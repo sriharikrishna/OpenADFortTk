@@ -152,7 +152,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="t__1_4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
+          <xaif:BooleanOperation vertex_id="1" name="greater_than"/>
           <xaif:VariableReference vertex_id="2" du_ud="1">
             <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="X_1"/>
           </xaif:VariableReference>
@@ -200,7 +200,7 @@
 
     <xaif:Branch vertex_id="9" annotation="{WHIRL_Id#121}">
       <xaif:Condition>
-        <xaif:Intrinsic vertex_id="1" name="bogus_lt_scal_scal" type="***"/>
+        <xaif:BooleanOperation vertex_id="1" name="less_than"/>
         <xaif:VariableReference vertex_id="2" du_ud="5">
           <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="Y_2"/>
         </xaif:VariableReference>
@@ -225,7 +225,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="t__1_4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
+          <xaif:BooleanOperation vertex_id="1" name="greater_than"/>
           <xaif:VariableReference vertex_id="2" du_ud="6">
             <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="X_1"/>
           </xaif:VariableReference>

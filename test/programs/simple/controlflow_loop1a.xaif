@@ -66,7 +66,7 @@
         </xaif:AssignmentRHS>
       </xaif:Initialization>
       <xaif:Condition>
-        <xaif:Intrinsic vertex_id="1" name="bogus_lteq_scal_scal" type="***"/>
+        <xaif:BooleanOperation vertex_id="1" name="less_or_equal"/>
         <xaif:VariableReference vertex_id="2" du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_1"/>
         </xaif:VariableReference>
@@ -141,7 +141,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="t__1_3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="bogus_lt_scal_scal" type="***"/>
+          <xaif:BooleanOperation vertex_id="1" name="less_than"/>
           <xaif:VariableReference vertex_id="2" du_ud="1">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="I_1"/>
           </xaif:VariableReference>
@@ -194,7 +194,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="t__1_3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="bogus_lt_scal_scal" type="***"/>
+          <xaif:BooleanOperation vertex_id="1" name="less_than"/>
           <xaif:VariableReference vertex_id="2" du_ud="6">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="I_1"/>
           </xaif:VariableReference>

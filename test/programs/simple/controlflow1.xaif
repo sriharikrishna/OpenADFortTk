@@ -61,7 +61,7 @@
 
     <xaif:Branch vertex_id="10" annotation="{WHIRL_Id#18}">
       <xaif:Condition>
-        <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
+        <xaif:BooleanOperation vertex_id="1" name="greater_than"/>
         <xaif:VariableReference vertex_id="2" du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="Y_2"/>
           <xaif:ArrayElementReference vertex_id="2">
@@ -89,7 +89,7 @@
         </xaif:AssignmentRHS>
       </xaif:Initialization>
       <xaif:Condition>
-        <xaif:Intrinsic vertex_id="1" name="bogus_lteq_scal_scal" type="***"/>
+        <xaif:BooleanOperation vertex_id="1" name="less_or_equal"/>
         <xaif:VariableReference vertex_id="2" du_ud="4">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_3"/>
         </xaif:VariableReference>

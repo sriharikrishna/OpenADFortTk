@@ -74,7 +74,7 @@
 
     <xaif:Branch vertex_id="7" annotation="{WHIRL_Id#18}">
       <xaif:Condition>
-        <xaif:Intrinsic vertex_id="1" name="bogus_eq_scal_scal" type="***"/>
+        <xaif:BooleanOperation vertex_id="1" name="equal"/>
         <xaif:VariableReference vertex_id="2" du_ud="1">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="N_1"/>
         </xaif:VariableReference>

@@ -80,7 +80,7 @@ doloop_var        </xaif:AssignmentLHS>
         </xaif:AssignmentRHS>
       </xaif:Initialization>
       <xaif:Condition>
-        <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
+        <xaif:BooleanOperation vertex_id="1" name="greater_than"/>
 doloop_countdoloop_var        <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
         <xaif:ExpressionEdge edge_id="2" source="2" target="1" position="2"/>
       </xaif:Condition>

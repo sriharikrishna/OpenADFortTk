@@ -191,7 +191,7 @@ doloop_var        </xaif:AssignmentLHS>
         </xaif:AssignmentRHS>
       </xaif:Initialization>
       <xaif:Condition>
-        <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
+        <xaif:BooleanOperation vertex_id="1" name="greater_than"/>
 doloop_countdoloop_var        <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
         <xaif:ExpressionEdge edge_id="2" source="2" target="1" position="2"/>
       </xaif:Condition>
@@ -243,14 +243,14 @@ doloop_var          <xaif:Constant vertex_id="2" type="integer" value="1"/>
     <xaif:Branch vertex_id="16" annotation="{WHIRL_Id#63}">
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_land_scal_scal" type="***"/>
-        <xaif:Intrinsic vertex_id="2" name="bogus_gt_scal_scal" type="***"/>
+        <xaif:BooleanOperation vertex_id="2" name="greater_than"/>
         <xaif:VariableReference vertex_id="3" du_ud="21">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_7"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="4" type="real" value="7.0000000000e+00"/>
         <xaif:ExpressionEdge edge_id="1" source="3" target="2" position="1"/>
         <xaif:ExpressionEdge edge_id="2" source="4" target="2" position="2"/>
-        <xaif:Intrinsic vertex_id="5" name="bogus_lt_scal_scal" type="***"/>
+        <xaif:BooleanOperation vertex_id="5" name="less_than"/>
         <xaif:VariableReference vertex_id="6" du_ud="21">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_7"/>
         </xaif:VariableReference>
@@ -294,14 +294,14 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
     <xaif:Branch vertex_id="17" annotation="{WHIRL_Id#74}">
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_land_scal_scal" type="***"/>
-        <xaif:Intrinsic vertex_id="2" name="bogus_gt_scal_scal" type="***"/>
+        <xaif:BooleanOperation vertex_id="2" name="greater_than"/>
         <xaif:VariableReference vertex_id="3" du_ud="25">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_7"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="4" type="real" value="3.0000000000e+00"/>
         <xaif:ExpressionEdge edge_id="1" source="3" target="2" position="1"/>
         <xaif:ExpressionEdge edge_id="2" source="4" target="2" position="2"/>
-        <xaif:Intrinsic vertex_id="5" name="bogus_lt_scal_scal" type="***"/>
+        <xaif:BooleanOperation vertex_id="5" name="less_than"/>
         <xaif:VariableReference vertex_id="6" du_ud="25">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_7"/>
         </xaif:VariableReference>

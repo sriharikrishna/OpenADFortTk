@@ -190,7 +190,7 @@
 
     <xaif:Branch vertex_id="16" annotation="{WHIRL_Id#48}">
       <xaif:Condition>
-        <xaif:Intrinsic vertex_id="1" name="bogus_gteq_scal_scal" type="***"/>
+        <xaif:BooleanOperation vertex_id="1" name="greater_or_equal"/>
         <xaif:VariableReference vertex_id="2" du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="select_expr_temp_1_3"/>
         </xaif:VariableReference>
@@ -206,7 +206,7 @@
 
     <xaif:Branch vertex_id="19" annotation="{WHIRL_Id#59}">
       <xaif:Condition>
-        <xaif:Intrinsic vertex_id="1" name="bogus_gteq_scal_scal" type="***"/>
+        <xaif:BooleanOperation vertex_id="1" name="greater_or_equal"/>
         <xaif:VariableReference vertex_id="2" du_ud="3">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="select_expr_temp_1_3"/>
         </xaif:VariableReference>
@@ -303,7 +303,7 @@
 
     <xaif:Branch vertex_id="18" annotation="{WHIRL_Id#63}">
       <xaif:Condition>
-        <xaif:Intrinsic vertex_id="1" name="bogus_lteq_scal_scal" type="***"/>
+        <xaif:BooleanOperation vertex_id="1" name="less_or_equal"/>
         <xaif:VariableReference vertex_id="2" du_ud="7">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="select_expr_temp_1_3"/>
         </xaif:VariableReference>
@@ -330,7 +330,7 @@
 
     <xaif:Branch vertex_id="20" annotation="{WHIRL_Id#52}">
       <xaif:Condition>
-        <xaif:Intrinsic vertex_id="1" name="bogus_lteq_scal_scal" type="***"/>
+        <xaif:BooleanOperation vertex_id="1" name="less_or_equal"/>
         <xaif:VariableReference vertex_id="2" du_ud="4">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="select_expr_temp_1_3"/>
         </xaif:VariableReference>
