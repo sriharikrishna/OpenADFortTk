@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.2 2003/05/14 01:10:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.3 2003/05/14 19:29:46 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -206,7 +206,7 @@ static const WN2F_OPR_HANDLER WN2F_Opr_Handler_List[] = {
   {OPR_SQRT, &xlate_UnaryOp},
   {OPR_REALPART, &WN2F_realpart},
   {OPR_IMAGPART, &WN2F_imagpart},
-  {OPR_PAREN, &WN2F_paren},
+  {OPR_PAREN, &xlate_PAREN},
   {OPR_RND, &xlate_UnaryOp},
   {OPR_TRUNC, &xlate_UnaryOp},
   {OPR_CEIL, &WN2F_ceil},
@@ -525,10 +525,8 @@ whirl2xaif::WN2F_translate(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // FIXME: I don't think we need these logical tests
   if (OPCODE_is_boolean(WN_opcode(wn)) && 
       WN2F_expr_has_boolean_arg(WN_opcode(wn))) { /* expect logical args */
-    /* Note that this may also be a logical argument, so 
-     * XlationContext_is_logical_arg(ctxt) may also hold
-     * TRUE.
-     */
+    /* Note that this may also be a logical argument, so
+     * XlationContext_is_logical_arg(ctxt) may also hold TRUE.  */
     set_XlationContext_has_logical_arg(ctxt);
   } else if (XlationContext_has_logical_arg(ctxt)) { /* is a logical arg */
     /* This is the only place where we should need to check whether
@@ -610,7 +608,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     CFG::Node* n1 = dynamic_cast<CFG::Node*>(e->source());
     CFG::Node* n2 = dynamic_cast<CFG::Node*>(e->sink());
     
-    xos << BegElem("xaif:ControlFlowEdge") << Attr("edge_id", ctxt.GetNewId())
+    xos << BegElem("xaif:ControlFlowEdge") << Attr("edge_id", ctxt.GetNewEId())
 	<< Attr("source", n1->getID()) 
 	<< Attr("target", n2->getID()) << EndElem; // FIXME: DumpGraphEdge
   }
@@ -618,7 +616,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ctxt.DeleteContext();
   delete symtab;
   
-  WN2F_End_Routine_Strings(xos, 0 /*func_id*/);
+  //FIXME WN2F_End_Routine_Strings(xos, 0 /*func_id*/);
   
   return EMPTY_WN2F_STATUS;
 }
@@ -899,6 +897,7 @@ WN2F_Offset_Symref(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
   // FIXME: for now, make sure this is only used for data refs 
   if (ST_class(base_st) == CLASS_FUNC) {
     //assert(false && "symref FIXME");
+    std::cerr << "WN2F_Offset_Symref: translating function ref\n";
   }
   
 #ifdef __USE_COMMON_BLOCK_NAME__
@@ -949,10 +948,13 @@ WN2F_Offset_Symref(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
 			      "WN2F_Offset_Symref"));
 
     if (!ctxt.IsLValue()) {
-      xos << BegElem("xaif:VariableReference") << Attr("id", ctxt.GetNewId());
+      xos << BegElem("xaif:VariableReference") 
+	  << Attr("vertex_id", ctxt.GetNewVId());
+      ctxt.CreateContext();
     }
     translate_var_ref(xos, base_st, ctxt);
     if (!ctxt.IsLValue()) {
+      ctxt.DeleteContext();
       xos << EndElem /* xaif:VariableReference */;
     }
 

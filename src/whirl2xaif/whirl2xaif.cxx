@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.2 2003/05/14 01:10:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.3 2003/05/14 19:29:46 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -182,7 +182,7 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info *pu_tree)
     CallGraph::Node* n1 = dynamic_cast<CallGraph::Node*>(e->source());
     CallGraph::Node* n2 = dynamic_cast<CallGraph::Node*>(e->sink());
     
-    xos << BegElem("xaif:CallGraphEdge") << Attr("edge_id", ctxt.GetNewId())
+    xos << BegElem("xaif:CallGraphEdge") << Attr("edge_id", ctxt.GetNewEId())
 	<< Attr("source", n1->getID())
 	<< Attr("target", n2->getID()) << EndElem; // FIXME: DumpGraphEdge
   }
@@ -242,7 +242,7 @@ TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId,
   xos << EndElem << std::endl;
   
   // Generate an edge to parent
-  xos << BegElem("xaif:ScopeEdge") << Attr("edge_id", ctxt.GetNewId())
+  xos << BegElem("xaif:ScopeEdge") << Attr("edge_id", ctxt.GetNewEId())
       << Attr("source", parentId) 
       << Attr("target", id) << EndElem << std::endl; // FIXME: DumpGraphEdge
   

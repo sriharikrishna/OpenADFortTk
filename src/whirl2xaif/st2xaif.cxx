@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.2 2003/05/14 01:10:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.3 2003/05/14 19:29:45 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -267,7 +267,7 @@ whirl2xaif::xlate_NonScalarSymTab(xml::ostream& xos, NonScalarSymTab* symtab,
 {
   xos << BegElem("xaif:SymbolTable") << Attr("id", symtab->GetName());
   
-  xos << BegElem("xaif:Property") << Attr("id", ctxt.GetNewId()) 
+  xos << BegElem("xaif:Property") << Attr("id", ctxt.GetNewVId()) 
       << Attr("name", "kind") << Attr("value", "nonscalar_stab") << EndElem;
   
   for (NonScalarSymTabIterator it(*symtab); it.IsValid(); ++it) {
@@ -404,7 +404,7 @@ xlate_STVAR_ToSymbol(xml::ostream& xos, ST *st, XlationContext& ctxt)
   TY_IDX ty = ST_type(st);
   
   xos << Comment(st_name);
-  xos << BegElem("xaif:Symbol") << Attr("symbol_id", (UINT32)ST_index(st)) 
+  xos << BegElem("xaif:Symbol") << Attr("symbol_id", (UINT)ST_index(st)) 
       << Attr("kind", "variable")
       << Attr("type", "real -- fixme") << EndElem;
 
@@ -522,7 +522,7 @@ ST2F_decl_type(xml::ostream& xos, ST *st, XlationContext& ctxt)
     ASSERT_DBG_FATAL(!PUINFO_RETURN_TO_PARAM || st != PUINFO_RETURN_PARAM, 
 		     (DIAG_W2F_DECLARE_RETURN_PARAM, "ST2F_decl_type"));
   
-  //xos << BegComment << "type id=" << (UINT32)ST_index(st) << EndComment; 
+  //xos << BegComment << "type id=" << (UINT)ST_index(st) << EndComment; 
   //FIXME TY2F_translate(xos, ST_type(st), 1, ctxt);
 }
 
@@ -542,32 +542,32 @@ xlate_STFUNC_ToSymbol(xml::ostream& xos, ST* st, XlationContext& ctxt)
   TY_IDX return_ty = Func_Return_Type(ST_pu_type(st));
   // FIXME: ST2F_Declare_Return_Type(xos, return_ty, ctxt);  
 
-  xos << BegElem("xaif:Symbol")  << Attr("symbol_id", (UINT32)ST_index(st)) 
+  xos << BegElem("xaif:Symbol")  << Attr("symbol_id", (UINT)ST_index(st)) 
       << Attr("kind", "subroutine") << Attr("type", return_ty) << EndElem;
 }
 
 static void 
 ST2F_decl_const(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
-  //xos << BegComment << "const id=" << (UINT32)ST_index(st) << EndComment; 
+  //xos << BegComment << "const id=" << (UINT)ST_index(st) << EndComment; 
 }
 
 static void 
 ST2F_decl_preg(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
-  //xos << BegComment << "preg id=" << (UINT32)ST_index(st) << EndComment;
+  //xos << BegComment << "preg id=" << (UINT)ST_index(st) << EndComment;
 }
 
 static void 
 ST2F_decl_block(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
-  //xos << BegComment << "block id=" << (UINT32)ST_index(st) << EndComment;
+  //xos << BegComment << "block id=" << (UINT)ST_index(st) << EndComment;
 }
 
 static void 
 ST2F_decl_name(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
-  //xos << BegComment << "name id=" << (UINT32)ST_index(st) << EndComment;
+  //xos << BegComment << "name id=" << (UINT)ST_index(st) << EndComment;
 }
 
 /*---------------- hidden routines to handle ST uses ------------------*/
@@ -618,14 +618,14 @@ ST2F_use_var(xml::ostream& xos, ST *st, XlationContext& ctxt)
   } else {
     // FIXME: abstract
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-    UINT32 scopeid = map.Find(sttab);
+    UINT scopeid = map.Find(sttab);
     ASSERT_FATAL(scopeid != 0, (DIAG_UNIMPLEMENTED, 0, "ST2F_use_var"));
 
     xos << BegComment << "sym = " << W2CF_Symtab_Nameof_St(st) << EndComment;
     xos << BegElem("xaif:SymbolReference") 
-	<< Attr("vertex_id", ctxt.GetNewId())
+	<< Attr("vertex_id", ctxt.GetNewVId())
 	<< Attr("scope_id", scopeid)
-	<< Attr("symbol_id", (UINT32)ST_index(st)) << EndElem;
+	<< Attr("symbol_id", (UINT)ST_index(st)) << EndElem;
   }
 }
 
@@ -637,7 +637,7 @@ ST2F_use_func(xml::ostream& xos, ST *st, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
 		    ST_sym_class(st), "ST2F_use_func"));
   
-  xos << BegElem("***use_func") << Attr("id", ctxt.GetNewId())
+  xos << BegElem("***use_func") << Attr("id", ctxt.GetNewVId())
       << Attr("_type", -1) << Attr("value", W2CF_Symtab_Nameof_St(st)) 
       << EndElem;
   
@@ -663,7 +663,7 @@ ST2F_use_const(xml::ostream& xos, ST *st, XlationContext& ctxt)
     val = TCON2F_translate(STC_val(st), TY_is_logical(ty));
   }
   
-  xos << BegElem("***use_const") << Attr("id", ctxt.GetNewId()) 
+  xos << BegElem("***use_const") << Attr("id", ctxt.GetNewVId()) 
       << Attr("_type", -1) << Attr("value", val) << EndElem;
 }
 
@@ -677,7 +677,7 @@ ST2F_use_block(xml::ostream& xos, ST *st, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
 		    ST_sym_class(st), "ST2F_use_block"));
   
-  xos << BegElem("***use_block") << Attr("id", ctxt.GetNewId()) 
+  xos << BegElem("***use_block") << Attr("id", ctxt.GetNewVId()) 
       << Attr("_type", -1) << Attr("value", ST_name(st)) << EndElem;
 } 
 
@@ -725,14 +725,14 @@ whirl2xaif::xlate_Params(xml::ostream& xos, WN* wn, ST* st, ST** params,
       // FIXME: abstract (SymbolReference)
       ST* st = params[param];
       ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-      UINT32 scopeid = map.Find(sttab);
+      UINT scopeid = map.Find(sttab);
       ASSERT_FATAL(scopeid != 0, (DIAG_UNIMPLEMENTED, 0, "xlate_Params"));
       
       xos << BegComment << "sym = " << W2CF_Symtab_Nameof_St(st) << EndComment;
       xos << BegElem("xaif:ArgumentSymbolReference") 
 	  << Attr("position", position) 
 	  << Attr("scope_id", scopeid)
-	  << Attr("symbol_id", (UINT32)ST_index(st)) << EndElem;
+	  << Attr("symbol_id", (UINT)ST_index(st)) << EndElem;
       
       position++;
     }
