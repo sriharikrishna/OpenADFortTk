@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.1 2003/08/01 15:59:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.2 2003/08/08 19:51:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -23,8 +23,9 @@
 //************************* System Include Files ****************************
 
 #include <iostream>
-#include <map> // STL
-#include <set> // STL
+#include <map>  // STL
+#include <set>  // STL
+#include <list> // STL
 
 //************************** Open64 Include Files ***************************
 
@@ -36,7 +37,40 @@
 
 typedef UINT WNId;
 
+//***************************************************************************
+
+// Some possibly useful containers: WNIdSet, WNIdList
+
 typedef std::set<WNId> WNIdSet;
+
+namespace WNIdList_hidden {
+  typedef std::list<WNId> WNIdBaseList;
+};
+
+class WNIdList : public WNIdList_hidden::WNIdBaseList {
+public:
+  WNIdList() { }
+  ~WNIdList() { }
+
+  // Returns 0 if not found
+  WNId
+  Find(WNId id) 
+  {
+    using namespace WNIdList_hidden;
+    
+    for (WNIdBaseList::iterator it = this->begin(); it != this->end(); ++it) {
+      WNId val = *it;
+      if (id == val) {
+	return val;
+      }
+    }
+    
+    return 0;
+  }
+  
+};
+
+//***************************************************************************
 
 namespace WhirlIDMaps_hidden {
   typedef std::map<WNId, WN*> WNIdToWNBaseMap;
