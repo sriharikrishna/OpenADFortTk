@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/Makefile,v 1.4 2003/10/29 01:52:50 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/Makefile,v 1.5 2003/12/02 13:20:35 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -61,7 +61,7 @@ endif
 # lgen: basename
 
 LIBS = $(LIBRARY) $(WHIRL2XAIF_OBJ_PATH)/$(LIB_SUPPORT) \
-	$(OPEN64)/$(O64TARG)/whirl2f/be.$(DSOext)
+	$(OPEN64TARG)/whirl2f/be.$(DSOext)
 
 #	$(WHIRL2XAIF_OBJ_PATH)/$(LIB_WHIRLREADER) \
 #	$(WHIRL2XAIF_OBJ_PATH)/$(LIB_COMUTIL) 
