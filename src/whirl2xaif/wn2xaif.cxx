@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.46 2004/03/03 21:45:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.47 2004/03/04 13:53:42 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1081,7 +1081,7 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   const char* vty = GetStructuredCFGVertexType(wn);
   OPERATOR opr = WN_operator(wn);
   const char* opr_str = OPERATOR_name(opr);
-
+  
   if (vty == XAIFStrings.elem_BBForLoop()) {
     xlate_LoopInitialization(xos, WN_start(wn), ctxt);
     xlate_CFCondition(xos, WN_end(wn), ctxt);
@@ -1092,14 +1092,9 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     xlate_CFCondition(xos, WN_while_test(wn), ctxt);
   }
   else if (vty == XAIFStrings.elem_BBBranch()) {
-    WN* condWN = NULL; 
-    if (opr == OPR_IF || opr == OPR_TRUEBR || opr == OPR_FALSEBR) {
-      condWN = WN_if_test(wn);
-    } else if (opr == OPR_SWITCH || opr == OPR_COMPGOTO) {
-      condWN = WN_switch_test(wn);
-    }
-    ASSERT_FATAL(condWN, (DIAG_W2F_UNEXPECTED_OPC, "xlate_BBStmt"));
-    xlate_CFCondition(xos, condWN, ctxt);
+    // (opr == OPR_SWITCH || opr == OPR_COMPGOTO) // WN_switch_test(wn);
+    // (opr == OPR_TRUEBR || opr == OPR_FALSEBR)
+    xlate_CFCondition(xos, WN_if_test(wn), ctxt);
   } 
   else if (vty == XAIFStrings.elem_BBEndBranch() ||
 	   vty == XAIFStrings.elem_BBEndLoop()) {
@@ -1154,7 +1149,7 @@ GetCFGVertexType(CFG* cfg, CFG::Node* n)
 // special structured CFG vertex, return that type.  Otherwise return
 // NULL.  Returns strings from XAIFStrings.
 static const char*
-GetStructuredCFGVertexType(WN* wstmt)
+GetStructuredCFGVertexType(WN* wstmt) // FIXME
 {
   OPERATOR opr = WN_operator(wstmt);
   switch (opr) {
@@ -1169,14 +1164,10 @@ GetStructuredCFGVertexType(WN* wstmt)
   case OPR_WHILE_DO:
     return XAIFStrings.elem_BBPreLoop();
 
-    // In OA, IF and BR nodes represent the *condition* (not the body)
+    // In OA, IF nodes represent the *condition* (not the body)
   case OPR_IF: 
-  case OPR_TRUEBR:   // FIXME: UNSTRUCTURED
-  case OPR_FALSEBR:  // FIXME: UNSTRUCTURED
     return XAIFStrings.elem_BBBranch();
-  case OPR_SWITCH:   // FIXME: UNSTRUCTURED
-  case OPR_COMPGOTO: // FIXME: UNSTRUCTURED
-    return XAIFStrings.elem_BBBranch();
+    // Unstructured: OPR_TRUEBR, OPR_FALSEBR, OPR_SWITCH, OPR_COMPGOTO
     
     // Currently we use special comments to denote EndBranch and EndLoop
   case OPR_COMMENT: 
@@ -1295,7 +1286,7 @@ AddStructuredCFEndTags(WN* wn)
       WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndLoop());
       WN_INSERT_BlockLast(blkWN, newWN);
     }
-    else if (opr == OPR_IF /*vty == XAIFStrings.elem_BBBranch()*/) {
+    else if (vty == XAIFStrings.elem_BBBranch()) {
       //     if (...) { ... }
       //     else { ... }
       //     endif
@@ -1439,9 +1430,9 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
 	  WN* wn = (WN *)((StmtHandle)stmtIt1);
 	  if ((wn == initWN) || (wn == updateWN)) {
 	    n1->erase((StmtHandle)wn);
-	    if (n1->size() == 0) {
-	      toRemove.push_back(n1);
-	    }
+	    if (n1->size() == 0 && wn == updateWN) {
+	      toRemove.push_back(n1); // ONLY erase update 
+	    }                         // [EndLoop] --> [update] --backedge-->
 	    break;
 	  }
 	}
@@ -1450,7 +1441,6 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
   }
 
   // Remove empty basic blocks
-#if 0 // FIXME: This can mess up important edge information
   for (DGraphNodeList::iterator it = toRemove.begin(); 
        it != toRemove.end(); ++it) {
     DGraph::Node* n = (*it);
@@ -1473,7 +1463,6 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
     cfg->remove(n); // removes all outgoing and incoming edges
     delete n;
   }
-#endif
   toRemove.clear();
 
   
