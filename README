@@ -1,4 +1,4 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.11 2003/11/25 16:47:11 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.12 2003/12/02 13:19:57 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
@@ -64,27 +64,27 @@ Please use the same compiler for Open64, OpenAnalysis and whirl2xaif.
 2. Build Open64's mfef90 (Open64 front end) and whirl2f (Open64 backend).
    Ensure the correct compiler is in your path.
 
-   cd ${OPEN64TARG}/crayf90/sgi
+   cd ${OPEN64ROOT}/crayf90/sgi
    make
 
-   cd ${OPEN64TARG}/whirl2f 
+   cd ${OPEN64ROOT}/whirl2f 
    make
 
    To build ir_b2a:
 
-     cd ${OPEN64TARG}/ir_tools
+     cd ${OPEN64ROOT}/ir_tools
      make
    
 
 3. Build OA.
 
-   cd ${WHIRL2XAIF_OA}
+   cd ${OPENANALYSIS_BASE}
    make CXX="<C++ compiler>" CXXFLAGS="<options such as -g or -O>"
 
 
 4. Build XercesC++ [if necessary]:
 
-   cd ${WHIRL2XAIF_XERCESC}
+   cd ${XERCESC_BASE}
    make CXX="<C++ compiler>" CC="<C compiler>"
 
 
@@ -99,13 +99,13 @@ Please use the same compiler for Open64, OpenAnalysis and whirl2xaif.
 
 6. xaifbooster
  
-   cd ${XAIFBOOSTERROOT}
+   cd ${XAIFBOOSTER_BASE}
    make
 
-   cd ${ANGELROOT}
+   cd ${ANGEL_BASE}
    make
 
-   cd ${XAIFBOOSTERROOT}
+   cd ${XAIFBOOSTER_BASE}
    make test
 
 
