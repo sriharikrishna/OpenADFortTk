@@ -16,32 +16,63 @@ use strict;
 use warnings;
 use File::Spec;
 use IO::File;
-use Getopt::Std;
+use Getopt::Long;
 
 STDOUT->autoflush(1); 
 
-my $usage = 
-"usage: openad [...] [-h] <fortran-file>
+my $the_program = $0;
+my $the_usage = 
+"usage: ${the_program} [mode] [options] <fortran-file>
 
-Modes:
-  -a, --for-bb [NOT IMPLEMENTED]
-  -b, --for-stmt
-  -c, --rev-bb
+Mode:
+  --bb-rev          BasicBlockPreaccumulationReverse [Default]
+  --bb-tapeadj      BasicBlockPreaccumulationTapeAdjoint
+  --bb-tape         BasicBlockPreaccumulationTape
+  --bb              BasicBlockPreaccumulation
+  --cfr             ControlFlowReversal
+  --linear          Linearization
+  --memopstradeoff  MemOpsTradeoffPreaccumulation
 
 Options:
-  -v: verbose
-  -h: print help
+  -i, --interactive  
+    prompt user to authorize each step in pipeline
+  -v [lvl], --verbose [lvl]
+    Set verbosity level.  If no level is supplied, defaults to 1.
+    1: 
+    2: Print all pipeline commands
+  -h, --help         print help
 \n";
 
 #############################################################################
+
+my ($alg_BasicBlockPreaccumulationReverse,
+    $alg_BasicBlockPreaccumulationTapeAdjoint,
+    $alg_BasicBlockPreaccumulationTape,
+    $alg_BasicBlockPreaccumulation,
+    $alg_ControlFlowReversal,
+    $alg_Linearization,
+    $alg_MemOpsTradeoffPreaccumulation) =
+    (1, 2, 3, 4, 5, 6, 7);
 
 #############################################################################
 ## main/driver
 #############################################################################
 
-my $program = $0;
-my $options = 'abcvh';
+my @options = ('bb-rev',
+	       'bb-tapeadj',
+	       'bb-tape',
+	       'bb',
+	       'cfr',
+	       'linear',
+	       'memopstradeoff',
+	       
+	       'interactive|i',
+	       'verbose|v:i',
+	       'help|h');
+
+my $opt_interactive = undef;
 my $opt_verbose = 0;
+#my $opt_debug = 0;
 my $openad_mode = undef;
 my $openad_input = undef;
 
@@ -50,24 +81,59 @@ my $openad_input = undef;
 # ----------------------------------------------------------
 
 # Get optional arguments
-my %opts;
-getopts($options, \%opts);
-
-if (defined($opts{v})) {
-  $opt_verbose = 1;
-} 
-if (defined($opts{h})) {
-  printUsageAndExit($program);
-} 
-
-$openad_mode = 'forward';
-if (!defined($openad_mode)) {
-  printUsageAndExit($program);
+my %opts = ();
+my $ret = GetOptions(\%opts, @options);
+if (!$ret) { 
+  printErrorAndExit(); 
 }
+
+# Get optional arguments: verbose, help
+if (defined($opts{'verbose'})) {
+  $opt_verbose = $opts{'verbose'};
+  if ($opt_verbose == 0) { $opt_verbose = 1; }
+} 
+if (defined($opts{'help'})) {
+  printUsageAndExit($the_program);
+} 
+
+# Get required argument: OpenAD Mode
+$openad_mode = $alg_BasicBlockPreaccumulationReverse;
+if (defined($opts{'bb-rev'})) {
+  $openad_mode = $alg_BasicBlockPreaccumulationReverse;
+} 
+if (defined($opts{'bb-tapeadj'})) {
+  $openad_mode = $alg_BasicBlockPreaccumulationTapeAdjoint;
+} 
+if (defined($opts{'bb-tape'})) {
+  $openad_mode = $alg_BasicBlockPreaccumulationTape;
+} 
+if (defined($opts{'bb'})) {
+  $openad_mode = $alg_BasicBlockPreaccumulation;
+} 
+if (defined($opts{'cfr'})) {
+  $openad_mode = $alg_ControlFlowReversal;
+} 
+if (defined($opts{'linear'})) {
+  $openad_mode = $alg_Linearization;
+} 
+if (defined($opts{'memopstradeoff'})) {
+  $openad_mode = $alg_MemOpsTradeoffPreaccumulation;
+} 
+if (!defined($openad_mode)) {
+  printUsageAndExit($the_program);
+}
+
+# Get optional arguments: interactive
+if (defined($opts{'interactive'})) {
+  $opt_interactive = 1;
+} 
+
 
 # Get required arguments
 my $numArgs = scalar(@ARGV);
-if ($numArgs != 1) { printUsageAndExit($program); }
+if ($numArgs != 1) { 
+  printErrorAndExit("Invalid number of required arguments!\n"); 
+}
 
 $openad_input = $ARGV[0];
 
@@ -75,7 +141,7 @@ $openad_input = $ARGV[0];
 # Run
 # ----------------------------------------------------------
 
-RunOpenADPipeline($openad_input);
+RunOpenADPipeline($openad_mode, $openad_input);
 
 #############################################################################
 ## Subroutines
@@ -85,7 +151,18 @@ RunOpenADPipeline($openad_input);
 sub printUsageAndExit 
 {
   my ($command) = @_; # not used now
-  print STDOUT ${usage};
+  print STDOUT ${the_usage};
+  exit(-1);
+}
+
+# printErrorAndExit
+sub printErrorAndExit 
+{
+  my ($msg) = @_;
+  if (defined($msg)) {
+    print STDOUT "${msg}";
+  }
+  print STDOUT "Try `${the_program} --help' for more information.\n";
   exit(-1);
 }
 
@@ -107,7 +184,7 @@ sub undefEnvVarErr
   my $configured = undef;
   my ($MFEF90, $WHIRL2F) = (undef, undef);
   my ($W2X, $X2W, $NORM, $PP) = (undef, undef, undef, undef);
-  my ($XB_BB) = (undef);
+  my ($XB) = (undef);
   
   my ($WHIRL2XAIF, $PLATFORM, $OPEN64) = (undef, undef, undef);
   my $XAIFBOOSTERROOT = undef;
@@ -118,12 +195,11 @@ sub undefEnvVarErr
 
   sub RunOpenADPipeline 
   {
-    my($fortranfile) = @_;
+    my($mode, $fortranfile) = @_;
     
-    # Intentionally use this instead of a BEGIN block in case we want to
-    # play with options.
+    # Use this instead of a BEGIN block so we can pass options
     if (!defined($configured)) {
-      ConfigRunOpenADPipeline();
+      ConfigRunOpenADPipeline($mode);
     }
     
     # Find base name of file. Support following extensions: .f90, .f 
@@ -137,40 +213,39 @@ sub undefEnvVarErr
     if ($opt_verbose >= 1) {
       print STDOUT "OpenAD: ${fortranfile} --> ${base}.xb.x2w.w2f.pp.f\n";
     }
+    #print STDOUT "$XB\n";
+
+    my $cmdsRef = 
+	["$MFEF90  ${fortranfile}",
+	 "$W2X     ${base}.B -o ${base}.xaif",
+	 "$NORM    ${base}.xaif",
+	 "$XB   -i ${base}.xaif -o ${base}.xb.xaif",
+	 "$X2W --st ${base}.B ${base}.xb.xaif -o ${base}.xb.x2w.B",
+	 "$WHIRL2F ${base}.xb.x2w.B",
+	 "$NORM    ${base}.xb.x2w.w2f.f",
+	 "$PP      ${base}.xb.x2w.w2f.f"];
     
-    RunCmd("$MFEF90   ${fortranfile}");
-    RunCmd("$W2X      ${base}.B -o ${base}.xaif");
-    RunCmd("$NORM     ${base}.xaif");
-    RunCmd("$XB_BB -i ${base}.xaif -o ${base}.xb.xaif");
-    RunCmd("$X2W --st ${base}.B ${base}.xb.xaif -o ${base}.xb.x2w.B");
-    RunCmd("$WHIRL2F  ${base}.xb.x2w.B");
-    RunCmd("$NORM     ${base}.xb.x2w.w2f.f");
-    RunCmd("$PP       ${base}.xb.x2w.w2f.f");
+    RunCmds($cmdsRef, $opt_verbose, $opt_interactive);
   }
 
   sub ConfigRunOpenADPipeline 
   {
+    my($mode) = @_;
+    
     $WHIRL2XAIF = $ENV{WHIRL2XAIF};
     if (!defined($WHIRL2XAIF)) { undefEnvVarErr('WHIRL2XAIF'); }
-
+    
     $PLATFORM = $ENV{WHIRL2XAIF_PLATFORM};
     if (!defined($PLATFORM)) { undefEnvVarErr('WHIRL2XAIF_PLATFORM'); }
-
+    
     $OPEN64 = $ENV{WHIRL2XAIF_OPEN64};
     if (!defined($OPEN64)) { undefEnvVarErr('WHIRL2XAIF_OPEN64'); }
-
+    
     $XAIFBOOSTERROOT = $ENV{XAIFBOOSTERROOT};
     if (!defined($XAIFBOOSTERROOT)) { undefEnvVarErr('XAIFBOOSTERROOT'); }
-
+    
     $XAIFSCHEMAROOT = $ENV{XAIFSCHEMAROOT};
     if (!defined($XAIFSCHEMAROOT)) { undefEnvVarErr('XAIFSCHEMAROOT'); }
-    
-    my $XB_alg = "${XAIFBOOSTERROOT}/xaifBooster/algorithms";
-    my $ii_xaif = "${XAIFSCHEMAROOT}/schema/examples/inlinable_intrinsics.xaif";
-    if (${PLATFORM} eq "i686-Cygwin") {
-      # convert to Windows path for XercesC
-      $ii_xaif = "\`cygpath -w ${ii_xaif}\`";
-    } 
     
     $MFEF90  = "${OPEN64}/crayf90/sgi/mfef90";
     $WHIRL2F = "${OPEN64}/whirl2f/whirl2f";
@@ -180,7 +255,40 @@ sub undefEnvVarErr
     $NORM = "${WHIRL2XAIF}/test/util/normalize";
     $PP   = "perl ${WHIRL2XAIF}/postprocess/pp.pl";
     
-    $XB_BB = "${XB_alg}/BasicBlockPreaccumulation/test/t -c ${ii_xaif}";
+    my $XB_alg_path = "${XAIFBOOSTERROOT}/xaifBooster/algorithms";
+    my $XB_alg = undef;
+    if ($mode == $alg_BasicBlockPreaccumulationReverse) {
+      $XB_alg = "${XB_alg_path}/BasicBlockPreaccumulationReverse/test/t";
+    } 
+    elsif ($mode == $alg_BasicBlockPreaccumulationTapeAdjoint) {
+      $XB_alg = "${XB_alg_path}/BasicBlockPreaccumulationTapeAdjoint/test/t";
+    } 
+    elsif ($mode == $alg_BasicBlockPreaccumulationTape) {
+      $XB_alg = "${XB_alg_path}/BasicBlockPreaccumulationTape/test/t";
+    }
+    elsif ($mode == $alg_BasicBlockPreaccumulation) {
+      $XB_alg = "${XB_alg_path}/BasicBlockPreaccumulation/test/t";
+    }
+    elsif ($mode == $alg_ControlFlowReversal) {
+      $XB_alg = "${XB_alg_path}/ControlFlowReversal/test/t";
+    }
+    elsif ($mode == $alg_Linearization) {
+      $XB_alg = "${XB_alg_path}/Linearization/test/t";
+    }
+    elsif ($mode == $alg_MemOpsTradeoffPreaccumulation) {
+      $XB_alg = "${XB_alg_path}/MemOpsTradeoffPreaccumulation/test/t";
+    } 
+    else {
+      printErrorAndExit("Internal Error: invalid algorithm");
+    }
+    
+    my $ii_xaif = "$XAIFSCHEMAROOT/schema/examples/inlinable_intrinsics.xaif";
+    if ($PLATFORM eq "i686-Cygwin") {
+      # convert to Windows path for XercesC
+      $ii_xaif = "\`cygpath -w ${ii_xaif}\`";
+    } 
+    
+    $XB = "${XB_alg} -c ${ii_xaif}";
     
     $f_RE = '.f$';
     $f90_RE = '.f90$';
@@ -210,16 +318,36 @@ sub undefEnvVarErr
     }
   }
 
+  sub RunCmds
+  {
+    my($cmdsRef, $verbose, $interactive) = @_;
+    
+    for my $cmd (@{$cmdsRef}) {
+      if ($interactive) {
+	print STDOUT "OpenAD: Execute? '${cmd}'\n";
+	print STDOUT "...[Y/n]\n";
+	my $ans = <STDIN>;
+	chomp($ans);
+	if (defined($ans) && ($ans eq 'n' || $ans eq 'N')) {
+	  last;
+	}
+      }
+      RunCmd($cmd, $verbose); 
+    }
+    
+  }
+
   sub RunCmd
   {
-    my($cmd) = @_;
-    
+    my($cmd, $verbose) = @_;
+
     my $outfile = "./OpenAD-out.tmp~";
     $cmd .= " > ${outfile} 2>&1";
 
-    if ($opt_verbose >= 2) {
-      print STDOUT "OpenAD: Running '${cmd}'\n";
+    if ($verbose >= 2) {
+      print STDOUT "OpenAD: Executing '${cmd}'\n";
     }
+
     if (system($cmd) != 0) {
       my $exit_value  = $? >> 8;
       my $signal_num  = $? & 127;
