@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.42 2004/04/30 20:39:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.43 2004/05/04 23:51:15 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -635,6 +635,8 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       // Begin a structured loop
       // ---------------------------------------------------
       
+      bool isDoLoop = (XAIF_BBElemFilter::IsBBForLoop(bbElem));
+
       // 1. Gather children
       MyDGNode* body = GetSuccessorAlongEdge(curNode, 1);
       MyDGNode* fallthru = GetSuccessorAlongEdge(curNode, 0);
@@ -647,7 +649,12 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       DOMElement* cond = 
         GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
       DOMElement* condexpr = GetFirstChildElement(cond);      
-      WN* condWN = TranslateExpression(condexpr, ctxt);
+      WN* condWN = NULL;
+      if (isDoLoop) {
+	condWN = TranslateExpressionSimple(condexpr, ctxt);
+      } else {
+	condWN = TranslateExpression(condexpr, ctxt);
+      }
       
       DOMElement *init = NULL, *update = NULL;
       WN *initWN = NULL, *updateWN = NULL;
@@ -661,7 +668,7 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       
       // 4. Create control flow statement
       WN* stmtWN = NULL;
-      if (XAIF_BBElemFilter::IsBBForLoop(bbElem)) {
+      if (isDoLoop) {
         WN* idxWN = WN_CreateIdname(WN_store_offset(initWN), WN_st(initWN));
         stmtWN = WN_CreateDO(idxWN, initWN, condWN, updateWN, bodyWN, NULL);
       }
@@ -863,6 +870,8 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       // -- because in WHIRL the whole procedure is actually in the same
       // lexical scope.
       
+      bool isDoLoop = (XAIF_BBElemFilter::IsBBForLoop(bbElem));
+      
       // 1. Gather children
       MyDGNode* bodyNode = GetSuccessorAlongEdge(curNode, 1);
       MyDGNode* fallthruNode = GetSuccessorAlongEdge(curNode, 0);
@@ -871,7 +880,12 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       DOMElement* cond = 
         GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
       DOMElement* condexpr = GetFirstChildElement(cond);
-      WN* condWN = TranslateExpression(condexpr, ctxt);
+      WN* condWN = NULL;
+      if (isDoLoop) {
+	condWN = TranslateExpressionSimple(condexpr, ctxt);
+      } else {
+	condWN = TranslateExpression(condexpr, ctxt);
+      }
       
       DOMElement *init = NULL, *update = NULL;
       WN *initWN = NULL, *updateWN = NULL;
@@ -890,7 +904,7 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       
       // Create other special pre-loop statements
       WN* stmtWN = NULL;
-      if (XAIF_BBElemFilter::IsBBForLoop(bbElem)) {
+      if (isDoLoop) {
         INT32 lbl_test = nextLblCntr++;
         INT32 lbl_cntnue = nodeToLoopContLblMap[curNode];
         
