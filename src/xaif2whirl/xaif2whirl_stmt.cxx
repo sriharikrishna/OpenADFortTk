@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.9 2004/04/08 13:53:41 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.10 2004/04/13 16:40:59 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -26,7 +26,6 @@
 
 //************************* Xerces Include Files ****************************
 
-#include <xercesc/dom/DOMNodeIterator.hpp>
 #include <xercesc/dom/DOMDocument.hpp>
 #include <xercesc/dom/DOMNode.hpp>
 #include <xercesc/dom/DOMElement.hpp>
@@ -338,13 +337,9 @@ xlate_DerivativePropagator(const DOMElement* elem, XlationContext& ctxt)
   WN* blckWN = WN_CreateBlock();
   
   // Accumulate derivative propagator statements and add to block
-  DOMDocument* doc = elem->getOwnerDocument();
-  DOMNodeIterator* it = 
-    doc->createNodeIterator((DOMNode*)elem, DOMNodeFilter::SHOW_ALL, 
-			    new XAIF_DerivPropStmt(), true);
-  for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
-    DOMElement* stmt = dynamic_cast<DOMElement*>(node);
-    
+  XAIF_DerivPropStmt filt;
+  for (DOMElement* stmt = GetChildElement(elem, &filt);
+       (stmt); stmt = GetNextSiblingElement(stmt, &filt)) {
     WN* wn = NULL;
     if (XAIF_DerivPropStmt::IsSetDeriv(stmt)) {
       wn = xlate_SetDeriv(stmt, ctxt);
@@ -360,7 +355,6 @@ xlate_DerivativePropagator(const DOMElement* elem, XlationContext& ctxt)
     
     WN_INSERT_BlockLast(blckWN, wn);
   }
-  it->release();
   
   // Do not return an empty block
   if (WN_first(blckWN) == NULL)  {
