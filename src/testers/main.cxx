@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v 1.8 2004/02/27 20:21:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v 1.9 2004/02/28 16:41:38 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -62,12 +62,12 @@ main(int argc, char **argv)
   try {
     return real_main(argc, argv);
   }
-  catch (Exception& e /* OpenAnalysis -- should be in namespace */) {
-    e.report(cerr);
-    exit(1);
-  }
   catch (CmdLineParser::Exception& e) {
     e.Report(cerr); // fatal error
+    exit(1);
+  }
+  catch (Exception& e /* OpenAnalysis -- should be in namespace */) {
+    e.report(cerr);
     exit(1);
   }
   catch (...) {

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.h,v 1.1 2004/02/27 20:22:55 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.h,v 1.2 2004/02/28 16:41:38 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -49,6 +49,11 @@ public:
   void PrintError(std::ostream& os, const char* msg) const;
   void PrintError(std::ostream& os, const std::string& msg) const;
   
+  // Dump
+  void Dump(std::ostream& os = std::cerr) const;
+  void DDump() const;
+
+public:
   // Parsed Data: Command
   const std::string& GetCmd() const { return parser.GetCmd(); }
   
@@ -60,10 +65,6 @@ public:
   std::string inWhirlFileNm;
   std::string outWhirlFileNm;
   std::string xaifFileNm;
-  
-  // Dump
-  void Dump(std::ostream& os = std::cerr) const;
-  void DDump() const;
   
 private:
   void Ctor();

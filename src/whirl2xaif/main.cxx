@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.18 2004/02/27 20:23:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.19 2004/02/28 16:41:38 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -103,16 +103,16 @@ main(int argc, char **argv)
   try {
     return real_main(argc, argv);
   }
+  catch (CmdLineParser::Exception& e) {
+    e.Report(cerr); // fatal error
+    exit(1);
+  }
   catch (xml::ostream::Exception& e) {
     e.Report(cerr);
     exit(1);
   }
   catch (Exception &e /* OpenAnalysis -- should be in namespace */) {
     e.report(cerr);
-    exit(1);
-  }
-  catch (CmdLineParser::Exception& e) {
-    e.Report(cerr); // fatal error
     exit(1);
   }
   catch (...) {
