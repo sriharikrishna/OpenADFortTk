@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.8 2003/12/29 20:44:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.9 2004/01/25 02:41:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -68,6 +68,9 @@ RecursiveFnWN(std::ostream& os, WN* wn);
 static int
 DumpExprTree(std::ostream& os, WN* wn);
 
+static int
+DumpExprTree(std::ostream& os, ExprTree* tree);
+
 //****************************************************************************
 
 // TestIR_OA: 
@@ -131,10 +134,12 @@ TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn,
   // Base case
   if (varref || opr == OPR_STID) {
     VN vn = vnmap.Find((ExprHandle)wn);
-    
+
+    ExprTree* tree = ir.GetExprTreeForExprHandle((ExprHandle)wn);    
     os << "VN = " << vn << endl;
-    ExprTree* tree = ir.GetExprTreeForExprHandle((ExprHandle)wn);
-    tree->dump(os);
+    os << "  ";
+    DumpExprTree(os, tree);
+    os << endl;
     delete tree;
 
     if (opr == OPR_STID) { recur = true; }
@@ -253,18 +258,51 @@ RecursiveFnWN(std::ostream& os, WN* wn)
 
 //****************************************************************************
 
+static int
+DumpExprNode(std::ostream& os, ExprTree::Node* node, Pro64IRInterface& ir);
 
 static int
 DumpExprTree(std::ostream& os, WN* wn)
 {
-  Pro64IRInterface ir;
+  static Pro64IRInterface ir;
 
   OPERATOR opr = WN_operator(wn);
   if (OPERATOR_is_expression(opr)) {
     ExprTree* tree = ir.GetExprTreeForExprHandle((ExprHandle)wn);
-    tree->dump(os);
+    DumpExprTree(os, tree);
     delete tree;
   }
   
   return 0;
 }
+
+static int
+DumpExprTree(std::ostream& os, ExprTree* tree)
+{
+  static Pro64IRInterface ir;
+  
+  Tree::PreOrderIterator nodes_iter(*tree);
+  for ( ; (bool)nodes_iter; ++nodes_iter) {
+    ExprTree::Node* node = 
+      dynamic_cast<ExprTree::Node*>((Tree::Node*)nodes_iter);
+    DumpExprNode(os, node, ir);
+  }
+
+  return 0;
+}
+
+static int
+DumpExprNode(std::ostream& os, ExprTree::Node* node, Pro64IRInterface& ir)
+{
+  std::string& attr = node->getAttr();
+  os << "{ " << attr;
+  
+  if (node->isSym()) {
+    const char* nm = ir.GetSymNameFromSymHandle(node->getSymHandle());
+    os << " sym: " << nm; 
+  } else if (node->isConst()) {
+    os << " const"; 
+  }
+  os << " }";
+}
+
