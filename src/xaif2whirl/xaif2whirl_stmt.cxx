@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.10 2004/04/13 16:40:59 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.11 2004/05/03 18:06:18 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -179,7 +179,14 @@ xlate_Assignment(const DOMElement* elem, XlationContext& ctxt)
   WN* rhs = xlate_AssignmentRHS(rhs_elem, ctxt);
   ctxt.DeleteContext();
   
-  WN* wn = CreateAssignment(lhs, rhs);
+  // Special case to handle PREGS
+  WN* wn = NULL;
+  if (WN_operator(lhs) == OPR_LDID && ST_class(WN_st(lhs)) == CLASS_PREG) {
+    wn = CreateAssignment(WN_st(lhs), rhs);
+    WN_Delete(lhs); // not recursive
+  } else {    
+    wn = CreateAssignment(lhs, rhs);
+  }
   return wn;
 }
 
