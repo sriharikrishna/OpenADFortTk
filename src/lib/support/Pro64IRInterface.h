@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.12 2004/01/29 23:16:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.13 2004/03/03 16:31:09 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -51,6 +51,14 @@
 #include <lib/support/WhirlGlobalStateUtils.h>
 
 //************************** Forward Declarations ***************************
+
+// These are useful to for casting OA handles into the Pro64 versions
+typedef PU_Info* Pro64ProcHandle;
+typedef WN*      Pro64StmtHandle;
+typedef WN*      Pro64ExprHandle;
+typedef WN*      Pro64LeafHandle;
+typedef INT32    Pro64StmtLabel;
+typedef ST*      Pro64SymHandle;
 
 //***************************************************************************
 
