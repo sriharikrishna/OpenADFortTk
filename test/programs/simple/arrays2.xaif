@@ -80,8 +80,8 @@
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
 
     <xaif:BasicBlock vertex_id="2" scope_id="2" annotation="{WHIRL_Id#5:6:8:16:22}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#5} [passive: OPR_PRAGMA]"/>
-      <xaif:Assignment statement_id="2">
+      <xaif:Marker statement_id="5" annotation="{WHIRL_Id#5} [passive: OPR_PRAGMA]"/>
+      <xaif:Assignment statement_id="6">
         <xaif:AssignmentLHS du_ud="1">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_7"/>
         </xaif:AssignmentLHS>
@@ -89,7 +89,7 @@
           <xaif:Constant vertex_id="1" type="real" value="5.0000000000e+00"/>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:Assignment statement_id="3">
+      <xaif:Assignment statement_id="8">
         <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="TR_6"/>
           <xaif:ArrayElementReference vertex_id="2">
@@ -107,7 +107,7 @@
           </xaif:VariableReference>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:Assignment statement_id="4">
+      <xaif:Assignment statement_id="16">
         <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="TR_6"/>
           <xaif:ArrayElementReference vertex_id="2">
@@ -121,7 +121,7 @@
           <xaif:Constant vertex_id="1" type="integer" value="9"/>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:Assignment statement_id="5">
+      <xaif:Assignment statement_id="22">
         <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="TR_6"/>
           <xaif:ArrayElementReference vertex_id="2">
@@ -172,8 +172,8 @@
     </xaif:ForLoop>
 
     <xaif:BasicBlock vertex_id="4" scope_id="2" annotation="{WHIRL_Id#40:46:60:74}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#40} [passive: OPR_ISTORE]"/>
-      <xaif:Assignment statement_id="2">
+      <xaif:Marker statement_id="40" annotation="{WHIRL_Id#40} [passive: OPR_ISTORE]"/>
+      <xaif:Assignment statement_id="46">
         <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="A_1"/>
           <xaif:ArrayElementReference vertex_id="2">
@@ -203,7 +203,7 @@
           </xaif:VariableReference>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:Assignment statement_id="3">
+      <xaif:Assignment statement_id="60">
         <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="B_2"/>
           <xaif:ArrayElementReference vertex_id="2">
@@ -233,7 +233,7 @@
           </xaif:VariableReference>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:Assignment statement_id="4">
+      <xaif:Assignment statement_id="74">
         <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="C_3"/>
           <xaif:ArrayElementReference vertex_id="2">
@@ -266,7 +266,7 @@
     </xaif:BasicBlock>
 
     <xaif:BasicBlock vertex_id="5" scope_id="2" annotation="{WHIRL_Id#88}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#88}{StmtLabel#1}"/>
+      <xaif:Marker statement_id="88" annotation="{WHIRL_Id#88}{StmtLabel#1}"/>
     </xaif:BasicBlock>
 
     <xaif:EndLoop vertex_id="14" annotation="{WHIRL_Id#}"/>
@@ -308,7 +308,7 @@
     </xaif:ForLoop>
 
     <xaif:BasicBlock vertex_id="9" scope_id="2" annotation="{WHIRL_Id#101:128:129:130:157}">
-      <xaif:Assignment statement_id="1">
+      <xaif:Assignment statement_id="101">
         <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="A_1"/>
           <xaif:ArrayElementReference vertex_id="2">
@@ -368,20 +368,20 @@
           <xaif:ExpressionEdge edge_id="7" source="5" target="1" position="2"/>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:Marker statement_id="2" annotation="{WHIRL_Id#128} [passive: OPR_COMMENT]"/>
-      <xaif:Marker statement_id="3" annotation="{WHIRL_Id#129} [passive: OPR_PRAGMA]"/>
-      <xaif:Marker statement_id="4" annotation="{WHIRL_Id#130} [WRITE***]"/>
-      <xaif:Marker statement_id="5" annotation="{WHIRL_Id#157} [passive: OPR_PRAGMA]"/>
+      <xaif:Marker statement_id="128" annotation="{WHIRL_Id#128} [passive: OPR_COMMENT]"/>
+      <xaif:Marker statement_id="129" annotation="{WHIRL_Id#129} [passive: OPR_PRAGMA]"/>
+      <xaif:Marker statement_id="130" annotation="{WHIRL_Id#130} [WRITE***]"/>
+      <xaif:Marker statement_id="157" annotation="{WHIRL_Id#157} [passive: OPR_PRAGMA]"/>
     </xaif:BasicBlock>
 
     <xaif:BasicBlock vertex_id="10" scope_id="2" annotation="{WHIRL_Id#158}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#158}{StmtLabel#3}"/>
+      <xaif:Marker statement_id="158" annotation="{WHIRL_Id#158}{StmtLabel#3}"/>
     </xaif:BasicBlock>
 
     <xaif:EndLoop vertex_id="15" annotation="{WHIRL_Id#}"/>
 
     <xaif:BasicBlock vertex_id="12" scope_id="2" annotation="{WHIRL_Id#159}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#159} [passive: OPR_RETURN]"/>
+      <xaif:Marker statement_id="159" annotation="{WHIRL_Id#159} [passive: OPR_RETURN]"/>
     </xaif:BasicBlock>
 
     <xaif:Exit vertex_id="13" annotation="{WHIRL_Id#}"/>
@@ -409,8 +409,8 @@
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
 
     <xaif:BasicBlock vertex_id="2" scope_id="3" annotation="{WHIRL_Id#5:6:8:19:30:41:79:80:81:98:99}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#5} [passive: OPR_PRAGMA]"/>
-      <xaif:Assignment statement_id="2">
+      <xaif:Marker statement_id="5" annotation="{WHIRL_Id#5} [passive: OPR_PRAGMA]"/>
+      <xaif:Assignment statement_id="6">
         <xaif:AssignmentLHS du_ud="1">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_4"/>
         </xaif:AssignmentLHS>
@@ -418,7 +418,7 @@
           <xaif:Constant vertex_id="1" type="real" value="5.0000000000e+00"/>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:Assignment statement_id="3">
+      <xaif:Assignment statement_id="8">
         <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="A_1"/>
 (          <xaif:Constant vertex_id="2" type="integer" value="1"/>
@@ -430,7 +430,7 @@
           </xaif:VariableReference>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:Assignment statement_id="4">
+      <xaif:Assignment statement_id="19">
         <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="B_2"/>
 (          <xaif:Constant vertex_id="2" type="integer" value="1"/>
@@ -440,7 +440,7 @@
           <xaif:Constant vertex_id="1" type="integer" value="9"/>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:Assignment statement_id="5">
+      <xaif:Assignment statement_id="30">
         <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="C_3"/>
 (          <xaif:Constant vertex_id="2" type="integer" value="1"/>
@@ -450,7 +450,7 @@
           <xaif:Constant vertex_id="1" type="integer" value="68"/>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:Assignment statement_id="6">
+      <xaif:Assignment statement_id="41">
         <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="A_1"/>
 (          <xaif:Constant vertex_id="2" type="integer" value="1"/>
@@ -484,11 +484,11 @@
           <xaif:ExpressionEdge edge_id="7" source="5" target="1" position="2"/>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:Marker statement_id="7" annotation="{WHIRL_Id#79} [passive: OPR_COMMENT]"/>
-      <xaif:Marker statement_id="8" annotation="{WHIRL_Id#80} [passive: OPR_PRAGMA]"/>
-      <xaif:Marker statement_id="9" annotation="{WHIRL_Id#81} [WRITE***]"/>
-      <xaif:Marker statement_id="10" annotation="{WHIRL_Id#98} [passive: OPR_PRAGMA]"/>
-      <xaif:Marker statement_id="11" annotation="{WHIRL_Id#99} [passive: OPR_RETURN]"/>
+      <xaif:Marker statement_id="79" annotation="{WHIRL_Id#79} [passive: OPR_COMMENT]"/>
+      <xaif:Marker statement_id="80" annotation="{WHIRL_Id#80} [passive: OPR_PRAGMA]"/>
+      <xaif:Marker statement_id="81" annotation="{WHIRL_Id#81} [WRITE***]"/>
+      <xaif:Marker statement_id="98" annotation="{WHIRL_Id#98} [passive: OPR_PRAGMA]"/>
+      <xaif:Marker statement_id="99" annotation="{WHIRL_Id#99} [passive: OPR_RETURN]"/>
     </xaif:BasicBlock>
 
     <xaif:Exit vertex_id="3" annotation="{WHIRL_Id#}"/>
@@ -505,8 +505,8 @@
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
 
     <xaif:BasicBlock vertex_id="2" scope_id="4" annotation="{WHIRL_Id#5:6:8:10:11:12:13}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#5} [passive: OPR_PRAGMA]"/>
-      <xaif:Assignment statement_id="2">
+      <xaif:Marker statement_id="5" annotation="{WHIRL_Id#5} [passive: OPR_PRAGMA]"/>
+      <xaif:Assignment statement_id="6">
         <xaif:AssignmentLHS du_ud="1">
           <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="X_3"/>
         </xaif:AssignmentLHS>
@@ -514,7 +514,7 @@
           <xaif:Constant vertex_id="1" type="real" value="2.00000000000000000000e+00"/>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:Assignment statement_id="3">
+      <xaif:Assignment statement_id="8">
         <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="Y_4"/>
         </xaif:AssignmentLHS>
@@ -522,10 +522,10 @@
           <xaif:Constant vertex_id="1" type="real" value="8.00000000000000000000e+00"/>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:SubroutineCall statement_id="4" scope_id="1" symbol_id="compute1__20"/>
-      <xaif:SubroutineCall statement_id="5" scope_id="1" symbol_id="compute2__28"/>
-      <xaif:SubroutineCall statement_id="6" scope_id="1" symbol_id="_END_32"/>
-      <xaif:Marker statement_id="7" annotation="{WHIRL_Id#13} [passive: OPR_RETURN]"/>
+      <xaif:SubroutineCall statement_id="10" scope_id="1" symbol_id="compute1__20"/>
+      <xaif:SubroutineCall statement_id="11" scope_id="1" symbol_id="compute2__28"/>
+      <xaif:SubroutineCall statement_id="12" scope_id="1" symbol_id="_END_32"/>
+      <xaif:Marker statement_id="13" annotation="{WHIRL_Id#13} [passive: OPR_RETURN]"/>
     </xaif:BasicBlock>
 
     <xaif:Exit vertex_id="4" annotation="{WHIRL_Id#}"/>
