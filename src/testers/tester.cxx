@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.18 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.19 2005/03/30 22:33:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -197,8 +197,8 @@ DumpExprTree(std::ostream& os, OA::OA_ptr<OA::ExprTree> tree)
   
   OA::Tree::PreOrderIterator nodes_iter(*tree);
   for ( ; nodes_iter.isValid(); ++nodes_iter) {
-      OA::OA_ptr<OA::ExprTree::Node> node 
-        = nodes_iter.current().convert<OA::ExprTree::Node>();
+    OA::OA_ptr<OA::Tree::Node> ntmp = nodes_iter.current();
+    OA::OA_ptr<OA::ExprTree::Node> node = ntmp.convert<OA::ExprTree::Node>();
     DumpExprNode(os, node, ir);
   }
   

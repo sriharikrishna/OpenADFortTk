@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.49 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.50 2005/03/30 22:33:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -184,8 +184,10 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   for (DGraphNodeVec::iterator nodeIt = nodes->begin();
        nodeIt != nodes->end(); ++nodeIt) {
     ctxt.CreateContext();
+    OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = *nodeIt;
     OA::OA_ptr<CallGraphStandard::Node> n = 
-      (*nodeIt).convert<CallGraphStandard::Node>();
+      ntmp.convert<CallGraphStandard::Node>();
+
     TranslatePU(xos, n, n->getId(), ctxt);
     ctxt.DeleteContext();
   }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.35 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.36 2005/03/30 22:33:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -172,7 +172,8 @@ xaif2whirl::TranslateExpression(const DOMElement* elem, XlationContext& ctxt)
   
   // Slurp expression into a graph (DAG) and translate it
   OA::OA_ptr<OA::DGraph::DGraphStandard> g = CreateExpressionGraph(elem);
-  OA::OA_ptr<MyDGNode> n = g->getRoot().convert<MyDGNode>();
+  OA::OA_ptr<OA::BaseGraph::Node> root = g->getRoot();
+  OA::OA_ptr<MyDGNode> n = root.convert<MyDGNode>();
   WN* wn = xlate_Expression(g, n, ctxt);
 
   return wn;
@@ -268,7 +269,8 @@ xaif2whirl::TranslateVarRef(const DOMElement* elem, XlationContext& ctxt)
   ctxt.CreateContext(XlationContext::VARREF);
   OA::OA_ptr<OA::DGraph::DGraphStandard> g = 
     CreateExpressionGraph(elem, true /* varRef */);
-  OA::OA_ptr<MyDGNode> n = g->getRoot().convert<MyDGNode>();
+  OA::OA_ptr<OA::BaseGraph::Node> root = g->getRoot();
+  OA::OA_ptr<MyDGNode> n = root.convert<MyDGNode>();
   WN* wn = xlate_VarRef(g, n, ctxt);
   ctxt.DeleteContext();
   
@@ -485,14 +487,16 @@ xlate_ExprOpUsingIntrinsicTable(IntrinsicXlationTable::XAIFOpr xopr,
   OA::OA_ptr<Interface::IncomingEdgesIterator> itPtr 
       = n->getIncomingEdgesIterator();
   for (int i = 0; itPtr->isValid(); ++(*itPtr), ++i) {
-    opnd_edge[i] = itPtr->current().convert<MyDGEdge>();
+    OA::OA_ptr<OA::DGraph::Interface::Edge> etmp = itPtr->current();
+    opnd_edge[i] = etmp.convert<MyDGEdge>();
   }
   std::sort(opnd_edge.begin(), opnd_edge.end(), sort_Position()); // ascending
   
   // 2. Translate each operand into a WHIRL expression tree
   vector<WN*> opnd_wn(info->numop, NULL); 
   for (unsigned i = 0; i < info->numop; ++i) {
-    OA::OA_ptr<MyDGNode> opnd = opnd_edge[i]->source().convert<MyDGNode>();
+    OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = opnd_edge[i]->source();
+    OA::OA_ptr<MyDGNode> opnd = ntmp.convert<MyDGNode>();
     opnd_wn[i] = xlate_Expression(g, opnd, ctxt);
   }       
   
@@ -914,8 +918,7 @@ CreateExpressionGraph(const DOMElement* elem, bool varRef)
   OA::OA_ptr<DGraphStandard::Node> root; root = NULL;
   DGraphStandard::NodesIterator nIt(*g);
   for ( ; nIt.isValid(); ++nIt) {
-    OA::OA_ptr<DGraphStandard::Node> node = 
-      nIt.current().convert<DGraphStandard::Node>();
+    OA::OA_ptr<DGraphStandard::Node> node = nIt.current();
     if (node->num_outgoing() == 0) {
       root = node;
       break;

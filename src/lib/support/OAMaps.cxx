@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.cxx,v 1.2 2005/03/19 22:55:25 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.cxx,v 1.3 2005/03/30 22:33:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -529,8 +529,9 @@ MassageOACFGIntoXAIFCFG(OA::OA_ptr<OA::CFG::CFGStandard> cfg,
   // c. Split blocks
   for (MySplitList::iterator it = toSplit.begin(); it != toSplit.end(); ++it) {
     CFGNodeList::iterator wnodeIt = (*it).first;
+    OA::OA_ptr<OA::CFG::Interface::Node> ntmp = *wnodeIt;
     OA::OA_ptr<OA::CFG::CFGStandard::Node> n 
-      = (*wnodeIt).convert<OA::CFG::CFGStandard::Node>();
+      = ntmp.convert<OA::CFG::CFGStandard::Node>();
     WN* startWN = (*it).second;
     
     OA::StmtHandle stmt((OA::irhandle_t)startWN);
@@ -655,8 +656,9 @@ MassageOACFGIntoXAIFCFG(OA::OA_ptr<OA::CFG::CFGStandard> cfg,
     
     for (CFGNodeList::iterator wnodeIt = workList.begin(); 
          wnodeIt != workList.end(); ++wnodeIt) {
+      OA::OA_ptr<OA::CFG::Interface::Node> ntmp = *wnodeIt;
       OA::OA_ptr<OA::CFG::CFGStandard::Node> n 
-	= (*wnodeIt).convert<OA::CFG::CFGStandard::Node>();
+	= ntmp.convert<OA::CFG::CFGStandard::Node>();
       
       // 1. Find split-point for this node.  If there is none, remove it
       // from 'workList'
@@ -701,7 +703,9 @@ MassageOACFGIntoXAIFCFG(OA::OA_ptr<OA::CFG::CFGStandard> cfg,
     for (MySplitList::iterator it = toSplit.begin(); 
 	 it != toSplit.end(); ++it) {
       CFGNodeList::iterator wnodeIt = (*it).first;
-      OA::OA_ptr<OA::CFG::CFGStandard::Node> n = (*wnodeIt).convert<OA::CFG::CFGStandard::Node>();
+      OA::OA_ptr<OA::CFG::Interface::Node> ntmp = *wnodeIt;
+      OA::OA_ptr<OA::CFG::CFGStandard::Node> n = 
+	ntmp.convert<OA::CFG::CFGStandard::Node>();
       WN* startWN = (*it).second;
       
       OA::StmtHandle stmt((OA::irhandle_t)startWN);
