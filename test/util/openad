@@ -108,37 +108,43 @@ sub undefEnvVarErr
   my ($W2X, $X2W, $NORM, $PP) = (undef, undef, undef, undef);
   my ($XB_BB) = (undef);
   
-  my ($WHIRL2XAIF, $WHIRL2XAIF_PLATFORM, $WHIRL2XAIF_OPEN64) 
-      = (undef, undef, undef);
+  my ($WHIRL2XAIF, $PLATFORM, $OPEN64) = (undef, undef, undef);
   my $XAIFBOOSTERROOT = undef;
   my $XAIFSCHEMAROOT = undef;
   
   sub ConfigPipelineUtils 
   {
     $WHIRL2XAIF = $ENV{WHIRL2XAIF};
-    $WHIRL2XAIF_OPEN64 = $ENV{WHIRL2XAIF_OPEN64};
-    $WHIRL2XAIF_PLATFORM = $ENV{WHIRL2XAIF_PLATFORM};
-    $XAIFBOOSTERROOT = $ENV{XAIFBOOSTERROOT};
-    $XAIFSCHEMAROOT = $ENV{XAIFSCHEMAROOT};
-    
     if (!defined($WHIRL2XAIF)) { undefEnvVarErr('WHIRL2XAIF'); }
-    if (!defined($WHIRL2XAIF_OPEN64)) { undefEnvVarErr('WHIRL2XAIF_OPEN64'); }
-    if (!defined($WHIRL2XAIF_PLATFORM)) { undefEnvVarErr('WHIRL2XAIF_PLATFORM'); }
+
+    $PLATFORM = $ENV{WHIRL2XAIF_PLATFORM};
+    if (!defined($PLATFORM)) { undefEnvVarErr('WHIRL2XAIF_PLATFORM'); }
+
+    $OPEN64 = $ENV{WHIRL2XAIF_OPEN64};
+    if (!defined($OPEN64)) { undefEnvVarErr('WHIRL2XAIF_OPEN64'); }
+
+    $XAIFBOOSTERROOT = $ENV{XAIFBOOSTERROOT};
     if (!defined($XAIFBOOSTERROOT)) { undefEnvVarErr('XAIFBOOSTERROOT'); }
+
+    $XAIFSCHEMAROOT = $ENV{XAIFSCHEMAROOT};
     if (!defined($XAIFSCHEMAROOT)) { undefEnvVarErr('XAIFSCHEMAROOT'); }
     
     my $XB_alg = "${XAIFBOOSTERROOT}/xaifBooster/algorithms";
-    my $XAIF_ii = "${XAIFSCHEMAROOT}/schema/examples/inlinable_intrinsics.xaif";
+    my $ii_xaif = "${XAIFSCHEMAROOT}/schema/examples/inlinable_intrinsics.xaif";
+    if (${PLATFORM} eq "i686-Cygwin") {
+      # convert to Windows path for XercesC
+      $ii_xaif = "\`cygpath -w ${ii_xaif}\`";
+    } 
     
-    $MFEF90  = "${WHIRL2XAIF_OPEN64}/crayf90/sgi/mfef90";
-    $WHIRL2F = "${WHIRL2XAIF_OPEN64}/whirl2f/whirl2f";
+    $MFEF90  = "${OPEN64}/crayf90/sgi/mfef90";
+    $WHIRL2F = "${OPEN64}/whirl2f/whirl2f";
     
-    $W2X  = "${WHIRL2XAIF}/obj/${WHIRL2XAIF_PLATFORM}/obj/whirl2xaif";
-    $X2W  = "${WHIRL2XAIF}/obj/${WHIRL2XAIF_PLATFORM}/obj/xaif2whirl";
+    $W2X  = "${WHIRL2XAIF}/obj/${PLATFORM}/obj/whirl2xaif";
+    $X2W  = "${WHIRL2XAIF}/obj/${PLATFORM}/obj/xaif2whirl";
     $NORM = "${WHIRL2XAIF}/test/util/normalize";
     $PP   = "perl ${WHIRL2XAIF}/postprocess/pp.pl";
     
-    $XB_BB = "${XB_alg}/BasicBlockPreaccumulation/test/t -c ${XAIF_ii}";
+    $XB_BB = "${XB_alg}/BasicBlockPreaccumulation/test/t -c ${ii_xaif}";
     
     ConfigSchema();
 
@@ -157,7 +163,7 @@ sub undefEnvVarErr
     @schemafiles = glob("${XAIFSCHEMAROOT}/schema/xaif*.xsd");
     for my $path (@schemafiles) {
       my ($vol,$dir,$file) = File::Spec->splitpath($path);
-      if (${WHIRL2XAIF_PLATFORM} eq "i686-Cygwin") {
+      if (${PLATFORM} eq "i686-Cygwin") {
 	link($path, "./$file") or die "Error: could not link $path";
       } else {
 	symlink($path, "./$file") or die "Error: could not link $path"
