@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.29 2004/06/28 18:52:31 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.30 2004/06/30 23:45:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -1131,14 +1131,18 @@ GetWNIntrinsic(const char* intrnNm, vector<WN*>& opands, TYPE_ID* dtype)
   // intrn_info.cxx, wutil.cxx
   INTRINSIC intrn = INTRINSIC_INVALID;
   if (strcmp(intrnNm, "EXPEXPR") == 0) {
-    intrn = INTRN_F8EXPEXPR; // FIXME
+    intrn = INTRN_F8EXPEXPR;
     if (dtype) { *dtype = MTYPE_F8; }
   }
+  else if (strcmp(intrnNm, "CEQEXPR") == 0) {
+    intrn = INTRN_CEQEXPR;
+    if (dtype) { *dtype = MTYPE_I4; }
+  }
   else if (strcmp(intrnNm, "AMOD") == 0) {
-    intrn = INTRN_F4MOD; // FIXME
+    intrn = INTRN_F4MOD;
     if (dtype) { *dtype = MTYPE_F4; }
   }
-
+  
   ASSERT_FATAL(intrn != INTRINSIC_INVALID, 
 	       (DIAG_A_STRING, "Unknown Intrinsic."));
   return intrn;

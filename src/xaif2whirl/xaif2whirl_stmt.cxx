@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.14 2004/06/28 18:52:31 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.15 2004/06/30 23:45:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -535,9 +535,12 @@ PatchWN_IO_ITEM_list(WN* wn, XlationContext& ctxt)
     PatchWNExpr(wn, 0 /* kid */, ctxt);
     break;
     
-  case IOL_IMPLIED_DO:
+  case IOL_IMPLIED_DO: // patch
   case IOL_IMPLIED_DO_1TRIP:
-    assert(false); // FIXME
+    PatchWNExpr(wn, 2 /* kid */, ctxt);
+    for (int kid = 4; kid < WN_kid_count(wn); ++kid) {
+      PatchWN_IO_ITEM_list(WN_kid(wn, kid), ctxt);
+    }
     break;
     
   case IOL_LOGICAL: // skip
