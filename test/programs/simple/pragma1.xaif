@@ -123,7 +123,7 @@
 
     <xaif:ForLoop vertex_id="3" annotation="{WHIRL_Id#43}">
       <xaif:Initialization>
-        <xaif:AssignmentLHS du_ud="10">
+        <xaif:AssignmentLHS du_ud="11">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -132,7 +132,7 @@
       </xaif:Initialization>
       <xaif:Condition>
         <xaif:BooleanOperation vertex_id="1" name="less_or_equal"/>
-        <xaif:VariableReference vertex_id="2" du_ud="9">
+        <xaif:VariableReference vertex_id="2" du_ud="10">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_3"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="3" type="integer" value="10"/>
@@ -140,12 +140,12 @@
         <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
       </xaif:Condition>
       <xaif:Update>
-        <xaif:AssignmentLHS du_ud="17">
+        <xaif:AssignmentLHS du_ud="18">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="2" du_ud="16">
+          <xaif:VariableReference vertex_id="2" du_ud="17">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_3"/>
           </xaif:VariableReference>
           <xaif:Constant vertex_id="3" type="integer" value="1"/>
@@ -161,7 +161,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="A_1"/>
           <xaif:ArrayElementReference vertex_id="2">
             <xaif:Index>
-              <xaif:VariableReference vertex_id="1" du_ud="13">
+              <xaif:VariableReference vertex_id="1" du_ud="14">
                 <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_3"/>
               </xaif:VariableReference>
             </xaif:Index>
@@ -174,7 +174,7 @@
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="A_1"/>
             <xaif:ArrayElementReference vertex_id="2">
               <xaif:Index>
-                <xaif:VariableReference vertex_id="1" du_ud="13">
+                <xaif:VariableReference vertex_id="1" du_ud="14">
                   <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_3"/>
                 </xaif:VariableReference>
               </xaif:Index>
@@ -185,7 +185,7 @@
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="B_2"/>
             <xaif:ArrayElementReference vertex_id="2">
               <xaif:Index>
-                <xaif:VariableReference vertex_id="1" du_ud="13">
+                <xaif:VariableReference vertex_id="1" du_ud="14">
                   <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_3"/>
                 </xaif:VariableReference>
               </xaif:Index>

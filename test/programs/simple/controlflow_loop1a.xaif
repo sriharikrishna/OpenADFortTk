@@ -75,7 +75,7 @@
 
     <xaif:ForLoop vertex_id="3" annotation="{WHIRL_Id#6}">
       <xaif:Initialization>
-        <xaif:AssignmentLHS du_ud="3">
+        <xaif:AssignmentLHS du_ud="4">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_1"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -84,7 +84,7 @@
       </xaif:Initialization>
       <xaif:Condition>
         <xaif:BooleanOperation vertex_id="1" name="less_or_equal"/>
-        <xaif:VariableReference vertex_id="2" du_ud="2">
+        <xaif:VariableReference vertex_id="2" du_ud="3">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_1"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="3" type="integer" value="10"/>
@@ -92,12 +92,12 @@
         <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
       </xaif:Condition>
       <xaif:Update>
-        <xaif:AssignmentLHS du_ud="8">
+        <xaif:AssignmentLHS du_ud="9">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_1"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="2" du_ud="7">
+          <xaif:VariableReference vertex_id="2" du_ud="8">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_1"/>
           </xaif:VariableReference>
           <xaif:Constant vertex_id="3" type="integer" value="2"/>
@@ -109,12 +109,12 @@
 
     <xaif:BasicBlock vertex_id="4" scope_id="2" annotation="{WHIRL_Id#18}">
       <xaif:Assignment statement_id="1">
-        <xaif:AssignmentLHS du_ud="6">
+        <xaif:AssignmentLHS du_ud="7">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="Y_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="2" du_ud="5">
+          <xaif:VariableReference vertex_id="2" du_ud="6">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_1"/>
           </xaif:VariableReference>
           <xaif:Constant vertex_id="3" type="integer" value="-2"/>

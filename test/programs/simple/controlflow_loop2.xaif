@@ -93,13 +93,13 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="3">
-        <xaif:AssignmentLHS du_ud="5">
+        <xaif:AssignmentLHS du_ud="4">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="Y_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
           <xaif:Intrinsic vertex_id="2" name="mul_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="3" du_ud="4">
+          <xaif:VariableReference vertex_id="3" du_ud="2">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="Y_2"/>
           </xaif:VariableReference>
           <xaif:Constant vertex_id="4" type="real" value="7.88999974727630615234e-01"/>

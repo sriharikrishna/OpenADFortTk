@@ -204,7 +204,7 @@
 
     <xaif:ForLoop vertex_id="4" annotation="{WHIRL_Id#42}">
       <xaif:Initialization>
-        <xaif:AssignmentLHS du_ud="15">
+        <xaif:AssignmentLHS du_ud="17">
           <xaif:SymbolReference vertex_id="1" scope_id="1" symbol_id=".preg_I4_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -213,22 +213,22 @@
       </xaif:Initialization>
       <xaif:Condition>
         <xaif:BooleanOperation vertex_id="1" name="greater_than"/>
-        <xaif:VariableReference vertex_id="2" du_ud="14">
+        <xaif:VariableReference vertex_id="2" du_ud="15">
           <xaif:SymbolReference vertex_id="3" scope_id="1" symbol_id=".preg_I4_2"/>
         </xaif:VariableReference>
-        <xaif:VariableReference vertex_id="4" du_ud="14">
+        <xaif:VariableReference vertex_id="4" du_ud="16">
           <xaif:SymbolReference vertex_id="5" scope_id="1" symbol_id=".preg_I4_2"/>
         </xaif:VariableReference>
         <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
         <xaif:ExpressionEdge edge_id="2" source="4" target="1" position="2"/>
       </xaif:Condition>
       <xaif:Update>
-        <xaif:AssignmentLHS du_ud="29">
+        <xaif:AssignmentLHS du_ud="31">
           <xaif:SymbolReference vertex_id="1" scope_id="1" symbol_id=".preg_I4_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="2" du_ud="28">
+          <xaif:VariableReference vertex_id="2" du_ud="30">
             <xaif:SymbolReference vertex_id="3" scope_id="1" symbol_id=".preg_I4_2"/>
           </xaif:VariableReference>
           <xaif:Constant vertex_id="4" type="integer" value="1"/>
@@ -240,12 +240,12 @@
 
     <xaif:BasicBlock vertex_id="5" scope_id="3" annotation="{WHIRL_Id#54:58}">
       <xaif:Assignment statement_id="1">
-        <xaif:AssignmentLHS du_ud="18">
+        <xaif:AssignmentLHS du_ud="20">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="ITER_3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="2" du_ud="17">
+          <xaif:VariableReference vertex_id="2" du_ud="19">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="ITER_3"/>
           </xaif:VariableReference>
           <xaif:Constant vertex_id="3" type="integer" value="1"/>
@@ -254,15 +254,15 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="2">
-        <xaif:AssignmentLHS du_ud="21">
+        <xaif:AssignmentLHS du_ud="23">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_7"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="2" du_ud="19">
+          <xaif:VariableReference vertex_id="2" du_ud="21">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="I_2"/>
           </xaif:VariableReference>
-          <xaif:VariableReference vertex_id="3" du_ud="20">
+          <xaif:VariableReference vertex_id="3" du_ud="22">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_7"/>
           </xaif:VariableReference>
           <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
@@ -275,14 +275,14 @@
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="and" type="***"/>
         <xaif:BooleanOperation vertex_id="2" name="greater_than"/>
-        <xaif:VariableReference vertex_id="3" du_ud="21">
+        <xaif:VariableReference vertex_id="3" du_ud="23">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_7"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="4" type="real" value="7.0000000000e+00"/>
         <xaif:ExpressionEdge edge_id="1" source="3" target="2" position="1"/>
         <xaif:ExpressionEdge edge_id="2" source="4" target="2" position="2"/>
         <xaif:BooleanOperation vertex_id="5" name="less_than"/>
-        <xaif:VariableReference vertex_id="6" du_ud="21">
+        <xaif:VariableReference vertex_id="6" du_ud="23">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_7"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="7" type="real" value="8.0000000000e+00"/>
@@ -296,15 +296,15 @@
     <xaif:BasicBlock vertex_id="6" scope_id="3" annotation="{WHIRL_Id#82:83}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#82}{StmtLabel#5}"/>
       <xaif:Assignment statement_id="2">
-        <xaif:AssignmentLHS du_ud="24">
+        <xaif:AssignmentLHS du_ud="26">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="I_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="2" du_ud="22">
+          <xaif:VariableReference vertex_id="2" du_ud="24">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="I_2"/>
           </xaif:VariableReference>
-          <xaif:VariableReference vertex_id="3" du_ud="23">
+          <xaif:VariableReference vertex_id="3" du_ud="25">
             <xaif:SymbolReference vertex_id="4" scope_id="1" symbol_id=".preg_I4_2"/>
           </xaif:VariableReference>
           <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
@@ -329,14 +329,14 @@
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="and" type="***"/>
         <xaif:BooleanOperation vertex_id="2" name="greater_than"/>
-        <xaif:VariableReference vertex_id="3" du_ud="25">
+        <xaif:VariableReference vertex_id="3" du_ud="27">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_7"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="4" type="real" value="3.0000000000e+00"/>
         <xaif:ExpressionEdge edge_id="1" source="3" target="2" position="1"/>
         <xaif:ExpressionEdge edge_id="2" source="4" target="2" position="2"/>
         <xaif:BooleanOperation vertex_id="5" name="less_than"/>
-        <xaif:VariableReference vertex_id="6" du_ud="25">
+        <xaif:VariableReference vertex_id="6" du_ud="27">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_7"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="7" type="real" value="4.0000000000e+00"/>

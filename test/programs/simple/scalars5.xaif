@@ -167,12 +167,12 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="8">
-        <xaif:AssignmentLHS du_ud="10">
+        <xaif:AssignmentLHS du_ud="9">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="XB_AUX_3_10"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="2" du_ud="9">
+          <xaif:VariableReference vertex_id="2" du_ud="2">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_1"/>
           </xaif:VariableReference>
           <xaif:Constant vertex_id="3" type="real" value="1.00000000000000000000e+00"/>
@@ -181,7 +181,7 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="9">
-        <xaif:AssignmentLHS du_ud="11">
+        <xaif:AssignmentLHS du_ud="10">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="XB_AUX_4_11"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -190,7 +190,7 @@
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="T1_6"/>
           </xaif:VariableReference>
           <xaif:Intrinsic vertex_id="3" name="mul_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="4" du_ud="10">
+          <xaif:VariableReference vertex_id="4" du_ud="9">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="XB_AUX_3_10"/>
           </xaif:VariableReference>
           <xaif:Intrinsic vertex_id="5" name="mul_scal_scal" type="***"/>
@@ -209,7 +209,7 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="10">
-        <xaif:AssignmentLHS du_ud="12">
+        <xaif:AssignmentLHS du_ud="11">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="XB_AUX_5_12"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -217,7 +217,7 @@
           <xaif:VariableReference vertex_id="2" du_ud="3">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="XB_AUX_1_8"/>
           </xaif:VariableReference>
-          <xaif:VariableReference vertex_id="3" du_ud="10">
+          <xaif:VariableReference vertex_id="3" du_ud="9">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="XB_AUX_3_10"/>
           </xaif:VariableReference>
           <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
@@ -225,25 +225,25 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="11">
-        <xaif:AssignmentLHS du_ud="15">
+        <xaif:AssignmentLHS du_ud="14">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="D_Y_4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
           <xaif:Intrinsic vertex_id="2" name="mul_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="3" du_ud="13">
+          <xaif:VariableReference vertex_id="3" du_ud="12">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="D_X_2"/>
           </xaif:VariableReference>
-          <xaif:VariableReference vertex_id="4" du_ud="11">
+          <xaif:VariableReference vertex_id="4" du_ud="10">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="XB_AUX_4_11"/>
           </xaif:VariableReference>
           <xaif:ExpressionEdge edge_id="1" source="3" target="2" position="1"/>
           <xaif:ExpressionEdge edge_id="2" source="4" target="2" position="2"/>
           <xaif:Intrinsic vertex_id="5" name="mul_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="6" du_ud="14">
+          <xaif:VariableReference vertex_id="6" du_ud="13">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="D_Y_4"/>
           </xaif:VariableReference>
-          <xaif:VariableReference vertex_id="7" du_ud="12">
+          <xaif:VariableReference vertex_id="7" du_ud="11">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="XB_AUX_5_12"/>
           </xaif:VariableReference>
           <xaif:ExpressionEdge edge_id="3" source="6" target="5" position="1"/>
