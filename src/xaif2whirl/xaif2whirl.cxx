@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.27 2004/03/23 18:11:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.28 2004/03/24 13:33:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -61,6 +61,8 @@ using namespace xaif2whirl;
 
 IntrinsicXlationTable xaif2whirl::IntrinsicTable(IntrinsicXlationTable::X2W);
 
+//*************************** Forward Declarations ***************************
+
 static void
 TranslateCallGraph(PU_Info* pu_forest, const DOMDocument* doc, 
 		   XlationContext& ctxt);
@@ -78,7 +80,6 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt);
 static void
 TranslateBB(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt);
 
-//*************************** Forward Declarations ***************************
 
 static void
 xlate_BasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt);
@@ -86,6 +87,10 @@ xlate_BasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt);
 static void
 xlate_BBCondition(WN* wn_pu, const DOMElement* bbElem, XlationContext& ctxt);
 
+static DGraph* 
+CreateCFGraph(const DOMElement* elem);
+
+//*************************** Forward Declarations ***************************
 
 static bool
 FindNextStmtInterval(const DOMElement* bbElem, IdList<WNId>* bbIdList, 
@@ -203,15 +208,13 @@ TranslateCallGraph(PU_Info* pu_forest, const DOMDocument* doc,
 }
 
 
-// TranslateScopeHierarchy: 
+// TranslateScopeHierarchy: Enter symbols for all Scopes in the
+// ScopeHierarchy
 static XAIFSymToSymbolMap*
 TranslateScopeHierarchy(const DOMDocument* doc, XlationContext& ctxt)
 {
   XAIFSymToSymbolMap* symMap = new XAIFSymToSymbolMap;
 
-  // -------------------------------------------------------
-  // Enter symbols for all Scopes in the ScopeHierarchy
-  // -------------------------------------------------------
   DOMDocument* d = const_cast<DOMDocument*>(doc); // Xerces can't take a const!
   DOMNodeIterator* it = 
     d->createNodeIterator((DOMNode*)doc, DOMNodeFilter::SHOW_ALL, 
@@ -226,13 +229,13 @@ TranslateScopeHierarchy(const DOMDocument* doc, XlationContext& ctxt)
 }
 
 
-// TranslateCFG: 
+// TranslateCFG: Translate XAIF CFG to WHIRL
 static void
 TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
 	     XlationContext& ctxt)
 {
   // -------------------------------------------------------
-  // Translate XAIF CFG to WHIRL PU.
+  // Find original PU and set globals
   // -------------------------------------------------------
   PUId puid = GetPUId(cfgElem);
   PU_Info* pu = ctxt.FindPU(puid);
@@ -243,11 +246,14 @@ TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
   ST* st = sym->GetST();
   cout << XercesStrX(cfgElem->getNodeName()) << ": " << ST_name(st) << endl;
 #endif  
-
-  // If we found the PU, translate
-  PU_SetGlobalState(pu);
   
+  // Set globals
   WN *wn_pu = PU_Info_tree_ptr(pu);
+  PU_SetGlobalState(pu);
+
+  // -------------------------------------------------------
+  // Translate, modifying 'wn_pu'
+  // -------------------------------------------------------
   TranslateCFG(wn_pu, cfgElem, ctxt);
   
 #if 0
@@ -263,26 +269,118 @@ TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
 static void
 TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
 {
+  // 1. Create auxiliary data structures
   pair<WNToWNIdMap*, WNIdToWNMap*> wnmaps = CreateWhirlIdMaps(wn_pu);
   ctxt.SetWNToIdMap(wnmaps.first);
   ctxt.SetIdToWNMap(wnmaps.second);
   
+  DGraph* cfg = CreateCFGraph(cfgElem);
+  
   // -------------------------------------------------------
   // Translate each BasicBlock in the CFG
   // -------------------------------------------------------
+  // FIXME: call xlate_CFG
+
   DOMDocument* doc = cfgElem->getOwnerDocument();
   DOMNodeIterator* it = 
     doc->createNodeIterator((DOMNode*)cfgElem, DOMNodeFilter::SHOW_ALL, 
-			    new XAIF_BBElemFilter(), true);
+			    new XAIF_BBElemFilter(false), true);
   for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
     DOMElement* elem = dynamic_cast<DOMElement*>(node);
     
     TranslateBB(wn_pu, elem, ctxt);
   }
   it->release();
-
+  
+  // 3. Cleanup
   delete wnmaps.first;
   delete wnmaps.second;
+  delete cfg;
+}
+
+
+// xlate_CFG: Given the original WHIRL tree, a CFG structure
+// representing the XAIF CFG, and a CFG node pointing to a CFG
+// subgraph, translate the CFG into a block of WHIRL statements.
+// During translation, non-numerical statements that were represented
+// by xaif:Marker will be spliced out of the original WHIRL tree and
+// placed in the return block.  It is expected that the *caller* will
+// splice the returned block containing new (and original statements)
+// back into the WHIRL tree.
+//
+// Note: This routine will not translate any blocks that are
+// unreachable (i.e. dead code).
+
+// FIXME: An implicit label number has been created for each basic block:
+// the node id.  We do not need to worry about original label/gotos
+// numbers because we do not keep them.  [FIXME - not true for DGraph]
+static WN*
+xlate_CFG(WN* wn_pu, DGraph* cfg, MyDGNode* n, XlationContext& ctxt)
+{
+  WN* blkWN = WN_CreateBlock();
+
+  // FIXME: need some context info to know whether to generate a label or goto
+
+  DOMElement* elem = n->GetElem();
+  const XMLCh* nameX = elem->getNodeName();
+  XercesStrX name = XercesStrX(nameX);
+  
+  bool continueIteration = true;
+  MyDGNode* curNode = n;
+  while (curNode && continueIteration) {
+
+    if (XMLString::equals(nameX, XAIFStrings.elem_BBEntry_x()) ||
+	XMLString::equals(nameX, XAIFStrings.elem_BBExit_x()) ||
+	XMLString::equals(nameX, XAIFStrings.elem_BB_x())) {
+      // translate the basic block
+      // possibly add a label at the front
+      // possible add a goto at the end to successor node
+      //   - should only be one successor since not a branch
+      // insert block at end of blkWN
+      // curNode = successor blk to curNode.
+    }      
+    else if (XMLString::equals(nameX, XAIFStrings.elem_BBBranch_x())) {
+      // structured CF and recursion implicitly creates nests
+      // 
+      // if a switch, set a context flag to indicate generation of labels
+      // for switch must also know first block after switch ***
+      // create array to hold outgoing edges, sorted by condition
+      // create array to hold WHIRL for translated children
+      // for each target node of an outgoing edge...
+      //   childWN[i] = xlate_CFG(g, childNode, ctxt); *** stop at right EndBr
+      // translate condition expression: TranslateExpression(...)
+      // create if/switch, set expression and children 
+      //   obtain labels from node id
+      // insert WN at end of 'blkWN'
+      // curNode = successor blk to EndBranch ***
+    
+      // *** switches will not have an EndBranch
+    }
+    else if (XMLString::equals(nameX, XAIFStrings.elem_BBEndBranch_x())) {
+      // End translation of this sub-graph of the CFG
+      continueIteration = false;
+    }
+    else if (XMLString::equals(nameX, XAIFStrings.elem_BBForLoop_x()) ||
+	     XMLString::equals(nameX, XAIFStrings.elem_BBPreLoop_x()) ||
+	     XMLString::equals(nameX, XAIFStrings.elem_BBPostLoop_x())) {
+      // structured CF and recursion implicitly creates nests
+      // 
+      // childWN = xlate_CFG(g, trueNode, ctxt)
+      // translate condition, update, initialization
+      // create loop WN
+      // insert WN at end of 'blkWN'
+      // curNode = fallthru node 
+    }      
+    else if (XMLString::equals(nameX, XAIFStrings.elem_BBEndLoop_x())) {
+      // End translation of this sub-graph of the CFG
+      continueIteration = false;
+    }
+    else {
+      ASSERT_FATAL(blkWN, (DIAG_A_STRING, "Programming error."));
+    }
+  }
+  
+  return blkWN;
 }
 
 
@@ -292,13 +390,16 @@ TranslateBB(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
 {
   if (XAIF_BBElemFilter::IsBB(bbElem)) {
     xlate_BasicBlock(wn_pu, bbElem, ctxt);
-  } else if (XAIF_BBElemFilter::IsBBBranch(bbElem)
-	     || XAIF_BBElemFilter::IsBBPreLoop(bbElem)
-	     || XAIF_BBElemFilter::IsBBPostLoop(bbElem)) {
+  } 
+  else if (XAIF_BBElemFilter::IsBBBranch(bbElem)
+	   || XAIF_BBElemFilter::IsBBPreLoop(bbElem)
+	   || XAIF_BBElemFilter::IsBBPostLoop(bbElem)) {
     xlate_BBCondition(wn_pu, bbElem, ctxt);
-  } else if (XAIF_BBElemFilter::IsBBForLoop(bbElem)) {
+  } 
+  else if (XAIF_BBElemFilter::IsBBForLoop(bbElem)) {
     // FIXME: what to do with ForLoops?
-  } else {
+  } 
+  else {
     // skip anything else for now
   }
 }
@@ -424,6 +525,76 @@ xlate_BBCondition(WN* wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
 
 //****************************************************************************
 
+// CreateCFGraph: Given an XAIF control flow graph, create and
+// return a CFG where CFG nodes point to XAIF CVG vertices.
+static DGraph* 
+CreateCFGraph(const DOMElement* cfgElem)
+{
+  DGraph* g = new DGraph;
+  VertexIdToDGraphNodeMap m;
+  
+  // -------------------------------------------------------
+  // Create the graph
+  // -------------------------------------------------------
+  DOMDocument* doc = cfgElem->getOwnerDocument();
+  DOMNodeIterator* it = 
+    doc->createNodeIterator((DOMNode*)cfgElem, DOMNodeFilter::SHOW_ALL, 
+			    new XAIF_BBElemFilter(), true);
+  for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
+    DOMElement* elem = dynamic_cast<DOMElement*>(node);
+
+    if (XAIF_BBElemFilter::IsEdge(elem)) {
+      // Add an edge to the graph. 
+      
+      // Find src and target (sink) nodes. 
+      const XMLCh* srcX = elem->getAttribute(XAIFStrings.attr_source_x());
+      const XMLCh* targX = elem->getAttribute(XAIFStrings.attr_target_x());
+      XercesStrX src = XercesStrX(srcX);
+      XercesStrX targ = XercesStrX(targX);
+
+      MyDGNode* gn1 = NULL, *gn2 = NULL; // src and targ
+      
+      VertexIdToDGraphNodeMap::iterator it = m.find(std::string(src.c_str()));
+      if (it != m.end()) { 
+	gn1 = dynamic_cast<MyDGNode*>((*it).second); 
+      }
+      
+      it = m.find(std::string(targ.c_str()));
+      if (it != m.end()) { 
+	gn2 = dynamic_cast<MyDGNode*>((*it).second); 
+      }
+      
+      ASSERT_FATAL(gn1 && gn2, (DIAG_A_STRING, "Programming error."));
+
+      DGraph::Edge* ge = new DGraph::Edge(gn1, gn2); // src, targ
+      g->add(ge);
+    } 
+    else {
+      // Add a vertex to the graph
+      const XMLCh* vidX = elem->getAttribute(XAIFStrings.attr_Vid_x());
+      XercesStrX vid = XercesStrX(vidX);
+      ASSERT_FATAL(strlen(vid.c_str()) > 0, (DIAG_A_STRING, "Error."));
+      
+      MyDGNode* gn = new MyDGNode(elem);
+      g->add(gn);
+      m[std::string(vid.c_str())] = dynamic_cast<DGraph::Node*>(gn);
+      
+      // Set the graph root if necessary
+      const XMLCh* name = elem->getNodeName();
+      if (XMLString::equals(name, XAIFStrings.elem_BBEntry_x())) {
+	g->set_root(gn);
+      }
+    } 
+    
+  }
+  it->release();
+  
+  return g;
+}
+
+
+//****************************************************************************
+
 // FindNextStmtInterval: Finds the next translation interval within
 // the XAIF BB 'bbElem' given the current interval.  The current
 // interval's status is defined by [begXAIF, endXAIF] both of which
@@ -450,9 +621,11 @@ FindNextStmtInterval(const DOMElement* bbElem, IdList<WNId>* bbIdList,
   // 1. Find beginning of the interval
   if (!begXAIF) {
     begXAIF = GetFirstChildElement(bbElem);   // first interval (tmp)
-  } else if (endXAIF) {
+  } 
+  else if (endXAIF) {
     begXAIF = GetNextSiblingElement(endXAIF); // successive intervals (tmp)
-  } else {
+  } 
+  else {
     begXAIF = NULL;                           // no more intervals exist
   }  
   
@@ -524,7 +697,6 @@ FindIntervalBoundary(const DOMElement* elem, IdList<WNId>* bbIdList,
 
   WN* wn = NULL;
   if (boundary == 0) {
-    
     // For begin boundaries: If the previous element is an xaif:Marker
     // with WhirlId annotation, use it to find the WN*; otherwise try
     // to use 'bbIdList' to return the first WN* in the list.
@@ -554,9 +726,8 @@ FindIntervalBoundary(const DOMElement* elem, IdList<WNId>* bbIdList,
     if (!wn && bbIdList->size() > 0) {
       wn = wnmap->Find(bbIdList->front(), true /* mustFind */);
     }
-
-  } else if (boundary == 1) {
-    
+  } 
+  else if (boundary == 1) {
     // For end boundaries: If the next element is an xaif:Marker
     // with WhirlId annotation, use it to find the WN*; otherwise try
     // to use 'bbIdList' to return the last WN* in the list.
@@ -577,8 +748,8 @@ FindIntervalBoundary(const DOMElement* elem, IdList<WNId>* bbIdList,
     if (!wn && bbIdList->size() > 0) {
       wn = wnmap->Find(bbIdList->back(), true /* mustFind */);
     }
-    
-  } else {
+  } 
+  else {
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
   }
   
