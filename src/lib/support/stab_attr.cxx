@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.cxx,v 1.5 2003/07/24 20:30:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.cxx,v 1.6 2003/08/19 13:52:08 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -65,8 +65,6 @@
 #include <include/Open64BasicTypes.h>
 
 #include "stab_attr.h"
-#include "whirl2f_common.h"
-#include "PUinfo.h"
 
 
 /*------------------- Reserved Names Information -----------------

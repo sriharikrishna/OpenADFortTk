@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.3 2003/07/24 20:30:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.4 2003/08/19 13:52:08 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -258,9 +258,31 @@
 
 #include <include/Open64BasicTypes.h>
 
+
+// FIXME: new stuff
+// W2FC flag accessors..
+extern void Set_TY_is_translated_to_c(const TY_IDX ty);
+extern void Reset_TY_is_translated_to_c(const TY_IDX ty);
+extern BOOL TY_is_translated_to_c(const TY_IDX ty);
+
+extern void Clear_w2fc_flags(void);
+
+
+/* Some general utility routines for memory allocation.  Include
+ * "mempool.h" when using these!
+ */
+#define TYPE_ALLOC_N(type, count)\
+   TYPE_MEM_POOL_ALLOC_N(type, Malloc_Mem_Pool, count)
+
+#define TYPE_REALLOC_N(type, old_ptr, old_count, new_count)\
+   TYPE_MEM_POOL_REALLOC_N(type, Malloc_Mem_Pool, old_ptr,\
+			   old_count, new_count)
+
+#define FREE(ptr) MEM_POOL_FREE(Malloc_Mem_Pool, ptr)
+
+
                      /*------ Type Information ------*/
                      /*------------------------------*/
-
 
 extern BOOL Stab_Identical_Types(TY_IDX t1, 
 				 TY_IDX t2, 
