@@ -11,9 +11,25 @@ sub new {
     bless {ff => $ff},$class;
 }
 
+sub module {
+    my($scan) = FTscan->new($_[0]);
+
+    return $scan->match(qr/^ module $TB/ix);
+}
+
+sub is_module {
+    my($in) = @_;
+    my($ff) = $in->filter(\&module);
+    
+    return ($ff->lines()+0);
+}
 sub instantiate {
     my($self,$src) = @_;
 
+# !! HACK !! to find out if unit is a module  :-] :-]
+# (no rewrite of modules
+#
+    return $src if (is_module($src));
     _init();
     $src->map(\&readit);
     my($retn) = $self->{ff};
