@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.17 2004/02/13 20:19:09 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.18 2004/03/19 16:53:13 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -502,7 +502,7 @@ Pro64IRInterface::LoopBody (StmtHandle h)
     break;
   default:
     // FIXME: Any other statement types here?
-    assert (0);
+    assert(0);
     break;
   }
 
@@ -535,7 +535,7 @@ Pro64IRInterface::LoopHeader (StmtHandle h)
   } else if (WN_operator (wn) == OPR_WHILE_DO) {
     return 0;
   } else {
-    assert (0);
+    assert(0);
   }
 }
 
@@ -555,7 +555,7 @@ Pro64IRInterface::GetLoopCondition (StmtHandle h)
     expr_wn = WN_while_test (wn);
     break;
   default:
-    assert (0);
+    assert(0);
     break;
   }
 
@@ -575,7 +575,7 @@ Pro64IRInterface::GetLoopIncrement (StmtHandle h)
   } else if (WN_operator (wn) == OPR_WHILE_DO) {
     return 0;
   } else {
-    assert (0);
+    assert(0);
   }
 }
 
@@ -598,7 +598,7 @@ Pro64IRInterface::GetCondition (StmtHandle h)
              || WN_operator (wn) == OPR_FALSEBR) {
     expr_wn = WN_kid0 (wn);
   } else {
-    assert (0);
+    assert(0);
   }
   return (ExprHandle) expr_wn;
 }
@@ -612,7 +612,7 @@ Pro64IRInterface::TrueBody (StmtHandle h)
   if (WN_operator (wn) == OPR_IF) {
     return new Pro64IRStmtIterator (WN_then (wn));
   } else {
-    assert (0);
+    assert(0);
   }
 }
 
@@ -625,7 +625,7 @@ Pro64IRInterface::ElseBody (StmtHandle h)
   if (WN_operator (wn) == OPR_IF) {
     return new Pro64IRStmtIterator (WN_else (wn));
   } else {
-    assert (0);
+    assert(0);
   }
 }
 
@@ -638,7 +638,7 @@ int
 Pro64IRInterface::NumMultiCases (StmtHandle h)
 {
   // Whirl does not appear to have a structured switch statement.
-  assert (0);
+  assert(0);
   return 0;
 }
 
@@ -647,7 +647,7 @@ ExprHandle
 Pro64IRInterface::GetSMultiCondition (StmtHandle h, int bodyIndex)
 {
   // Whirl does not appear to have a structured switch statement.
-  assert (0);
+  assert(0);
   return (ExprHandle) 0;
 }
 
@@ -656,7 +656,7 @@ ExprHandle
 Pro64IRInterface::GetMultiExpr (StmtHandle h)
 {
   // Whirl does not appear to have a structured switch statement.
-  assert (0);
+  assert(0);
   return (ExprHandle) 0;
 }
 
@@ -666,7 +666,7 @@ IRStmtIterator*
 Pro64IRInterface::MultiBody (StmtHandle h, int bodyIndex)
 {
   // Whirl does not appear to have a structured switch statement.
-  assert (0);
+  assert(0);
   return (IRStmtIterator *) 0;
 }
 
@@ -675,7 +675,7 @@ IRStmtIterator*
 Pro64IRInterface::GetMultiCatchall (StmtHandle h)
 {
   // Whirl does not appear to have a structured switch statement.
-  assert (0);
+  assert(0);
   return (IRStmtIterator *) 0;
 }
 
@@ -684,7 +684,7 @@ bool
 Pro64IRInterface::IsBreakImplied (StmtHandle multicond)
 {
   // Whirl does not appear to have a structured switch statement.
-  assert (0);
+  assert(0);
   return false;
 }
 
@@ -693,7 +693,7 @@ bool
 Pro64IRInterface::IsCatchAll (StmtHandle h, int bodyIndex)
 {
   // Whirl does not appear to have a structured switch statement.
-  assert (0);
+  assert(0);
   return false;
 }
 
@@ -713,7 +713,7 @@ Pro64IRInterface::GetTargetLabel (StmtHandle h, int n)
       || WN_operator (wn) == OPR_FALSEBR) {
     return (StmtLabel) WN_label_number (wn);
   } else {
-    assert (0);
+    assert(0);
   }
 }
 
@@ -730,11 +730,10 @@ Pro64IRInterface::NumUMultiTargets (StmtHandle h)
   WN *wn = (WN *) h;
 
   // FIXME: Support also OPR_XGOTO?
-  if (WN_operator (wn) == OPR_COMPGOTO
-      || WN_operator (wn) == OPR_SWITCH) {
-    return WN_num_entries (wn);
+  if (WN_operator(wn) == OPR_COMPGOTO || WN_operator(wn) == OPR_SWITCH) {
+    return WN_num_entries(wn);
   } else {
-    assert (0);
+    assert(0);
   }
 }
 
@@ -748,47 +747,39 @@ Pro64IRInterface::GetUMultiTargetLabel (StmtHandle h, int targetIndex)
   StmtLabel target_label = 0;
   WN *curr_goto;
 
-  //
-  // Whirl has a number of multiway branches--  OPR_SWITCH, OPR_COMPGOTO,
+  // Whirl has a number of multiway branches: OPR_SWITCH, OPR_COMPGOTO,
   // and OPR_XGOTO. SWITCH and COMPGOTO are redundant in the sense that
   // SWITCH could be used for any COMPGOTO. Nevertheless, we have to handle
   // them all.
   // FIXME: XGOTO is a lowered form of COMPGOTO which isn't handled here yet. 
-  //
-  assert (WN_operator (wn) == OPR_COMPGOTO || WN_operator (wn) == OPR_SWITCH);
-  if (WN_operator (wn) == OPR_COMPGOTO) {
-    assert (WN_operator (WN_kid1 (wn)) == OPR_BLOCK);
-    curr_goto = WN_first (WN_kid1 (wn));
+  assert (WN_operator(wn) == OPR_COMPGOTO || WN_operator(wn) == OPR_SWITCH);
+  if (WN_operator(wn) == OPR_COMPGOTO) {
+    assert(WN_operator(WN_kid1(wn)) == OPR_BLOCK);
+    curr_goto = WN_first(WN_kid1(wn));
   } else {
-    assert (WN_operator (WN_switch_table (wn)) == OPR_BLOCK);
-    curr_goto = WN_first (WN_switch_table (wn));
+    assert(WN_operator(WN_switch_table(wn)) == OPR_BLOCK);
+    curr_goto = WN_first(WN_switch_table(wn));
   }
-
-  //
+  
   // For COMPGOTO, kid 1 is an OPR_BLOCK which contains the dispatch table.
   // It is a list of OPR_GOTOs to the corresponding targets. SWITCH is
   // similar, except its table is a list of OPR_CASEGOTOs.
   //
   // Below is somewhat inefficient, but the method wants random access to the
   // targets, while Whirl blocks have to be traversed sequentially.
-  //
   int curr_idx = 0;
   while (curr_goto) {
     if (curr_idx == targetIndex) {
-      assert (WN_operator (curr_goto) == OPR_GOTO
-              || WN_operator (curr_goto) == OPR_CASEGOTO);
-      target_label = (StmtLabel) WN_label_number (curr_goto);
+      assert(WN_operator(curr_goto) == OPR_GOTO 
+	     || WN_operator(curr_goto) == OPR_CASEGOTO);
+      target_label = (StmtLabel) WN_label_number(curr_goto);
       break;
     }
-    curr_goto = WN_next (curr_goto);
+    curr_goto = WN_next(curr_goto);
     ++curr_idx;
   }
-    
-  if (curr_idx != targetIndex) {
-    // Target not found, error.
-    assert (0);
-  }
-
+  assert(curr_idx == targetIndex); // Ensure target is found...
+  
   return target_label;
 }
 
@@ -802,17 +793,17 @@ Pro64IRInterface::GetUMultiCatchallLabel (StmtHandle h)
   WN *target = 0;
 
   // FIXME: Support also OPR_XGOTO?
-  if (WN_operator (wn) == OPR_COMPGOTO) {
-    target = WN_kid2 (wn);
-  } else if (WN_operator (wn) == OPR_SWITCH) {
-    target = WN_switch_default (wn);
+  if (WN_operator(wn) == OPR_COMPGOTO) {
+    target = WN_kid2(wn);
+  } else if (WN_operator(wn) == OPR_SWITCH) {
+    target = WN_switch_default(wn);
   } else {
-    assert (0);
+    assert(0);
   }
 
   if (target) {
-    assert (WN_operator (target) == OPR_GOTO);
-    return (StmtLabel) WN_label_number (target);
+    assert(WN_operator(target) == OPR_GOTO);
+    return (StmtLabel) WN_label_number(target);
   } else {
     return 0;
   }
@@ -826,7 +817,7 @@ Pro64IRInterface::GetUMultiCondition (StmtHandle h, int targetIndex)
 {
   // FIXME: It isn't yet decided whether or not this function is needed in
   // the IR interface.
-  assert (0);
+  assert(0);
   return 0;
 }
 
@@ -913,14 +904,14 @@ BuildExprTreeForWN(ExprTree* tree, WN* wn)
 //-----------------------------------------------------------------------------
 
 IRUseDefIterator*
-Pro64IRInterface::GetUses (StmtHandle h)
+Pro64IRInterface::GetUses(StmtHandle h)
 {
   WN *wn = (WN *) h;
   return new Pro64IRUseDefIterator (wn, IRUseDefIterator::Uses);
 }
 
 IRUseDefIterator*
-Pro64IRInterface::GetDefs (StmtHandle h)
+Pro64IRInterface::GetDefs(StmtHandle h)
 {
   WN *wn = (WN *) h;
   return new Pro64IRUseDefIterator (wn, IRUseDefIterator::Defs);
@@ -936,7 +927,7 @@ Pro64IRInterface::GetDefs (StmtHandle h)
 //-----------------------------------------------------------------------------
 
 void 
-Pro64IRInterface::PrintLeaf (LeafHandle vh, ostream & os) 
+Pro64IRInterface::PrintLeaf(LeafHandle vh, ostream & os) 
 {
   WN *wn = (WN *) vh;
   if (!wn) { return; }
@@ -947,7 +938,7 @@ Pro64IRInterface::PrintLeaf (LeafHandle vh, ostream & os)
 }
 
 void 
-Pro64IRInterface::Dump (StmtHandle stmt, ostream& os) 
+Pro64IRInterface::Dump(StmtHandle stmt, ostream& os) 
 {
   WN *wn = (WN *) stmt;
   dump_wn_subtree (wn, os);
@@ -960,9 +951,9 @@ Pro64IRInterface::Dump (StmtHandle stmt, ostream& os)
 // properly parenthesize expressions, etc.
 //-----------------------------------------------------------------------------
 void
-Pro64IRInterface::dump_wn_subtree (WN *wn, ostream &os)
+Pro64IRInterface::dump_wn_subtree(WN *wn, ostream &os)
 {
-  if (wn == 0)
+  if (wn == NULL)
     return;
 
   OPERATOR opr = WN_operator (wn);
