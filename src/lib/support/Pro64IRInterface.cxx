@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.12 2004/01/13 03:47:00 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.13 2004/01/19 21:42:24 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -191,42 +191,43 @@ Pro64IRUseDefIterator::Pro64IRUseDefIterator (WN *subtree, int uses_or_defs)
 // processed, so that an LDA can be correctly determined to be a use or
 // definition.
 void
-Pro64IRUseDefIterator::build_use_def_lists (WN *t, int flags)
+Pro64IRUseDefIterator::build_use_def_lists (WN *wn, int flags)
 {
   // FIXME: var refs used in callsites are assumed to be definitions
   enum { OuterMost_OPR_ARRAY = 1 };
-  OPERATOR opr = WN_operator (t);
+  OPERATOR opr = WN_operator (wn);
+
   switch (opr) {
-  // FIXME: ISTOREBITS, ISTOREX, MSTORE?
+  // FIXME: ISTOREBITS, ISTOREX, MSTORE?    
   case OPR_LDID:
   case OPR_LDBITS:
   case OPR_IDNAME:
     assert (OPERATOR_has_sym (opr));
-    uses_node_list.push_back (t);
+    uses_node_list.push_back (wn);
     return;
   case OPR_STID:
   case OPR_STBITS:
     assert (OPERATOR_has_sym (opr));
-    defs_node_list.push_back (t);
+    defs_node_list.push_back (wn);
     break;
   case OPR_LDA:
     assert (OPERATOR_has_sym (opr));
     // Perhaps strange, but Whirl has the notion of taking the address of a
     // constant.  The FORTRAN call foo(2) in Whirl is foo(OPR_LDA(2)). We
     // don't want a constant noted as a use or def.
-    if (ST_sym_class (WN_st (t)) != CLASS_CONST) {
-      uses_node_list.push_back (t);
+    if (ST_sym_class (WN_st (wn)) != CLASS_CONST) {
+      uses_node_list.push_back (wn);
     }
     return;
   case OPR_LDMA:
     assert (OPERATOR_has_sym (opr));
-    uses_node_list.push_back (t);
+    uses_node_list.push_back (wn);
     return;
   case OPR_ISTORE:
     // Process kid0, the RHS of the store.
-    build_use_def_lists (WN_kid0 (t), 0);
+    build_use_def_lists (WN_kid0 (wn), 0);
     // Process kid1, the LHS of the store.
-    build_use_def_lists (WN_kid1 (t), OuterMost_OPR_ARRAY);
+    build_use_def_lists (WN_kid1 (wn), OuterMost_OPR_ARRAY);
     return;
   case OPR_ARRAY:
   case OPR_ARRSECTION:
@@ -234,7 +235,7 @@ Pro64IRUseDefIterator::build_use_def_lists (WN *t, int flags)
     // referenced or defined. Only an outermost OPR_ARRAY of a subtree will
     // ever represent a definition of an array section or element (e.g., In
     // reference A(G(I)) = X, variable A is a definition, while G is a use).
-    WN *base = WN_kid0 (t);
+    WN *base = WN_kid0 (wn);
     assert (WN_operator (base) == OPR_LDA || WN_operator (base) == OPR_LDID);
     if ((flags & OuterMost_OPR_ARRAY)) {
       defs_node_list.push_back (base);
@@ -244,21 +245,29 @@ Pro64IRUseDefIterator::build_use_def_lists (WN *t, int flags)
     flags &= ~OuterMost_OPR_ARRAY;
     // Kids 1..n are dimensions, which we need to ignore. Kids n+1..2n
     // are the index expressions.
-    int ndims = WN_kid_count (t) >> 1;
+    int ndims = WN_kid_count (wn) >> 1;
     for (int kid = 0; kid < ndims; kid++) {
-      if (! OPERATOR_is_stmt (WN_operator (WN_kid (t, kid+ndims+1)))) {
-        build_use_def_lists (WN_kid (t, kid+ndims+1), flags);
+      if (! OPERATOR_is_stmt (WN_operator (WN_kid (wn, kid+ndims+1)))) {
+        build_use_def_lists (WN_kid (wn, kid+ndims+1), flags);
       }
     } // for kids
     return;
   } // switch
 
+
   // Recursively visit all kids (that aren't statements) adding their
-  // uses and defs.
-  for (int kid = 0; kid < WN_kid_count (t); kid++) {
-    if (! OPERATOR_is_stmt (WN_operator (WN_kid (t, kid)))) {
-      build_use_def_lists (WN_kid (t, kid), flags);
-    }
+  // uses and defs.  
+  int kid_beg = 0;
+  int num_kids = WN_kid_count (wn);
+  if (OPERATOR_is_call(opr)) {
+    num_kids = WN_num_actuals(wn);
+  }
+  
+  for (int kid = kid_beg; kid < num_kids; kid++) {
+    // FIXME: E.g.: MPY(CALL( ), CALL( ))
+    //if (! OPERATOR_is_stmt (WN_operator (WN_kid (wn, kid)))) {
+      build_use_def_lists (WN_kid (wn, kid), flags);
+    //}
   } // for kids
 }
 
