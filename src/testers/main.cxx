@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v 1.1 2003/09/05 21:45:50 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v 1.2 2003/12/02 20:30:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -132,7 +132,8 @@ real_main(INT argc, char **argv)
     DumpIR(pu_forest); 
   }
   
-  whirltester::TestIR(std::cout, pu_forest);
+  // whirltester::TestIR(std::cout, pu_forest);
+  whirltester::TestIR_OA(std::cout, pu_forest);
 
   FreeIR(pu_forest); // N.B. cannot use with WriteIR
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.2 2003/09/16 14:30:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.3 2003/12/02 20:30:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -30,13 +30,24 @@
 
 #include <lib/support/Pro64IRInterface.h>
 
-// #include <lib/support/WhirlIDMaps.h>
+#include <OpenAnalysis/ValueNumbers/ValueNumbers.h>
+#include <OpenAnalysis/ValueNumbers/ExprTree.h>
+
+#include <lib/support/SymTab.h>
 #include <lib/support/diagnostics.h>
 
 //*************************** Forward Declarations ***************************
 
 using std::cerr;
 using std::endl;
+
+static int
+TestIR_OA_ForEachWNPU(std::ostream& os, WN* wn_pu);
+
+static void
+TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn, ValueNumbers& vnmap);
+
+//****************************************************************************
 
 static int
 TestForEachPU(std::ostream& os, PU_Info* pu_forest);
@@ -54,6 +65,79 @@ RecursiveFnWN(std::ostream& os, WN* wn);
 
 static int
 DumpExprTree(std::ostream& os, WN* wn);
+
+//****************************************************************************
+
+// TestIR_OA: 
+int
+whirltester::TestIR_OA(std::ostream& os, PU_Info* pu_forest)
+{
+  Diag_Set_Phase("WHIRL tester: TestIR_OA");
+  
+  if (!pu_forest) { return 0; }
+
+  Pro64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.IsValid(); ++procIt) { 
+    
+    // The PU_Info* for this PU
+    PU_Info* pu = (PU_Info*)procIt.Current();
+
+    // The root of the WHIRL tree
+    WN* wn_pu = PU_Info_tree_ptr(pu);
+    
+    TestIR_OA_ForEachWNPU(os, wn_pu);
+  }
+  return 0;
+}
+
+static int
+TestIR_OA_ForEachWNPU(std::ostream& os, WN* wn_pu)
+{
+  WN* fbody = WN_func_body(wn_pu);
+
+  Pro64IRInterface irInterface;
+  Pro64IRStmtIterator irStmtIter(fbody);
+  CFG cfg(irInterface, &irStmtIter, (SymHandle)WN_st(wn_pu), true);
+  ValueNumbers vnmap(cfg);
+  
+  TestIR_OA_ForEachVarRef(os, wn_pu, vnmap);
+}
+
+static void
+TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn, ValueNumbers& vnmap)
+{
+  if (wn == NULL) {
+    // Base case
+  } 
+
+  OPERATOR opr = WN_operator(wn);
+  
+  if (IsVarRefTranslatableToXAIF(wn)) {
+    // Base case
+    VN vn = vnmap.Find((ExprHandle)wn);
+    
+    ExprTree* tree = GetExprTreeForExprHandle((ExprHandle)wn);
+    tree->dump(os);
+    delete tree;
+
+  } else if (!OPERATOR_is_leaf(opr)) {
+    
+    // General recursive case
+    if (WN_operator(wn) == OPR_BLOCK) {
+      WN *kid = WN_first(wn);
+      while (kid) {
+	TestIR_OA_ForEachVarRef(os, kid, vnmap);
+	kid = WN_next(kid);
+      }
+    } else {
+      for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
+	WN* kid = WN_kid(wn, kidno);
+	TestIR_OA_ForEachVarRef(os, kid, vnmap);
+      }
+    }
+  }
+}
+
 
 //****************************************************************************
 
@@ -149,8 +233,6 @@ RecursiveFnWN(std::ostream& os, WN* wn)
 
 //****************************************************************************
 
-
-#include <OpenAnalysis/ValueNumbers/ExprTree.h>
 
 static int
 DumpExprTree(std::ostream& os, WN* wn)

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.h,v 1.1 2003/09/05 21:45:50 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.h,v 1.2 2003/12/02 20:30:18 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -35,6 +35,9 @@
 //****************************************************************************
 
 namespace whirltester {
+
+  int
+  TestIR_OA(std::ostream& os, PU_Info* pu_forest);
 
   int
   TestIR(std::ostream& os, PU_Info* pu_forest);
