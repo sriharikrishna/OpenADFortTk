@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.h,v 1.4 2004/12/08 22:10:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.h,v 1.5 2004/12/20 15:18:30 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -38,10 +38,11 @@
 namespace whirl2sexp {
 
   extern void 
-  TranslateGlobalSymbolTables(sexp::ostream& sos);
-
+  TranslateGlobalSymbolTables(sexp::ostream& sos, int flags = 0);
+  
   extern void 
-  TranslateLocalSymbolTables(sexp::ostream& sos, SYMTAB_IDX stab_lvl);
+  TranslateLocalSymbolTables(sexp::ostream& sos, SYMTAB_IDX stab_lvl,
+			     int flags = 0);
 
 }; /* namespace whirl2sexp */
 

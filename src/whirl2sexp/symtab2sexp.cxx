@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.4 2004/08/09 19:58:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.5 2004/12/20 15:18:30 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -25,6 +25,8 @@
 #include "wn2sexp.h"
 #include "symtab2sexp.h"
 
+#include <lib/support/SexpTags.h>
+
 //************************** Forward Declarations ***************************
 
 using namespace whirl2sexp;
@@ -36,7 +38,7 @@ using namespace sexp; // for sexp::ostream, etc
 //***************************************************************************
 
 void 
-whirl2sexp::TranslateGlobalSymbolTables(sexp::ostream& sos)
+whirl2sexp::TranslateGlobalSymbolTables(sexp::ostream& sos, int flags)
 {
   // There are GLOBAL_SYMTAB_TABLES [13] number of global tables. 
   //   FILE_INFO     (File_info)
@@ -54,7 +56,7 @@ whirl2sexp::TranslateGlobalSymbolTables(sexp::ostream& sos)
   // ? STR_TABLE     (Str_Table) (strtab.cxx)
   // ?   TCON_STR_TAB
   
-  sos << BegList << Atom("gobal_symtab") << EndLine;
+  sos << BegList << Atom(SexpTags::GBL_SYMTAB) << EndLine;
 
   xlate_FILE_INFO(sos);
   sos << EndLine;
@@ -98,7 +100,8 @@ whirl2sexp::TranslateGlobalSymbolTables(sexp::ostream& sos)
 
 
 void 
-whirl2sexp::TranslateLocalSymbolTables(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
+whirl2sexp::TranslateLocalSymbolTables(sexp::ostream& sos, SYMTAB_IDX stab_lvl,
+				       int flags)
 {
   // There are LOCAL_SYMTAB_TABLES [5] number of global tables. 
   //   ST
@@ -107,7 +110,7 @@ whirl2sexp::TranslateLocalSymbolTables(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
   //   PREG_TABLE  (Preg_Table)
   //   LABEL_TABLE (Label_Table)
 
-  sos << BegList << Atom("symtab") << EndLine;
+  sos << BegList << Atom(SexpTags::PU_SYMTAB) << EndLine;
   
   xlate_ST_TAB(sos, stab_lvl);
   sos << EndLine;
@@ -137,7 +140,7 @@ whirl2sexp::TranslateLocalSymbolTables(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
 void 
 whirl2sexp::xlate_FILE_INFO(sexp::ostream& sos)
 {
-  sos << BegList << Atom("file_info");
+  sos << BegList << Atom(SexpTags::FILE_INFO);
   
   UINT gp = (UINT)FILE_INFO_gp_group(File_info);
   sos << Atom(gp) << GenBeginFlgList(File_info.flags) << EndList;
@@ -148,7 +151,7 @@ whirl2sexp::xlate_FILE_INFO(sexp::ostream& sos)
 void 
 whirl2sexp::xlate_ST_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
 {
-  sos << BegList << Atom("st_tab") << EndLine;
+  sos << BegList << Atom(SexpTags::ST_TAB) << EndLine;
   For_all(St_Table, stab_lvl, xlate_SYMTAB_entry_op<ST>(sos));
   sos << EndList;
 }
@@ -156,7 +159,7 @@ whirl2sexp::xlate_ST_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
 void 
 whirl2sexp::xlate_ST_TAB(sexp::ostream& sos, const SCOPE& scope)
 {
-  sos << BegList << Atom("st_tab") << EndLine;
+  sos << BegList << Atom(SexpTags::ST_TAB) << EndLine;
   For_all(*scope.st_tab, xlate_SYMTAB_entry_op<ST>(sos));
   sos << EndList;
 }
@@ -164,7 +167,7 @@ whirl2sexp::xlate_ST_TAB(sexp::ostream& sos, const SCOPE& scope)
 void 
 whirl2sexp::xlate_PU_TAB(sexp::ostream& sos)
 {
-  sos << BegList << Atom("pu_tab") << EndLine;
+  sos << BegList << Atom(SexpTags::PU_TAB) << EndLine;
   For_all(Pu_Table, xlate_SYMTAB_entry_op<PU>(sos));
   sos << EndList;
 }
@@ -172,7 +175,7 @@ whirl2sexp::xlate_PU_TAB(sexp::ostream& sos)
 void 
 whirl2sexp::xlate_TY_TAB(sexp::ostream& sos)
 {
-  sos << BegList << Atom("ty_tab") << EndLine;
+  sos << BegList << Atom(SexpTags::TY_TAB) << EndLine;
   For_all(Ty_Table, xlate_SYMTAB_entry_op<TY>(sos));
   sos << EndList;
 }
@@ -180,7 +183,7 @@ whirl2sexp::xlate_TY_TAB(sexp::ostream& sos)
 void 
 whirl2sexp::xlate_FLD_TAB(sexp::ostream& sos)
 {
-  sos << BegList << Atom("fld_tab") << EndLine;
+  sos << BegList << Atom(SexpTags::FLD_TAB) << EndLine;
   For_all(Fld_Table, xlate_SYMTAB_entry_op<FLD>(sos));
   sos << EndList;
 }
@@ -188,7 +191,7 @@ whirl2sexp::xlate_FLD_TAB(sexp::ostream& sos)
 void 
 whirl2sexp::xlate_TYLIST_TAB(sexp::ostream& sos)
 {
-  sos << BegList << Atom("tylist_tab") << EndLine;
+  sos << BegList << Atom(SexpTags::TYLIST_TAB) << EndLine;
   For_all(Tylist_Table, xlate_SYMTAB_entry_op<TYLIST>(sos));
   sos << EndList;
 }
@@ -196,7 +199,7 @@ whirl2sexp::xlate_TYLIST_TAB(sexp::ostream& sos)
 void 
 whirl2sexp::xlate_ARB_TAB(sexp::ostream& sos)
 {
-  sos << BegList << Atom("arb_tab") << EndLine;
+  sos << BegList << Atom(SexpTags::ARB_TAB) << EndLine;
   For_all(Arb_Table, xlate_SYMTAB_entry_op<ARB>(sos));
   sos << EndList;
 }
@@ -204,7 +207,7 @@ whirl2sexp::xlate_ARB_TAB(sexp::ostream& sos)
 void 
 whirl2sexp::xlate_BLK_TAB(sexp::ostream& sos)
 {
-  sos << BegList << Atom("blk_tab") << EndLine;
+  sos << BegList << Atom(SexpTags::BLK_TAB) << EndLine;
   For_all(Blk_Table, xlate_SYMTAB_entry_op<BLK>(sos));
   sos << EndList;
 }
@@ -212,7 +215,7 @@ whirl2sexp::xlate_BLK_TAB(sexp::ostream& sos)
 void 
 whirl2sexp::xlate_TCON_TAB(sexp::ostream& sos)
 {
-  sos << BegList << Atom("tcon_tab") << EndLine;
+  sos << BegList << Atom(SexpTags::TCON_TAB) << EndLine;
   For_all(Tcon_Table, xlate_SYMTAB_entry_op<TCON>(sos));
   sos << EndList;
 }
@@ -220,7 +223,7 @@ whirl2sexp::xlate_TCON_TAB(sexp::ostream& sos)
 void 
 whirl2sexp::xlate_INITO_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
 {
-  sos << BegList << Atom("inito_tab") << EndLine;
+  sos << BegList << Atom(SexpTags::INITO_TAB) << EndLine;
   For_all(Inito_Table, stab_lvl, xlate_SYMTAB_entry_op<INITO>(sos));
   sos << EndList;
 }
@@ -228,7 +231,7 @@ whirl2sexp::xlate_INITO_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
 void 
 whirl2sexp::xlate_INITV_TAB(sexp::ostream& sos)
 {
-  sos << BegList << Atom("initv_tab") << EndLine;
+  sos << BegList << Atom(SexpTags::INITV_TAB) << EndLine;
   For_all(Initv_Table, xlate_SYMTAB_entry_op<INITV>(sos));
   sos << EndList;
 }
@@ -236,7 +239,7 @@ whirl2sexp::xlate_INITV_TAB(sexp::ostream& sos)
 void 
 whirl2sexp::xlate_ST_ATTR_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
 {
-  sos << BegList << Atom("st_attr_tab") << EndLine;
+  sos << BegList << Atom(SexpTags::ST_ATTR_TAB) << EndLine;
   For_all(St_Attr_Table, stab_lvl, xlate_SYMTAB_entry_op<ST_ATTR>(sos));
   sos << EndList;
 }
@@ -244,8 +247,8 @@ whirl2sexp::xlate_ST_ATTR_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
 void 
 whirl2sexp::xlate_STR_TAB(sexp::ostream& sos)
 {
-  sos << BegList << Atom("str_tab") << EndLine; 
-
+  sos << BegList << Atom(SexpTags::STR_TAB) << EndLine; 
+  
   // see osprey1.0/common/com/strtab.h
   // const char* str = Index_To_Str(STR_IDX idx);
   // extern UINT32 STR_Table_Size ();
@@ -258,7 +261,7 @@ whirl2sexp::xlate_STR_TAB(sexp::ostream& sos)
 void 
 whirl2sexp::xlate_PREG_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
 {
-  sos << BegList << Atom("preg_tab") << EndLine;
+  sos << BegList << Atom(SexpTags::PREG_TAB) << EndLine;
   // osprey1.0/common/com/symtab_utils.h defines this without 'stab_lvl' arg!
   //For_all(Preg_Table, stab_lvl, xlate_SYMTAB_entry_op<PREG>(sos));
   For_all_entries(*Scope_tab[stab_lvl].preg_tab, 
@@ -269,7 +272,7 @@ whirl2sexp::xlate_PREG_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
 void 
 whirl2sexp::xlate_LABEL_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
 {
-  sos << BegList << Atom("label_tab") << EndLine;
+  sos << BegList << Atom(SexpTags::LABEL_TAB) << EndLine;
   // osprey1.0/common/com/symtab_utils.h defines this without 'stab_lvl' arg!
   //For_all(Label_Table, stab_lvl, xlate_SYMTAB_entry_op<LABEL>(sos));
   For_all_entries(*Scope_tab[stab_lvl].label_tab, 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.i,v 1.3 2004/10/06 22:10:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.i,v 1.4 2004/12/20 15:18:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -211,40 +211,40 @@ namespace whirl2sexp {
   // ---------------------------------------------------------
 
   extern whirl2sexp::status 
-  xlate_CVT_CVTL(sexp::ostream& sos, WN *wn);
+  xlate_CVT_CVTL(sexp::ostream& sos, WN* wn);
   
   extern whirl2sexp::status 
-  xlate_TAS(sexp::ostream& sos, WN *wn);
+  xlate_TAS(sexp::ostream& sos, WN* wn);
   
   // ---------------------------------------------------------
   // Leaf (Other)
   // ---------------------------------------------------------
 
   extern whirl2sexp::status 
-  xlate_CONST(sexp::ostream& sos, WN *wn);
+  xlate_CONST(sexp::ostream& sos, WN* wn);
   
   extern whirl2sexp::status 
-  xlate_INTCONST(sexp::ostream& sos, WN *wn);
+  xlate_INTCONST(sexp::ostream& sos, WN* wn);
   
   // ---------------------------------------------------------
   // Expression Operators: Unary Operations
   // ---------------------------------------------------------
 
   extern whirl2sexp::status 
-  xlate_UnaryOp(sexp::ostream& sos, WN *wn);
+  xlate_UnaryOp(sexp::ostream& sos, WN* wn);
 
   extern whirl2sexp::status 
-  xlate_PARM(sexp::ostream& sos, WN *wn);
+  xlate_PARM(sexp::ostream& sos, WN* wn);
 
   extern whirl2sexp::status 
-  xlate_ALLOCA(sexp::ostream& sos, WN *wn) ;
+  xlate_ALLOCA(sexp::ostream& sos, WN* wn) ;
 
   // ---------------------------------------------------------
   // Expression Operators: Binary Operations
   // ---------------------------------------------------------
   
   extern whirl2sexp::status 
-  xlate_BinaryOp(sexp::ostream& sos, WN *wn);
+  xlate_BinaryOp(sexp::ostream& sos, WN* wn);
 
   // ---------------------------------------------------------
   // Expression Operators: Ternary Operations
@@ -269,7 +269,7 @@ namespace whirl2sexp {
 namespace whirl2sexp {
   
   extern whirl2sexp::status 
-  xlate_unknown(sexp::ostream& xos, WN* wn);
+  xlate_unknown(sexp::ostream& sos, WN* wn);
   
 }; /* namespace whirl2sexp */
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.cxx,v 1.3 2004/08/09 14:34:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.cxx,v 1.4 2004/12/20 15:18:30 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -29,6 +29,7 @@
 #include "symtab2sexp.h"
 
 #include <lib/support/WhirlGlobalStateUtils.h>
+#include <lib/support/SexpTags.h>
 
 //************************** Forward Declarations ***************************
 
@@ -39,6 +40,9 @@ GenHeader(sexp::ostream& sos);
 
 static void
 xlate_IR(sexp::ostream& os, PU_Info* pu_forest, int flags);
+
+static void
+xlate_PUForest(sexp::ostream& sos, PU_Info* pu_forest, int flags);
 
 static void 
 xlate_PUTree(sexp::ostream& os, PU_Info* pu_tree, int flags);
@@ -123,13 +127,14 @@ void
 GenHeader(sexp::ostream& sos)
 {
   using namespace sexp;
-  sos << Comment("WHIRL_IR   ::= (GBL_SYMTAB PU_FOREST)")
-      << Comment("GBL_SYMTAB ::= (...)")
-      << Comment("PU_FOREST  ::= (PU_TREE*)")
-      << Comment("PU_TREE    ::= (PU PU_TREE*) | NULL")
-      << Comment("PU_SYMTAB  ::= ...")
-      << Comment("PU         ::= (PU_SYMTAB WHIRL_AST)")
-      << Comment("WHIRL_AST  ::= (WN_OPR WN_ATTRS WHIRL_AST*) | NULL")
+  sos << Comment("WHIRL_IR   ::= (whirl GBL_SYMTAB PU_FOREST)")
+      << Comment("GBL_SYMTAB ::= (gobal_symtab GBL_TAB1..GBL_TABn)")
+      << Comment("PU_FOREST  ::= (pu_forest PU_TREE*) ;; list of PU_TREEs")
+      << Comment("PU_TREE    ::= (pu_tree PU PU_TREE*) | NULL")
+      << Comment("PU         ::= (pu PU_SYM PU_SYMTAB WN_AST)")
+      << Comment("PU_SYMTAB  ::= (pu_symtab PU_TAB1..PU_TABn)")
+      << Comment("WN_AST     ::= (WN_OPR WN_ATTRS WN_AST*) | NULL")
+      << Comment("WN_OPR     ::= operator rtype dtype")
       << Comment("WN_ATTRS   ::= ((attr1 ...) (attr2 ...) (attr3 ...) ...)");
 }
 
@@ -137,14 +142,23 @@ GenHeader(sexp::ostream& sos)
 void
 xlate_IR(sexp::ostream& sos, PU_Info* pu_forest, int flags)
 {
-  sos << sexp::BegList << sexp::Atom("whirl") << sexp::EndLine;
+  sos << sexp::BegList << sexp::Atom(SexpTags::WHIRL) << sexp::EndLine;
+  
+  whirl2sexp::TranslateGlobalSymbolTables(sos, flags);
+  sos << sexp::EndLine; // end the line 
 
-  whirl2sexp::TranslateGlobalSymbolTables(sos);
+  xlate_PUForest(sos, pu_forest, flags);
   
-  if (!pu_forest) { return; }
-  sos << sexp::EndLine; // end the line now that we know something comes next
+  sos << sexp::EndList << sexp::EndLine;
+}
+
+
+void
+xlate_PUForest(sexp::ostream& sos, PU_Info* pu_forest, int flags)
+{
+  sos << sexp::BegList << sexp::Atom(SexpTags::PU_FOREST) << sexp::EndLine;
   
-  // Translate each PU-tree
+  // Translate each PU_TREE
   for (PU_Info* pu_tree = pu_forest; 
        pu_tree != NULL; pu_tree = PU_Info_next(pu_tree)) {
     xlate_PUTree(sos, pu_tree, flags);
@@ -157,16 +171,20 @@ xlate_IR(sexp::ostream& sos, PU_Info* pu_forest, int flags)
 void 
 xlate_PUTree(sexp::ostream& sos, PU_Info* pu_tree, int flags)
 {
-  if (!pu_tree) { return; }
+  sos << sexp::BegList << sexp::Atom(SexpTags::PU_TREE) << sexp::EndLine;
   
   // Translate the parent PU
   xlate_PU(sos, pu_tree, flags);
 
   // Translate each child PU
-  for (PU_Info* child = PU_Info_child(pu_tree); 
-       child != NULL; child = PU_Info_next(child)) {
-    xlate_PU(sos, child, flags);
+  if (pu_tree) { 
+    for (PU_Info* child = PU_Info_child(pu_tree); 
+	 child != NULL; child = PU_Info_next(child)) {
+      xlate_PU(sos, child, flags);
+    }
   }
+  
+  sos << sexp::EndList << sexp::EndLine;
 }
 
 
@@ -184,9 +202,9 @@ xlate_PU(sexp::ostream& sos, PU_Info* pu, int flags)
   WN* wn_pu = PU_Info_tree_ptr(pu);
   const SCOPE& scope = Scope_tab[CURRENT_SYMTAB];
   
-  sos << sexp::BegList << sexp::Atom("pu") << GenSexpSymRef(st_idx)
+  sos << sexp::BegList << sexp::Atom(SexpTags::PU) << GenSexpSymRef(st_idx)
       << sexp::EndLine;
-  whirl2sexp::TranslateLocalSymbolTables(sos, CURRENT_SYMTAB);
+  whirl2sexp::TranslateLocalSymbolTables(sos, CURRENT_SYMTAB, flags);
   sos << sexp::EndLine;
   
   xlate_WN(sos, wn_pu, flags);
