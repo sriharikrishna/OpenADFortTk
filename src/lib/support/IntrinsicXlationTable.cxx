@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.3 2003/12/02 13:32:24 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.4 2003/12/13 17:31:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -65,8 +65,12 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
                         { XAIFIntrin, "mul_scal_scal", 2 } },
   { { WNExpr, OPR_DIV, NULL, 2 },
                         { XAIFIntrin, "div_scal_scal", 2 } },
+  { { WNCall, OPR_CALL, "SQRT", 1 },
+                        { XAIFIntrin, "sqrt_scal", 1 } },
+#if 0
   { { WNExpr, OPR_SQRT, NULL, 1 },
                         { XAIFIntrin, "sqrt_scal", 1 } },
+#endif
 
   { { WNExpr, OPR_MOD, NULL, 2 },
                         { XAIFIntrin, "bogus_mod_scal_scal", 2 } },
