@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexputil.h,v 1.2 2004/12/23 16:27:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexputil.h,v 1.3 2005/01/12 20:00:48 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -48,6 +48,12 @@ inline bool
 is_list(sexp_t* sx) 
 { 
   return (sx->ty == SEXP_LIST); 
+}
+
+inline bool 
+is_null_list(sexp_t* sx) 
+{ 
+  return (sx->list == NULL); 
 }
 
 
@@ -166,8 +172,23 @@ get_next(sexp_t* sx)
   return sx->next; 
 }
 
+//***************************************************************************
 
-  
+// routines specific to S-expression WHIRL
+
+inline sexp_t*
+get_wnast_attrs(sexp_t* sx)
+{
+  return get_elem3(sx); // fourth element
+}
+
+inline sexp_t*
+get_wnast_kid0(sexp_t* sx)
+{
+  return get_elem(sx, 4); // begin at fifth element
+}
+
+
 }; /* namespace sexp */
 
 //***************************************************************************
