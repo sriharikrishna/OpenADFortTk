@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Args.cxx,v 1.3 2004/03/03 21:44:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Args.cxx,v 1.4 2004/08/05 18:35:38 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -36,7 +36,8 @@ static const char* usage_summary =
 "[options] <whirl-file>\n";
 
 static const char* usage_details =
-"Given a WHIRL file, generates XAIF.  By default, output is sent to stdout.\n"
+"Given a WHIRL file, translates the 'numerical core' into XAIF.  By default,\n"
+"output is sent to stdout.\n"
 "\n"
 "Options:\n"
 "  -o, --output <file> send output to <file> instead of stdout\n"
