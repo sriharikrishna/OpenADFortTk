@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.8 2004/06/11 19:45:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.9 2004/06/16 14:27:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -128,7 +128,7 @@ Create(PU_Info* pu)
   WN* wn_pu = PU_Info_tree_ptr(pu);
   WN* fbody = WN_func_body(wn_pu);
   AddToScalarizedRefTabOp op(this, pu);
-  ForAllNonScalarRefs(fbody, op);
+  ForAllScalarizableRefs(fbody, op);
 }
 
 void
@@ -197,42 +197,82 @@ ScalarizedRef::DDump() const
 // 
 //***************************************************************************
 
-// IsVarRefTranslatableToXAIF: Returns whether 'wn' a variable
+// IsRefTranslatableToXAIF: Returns whether 'wn' a variable
 // reference that can be translated into XAIF.  'wn' must be an
 // expression; IOW it cannot be a store (=statement).
 bool 
-IsVarRefTranslatableToXAIF(const WN* wn)
+IsRefTranslatableToXAIF(const WN* wn)
+{
+  return (IsRefSimple(wn) || IsRefScalarizable(wn));
+}
+
+
+// IsRefSimple: 
+//   Note: WHIRL stores represent the lhs var-ref (e.g. OPR_ISTORE,
+//   OPR_STID)
+bool 
+IsRefSimple(const WN* wn)
+{
+  //if (!(opr == OPR_STID || OPERATOR_is_expression(opr))) { return false; }  
+  return (IsRefSimpleScalar(wn) || IsRefSimpleArrayElem(wn) 
+	  || IsRefSimpleArray(wn));
+}
+
+
+// IsRefSimpleScalar: 
+bool
+IsRefSimpleScalar(const WN* wn)
 {
   OPERATOR opr = WN_operator(wn);
-  if (!OPERATOR_is_expression(opr)) { return false; }
-  
   switch (opr) {
-    // FIXME 
-    // ILOADX, ISTOREX
-    // ILDBITS, ISTBITS
-    // MLOAD, MSTORE: memref
-    // OPR_IDNAME:
     
   case OPR_LDA:
   case OPR_LDMA:
-    return true; // FIXME: can this be used in some evil way?
-    
   case OPR_LDID:
-  case OPR_LDBITS: { // symref
-    TY_IDX baseobj_ty = ST_type(WN_st(wn));
-    TY_IDX refobj_ty = WN_Tree_Type(wn);
-    return (IsScalarRef(baseobj_ty, refobj_ty));
+  case OPR_LDBITS: 
+  case OPR_STID:
+  case OPR_STBITS: 
+  case OPR_ILOAD: 
+  case OPR_ILDBITS: {
+    // (for stores, only check LHS (kid1))
+    TY_IDX baseobj_ty = WN_GetBaseObjType(wn);
+    TY_IDX refobj_ty = WN_GetRefObjType(wn);
+    return (IsRefScalar(baseobj_ty, refobj_ty));
   }
+    
+  } // switch
   
-  case OPR_ILOAD: { // memref
-    TY_IDX baseobj_ty = TY_pointed(WN_load_addr_ty(wn));
-    TY_IDX refobj_ty = WN_Tree_Type(wn);
-    return (IsScalarRef(baseobj_ty, refobj_ty));
+  return false;
+}
+
+
+// IsRefSimpleArrayElem: 
+bool 
+IsRefSimpleArrayElem(const WN* wn)
+{
+  OPERATOR opr = WN_operator(wn);
+  switch (opr) {
+    
+  case OPR_LDA:  
+  case OPR_LDMA: 
+  case OPR_LDID: // probably never used for this
+  case OPR_STID: // probably never used for this
+  case OPR_ILOAD:
+  case OPR_ISTORE: {
+    // yes if baseobj_ty is of type array and reference is non-scalar
+    // (for stores, only check LHS (kid1))
+    TY_IDX baseobj_ty = WN_GetBaseObjType(wn);
+    TY_IDX refobj_ty = WN_GetRefObjType(wn);
+#if 0
+    if (/* array element access */) {
+    ASSERT_DBG_WARN(WN2F_Can_Assign_Types(TY_AR_etype(baseobj_ty), refobj_ty),
+		    (DIAG_W2F_INCOMPATIBLE_TYS, "xlate_SymRef"));
+    }
+#endif
+    return (TY_Is_Array(baseobj_ty) && !IsRefScalar(baseobj_ty, refobj_ty));
   }
   
   case OPR_ARRAY:
-  case OPR_ARRSECTION: // FIXME: can we do arrsection?
-  case OPR_ARRAYEXP:
     return true;
     
   } // switch
@@ -241,8 +281,64 @@ IsVarRefTranslatableToXAIF(const WN* wn)
 }
 
 
+// IsRefSimpleArray: 
+bool 
+IsRefSimpleArray(const WN* wn)
+{
+  OPERATOR opr = WN_operator(wn);
+  switch (opr) {
+    
+  case OPR_LDA:  
+  case OPR_LDMA: 
+  case OPR_LDID: {
+    // yes if refobj_ty is of type array
+    TY_IDX baseobj_ty = WN_GetBaseObjType(wn);
+    TY_IDX refobj_ty = WN_GetRefObjType(wn);
+    return (TY_Is_Array(refobj_ty));
+  }
+    
+  case OPR_ARRSECTION: // FIXME: can we do arrsection?
+  case OPR_ARRAYEXP:
+    return true;
+    
+  } // switch
+  
+  return false;
+}
+
+
+// IsRefScalarizable: 
 bool
-IsScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty) 
+IsRefScalarizable(const WN* wn)
+{
+  OPERATOR opr = WN_operator(wn);
+  switch (opr) {
+    // FIXME: ILOADX, ISTOREX  /  ILDBITS, ISTBITS
+    
+  case OPR_LDA: 
+  case OPR_LDMA: 
+  case OPR_LDID: 
+  case OPR_LDBITS: 
+  case OPR_STID: 
+  case OPR_STBITS: 
+  case OPR_ILOAD: 
+  case OPR_ISTORE: {
+    // yes if refobj_ty is scalar and reference is non-scalar
+    // (for stores, only check LHS (kid1))
+    TY_IDX baseobj_ty = WN_GetBaseObjType(wn);
+    TY_IDX refobj_ty = WN_GetRefObjType(wn);
+    return (TY_Is_Scalar(refobj_ty) && !IsRefScalar(baseobj_ty, refobj_ty));
+  }
+    
+  } // switch
+
+  return false;
+}
+
+
+// IsRefScalar: 
+bool
+IsRefScalar(TY_IDX baseobj_ty, TY_IDX refobj_ty) 
 {
   if (TY_IsNonScalar(refobj_ty)) {
     // This is a reference to a non-scalar or a non-scalar within a
@@ -258,75 +354,6 @@ IsScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty)
   else {
     return false;
   }
-}
-
-
-// FIXME: 
-// IsScalarRef --> IsRefScalar
-// IsNonScalarRef --> IsRefNonScalar  // IsRefTranslatableToXAIF
-// Add: IsRefScalarizable
-
-
-bool
-IsNonScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty) 
-{
-  return (!IsScalarRef(baseobj_ty, refobj_ty));
-}
-
-
-// NOTE: for store OPERATORs, only the LHS is checked
-bool
-IsNonScalarRef(const WN* wn)
-{
-  // FIXME: redefine to be !IsVarRefTranslatableToXAIF
-
-  OPERATOR opr = WN_operator(wn);
-  switch (opr) {
-    // FIXME 
-    // ILOADX, ISTOREX
-    // ILDBITS, ISTBITS
-    // MLOAD, MSTORE: memref
-    
-  case OPR_LDA:  // FIXME:
-  case OPR_LDMA: // FIXME: 
-    break; // can this be used to access records?
-    
-  case OPR_LDID:
-  case OPR_LDBITS: 
-  case OPR_STID:
-  case OPR_STBITS: { // symref
-    // For stores, only check LHS (kid1)
-    TY_IDX baseobj_ty = WN_GetBaseObjType(wn);
-    TY_IDX refobj_ty = WN_GetRefObjType(wn);
-    return (IsNonScalarRef(baseobj_ty, refobj_ty));
-  }
-  
-  case OPR_ILOAD: 
-  case OPR_ISTORE: { // memref
-    // For stores, only check LHS (kid1)
-    TY_IDX baseobj_ty = WN_GetBaseObjType(wn);
-    TY_IDX refobj_ty = WN_GetRefObjType(wn);
-    return (IsNonScalarRef(baseobj_ty, refobj_ty));
-  }
-
-  case OPR_ARRAY:
-  case OPR_ARRSECTION: {
-    // Arrays: 
-    // Kid 0 is an LDA or LDID which represents the base of the array
-    // being referenced or defined. Kids 1..n are dimensions; Kids
-    // n+1..2n are the index expressions.
-    WN* base = WN_kid0(wn);
-    ASSERT_FATAL(WN_operator(base) == OPR_LDA || WN_operator(base) == OPR_LDID,
-		 (DIAG_A_STRING, "Error!"));
-    return true;
-  }
-
-  case OPR_ARRAYEXP: // FIXME
-    return true;
-    
-  } // switch
-
-  return false;
 }
 
 
@@ -347,15 +374,14 @@ WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2)
 //
 //***************************************************************************
 
-//FIXME: op should not be const because we call op(), which is non const.
 void 
-ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
+ForAllScalarizableRefs(const WN* wn, ForAllScalarizableRefsOp& op)
 {
   // Special base case
   if (wn == NULL) { return; }
 
   OPERATOR opr = WN_operator(wn);
-  if (IsNonScalarRef(wn)) {
+  if (IsRefScalarizable(wn)) {
     
     // Base case
     int ret = op(wn); // FIXME: what to do on error?
@@ -364,23 +390,24 @@ ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
     // expressions) we need to check the RHS (kid0) of the implied
     // assignment for non-scalar references.
     if (OPERATOR_is_store(opr)) {
-      ForAllNonScalarRefs(WN_kid0(wn), op);
+      ForAllScalarizableRefs(WN_kid0(wn), op);
     }
 
-  } else if (!OPERATOR_is_leaf(opr)) {
+  } 
+  else if (!OPERATOR_is_leaf(opr)) {
     
     // General recursive case
     if (WN_operator(wn) == OPR_BLOCK) {
       WN *kid = WN_first(wn);
       while (kid) {
-	ForAllNonScalarRefs(kid, op);
+	ForAllScalarizableRefs(kid, op);
 	kid = WN_next(kid);
       }
     } 
     else {
       for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
 	WN* kid = WN_kid(wn, kidno);
-	ForAllNonScalarRefs(kid, op);
+	ForAllScalarizableRefs(kid, op);
       }
     }
     

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.8 2004/06/11 19:45:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.9 2004/06/16 14:27:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -245,21 +245,65 @@ public:
 
 
 //***************************************************************************
-// 
+// Variable References and WHIRL/XAIF
 //***************************************************************************
 
+// These are the categories of WHIRL var-refs that are translatable to
+// XAIF without canonicalization:
+// 
+//   1. 'simple' (scalar, array element of non-structured type)
+//      a
+//      b(3), b(i)
+//      ??? array section ???
+//
+//   2. 'scalarizable' (scalar members of any structured type;
+//      involves path collapsing)
+//      s%a
+//      b(i)%a
+//
+//   ?. 'array references & array operations' (whole arrays of scalar
+//      element-type) (may involve path collapsing)
+//      (put in category 1 if XAIF gets array ops)
+//      x = y      ! where x and y are arrays of scalars
+//      s%x = s%y  ! must collapse access paths
+//
+// These are the categories of WHIRL var-refs that must be
+// canonicalized before translation into XAIF. Note that translation
+// in XAIF may involve access path collapsing.
+//   - non-scalarizable members of structures
+//   - whole structures
+//   - arrays [whole/slice/element] of structured type
+//
+// The XAIF 'opaque' type will be used to represent these types (an
+// array of structures is one 'opaque' type instead of an array of
+// opaque types). Var references to something of opaque type are
+// permissable and paths may need to be collapsed:
+//   foo(s)     ! where s is a structure
+//   foo(a[j])  ! where a[j] is in the second category [collapse]
+//   moo(m%x)   ! where m%x is in the second category [collapse]
+// though assignments of structures with active members will need to
+// be canonicalized into recursive member-wise assignments so they can
+// be scalarized.
+
 bool 
-IsVarRefTranslatableToXAIF(const WN* wn);
+IsRefTranslatableToXAIF(const WN* wn);
 
+bool 
+IsRefSimple(const WN* wn);
+bool 
+IsRefSimpleScalar(const WN* wn);
+bool 
+IsRefSimpleArrayElem(const WN* wn);
+bool 
+IsRefSimpleArray(const WN* wn);
 
 bool
-IsScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty);
+IsRefScalarizable(const WN* wn);
 
-bool
-IsNonScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty);
 
-bool
-IsNonScalarRef(const WN* wn);
+bool 
+IsRefScalar(TY_IDX baseobj_ty, TY_IDX refobj_ty);
+
 
 // WN2F_Can_Assign_Types: This determines whether or not a value of
 // type t1 can be used anywhere we expect a value of type t2.  When
@@ -274,14 +318,14 @@ WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2);
 // 
 //***************************************************************************
 
-// ForAllNonScalarRefsOp: Abstract base class for the operator passed
-// to the function 'ForAllNonScalarRefs(...)'.  Any caller of this
+// ForAllScalarizableRefsOp: Abstract base class for the operator passed
+// to the function 'ForAllScalarizableRefs(...)'.  Any caller of this
 // function must define its own operator object, using this class
 // as a base class and providing a definition for 'operator()'.
-class ForAllNonScalarRefsOp {
+class ForAllScalarizableRefsOp {
 public:
-  ForAllNonScalarRefsOp() { }
-  virtual ~ForAllNonScalarRefsOp() { }
+  ForAllScalarizableRefsOp() { }
+  virtual ~ForAllScalarizableRefsOp() { }
 
   // Given a non-scalar reference 'wn', does something interesting.
   // Returns 0 on success; non-zero on error.
@@ -290,12 +334,12 @@ private:
 };
 
 void 
-ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op);
+ForAllScalarizableRefs(const WN* wn, ForAllScalarizableRefsOp& op);
 
 
 
 // AddToScalarizedRefTabOp: Given a ScalarizedRefTab, add references to it
-class AddToScalarizedRefTabOp : public ForAllNonScalarRefsOp {
+class AddToScalarizedRefTabOp : public ForAllScalarizableRefsOp {
 public:
   AddToScalarizedRefTabOp(ScalarizedRefTab_W2X* tab_, PU_Info* curpu_);
   virtual ~AddToScalarizedRefTabOp();
