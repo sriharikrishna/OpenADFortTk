@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.22 2004/05/24 15:03:40 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.23 2004/07/15 18:29:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -817,11 +817,20 @@ WN2F_ios_inquire(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	      (DIAG_W2F_UNEXPECTED_IOS, 
 	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_inquire"));
   
+  xos << BegElem(XAIFStrings.elem_Marker())
+      << Attr("statement_id", ctxt.GetNewVId())
+      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << " [INQUIRE***]" << EndAttr
+      << EndElem;
+
+#if 0
   xos << "INQUIRE";
   xlate_IOControlList(xos, wn,
 		      0,                  /* from kid*/
 		      WN_kid_count(wn)-1, /* to kid*/
 		      ctxt);
+#endif 
+
 } /* WN2F_ios_inquire */
 
 
@@ -852,11 +861,6 @@ WN2F_ios_open(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	      (DIAG_W2F_UNEXPECTED_IOS, 
 	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_open"));
   
-  xos << BegElem(XAIFStrings.elem_Marker())
-      << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
-      << " [OPEN***]" << EndAttr
-      << EndElem;
 
 #if 0 // FIXME
   xlate_IOControlList(xos, wn,
