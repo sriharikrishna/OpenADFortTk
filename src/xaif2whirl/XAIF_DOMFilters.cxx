@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.12 2004/03/03 16:31:26 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.13 2004/03/24 13:32:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -294,16 +294,12 @@ XAIF_CFGElemFilter::acceptNode(const DOMNode *node) const
 short
 XAIF_BBElemFilter::acceptNode(const DOMNode *node) const
 {
-  if (onlyBasicBlock) {
-    if ( (node->getNodeType() == DOMNode::ELEMENT_NODE) && IsBB(node) ) {
-      return FILTER_ACCEPT;
-    }
-  } else {
-    if ( (node->getNodeType() == DOMNode::ELEMENT_NODE) && IsAnyBB(node) ) {
-      return FILTER_ACCEPT;
-    }
+  bool ans = (node->getNodeType() == DOMNode::ELEMENT_NODE) && IsAnyBB(node);
+  
+  if (includeEdges ) {
+    ans &= IsEdge(node);
   }
-  return FILTER_SKIP;
+  return (ans) ? FILTER_ACCEPT : FILTER_SKIP;
 }
 
 
@@ -353,6 +349,13 @@ XAIF_BBElemFilter::IsBBPostLoop(const DOMNode *node)
 {
   const XMLCh* name = node->getNodeName();
   return (XMLString::equals(name, XAIFStrings.elem_BBPostLoop_x()));
+}
+
+bool 
+XAIF_BBElemFilter::IsEdge(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_CFGEdge_x()));
 }
 
 //****************************************************************************

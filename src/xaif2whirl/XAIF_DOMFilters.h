@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.11 2004/03/03 16:31:26 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.12 2004/03/24 13:32:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -139,8 +139,8 @@ public:
   //  Constructors and Destructor
   // -----------------------------------------------------------------------
   // if 'onlyBasicBlock' is true, only xaif:BasicBlocks are in the iteration
-  XAIF_BBElemFilter(bool onlyBasicBlock_ = false)
-    : onlyBasicBlock(onlyBasicBlock_) { }
+  XAIF_BBElemFilter(bool edges = true)
+    : includeEdges(edges) { }
   ~XAIF_BBElemFilter() { }
   
   // -----------------------------------------------------------------------
@@ -155,8 +155,10 @@ public:
   static bool IsBBPreLoop(const DOMNode *node);
   static bool IsBBPostLoop(const DOMNode *node);
 
+  static bool IsEdge(const DOMNode *node);
+
 private:
-  bool onlyBasicBlock;
+  bool includeEdges;
 };
 
 
