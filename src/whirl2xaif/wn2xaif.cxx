@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.57 2004/05/24 13:29:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.58 2004/05/28 15:17:59 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1325,15 +1325,20 @@ xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 static void
 AddControlFlowEndTags(WN* wn, WhirlParentMap* wnParentMap)
 {
+  // FIXME: we should be skipping most expression sub trees like
+  // interface to NewOA.
+  
   WN_TREE_CONTAINER<PRE_ORDER> wtree(wn);
   WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
   for (it = wtree.begin(); it != wtree.end(); ++it) {
     WN* curWN = it.Wn();
     OPERATOR opr = WN_operator(curWN);
-
+    
+    const char* vty = GetCFGControlFlowVertexType(curWN);
+    if (!vty) { continue; }
+    
     // Find structured (and some unstructured) control flow and insert
     // placehoder statement.
-    const char* vty = GetCFGControlFlowVertexType(curWN);
     if (vty == XAIFStrings.elem_BBForLoop() || 
 	vty == XAIFStrings.elem_BBPostLoop() ||
 	vty == XAIFStrings.elem_BBPreLoop()) {
