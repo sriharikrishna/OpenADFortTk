@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.7 2003/05/21 18:21:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.8 2003/05/23 18:33:47 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -189,7 +189,7 @@ static const WN2F_OPR_HANDLER WN2F_Opr_Handler_List[] = {
   {OPR_ILOAD, &xlate_ILOAD},
   {OPR_ILOADX, &xlate_ILOADX},
   {OPR_MLOAD, &WN2F_mload},
-  {OPR_ARRAY, &WN2F_array},
+  {OPR_ARRAY, &xlate_ARRAY},
   
   {OPR_ARRAYEXP,&WN2F_arrayexp},      
   {OPR_ARRSECTION,&WN2F_arrsection},  
@@ -305,37 +305,11 @@ WN2F_STATUS
 whirl2xaif::TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {   
   if (!wn) { return EMPTY_WN2F_STATUS; }
-
-  const BOOL parenthesize = !XlationContext_no_parenthesis(ctxt);
-
-  /* Determine whether we are in a context where we expect this
-    * expression to have logically valued arguments, or whether
-    * we are entering a context where we expect this expression
-    * to be a logically valued argument.
-    */
-
-  // FIXME: I don't think we need these logical tests
-  if (OPCODE_is_boolean(WN_opcode(wn)) && 
-      WN2F_expr_has_boolean_arg(WN_opcode(wn))) { /* expect logical args */
-    /* Note that this may also be a logical argument, so
-     * XlationContext_is_logical_arg(ctxt) may also hold TRUE.  */
-    set_XlationContext_has_logical_arg(ctxt);
-  } else if (XlationContext_has_logical_arg(ctxt)) { /* is a logical arg */
-    /* This is the only place where we should need to check whether
-     * this is expected to be a logical valued expression. I.e. the
-     * only place where we apply XlationContext_has_logical_arg(ctxt).
-     * However, it may be set at other places (e.g. in wn2f_stmt.c).
-     */
-    reset_XlationContext_has_logical_arg(ctxt);
-    set_XlationContext_is_logical_arg(ctxt);
-  } else {
-    reset_XlationContext_has_logical_arg(ctxt);
-    reset_XlationContext_is_logical_arg(ctxt);
-  }
-
-  // Dispatch to the appropriate handler for this construct.
+  
   OPERATOR opr = WN_opc_operator(wn);
   //xos << BegComment << "Translating " << OPERATOR_name(opr) << EndComment;
+  
+  // Dispatch to the appropriate handler for this construct.
   return XlateWN_HandlerTable[opr](xos, wn, ctxt);
 }
 
@@ -363,7 +337,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xlate_EntryPoint(xos, wn, ctxt); 
 
   NonScalarSymTab* symtab = new NonScalarSymTab(); // FIXME
-  ctxt.CreateContext(XlationContext::NEW_PU, symtab);
+  ctxt.CreateContext(XlationContext::NOFLAG, symtab);
 
   WN* fbody = WN_func_body(wn);
   Pro64IRInterface irInterface;
@@ -931,10 +905,11 @@ WN2F_Address_Of(xml::ostream& xos)
   xos << "loc%()"; // FIXME
 }
 
-// FIXME: renme to xlate_SymRef
+
 WN2F_STATUS
-WN2F_Offset_Symref(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
-                   TY_IDX ref_ty, STAB_OFFSET offset, XlationContext& ctxt)
+whirl2xaif::xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
+			 TY_IDX ref_ty, STAB_OFFSET offset,
+			 XlationContext& ctxt)
 {
   // Given a base symbol 'base_st' and an offset 'offset' within it,
   // generate an XAIF expression to reference an object of 'ref_ty' at
@@ -958,47 +933,12 @@ WN2F_Offset_Symref(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
    * "Stab_Pointer_To(ST_type(base_st))", both for "deref" cases and 
    * ptr_as_array variables.  */
 
-  TY_IDX     base_ty = TY_pointed(baseptr_ty); 
-  const BOOL deref_val = ctxt.IsDerefAddr();
-  BOOL       deref_fld;
-  void     (*translate_var_ref)(xml::ostream&, ST*, XlationContext&);
-  
-
-  // FIXME: for now, make sure this is only used for data refs 
-  if (ST_class(base_st) == CLASS_FUNC) {
-    //assert(false && "symref FIXME");
-    std::cerr << "WN2F_Offset_Symref: translating function ref\n";
-  }
-  
-#ifdef __USE_COMMON_BLOCK_NAME__
-  /* Do the symbol translation from the base of BASED symbols */
-  if (Stab_Is_Based_At_Common_Or_Equivalence(base_st)) {
-    offset += ST_ofst(base_st); /* offset of based symbol */
-    base_st = ST_base(base_st); /* replace based symbol with its base */
-    
-    base_ty = ST_type(base_st);
-    baseptr_ty = Stab_Pointer_To(base_ty);
-    Set_BE_ST_w2fc_referenced(base_st);
-  }
-  
-  /* Do the symbol translation from the base of fully split common symbols */
-  if (ST_is_split_common(base_st)) {
-    Clear_BE_ST_w2fc_referenced(base_st); // no split base, just user COMMON
-    base_st = ST_full(base_st);
-    Set_BE_ST_w2fc_referenced(base_st);
-    base_ty = ST_type(base_st);
-    
-    if (TY_is_Pointer(base_ty))
-      base_ty = TY_pointed(base_ty);
-    
-    if (TY_is_f90_pointer(base_ty)) //Sept
-      base_ty = TY_pointed(base_ty);
-    
-    baseptr_ty = Stab_Pointer_To(base_ty);
-  }
-#endif 
+  TY_IDX base_ty = TY_pointed(baseptr_ty); 
   
   /* Select variable-reference translation function */
+  const BOOL deref_val = ctxt.IsDerefAddr();
+  void (*translate_var_ref)(xml::ostream&, ST*, XlationContext&);
+
   if (deref_val && (ST_sclass(base_st) != SCLASS_FORMAL) 
       && TY_Is_Pointer(ST_type(base_st)) 
       && !TY_is_f90_pointer(ST_type(base_st))) {
@@ -1009,60 +949,58 @@ WN2F_Offset_Symref(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
     translate_var_ref = &TranslateSTUse;
   }
   
+  // If we are not already within xaif:VariableReference... (FIXME: abstract)
+  bool newContext = false;
+  if (ST_class(base_st) != CLASS_CONST && !ctxt.IsVarRef()) {
+    xos << BegElem("xaif:VariableReference")
+	<< Attr("vertex_id", ctxt.GetNewVId());
+    ctxt.CreateContext(XlationContext::VARREF); // FIXME: do we need wn?
+    newContext = true; 
+  }
+  
+  
+  // FIXME: for now, make sure this is only used for data refs 
+  if (ST_class(base_st) == CLASS_FUNC) {
+    //assert(false && "symref FIXME");
+    std::cerr << "xlate_SymRef: translating function ref\n";
+  } else if (ST_class(base_st) == CLASS_BLOCK) { // FIXME
+    TranslateSTUse(xos, base_st, ctxt);
+    xos << "+ " << Num2Str(offset, "%lld");
+  }
   
   if (IsScalarRef(base_ty, ref_ty)) {
 
     // 1. Reference to a scalar symbol (==> offset into 'base_st' is zero)
     // FIXME: what about FUNCTIONS?
     ASSERT_WARN(offset == 0, (DIAG_W2F_UNEXPEXTED_OFFSET, offset, 
-			      "WN2F_Offset_Symref"));
-
-    if (!ctxt.IsLValue()) {
-      xos << BegElem("xaif:VariableReference") 
-	  << Attr("vertex_id", ctxt.GetNewVId());
-      ctxt.CreateContext();
-    }
+			      "xlate_SymRef"));
     translate_var_ref(xos, base_st, ctxt);
-    if (!ctxt.IsLValue()) {
-      ctxt.DeleteContext();
-      xos << EndElem /* xaif:VariableReference */;
-    }
 
   } else if (TY_Is_Array(base_ty)) {
 
     // 2. Array reference (non-scalar) 
 #if 0 // FIXME
     ASSERT_DBG_WARN(WN2F_Can_Assign_Types(TY_AR_etype(base_ty), ref_ty),
-		    (DIAG_W2F_INCOMPATIBLE_TYS, "WN2F_Offset_Symref"));
+		    (DIAG_W2F_INCOMPATIBLE_TYS, "xlate_SymRef"));
 #endif
-
-
-    WN* wn = ctxt.GetWN();
-    NonScalarSym* sym = ctxt.FindNonScalarSym(wn);
-    if (sym) {
-      xos << BegElem("xaif:NONSCALAR") << Attr("id", sym->GetName()) 
-	  << EndAttr;
-    }
     
     // FIXME: Call 'xlate_non_scalar_ref'.  Get a dummy variable.  As
     // properties translate the exact reference.
     translate_var_ref(xos, base_st, ctxt);
-
+    
     //if (TY_Is_Character_String(base_ty)) { } 
     if (!XlationContext_has_no_arr_elmt(ctxt)) {
       TY2F_Translate_ArrayElt(xos, base_ty, offset); // FIXME
       reset_XlationContext_has_no_arr_elmt(ctxt);
     }
     
-    if (sym) { xos << EndElem; }
-
   } else {
-
+    
     // 3. Structure (non-scalar)
-
+    
     // call 'xlate_derivedtype_ref'
     // Get the dummy variable (need the parent wn) FIXME
-    WN* wn = ctxt.GetWN();
+    WN* wn = ctxt.GetWN(); // FIXME
     NonScalarSym* sym = ctxt.FindNonScalarSym(wn);
     if (sym) {
       xos << BegElem("xaif:NONSCALAR") << Attr("id", sym->GetName())
@@ -1073,9 +1011,9 @@ WN2F_Offset_Symref(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
      * dereferenced.  We never need to have both dereferenced, 
      * since pointers cannot occur in RECORDS and common/
      * equivalence blocks cannot be referenced through pointer 
-     * identifiers.
-     */
+     * identifiers. */
     FLD_PATH_INFO *fld_path = NULL;
+    BOOL deref_fld;
     if ( !(TY_IsRecord(ref_ty) /* && FIXME*/) ) {
       deref_fld = (deref_val && !TY_Is_Pointer(ST_type(base_st))) ? TRUE:FALSE;
       if (deref_fld) {  ref_ty = Stab_Pointer_To(ref_ty); }
@@ -1085,7 +1023,6 @@ WN2F_Offset_Symref(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
     if (fld_path == NULL) {
       translate_var_ref(xos, base_st, ctxt);
     } else {
-
       /* Base the path at the 'base_st' object, and separate it from
        * the remainder of the path with the field selection operator. */
       translate_var_ref(xos, base_st, ctxt);
@@ -1101,9 +1038,15 @@ WN2F_Offset_Symref(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
     if (sym) { xos << EndElem; }
 
   }
+
+  if (newContext) {
+    ctxt.DeleteContext();
+    xos << EndElem /* xaif:VariableReference */;
+  }
+
   
   return EMPTY_WN2F_STATUS;
-} /* WN2F_Offset_Symref */
+} /* xlate_SymRef */
 
 
 // rename to xlate_memref (derefaddr)
@@ -1147,6 +1090,15 @@ WN2F_Offset_Memref(xml::ostream& xos,
     assert(false && "memref FIXME");
   }
 
+  bool newContext = false;
+  if (!ctxt.IsVarRef()) {
+    xos << BegElem("xaif:VariableReference")
+	<< Attr("vertex_id", ctxt.GetNewVId());
+    ctxt.CreateContext(XlationContext::VARREF); // FIXME: do we need wn?
+    newContext = true; 
+  }
+
+
   /* Prepare to dereference the base-address expression */
   ctxt.SetDerefAddr();
   
@@ -1172,13 +1124,6 @@ WN2F_Offset_Memref(xml::ostream& xos,
 		      (DIAG_W2F_INCOMPATIBLE_TYS, "WN2F_Offset_Memref"));
 #endif
 	
-      WN* wn = ctxt.GetWN();
-      NonScalarSym* sym = ctxt.FindNonScalarSym(wn);
-      if (sym) {
-	xos << BegElem("xaif:NONSCALAR") << Attr("id", sym->GetName()) 
-	    << EndAttr;
-      }
-
       if (TY_Is_Character_String(base_ty)) {
 	TranslateWN(xos, addr, ctxt); /* String lvalue */	  
 	if (!XlationContext_has_no_arr_elmt(ctxt))
@@ -1191,8 +1136,6 @@ WN2F_Offset_Memref(xml::ostream& xos,
 	  reset_XlationContext_has_no_arr_elmt(ctxt);
       }
       
-      if (sym) { xos << EndElem; }
-
     } else if ((WN_opc_operator(addr) == OPR_LDA
 		|| WN_opc_operator(addr) == OPR_LDID) 
 	       && (TY_kind(base_ty) != KIND_STRUCT)
@@ -1200,13 +1143,13 @@ WN2F_Offset_Memref(xml::ostream& xos,
 		   || Stab_Is_Equivalence_Block(WN_st(addr)))) {
       
       // 3. A common-block or equivalence-block, both of which we
-      // handle only in WN2F_Offset_Symref().
+      // handle only in xlate_SymRef().
       ASSERT_WARN(WN2F_Can_Assign_Types(ST_type(WN_st(addr)), base_ty) ,
-		  (DIAG_W2F_INCOMPATIBLE_TYS, "WN2F_Offset_Symref"));
+		  (DIAG_W2F_INCOMPATIBLE_TYS, "xlate_SymRef"));
       
       if (WN_opc_operator(addr) == OPR_LDA)
 	ctxt.ResetDerefAddr();
-      WN2F_Offset_Symref(xos, WN_st(addr), addr_ty, ref_ty,
+      xlate_SymRef(xos, WN_st(addr), addr_ty, ref_ty,
 			 offset + WN_lda_offset(addr) /*offset*/, ctxt);
     } else { 
       // 4. Field access (Neither common-block nor equivalence)
@@ -1237,7 +1180,7 @@ WN2F_Offset_Memref(xml::ostream& xos,
       
       /* May have ARRAY(ADD(ARRAY(LDA),CONST)) or some such. */
       /* The deepest ARRAY (with the address) is handled     */
-      /* by the WN2F_array processing, but the others        */
+      /* by the xlate_ARRAY processing, but the others        */
       /* are field references with array components.         */
       LOC_INFO det(fld_path);
       det.WN2F_Find_And_Mark_Nested_Address(addr);
@@ -1258,6 +1201,11 @@ WN2F_Offset_Memref(xml::ostream& xos,
 
       if (sym) { xos << EndElem; }
     }    
+  }
+
+  if (newContext) {
+    ctxt.DeleteContext();
+    xos << EndElem /* xaif:VariableReference */;
   }
 
   return EMPTY_WN2F_STATUS;

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.5 2003/05/20 23:28:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.6 2003/05/23 18:33:48 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -91,7 +91,11 @@ using namespace xml; // for xml::ostream, etc
 
 //************************** Forward Declarations ***************************
 
-static void WN2F_Block(xml::ostream& xos, ST * st, STAB_OFFSET off, XlationContext& ctxt) ;
+static WN2F_STATUS 
+DumpVarRefEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid);
+
+static void 
+WN2F_Block(xml::ostream& xos, ST * st, STAB_OFFSET off, XlationContext& ctxt);
 
 static WN *WN2F_ZeroInt_Ptr = NULL;
 static WN *WN2F_OneInt_Ptr = NULL;
@@ -103,38 +107,16 @@ static WN *WN2F_OneInt_Ptr = NULL;
    (WN2F_OneInt_Ptr == NULL? WN2F_OneInt_Ptr = WN2F_Initiate_OneInt() \
                             : WN2F_OneInt_Ptr)
 
-void WN2F_Arrsection_Slots(xml::ostream& xos, WN *wn, XlationContext& ctxt, BOOL parens);
-void WN2F_Array_Slots(xml::ostream& xos, WN *wn, XlationContext& ctxt, BOOL parens);
+static void 
+WN2F_Arrsection_Slots(xml::ostream& xos, WN *wn, XlationContext& ctxt, BOOL parens);
+
+static void 
+xlate_ArrayIndices(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 //***************************************************************************
 
 /*------------------------- Utility Functions ------------------------*/
 /*--------------------------------------------------------------------*/
-
-static ST *
-WN2F_Get_Named_Param(const WN *pu, const char *param_name)
-{
-  /* Find a parameter with a matching name, if possible, otherwise
-   * return NULL.
-   */
-  ST *param_st = NULL;
-  INT param, num_formals;
-  
-  if (WN_opcode(pu) == OPC_ALTENTRY)
-    num_formals = WN_kid_count(pu);
-  else
-    num_formals = WN_num_formals(pu);
-  
-  /* Search through the parameter ST entries
-   */
-  for (param = 0; param_st == NULL && param < num_formals; param++) {
-    if (ST_name(WN_st(WN_formal(pu, param))) != NULL &&
-	strcmp(ST_name(WN_st(WN_formal(pu, param))), param_name) == 0)
-      param_st = WN_st(WN_formal(pu, param));
-  }
-  return param_st;
-} /* WN2F_Get_Named_Param */
-
 
 static WN *
 WN2F_Initiate_ZeroInt(void)
@@ -167,295 +149,6 @@ WN2F_Initiate_OneInt(void)
 } /* WN2F_Initiate_ZeroInt */
 
 
-static BOOL
-WN2F_Expr_Plus_Literal(std::string& str,
-		       WN          *wn,
-		       INT64        literal,
-		       XlationContext& ctxt)
-{
-  /* Returns TRUE if the resultant value is constant and different
-   * from zero.
-   */
-  const BOOL parenthesize = !XlationContext_no_parenthesis(ctxt);
-  BOOL       is_const = TRUE;
-  INT64      value;
-  
-  if (WN_operator(wn) == OPR_INTCONST)
-    value = WN_const_val(wn) + literal;
-  else if (WN_operator(wn) == OPR_CONST)
-    value = Targ_To_Host(STC_val(WN_st(wn))) + literal;
-  else
-    is_const = FALSE;
-  
-  if (is_const) {
-    if (WN_operator(wn) == OPR_INTCONST) {
-      std::string val = TCON2F_translate(Host_To_Targ(WN_opc_rtype(wn), value),
-					 FALSE/*is_logical*/);
-      str += "EXPR+LIT: " + val;
-    } else {  //WN_operator(wn) == OPR_CONST
-     ; //Shouldn't be here
-    }
- 
-  } else {
-    if (parenthesize) {
-      reset_XlationContext_no_parenthesis(ctxt);
-      str += '(';
-    } 
-    if (WN_operator(wn) == OPR_IMPLICIT_BND)
-      str += '*';
-    else {
-      // FIXME: 
-      std::ostringstream xos_sstr;
-      xml::ostream xos(xos_sstr.rdbuf());
-
-      TranslateWN(xos, wn, ctxt);
-      str += xos_sstr.str();
-    }
-    
-    if (parenthesize)
-      str += ')';
-  }
-  
-  return is_const && (value != 0LL);
-} /* WN2F_Expr_Plus_Literal */
-
-
-static WN2F_STATUS
-WN2F_OLD_Den_Arr_Idx(xml::ostream& xos, WN *idx_expr, XlationContext& ctxt)
-{
-  const BOOL   parenthesize = !XlationContext_no_parenthesis(ctxt);
-  BOOL         non_zero, cexpr_is_lhs;
-  WN          *nexpr, *cexpr;
-  INT64        plus_value;
-  
-  /* Given an index expression, translate it to Fortran and append
-   * the tokens to the given token-buffer.  If the value of the idx
-   * expression is "v", then the appended tokens should represent
-   * the value "v+1".  This denormalization moves the base of the
-   * array from index zero to index one.
-   */
-  if (WN_operator(idx_expr) == OPR_ADD && 
-      (WN_is_constant_expr(WN_kid1(idx_expr)) || 
-       WN_is_constant_expr(WN_kid0(idx_expr)))) {
-    /* Do the "e+c" ==> "e+(c+1)" translation, using the property
-     * that addition is commutative.
-     */
-    if (WN_is_constant_expr(WN_kid1(idx_expr))) {
-      cexpr = WN_kid1(idx_expr);
-      nexpr = WN_kid0(idx_expr);
-    } else { /* if (WN_is_constant_expr(WN_kid0(idx_expr))) */
-      cexpr = WN_kid0(idx_expr);
-      nexpr = WN_kid1(idx_expr);
-    }
-
-    std::string str;
-    non_zero = WN2F_Expr_Plus_Literal(str, cexpr, 1LL, ctxt);
-    if (non_zero) {
-      if (parenthesize) {
-	reset_XlationContext_no_parenthesis(ctxt);
-	xos << '(';
-      }
-      TranslateWN(xos, nexpr, ctxt);
-      xos << '+' << str;
-      if (parenthesize)
-	xos << ')';
-    } else {
-      TranslateWN(xos, nexpr, ctxt);
-    }
-  } else if (WN_operator(idx_expr) == OPR_SUB && 
-	     (WN_is_constant_expr(WN_kid1(idx_expr)) || 
-	      WN_is_constant_expr(WN_kid0(idx_expr)))) {
-    /* Do the "e-c" ==> "e-(c-1)" or the  "c-e" ==> "(c+1)-e"
-     * translation.
-     */
-    cexpr_is_lhs = WN_is_constant_expr(WN_kid0(idx_expr));
-    if (!cexpr_is_lhs) {
-      cexpr = WN_kid1(idx_expr);
-      nexpr = WN_kid0(idx_expr);
-      plus_value = -1LL;
-    } else {
-      cexpr = WN_kid0(idx_expr);
-      nexpr = WN_kid1(idx_expr);
-      plus_value = 1LL;
-    }
-    
-    /* Do the "e-c" ==> "e-(c-1)" or the  "c-e" ==> "(c+1)-e"
-     * translation.
-     */
-    std::string str;
-    non_zero = WN2F_Expr_Plus_Literal(str, cexpr, plus_value, ctxt);
-    if (non_zero) {
-      if (parenthesize) {
-	reset_XlationContext_no_parenthesis(ctxt);
-	xos << '(';
-      } 
-      if (!cexpr_is_lhs) {
-	TranslateWN(xos, nexpr, ctxt);
-	xos << '-' << str;
-      } else {
-	xos << str << '-';
-	TranslateWN(xos, nexpr, ctxt);
-      }
-      if (parenthesize)
-	xos << ')';
-    } else {
-      if (cexpr_is_lhs) {
-	if (parenthesize) {
-	  reset_XlationContext_no_parenthesis(ctxt);
-	  xos << '(';
-	}
-	xos << '-';
-	TranslateWN(xos, nexpr, ctxt);
-	if (parenthesize)
-	  xos << ')';
-      } else {
-	TranslateWN(xos, nexpr, ctxt);
-      }
-    }
-  } else {
-    std::string str;
-    WN2F_Expr_Plus_Literal(str, idx_expr, 1LL, ctxt); // FIXME
-    xos << str;
-  }
-  return EMPTY_WN2F_STATUS;
-}
-
-static WN2F_STATUS
-WN2F_Denormalize_Array_Idx(xml::ostream& xos, 
-			   WN          *idx_expr, 
-			   XlationContext& ctxt)
-{
-   const BOOL   parenthesize = !XlationContext_no_parenthesis(ctxt);
-   BOOL         non_zero, cexpr_is_lhs;
-   WN          *nexpr, *cexpr;
-   INT64        plus_value;
-   
-   /* Given an index expression, translate it to Fortran and append
-    * the tokens to the given token-buffer.  If the value of the idx
-    * expression is "v", then the appended tokens should represent
-    * the value "v+1".  This denormalization moves the base of the
-    * array from index zero to index one.
-    */
-   if (idx_expr==NULL) { return EMPTY_WN2F_STATUS; }
-
-   if (WN_operator(idx_expr) == OPR_ADD && 
-       (WN_is_constant_expr(WN_kid1(idx_expr)) || 
-	WN_is_constant_expr(WN_kid0(idx_expr)))) {
-     /* Do the "e+c" ==> "e+(c+1)" translation, using the property
-      * that addition is commutative.
-      */
-     if (WN_is_constant_expr(WN_kid1(idx_expr))) {
-       cexpr = WN_kid1(idx_expr);
-       nexpr = WN_kid0(idx_expr);
-     } else { /* if (WN_is_constant_expr(WN_kid0(idx_expr))) */
-       cexpr = WN_kid0(idx_expr);
-       nexpr = WN_kid1(idx_expr);
-     }
-
-     std::string str; 
-     non_zero = WN2F_Expr_Plus_Literal(str, cexpr, 0LL, ctxt);
-     if (non_zero) {
-       if (parenthesize) {
-	 reset_XlationContext_no_parenthesis(ctxt);
-	 xos << '(';
-       }
-       TranslateWN(xos, nexpr, ctxt);
-       xos << '+' << str;
-       if (parenthesize)
-	 xos << ')';
-     } else {
-       TranslateWN(xos, nexpr, ctxt);
-     }
-
-   } else if (WN_operator(idx_expr) == OPR_SUB && 
-	      (WN_is_constant_expr(WN_kid1(idx_expr)) || 
-	       WN_is_constant_expr(WN_kid0(idx_expr)))) {
-      /* Do the "e-c" ==> "e-(c-1)" or the  "c-e" ==> "(c+1)-e"
-       * translation.
-       */
-      cexpr_is_lhs = WN_is_constant_expr(WN_kid0(idx_expr));
-      if (!cexpr_is_lhs) {
-	cexpr = WN_kid1(idx_expr);
-	nexpr = WN_kid0(idx_expr);
-	plus_value = 0LL;
-      } else {
-	cexpr = WN_kid0(idx_expr);
-	nexpr = WN_kid1(idx_expr);
-	plus_value = 0LL;
-      }
-      
-      /* Do the "e-c" ==> "e-(c-1)" or the  "c-e" ==> "(c+1)-e"
-       * translation.
-       */
-      std::string str;
-      non_zero = WN2F_Expr_Plus_Literal(str, cexpr, plus_value, ctxt);
-      if (non_zero) {
-	if (parenthesize) {
-	  reset_XlationContext_no_parenthesis(ctxt);
-	  xos << '(';
-	} if (!cexpr_is_lhs) {
-	  TranslateWN(xos, nexpr, ctxt);
-	  xos << '-' << str;
-	} else {
-	  xos << str << '-';
-	  TranslateWN(xos, nexpr, ctxt);
-	}
-	if (parenthesize)
-	  xos << ')';
-
-      } else {
-	if (cexpr_is_lhs) {
-	  if (parenthesize) {
-	    reset_XlationContext_no_parenthesis(ctxt);
-	    xos << '(';
-	  }
-	  xos << '-';
-	  TranslateWN(xos, nexpr, ctxt);
-	  if (parenthesize)
-	    xos << ')';
-	} else {
-	  TranslateWN(xos, nexpr, ctxt);
-	}
-      }
-      
-   } else {
-     std::string str;
-     WN2F_Expr_Plus_Literal(str, idx_expr, 0LL, ctxt); // FIXME
-     xos << str;
-   }
-
-   return EMPTY_WN2F_STATUS;
-} /* WN2F_Denormalize_Array_Idx */
-
-
-static void
-WN2F_Normalize_Idx_To_Onedim(xml::ostream& xos, WN* wn, XlationContext& ctxt)
-{
-  INT32 dim1, dim2;
-  
-  /* Parenthesize the normalized index expressions */
-  reset_XlationContext_no_parenthesis(ctxt);
-  
-  for (dim1 = 0; dim1 < WN_num_dim(wn); dim1++) {
-    if (dim1 > 0)
-      xos << '+';
-
-    /* Multiply the index expression with the product of the sizes
-     * of subordinate dimensions, where a higher dimension-number
-     * means a more subordinate dimension.  Do not parenthesize the
-     * least significant index expression.
-     */   
-    if (dim1+1 == WN_num_dim(wn))
-      set_XlationContext_no_parenthesis(ctxt);
-    WN2F_Denormalize_Array_Idx(xos, WN_array_index(wn, dim1), ctxt);
-    for (dim2 = dim1+1; dim2 < WN_num_dim(wn); dim2++) {
-      xos << "*";
-      TranslateWN(xos, WN_array_dim(wn, dim2), ctxt);
-    }
-  }
-}
-
-
 static void
 WN2F_Substring(xml::ostream& xos, 
 	       INT64        string_size,
@@ -476,10 +169,7 @@ WN2F_Substring(xml::ostream& xos,
       /* Need to generate substring expression "(l+1:l+size)" */
       xos << "(";
       set_XlationContext_no_parenthesis(ctxt);
-      /* WN2F_Denormalize_Array_Idx(xos, lower_bnd, ctxt);*/
-
-      WN2F_OLD_Den_Arr_Idx(xos, lower_bnd, ctxt);
-
+      TranslateWN(xos, lower_bnd, ctxt);
       reset_XlationContext_no_parenthesis(ctxt);
       xos << ":";
       if (WN_operator(lower_bnd) != OPR_INTCONST ||
@@ -511,10 +201,8 @@ WN2F_Get_Substring_Info(WN **base,        /* Possibly OPR_ARRAY node (in/out)*/
 
    *string_ty = TY_pointed(ptr_ty);
 
-   if (TY_size(*string_ty) == 1 && 
-       !TY_Is_Array(*string_ty) &&
-       WN_operator(*base) == OPR_ARRAY)
-   {
+   if (TY_size(*string_ty) == 1 && !TY_Is_Array(*string_ty)
+       && WN_operator(*base) == OPR_ARRAY) {
       /* Let the base of the string be denoted as the base of the array
        * expression.
        */
@@ -527,16 +215,13 @@ WN2F_Get_Substring_Info(WN **base,        /* Possibly OPR_ARRAY node (in/out)*/
 	    TY_Is_Array(*string_ty)             &&
 	    TY_AR_ndims(*string_ty) == 1        &&
 	    TY_Is_Character_String(*string_ty)  &&
-	    !TY_ptr_as_array(Ty_Table[ptr_ty]))
-   {
-      /* Presumably, the lower bound is given by the array operator
-       */
+	    !TY_ptr_as_array(Ty_Table[ptr_ty])) {
+      /* Presumably, the lower bound is given by the array operator */
       *lower_bnd = WN_array_index(*base, 0);
       *length    = WN_kid1(*base);
       *base = WN_kid0(*base);
    }
-   else
-   {
+   else {
       *lower_bnd = WN2F_INTCONST_ZERO;
       *length    = WN2F_INTCONST_ZERO;
    }
@@ -546,11 +231,9 @@ static WN *
 WN2F_Find_Base(WN *addr)
 {
   /* utility to find base of address tree */
-
   WN *res = addr;
 
-  switch (WN_operator(addr))
-  {
+  switch (WN_operator(addr)) {
     case OPR_ARRAY: 
     case OPR_ILOAD:
     res=WN_kid0(addr);
@@ -578,34 +261,26 @@ WN2F_Is_Address_Preg(WN * ad ,TY_IDX ptr_ty)
 
   BOOL is_somewhat_address_like = TY_kind(ptr_ty) == KIND_POINTER;
   
-  if (TY_kind(ptr_ty) == KIND_SCALAR) 
-  {
+  if (TY_kind(ptr_ty) == KIND_SCALAR) {
     TYPE_ID tid = TY_mtype(ptr_ty);
-
     is_somewhat_address_like |= (MTYPE_is_pointer(tid)) || (tid == MTYPE_I8) || (tid == MTYPE_I4) ;
   }
 
-  if (is_somewhat_address_like)
-  {
+  if (is_somewhat_address_like) {
     WN * wn = WN2F_Find_Base(ad);
-    
-    if (WN_operator(wn) == OPR_LDID) 
-    {
+    if (WN_operator(wn) == OPR_LDID) {
       ST * st = WN_st(wn) ;
       if (ST_class(st) == CLASS_PREG)
 	return TRUE ;
       
-      if (ST_class(st) == CLASS_VAR) 
-      {
+      if (ST_class(st) == CLASS_VAR) {
 	if (TY_kind(ptr_ty) == KIND_SCALAR)
 	  return TRUE;
 	
-	if (TY_kind(WN_ty(wn)) == KIND_SCALAR)
-	{
+	if (TY_kind(WN_ty(wn)) == KIND_SCALAR) {
 	  TYPE_ID wtid = TY_mtype(WN_ty(wn));
 	  
 	  /* Looks like a Cray pointer (I4/I8) ? */
-	  
 	  if ((wtid == MTYPE_I8)|| (wtid == MTYPE_I4))
 	    if (ad != wn)
 	      return TRUE ;
@@ -613,7 +288,6 @@ WN2F_Is_Address_Preg(WN * ad ,TY_IDX ptr_ty)
 	  /* Looks like a VAR with a U4/U8? used  */
 	  /* only with offsets, or FORMALs would  */
 	  /* qualify, if intrinsic mtype          */
-	  
 	  if (MTYPE_is_pointer(wtid))
 	    if (TY_kind(ST_type(st)) != KIND_SCALAR)
 	      return TRUE;
@@ -624,24 +298,6 @@ WN2F_Is_Address_Preg(WN * ad ,TY_IDX ptr_ty)
   return FALSE;
 }
 
-/*---------------------- Prefetching Comments ------------------------*/
-/*--------------------------------------------------------------------*/
-
-static void
-WN2F_Append_Prefetch_Map(xml::ostream& xos, WN *wn)
-{
-  PF_POINTER* pfptr = (PF_POINTER*)WN_MAP_Get(WN_MAP_PREFETCH, wn);
-  
-  xos << "prefetch (ptr, lrnum): ";
-  if (pfptr->wn_pref_1L) {
-    xos << "1st <" << Ptr_as_String(pfptr->wn_pref_1L) << ", " 
-	<< WHIRL2F_number_as_name(pfptr->lrnum_1L) << ">";
-  }
-  if (pfptr->wn_pref_2L) {
-    xos << "2nd <" << Ptr_as_String(pfptr->wn_pref_2L) << ", "
-	<< WHIRL2F_number_as_name(pfptr->lrnum_2L) << ">";
-  }
-}
 
 //***************************************************************************
 // Loads (In WHIRL, loads are expressions.)
@@ -654,42 +310,25 @@ whirl2xaif::xlate_LDA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_LDA"));
   ASSERT_DBG_FATAL(ST_class(WN_st(wn)) != CLASS_PREG, 
 		   (DIAG_W2F_CANNOT_LDA_PREG));
-
+  
   // The referenced object's address is at some offset from the base
   // object.  These are types for 1) the base object and a pointer to
   // it 2) the referenced object.
   ST* base_st = WN_st(wn); // symbol for base object
   TY_IDX base_ty = ST_type(base_st);
-  TY_IDX baseptr_ty;
-  TY_IDX ref_ty = TY_pointed(WN_ty(wn));
+  if (TY_is_f90_pointer(base_ty)) { base_ty = TY_pointed(base_ty); }
+  TY_IDX baseptr_ty = Stab_Pointer_To(base_ty);
 
-  if (!TY_Is_Pointer(WN_ty(wn))) {
-    // Sometimes we need to deal with buggy WHIRL code, where the type
-    // associated with an LDA is not a pointer type.  For such cases
-    // we infer a type; it may be wrong but it is the best we can do.
-    ref_ty = ST_type(base_st); // FIXME
-  }
-
-  if (TY_is_f90_pointer(base_ty)) {
-    base_ty = TY_pointed(base_ty);
-  }
-  baseptr_ty = Stab_Pointer_To(base_ty);
-  
-  if (!ctxt.IsDerefAddr()) { //FIXME
-    set_XlationContext_no_parenthesis(ctxt); /* true address-of operation */
-  }
-
+  // Sometimes we need to deal with buggy WHIRL code, where the type
+  // associated with an LDA is not a pointer type.  For such cases
+  // we infer a type; it may be wrong but it is the best we can do.
+  TY_IDX ref_ty = (TY_Is_Pointer(WN_ty(wn))) ? TY_pointed(WN_ty(wn)) : base_ty;
+    
   ctxt.ResetDerefAddr();
-  if (ST_sym_class(base_st) == CLASS_BLOCK) {
-    WN2F_Block(xos, base_st, WN_lda_offset(wn), ctxt);
-  } else {
-       
-    set_XlationContext_has_no_arr_elmt(ctxt);
-    WN2F_Offset_Symref(xos, base_st, baseptr_ty, ref_ty, 
-		       WN_lda_offset(wn), ctxt);
-    reset_XlationContext_has_no_arr_elmt(ctxt);
-  }
-
+  set_XlationContext_has_no_arr_elmt(ctxt);
+  xlate_SymRef(xos, base_st, baseptr_ty, ref_ty, WN_lda_offset(wn), ctxt);
+  reset_XlationContext_has_no_arr_elmt(ctxt);
+  
   return EMPTY_WN2F_STATUS;
 }
 
@@ -706,7 +345,7 @@ whirl2xaif::xlate_LDID(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   TY_IDX base_ty = ST_type(WN_st(wn));
   TY_IDX baseptr_ty;
   TY_IDX ref_ty = WN_ty(wn);
-
+  
   if (ST_class(WN_st(wn)) == CLASS_PREG) {
     ST2F_Use_Preg(xos, base_ty, WN_load_offset(wn)); // FIXME if WN_load_offset(wn) == -1
   } else {
@@ -729,7 +368,7 @@ whirl2xaif::xlate_LDID(xml::ostream& xos, WN* wn, XlationContext& ctxt)
       //
       // Note that this does not handle a pointer to a struct to be
       // treated as an array of structs, where the object type and
-      // offset denote a member of the struct, since WN2F_Offset_Symref() 
+      // offset denote a member of the struct, since xlate_SymRef() 
       // cannot access a struct member through an array access.
       if (TY_ptr_as_array(Ty_Table[base_ty])) {
 	base_ty = Stab_Array_Of(TY_pointed(base_ty), 0/*size*/);
@@ -744,7 +383,7 @@ whirl2xaif::xlate_LDID(xml::ostream& xos, WN* wn, XlationContext& ctxt)
       // Either not a dereference, or possibly a dereference off a 
       // record/map/common/equivalence field.  The base symbol is
       // not a pointer, and any dereferencing on a field will occur
-      // in WN2F_Offset_Symref().
+      // in xlate_SymRef().
       baseptr_ty = Stab_Pointer_To(base_ty);
       ref_ty = WN_ty(wn);
     }
@@ -758,11 +397,10 @@ whirl2xaif::xlate_LDID(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 #endif
     
     set_XlationContext_has_no_arr_elmt(ctxt); // FIXME why?
-    WN2F_Offset_Symref(xos, WN_st(wn), baseptr_ty, ref_ty, 
-		       WN_load_offset(wn), ctxt);
+    xlate_SymRef(xos, WN_st(wn), baseptr_ty, ref_ty, WN_load_offset(wn), ctxt);
     reset_XlationContext_has_no_arr_elmt(ctxt);
   }
-  
+
   return EMPTY_WN2F_STATUS;
 } 
 
@@ -785,19 +423,12 @@ whirl2xaif::xlate_ILOAD(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // Translate into a reference (dereference address???)
   if (WN_operator(baseptr) == OPR_LDA || WN_operator(baseptr) == OPR_LDID)
     set_XlationContext_has_no_arr_elmt(ctxt); // FIXME
+  
   WN2F_Offset_Memref(xos, baseptr, baseptr_ty, ref_ty,
 		     WN_load_offset(wn), ctxt);
+
   reset_XlationContext_has_no_arr_elmt(ctxt);
-  
-  // See if there is any prefetch information with this load, and 
-  // if so insert information about it as a comment on a separate
-  // continuation line. (FIXME)
-  if (W2F_Emit_Prefetch && WN_MAP_Get(WN_MAP_PREFETCH, wn)) {
-    xos << std::endl;
-    WN2F_Append_Prefetch_Map(xos, wn);
-    xos << std::endl;
-  }
-  
+
   return EMPTY_WN2F_STATUS;
 }
 
@@ -829,6 +460,7 @@ WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		     base_ty, /* base-type */
 		     TY_pointed(WN_ty(wn)), /* object-type */
 		     WN_load_offset(wn), /* object-ofst */ ctxt);
+
   return EMPTY_WN2F_STATUS;
 }
 
@@ -858,16 +490,15 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   // LHS of assignment
   xos << BegElem("xaif:AssignmentLHS") << EndAttr;
+  ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for LHS
   
-  ctxt.CreateContext(XlationContext::LVALUE, wn);
   if (ST_class(base_st) == CLASS_PREG) { // FIXME
     ST2F_Use_Preg(xos, base_ty, WN_store_offset(wn));
   } else {
-    WN2F_Offset_Symref(xos, base_st, baseptr_ty, ref_ty,
-		       WN_store_offset(wn), ctxt);
+    xlate_SymRef(xos, base_st, baseptr_ty, ref_ty, WN_store_offset(wn), ctxt);
   }
-  ctxt.DeleteContext();
   
+  ctxt.DeleteContext();
   xos << EndElem;
   
   // RHS of assignment
@@ -905,16 +536,16 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   
   // LHS of assignment (dereference address)
   xos << BegElem("xaif:AssignmentLHS") << EndAttr;
+  ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for LHS
 
-  ctxt.CreateContext(XlationContext::LVALUE, wn);
   if (WN_operator(baseptr) == OPR_LDA || WN_operator(baseptr) == OPR_LDID) {
     set_XlationContext_has_no_arr_elmt(ctxt);
   }
   WN2F_Offset_Memref(xos, baseptr, baseptr_ty, ref_ty,
 		     WN_store_offset(wn), ctxt);
   reset_XlationContext_has_no_arr_elmt(ctxt); 
-  ctxt.DeleteContext();
 
+  ctxt.DeleteContext();
   xos << EndElem;
 
   // RHS of assignment
@@ -1000,12 +631,12 @@ WN2F_pstid(xml::ostream& xos, WN *wn, XlationContext& ctxt)
      Append_Token_String(xos, W2CF_Symtab_Nameof_Tempvar(tmp_idx));
      Stab_Unlock_Tmpvar(tmp_idx);
    } else {
-     WN2F_Offset_Symref(xos,
-			WN_st(wn),                        /* base-symbol */
-			Stab_Pointer_To(ST_type(WN_st(wn))),/* base-type */
-			WN_ty(wn),                        /* object-type */
-			WN_store_offset(wn),              /* object-ofst */
-			ctxt);
+     xlate_SymRef(xos,
+		  WN_st(wn),                        /* base-symbol */
+		  Stab_Pointer_To(ST_type(WN_st(wn))),/* base-type */
+		  WN_ty(wn),                        /* object-type */
+		  WN_store_offset(wn),              /* object-ofst */
+		  ctxt);
    }
    
    // Assign the rhs to the lhs.
@@ -1035,15 +666,6 @@ WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    if (!TY_Is_Pointer(base_ty))
       base_ty = WN_ty(wn);
 
-   /* See if there is any prefetch information with this store,
-    * and if so insert information about it as a comment preceeding
-    * the store.
-    */
-   if (W2F_Emit_Prefetch && WN_MAP_Get(WN_MAP_PREFETCH, wn)) {
-     xos << std::endl;
-     WN2F_Append_Prefetch_Map(xos, wn);
-   }
-   
    /* Get the lhs of the assignment (dereference address) */
    xos << std::endl;
    set_XlationContext_has_no_arr_elmt(ctxt);
@@ -1076,20 +698,15 @@ WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 //***************************************************************************
 
 WN2F_STATUS
-WN2F_array(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   /* Note that array indices have been normalized to assume the
    * array is based at index zero.  Since a base at index 1 is
-   * the default for Fortran, we denormalize to base 1 here.
-   */
-  BOOL  deref = ctxt.IsDerefAddr();
-  
-  WN    * kid;
-  TY_IDX ptr_ty;
-  TY_IDX array_ty;
+   * the default for Fortran, we denormalize to base 1 here. */
+  BOOL deref = ctxt.IsDerefAddr();
   
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ARRAY, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_array"));
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_ARRAY"));
   
   // Only allow taking the address of an array element for F90!
 #if 0
@@ -1097,21 +714,27 @@ WN2F_array(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 			  "taking the address of an array element"));
 #endif
 
+  bool newContext = false; // FIXME: abstract (symref, memref)
+  if (!ctxt.IsVarRef()) {
+    xos << BegElem("xaif:VariableReference")
+	<< Attr("vertex_id", ctxt.GetNewVId());
+    ctxt.CreateContext(XlationContext::VARREF, wn); // FIXME: do we need wn?
+    newContext = true; 
+  }
+
   /* Get the array or, for ptr-as-array types, the element type */  
-  kid    = WN_kid0(wn);
-  ptr_ty = WN_Tree_Type(kid);
-  
-  ctxt.CreateContext(XlationContext::NOFLAG, wn);
+  WN* kid = WN_kid0(wn);
+  TY_IDX ptr_ty = WN_Tree_Type(kid);
   
   if (WN2F_Is_Address_Preg(kid, ptr_ty)) {
-
     /* a preg or sym has been used as an address, usually after
        optimization don't know base type, or anything else so use
        OPR_ARRAY to generate bounds */
     TranslateWN(xos, kid, ctxt);
-    WN2F_Array_Slots(xos,wn,ctxt,TRUE);     
+    xlate_ArrayIndices(xos, wn, ctxt);
+    // FIXME
   } else {
-    array_ty = W2F_TY_pointed(ptr_ty, "base of OPC_ARRAY");
+    TY_IDX array_ty = W2F_TY_pointed(ptr_ty, "base of OPC_ARRAY");
     
     if (WN_operator(kid) == OPR_LDID 
 	&& ST_sclass(WN_st(kid)) == SCLASS_FORMAL 
@@ -1131,26 +754,31 @@ WN2F_array(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	       && TY_Is_Character_String(array_ty) ) {
       /* We assume that substring accesses are treated in the handling
        * of intrinsic functions, except when the substrings are to be
-       * handled as integral types and thus are encountered here.
-       */
+       * handled as integral types and thus are encountered here. */
       WN2F_String_Argument(xos, wn, WN2F_INTCONST_ONE, ctxt);
     } else { 
-
       // A regular array access
-      // Get the base of the object to be indexed into, still using
-      // ctxt.IsDerefAddr().
-      TranslateWN(xos, kid, ctxt);
-      ctxt.ResetDerefAddr();
-      WN2F_array_bounds(xos, wn, array_ty, ctxt);
-    }
-    
-    // if (!deref)
-    //   xos << ")";
-  }
-  ctxt.DeleteContext();
 
+      // Array base
+      UINT srcid = ctxt.PeekVId();
+      TranslateWN(xos, kid, ctxt); // still use ctxt.IsDerefAddr()
+      ctxt.ResetDerefAddr();
+
+      // Array indexing
+      UINT targid = ctxt.PeekVId();
+      WN2F_array_bounds(xos, wn, array_ty, ctxt);
+      
+      DumpVarRefEdge(xos, ctxt.GetNewEId(), srcid, targid);
+    }
+  }
+  
+  if (newContext) {
+    ctxt.DeleteContext();
+    xos << EndElem /* xaif:VariableReference */;
+  }
+  
   return EMPTY_WN2F_STATUS;
-} /* WN2F_array */
+} /* xlate_ARRAY */
 
 
 WN2F_STATUS
@@ -1167,7 +795,7 @@ WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
    ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ARRAY,
-                    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_array"));
+                    (DIAG_W2F_UNEXPECTED_OPC, "xlate_ARRAY"));
 
    /* Only allow taking the address of an array element for F90!
     *
@@ -1178,23 +806,18 @@ WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 #endif
 
    /* Get the array or, for ptr-as-array types, the element type */
-
    kid    = WN_kid0(wn);
    ptr_ty = WN_Tree_Type(kid);
 
-   if (WN2F_Is_Address_Preg(kid,ptr_ty))
-   {
-       /* a preg or sym has been used as an address, usually after optimization
-*/
-       /* don't know base type, or anything else so use OPR_ARRAY to generate bounds
-*/
+   if (WN2F_Is_Address_Preg(kid,ptr_ty)) {
+     /* a preg or sym has been used as an address, usually after
+	optimization don't know base type, or anything else so use
+	OPR_ARRAY to generate bounds */
 
      TranslateWN(xos, kid, ctxt);
      WN2F_Arrsection_Slots(xos,wn,ctxt,TRUE);
    }
-   else
-   {
-
+   else {
      array_ty = W2F_TY_pointed(ptr_ty, "base of OPC_ARRAY");
     
      if (WN_operator(kid) == OPR_LDID       &&
@@ -1207,8 +830,7 @@ WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
          WN_const_val(WN_array_index(wn, 0)) == 0       &&
          !TY_ptr_as_array(Ty_Table[WN_ty(kid)])           &&
          (!TY_Is_Array(array_ty) ||
-          TY_size(TY_AR_etype(array_ty)) < TY_size(array_ty)))
-     {
+          TY_size(TY_AR_etype(array_ty)) < TY_size(array_ty))) {
          /* This array access is just a weird representation for an implicit
           * reference parameter dereference.  Ignore the array indexing.
           */
@@ -1235,18 +857,17 @@ WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 # endif
 
      }
-     else /* A regular array access */
-     {
-           /* Get the base of the object to be indexed into, still using
-            * ctxt.IsDerefAddr().
-            */
+     else { /* A regular array access */
+       /* Get the base of the object to be indexed into, still using
+	* ctxt.IsDerefAddr().
+	*/
        TranslateWN(xos, kid, ctxt);
        ctxt.ResetDerefAddr();
-
-   if ( XlationContext_has_no_arr_elmt(ctxt))
-            ;
-   else
-         WN2F_arrsection_bounds(xos,wn,array_ty,ctxt);
+       
+       if ( XlationContext_has_no_arr_elmt(ctxt))
+	 ;
+       else
+	 WN2F_arrsection_bounds(xos,wn,array_ty,ctxt);
      }
    }
    return EMPTY_WN2F_STATUS;
@@ -1256,19 +877,12 @@ WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 WN2F_STATUS
 WN2F_where(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  WN  *kid;
-  xos << std::endl;
-  xos << "WHERE";
-  xos << "(";
-  kid  =WN_kid0(wn);
-  TranslateWN(xos, kid, ctxt);
+  xos << "WHERE(";
+  TranslateWN(xos, WN_kid0(wn), ctxt);
   xos << ")";
-  kid   =WN_kid1(wn);
-  TranslateWN(xos, kid, ctxt);
-  kid   = WN_kid2(wn);
-  xos << std::endl;
+  TranslateWN(xos, WN_kid1(wn), ctxt);
   xos << "END WHERE";
-  TranslateWN(xos, kid, ctxt);
+  TranslateWN(xos, WN_kid2(wn), ctxt);
   return EMPTY_WN2F_STATUS;
 }
 
@@ -1276,9 +890,7 @@ WN2F_where(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 WN2F_STATUS
 WN2F_arrayexp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  WN    * kid;
-  kid    = WN_kid0(wn);
-  TranslateWN(xos, kid, ctxt);
+  TranslateWN(xos, WN_kid0(wn), ctxt);
   return EMPTY_WN2F_STATUS;
 }
 
@@ -1303,7 +915,7 @@ WN2F_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   kid0=WN_kid0(wn);
   kid1=WN_kid1(wn);
   kid2=WN_kid2(wn);
-  (void)WN2F_Denormalize_Array_Idx(xos,kid0,ctxt);
+  TranslateWN(xos, kid0, ctxt);
   if ((WN_operator(kid2) == OPR_INTCONST) &&
       (WN_const_val(kid2)==INT_MIN) )
     xos << ":";
@@ -1527,7 +1139,7 @@ WN2F_Arrsection_Slots(xml::ostream& xos, WN *wn, XlationContext& ctxt, BOOL pare
       if (WN_operator(WN_array_index(wn, dim))==OPR_SRCTRIPLET) {
 	TranslateWN(xos, WN_array_index(wn, dim), ctxt);    
       } else {
-	WN2F_Denormalize_Array_Idx(xos, WN_array_index(wn, dim), ctxt);
+	TranslateWN(xos, WN_array_index(wn, dim), ctxt);
       }
       if (dim > 0)
 	xos << ",";
@@ -1537,7 +1149,7 @@ WN2F_Arrsection_Slots(xml::ostream& xos, WN *wn, XlationContext& ctxt, BOOL pare
       if (WN_operator(WN_array_index(wn, dim))==OPR_SRCTRIPLET) {
 	TranslateWN(xos, WN_array_index(wn, dim), ctxt);
       } else {
-	WN2F_Denormalize_Array_Idx(xos, WN_array_index(wn, dim), ctxt);
+	TranslateWN(xos, WN_array_index(wn, dim), ctxt);
       }
       if (dim > co_dim)
 	xos << ",";
@@ -1555,7 +1167,7 @@ WN2F_Arrsection_Slots(xml::ostream& xos, WN *wn, XlationContext& ctxt, BOOL pare
       if (WN_operator(WN_array_index(wn, dim))==OPR_SRCTRIPLET) {
 	TranslateWN(xos, WN_array_index(wn, dim), ctxt);
       } else {
-	WN2F_Denormalize_Array_Idx(xos, WN_array_index(wn, dim), ctxt);
+	TranslateWN(xos, WN_array_index(wn, dim), ctxt);
       }
       if (dim > 0)
 	xos << ",";
@@ -1567,109 +1179,79 @@ WN2F_Arrsection_Slots(xml::ostream& xos, WN *wn, XlationContext& ctxt, BOOL pare
 }
 
 void
-WN2F_Array_Slots(xml::ostream& xos, WN *wn,XlationContext& ctxt,BOOL parens)
+xlate_ArrayIndices(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  INT32 dim;
-  WN * kid;
-  INT32 co_dim;
-  INT32 array_dim;
-  ST * st;
-  ARB_HANDLE arb_base;
-  TY_IDX ttyy;
+  // FIXME: do not handle co dimentions
   
-
   /* get array's rank and co_rank information from kid0 of wn
-   * kid0 should be OPR_LDA
-   *coarray reference is legal without co_rank
-   *so we have to use dim plus kid_number to 
-   *see if there is co_rank or not
-   */
-
-  kid = WN_kid0(wn);
-  
-  if (WN_operator(kid)==OPR_LDA) {
-    st  =  WN_st(kid);
-    ttyy = ST_type(st);
+   * kid0 should be OPR_LDA */
+  INT32 array_dim;
+  WN* kid = WN_kid0(wn);
+  if (WN_operator(kid) == OPR_LDA) {
+    ST* st = WN_st(kid);
+    TY_IDX ty = ST_type(st);
     
-    if (TY_Is_Pointer(ttyy))
-      ttyy =TY_pointed(ttyy);
-    if (TY_is_f90_pointer(ttyy))
-      ttyy = TY_pointed(ttyy);
+    if (TY_Is_Pointer(ty))
+      ty = TY_pointed(ty);
+    if (TY_is_f90_pointer(ty))
+      ty = TY_pointed(ty);
     
-    arb_base = TY_arb(ttyy);
-    
-    dim =  ARB_dimension(arb_base);
-    co_dim = ARB_co_dimension(arb_base);
+    ARB_HANDLE arb_base = TY_arb(ty);
+    array_dim = ARB_dimension(arb_base);
   } else {
-    co_dim =0;
-    dim = WN_num_dim(wn);
-  }
-  
-  if (co_dim <= 0)
-    co_dim = 0;
-  
-  if (dim == WN_num_dim(wn))
-    array_dim = dim-co_dim;
-  else { // this means the co_rnks were omitted
     array_dim = WN_num_dim(wn);
-    co_dim = 0;
   }
   
-  /* Gets bounds from the slots of an OPC_ARRAY node  */
-  
-  /* Append the "denormalized" indexing expressions in reverse order
-   * of the way they occur in the indexing expression, since Fortran
-   * employs column-major array layout, meaning the leftmost indexing
-   * expression represents array elements laid out in contiguous 
-   * memory locations.
-   */
-  
-  if (array_dim > 0 ) {
-    xos << "(";
-    set_XlationContext_no_parenthesis(ctxt);
-    
-    for (dim =  WN_num_dim(wn)-1; dim >= co_dim; dim--) {
-      WN2F_Denormalize_Array_Idx(xos, WN_array_index(wn, dim), ctxt);
-      
-      if (dim > co_dim)
-	xos << ",";
-    }
-    
-    
-    xos << ")";
-  } 
-  /* for co_rank */
-  
-  if (co_dim > 0) {
-    xos << "[";
-    for (dim = co_dim-1; dim >= 0; dim--) {
-      WN2F_Denormalize_Array_Idx(xos, WN_array_index(wn, dim), ctxt);
-      if (dim > 0)
-	xos << ",";
-    }
-    
-    xos << "]";
-    
+  /* Append indexing expressions in reverse order of the way they
+   * occur in the indexing expression, since Fortran employs
+   * column-major array layout, meaning the leftmost indexing
+   * expression represents array elements laid out in contiguous
+   * memory locations. */
+  xos << BegElem("xaif:ArrayElementReference") 
+      << Attr("vertex_id", ctxt.GetNewVId());
+  for (INT32 dim = array_dim - 1; dim >= 0; --dim) {
+    xos << BegElem("xaif:Index");
+    ctxt.CreateContext();
+    TranslateWN(xos, WN_array_index(wn, dim), ctxt);
+    ctxt.DeleteContext();
+    xos << EndElem;
   }
+  xos << EndElem;
+}
+
+void
+WN2F_array_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,XlationContext& ctxt)
+{
+  // FIXME: referenced in ty2xaif.cxx
+
+  if (TY_is_f90_pointer(array_ty)) // FIXME (should this be moved up?)
+    array_ty = TY_pointed(array_ty); //Sept
+  
+  // (TY_Is_Array(array_ty) && TY_AR_ndims(array_ty) >= WN_num_dim(wn)) 
+  ASSERT_DBG_WARN((TY_AR_ndims(array_ty) == WN_num_dim(wn)),
+		  (DIAG_UNIMPLEMENTED, "array dimension mismatch"));
+  ASSERT_DBG_WARN((TY_size(TY_AR_etype(array_ty)) == WN_element_size(wn)) 
+		  || WN_element_size(wn) < 0 
+		  || TY_size(TY_AR_etype(array_ty)) == 0,
+		  (DIAG_UNIMPLEMENTED, 
+		   "access/declaration mismatch in array element size"));
+  
+  xlate_ArrayIndices(xos, wn, ctxt);
 }
 
 void
 WN2F_arrsection_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,XlationContext& ctxt)
 {
   /* This prints the array subscript expression. It was part of
-   * WN2F_array, but was split so it could be used for bounds
+   * xlate_ARRAY, but was split so it could be used for bounds
    * of structure components.
    */
-  
-  INT32 dim;
-  
   if (TY_is_f90_pointer(array_ty))
     array_ty = TY_pointed(array_ty);//Sept
   
   if (TY_Is_Array(array_ty) && TY_AR_ndims(array_ty) >= WN_num_dim(wn)) {
     /* Cannot currently handle differing element sizes at place of
-     * array declaration versus place of array access (TODO?).
-     */
+     * array declaration versus place of array access (TODO?). */
     
     ASSERT_DBG_WARN((TY_size(TY_AR_etype(array_ty)) == WN_element_size(wn)) ||
 		    WN_element_size(wn) < 0 ||
@@ -1679,79 +1261,14 @@ WN2F_arrsection_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,XlationContext
     
     WN2F_Arrsection_Slots(xos,wn,ctxt,TRUE);
     
-    /* We handle the case when an array is declared to have more
-     * dimensions than that given by this array addressing expression.
-     */
-# if 0 //we don't need this think about co_array
-    
-    if (TY_AR_ndims(array_ty) > WN_num_dim(wn)) {
-	/* Substitute in '1' for the missing dimensions */
-      for (dim = TY_AR_ndims(array_ty) - WN_num_dim(wn); dim > 0; dim--) {
-	xos << ",";
-	xos << "1";
-      }
-    }
-# endif
   } else { /* Normalize array access to assume a single dimension */
+    Is_True(FALSE, (""));
     ASSERT_DBG_WARN(!TY_Is_Array(array_ty) || TY_AR_ndims(array_ty) == 1,
 		    (DIAG_UNIMPLEMENTED,
 		     "access/declaration mismatch in array dimensions"));
-    
-    WN2F_Normalize_Idx_To_Onedim(xos, wn, ctxt);
+    //FIXME: WN2F_Normalize_Idx_To_Onedim(xos, wn, ctxt);
   }
   
-}
-
-
-void
-WN2F_array_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty, 
-		  XlationContext& ctxt)
-{
-  /* This prints the array subscript expression. It was part of
-   * WN2F_array, but was split so it could be used for bounds 
-   * of structure components.
-   */
-  INT32 dim;
-  WN  * kid; 
-  
-  if (TY_is_f90_pointer(array_ty))
-    array_ty = TY_pointed(array_ty); //Sept
-  
-  if (TY_Is_Array(array_ty) && TY_AR_ndims(array_ty) >= WN_num_dim(wn)) {
-    /* Cannot currently handle differing element sizes at place of
-     * array declaration versus place of array access (TODO?).
-     */    
-    ASSERT_DBG_WARN((TY_size(TY_AR_etype(array_ty)) == WN_element_size(wn)) ||
-		    WN_element_size(wn) < 0 ||
-		    TY_size(TY_AR_etype(array_ty)) == 0,
-		    (DIAG_UNIMPLEMENTED, 
-		     "access/declaration mismatch in array element size"));
-    
-    WN2F_Array_Slots(xos, wn, ctxt, FALSE);
-
-    /* We handle the case when an array is declared to have more 
-     * dimensions than that given by this array addressing expression.
-     * COMMENT ABOVE IS FROM ORIGINAL VERSION ,belowing added by zhao
-     * this could be happend when co_rank doesn't appear,don't need add
-     */
-#if 0 
-    if (TY_AR_ndims(array_ty) > WN_num_dim(wn)) {
-      /* Substitute in '1' for the missing dimensions */
-      for (dim = TY_AR_ndims(array_ty) - WN_num_dim(wn); dim > 0; dim--) {
-	xos << ",";
-	xos << "1";
-      }
-    }
-#endif
-    
-  } else { /* Normalize array access to assume a single dimension */
-    ASSERT_DBG_WARN(!TY_Is_Array(array_ty) || TY_AR_ndims(array_ty) == 1,
-		    (DIAG_UNIMPLEMENTED, 
-		     "access/declaration mismatch in array dimensions"));
-    
-    WN2F_Normalize_Idx_To_Onedim(xos, wn, ctxt);
-  }
-  //   xos << ")";
 }
 
 /*----------- Character String Manipulation Translation ---------------*/
@@ -1826,7 +1343,7 @@ WN2F_String_Argument(xml::ostream& xos, WN* base_parm, WN* length,
     
   } else {
     /* A regular address expression as base */    
-    WN2F_Get_Substring_Info(&base, &str_ty, &lower_bnd,&length_new);
+    WN2F_Get_Substring_Info(&base, &str_ty, &lower_bnd, &length_new);
     
     /* Was this a character component of an array of derived type? */
     /* eg: vvv(2)%ccc(:)(1:5) - offset to ccc is added above base, */
@@ -1872,7 +1389,6 @@ WN2F_String_Argument(xml::ostream& xos, WN* base_parm, WN* length,
     }
 # if 0
     /* need to take a look see when we need dump out substring--fzhao Jan*/ 
-    
     if (WN_operator(base) != OPR_CALL &&
 	WN_operator(base) != OPR_LDA &&
 	(WN_operator(base1) != OPR_ARRAY ||
@@ -1883,24 +1399,18 @@ WN2F_String_Argument(xml::ostream& xos, WN* base_parm, WN* length,
 	  && !XlationContext_has_no_arr_elmt(ctxt))
 	WN2F_Substring(xos, str_length, lower_bnd,
 		       // WN_Skip_Parm(length),
-		       length_new,
-		       ctxt);
+		       length_new, ctxt);
 // fzhao Feb#endif
     return;
   }
 } /* WN2F_String_Argument */
 
 
-/*----------- Miscellaneous  routines ---------------------------------*/
-/*---------------------------------------------------------------------*/
-
-static void
-WN2F_Block(xml::ostream& xos, ST* st, STAB_OFFSET offset, XlationContext& ctxt)
+static WN2F_STATUS 
+DumpVarRefEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid)
 {
-  /* An ST of CLASS_BLOCK may appear in f90 IO, at -O2 */
-  /* put out something for the whirl browser           */
-  TranslateSTUse(xos, st, ctxt);
-  if (offset != 0) {
-    xos << "+ " << Num2Str(offset, "%lld");
-  }
+  xos << BegElem("xaif:VariableReferenceEdge") << Attr("edge_id", eid) 
+      << Attr("source", srcid) << Attr("target", targid)
+      << EndElem;
+  return EMPTY_WN2F_STATUS;
 }

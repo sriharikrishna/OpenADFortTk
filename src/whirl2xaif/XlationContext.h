@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.3 2003/05/20 22:50:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.4 2003/05/23 18:33:47 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -179,14 +179,11 @@ public:
   // FIXME: these refer to the current context; they support the
   // crusty old implementation of W2F_CONTEXT
   mUINT32 flags;
-  WN     *wn;
   
   enum Flags {
     NOFLAG           = 0x00000000,
-    NEW_PU           = 0x00000001,
-    INSERT_INDUCTION = 0x00000002,
     DEREF_ADDR       = 0x00000004,
-    LVALUE           = 0x00000008
+    VARREF           = 0x00000008  // within xaif:VariableReference; inherited
 #define XlationContext_NO_NEWLINE              0x00000100
 #define XlationContext_HAS_LOGICAL_ARG         0x00000200
 #define XlationContext_IS_LOGICAL_ARG          0x00000400
@@ -205,38 +202,20 @@ public:
     
   };
 
-#define reset_XlationContext(c) ((c).flags = 0U, (c).wn = NULL)
+#define reset_XlationContext(c) ((c).flags = 0U)
   
-  // Indicates to a block translation that this is the body of a PU.
-  BOOL IsNewPU() const { return (flags & NEW_PU); }
-  void SetNewPU() { flags = flags | NEW_PU; }
-  void ResetNewPU() { flags = flags & ~NEW_PU; }
-
-  // Indicates to a block translation that an induction-step must be
-  // inserted at the end of this block, before the loop-termination
-  // label.
-#define XlationContext_insert_induction(c)\
-   ((c).flags & XlationContext::INSERT_INDUCTION)
-#define XlationContext_induction_stmt(c) (c).wn
-#define set_XlationContext_induction_step(c, stmt)\
-   ((c).flags = (c).flags | XlationContext::INSERT_INDUCTION,\
-    (c).wn = stmt)
-#define reset_XlationContext_induction_step(c)\
-   ((c).flags = (c).flags & ~XlationContext::INSERT_INDUCTION,\
-    (c).wn = NULL)
-
   // Indicates that we expect to dereference an address expression.
   // LDA or ARRAY nodes should not be translated unless this flag has
   // been set, other than when we can use an "address of" operator
   // in Fortran.
   BOOL IsDerefAddr() const { return (flags & DEREF_ADDR); }
   void SetDerefAddr()      { flags = flags | DEREF_ADDR; }
-  void ResetDerefAddr()    { flags = flags & ~DEREF_ADDR; }
+  void ResetDerefAddr()    { flags = flags & ~DEREF_ADDR; } // Clear
   
   // This reference
-  BOOL IsLValue() const { return CurContext().AreFlags(LVALUE); }
-  void SetLValue()      { CurContext().SetFlags(LVALUE); }
-  //void ResetLValue() { CurContext().ResetFlags(LVALUE); }
+  BOOL IsVarRef() const { return CurContext().AreFlags(VARREF); }
+  void SetVarRef()      { CurContext().SetFlags(VARREF); }
+  //void ResetVarRef() { CurContext().ResetFlags(VARREF); }
 
   // Indicates that we should not start the next statement on a new
   // line.  This only needs to be taken into account for statement

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.6 2003/05/21 18:21:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.7 2003/05/23 18:33:48 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -1553,12 +1553,16 @@ whirl2xaif::xlate_CONST(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_CONST, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_CONST"));
 
-  BOOL logical = (TY_is_logical(ST_type(WN_st(wn))) 
-		  || XlationContext_is_logical_arg(ctxt));
+  TY_IDX ty_idx = ST_type(WN_st(wn));
+  
+  BOOL logical = (TY_is_logical(ty_idx) || XlationContext_is_logical_arg(ctxt));
   std::string val = TCON2F_translate(STC_val(WN_st(wn)), logical);
 
+  const char* ty_str = TranslateTYToSymType(ty_idx);
+  if (!ty_str) { ty_str = "***"; }  
+
   xos << BegElem("xaif:Constant") << Attr("vertex_id", ctxt.GetNewVId())
-      << Attr("type", "***") << Attr("value", val) << EndElem;
+      << Attr("type", ty_str) << Attr("value", val) << EndElem;
   
   return EMPTY_WN2F_STATUS;
 }

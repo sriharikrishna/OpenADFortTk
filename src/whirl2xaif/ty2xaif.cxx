@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.5 2003/05/20 23:28:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.6 2003/05/23 18:33:47 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -71,10 +71,10 @@
 
 //*************************** User Include Files ****************************
 
+#include "ty2xaif.h"
 #include "whirl2f_common.h"
 #include "PUinfo.h"
 #include "wn2xaif.h"
-#include "ty2xaif.h"
 #include "st2xaif.h"
 #include "tcon2f.h"
 #include "wn2xaif_mem.h"
@@ -1295,45 +1295,34 @@ TY2F_Translate_ArrayElt(xml::ostream& xos,
   xos << EndElem;
 }
 
+
 void
 TY2F_Translate_Common(xml::ostream& xos, const char *name, TY_IDX ty_idx)
 {
   TY& ty = Ty_Table[ty_idx];
-
-  BOOL  is_equiv = FALSE;
+  BOOL is_equiv = FALSE;
   
   ASSERT_DBG_FATAL(TY_kind(ty) == KIND_STRUCT, 
 		   (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
 		    TY_kind(ty), "TY2F_Translate_Common"));
 
-  /* Emit specification statements for every element of the
-   * common block, including equivalences.
-   */
-  xos << "COMMON";
-  if (name != NULL && *name != '\0')
-    xos << "/" << name << "/";
+  // Emit specification statements for every element of the common
+  // block, including equivalences.
+  xos << BegComment << "COMMON";
+  if (name != NULL && *name != '\0') { xos << " name = " << name; }
+  xos << EndComment;
+
+#if 0 // FIXME
   TY2F_List_Common_Flds(xos, TY_flist(ty));
   
-  TY2F_Declare_Common_Flds(xos,   // variables in common block type declaration
-			   TY_flist(ty),
-			   FALSE, /*alt_return*/
-			   &is_equiv);
-  /* Emit the common block specification statement, excluding
-   * equivalences, where the name is already in a valid form and 
-   * can be emitted as is without a call to W2CF_Symtab_Nameof_Ty().
-   */
-# if 0 //June
-  xos << "COMMON";
-  if (name != NULL && *name != '\0')
-    xos << "/" << name << "/";
-  TY2F_List_Common_Flds(xos, TY_flist(ty));
-#endif
-
-  /* Emit equivalences, if there are any */
+  // variables in common block type declaration
+  TY2F_Declare_Common_Flds(xos, TY_flist(ty), FALSE /*alt_return*/, &is_equiv);
+  
+  // Emit equivalences, if there are any
   if (is_equiv)
     TY2F_Equivalence_List(xos, ty_idx /*struct_ty*/);
-
-} /* TY2F_Translate_Common */
+#endif
+}
 
 
 void
@@ -1356,21 +1345,16 @@ TY2F_Translate_Equivalence(xml::ostream& xos, TY_IDX ty_idx, BOOL alt_return)
 		    (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
 		     TY_kind(ty), "TY2F_Translate_Equivalence"));
 
-   if (alt_return)
-   {
-      first_fld = FLD_next(TY_flist(ty)); /* skip func_entry return var */
-   }
-   else
-   {
-      first_fld = TY_flist(ty);
+   if (alt_return) {
+     first_fld = FLD_next(TY_flist(ty)); /* skip func_entry return var */
+   } else {
+     first_fld = TY_flist(ty);
    }
 
    /* Emit specification statements for every element of the
     * equivalence block.
     */  
-   TY2F_Declare_Common_Flds(xos, 
-			    first_fld,
-			    alt_return,
+   TY2F_Declare_Common_Flds(xos, first_fld, alt_return,
 			    &is_equiv);  /* Redundant in this call */
 
    if (!alt_return)
@@ -1384,8 +1368,7 @@ TY2F_Free_Fld_Path(FLD_PATH_INFO *fld_path)
 {
    FLD_PATH_INFO *free_list;
    
-   if (fld_path != NULL)
-   {
+   if (fld_path != NULL) {
       free_list = Free_Fld_Path_Info;
       Free_Fld_Path_Info = fld_path;
       while (fld_path->next != NULL)
@@ -1415,12 +1398,10 @@ TY2F_Get_Fld_Path(const TY_IDX struct_ty,
 
   fld_iter = Make_fld_iter(TY_flist(s_ty));
 
-  do 
-    {
+  do {
       FLD_HANDLE fld (fld_iter);
 
-      if (NOT_BITFIELD_OR_IS_FIRST_OF_BITFIELD(fld_iter)) 
-      {
+      if (NOT_BITFIELD_OR_IS_FIRST_OF_BITFIELD(fld_iter)) {
 	fld_path = Construct_Fld_Path(fld_iter,
 				      struct_ty,
 				      object_ty,
@@ -1450,50 +1431,44 @@ TY2F_Translate_Fld_Path(xml::ostream&   xos,
 			BOOL           alt_ret_name,
 			XlationContext& ctxt)
 {
-   /* Append the name of each field to the tokens, separated them
-    * from each other by the field-selection operator ('.').  The
-    * first name on the path may optionally be emitted in unclobbered 
-    * form, as it may represent an alternate return point.
-    */
-   while (fld_path != NULL)
-   {
-      FLD_HANDLE f (fld_path->fld);
-      if (deref && TY_Is_Pointer(FLD_type(f)))
-	 Append_Token_String(xos, W2CF_Symtab_Nameof_Fld_Pointee(f));
-      else
-	  Append_Token_String(xos, 
-			      TY2F_Fld_Name(f,
-					    member_of_common,
-					    alt_ret_name));
-
-      member_of_common = FALSE; /* Can only be true first time around */
-
-      /* if an array element, form the subscript list. If an OPC_ARRAY */
-      /* provides the subscripts, use it o/w use offset                */
-
-      if (fld_path->arr_elt) 
-	{
-	  if (fld_path->arr_wn != NULL)
-	    WN2F_array_bounds(xos,fld_path->arr_wn,FLD_type(f), ctxt);
-	  else 
-	    ;
-
-	  // TY2F_Translate_ArrayElt(xos,FLD_type(f),fld_path->arr_ofst);
-	  /* Looks like this stmt(above) is a bug.We don't need
-	   * translate array_element here since we already get array
-	   * information from an operator associated with this
-	   * processing */
-	}
-
-      /* Separate fields with the dot-notation. */
-      fld_path = fld_path->next;
-      if (fld_path != NULL)
-      {
-	TY2F_Fld_Separator(xos) ;
-	alt_ret_name = FALSE; /* Only applies to first field on the path */
-      }
-    } /* while */
-
+  /* Append the name of each field to the tokens, separated them
+   * from each other by the field-selection operator ('.').  The
+   * first name on the path may optionally be emitted in unclobbered 
+   * form, as it may represent an alternate return point.
+   */
+  while (fld_path != NULL) {
+    FLD_HANDLE f (fld_path->fld);
+    if (deref && TY_Is_Pointer(FLD_type(f)))
+      xos << W2CF_Symtab_Nameof_Fld_Pointee(f);
+    else
+      xos << TY2F_Fld_Name(f, member_of_common, alt_ret_name);
+  
+    member_of_common = FALSE; /* Can only be true first time around */
+    
+    /* if an array element, form the subscript list. If an OPC_ARRAY */
+    /* provides the subscripts, use it o/w use offset                */
+    
+    if (fld_path->arr_elt) {
+      if (fld_path->arr_wn != NULL)
+	WN2F_array_bounds(xos,fld_path->arr_wn,FLD_type(f), ctxt);
+      else 
+	;
+      
+      // TY2F_Translate_ArrayElt(xos,FLD_type(f),fld_path->arr_ofst);
+      /* Looks like this stmt(above) is a bug.We don't need
+       * translate array_element here since we already get array
+       * information from an operator associated with this
+       * processing */
+    }
+    
+    /* Separate fields with the dot-notation. */
+    fld_path = fld_path->next;
+    if (fld_path != NULL) {
+      TY2F_Fld_Separator(xos) ;
+      alt_ret_name = FALSE; /* Only applies to first field on the path */
+    }
+  } /* while */
+  
 } /* TY2F_Translate_Fld_Path */
 
 
@@ -1525,11 +1500,9 @@ TY2F_Point_At_Path(FLD_PATH_INFO * path, STAB_OFFSET off)
 {
   /* given a fld path, return a pointer to */
   /* the slot at the given offset          */
-  while (path != NULL )
-  {
+  while (path != NULL) {
     if (FLD_ofst(path->fld) >= off)
-      break ;
-
+      break ;    
     path=path->next;
   }
   return path;
@@ -1539,24 +1512,102 @@ extern void
 TY2F_Dump_Fld_Path(FLD_PATH_INFO *fld_path)
 {
   printf ("path ::");
-  while (fld_path != NULL)
-    {
-      FLD_HANDLE f = fld_path->fld;
-
-      printf ("%s(#%d)",TY2F_Fld_Name(f,FALSE,FALSE),f.Idx ());
-
-      if (fld_path->arr_elt)
-	printf (" array");
-
-      if (fld_path->arr_ofst)
-	printf (" offset 0x%x",(mINT32) fld_path->arr_ofst);
-
-      if (fld_path->arr_wn != NULL)
-	printf (" tree 0x%p",fld_path->arr_wn);
-
-      printf (" ::");
-      fld_path = fld_path->next ;
-    }
+  while (fld_path != NULL) {
+    FLD_HANDLE f = fld_path->fld;
+    
+    printf ("%s(#%d)",TY2F_Fld_Name(f,FALSE,FALSE),f.Idx ());
+    
+    if (fld_path->arr_elt)
+      printf (" array");
+    
+    if (fld_path->arr_ofst)
+      printf (" offset 0x%x",(mINT32) fld_path->arr_ofst);
+    
+    if (fld_path->arr_wn != NULL)
+      printf (" tree 0x%p",fld_path->arr_wn);
+    
+    printf (" ::");
+    fld_path = fld_path->next ;
+  }
   printf ("\n");
 }
 
+
+//***************************************************************************
+//
+//***************************************************************************
+
+
+const char*
+TranslateTYToSymType(TY_IDX ty_idx)
+{
+  TY& ty = Ty_Table[ty_idx];
+  const char* str = NULL;
+
+  if (TY_kind(ty) == KIND_SCALAR) {
+ 
+    MTYPE mt = TY_mtype(ty);
+    if (TY_is_character(ty)) {
+      str = "char"; 
+    } else if (TY_is_logical(ty)) {
+      str = "bool"; 
+    } else if (MTYPE_is_signed(mt)) {
+      str = "integer"; 
+    } else if (MTYPE_is_unsigned(mt)) { 
+      str = "integer"; 
+    } else if (MTYPE_is_float(mt)) { 
+      str = "real"; 
+      if (TY_size(ty) >= 8) { str = "double"; }
+    }
+
+  } else if (TY_kind(ty) == KIND_ARRAY) {
+
+    if (TY_is_character(ty)) { 
+      str = "string"; 
+    } else {
+      // Do not permit pointers as elements of arrays, so just use
+      // the corresponding integral type instead.  We do not expect
+      // such pointers to be dereferenced anywhere. (FIXME)
+      TY_IDX ety_idx = TY_AR_etype(ty);
+      if (TY_Is_Pointer(ety_idx)) {
+	ety_idx = Stab_Mtype_To_Ty(TY_mtype(ety_idx));
+      } 
+      str = TranslateTYToSymType(ety_idx);
+    }
+    
+  } else if (TY_kind(ty) == KIND_FUNCTION) {
+    str = "void";
+  } 
+  
+  return str;
+}
+
+const char*
+TranslateTYToSymShape(TY_IDX ty_idx)
+{
+  TY& ty = Ty_Table[ty_idx];
+  const char* str = NULL;
+  
+  if (TY_kind(ty) == KIND_SCALAR) {
+    str = "scalar";
+  } else if (TY_kind(ty) == KIND_ARRAY) {
+    
+    ARB_HANDLE arb_base = TY_arb(ty);
+    INT32 dim = ARB_dimension(arb_base);
+    // ARB_co_dimension(arb_base) <= 0 FIXME
+
+    if (TY_is_character(ty)) { 
+      str = "scalar"; 
+    } else {
+      switch (dim) {
+      case 1:  str = "vector"; break;
+      case 2:  str = "matrix"; break;
+      case 3:  str = "three_tensor"; break;
+      case 4:  str = "four_tensor"; break;
+      }
+    }
+
+  } 
+  
+  return str;
+}

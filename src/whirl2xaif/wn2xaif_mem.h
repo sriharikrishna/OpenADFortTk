@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.h,v 1.2 2003/05/20 22:50:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.h,v 1.3 2003/05/23 18:33:48 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -90,7 +90,7 @@ extern WN2F_STATUS
    WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS
-   WN2F_array(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+   xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 extern WN2F_STATUS
    WN2F_arrayexp(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 extern WN2F_STATUS

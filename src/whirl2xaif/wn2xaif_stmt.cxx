@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.6 2003/05/21 18:21:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.7 2003/05/23 18:33:48 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -303,7 +303,7 @@ WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   /* Generate the loop expression */
   ST* idx_name = WN_st(WN_index(wn));
-  WN2F_Offset_Symref(xos, idx_name,                      /* base-symbol */
+  xlate_SymRef(xos, idx_name,                      /* base-symbol */
 		     Stab_Pointer_To(ST_type(idx_name)), /* base-type */
 		     ST_type(idx_name),                  /* object-type */
 		     0,                                  /* object-ofst */

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.4 2003/05/20 22:50:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.5 2003/05/23 18:33:48 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -72,7 +72,7 @@
  *           of the lvalue constituted by the tokens in the given
  *           token-buffer.
  *
- *   WN2F_Offset_Symref:
+ *   xlate_SymRef:
  *           Generate code to access the memory location denoted by
  *           the object type, based on the base-symbol, its given
  *           address type and the offset from the base of the symbol.
@@ -93,9 +93,6 @@
  *   TranslateWN:  Translates a WN subtree into a sequence of Fortran
  *           tokens, which are added to the given xml::ostream&.
  *
- *   WN2F_Emit_End_Stmt: a utility to insert an END statement for
- *            an f90 program which contains nested PUs
- *
  *   WN2F_Sum_Offsets:  Sums any ADD nodes encountered in an address tree
  *
  * ====================================================================
@@ -105,6 +102,8 @@
 //************************** System Include Files ***************************
 
 //************************** Open64 Include Files ***************************
+
+#include "Open64BasicTypes.h"
 
 //*************************** User Include Files ****************************
 
@@ -136,6 +135,14 @@ TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 // Declarations of top-level handler-functions for translation from
 // WHIRL to XIAF. 
 namespace whirl2xaif {
+
+extern WN2F_STATUS
+xlate_SymRef(xml::ostream& xos,
+	     ST          *base_st,    /* base symbol */
+	     TY_IDX       baseptr_ty, /* type of base symbol ptr */
+	     TY_IDX       ref_ty,     /* type of referenced object */
+	     STAB_OFFSET  offset,     /* offset from base */
+	     XlationContext& ctxt);
 
 extern WN2F_STATUS 
 xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
@@ -225,13 +232,6 @@ WN2F_Offset_Memref(xml::ostream& xos,
 		   STAB_OFFSET  addr_offset, /* offset from base */
 		   XlationContext& ctxt);
 
-extern WN2F_STATUS
-WN2F_Offset_Symref(xml::ostream& xos,
-		   ST          *addr,        /* Base symbol */
-		   TY_IDX       addr_ty,     /* type of base-symbol-addr */
-		   TY_IDX       object_ty,   /* type of object referenced */
-		   STAB_OFFSET  addr_offset, /* offset from base */
-		   XlationContext& ctxt);
 
 extern WN_OFFSET WN2F_Sum_Offsets(WN *addr);
 

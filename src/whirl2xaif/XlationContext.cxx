@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.3 2003/05/20 22:50:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.4 2003/05/23 18:33:47 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -70,7 +70,7 @@
 //***************************************************************************
 
 XlationContext::XlationContext()
-  : flags(0), wn(NULL)
+  : flags(0)
 { 
   ctxtstack.push_front(Ctxt());
 }
@@ -107,10 +107,22 @@ XlationContext::CreateContext(mUINT32 flags_, WN* wn_)
 XlationContext&
 XlationContext::Ctor(mUINT32 flags_, NonScalarSymTab* symtab_, WN* wn_)
 {
+  // If available, get enclosing context
+  const Ctxt* enclCtxt = NULL;
+  if (ctxtstack.size() > 0) {
+    enclCtxt = &(ctxtstack.front());
+  }
+  
+  // Create new context
   ctxtstack.push_front(Ctxt());
   CurContext().SetFlags(flags_);
   CurContext().SetSymTab(symtab_);
   CurContext().SetWN(wn_);
+
+  // Set inherited flags from enclosing context
+  Ctxt& curCtxt = CurContext();
+  if (enclCtxt->AreFlags(VARREF)) { curCtxt.SetFlags(VARREF); }
+  
   return (*this);
 }
 
@@ -146,8 +158,6 @@ XlationContext::Dump(std::ostream& o, const char* pre) const
   o << "(";
 
   // FIXME: convert to member functions
-  if (IsNewPU())                               o << " new_pu";
-  if (XlationContext_insert_induction(*this))  o << " induct_tmp_reqd";
   if (IsDerefAddr())                           o << " deref";
   if (XlationContext_no_newline(*this))        o << " no_newline";
   if (XlationContext_has_logical_arg(*this))   o << " logical_arg";

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.6 2003/05/20 23:28:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.7 2003/05/23 18:33:47 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -418,27 +418,55 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
   ST* base = ST_base(st);
   TY_IDX ty = ST_type(st);
   
-  xos << Comment(st_name);
-  xos << BegElem("xaif:Symbol") << Attr("symbol_id", (UINT)ST_index(st)) 
-      << Attr("kind", "variable")
-      << Attr("type", "***")
-      << Attr("shape", "***") << EndElem;
+  bool translatenow = false;
+  if (Stab_Is_Common_Block(st)) {
+    TY2F_Translate_Common(xos, st_name, ty); 
+  } else if (ST_sclass(st) == SCLASS_FORMAL && !ST_is_value_parm(st)) {
+    // A procedure parameter (we expect a pointer TY to counteract the
+    // Fortran call-by-reference semantics)
+    ASSERT_DBG_FATAL(TY_Is_Pointer(ty), (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
+					 TY_kind(ty), "xlate_STDecl_VAR"));
+    
+    TY_IDX base_ty = TY_pointed(ty);
+    if (TY_Is_Pointer(base_ty) && TY_ptr_as_array(Ty_Table[base_ty])) {
+      /* FIXME: Handle ptr as array parameters */ 
+      ty = Stab_Array_Of(TY_pointed(base_ty), 0/*size*/);
+    } else {
+      ty = base_ty;
+    }
+    translatenow = true;
+    
+  } else {
+    translatenow = true;
+  }
+
+  if (translatenow) { // FIXME
+    const char* ty_str = TranslateTYToSymType(ty);
+    if (!ty_str) { TranslateTYToSymType(ty); }
+    
+    const char* shape_str = TranslateTYToSymShape(ty);
+    if (!shape_str) { shape_str = "***"; }
+
+    xos << Comment(st_name);
+    xos << BegElem("xaif:Symbol") << Attr("symbol_id", (UINT)ST_index(st)) 
+	<< Attr("kind", "variable")
+	<< Attr("type", ty_str)
+	<< Attr("shape", shape_str) << EndElem;
+  }
 
   //FIXME: TY2F_translate(xos, ty, ctxt); // Add type specs
 
 #if 0 // FIXME
   /* Declare the variable */
   
-  /* don't output ST_sclass(st) == SCLASS_DGLOBAL as common block      */
-  /* keep only st sclass is SCLASS_COMMON as common block output June  */
-  if (Stab_Is_Common_Block(st)) { //if (ST_sclass(st) == SCLASS_COMMON) 
-    TY2F_Translate_Common(xos, st_name, ST_type(st)); // Declare common block
+
+  if (Stab_Is_Common_Block(st)) {
+    TY2F_Translate_Common(xos, st_name, ty); 
   } else if (Stab_Is_Equivalence_Block(st)) {
     if (ST_is_return_var(st))
-      TY2F_Translate_Equivalence(xos, ST_type(st), TRUE /*alt return point*/);
+      TY2F_Translate_Equivalence(xos, ty, TRUE /*alt return point*/);
     else
-      TY2F_Translate_Equivalence(xos, ST_type(st), FALSE /*regular equiv.*/);
-
+      TY2F_Translate_Equivalence(xos, ty, FALSE /*regular equiv.*/);
   } else if (TY_Is_Pointer(ty) && !TY_is_f90_pointer(ty) 
 	     && ST_sclass(st) != SCLASS_FORMAL) {
 
@@ -457,10 +485,11 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
   } else if (ST_sclass(st) == SCLASS_FORMAL && !ST_is_value_parm(st)) {
     /* ie, regular f77 dummy argument, expect pointer TY     */
     /* To counteract the Fortran call-by-reference semantics */
+    // a parameter
     ASSERT_DBG_FATAL(TY_Is_Pointer(ty), 
 		     (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
 		      TY_kind(ty), "xlate_STDecl_VAR"));
-    if (TY_kind(TY_pointed(ST_type(st))) == KIND_FUNCTION) {
+    if (TY_kind(TY_pointed(ty)) == KIND_FUNCTION) {
       xos << "EXTERNAL ";
     } else {
       TY_IDX ty1;
@@ -474,8 +503,9 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
       TY2F_translate(xos, ty1);
     }
     xos << st_name << "-1-" << std::endl;
+
   } else if (ST2F_Is_Dummy_Procedure(st)) {
-    TYLIST tylist_idx = TY_tylist(TY_pointed(ST_type(st)));
+    TYLIST tylist_idx = TY_tylist(TY_pointed(ty));
     TY_IDX rt = TY_IDX_ZERO;
     if (tylist_idx != (TYLIST) 0)
       rt = TYLIST_type(Tylist_Table[tylist_idx]);
@@ -483,7 +513,7 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
     ST2F_Declare_Return_Type(xos, rt, ctxt);
     
   } else {
-    TY2F_translate(xos, ST_type(st)); // Declare as specified in symbol table
+    TY2F_translate(xos, ty); // Declare as specified in symbol table
   }
 
   xos << " " << st_name;
@@ -513,7 +543,7 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
  INITPRO:
   /* Generate a DATA statement for initializers */
   if (ST_is_initialized(st) && !Stab_No_Linkage(st)  
-      && (!TY_Is_Structured(ST_type(st)) || Stab_Is_Common_Block(st)
+      && (!TY_Is_Structured(ty) || Stab_Is_Common_Block(st)
 	  || Stab_Is_Equivalence_Block(st))) {
     inito = Find_INITO_For_Symbol(st);
     if (inito != (INITO_IDX)0)
@@ -632,7 +662,7 @@ xlate_STUse_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
      * at ST_full(ST_base(st)).
      */
     // XlationContext ctxt;  // FIXME
-    WN2F_Offset_Symref(xos, ST_base(st) /*base-symbol*/,
+    xlate_SymRef(xos, ST_base(st) /*base-symbol*/,
 		       Stab_Pointer_To(ST_type(ST_base(st))), /*base-type*/
 		       ST_type(st) /*object-type*/, 
 		       ST_ofst(st) /*object-ofst*/, ctxt);
@@ -676,16 +706,19 @@ xlate_STUse_CONST(xml::ostream& xos, ST *st, XlationContext& ctxt)
   // FIXME
   TY_IDX ty_idx = ST_type(st);
   TY& ty = Ty_Table[ty_idx];
-  
+    
   std::string val;
   if (TY_mtype(ty) == MTYPE_STR && TY_align(ty_idx) > 1) {
     val = TCON2F_hollerith(STC_val(st)); // must be a hollerith constant
   } else {
     val = TCON2F_translate(STC_val(st), TY_is_logical(ty));
   }
-  
+
+  const char* ty_str = TranslateTYToSymType(ty_idx);
+  if (!ty_str) { ty_str = "***"; }  
+
   xos << BegElem("xaif:Constant") << Attr("vertex_id", ctxt.GetNewVId()) 
-      << Attr("type", "***") << Attr("value", val) << EndElem;
+      << Attr("type", ty_str) << Attr("value", val) << EndElem;
 }
 
 
@@ -1054,16 +1087,13 @@ static BOOL
 ST2F_Is_Dummy_Procedure(ST *st)
 {
   /* Does this ST represent a dummy procedure ? */
-
   BOOL dummy = FALSE;
-
-  if (ST_sclass(st) == SCLASS_FORMAL && ST_is_value_parm(st))
-  {
-      TY_IDX ty = ST_type(st);
-
-      if (TY_kind(ty) == KIND_POINTER)
-	if (TY_kind(TY_pointed(ty)) == KIND_FUNCTION)
-	  dummy = TRUE ;
+  if (ST_sclass(st) == SCLASS_FORMAL && ST_is_value_parm(st)) {
+    TY_IDX ty = ST_type(st);
+    if (TY_kind(ty) == KIND_POINTER
+	&& TY_kind(TY_pointed(ty)) == KIND_FUNCTION) {
+	dummy = TRUE;
+    }
   }
   return dummy;
 }

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.5 2003/05/21 18:21:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.6 2003/05/23 18:33:47 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -826,7 +826,7 @@ Append_A_Clause_Symbol(xml::ostream& xos, WN *clause, WN_OFFSET ofst)
     const TY_IDX base_ty = ST_type(st);
     XlationContext ctxt;
     
-    WN2F_Offset_Symref(xos, st,                  /* base variable */
+    xlate_SymRef(xos, st,                  /* base variable */
 		       Stab_Pointer_To(base_ty), /* base addr */
 		       base_ty,                  /* type of reference */
 		       ofst,                     /* base offset */
@@ -1060,7 +1060,7 @@ Append_Nest_Clauses(xml::ostream& xos,
 	 }
 	 else
 	 {
-	    WN2F_Offset_Symref(nest_tokens,
+	    xlate_SymRef(nest_tokens,
 			       idx_var,                 /* base variable */
 			       Stab_Pointer_To(idx_ty), /* base addr */
 			       idx_ty,                  /* type of ref */

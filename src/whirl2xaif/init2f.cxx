@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.cxx,v 1.3 2003/05/20 23:28:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.cxx,v 1.4 2003/05/23 18:33:47 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -81,32 +81,33 @@
  * ====================================================================
  */
 
+//************************** System Include Files ***************************
+
+//************************** Open64 Include Files ***************************
+
+#include "Open64BasicTypes.h"
+
+//*************************** User Include Files ****************************
+
+#include "init2f.h"
 #include "whirl2f_common.h"
 #include "PUinfo.h"
-#include "st2xaif.h"
 #include "wn2xaif.h"
+#include "st2xaif.h"
 #include "ty2xaif.h"
 #include "tcon2f.h"
-#include "init2f.h"
+#include "xmlostream.h"
+#include "XlationContext.h"
 
+//************************** Forward Declarations ***************************
+
+using namespace whirl2xaif;
+using namespace xml; // for xml::ostream, etc
+
+//***************************************************************************
 
 /*------------------- Buffer to hold Data Statements -------------------*/
 /*----------------------------------------------------------------------*/
- 
-/* Is initialized when entering a PU block and reclaimed 
- * when exiting a PU block.
- */
-extern xml::ostream* Data_Stmt_Tokens;  /* FIXME: Defined in wn2f.c */
-
-#if 0
-
-// Buffers to hold intermediate results
-/* Should be initialized when entering a PU block and reclaimed 
- * when exiting a PU block.
- */
-xml::ostream* Data_Stmt_Tokens; /* FIXME: Defined in init2f.c */
-
-#endif
 
 /*--------------------------- Utility Routines -------------------------*/
 /*----------------------------------------------------------------------*/
@@ -492,12 +493,12 @@ INITVKIND_symoff(xml::ostream& xos,
    XlationContext& context;
    xml::ostream symref_tokens;//FIXME
 
-   WN2F_Offset_Symref(symref_tokens,
-		      st,
-		      Stab_Pointer_To(ST_type(st)),
-		      object_ty,
-		      ofst,
-		      context);
+   xlate_SymRef(symref_tokens,
+		st,
+		Stab_Pointer_To(ST_type(st)),
+		object_ty,
+		ofst,
+		context);
    WN2F_Address_Of(symref_tokens);
    INIT2F_Append_Initializer(xos, &symref_tokens, repeat);
 #endif
@@ -654,12 +655,12 @@ INIT2F_Translate_Char_Ref(xml::ostream& xos, /* Append reference here */
     */
 
    /* Generate the array indexing expression */
-   WN2F_Offset_Symref(xos,
-		      base_object,
-		      Stab_Pointer_To(ST_type(base_object)),
-		      array_etype,
-		      base_ofst + array_ofst,
-		      context);
+   xlate_SymRef(xos,
+		base_object,
+		Stab_Pointer_To(ST_type(base_object)),
+		array_etype,
+		base_ofst + array_ofst,
+		context);
 
    /* Generate the substring expression */
    if (string_size != TY_size(array_etype))
@@ -967,7 +968,7 @@ INIT2F_Translate_Array_Ref(xml::ostream&         xos,
       /* Use an implied do-loop to do this special F90 initialization */
 
       abase_tokens = New_Token_Buffer();
-      WN2F_Offset_Symref(abase_tokens,
+      xlate_SymRef(abase_tokens,
 			 base_object,
 			 Stab_Pointer_To(ST_type(base_object)),
 			 aseg->atype,
@@ -1021,7 +1022,7 @@ INIT2F_Translate_Array_Ref(xml::ostream&         xos,
    {
       /* Translate the array base reference */
       abase_tokens = New_Token_Buffer();
-      WN2F_Offset_Symref(abase_tokens,
+      xlate_SymRef(abase_tokens,
 			 base_object,
 			 Stab_Pointer_To(ST_type(base_object)),
 			 aseg->atype,
@@ -1112,7 +1113,7 @@ INIT2F_ptr_or_scalar(xml::ostream& lhs_tokens,
 
    /* Get the lhs of the initializer */
    sym_tokens = New_Token_Buffer();
-   WN2F_Offset_Symref(sym_tokens,
+   xlate_SymRef(sym_tokens,
 		      base_object,
 		      Stab_Pointer_To(ST_type(base_object)),
 		      object_ty,
