@@ -1,11 +1,11 @@
 # -*-Mode: sh;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.19 2004/05/11 18:14:49 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.20 2005/01/18 19:45:10 utke Exp $
 
 #############################################################################
 # These variables should be set by the user
 #############################################################################
 
-export OPENADFORTTK="/cygdrive/c/UserHome/Develop/OpenADFortTk"
+export OPENADFORTTK="/sandbox/cvs/OpenADFortTk"
 
 PLATFORM=`cd ${OPENADFORTTK}/config; ./hpcplatform`
 case $PLATFORM in
@@ -13,7 +13,7 @@ case $PLATFORM in
     base="/cygdrive/c/UserHome/Develop"
     ;;
   i686-Linux | ia64-Linux) 
-    base="/local/eraxxon"
+    base="/sandbox/cvs/"
     ;;
   mips-IRIX64 | sparc-SunOS)
     base="/net/basuri4/eraxxon"
@@ -25,11 +25,12 @@ esac
 # Base directories of various components
 export OPEN64_BASE="${base}/Open64"
 export OPENANALYSIS_BASE="${base}/OpenAnalysis"
-export XERCESC_BASE="${base}/xercesc"
+export XERCESC_BASE="${XERCESCROOT}"
 export XAIFBOOSTER_BASE="${base}/ACTS"
-export BOOST_BASE="${base}/ACTS/boost-1.30.2"
+export BOOST_BASE="${BOOSTROOT}"
 export ANGEL_BASE="${base}/ACTS/angel"
-export XAIFSCHEMA_BASE="${base}/ACTS/xaif-1.0"
+
+XAIFSCHEMA="${base}/ACTS/xaif-1.0"
 
 unset base
 
@@ -56,11 +57,10 @@ esac
 # Installations of the respective components
 export OPEN64ROOT="${OPEN64_BASE}/osprey1.0/${o64targ}"
 export OPENANALYSISROOT="${OPENANALYSIS_BASE}/${PLATFORM}"
-export XERCESCROOT="${XERCESC_BASE}/${PLATFORM}"
+export XERCESCROOT="${XERCESC_BASE}"
 export XAIFBOOSTERROOT="${XAIFBOOSTER_BASE}"
 export BOOSTROOT="${BOOST_BASE}"
 export ANGELROOT="${ANGEL_BASE}"
-export XAIFSCHEMAROOT="${XAIFSCHEMA_BASE}"
 
 unset o64targ
 
@@ -127,13 +127,11 @@ fi
 alias xboostread="${xbase}/system/test/t -c ${ii_xaif}"
 alias xboost_l="${xbase}/algorithms/Linearization/test/t -c ${ii_xaif}"
 alias xboost_bb="${xbase}/algorithms/BasicBlockPreaccumulation/test/t -c ${ii_xaif}"
-alias xboost_bbt="${xbase}/algorithms/BasicBlockPreaccumulationTape/test/t -c ${ii_xaif}"
-alias xboost_bbr="${xbase}/algorithms/BasicBlockPreaccumulationReverse/test/t -c ${ii_xaif}"
-alias xboost_cfr="${xbase}/algorithms/ControlFlowReversal/test/t -c ${ii_xaif}"
 
 unset xbase
 unset ii_xaif
 
 #############################################################################
 
+unset XAIFSCHEMA
 unset PLATFORM
