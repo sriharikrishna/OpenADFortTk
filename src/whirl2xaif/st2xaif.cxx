@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.34 2004/06/03 01:37:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.35 2004/06/09 20:43:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -306,7 +306,7 @@ whirl2xaif::xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
   xos << BegElem("xaif:SymbolTable") << EndAttrs;
   
   xlate_SYMTAB(xos, symtab_lvl, ctxt);
-  xlate_ScalarizedRefTab(xos, nonscalarsymtab, ctxt);
+  //xlate_ScalarizedRefTab(xos, nonscalarsymtab, ctxt);
   
   xos << EndElem;
 }
@@ -359,19 +359,20 @@ void
 whirl2xaif::xlate_ScalarizedRefTab(xml::ostream& xos, ScalarizedRefTab_W2X* symtab, 
 				  XlationContext& ctxt)
 {
-#if 0
   if (!symtab) { return; }
+
+  // FIXME: *** may be active and non active non-scalar syms
   
-  // *** may be active and non active non-scalar syms
-  for (ScalarizedRefTabIterator it(*symtab); it.IsValid(); ++it) {
-    WN* wn = it.CurrentSrc();
-    ScalarizedRef* sym = it.CurrentTarg();
+  for (ScalarizedRefTab_W2X::ScalarizedRefPoolTy::iterator it 
+	 = symtab->RefPoolBegin(); 
+       it != symtab->RefPoolEnd(); ++it) {
+    ScalarizedRef* sym = (*it);
     
     xos << BegElem("xaif:Symbol") << Attr("symbol_id", sym->GetName())
-	<< Attr("kind", "variable") << Attr("type", "nonscalar-***???")
-	<< Attr("shape", "nonscalar-***???") << Attr("active", "***???") << EndElem;
+	<< Attr("kind", "variable") << Attr("type", "opaque")
+	<< Attr("shape", "scalar") << Attr("active", "true") 
+	<< EndElem;
   }
-#endif
 }
 
 
