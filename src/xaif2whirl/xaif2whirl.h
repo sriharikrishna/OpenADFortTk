@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.13 2004/04/05 20:59:39 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.14 2004/04/08 13:53:23 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -79,8 +79,10 @@ GetOrCreateBogusTmpSymbol(XlationContext& ctxt);
 //****************************************************************************
 
 namespace xaif2whirl {
-  
+  // -------------------------------------------------------
   // Generic attribute retrieval funtions
+  // -------------------------------------------------------
+
   bool
   GetBoolAttr(const DOMElement* elem, XMLCh* attr, bool default_val);
 
@@ -109,7 +111,20 @@ namespace xaif2whirl {
   // Default: 0. A valid position value is non-zero.
   unsigned int
   GetPositionAttr(const DOMElement* elem);
+
+
+  // -------------------------------------------------------
+  // Get information within XAIF 'annotation' attribute
+  // -------------------------------------------------------
+
+  // Given an element or annotation string and a tag, returns whether
+  // the tag is present in teh annotation attribute.
+  bool
+  IsTagPresent(const DOMElement* elem, const char* tag);
   
+  bool
+  IsTagPresent(const char* annotstr, const char* tag);
+
   // Get the appropriate persistant id from the element 'elem'.  See
   // detailed descriptions for generic functions below.
   SymTabId
