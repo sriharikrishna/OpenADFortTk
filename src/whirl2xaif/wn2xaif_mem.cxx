@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.17 2004/01/19 21:41:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.18 2004/02/11 14:44:43 mfagan Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -494,8 +494,10 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   // LHS of assignment
   WN* lhs = wn; // OPR_STID represents the LHS of the assignment
+  // Change alias to du_ud MWF
+  // ----------------------------
   xos << BegElem(XAIFStrings.elem_AssignLHS()) 
-      << Attr("alias", ctxt.FindVN(lhs)) << EndAttrs;
+      << Attr("du_ud", ctxt.FindVN(lhs)) << EndAttrs;
   ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for LHS
   
   if (ST_class(base_st) == CLASS_PREG) { // FIXME
@@ -549,9 +551,11 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   }
   
   // LHS of assignment (dereference address)
+  // Change alias to du_ud MWF
+  // ----------------------------
   WN* lhs = baseptr;
   xos << BegElem(XAIFStrings.elem_AssignLHS()) 
-      << Attr("alias", ctxt.FindVN(lhs)) << EndAttrs;
+      << Attr("du_ud", ctxt.FindVN(lhs)) << EndAttrs;
   ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for LHS
   
   if (WN_operator(baseptr) == OPR_LDA || WN_operator(baseptr) == OPR_LDID) {
@@ -733,10 +737,12 @@ xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 #endif
 
   bool newContext = false; // FIXME: abstract (symref, memref)
+  // Change alias to du_ud MWF
+  // ----------------------------
   if (!ctxt.IsVarRef()) {
     xos << BegElem(XAIFStrings.elem_VarRef())
 	<< Attr("vertex_id", ctxt.GetNewVId())
-	<< Attr("alias", ctxt.FindVN(wn));
+	<< Attr("du_ud", ctxt.FindVN(wn));
     ctxt.CreateContext(XlationContext::VARREF, wn); // FIXME: do we need wn?
     newContext = true; 
   }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.30 2004/01/25 02:43:25 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.31 2004/02/11 14:44:42 mfagan Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -984,12 +984,14 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
   // -------------------------------------------------------
   // If we are not already within xaif:VariableReference... (FIXME: abstract)
   // -------------------------------------------------------
+  // Change alias to du_ud MWF
+  // ----------------------------
   bool constant = (ST_class(base_st) == CLASS_CONST);
   bool newContext = false;
   if (!constant && !ctxt.IsVarRef()) {
     xos << BegElem(XAIFStrings.elem_VarRef())
 	<< Attr("vertex_id", ctxt.GetNewVId())
-	<< Attr("alias", ctxt.FindVN(ctxt.GetWN_MR()));
+	<< Attr("du_ud", ctxt.FindVN(ctxt.GetWN_MR()));
     ctxt.CreateContext(XlationContext::VARREF); // FIXME: do we need wn?
     newContext = true; 
   }
@@ -1157,13 +1159,15 @@ WN2F_Offset_Memref(xml::ostream& xos,
   // -------------------------------------------------------
   //
   // -------------------------------------------------------
+  // Change alias to du_ud MWF
+  // ----------------------------
   bool constant = (WN_operator(addr) == OPR_LDA 
 		   && ST_class(WN_st(addr)) == CLASS_CONST);
   bool newContext = false; 
   if (!constant && !ctxt.IsVarRef()) {
     xos << BegElem(XAIFStrings.elem_VarRef())
 	<< Attr("vertex_id", ctxt.GetNewVId())
-	<< Attr("alias", ctxt.FindVN(ctxt.GetWN_MR()));
+	<< Attr("du_ud", ctxt.FindVN(ctxt.GetWN_MR()));
     ctxt.CreateContext(XlationContext::VARREF); // FIXME: do we need wn?
     newContext = true; 
   }
