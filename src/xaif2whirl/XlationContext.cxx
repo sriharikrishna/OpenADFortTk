@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.cxx,v 1.6 2004/03/29 23:41:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.cxx,v 1.7 2004/04/14 21:26:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -34,12 +34,9 @@
 //***************************************************************************
 
 XlationContext::XlationContext()
+  : wnParentMap(NULL), id2stabMap(NULL), id2puMap(NULL), wn2idMap(NULL),
+    id2wnMap(NULL), xsym2wsymMap(NULL)
 { 
-  id2puMap = NULL;
-  wn2idMap = NULL;
-  id2wnMap = NULL;
-  xsym2wsymMap = NULL;
-
   ctxtstack.push_front(Ctxt());
 }
 
@@ -113,49 +110,60 @@ XlationContext::DeleteContext()
   return (*this);
 }
 
+
 // -------------------------------------------------------
-// Id maps
+// Procedure-level maps/data
 // -------------------------------------------------------
+
+WN*
+XlationContext::FindParentWN(WN* wn)
+{
+  if (wnParentMap) { return (wnParentMap->Find(wn)); }
+  return NULL;
+}
+
+WN*
+XlationContext::FindParentBlockWN(WN* wn)
+{
+  if (wnParentMap) { return (wnParentMap->FindBlock(wn)); }
+  return NULL;
+}
 
 pair<ST_TAB*, PU_Info*>
 XlationContext::FindSymTab(SymTabId stabId)
 {
-  SymTabIdToSymTabMap* map = GetIdToSymTabMap();
-  if (map) { return (map->Find(stabId)); }
+  if (id2stabMap) { return (id2stabMap->Find(stabId)); }
   return pair<ST_TAB*, PU_Info*>(NULL, NULL);
 }
 
 PU_Info*
 XlationContext::FindPU(PUId puid)
 {
-  PUIdToPUMap* map = GetIdToPUMap();
-  if (map) { return (map->Find(puid)); }
+  if (id2puMap) { return (id2puMap->Find(puid)); }
   return NULL;
 }
 
 WNId
 XlationContext::FindWNId(WN* wn)
 {
-  WNToWNIdMap* map = GetWNToIdMap();
-  if (map) { return (map->Find(wn)); }
+  if (wn2idMap) { return (wn2idMap->Find(wn)); }
   return 0;
 }
 
 WN*
 XlationContext::FindWN(WNId wnid, bool mustFind)
 {
-  WNIdToWNMap* map = GetIdToWNMap();
-  if (map) { return (map->Find(wnid, mustFind)); }
+  if (id2wnMap) { return (id2wnMap->Find(wnid, mustFind)); }
   return NULL;
 }
 
 Symbol*
 XlationContext::FindSym(const char* scopeid, const char* symid)
 {
-  XAIFSymToSymbolMap* map = GetXAIFSymToSymbolMap();
-  if (map) { return (map->Find(scopeid, symid)); }
+  if (xsym2wsymMap) { return (xsym2wsymMap->Find(scopeid, symid)); }
   return NULL;
 }
+
 
 // -------------------------------------------------------
 // Misc
@@ -171,6 +179,7 @@ XlationContext::DDump() const
 {
   Dump(std::cerr);
 }
+
 
 //***************************************************************************
 // XlationContext::Ctxt

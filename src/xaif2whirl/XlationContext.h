@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.h,v 1.6 2004/03/29 23:41:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.h,v 1.7 2004/04/14 21:26:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -29,6 +29,7 @@
 //*************************** User Include Files ****************************
 
 #include <lib/support/XlationCtxt.h>
+#include <lib/support/WhirlParentize.h>
 #include <lib/support/WhirlIDMaps.h>
 #include <lib/support/SymTab.h>
 
@@ -71,7 +72,7 @@ public:
     LVALUE           = 0x00000020, // var ref should be an lvalue (inheritD)
     ARRAY            = 0x00000040, // an array reference (inheritD)
     ARRAYIDX         = 0x00000080, // an array index expr (inheritD)
-    EXPRSIMPLE       = 0x00000100, // within a 'simple' expr (inheritD)
+    EXPRSIMPLE       = 0x00000100  // within a 'simple' expr (inheritD)
   };
 
 public:
@@ -140,11 +141,16 @@ public:
   void SetExprSimple()      { CurContext().SetFlags(EXPRSIMPLE); }
   void ResetExprSimple()    { CurContext().ResetFlags(EXPRSIMPLE); }
 
-
   // -------------------------------------------------------
-  // Id maps
+  // Procedure-level maps/data
   // -------------------------------------------------------
   
+  // WHIRL parent map
+  WN* FindParentWN(WN*);
+  WN* FindParentBlockWN(WN*);
+  WhirlParentMap* GetWNParentMap() const { return wnParentMap; }
+  void SetWNParentMap(WhirlParentMap* x) { wnParentMap = x; }
+
   // SymTabId -> ST_TAB* map: (We do not assume ownership of the map)
   pair<ST_TAB*, PU_Info*> FindSymTab(SymTabId stabId);
   SymTabIdToSymTabMap* GetIdToSymTabMap() const { return id2stabMap; }
@@ -192,8 +198,8 @@ private:
   typedef CtxtStack::iterator       CtxtStackIt;
   typedef CtxtStack::const_iterator CtxtStackItC;
 
-
 private:
+  WhirlParentMap* wnParentMap;
   SymTabIdToSymTabMap* id2stabMap;
   PUIdToPUMap* id2puMap;
   WNToWNIdMap* wn2idMap;
