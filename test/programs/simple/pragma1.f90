@@ -15,7 +15,7 @@ program pragmatest
   integer :: jjj
   
   !*$*align_symbol(x, 16)
-  !*$*align_symbol(ix, 32)
+  !*$*align_symbol(ix, 16)
   x = x * x + 3.1415 - y
   ix = ix / ix + jjj
 
@@ -27,10 +27,10 @@ program pragmatest
      a(i) = a(i) + b(i)
   END DO
 
-  !DIR$ IVDEP
-  !do i = 1, 10
-  !   b(i) = a(i) + 3.0
-  !enddo
+  !!DIR$ IVDEP
+  !!do i = 1, 10
+  !!   b(i) = a(i) + 3.0
+  !!enddo
   
   ! Some other pragmas
   !!MIC$ NUMCPUS
@@ -47,8 +47,8 @@ program pragmatest
   !!DIR$ IVDEP
   !!DIR$ NAME
 
-  !$OMP SECTIONS
-  !$OMP SECTION  
-  !$OMP END SECTIONS
+  !!$OMP SECTIONS
+  !!$OMP SECTION  
+  !!$OMP END SECTIONS
 
 end program
