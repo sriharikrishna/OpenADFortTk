@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.h,v 1.4 2004/02/26 14:24:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.h,v 1.5 2004/04/07 14:58:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -64,6 +64,8 @@ const char* INTRINSIC_basename(INTRINSIC opcode);
 // 
 // * OPR_TRUNC <------------------> * Intrinsic, using XAIF name
 //   et al.
+// 
+// * OPR_EQ    <------------------> * BooleanOp, using XAIF name
 //
 class IntrinsicXlationTable {
 public:
@@ -84,19 +86,20 @@ public:
     WNOprClass_UNKNOWN // special, reserved for searching table
   };
 
-  static const char* WNOprClass2Str(WNOprClass oprcl);
-
+  static const char* ToString(WNOprClass oprcl);
+  
   // XAIFOpr is the analog of the WHIRL 'OPERATOR'.  It is not really
   // needed at this point.
   enum XAIFOpr {
     XAIFSubCall,
     XAIFFuncCall,
     XAIFIntrin,
+    XAIFBoolOp,
     
     XAIFOpr_UNKNOWN   // special, reserved for searching table
   };
 
-  static const char* XAIFOpr2Str(XAIFOpr opr);
+  static const char* ToString(XAIFOpr opr);
 
   struct WHIRLInfo {
     WNOprClass oprcl;   // class of the WN operator

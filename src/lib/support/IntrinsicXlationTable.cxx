@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.4 2003/12/13 17:31:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.5 2004/04/07 14:58:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -126,17 +126,17 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
   { { WNExpr, OPR_BXOR, NULL, 2 },
                         { XAIFIntrin, "bogus_xor_scal_scal", 2 } },
   { { WNExpr, OPR_EQ, NULL, 2 },
-                        { XAIFIntrin, "bogus_eq_scal_scal", 2 } },
+                        { XAIFBoolOp, "equal", 2 } },
   { { WNExpr, OPR_NE, NULL, 2 },
-                        { XAIFIntrin, "bogus_neq_scal_scal", 2 } },
+                        { XAIFBoolOp, "not_equal", 2 } },
   { { WNExpr, OPR_GT, NULL, 2 },
-                        { XAIFIntrin, "bogus_gt_scal_scal", 2 } },
+                        { XAIFBoolOp, "greater_than", 2 } },
   { { WNExpr, OPR_GE, NULL, 2 },
-                        { XAIFIntrin, "bogus_gteq_scal_scal", 2 } },
+                        { XAIFBoolOp, "greater_or_equal", 2 } },
   { { WNExpr, OPR_LT, NULL, 2 },
-                        { XAIFIntrin, "bogus_lt_scal_scal", 2 } },
+                        { XAIFBoolOp, "less_than", 2 } },
   { { WNExpr, OPR_LE, NULL, 2 },
-                        { XAIFIntrin, "bogus_lteq_scal_scal", 2 } },
+                        { XAIFBoolOp, "less_or_equal", 2 } },
 
   { { WNExpr, OPR_LAND, NULL, 2 },
                         { XAIFIntrin, "bogus_land_scal_scal", 2 } },
@@ -181,7 +181,7 @@ IntrinsicXlationTable::XAIFInfo::XAIFInfo()
 //****************************************************************************
 
 const char* 
-IntrinsicXlationTable::WNOprClass2Str(WNOprClass oprcl)
+IntrinsicXlationTable::ToString(WNOprClass oprcl)
 {
   switch (oprcl) {
     case WNCall:       return "WNCall";
@@ -194,12 +194,13 @@ IntrinsicXlationTable::WNOprClass2Str(WNOprClass oprcl)
 }
 
 const char* 
-IntrinsicXlationTable::XAIFOpr2Str(XAIFOpr opr)
+IntrinsicXlationTable::ToString(XAIFOpr opr)
 {
   switch (opr) {
     case XAIFSubCall:  return "XAIFSubCall";
     case XAIFFuncCall: return "XAIFFuncCall";
     case XAIFIntrin:   return "XAIFIntrinsic";
+    case XAIFBoolOp:   return "XAIFBoolOp";
     default:           return "<invalid-XAIFOpr>";
   }
   return NULL; // should never reach
@@ -209,7 +210,7 @@ void
 IntrinsicXlationTable::WHIRLInfo::Dump(std::ostream& os) const
 {
   os << "{ " 
-     << WNOprClass2Str(oprcl) << ", " 
+     << ToString(oprcl) << ", " 
      << OPERATOR_name(opr) << ", "
      << ((name) ? name : "<null>") 
      << numop 
@@ -226,7 +227,7 @@ void
 IntrinsicXlationTable::XAIFInfo::Dump(std::ostream& os) const
 {
   os << "{ " 
-     << XAIFOpr2Str(opr) << ", " 
+     << ToString(opr) << ", " 
      << ((name) ? name : "<null>") << ", " 
      << numop 
      << " }";

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.25 2004/02/26 14:24:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.26 2004/04/07 14:58:50 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -72,12 +72,14 @@ using namespace xml; // for xml::ostream, etc
 //************************** Forward Declarations ***************************
 
 static whirl2xaif::status 
-xlate_UnaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
-			 WN* wn, XlationContext& ctxt);
+xlate_UnaryOpUsingIntrinsicTable(xml::ostream& xos, OPCODE opcode, 
+				 TY_IDX result_ty,
+				 WN* wn, XlationContext& ctxt);
 
 static whirl2xaif::status 
-xlate_BinaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
-			  WN *wn0, WN *wn1, XlationContext& ctxt);
+xlate_BinaryOpUsingIntrinsicTable(xml::ostream& xos, OPCODE opcode, 
+				  TY_IDX result_ty,
+				  WN *wn0, WN *wn1, XlationContext& ctxt);
 
 static whirl2xaif::status 
 xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty, BOOL callByValue,
@@ -373,7 +375,8 @@ whirl2xaif::xlate_UnaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		    WN_kid_count(wn), 1, OPCODE_name(opc)));
 
   if (IntrinsicTable.FindXAIFInfo(WN_operator(wn), NULL)) {
-    xlate_UnaryOpToIntrinsic(xos, opc, WN_Tree_Type(wn), WN_kid0(wn), ctxt);
+    xlate_UnaryOpUsingIntrinsicTable(xos, opc, WN_Tree_Type(wn), 
+				     WN_kid0(wn), ctxt);
   } else {
     ASSERT_DBG_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_OPC, "xlate_UnaryOp"));
   }
@@ -499,7 +502,8 @@ whirl2xaif::xlate_RECIP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    }
    WN* wn_one = Make_Const(tcon);
    
-   xlate_BinaryOpToIntrinsic(xos, opc, result_ty, wn_one, WN_kid0(wn), ctxt);
+   xlate_BinaryOpUsingIntrinsicTable(xos, opc, result_ty, wn_one, 
+				     WN_kid0(wn), ctxt);
    
    WN_DELETE_Tree(wn_one);
    
@@ -555,8 +559,8 @@ whirl2xaif::xlate_BinaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		    WN_kid_count(wn), 2, OPCODE_name(opc)));
   
   if (IntrinsicTable.FindXAIFInfo(WN_operator(wn), NULL)) {
-    xlate_BinaryOpToIntrinsic(xos, opc, WN_Tree_Type(wn), 
-			      WN_kid0(wn), WN_kid1(wn), ctxt);
+    xlate_BinaryOpUsingIntrinsicTable(xos, opc, WN_Tree_Type(wn), 
+				      WN_kid0(wn), WN_kid1(wn), ctxt);
   } else {
     ASSERT_DBG_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_OPC, "xlate_BinaryOp"));
   }
@@ -911,18 +915,20 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
 //***************************************************************************
 
 static whirl2xaif::status
-xlate_UnaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
-			 WN* wn, XlationContext& ctxt)
+xlate_UnaryOpUsingIntrinsicTable(xml::ostream& xos, OPCODE opcode, 
+				 TY_IDX result_ty,
+				 WN* wn, XlationContext& ctxt)
 {
-  xlate_BinaryOpToIntrinsic(xos, opcode, result_ty, wn, NULL, ctxt);
+  xlate_BinaryOpUsingIntrinsicTable(xos, opcode, result_ty, wn, NULL, ctxt);
   return whirl2xaif::good;
 }
 
 
-// xlate_BinaryOpToIntrinsic: 
+// xlate_BinaryOpUsingIntrinsicTable: 
 static whirl2xaif::status
-xlate_BinaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
-			  WN* wn0, WN* wn1, XlationContext& ctxt)
+xlate_BinaryOpUsingIntrinsicTable(xml::ostream& xos, OPCODE opcode, 
+				  TY_IDX result_ty,
+				  WN* wn0, WN* wn1, XlationContext& ctxt)
 {
   BOOL is_binary_op = (wn1 != NULL);
   
@@ -934,16 +940,37 @@ xlate_BinaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
   } else {
     wn0_ty = wn1_ty = Stab_Mtype_To_Ty(OPCODE_desc(opcode));
   }
-
+  
   IntrinsicXlationTable::XAIFInfo* info // FIXME (perhaps pass?)
     = IntrinsicTable.FindXAIFInfo(OPCODE_operator(opcode), NULL);
   ASSERT_FATAL(info, (DIAG_A_STRING, "intrinsic lookup failed!"));
   UINT targid, srcid0, srcid1;
   
+  // Get XAIF operator type
+  const char* opStr = NULL;
+  const char* typeStr = NULL;
+  switch (info->opr) {
+  case IntrinsicXlationTable::XAIFIntrin: {
+    opStr = "xaif:Intrinsic";
+    typeStr = "***";
+    break;
+  }
+  case IntrinsicXlationTable::XAIFBoolOp: {
+    opStr = "xaif:BooleanOperation";
+    break;
+  }
+  default:
+    ASSERT_FATAL(false, (DIAG_A_STRING, "Invalid operator"));
+  }
+  
   // Operation
   targid = ctxt.GetNewVId();
-  xos << BegElem("xaif:Intrinsic") << Attr("vertex_id", targid)
-      << Attr("name", info->name) << Attr("type", "***") << EndElem;
+  xos << BegElem(opStr) << Attr("vertex_id", targid)
+      << Attr("name", info->name);
+  if (typeStr) {
+    xos << Attr("type", typeStr);
+  }
+  xos << EndElem;
   
   // First operand
   srcid0 = ctxt.PeekVId();
@@ -954,7 +981,7 @@ xlate_BinaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
     srcid1 = ctxt.PeekVId();
     xlate_Operand(xos, wn1, wn1_ty, TRUE/*call-by-value*/, ctxt);
   }
-
+  
   // Edges
   DumpExprGraphEdge(xos, ctxt.GetNewEId(), srcid0, targid, 1);
   if (is_binary_op) { 
