@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.20 2003/09/16 14:30:58 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.21 2003/09/17 19:43:26 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -668,105 +668,6 @@ AddToNonScalarSymTabOp::operator()(const WN* wn)
   NonScalarSym* sym = new NonScalarSym();
   bool ret = symtab->Insert(wn, sym);
   return (ret) ? 0 : 1;
-}
-
-BOOL 
-IsScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty) 
-{
-  if (TY_IsNonScalar(refobj_ty)) {
-    // This is a reference to a non-scalar or a non-scalar within a
-    // non-scalar (e.g. a record or a record within a record)
-    return false; 
-  } else if (TY_Is_Scalar(refobj_ty)) {
-    // Test whether 'baseobj_ty' is assignable to 'refobj_ty'.  If
-    // not, we have a non-scalar reference (e.g. a field within a
-    // structure; an element within an array).
-    return (WN2F_Can_Assign_Types(baseobj_ty, refobj_ty));
-  } else {
-    return false;
-  }
-}
-
-BOOL 
-IsNonScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty) 
-{
-  return (!IsScalarRef(baseobj_ty, refobj_ty));
-}
-
-// NOTE: for store OPERATORs, only the LHS is checked
-BOOL 
-IsNonScalarRef(const WN* wn)
-{
-  // FIXME: Only an outermost OPR_ARRAY of a subtree will
-  // ever represent a definition of an array section or element (e.g., In
-  // reference A(G(I)) = X, variable A is a definition, while G is a use).
-
-  OPERATOR opr = WN_operator (wn);
-  switch (opr) {
-    // FIXME 
-    // ILOADX, ISTOREX
-    // ILDBITS, ISTBITS
-    // MLOAD, MSTORE: memref
-    // OPR_IDNAME:
-    
-  case OPR_LDA:  // FIXME:
-  case OPR_LDMA: // FIXME: 
-    break; // can this be used to access records?
-    
-  case OPR_LDID:
-  case OPR_LDBITS: 
-  case OPR_STID:
-  case OPR_STBITS: { // symref
-    // For stores, only check LHS (kid1)
-    TY_IDX baseobj_ty = ST_type(WN_st(wn));
-    TY_IDX refobj_ty = WN_ty(wn);
-    return (IsNonScalarRef(baseobj_ty, refobj_ty));
-  }
-  
-  case OPR_ILOAD: { // memref
-    TY_IDX baseobj_ty = TY_pointed(WN_load_addr_ty(wn));
-    TY_IDX baseobj_ty1 = TY_pointed(WN_Tree_Type(WN_kid0(wn))); // FIXME
-    assert(baseobj_ty = baseobj_ty1); // FIXME
-    TY_IDX refobj_ty = WN_ty(wn);
-    return (IsNonScalarRef(baseobj_ty, refobj_ty));
-  }
-
-  case OPR_ISTORE: { // memref
-    // Only check LHS (kid1)
-    TY_IDX baseobj_ty = TY_pointed(WN_ty(wn));
-    TY_IDX refobj_ty = TY_pointed(WN_ty(wn));
-    return (IsNonScalarRef(baseobj_ty, refobj_ty));
-  }
-
-  case OPR_ARRAY:
-  case OPR_ARRSECTION: {
-    // Arrays: 
-    // Kid 0 is an LDA or LDID which represents the base of the array
-    // being referenced or defined. Kids 1..n are dimensions; Kids
-    // n+1..2n are the index expressions.
-    WN* base = WN_kid0(wn);
-    assert(WN_operator(base) == OPR_LDA || WN_operator(base) == OPR_LDID);
-    return TRUE;
-  }
-
-  case OPR_ARRAYEXP: // FIXME
-    return TRUE;
-    
-  } // switch
-
-  return FALSE;
-}
-
-// FIXME: 
-BOOL 
-WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2)
-{
-  BOOL simple = Stab_Identical_Types(ty1, ty2, FALSE, /*check_quals*/
-				     FALSE, /*check_scalars*/ 
-				     TRUE); /*ptrs_as_scalars*/
-  BOOL special = (TY_Is_Array(ty1) && TY_is_character(ty1) && 
-		  TY_Is_Array(ty2) && TY_is_character(ty2));
-  return (simple || special);
 }
 
 //FIXME: op should not be const because we call op(), which is non const.

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.11 2003/09/05 21:41:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.12 2003/09/17 19:43:26 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -333,16 +333,6 @@ public:
 private: 
 };
 
-BOOL 
-IsScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty);
-BOOL
-IsNonScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty);
-BOOL 
-IsNonScalarRef(const WN* wn);
-void 
-ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op);
-
-BOOL WN2F_Can_Assign_Types(TY_IDX t1, TY_IDX t2);
 
 //FIXME: locate elsewhere...
 #include <lib/support/SymTab.h> // FIXME
@@ -362,6 +352,9 @@ public:
 private:
   NonScalarSymTab* symtab;
 };
+
+void 
+ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op);
 
 //***************************************************************************
 

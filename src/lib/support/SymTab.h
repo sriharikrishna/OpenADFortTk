@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.6 2003/09/02 15:02:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.7 2003/09/17 19:43:26 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -33,6 +33,24 @@
 //*************************** User Include Files ****************************
 
 //************************** Forward Declarations ***************************
+
+bool 
+IsVarRefTranslatableToXAIF(const WN* wn);
+
+
+bool
+IsScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty);
+
+bool
+IsNonScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty);
+
+bool
+IsNonScalarRef(const WN* wn);
+
+bool
+WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2);
+
+
 
 //***************************************************************************
 // XAIFSymToWhirlSymMap (FIXME)
