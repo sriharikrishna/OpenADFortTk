@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.16 2004/10/06 22:10:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.17 2004/12/15 21:03:42 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -390,10 +390,10 @@ PleaseGetMeSomething(WN* wn_pu)
   
   if (blk) {
     // Create a comment and insert it into the block
-    WN* com1 = WN_CreateComment("$OpenAD$ BEGIN FRAGMENT(1)");
+    WN* com1 = WN_CreateComment("$OpenAD BEGIN FRAGMENT(1)");
     WN_INSERT_BlockFirst(blk, com1);
     
-    WN* com2 = WN_CreateComment("$OpenAD$ END FRAGMENT(1)");
+    WN* com2 = WN_CreateComment("$OpenAD END FRAGMENT(1)");
     WN_INSERT_BlockLast(blk, com2);
   }
   
