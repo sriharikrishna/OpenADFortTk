@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.h,v 1.4 2004/05/04 23:51:28 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.h,v 1.5 2004/07/28 20:01:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -56,7 +56,7 @@ namespace xaif2whirl {
   WN*
   TranslateVarRef(const DOMElement* elem, XlationContext& ctxt);
   
-  ST*
+  std::pair<ST*, WN_OFFSET>
   TranslateVarRefSimple(const DOMElement* elem, XlationContext& ctxt);
   
   WN*

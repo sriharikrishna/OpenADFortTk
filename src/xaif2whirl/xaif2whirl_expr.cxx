@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.32 2004/07/28 19:04:42 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.33 2004/07/28 20:01:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -109,7 +109,7 @@ xlate_ExprOpUsingIntrinsicTable(IntrinsicXlationTable::XAIFOpr xopr,
 static WN*
 xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt);
 
-static ST*
+static pair<ST*, WN_OFFSET>
 xlate_SymbolReferenceSimple(const DOMElement* elem, XlationContext& ctxt);
 
 static WN*
@@ -285,7 +285,7 @@ xaif2whirl::TranslateVarRef(const DOMElement* elem, XlationContext& ctxt)
 // TranslateSimpleVarRef: Given the first node in a simple variable
 // reference graph, create a variable reference.  No value/deriv
 // selector can be created.
-ST*
+pair<ST*, WN_OFFSET>
 xaif2whirl::TranslateVarRefSimple(const DOMElement* elem, XlationContext& ctxt)
 {
   if (!elem) {
@@ -300,10 +300,10 @@ xaif2whirl::TranslateVarRefSimple(const DOMElement* elem, XlationContext& ctxt)
   }
   
   ctxt.CreateContext(XlationContext::NOFLAG);
-  ST* st = xlate_SymbolReferenceSimple(elem, ctxt);
+  pair<ST*, WN_OFFSET> stpair = xlate_SymbolReferenceSimple(elem, ctxt);
   ctxt.DeleteContext();
   
-  return st;
+  return stpair;
 }
 
 
@@ -642,14 +642,20 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
 
 
 // xlate_SymbolReferenceSimple: Translate a simple symbol reference.
+// For pregs, also return the PREG_IDX as an WN_OFFSET.
 // Do not set an active flag.
-static ST*
+static pair<ST*, WN_OFFSET>
 xlate_SymbolReferenceSimple(const DOMElement* elem, XlationContext& ctxt)
 {
   Symbol* sym = GetSymbol(elem, ctxt);
   ST* st = sym->GetST();
-  ASSERT_FATAL(ST_class(st) != CLASS_PREG, (DIAG_A_STRING, "Unimplemented: We must propagate both symbol and preg offset information to our callers."));
-  return st;
+  
+  WN_OFFSET oset = 0;
+  if (ST_class(st) == CLASS_PREG) {
+    oset = GetPregId(elem);
+  }
+  
+  return make_pair(st, oset);
 }
 
 
