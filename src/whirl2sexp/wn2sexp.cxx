@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.6 2004/12/23 16:28:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.7 2005/01/07 19:00:17 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -148,18 +148,45 @@ operator<<(std::ostream& os, const GenSexpSymRefInfo_& x)
   ST_IDX st_idx = x.val;
   ST* st = (st_idx != 0) ? &St_Table[st_idx] : NULL;
 
-  const char* nm = NULL;
   UINT lvl = 0;
   UINT idx = 0;
   if (st) {
-    nm = ST_name(st);
     lvl = (UINT)ST_level(st);
     idx = (UINT)ST_index(st);
   } 
   
-  using namespace sexp::IOFlags;
-  sos << BegList << Atom(SexpTags::ST) << Atom(A_DQUOTE, nm) 
+  sos << BegList << Atom(SexpTags::ST) << GenSexpSymNm(st)
       << Atom(lvl) << Atom(idx) << EndList;
+  
+  return sos;
+}
+
+
+// Cf. GenSexpSymNm
+sexp::ostream&
+operator<<(std::ostream& os, const GenSexpSymNmInfo_& x)
+{
+  sexp::ostream& sos = dynamic_cast<sexp::ostream&>(os);
+
+  ST* st = x.val;
+  
+  const char* nm = NULL;
+  if (st) {
+    if (ST_class(st) == CLASS_CONST) {
+      nm = Targ_Print(NULL, STC_val(st));
+    }
+    else {
+      nm = ST_name(st);
+    }
+  }
+  
+  using namespace sexp::IOFlags;
+  if (nm && nm[0] == '"') {
+    sos << Quote << Atom(nm);
+  }
+  else {
+    sos << Atom(A_DQUOTE, nm);    
+  }
   
   return sos;
 }

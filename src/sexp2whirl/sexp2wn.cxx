@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.2 2004/12/23 16:28:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.3 2005/01/07 19:00:16 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -162,8 +162,9 @@ sexp2whirl::GetWhirlSymRef(sexp_t* sx)
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::ST) == 0,
 		FORTTK_UNEXPECTED_INPUT);
-  
+
   // Convert st_idx
+  // - ignore name
   sexp_t* lvl_st = get_elem2(sx);
   sexp_t* idx_st = get_elem3(sx);
   SYMTAB_IDX lvl = (SYMTAB_IDX)get_value_ui32(lvl_st);

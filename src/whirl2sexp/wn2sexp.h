@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.h,v 1.4 2004/12/23 16:28:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.h,v 1.5 2005/01/07 19:00:17 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -106,6 +106,9 @@ struct GenSexpWNOprInfo_ {
 struct GenSexpSymRefInfo_ {
   ST_IDX val;
 };
+struct GenSexpSymNmInfo_ {
+  ST* val;
+};
 struct GenSexpTyUseInfo_ {
   TY_IDX val;
 };
@@ -159,6 +162,18 @@ inline GenSexpSymRefInfo_
 GenSexpSymRef(ST_IDX val)
 {
   GenSexpSymRefInfo_ x;
+  x.val = val;
+  return x;
+}
+
+
+sexp::ostream&
+operator<<(std::ostream& os, const GenSexpSymNmInfo_& x);
+
+inline GenSexpSymNmInfo_ 
+GenSexpSymNm(ST* val)
+{
+  GenSexpSymNmInfo_ x;
   x.val = val;
   return x;
 }
