@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.67 2004/06/16 14:28:01 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.68 2004/06/22 21:08:40 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1271,7 +1271,7 @@ AddControlFlowEndTags(WN* wn, WhirlParentMap* wnParentMap)
 	//     casegoto L3
 	//   end
 	//   L2 ... L3 ...
-	//   L1 (beginning of code after switch)
+	//   L1 (branch-around-label: beginning of code after switch)
 	// * EndBranch
 	INT32 lbl = WN_last_label(curWN);
 	for (WN* x = WN_next(curWN); x; x = WN_next(x)) {
@@ -1469,18 +1469,28 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
   // 3. Split basic blocks with EndLoop and EndBranch tags (FIXME)
   // -------------------------------------------------------
 
-  // EndBranch statments will be at the beginning of any basic block;
-  // EndLoop at the end.
+  // EndBranch statments will be the first or second statment
+  // (switches) of a basic block; EndLoop at the end.
   for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
     CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
     
     if (n->size() > 1) {
-      for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
+    restart_loop:
+      unsigned int stmtcount = 1;
+      for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; 
+	   ++stmtIt, ++stmtcount) {
 	WN* wn = (WN*)((StmtHandle)stmtIt);
 
 	const char* vty = GetCFGControlFlowVertexType(wn);
 	WN* startWN = NULL; // start of new basic block
 	if (vty == XAIFStrings.elem_BBEndBranch()) {
+	  // If EndBranch is not the first stmt, move it to the
+	  // beginning and restart the loop
+	  if (stmtcount > 1) {
+	    n->erase((StmtHandle)wn);
+	    n->add_front((StmtHandle)wn);
+	    goto restart_loop;
+	  }
 	  ++stmtIt; // advance iterator to find start of new basic block
 	  assert((bool)stmtIt);
 	  startWN = (WN*)((StmtHandle)stmtIt);
@@ -1492,6 +1502,11 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
 	if (startWN) {
 	  CFG::Node* newblock = cfg->splitBlock(n, (StmtHandle)startWN);
 	  cfg->connect(n, newblock, CFG::FALLTHROUGH_EDGE);
+	  bool foo = false;
+	  if (foo) {
+	    n->longdump(cfg);
+	    newblock->longdump(cfg);
+	  }
 	  break;
 	}
       }
