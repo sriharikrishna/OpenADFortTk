@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/Attic/Makefile,v 1.1 2004/08/05 18:38:14 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/Attic/Makefile,v 1.2 2004/08/23 18:44:42 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -38,8 +38,6 @@ OBJS = \
 	\
 	wn2sexp.o \
 	symtab2sexp.o 
-
-# pu2sexp
 
 ####################
 
