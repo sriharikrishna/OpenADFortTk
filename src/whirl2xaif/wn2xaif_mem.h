@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.h,v 1.5 2003/10/01 16:32:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.h,v 1.6 2004/02/17 22:24:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -57,60 +57,60 @@
 
 namespace whirl2xaif { // FIXME
 
-extern 
-WN2F_STATUS xlate_LDA(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  extern whirl2xaif::status 
+  xlate_LDA(xml::ostream& xos, WN *wn, XlationContext& ctxt);
   
-extern 
-WN2F_STATUS xlate_LDID(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-extern 
-WN2F_STATUS xlate_ILOAD(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-extern 
-WN2F_STATUS xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-extern 
-WN2F_STATUS xlate_ISTORE(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
+  extern whirl2xaif::status 
+  xlate_LDID(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  
+  extern whirl2xaif::status 
+  xlate_ILOAD(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  
+  extern whirl2xaif::status 
+  xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  
+  extern whirl2xaif::status 
+  xlate_ISTORE(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  
 }; /* namespace whirl2xaif */
 
 
-extern WN2F_STATUS
+extern whirl2xaif::status
 xlate_ISTOREX(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-extern WN2F_STATUS
+extern whirl2xaif::status
 WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-extern WN2F_STATUS 
+extern whirl2xaif::status 
 WN2F_mstore(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-extern WN2F_STATUS
+extern whirl2xaif::status
 WN2F_pstid(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 
-extern WN2F_STATUS 
+extern whirl2xaif::status 
 xlate_ILOADX(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-extern WN2F_STATUS 
+extern whirl2xaif::status 
 WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 
-extern WN2F_STATUS
+extern whirl2xaif::status
 xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-extern WN2F_STATUS
+extern whirl2xaif::status
 WN2F_arrayexp(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-extern WN2F_STATUS
+extern whirl2xaif::status
 WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-extern WN2F_STATUS
+extern whirl2xaif::status
 WN2F_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-extern WN2F_STATUS
+extern whirl2xaif::status
 WN2F_src_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-extern WN2F_STATUS
+extern whirl2xaif::status
 WN2F_where(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 

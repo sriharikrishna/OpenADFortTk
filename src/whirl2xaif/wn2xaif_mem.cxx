@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.20 2004/02/17 20:44:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.21 2004/02/17 22:24:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -90,7 +90,7 @@ using namespace xml; // for xml::ostream, etc
 
 //************************** Forward Declarations ***************************
 
-static WN2F_STATUS 
+static void
 DumpVarRefEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid);
 
 static void 
@@ -252,7 +252,7 @@ WN2F_Find_Base(WN *addr)
   return res;
 }
 
-extern BOOL
+BOOL
 WN2F_Is_Address_Preg(WN * ad ,TY_IDX ptr_ty)
 {
   /* Does this look like a preg or variable being used as an address ? */
@@ -302,7 +302,7 @@ WN2F_Is_Address_Preg(WN * ad ,TY_IDX ptr_ty)
 // Loads (In WHIRL, loads are expressions.)
 //***************************************************************************
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_LDA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_LDA, 
@@ -329,11 +329,11 @@ whirl2xaif::xlate_LDA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xlate_SymRef(xos, base_st, baseptr_ty, ref_ty, WN_lda_offset(wn), ctxt);
   reset_XlationContext_has_no_arr_elmt(ctxt);
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_LDID(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_LDID, 
@@ -401,11 +401,11 @@ whirl2xaif::xlate_LDID(xml::ostream& xos, WN* wn, XlationContext& ctxt)
     reset_XlationContext_has_no_arr_elmt(ctxt);
   }
 
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 } 
 
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_ILOAD(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // Note that we handle this just like we do the lhs of an ISTORE.
@@ -430,19 +430,19 @@ whirl2xaif::xlate_ILOAD(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
   reset_XlationContext_has_no_arr_elmt(ctxt);
 
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
-WN2F_STATUS 
+whirl2xaif::status 
 xlate_ILOADX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_WARN(FALSE, (DIAG_UNIMPLEMENTED, "xlate_ILOADX"));
   xos << WN_opc_name(wn);  
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
-WN2F_STATUS 
+whirl2xaif::status 
 WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // This should only appear the as the rhs of an ISTORE.  Treat
@@ -462,7 +462,7 @@ WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		     TY_pointed(WN_ty(wn)), /* object-type */
 		     WN_load_offset(wn), /* object-ofst */ ctxt);
 
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
@@ -471,7 +471,7 @@ WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 //***************************************************************************
 
 // xlate_STID: Translate a WHIRL STID node to an XAIF assignment
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_STID, 
@@ -523,11 +523,11 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     xos << EndElem /* elem_Assign() */;
   }
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ISTORE, 
@@ -579,19 +579,19 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
     xos << EndElem /* elem_Assign() */;
   }
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
-WN2F_STATUS 
+whirl2xaif::status 
 xlate_ISTOREX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_WARN(FALSE, (DIAG_UNIMPLEMENTED, "xlate_ISTOREX"));
   xos << std::endl << WN_opc_name(wn);
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
-WN2F_STATUS 
+whirl2xaif::status 
 WN2F_mstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   /* Note that we make the assumption that this is just like an 
@@ -629,11 +629,11 @@ WN2F_mstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   /* The rhs */
   TranslateWN(xos, WN_kid0(wn), ctxt);
 
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
-WN2F_STATUS
+whirl2xaif::status
 WN2F_pstid(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
    ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PSTID,
@@ -672,11 +672,11 @@ WN2F_pstid(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    } else
      TranslateWN(xos, WN_kid0(wn), ctxt);
 
-   return EMPTY_WN2F_STATUS;
+   return whirl2xaif::good;
 } /* WN2F_pstid */
 
 
-extern WN2F_STATUS
+whirl2xaif::status
 WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
    TY_IDX        base_ty;
@@ -712,14 +712,14 @@ WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
      TranslateWN(xos, WN_kid0(wn), ctxt);
    }
    
-   return EMPTY_WN2F_STATUS;
+   return whirl2xaif::good;
 } /* WN2F_pstore */
 
 //***************************************************************************
 // 
 //***************************************************************************
 
-WN2F_STATUS
+whirl2xaif::status
 xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   /* Note that array indices have been normalized to assume the
@@ -802,11 +802,11 @@ xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     xos << EndElem /* elem_VarRef() */;
   }
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 } /* xlate_ARRAY */
 
 
-WN2F_STATUS
+whirl2xaif::status
 WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
    /* Note that array indices have been normalized to assume the
@@ -887,11 +887,11 @@ WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	 WN2F_arrsection_bounds(xos,wn,array_ty,ctxt);
      }
    }
-   return EMPTY_WN2F_STATUS;
+   return whirl2xaif::good;
 } /* WN2F_arrsection */
 
 
-WN2F_STATUS
+whirl2xaif::status
 WN2F_where(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   xos << "WHERE(";
@@ -900,15 +900,15 @@ WN2F_where(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TranslateWN(xos, WN_kid1(wn), ctxt);
   xos << "END WHERE";
   TranslateWN(xos, WN_kid2(wn), ctxt);
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
-WN2F_STATUS
+whirl2xaif::status
 WN2F_arrayexp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   TranslateWN(xos, WN_kid0(wn), ctxt);
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
@@ -923,7 +923,7 @@ WN2F_arrayexp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 |*                                                                           *|
 */
  
-WN2F_STATUS
+whirl2xaif::status
 WN2F_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   WN      *kid0;
@@ -1070,12 +1070,12 @@ WN2F_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       TranslateWN(xos, kid1, ctxt);
     } 
   }  
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
   
 }
 
 
-WN2F_STATUS
+whirl2xaif::status
 WN2F_src_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   WN      *kid0;
@@ -1096,7 +1096,7 @@ WN2F_src_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     TranslateWN(xos, kid2, ctxt); 
   }
   
-  return EMPTY_WN2F_STATUS;  
+  return whirl2xaif::good;  
 }
 
 void
@@ -1424,11 +1424,10 @@ WN2F_String_Argument(xml::ostream& xos, WN* base_parm, WN* length,
 } /* WN2F_String_Argument */
 
 
-static WN2F_STATUS 
+static void
 DumpVarRefEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid)
 {
   xos << BegElem(XAIFStrings.elem_VarRefEdge()) << Attr("edge_id", eid)
       << Attr("source", srcid) << Attr("target", targid)
       << EndElem;
-  return EMPTY_WN2F_STATUS;
 }

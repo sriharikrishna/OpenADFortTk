@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.13 2004/02/17 18:53:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.14 2004/02/17 22:24:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -235,7 +235,7 @@ Is_Cray_IO(IOSTATEMENT ios)
   return res ;
 }
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_IO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_IO, 
@@ -267,7 +267,7 @@ whirl2xaif::xlate_IO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   XlateWNio_HandlerTable[ios](xos, wn, ctxt);
   reset_XlationContext_cray_io(ctxt);
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
@@ -568,7 +568,7 @@ xlate_IO_ITEM_control(xml::ostream& xos, WN* item, XlationContext& ctxt)
 
 namespace whirl2xaif {
 
-extern WN2F_STATUS // REMOVE
+whirl2xaif::status // REMOVE
 WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 }; /* namespace whirl2xaif */

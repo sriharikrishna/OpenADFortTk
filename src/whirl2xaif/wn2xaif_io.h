@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.h,v 1.3 2003/07/24 14:36:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.h,v 1.4 2004/02/17 22:24:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -70,11 +70,11 @@ extern void WN2F_Io_finalize(void);
 
 namespace whirl2xaif { /* FIXME */
 
-extern WN2F_STATUS 
-xlate_IO(xml::ostream& xos, WN *wn, XlationContext& context);
-
-extern BOOL
-xlate_IO_ITEM(xml::ostream& xos, WN *wn, XlationContext& context);
+  extern whirl2xaif::status 
+  xlate_IO(xml::ostream& xos, WN *wn, XlationContext& context);
+  
+  extern BOOL
+  xlate_IO_ITEM(xml::ostream& xos, WN *wn, XlationContext& context);
 
 }; /* namespace whirl2xaif */
 

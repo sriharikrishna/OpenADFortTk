@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.14 2003/11/13 14:55:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.15 2004/02/17 22:24:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -56,9 +56,6 @@
  * ====================================================================
  *
  * Description:
- *
- *   WN2F_STATUS: The status of a translation of a WN subtree into 
- *           Fortran.
  *
  *   WN2F_Can_Assign_Types:
  *           This determines whether or not a value of type t1 can
@@ -121,18 +118,19 @@
 
 namespace whirl2xaif {
 
-extern IntrinsicXlationTable IntrinsicTable;
+  extern IntrinsicXlationTable IntrinsicTable;
 
-extern void 
-WN2F_initialize(void);
+  extern void 
+  WN2F_initialize(void);
 
-extern void 
-WN2F_finalize(void);
-
-extern WN2F_STATUS 
-TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
+  extern void 
+  WN2F_finalize(void);
+  
+  extern whirl2xaif::status 
+  TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  
 }; /* namespace whirl2xaif */
+
 
 //***************************************************************************
 
@@ -140,180 +138,28 @@ TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 // WHIRL to XIAF. 
 namespace whirl2xaif {
 
-extern WN2F_STATUS
-xlate_SymRef(xml::ostream& xos,
-	     ST          *base_st,    /* base symbol */
-	     TY_IDX       baseptr_ty, /* type of base symbol ptr */
-	     TY_IDX       ref_ty,     /* type of referenced object */
-	     STAB_OFFSET  offset,     /* offset from base */
-	     XlationContext& ctxt);
-
-extern WN2F_STATUS 
-xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-extern WN2F_STATUS 
-xlate_ALTENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-extern WN2F_STATUS 
-xlate_ignore(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-extern WN2F_STATUS 
-xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
+  extern whirl2xaif::status
+  xlate_SymRef(xml::ostream& xos,
+	       ST          *base_st,    /* base symbol */
+  	       TY_IDX       baseptr_ty, /* type of base symbol ptr */
+	       TY_IDX       ref_ty,     /* type of referenced object */
+	       STAB_OFFSET  offset,     /* offset from base */
+	       XlationContext& ctxt);
+  
+  extern whirl2xaif::status 
+  xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  
+  extern whirl2xaif::status 
+  xlate_ALTENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  
+  extern whirl2xaif::status 
+  xlate_ignore(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  
+  extern whirl2xaif::status 
+  xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  
 }; /* namespace whirl2xaif */
 
-
-//***************************************************************************
-// Some helpful utility xml::ostream operators
-//***************************************************************************
-
-// ---------------------------------------------------------
-// AttrSymId
-// ---------------------------------------------------------
-
-struct AttrSymTab_ {
-  const ST* st;
-};
-
-inline ostream&
-operator<<(std::ostream& os, const AttrSymTab_& x) 
-{
-  xml::ostream& xos = dynamic_cast<xml::ostream&>(os); // FIXME
-
-  const char* st_name = ST_name(x.st); // W2CF_Symtab_Nameof_St(st);
-  SymId st_id = (SymId)ST_index(x.st);
-  
-  xos << xml::BegAttr(XAIFStrings.attr_symId())
-      << st_name << "_" << st_id
-      << xml::EndAttr;
-
-  return xos;
-}
-
-// AttrAnnot: Given a tag and a value, generate a complete annotiation
-// attribute
-inline AttrSymTab_
-AttrSymId(ST* st_)
-{
-  AttrSymTab_ x;
-  x.st = st_;
-  return x;
-}
-
-// ---------------------------------------------------------
-// AttrAnnot, AttrAnnotVal
-// ---------------------------------------------------------
-template<class T> 
-struct AttrAnnotInfo_ {
-  bool completeAttr;
-  const char* tag;
-  const T* val;
-};
-
-template<class T> 
-ostream&
-operator<<(std::ostream& os, const AttrAnnotInfo_<T>& x) 
-{
-  xml::ostream& xos = dynamic_cast<xml::ostream&>(os); // FIXME
-
-  if (x.completeAttr) {
-    xos << xml::BegAttr(XAIFStrings.attr_annot());
-  }
-
-  xos << x.tag << *x.val << XAIFStrings.tag_End();
-  
-  if (x.completeAttr) {
-    xos << xml::EndAttr;
-  }
-
-  return xos;
-}
-
-// AttrAnnot: Given a tag and a value, generate a complete annotiation
-// attribute
-template<class T> 
-AttrAnnotInfo_<T> 
-AttrAnnot(const char* tag_, const T& val_)
-{
-  AttrAnnotInfo_<T> x;
-  x.completeAttr = true;
-  x.tag = tag_;
-  x.val = &val_;
-  return x;
-}
-
-// AttrAnnotVal: Given a tag and a value, generate only the
-// annotiation attribute value
-template<class T> 
-AttrAnnotInfo_<T>
-AttrAnnotVal(const char* tag_, const T& val_)
-{
-  AttrAnnotInfo_<T> x;
-  x.completeAttr = false;
-  x.val = &val_;
-  x.tag = tag_;
-  return x;
-}
-
-// *AttrAnnot: Given a value, generate a complete annotiation
-// attribute with appropriate tag
-template<class T> 
-AttrAnnotInfo_<T> 
-SymTabIdAnnot(const T& val_) 
-{
-  return AttrAnnot(XAIFStrings.tag_SymTabId(), val_);
-}
-
-template<class T> 
-AttrAnnotInfo_<T>
-SymIdAnnot(const T& val_) 
-{
-  return AttrAnnot(XAIFStrings.tag_SymId(), val_);
-}
-
-template<class T> 
-AttrAnnotInfo_<T>
-PUIdAnnot(const T& val_) 
-{
-  return AttrAnnot(XAIFStrings.tag_PUId(), val_);
-}
-
-template<class T> 
-AttrAnnotInfo_<T>
-WhirlIdAnnot(const T& val_) 
-{
-  return AttrAnnot(XAIFStrings.tag_WHIRLId(), val_);
-}
-
-// *AttrAnnotVal: Given a tag and a value, generate only the
-// annotiation attribute value with the appropriate tag
-template<class T> 
-AttrAnnotInfo_<T>
-SymTabIdAnnotVal(const T& val_)
-{
-  return AttrAnnotVal(XAIFStrings.tag_SymTabId(), val_);
-}
-
-template<class T> 
-AttrAnnotInfo_<T>
-SymIdAnnotVal(const T& val_)
-{
-  return AttrAnnotVal(XAIFStrings.tag_SymId(), val_);
-}
-
-template<class T> 
-AttrAnnotInfo_<T>
-PUIdAnnotVal(const T& val_)
-{
-  return AttrAnnotVal(XAIFStrings.tag_PUId(), val_);
-}
-
-template<class T> 
-AttrAnnotInfo_<T>
-WhirlIdAnnotVal(const T& val_)
-{
-  return AttrAnnotVal(XAIFStrings.tag_WHIRLId(), val_);
-}
 
 //***************************************************************************
 
@@ -370,7 +216,7 @@ ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op);
 
 extern void WN2F_Address_Of(xml::ostream& xos);
 
-extern WN2F_STATUS 
+extern whirl2xaif::status 
 WN2F_Offset_Memref(xml::ostream& xos,
 		   WN          *addr,        /* Base address */
 		   TY_IDX       addr_ty,     /* type of base-address */

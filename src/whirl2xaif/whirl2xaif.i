@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.i,v 1.9 2004/02/17 20:44:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.i,v 1.10 2004/02/17 22:24:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -50,7 +50,8 @@
 //
 //***************************************************************************
 
-#ifndef whirl2f_common_INCLUDED
+#ifndef whirl2xaif_i
+#define whirl2xaif_i
 
 //************************** System Include Files ***************************
 
@@ -61,14 +62,180 @@
 #include <lib/support/stab_attr.h>
 #include <lib/support/wn_attr.h>
 #include <lib/support/w2cf_symtab.h>
+
+#include <lib/support/WhirlIDMaps.h>
+#include <lib/support/xmlostream.h>
 #include <lib/support/XAIFStrings.h>
 #include <lib/support/diagnostics.h>
 
+//************************** Forward Declarations ***************************
+
+#define whirl2xaif_divider_comment \
+  "********************************************************************"
+
 //***************************************************************************
 
-typedef mUINT32 WN2F_STATUS;
-#define EMPTY_WN2F_STATUS (WN2F_STATUS)0
+namespace whirl2xaif {
+  
+  enum status {
+    good,
+    bad
+  };
+  
+}; /* namespace whirl2xaif */
+
+//***************************************************************************
+// Some helpful utility xml::ostream operators
+//***************************************************************************
+
+// ---------------------------------------------------------
+// AttrSymId
+// ---------------------------------------------------------
+
+struct AttrSymTab_ {
+  const ST* st;
+};
+
+inline ostream&
+operator<<(std::ostream& os, const AttrSymTab_& x) 
+{
+  xml::ostream& xos = dynamic_cast<xml::ostream&>(os); // FIXME
+
+  const char* st_name = ST_name(x.st); // W2CF_Symtab_Nameof_St(st);
+  SymId st_id = (SymId)ST_index(x.st);
+  
+  xos << xml::BegAttr(XAIFStrings.attr_symId())
+      << st_name << "_" << st_id
+      << xml::EndAttr;
+
+  return xos;
+}
+
+// AttrAnnot: Given a tag and a value, generate a complete annotiation
+// attribute
+inline AttrSymTab_
+AttrSymId(ST* st_)
+{
+  AttrSymTab_ x;
+  x.st = st_;
+  return x;
+}
+
+// ---------------------------------------------------------
+// AttrAnnot, AttrAnnotVal
+// ---------------------------------------------------------
+template<class T> 
+struct AttrAnnotInfo_ {
+  bool completeAttr;
+  const char* tag;
+  const T* val;
+};
+
+template<class T> 
+ostream&
+operator<<(std::ostream& os, const AttrAnnotInfo_<T>& x) 
+{
+  xml::ostream& xos = dynamic_cast<xml::ostream&>(os); // FIXME
+
+  if (x.completeAttr) {
+    xos << xml::BegAttr(XAIFStrings.attr_annot());
+  }
+
+  xos << x.tag << *x.val << XAIFStrings.tag_End();
+  
+  if (x.completeAttr) {
+    xos << xml::EndAttr;
+  }
+
+  return xos;
+}
+
+// AttrAnnot: Given a tag and a value, generate a complete annotiation
+// attribute
+template<class T> 
+AttrAnnotInfo_<T> 
+AttrAnnot(const char* tag_, const T& val_)
+{
+  AttrAnnotInfo_<T> x;
+  x.completeAttr = true;
+  x.tag = tag_;
+  x.val = &val_;
+  return x;
+}
+
+// AttrAnnotVal: Given a tag and a value, generate only the
+// annotiation attribute value
+template<class T> 
+AttrAnnotInfo_<T>
+AttrAnnotVal(const char* tag_, const T& val_)
+{
+  AttrAnnotInfo_<T> x;
+  x.completeAttr = false;
+  x.val = &val_;
+  x.tag = tag_;
+  return x;
+}
+
+// *AttrAnnot: Given a value, generate a complete annotiation
+// attribute with appropriate tag
+template<class T> 
+AttrAnnotInfo_<T> 
+SymTabIdAnnot(const T& val_) 
+{
+  return AttrAnnot(XAIFStrings.tag_SymTabId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+SymIdAnnot(const T& val_) 
+{
+  return AttrAnnot(XAIFStrings.tag_SymId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+PUIdAnnot(const T& val_) 
+{
+  return AttrAnnot(XAIFStrings.tag_PUId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+WhirlIdAnnot(const T& val_) 
+{
+  return AttrAnnot(XAIFStrings.tag_WHIRLId(), val_);
+}
+
+// *AttrAnnotVal: Given a tag and a value, generate only the
+// annotiation attribute value with the appropriate tag
+template<class T> 
+AttrAnnotInfo_<T>
+SymTabIdAnnotVal(const T& val_)
+{
+  return AttrAnnotVal(XAIFStrings.tag_SymTabId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+SymIdAnnotVal(const T& val_)
+{
+  return AttrAnnotVal(XAIFStrings.tag_SymId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+PUIdAnnotVal(const T& val_)
+{
+  return AttrAnnotVal(XAIFStrings.tag_PUId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+WhirlIdAnnotVal(const T& val_)
+{
+  return AttrAnnotVal(XAIFStrings.tag_WHIRLId(), val_);
+}
 
 //***************************************************************************
 
-#endif /* whirl2f_common_INCLUDED */
+#endif /* whirl2xaif_i */

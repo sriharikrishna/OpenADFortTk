@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.h,v 1.6 2004/02/17 20:44:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.h,v 1.7 2004/02/17 22:24:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -17,8 +17,8 @@
 //
 //***************************************************************************
 
-#ifndef whirl2xaif_INCLUDED
-#define whirl2xaif_INCLUDED
+#ifndef whirl2xaif_h
+#define whirl2xaif_h
 
 //************************** System Include Files ***************************
 
@@ -43,10 +43,6 @@ namespace whirl2xaif {
   
 }; /* namespace whirl2xaif */
 
-
-#define whirl2xaif_divider_comment \
-  "********************************************************************"
-
 //***************************************************************************
 
-#endif /* whirl2xaif_INCLUDED */
+#endif /* whirl2xaif_h */

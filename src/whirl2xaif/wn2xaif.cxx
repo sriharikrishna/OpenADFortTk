@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.32 2004/02/17 18:54:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.33 2004/02/17 22:24:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -126,27 +126,27 @@ public:
 //************************** Forward Declarations ***************************
 
 // Type of handler-functions for translating WHIRL to XAIF.
-typedef WN2F_STATUS (*XlateWNHandlerFunc)(xml::ostream&, WN*, XlationContext&);
+typedef status (*XlateWNHandlerFunc)(xml::ostream&, WN*, XlationContext&);
 
-static WN2F_STATUS
+static void
 xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 static set<SymHandle>* 
 GetParamSymHandleSet(WN* wn_pu);
 
-static WN2F_STATUS 
+static void
 xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 static const char*
 GetCFGVertexType(CFG* cfg, CFG::Node* n);
 
-static WN2F_STATUS 
+static void 
 xlate_CFCondition(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-static WN2F_STATUS 
+static void 
 xlate_LoopInitialization(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-static WN2F_STATUS 
+static void 
 xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 static std::string
@@ -336,10 +336,10 @@ whirl2xaif::WN2F_finalize(void)
   Stab_Free_Tmpvars();
 }
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {   
-  if (!wn) { return EMPTY_WN2F_STATUS; }
+  if (!wn) { return whirl2xaif::good; }
   
   OPERATOR opr = WN_operator(wn);
   
@@ -385,7 +385,7 @@ whirl2xaif::TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 // stream.  Assumes that the global symbol table pointer
 // 'Current_Symtab' already valid.
 
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_FUNC_ENTRY, 
@@ -486,10 +486,10 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   delete symtab;
   delete wnmaps.first;
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::xlate_ALTENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // Similar to a FUNC_ENTRY, but without the function body.
@@ -499,16 +499,16 @@ whirl2xaif::xlate_ALTENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // Translate the function entry point (FIXME)
   xlate_EntryPoint(xos, wn, ctxt);
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::xlate_ignore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // Warn about opcodes we cannot translate, but keep translating.
@@ -518,14 +518,14 @@ whirl2xaif::xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << BegComment << "*** Unknown WHIRL operator: " << OPERATOR_name(opr)
       << " ***" << EndComment;
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 //***************************************************************************
 // 
 //***************************************************************************
 
-static WN2F_STATUS
+static void
 xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   //FIXME
@@ -553,7 +553,6 @@ xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ST2F_func_header(xos, wn, &St_Table[WN_entry_name(wn)], 
 		   param_st, nparam, opc == OPC_ALTENTRY, ctxt);
 #endif
-  return EMPTY_WN2F_STATUS;
 }
 
 
@@ -575,10 +574,10 @@ GetParamSymHandleSet(WN* wn_pu)
 
 // xlate_BBStmt: 
 // FIXME: we know that loop and if BBs should only have one node in them.
-static WN2F_STATUS 
+static void
 xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  if (!wn) { return EMPTY_WN2F_STATUS; }
+  if (!wn) { return; }
 
   OPERATOR opr = WN_operator(wn);
   const char* opr_str = OPERATOR_name(opr);
@@ -614,8 +613,6 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   default: 
     TranslateWN(xos, wn, ctxt);
   }
-  
-  return EMPTY_WN2F_STATUS;
 }
 
 // GetCFGVertexType: A CFG vertex is either an Entry, Exit,
@@ -661,7 +658,7 @@ GetCFGVertexType(CFG* cfg, CFG::Node* n)
 }
 
 // xlate_CFCondition: Translate the BB's control flow condition (Loops, Ifs)
-static WN2F_STATUS 
+static void 
 xlate_CFCondition(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   xos << BegElem("xaif:Condition");
@@ -669,11 +666,10 @@ xlate_CFCondition(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TranslateWN(xos, wn, ctxt);
   ctxt.DeleteContext();
   xos << EndElem;
-  
-  return EMPTY_WN2F_STATUS;
 }
 
-static WN2F_STATUS 
+// xlate_LoopInitialization: 
+static void 
 xlate_LoopInitialization(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   xos << BegElem("xaif:Initialization");
@@ -681,11 +677,10 @@ xlate_LoopInitialization(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TranslateWN(xos, wn, ctxt);
   ctxt.DeleteContext();
   xos << EndElem;
-  
-  return EMPTY_WN2F_STATUS;
 }
 
-static WN2F_STATUS 
+// xlate_LoopUpdate: 
+static void 
 xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   xos << BegElem("xaif:Update"); 
@@ -693,8 +688,6 @@ xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TranslateWN(xos, wn, ctxt);
   ctxt.DeleteContext();
   xos << EndElem;
-  
-  return EMPTY_WN2F_STATUS;
 }
 
 // GetIDsForStmtsInBB:
@@ -945,7 +938,7 @@ WN2F_Address_Of(xml::ostream& xos)
 }
 
 
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
 			 TY_IDX ref_ty, STAB_OFFSET offset,
 			 XlationContext& ctxt)
@@ -1139,12 +1132,12 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
     xos << EndElem /* elem_VarRef() */;
   }
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 } /* xlate_SymRef */
 
 
-// rename to xlate_memref (derefaddr)
-WN2F_STATUS
+// WN2F_Offset_Memref: rename to xlate_memref (derefaddr)
+whirl2xaif::status
 WN2F_Offset_Memref(xml::ostream& xos, 
 		   WN          *addr,    /* base-address expression */
                    TY_IDX       addr_ty, /* expected base-address type */
@@ -1315,7 +1308,7 @@ WN2F_Offset_Memref(xml::ostream& xos,
     xos << EndElem /* elem_VarRef() */;
   }
 
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 } /* WN2F_Offset_Memref */
 
 //***************************************************************************

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.22 2004/02/17 18:53:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.23 2004/02/17 22:24:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -109,7 +109,7 @@ static BOOL WN2F_Skip_Stmt(WN *wn) { return FALSE; /* FIXME */ }
 //   superceded by construction of the control flow graph.
 //***************************************************************************
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_BLOCK(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_BLOCK, 
@@ -117,10 +117,10 @@ whirl2xaif::xlate_BLOCK(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
   ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::WN2F_region(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   Is_True(WN_operator(wn) == OPR_REGION, 
@@ -141,10 +141,10 @@ whirl2xaif::WN2F_region(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   }
 #endif
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 } /* WN2F_region */
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_DO_LOOP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_DO_LOOP,
@@ -152,10 +152,10 @@ whirl2xaif::xlate_DO_LOOP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_DO_WHILE(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_DO_WHILE,
@@ -163,10 +163,10 @@ whirl2xaif::xlate_DO_WHILE(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
   ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_WHILE_DO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_WHILE_DO,
@@ -174,10 +174,10 @@ whirl2xaif::xlate_WHILE_DO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_IF(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_IF,
@@ -185,7 +185,7 @@ whirl2xaif::xlate_IF(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
@@ -193,7 +193,7 @@ whirl2xaif::xlate_IF(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 // Unstructured Control Flow Statements
 //***************************************************************************
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // REMOVE
@@ -237,10 +237,10 @@ whirl2xaif::WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   /* Terminate the implied do-loop expression */
   xos << ')';
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 } /* WN2F_implied_do */
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_GOTO || 
@@ -253,11 +253,11 @@ whirl2xaif::xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       << " [goto " << WN_label_number(wn) << "]" << EndAttr
       << EndElem;
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 // OPC_SWITCH only appears in very high level whirl
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::WN2F_switch(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // REMOVE
@@ -282,10 +282,10 @@ whirl2xaif::WN2F_switch(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     TranslateWN(xos, WN_kid2(wn), ctxt);
   xos << "END SELECT ";
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::WN2F_casegoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // REMOVE
@@ -299,10 +299,10 @@ whirl2xaif::WN2F_casegoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   std::string val = TCON2F_translate(Host_To_Targ(MTYPE_I4,WN_const_val(wn)),
 				     FALSE);
   xos << " .EQ. " << val << ')' << " GO TO " << WN_label_number(wn);
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::WN2F_compgoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // REMOVE
@@ -340,10 +340,10 @@ whirl2xaif::WN2F_compgoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   if (WN_compgoto_has_default_case(wn))
     xlate_GOTO(xos, WN_kid(wn,2), ctxt);
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 } /* WN2F_compgoto */
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::WN2F_agoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // REMOVE
@@ -359,11 +359,11 @@ whirl2xaif::WN2F_agoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << std::endl << "GO TO";
   TranslateWN(xos, WN_kid0(wn), ctxt); // FIXME
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 } /* WN2F_agoto */
 
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_condBR(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_TRUEBR || 
@@ -372,10 +372,10 @@ whirl2xaif::xlate_condBR(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_RETURN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_RETURN,
@@ -387,10 +387,10 @@ whirl2xaif::xlate_RETURN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       << " [return]" << EndAttr
       << EndElem;
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_RETURN_VAL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_RETURN_VAL,
@@ -402,10 +402,10 @@ whirl2xaif::xlate_RETURN_VAL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       << " [return_val]" << EndAttr
       << EndElem;
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_LABEL, 
@@ -417,7 +417,7 @@ whirl2xaif::xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       << " [label " << WN_label_number(wn) << "]" << EndAttr
       << EndElem;
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
@@ -425,7 +425,7 @@ whirl2xaif::xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 // Calls
 //***************************************************************************
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // XAIF distinguishes between a subroutine call (statement) and
@@ -763,11 +763,11 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     xos << EndElem; // SubroutineCall or FunctionCall
   }
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 } /* xlate_CALL */
 
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
 				 XlationContext& ctxt)
 {
@@ -830,7 +830,7 @@ whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
     break;
   }
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 } /* xlate_INTRINSIC_CALL */
 
 
@@ -838,7 +838,7 @@ whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
 // Other Statements
 //***************************************************************************
 
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::WN2F_eval(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
    /* This generates code that will not recompile.  Short of
@@ -852,11 +852,11 @@ whirl2xaif::WN2F_eval(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    TranslateWN(xos, WN_kid0(wn), ctxt);
    xos << ')';
 
-   return EMPTY_WN2F_STATUS;
+   return whirl2xaif::good;
 } /* WN2F_eval */
 
 
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::xlate_PRAGMA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PRAGMA ||
@@ -870,22 +870,22 @@ whirl2xaif::xlate_PRAGMA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
       << " [pragma]" << EndAttr << EndElem;
 
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_PREFETCH(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PREFETCH ||
 		   WN_operator(wn) == OPR_PREFETCHX, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_PREFETCH"));
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
-WN2F_STATUS 
+whirl2xaif::status 
 whirl2xaif::xlate_COMMENT(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_opcode(wn) == OPC_COMMENT,
@@ -896,11 +896,11 @@ whirl2xaif::xlate_COMMENT(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
       << " [comment]" << EndAttr << EndElem;
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::xlate_USE(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_USE,
@@ -912,11 +912,11 @@ whirl2xaif::xlate_USE(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
       << " [use " << nm << "]" << EndAttr << EndElem;
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::WN2F_namelist_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   const char *st_name =  W2CF_Symtab_Nameof_St(WN_st(wn));
@@ -938,19 +938,19 @@ whirl2xaif::WN2F_namelist_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     }
   }
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 } //WN2F_namelist_stmt
 
 
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::WN2F_implicit_bnd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   xos << "[+-+]";
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
 
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::WN2F_nullify_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   int k ;  
@@ -971,11 +971,11 @@ whirl2xaif::WN2F_nullify_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   }
   xos << ")";
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 } //WN2F_namelist_stmt
 
 
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::WN2F_interface_blk(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   int           k ;
@@ -1162,10 +1162,10 @@ static const char unnamed_interface[] = "unnamed interface";
     xos << std::endl;    
   }
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 } //WN2F_interface_blk
 
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::WN2F_ar_construct(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   xos << "(/";
@@ -1176,10 +1176,10 @@ whirl2xaif::WN2F_ar_construct(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   }
   xos << "/)";
   
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
-WN2F_STATUS
+whirl2xaif::status
 whirl2xaif::WN2F_noio_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   xos << "(";
@@ -1196,6 +1196,6 @@ whirl2xaif::WN2F_noio_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt
   }
   
   xos << ")";
-  return EMPTY_WN2F_STATUS;
+  return whirl2xaif::good;
 }
 
