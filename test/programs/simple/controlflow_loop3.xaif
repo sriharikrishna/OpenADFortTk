@@ -216,6 +216,8 @@
   <xaif:ControlFlowGraph vertex_id="3" scope_id="1" symbol_id="controlflow__31" annotation="{PU_Id#3}">
     <xaif:ArgumentList/>
 
+    <xaif:Entry vertex_id="16" annotation="{WHIRL_Id#}"/>
+
     <xaif:BasicBlock vertex_id="17" scope_id="4" annotation="{WHIRL_Id#96:97:99:101:106:107}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#96} [pragma]"/>
       <xaif:Assignment statement_id="2">
@@ -249,8 +251,6 @@
     <xaif:BasicBlock vertex_id="18" scope_id="4" annotation="{WHIRL_Id#108}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#108} [return]"/>
     </xaif:BasicBlock>
-
-    <xaif:Entry vertex_id="16" annotation="{WHIRL_Id#}"/>
 
     <xaif:Exit vertex_id="19" annotation="{WHIRL_Id#}"/>
 
