@@ -1,4 +1,4 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.15 2004/01/14 16:56:26 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.16 2004/03/03 16:30:08 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
@@ -129,17 +129,17 @@ the binary with no problem.
 
 The whole pipeline:
 
-  mfef90 file.f90 --> file.B
-  whirl2xaif file.B --> file.xaif
+  mfef90 file.f90  --> file.B
+  whirl2xaif file.B -o file.xaif
   
-  xboost_bb -i file.xaif -o file.boost.xaif
+  xboost_bb -i file.xaif -o file.xb.xaif
 
     Note: Add following line to top of output file:
     <?xml version="1.0" encoding="UTF-8"?>
   
-  xaif2whirl file.B file.boost.xaif --> file.boost.x2w.B
-  whirl2f file.boost.x2w.B --> file.boost.x2w.w2f.f
-  perl pp.pl file.boost.x2w.w2f.f --> file.boost.x2w.w2f.pp.f
+  xaif2whirl file.B file.xb.xaif -o file.xb.x2w.B
+  whirl2f file.xb.x2w.B  --> file.xb.x2w.w2f.f
+  perl pp.pl file.xb.x2w.w2f.f  --> file.xb.x2w.w2f.pp.f
 
 
 =============================================================================
