@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.17 2003/09/16 14:30:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.18 2003/10/01 16:32:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -193,18 +193,17 @@ TCON2F_hollerith(TCON tvalue)
 std::string
 TCON2F_translate(TCON tvalue, BOOL is_logical, TY_IDX object_ty)
 {
-  // FIXME: double check // use stream operators
+  // Note: It would be nice to simply use C++ stream formatting
+  // instead of Targ_Print(..), but a TCON is a (complex) union whose
+  // interpretation technically depends on the target.
 
-  /* Translates the given TCON to a Fortran representation.  Since
-   * the tcon itself does not tell us, we must rely on the context
-   * to inform us whether or not a integer constant is a logical
-   * value or not.
-   */
-  const char  *strbase;
-  char        *str;
+  // Since Targ_Print(..) prints floating points with Fortran
+  // exponents (i.e. the exponent of a double is preceeded by 'd'
+  // instead of an 'e'), we massage its output.
 
   // FIXME: for now we use this hack to return a string
   std::ostringstream sstr;
+  const char* floatstr = NULL;
   
   if (is_logical && MTYPE_type_class(TCON_ty(tvalue)) & MTYPE_CLASS_INTEGER) {
     // Treat it as regular integral constant, unless it has value 0 or 1.
@@ -248,19 +247,19 @@ TCON2F_translate(TCON tvalue, BOOL is_logical, TY_IDX object_ty)
       break;
       
     case MTYPE_U8:
-      sstr << Targ_Print("%1llu", tvalue); // TCON_I8
+      sstr << Targ_Print("%1llu", tvalue);
       break;
       
     case MTYPE_F4:
-      sstr << Targ_Print("%.10e", tvalue); // TCON_R4
+      floatstr = Targ_Print("%.10e", tvalue);
       break;
       
     case MTYPE_F8:
-      sstr << Targ_Print("%.20e", tvalue); // TCON_R8
+      floatstr = Targ_Print("%.20e", tvalue);
       break;
       
     case MTYPE_FQ:
-      sstr << Targ_Print(NULL, tvalue);
+      floatstr = Targ_Print(NULL, tvalue);
       break;
       
     case MTYPE_C4:
@@ -279,6 +278,14 @@ TCON2F_translate(TCON tvalue, BOOL is_logical, TY_IDX object_ty)
       sstr << "<TCON>";
       break;
     }
+  }
+
+  if (floatstr) {
+    char* exp = NULL;
+    if (exp = strchr(floatstr, 'd')) {
+      *exp = 'e';
+    }
+    sstr << floatstr;
   }
   
   return sstr.str();
@@ -1232,3 +1239,27 @@ ST2F_Declare_Return_Type(xml::ostream& xos, TY_IDX return_ty,
       TY2F_translate(xos, return_ty, ctxt);
   }
 }
+
+
+// Find and emit any COMMONS that are initialized.
+//   For_all(St_Table,GLOBAL_SYMTAB,WN2F_emit_commons(xos));
+struct WN2F_emit_commons {
+public:
+  WN2F_emit_commons(xml::ostream& xos_) : xos(xos_) { }
+  
+  void operator() (UINT32,  ST* st)
+  {
+    //XlationContext& ctxt1 = ctxt; // FIXME (bug in gcc 3.0.4 it seems)
+    if (ST_sclass(st) == SCLASS_DGLOBAL) {
+      if (ST_is_initialized(st))  {
+	if (!Has_Base_Block(st) || ST_class(ST_base_idx(st)) == CLASS_BLOCK) {
+	  TranslateSTDecl(xos, st, ctxt);
+	}
+      }
+    }
+  }
+
+private:
+  xml::ostream& xos;
+  XlationContext ctxt;//FIXME
+};
