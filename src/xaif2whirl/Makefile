@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/Makefile,v 1.5 2003/12/02 13:20:35 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/Makefile,v 1.6 2003/12/19 21:07:07 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -41,7 +41,8 @@ OBJS = \
 	\
 	XAIF_SAXHandler.o \
 	XAIF_DOMErrorHandler.o \
-	XAIF_DOMFilters.o
+	XAIF_DOMFilters.o \
+	XercesStrX.o
 
 
 ####################
