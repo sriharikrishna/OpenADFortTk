@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.26 2004/02/26 14:24:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.27 2004/03/19 16:54:29 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -546,7 +546,7 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
 
   if (translatenow) { // FIXME
     const char* ty_str = TranslateTYToSymType(ty);
-    if (!ty_str) { TranslateTYToSymType(ty); }
+    if (!ty_str) { ty_str = "***"; }
     
     const char* shape_str = TranslateTYToSymShape(ty);
     if (!shape_str) { shape_str = "***"; }
