@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ******************************************************************** -->
+<!-- XAIF file translated from WHIRL at Mon Feb  2 14:25:30 2004 -->
+<!-- ******************************************************************** -->
+
+<xaif:CallGraph xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xaif="http://www.mcs.anl.gov/XAIF" xsi:schemaLocation="http://www.mcs.anl.gov/XAIF xaif.xsd" program_name="***myprog***" prefix="ADF90_">
+  <xaif:ScopeHierarchy>
+    <xaif:Scope vertex_id="1" annotation="{SymTab_Id#1}">
+      <xaif:SymbolTable>
+        <xaif:Symbol symbol_id="inline_useless__20" kind="subroutine" type="void" annotation="{Sym_Id#20}"/>
+        <xaif:Symbol symbol_id="COS_21" kind="subroutine" type="void" annotation="{Sym_Id#21}"/>
+        <xaif:Symbol symbol_id="SIN_22" kind="subroutine" type="void" annotation="{Sym_Id#22}"/>
+        <xaif:Symbol symbol_id="inlinetest__23" kind="subroutine" type="void" annotation="{Sym_Id#23}"/>
+        <xaif:Symbol symbol_id="_END_24" kind="subroutine" type="void" annotation="{Sym_Id#24}"/>
+      </xaif:SymbolTable>
+    </xaif:Scope>
+
+    <xaif:Scope vertex_id="2" annotation="{SymTab_Id#2}">
+      <xaif:SymbolTable>
+        <xaif:Symbol symbol_id="A_1" kind="variable" type="real" shape="scalar" annotation="{Sym_Id#1}" active="1"/>
+        <xaif:Symbol symbol_id="B_2" kind="variable" type="real" shape="scalar" annotation="{Sym_Id#2}" active="1"/>
+      </xaif:SymbolTable>
+    </xaif:Scope>
+
+    <xaif:ScopeEdge edge_id="1" source="2" target="1"/>
+
+    <xaif:Scope vertex_id="3" annotation="{SymTab_Id#3}">
+      <xaif:SymbolTable>
+        <xaif:Symbol symbol_id="inline_useless__1" kind="subroutine" type="void" annotation="{Sym_Id#1}"/>
+        <xaif:Symbol symbol_id="PI_2" kind="variable" type="real" shape="scalar" annotation="{Sym_Id#2}" active="1"/>
+        <xaif:Symbol symbol_id="X_3" kind="variable" type="real" shape="scalar" annotation="{Sym_Id#3}" active="1"/>
+        <xaif:Symbol symbol_id="Y_4" kind="variable" type="real" shape="scalar" annotation="{Sym_Id#4}" active="1"/>
+        <xaif:Symbol symbol_id="_END_5" kind="subroutine" type="void" annotation="{Sym_Id#5}"/>
+        <xaif:Symbol symbol_id="A_6" kind="variable" type="real" shape="scalar" annotation="{Sym_Id#6}" active="1"/>
+        <xaif:Symbol symbol_id="B_7" kind="variable" type="real" shape="scalar" annotation="{Sym_Id#7}" active="1"/>
+      </xaif:SymbolTable>
+    </xaif:Scope>
+
+    <xaif:ScopeEdge edge_id="2" source="3" target="1"/>
+
+  </xaif:ScopeHierarchy>
+
+  <!-- ******************************************************************** -->
+  <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="inline_useless__20" annotation="{PU_Id#1}">
+    <xaif:ArgumentList>
+      <xaif:ArgumentSymbolReference position="1" scope_id="2" symbol_id="A_1"/>
+      <xaif:ArgumentSymbolReference position="2" scope_id="2" symbol_id="B_2"/>
+    </xaif:ArgumentList>
+
+    <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
+
+    <xaif:BasicBlock vertex_id="2" scope_id="2" annotation="{WHIRL_Id#7:8:12:16}">
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#7} [pragma]"/>
+      <xaif:Assignment statement_id="2">
+        <xaif:AssignmentLHS alias="1">
+          <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="A_1"/>
+        </xaif:AssignmentLHS>
+        <xaif:AssignmentRHS>
+          <xaif:Intrinsic vertex_id="1" name="cos_scal" type="***"/>
+          <xaif:VariableReference vertex_id="2" alias="2">
+            <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="A_1"/>
+          </xaif:VariableReference>
+          <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
+        </xaif:AssignmentRHS>
+      </xaif:Assignment>
+      <xaif:Assignment statement_id="3">
+        <xaif:AssignmentLHS alias="3">
+          <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="B_2"/>
+        </xaif:AssignmentLHS>
+        <xaif:AssignmentRHS>
+          <xaif:Intrinsic vertex_id="1" name="sin_scal" type="***"/>
+          <xaif:VariableReference vertex_id="2" alias="4">
+            <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="B_2"/>
+          </xaif:VariableReference>
+          <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
+        </xaif:AssignmentRHS>
+      </xaif:Assignment>
+      <xaif:Marker statement_id="4" annotation="{WHIRL_Id#16} [return]"/>
+    </xaif:BasicBlock>
+
+    <xaif:Exit vertex_id="3" annotation="{WHIRL_Id#}"/>
+
+    <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
+    <xaif:ControlFlowEdge edge_id="2" source="2" target="3"/>
+  </xaif:ControlFlowGraph>
+
+  <!-- ******************************************************************** -->
+  <!-- *** This is the PROGRAM routine *** -->
+  <xaif:ControlFlowGraph vertex_id="4" scope_id="1" symbol_id="inlinetest__23" annotation="{PU_Id#2}">
+    <xaif:ArgumentList/>
+
+    <xaif:Entry vertex_id="4" annotation="{WHIRL_Id#}"/>
+
+    <xaif:BasicBlock vertex_id="5" scope_id="3" annotation="{WHIRL_Id#21:22:24:28:29:33:37:38}">
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#21} [pragma]"/>
+      <xaif:Assignment statement_id="2">
+        <xaif:AssignmentLHS alias="2">
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_3"/>
+        </xaif:AssignmentLHS>
+        <xaif:AssignmentRHS>
+          <xaif:VariableReference vertex_id="1" alias="1">
+            <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="PI_2"/>
+          </xaif:VariableReference>
+        </xaif:AssignmentRHS>
+      </xaif:Assignment>
+      <xaif:Assignment statement_id="3">
+        <xaif:AssignmentLHS alias="3">
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="Y_4"/>
+        </xaif:AssignmentLHS>
+        <xaif:AssignmentRHS>
+          <xaif:Intrinsic vertex_id="1" name="mul_scal_scal" type="***"/>
+          <xaif:VariableReference vertex_id="2" alias="1">
+            <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="PI_2"/>
+          </xaif:VariableReference>
+          <xaif:Constant vertex_id="3" type="real" value="5.00000000000000000000e-01"/>
+          <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
+          <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
+        </xaif:AssignmentRHS>
+      </xaif:Assignment>
+      <xaif:Marker statement_id="4" annotation="{WHIRL_Id#28} [pragma]"/>
+      <xaif:Assignment statement_id="5">
+        <xaif:AssignmentLHS alias="4">
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_3"/>
+        </xaif:AssignmentLHS>
+        <xaif:AssignmentRHS>
+          <xaif:Intrinsic vertex_id="1" name="cos_scal" type="***"/>
+          <xaif:VariableReference vertex_id="2" alias="5">
+            <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_3"/>
+          </xaif:VariableReference>
+          <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
+        </xaif:AssignmentRHS>
+      </xaif:Assignment>
+      <xaif:Assignment statement_id="6">
+        <xaif:AssignmentLHS alias="6">
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="Y_4"/>
+        </xaif:AssignmentLHS>
+        <xaif:AssignmentRHS>
+          <xaif:Intrinsic vertex_id="1" name="sin_scal" type="***"/>
+          <xaif:VariableReference vertex_id="2" alias="7">
+            <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="Y_4"/>
+          </xaif:VariableReference>
+          <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
+        </xaif:AssignmentRHS>
+      </xaif:Assignment>
+      <xaif:SubroutineCall statement_id="7" scope_id="1" symbol_id="_END_24"/>
+      <xaif:Marker statement_id="8" annotation="{WHIRL_Id#38} [return]"/>
+    </xaif:BasicBlock>
+
+    <xaif:BasicBlock vertex_id="6" scope_id="3" annotation="{WHIRL_Id#39}">
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#39} [return]"/>
+    </xaif:BasicBlock>
+
+    <xaif:Exit vertex_id="7" annotation="{WHIRL_Id#}"/>
+
+    <xaif:ControlFlowEdge edge_id="1" source="4" target="5"/>
+    <xaif:ControlFlowEdge edge_id="2" source="5" target="7"/>
+    <xaif:ControlFlowEdge edge_id="3" source="6" target="7"/>
+  </xaif:ControlFlowGraph>
+
+</xaif:CallGraph>
