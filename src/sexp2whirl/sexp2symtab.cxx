@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.cxx,v 1.4 2005/01/07 19:00:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.cxx,v 1.5 2005/01/12 20:01:01 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -90,6 +90,27 @@ xlate_SYMTAB(RELATED_SEGMENTED_ARRAY<T, block_size>& table,
 }
 
 
+void 
+xlate_SYMTAB(sexp_t* str_tab, const char* table_nm,
+			 UINT32 (*xlate_entry)(sexp_t*))
+{
+  using namespace sexp;
+  
+  // Sanity check
+  FORTTK_ASSERT(str_tab && is_list(str_tab), FORTTK_UNEXPECTED_INPUT);
+  
+  sexp_t* tag_sx = get_elem0(str_tab);
+  const char* tagstr = get_value(tag_sx);
+  FORTTK_ASSERT(tag_sx && strcmp(tagstr, table_nm) == 0,
+		FORTTK_UNEXPECTED_INPUT);
+  
+  // Translate each entry
+  for (sexp_t* entry = get_elem1(str_tab); entry; entry = get_next(entry)) {
+    xlate_entry(entry);
+  }
+}
+
+
 //***************************************************************************
 // Translate symbol tables
 //***************************************************************************
@@ -110,9 +131,37 @@ sexp2whirl::TranslateGlobalSymbolTables(sexp_t* gbl_symtab, int flags)
 		FORTTK_UNEXPECTED_INPUT);
   
   // Initialize WHIRL symbol tables
-  Initialize_Symbol_Tables(TRUE /*reserve_index_zero*/);
-  New_Scope(GLOBAL_SYMTAB, Malloc_Mem_Pool, TRUE /*reserve_index_zero*/);
-  
+  Read_Global_Data = "bogus-value-as-argument-to-Initialize_Symbol_Tables";
+  Initialize_Symbol_Tables(FALSE /*reserve_index_zero*/);
+  { 
+    // FIXME: if the above is FALSE we must do the following:
+    // action is one of: none, RESERVE_IDX, RESERVE_IDX && create_special_syms
+    Initialize_Strtab (0x1000);	// start with 4Kbytes for strtab.
+    
+    UINT32 dummy_idx;
+    memset (&New_PU ((PU_IDX&) dummy_idx), '\0', sizeof(PU));
+    memset (&New_TY ((TY_IDX&) dummy_idx), '\0', sizeof(TY));
+    memset (New_FLD ().Entry(), '\0', sizeof(FLD));
+    memset (&New_TYLIST ((TYLIST_IDX&) dummy_idx), '\0', sizeof(TYLIST));
+    memset (New_ARB ().Entry(), '\0', sizeof(ARB));
+    memset (&New_BLK ((BLK_IDX&) dummy_idx), '\0', sizeof(BLK));
+    memset (&Initv_Table.New_entry ((INITV_IDX&) dummy_idx), '\0', 
+	    sizeof(INITV));
+    // SKIP: Init_Constab ();
+    	TCON Zero;
+	UINT32 idx;
+        memset (&Zero, '\0', sizeof(TCON));
+        idx = Tcon_Table.Insert (Zero);	// index 0: dummy
+        // SKIP: init of consts
+	Initialize_TCON_strtab (1024);	// string table for TCONs
+
+    New_Scope(GLOBAL_SYMTAB, Malloc_Mem_Pool, TRUE /*reserve_index_zero*/);
+
+    // SKIP: Create_Special_Global_Symbols();
+    // SKIP: Create_All_Preg_Symbols();
+  }
+  DST_Init(NULL, 0); // generate a trivial debugging symbol table (DST)
+
   // Translate global tables
   sexp_t* file_info_sx = get_elem1(gbl_symtab);
   xlate_FILE_INFO(file_info_sx);
@@ -156,8 +205,8 @@ sexp2whirl::TranslateGlobalSymbolTables(sexp_t* gbl_symtab, int flags)
   sexp_t* str_tab_sx = get_next(st_attr_tab_sx);
   xlate_STR_TAB(str_tab_sx);
 
-  // Special initialization of WHIRL symbol tables
-  Initialize_Special_Global_Symbols();
+  // Special initialization of WHIRL symbol tables (disable)
+  //Initialize_Special_Global_Symbols();
 }
 
 
@@ -224,7 +273,7 @@ sexp2whirl::xlate_FILE_INFO(sexp_t* file_info)
   sexp_t* flags_sx = get_next(gp_sx);
   sexp_t* flag1_sx = GetBeginFlgList(flags_sx);
   mUINT32 flags = get_value_ui32(flag1_sx);
-  File_info.flags = flags;
+  File_info.flags = flags; // FIXME: flag parsing
 }
 
 
@@ -288,9 +337,7 @@ sexp2whirl::xlate_TCON_TAB(sexp_t* tcon_tab)
 void 
 sexp2whirl::xlate_TCON_STR_TAB(sexp_t* str_tab)
 {
-  // Initialize_TCON_strtab(1024);
-  // for each entry: extern UINT32 Save_StrN (const char *s1, UINT32 len);
-  // FIXME
+  xlate_SYMTAB(str_tab, SexpTags::TCON_STR_TAB, &xlate_TCON_STR_TAB_entry);
 }
 
 
@@ -328,9 +375,7 @@ sexp2whirl::xlate_ST_ATTR_TAB(sexp_t* st_attr_tab, SYMTAB_IDX stab_lvl)
 void 
 sexp2whirl::xlate_STR_TAB(sexp_t* str_tab)
 {
-  // Initialize_TCON_strtab(1024);
-  // for each entry: Save_Str(char*)
-  // FIXME
+  xlate_SYMTAB(str_tab, SexpTags::STR_TAB, &xlate_STR_TAB_entry);
 }
 
 
@@ -353,52 +398,6 @@ sexp2whirl::xlate_PREG_TAB(sexp_t* preg_tab, SYMTAB_IDX stab_lvl)
 //***************************************************************************
 // Functions to translate individual table entries
 //***************************************************************************
-
-// Specializations of xlate_SYMTAB_entry
-namespace sexp2whirl {
-
-  template <>
-  ST* xlate_SYMTAB_entry(sexp_t* sx) { return xlate_ST_TAB_entry(sx); }
-  
-  template <>
-  TY* xlate_SYMTAB_entry(sexp_t* sx) { return xlate_TY_TAB_entry(sx); }
-  
-  template <>
-  PU* xlate_SYMTAB_entry(sexp_t* sx) { return xlate_PU_TAB_entry(sx); }
-  
-  template <>
-  FLD* xlate_SYMTAB_entry(sexp_t* sx) { return xlate_FLD_TAB_entry(sx); }
-  
-  template <>
-  ARB* xlate_SYMTAB_entry(sexp_t* sx) { return xlate_ARB_TAB_entry(sx); }
-  
-  template <>
-  TYLIST* xlate_SYMTAB_entry(sexp_t* sx) { return xlate_TYLIST_TAB_entry(sx); }
-  
-  template <>
-  TCON* xlate_SYMTAB_entry(sexp_t* sx) { return xlate_TCON_TAB_entry(sx); }
-  
-  template <>
-  INITO* xlate_SYMTAB_entry(sexp_t* sx) { return xlate_INITO_TAB_entry(sx); }
-  
-  template <>
-  INITV* xlate_SYMTAB_entry(sexp_t* sx) { return xlate_INITV_TAB_entry(sx); }
-  
-  template <>
-  BLK* xlate_SYMTAB_entry(sexp_t* sx) { return xlate_BLK_TAB_entry(sx); }
-  
-  template <>
-  ST_ATTR* xlate_SYMTAB_entry(sexp_t* sx) { return xlate_ST_ATTR_TAB_entry(sx); }
-  
-  template <>
-  LABEL* xlate_SYMTAB_entry(sexp_t* sx) { return xlate_LABEL_TAB_entry(sx); }
-  
-  template <>
-  PREG* xlate_SYMTAB_entry(sexp_t* sx) { return xlate_PREG_TAB_entry(sx); }
-
-}; /* namespace sexp2whirl */
-
-
 
 ST*
 sexp2whirl::xlate_ST_TAB_entry(sexp_t* sx)
@@ -523,7 +522,7 @@ sexp2whirl::xlate_TY_TAB_entry(sexp_t* sx)
   }
   else if (knd == KIND_POINTER) {
     sexp_t* basety_sx = get_elem0(olist_sx);
-    TY_IDX basety = get_value_ui32(basety_sx);
+    TY_IDX basety = GetWhirlTy(basety_sx);
     Set_TY_pointed(*ty, basety);
   } 
   else if (knd == KIND_FUNCTION) {
@@ -912,6 +911,34 @@ sexp2whirl::xlate_PREG_TAB_entry(sexp_t* sx)
   Set_PREG_name_idx(*preg, nmidx);
   
   return preg;
+}
+
+
+UINT32
+sexp2whirl::xlate_TCON_STR_TAB_entry(sexp_t* sx)
+{
+  using namespace sexp;
+  
+  // char_array
+  sexp_t* str_sx = get_elem1(sx);
+  const char* str = get_value(str_sx);
+  UINT32 idx = Save_StrN(str, strlen(str)+1);
+  
+  return idx;
+}
+
+
+UINT32
+sexp2whirl::xlate_STR_TAB_entry(sexp_t* sx)
+{
+  using namespace sexp;
+  
+  // string
+  sexp_t* str_sx = get_elem1(sx);
+  const char* str = get_value(str_sx);
+  STR_IDX idx = Save_Str(str);
+  
+  return idx;
 }
 
 

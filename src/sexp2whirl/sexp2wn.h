@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.h,v 1.2 2004/12/23 16:28:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.h,v 1.3 2005/01/12 20:01:01 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -45,14 +45,14 @@ namespace sexp2whirl {
   // Note: All routines Assume that Open64 symbol table globals are
   // already set.
 
-  // TranslateWN: Translates the given WHIRL node, emitting output to
-  // 'sos'.  If 'wn' is NULL, emits an empty list.  
+  // TranslateWN: Translate the given S-expression WHIRL-AST node and
+  // return a WN*.  If 'sx' is NULL, returns NULL.
   extern WN* 
   TranslateWN(sexp_t* sx);
 
-  // TranslateWNChildren: Given a non-NULL WHIRL node, translates its
-  // children, emitting output to 'sos'.
-  extern WN* 
+  // TranslateWNChildren: Given a non-NULL S-expression WHIRL-AST
+  // node, translate its children and return them in a WN-vector.
+  extern std::vector<WN*>
   TranslateWNChildren(sexp_t* sx);
   
 }; /* namespace sexp2whirl */

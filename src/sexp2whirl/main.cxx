@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/main.cxx,v 1.3 2004/12/20 15:18:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/main.cxx,v 1.4 2005/01/12 20:01:01 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -113,12 +113,12 @@ real_main(int argc, char **argv)
   sexp_t* ir_sexp = ReadWhirlSexp(args.sexpFileNm.c_str());
 
   PU_Info* ir_whirl = sexp2whirl::TranslateIR(ir_sexp);
-  sexp2whirl::DumpIR(ir_sexp, sexp2whirl::XlateFlags::NONE);
+  //sexp2whirl::DumpIR(ir_sexp, sexp2whirl::XlateFlags::NONE);
   
-  //WriteIR(args.whirlFileNm.c_str(), ir_whirl);
+  WriteIR(args.whirlFileNm.c_str(), ir_whirl);
   
-  // destroy_sexp(sx);
-  // sexp_cleanup();
+  destroy_sexp(ir_sexp);
+  sexp_cleanup();
 
   // -------------------------------------------------------
   // 4. Finalization

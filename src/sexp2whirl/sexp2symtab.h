@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.h,v 1.4 2005/01/07 19:00:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.h,v 1.5 2005/01/12 20:01:01 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -156,6 +156,13 @@ namespace sexp2whirl {
 
   PREG*
   xlate_PREG_TAB_entry(sexp_t* sx);
+
+
+  UINT32
+  xlate_TCON_STR_TAB_entry(sexp_t* sx);
+
+  UINT32
+  xlate_STR_TAB_entry(sexp_t* sx);
   
 
   // xlate_SYMTAB_entry: Templated access to translation routines
@@ -163,6 +170,59 @@ namespace sexp2whirl {
   T*
   xlate_SYMTAB_entry(sexp_t* sx)
   { FORTTK_DIE("Must not be called (template specialization must exist)"); }
+  
+  // Specializations of xlate_SYMTAB_entry
+  template <> 
+  inline ST* 
+  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_ST_TAB_entry(sx); }
+  
+  template <>
+  inline TY* 
+  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_TY_TAB_entry(sx); }
+  
+  template <>
+  inline PU* 
+  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_PU_TAB_entry(sx); }
+  
+  template <>
+  inline FLD* 
+  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_FLD_TAB_entry(sx); }
+  
+  template <>
+  inline ARB* 
+  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_ARB_TAB_entry(sx); }
+  
+  template <>
+  inline TYLIST* 
+  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_TYLIST_TAB_entry(sx); }
+  
+  template <>
+  inline TCON* 
+  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_TCON_TAB_entry(sx); }
+  
+  template <>
+  inline INITO* 
+  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_INITO_TAB_entry(sx); }
+  
+  template <>
+  inline INITV* 
+  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_INITV_TAB_entry(sx); }
+  
+  template <>
+  inline BLK* 
+  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_BLK_TAB_entry(sx); }
+  
+  template <>
+  inline ST_ATTR* 
+  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_ST_ATTR_TAB_entry(sx); }
+  
+  template <>
+  inline LABEL* 
+  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_LABEL_TAB_entry(sx); }
+  
+  template <>
+  inline PREG* 
+  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_PREG_TAB_entry(sx); }
   
 }; /* namespace sexp2whirl */
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2whirl.cxx,v 1.4 2005/01/05 20:51:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2whirl.cxx,v 1.5 2005/01/12 20:01:01 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -203,7 +203,10 @@ xlate_PUTree(sexp_t* pu_tree_sx, int flags)
     }
     cur_child = child;
   }
-  
+
+  if (cur_child) { // if there was at least one child
+    Set_PU_Info_flags(pu, PU_HAS_NESTED_PU);
+  }
   return pu;
 }
 
@@ -216,7 +219,7 @@ xlate_PU(sexp_t* pu_sx, int flags)
   using namespace sexp;
 
   // Sanity check
-  FORTTK_ASSERT(pu_sx && is_list(pu_sx), FORTTK_UNEXPECTED_INPUT);  
+  FORTTK_ASSERT(pu_sx && is_list(pu_sx), FORTTK_UNEXPECTED_INPUT);
   
   sexp_t* tag_sx = get_elem0(pu_sx);
   const char* tagstr = get_value(tag_sx);
@@ -226,7 +229,7 @@ xlate_PU(sexp_t* pu_sx, int flags)
   // Translate PU_SYMTAB and WHIRL_AST
   sexp_t* pu_sym_sx    = get_elem1(pu_sx);
   sexp_t* pu_symtab_sx = get_elem2(pu_sx);
-  sexp_t* ast_sx      = get_elem3(pu_sx);
+  sexp_t* ast_sx       = get_elem3(pu_sx);
 
   ST_IDX st_idx = sexp2whirl::GetWhirlSymRef(pu_sym_sx);
   CURRENT_SYMTAB = PU_lexical_level(&St_Table[st_idx]);
@@ -234,14 +237,27 @@ xlate_PU(sexp_t* pu_sx, int flags)
   sexp2whirl::TranslateLocalSymbolTables(pu_symtab_sx, CURRENT_SYMTAB, flags);
   
   WN* ast = xlate_WN(ast_sx, flags);
-  
+
+  // Create the PU_Info
   PU_Info* pu = TYPE_MEM_POOL_ALLOC(PU_Info, MEM_pu_pool_ptr);
   PU_Info_init(pu);
+  // N.B. 'next', 'child' and PU_HAS_NESTED_PU are set by caller routines
   PU_Info_proc_sym(pu) = st_idx;
   Set_PU_Info_tree_ptr(pu, ast);
-  // FIXME, state, flags, pu_dst, cu_dst...
-  // N.B. 'next' and 'child' are set by caller routines
-  
+  Set_PU_Info_state(pu, WT_TREE,     Subsect_InMem);
+  Set_PU_Info_state(pu, WT_SYMTAB,   Subsect_InMem);
+  Set_PU_Info_state(pu, WT_PROC_SYM, Subsect_InMem);
+  Set_PU_Info_pu_dst(pu, DST_INVALID_IDX);
+  Set_PU_Info_cu_dst(pu, DST_INVALID_IDX);
+  PU_Info_maptab(pu) = WN_MAP_TAB_Create(MEM_pu_pool_ptr);
+
+  // Set and save global state (cf. PU_SetGlobalState)
+  //Advance_Current_PU_Count();
+  Current_Map_Tab = PU_Info_maptab(pu);
+  Current_pu = &PU_Info_pu(pu);
+  Current_PU_Info = pu;
+  WhirlGlobalStateUtils_hidden::PU_SaveGlobalState(pu);
+
   return pu;
 }
 
@@ -251,8 +267,7 @@ xlate_PU(sexp_t* pu_sx, int flags)
 WN*
 xlate_WN(sexp_t* ast_sx, int flags)
 {
-  // sexp2whirl::TranslateWN(ast_sx);
-  return NULL;
+  sexp2whirl::TranslateWN(ast_sx);
 }
 
 //***************************************************************************

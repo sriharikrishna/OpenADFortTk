@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/Attic/Makefile,v 1.3 2004/12/20 15:18:12 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/Attic/Makefile,v 1.4 2005/01/12 20:01:01 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -46,7 +46,7 @@ CXXFLAGS := $(USER_CXXFLAGS)
 CFLAGS := $(USER_CFLAGS)
 IFLAGS := $(USER_C_IFLAGS) -I. -I$(VPATH) -I$(OPENADFORTTK_INCLUDE_PATH) \
 	$(OPEN64_IFLAGS) $(SEXP_IFLAGS)
-LDFLAGS := $(USER_C_LDFLAGS) $(SEXP_LDFLAGS) -lm
+LDFLAGS := $(USER_C_LDFLAGS) $(OA_LDFLAGS) $(SEXP_LDFLAGS) -lm
 
 #FIXMEcygwin
 ifneq ($(PLATFORM),i686-Cygwin)
