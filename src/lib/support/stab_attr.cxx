@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.cxx,v 1.7 2004/02/17 18:53:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.cxx,v 1.8 2004/02/20 21:11:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -446,6 +446,9 @@ Stab_Array_Of(TY_IDX etype, mINT64 num_elts)
  * thus undo any additions made to these tables during whirl2c.
  *
  *--------------------------------------------------------------------*/
+
+extern void Stab_initialize(void);
+extern void Stab_finalize(void);
 
 void
 Stab_initialize(void)

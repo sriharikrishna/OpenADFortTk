@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.5 2004/02/17 18:53:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.6 2004/02/20 21:11:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -154,18 +154,6 @@
  *    Stab_Array_Of:
  *       Creates a unique one-dimensional array type with the given
  *       number of elements and the given element type.
- *
- *    Stab_initialize:
- *       Record the size of certain tables in the global symtab.  This
- *       information is then used later on in function Stab_finalize
- *       to reset the tables back to their original size and, thus,
- *       undo any additions made to these tables during whirl2c.
- *
- *    Stab_finalize:
- *       Reset certain tables in the global symtab back to their size
- *       at the start of whirl2c, thereby undoing any additions made
- *       to these tables during whirl2c.
- *
  *
  * Identifier naming utilities
  * ---------------------------
@@ -565,9 +553,6 @@ Stab_Pointer_To(TY_IDX pointee)          { return Make_Pointer_Type(pointee); }
 
 
 extern TY_IDX Stab_Array_Of(TY_IDX etype, mINT64 num_elts) ;
-
-extern void Stab_initialize(void);
-extern void Stab_finalize(void);
 
                  /*------ Name manipulation ------*/
                  /*-------------------------------*/
