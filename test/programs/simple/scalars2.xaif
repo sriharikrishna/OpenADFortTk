@@ -44,6 +44,29 @@
 
   </xaif:ScopeHierarchy>
 
+  <xaif:AliasSetList>
+    <xaif:AliasSet key="0">
+      <xaif:AliasRange from_virtual_address="1" to_virtual_address="1"/>
+    </xaif:AliasSet>
+  </xaif:AliasSetList>
+
+  <xaif:DUUDSetList>
+    <xaif:DUUDSet key="0"/>
+    <xaif:DUUDSet key="1"/>
+    <xaif:DUUDSet key="2">
+      <xaif:StatementId idRef=""/>
+    </xaif:DUUDSet>
+    <xaif:DUUDSet key="3">
+      <xaif:StatementId idRef="6"/>
+    </xaif:DUUDSet>
+    <xaif:DUUDSet key="4">
+      <xaif:StatementId idRef="14"/>
+    </xaif:DUUDSet>
+    <xaif:DUUDSet key="5">
+      <xaif:StatementId idRef="20"/>
+    </xaif:DUUDSet>
+  </xaif:DUUDSetList>
+
   <!-- ******************************************************************** -->
   <!-- *** This is the PROGRAM routine *** -->
   <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="scalartest__20" annotation="{PU_Id#1}" controlflowgraph_scope_id="2">
@@ -54,17 +77,17 @@
     <xaif:BasicBlock vertex_id="2" scope_id="2" annotation="{WHIRL_Id#5:6:14:18:19:20:43:44:45}">
       <xaif:Marker statement_id="5" annotation="{WHIRL_Id#5} [passive: OPR_PRAGMA]"/>
       <xaif:Assignment statement_id="6">
-        <xaif:AssignmentLHS du_ud="3">
+        <xaif:AssignmentLHS du_ud="5">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="sub_scal_scal" type="***"/>
           <xaif:Intrinsic vertex_id="2" name="add_scal_scal" type="***"/>
           <xaif:Intrinsic vertex_id="3" name="mul_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="4" du_ud="1">
+          <xaif:VariableReference vertex_id="4" du_ud="2">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_3"/>
           </xaif:VariableReference>
-          <xaif:VariableReference vertex_id="5" du_ud="1">
+          <xaif:VariableReference vertex_id="5" du_ud="2">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_3"/>
           </xaif:VariableReference>
           <xaif:ExpressionEdge edge_id="1" source="4" target="3" position="1"/>

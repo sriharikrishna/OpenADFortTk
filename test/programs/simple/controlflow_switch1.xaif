@@ -66,6 +66,23 @@
 
   </xaif:ScopeHierarchy>
 
+  <xaif:AliasSetList>
+    <xaif:AliasSet key="0">
+      <xaif:AliasRange from_virtual_address="1" to_virtual_address="1"/>
+    </xaif:AliasSet>
+  </xaif:AliasSetList>
+
+  <xaif:DUUDSetList>
+    <xaif:DUUDSet key="0"/>
+    <xaif:DUUDSet key="1"/>
+    <xaif:DUUDSet key="2">
+      <xaif:StatementId idRef=""/>
+    </xaif:DUUDSet>
+    <xaif:DUUDSet key="3">
+      <xaif:StatementId idRef="6"/>
+    </xaif:DUUDSet>
+  </xaif:DUUDSetList>
+
   <!-- ******************************************************************** -->
   <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="sub1__20" annotation="{PU_Id#1}" controlflowgraph_scope_id="2">
     <xaif:ArgumentList>
@@ -91,7 +108,7 @@
     <xaif:BasicBlock vertex_id="3" scope_id="2" annotation="{WHIRL_Id#18:19:21}">
       <xaif:Marker statement_id="18" annotation="{WHIRL_Id#18}{StmtLabel#2}"/>
       <xaif:Assignment statement_id="19">
-        <xaif:AssignmentLHS du_ud="3">
+        <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="BOGUS_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -113,7 +130,7 @@
     <xaif:BasicBlock vertex_id="4" scope_id="2" annotation="{WHIRL_Id#22:23:25}">
       <xaif:Marker statement_id="22" annotation="{WHIRL_Id#22}{StmtLabel#3}"/>
       <xaif:Assignment statement_id="23">
-        <xaif:AssignmentLHS du_ud="4">
+        <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="BOGUS_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -126,7 +143,7 @@
     <xaif:BasicBlock vertex_id="5" scope_id="2" annotation="{WHIRL_Id#26:27:29}">
       <xaif:Marker statement_id="26" annotation="{WHIRL_Id#26}{StmtLabel#4}"/>
       <xaif:Assignment statement_id="27">
-        <xaif:AssignmentLHS du_ud="5">
+        <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="BOGUS_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -139,7 +156,7 @@
     <xaif:BasicBlock vertex_id="6" scope_id="2" annotation="{WHIRL_Id#30:31:33}">
       <xaif:Marker statement_id="30" annotation="{WHIRL_Id#30}{StmtLabel#5}"/>
       <xaif:Assignment statement_id="31">
-        <xaif:AssignmentLHS du_ud="6">
+        <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="BOGUS_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -152,7 +169,7 @@
     <xaif:BasicBlock vertex_id="7" scope_id="2" annotation="{WHIRL_Id#34:35}">
       <xaif:Marker statement_id="34" annotation="{WHIRL_Id#34}{StmtLabel#6}"/>
       <xaif:Assignment statement_id="35">
-        <xaif:AssignmentLHS du_ud="7">
+        <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="BOGUS_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -184,14 +201,14 @@
       <xaif:ArgumentSymbolReference position="2" scope_id="3" symbol_id="BOGUS_2" intent="inout" annotation="{WHIRL_Id#3}"/>
     </xaif:ArgumentList>
 
-    <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
+    <xaif:Entry vertex_id="12" annotation="{WHIRL_Id#}"/>
 
-    <xaif:BasicBlock vertex_id="2" scope_id="3" annotation="{WHIRL_Id#7:8}">
+    <xaif:BasicBlock vertex_id="13" scope_id="3" annotation="{WHIRL_Id#7:8}">
       <xaif:Marker statement_id="7" annotation="{WHIRL_Id#7} [passive: OPR_PRAGMA]"/>
       <xaif:Marker statement_id="8" annotation="{WHIRL_Id#8} [passive: OPR_STID]"/>
     </xaif:BasicBlock>
 
-    <xaif:Branch vertex_id="19" annotation="{WHIRL_Id#10}">
+    <xaif:Branch vertex_id="27" annotation="{WHIRL_Id#10}">
       <xaif:Condition>
         <xaif:BooleanOperation vertex_id="1" name="greater_or_equal"/>
         <xaif:VariableReference vertex_id="2" du_ud="2">
@@ -203,14 +220,14 @@
       </xaif:Condition>
     </xaif:Branch>
 
-    <xaif:BasicBlock vertex_id="3" scope_id="3" annotation="{WHIRL_Id#20}">
+    <xaif:BasicBlock vertex_id="14" scope_id="3" annotation="{WHIRL_Id#20}">
       <xaif:Marker statement_id="20" annotation="{WHIRL_Id#20}{StmtLabel#7}"/>
     </xaif:BasicBlock>
 
-    <xaif:Branch vertex_id="18" annotation="{WHIRL_Id#21}">
+    <xaif:Branch vertex_id="28" annotation="{WHIRL_Id#21}">
       <xaif:Condition>
         <xaif:BooleanOperation vertex_id="1" name="greater_or_equal"/>
-        <xaif:VariableReference vertex_id="2" du_ud="3">
+        <xaif:VariableReference vertex_id="2" du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="select_expr_temp_1_3"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="3" type="integer" value="24"/>
@@ -219,22 +236,22 @@
       </xaif:Condition>
     </xaif:Branch>
 
-    <xaif:BasicBlock vertex_id="6" scope_id="3" annotation="{WHIRL_Id#31}">
+    <xaif:BasicBlock vertex_id="17" scope_id="3" annotation="{WHIRL_Id#31}">
       <xaif:Marker statement_id="31" annotation="{WHIRL_Id#31}{StmtLabel#8}"/>
     </xaif:BasicBlock>
 
-    <xaif:Branch vertex_id="16" annotation="{WHIRL_Id#32}">
+    <xaif:Branch vertex_id="30" annotation="{WHIRL_Id#32}">
       <xaif:Condition>
-        <xaif:VariableReference vertex_id="1" du_ud="6">
+        <xaif:VariableReference vertex_id="1" du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="select_expr_temp_1_3"/>
         </xaif:VariableReference>
       </xaif:Condition>
     </xaif:Branch>
 
-    <xaif:BasicBlock vertex_id="9" scope_id="3" annotation="{WHIRL_Id#45:46:48}">
+    <xaif:BasicBlock vertex_id="20" scope_id="3" annotation="{WHIRL_Id#45:46:48}">
       <xaif:Marker statement_id="45" annotation="{WHIRL_Id#45}{StmtLabel#2}"/>
       <xaif:Assignment statement_id="46">
-        <xaif:AssignmentLHS du_ud="9">
+        <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="BOGUS_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -244,19 +261,19 @@
       <xaif:Marker statement_id="48" annotation="{WHIRL_Id#48}{StmtGoto#1}"/>
     </xaif:BasicBlock>
 
-    <xaif:EndBranch vertex_id="14" annotation="{WHIRL_Id#}"/>
+    <xaif:EndBranch vertex_id="25" annotation="{WHIRL_Id#}"/>
 
-    <xaif:BasicBlock vertex_id="23" scope_id="3" annotation="{WHIRL_Id#64:65}">
+    <xaif:BasicBlock vertex_id="34" scope_id="3" annotation="{WHIRL_Id#64:65}">
       <xaif:Marker statement_id="64" annotation="{WHIRL_Id#64}{StmtLabel#1}"/>
       <xaif:Marker statement_id="65" annotation="{WHIRL_Id#65} [passive: OPR_RETURN]"/>
     </xaif:BasicBlock>
 
-    <xaif:Exit vertex_id="15" annotation="{WHIRL_Id#}"/>
+    <xaif:Exit vertex_id="26" annotation="{WHIRL_Id#}"/>
 
-    <xaif:BasicBlock vertex_id="10" scope_id="3" annotation="{WHIRL_Id#49:50:52}">
+    <xaif:BasicBlock vertex_id="21" scope_id="3" annotation="{WHIRL_Id#49:50:52}">
       <xaif:Marker statement_id="49" annotation="{WHIRL_Id#49}{StmtLabel#3}"/>
       <xaif:Assignment statement_id="50">
-        <xaif:AssignmentLHS du_ud="10">
+        <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="BOGUS_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -266,10 +283,10 @@
       <xaif:Marker statement_id="52" annotation="{WHIRL_Id#52}{StmtGoto#1}"/>
     </xaif:BasicBlock>
 
-    <xaif:BasicBlock vertex_id="11" scope_id="3" annotation="{WHIRL_Id#53:54:56}">
+    <xaif:BasicBlock vertex_id="22" scope_id="3" annotation="{WHIRL_Id#53:54:56}">
       <xaif:Marker statement_id="53" annotation="{WHIRL_Id#53}{StmtLabel#4}"/>
       <xaif:Assignment statement_id="54">
-        <xaif:AssignmentLHS du_ud="11">
+        <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="BOGUS_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -279,10 +296,10 @@
       <xaif:Marker statement_id="56" annotation="{WHIRL_Id#56}{StmtGoto#1}"/>
     </xaif:BasicBlock>
 
-    <xaif:BasicBlock vertex_id="12" scope_id="3" annotation="{WHIRL_Id#57:58:60}">
+    <xaif:BasicBlock vertex_id="23" scope_id="3" annotation="{WHIRL_Id#57:58:60}">
       <xaif:Marker statement_id="57" annotation="{WHIRL_Id#57}{StmtLabel#5}"/>
       <xaif:Assignment statement_id="58">
-        <xaif:AssignmentLHS du_ud="12">
+        <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="BOGUS_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -292,10 +309,10 @@
       <xaif:Marker statement_id="60" annotation="{WHIRL_Id#60}{StmtGoto#1}"/>
     </xaif:BasicBlock>
 
-    <xaif:BasicBlock vertex_id="13" scope_id="3" annotation="{WHIRL_Id#61:62}">
+    <xaif:BasicBlock vertex_id="24" scope_id="3" annotation="{WHIRL_Id#61:62}">
       <xaif:Marker statement_id="61" annotation="{WHIRL_Id#61}{StmtLabel#6}"/>
       <xaif:Assignment statement_id="62">
-        <xaif:AssignmentLHS du_ud="13">
+        <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="BOGUS_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -304,12 +321,12 @@
       </xaif:Assignment>
     </xaif:BasicBlock>
 
-    <xaif:EndBranch vertex_id="7" annotation="{WHIRL_Id#}"/>
+    <xaif:EndBranch vertex_id="18" annotation="{WHIRL_Id#}"/>
 
-    <xaif:Branch vertex_id="17" annotation="{WHIRL_Id#25}">
+    <xaif:Branch vertex_id="31" annotation="{WHIRL_Id#25}">
       <xaif:Condition>
         <xaif:BooleanOperation vertex_id="1" name="less_or_equal"/>
-        <xaif:VariableReference vertex_id="2" du_ud="7">
+        <xaif:VariableReference vertex_id="2" du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="select_expr_temp_1_3"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="3" type="integer" value="30"/>
@@ -318,18 +335,18 @@
       </xaif:Condition>
     </xaif:Branch>
 
-    <xaif:EndBranch vertex_id="8" annotation="{WHIRL_Id#}"/>
+    <xaif:EndBranch vertex_id="19" annotation="{WHIRL_Id#}"/>
 
-    <xaif:BasicBlock vertex_id="22" scope_id="3" annotation="{WHIRL_Id#29}">
+    <xaif:BasicBlock vertex_id="33" scope_id="3" annotation="{WHIRL_Id#29}">
       <xaif:Marker statement_id="29" annotation="{WHIRL_Id#29} [passive: OPR_STID]"/>
     </xaif:BasicBlock>
 
-    <xaif:EndBranch vertex_id="4" annotation="{WHIRL_Id#}"/>
+    <xaif:EndBranch vertex_id="15" annotation="{WHIRL_Id#}"/>
 
-    <xaif:Branch vertex_id="20" annotation="{WHIRL_Id#14}">
+    <xaif:Branch vertex_id="29" annotation="{WHIRL_Id#14}">
       <xaif:Condition>
         <xaif:BooleanOperation vertex_id="1" name="less_or_equal"/>
-        <xaif:VariableReference vertex_id="2" du_ud="4">
+        <xaif:VariableReference vertex_id="2" du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="select_expr_temp_1_3"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="3" type="integer" value="20"/>
@@ -338,47 +355,47 @@
       </xaif:Condition>
     </xaif:Branch>
 
-    <xaif:EndBranch vertex_id="5" annotation="{WHIRL_Id#}"/>
+    <xaif:EndBranch vertex_id="16" annotation="{WHIRL_Id#}"/>
 
-    <xaif:BasicBlock vertex_id="21" scope_id="3" annotation="{WHIRL_Id#18}">
+    <xaif:BasicBlock vertex_id="32" scope_id="3" annotation="{WHIRL_Id#18}">
       <xaif:Marker statement_id="18" annotation="{WHIRL_Id#18} [passive: OPR_STID]"/>
     </xaif:BasicBlock>
 
-    <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
-    <xaif:ControlFlowEdge edge_id="2" source="2" target="19"/>
-    <xaif:ControlFlowEdge edge_id="3" source="3" target="18"/>
-    <xaif:ControlFlowEdge edge_id="4" source="4" target="20"/>
-    <xaif:ControlFlowEdge edge_id="5" source="5" target="21"/>
-    <xaif:ControlFlowEdge edge_id="6" source="6" target="16"/>
-    <xaif:ControlFlowEdge edge_id="7" source="7" target="17"/>
-    <xaif:ControlFlowEdge edge_id="8" source="8" target="22"/>
-    <xaif:ControlFlowEdge edge_id="9" source="9" target="14"/>
-    <xaif:ControlFlowEdge edge_id="10" source="10" target="14"/>
-    <xaif:ControlFlowEdge edge_id="11" source="11" target="14"/>
-    <xaif:ControlFlowEdge edge_id="12" source="12" target="14"/>
-    <xaif:ControlFlowEdge edge_id="13" source="13" target="14"/>
-    <xaif:ControlFlowEdge edge_id="14" source="14" target="23"/>
-    <xaif:ControlFlowEdge edge_id="15" source="16" target="9" has_condition_value="true" condition_value="1"/>
-    <xaif:ControlFlowEdge edge_id="16" source="16" target="9" has_condition_value="true" condition_value="21"/>
-    <xaif:ControlFlowEdge edge_id="17" source="16" target="9" has_condition_value="true" condition_value="31"/>
-    <xaif:ControlFlowEdge edge_id="18" source="16" target="10" has_condition_value="true" condition_value="2"/>
-    <xaif:ControlFlowEdge edge_id="19" source="16" target="10" has_condition_value="true" condition_value="22"/>
-    <xaif:ControlFlowEdge edge_id="20" source="16" target="11" has_condition_value="true" condition_value="3"/>
-    <xaif:ControlFlowEdge edge_id="21" source="16" target="11" has_condition_value="true" condition_value="23"/>
-    <xaif:ControlFlowEdge edge_id="22" source="16" target="12" has_condition_value="true" condition_value="4"/>
-    <xaif:ControlFlowEdge edge_id="23" source="16" target="12" has_condition_value="true" condition_value="24"/>
-    <xaif:ControlFlowEdge edge_id="24" source="16" target="13"/>
-    <xaif:ControlFlowEdge edge_id="25" source="17" target="6"/>
-    <xaif:ControlFlowEdge edge_id="26" source="17" target="8"/>
-    <xaif:ControlFlowEdge edge_id="27" source="18" target="6"/>
-    <xaif:ControlFlowEdge edge_id="28" source="18" target="7"/>
-    <xaif:ControlFlowEdge edge_id="29" source="19" target="3"/>
-    <xaif:ControlFlowEdge edge_id="30" source="19" target="4"/>
-    <xaif:ControlFlowEdge edge_id="31" source="20" target="3"/>
-    <xaif:ControlFlowEdge edge_id="32" source="20" target="5"/>
-    <xaif:ControlFlowEdge edge_id="33" source="21" target="3"/>
-    <xaif:ControlFlowEdge edge_id="34" source="22" target="6"/>
-    <xaif:ControlFlowEdge edge_id="35" source="23" target="15"/>
+    <xaif:ControlFlowEdge edge_id="1" source="12" target="13"/>
+    <xaif:ControlFlowEdge edge_id="2" source="13" target="27"/>
+    <xaif:ControlFlowEdge edge_id="3" source="14" target="28"/>
+    <xaif:ControlFlowEdge edge_id="4" source="15" target="29"/>
+    <xaif:ControlFlowEdge edge_id="5" source="16" target="32"/>
+    <xaif:ControlFlowEdge edge_id="6" source="17" target="30"/>
+    <xaif:ControlFlowEdge edge_id="7" source="18" target="31"/>
+    <xaif:ControlFlowEdge edge_id="8" source="19" target="33"/>
+    <xaif:ControlFlowEdge edge_id="9" source="20" target="25"/>
+    <xaif:ControlFlowEdge edge_id="10" source="21" target="25"/>
+    <xaif:ControlFlowEdge edge_id="11" source="22" target="25"/>
+    <xaif:ControlFlowEdge edge_id="12" source="23" target="25"/>
+    <xaif:ControlFlowEdge edge_id="13" source="24" target="25"/>
+    <xaif:ControlFlowEdge edge_id="14" source="25" target="34"/>
+    <xaif:ControlFlowEdge edge_id="15" source="27" target="14"/>
+    <xaif:ControlFlowEdge edge_id="16" source="27" target="15"/>
+    <xaif:ControlFlowEdge edge_id="17" source="28" target="17"/>
+    <xaif:ControlFlowEdge edge_id="18" source="28" target="18"/>
+    <xaif:ControlFlowEdge edge_id="19" source="29" target="14"/>
+    <xaif:ControlFlowEdge edge_id="20" source="29" target="16"/>
+    <xaif:ControlFlowEdge edge_id="21" source="30" target="20" has_condition_value="true" condition_value="1"/>
+    <xaif:ControlFlowEdge edge_id="22" source="30" target="20" has_condition_value="true" condition_value="21"/>
+    <xaif:ControlFlowEdge edge_id="23" source="30" target="20" has_condition_value="true" condition_value="31"/>
+    <xaif:ControlFlowEdge edge_id="24" source="30" target="21" has_condition_value="true" condition_value="2"/>
+    <xaif:ControlFlowEdge edge_id="25" source="30" target="21" has_condition_value="true" condition_value="22"/>
+    <xaif:ControlFlowEdge edge_id="26" source="30" target="22" has_condition_value="true" condition_value="3"/>
+    <xaif:ControlFlowEdge edge_id="27" source="30" target="22" has_condition_value="true" condition_value="23"/>
+    <xaif:ControlFlowEdge edge_id="28" source="30" target="23" has_condition_value="true" condition_value="4"/>
+    <xaif:ControlFlowEdge edge_id="29" source="30" target="23" has_condition_value="true" condition_value="24"/>
+    <xaif:ControlFlowEdge edge_id="30" source="30" target="24"/>
+    <xaif:ControlFlowEdge edge_id="31" source="31" target="17"/>
+    <xaif:ControlFlowEdge edge_id="32" source="31" target="19"/>
+    <xaif:ControlFlowEdge edge_id="33" source="32" target="14"/>
+    <xaif:ControlFlowEdge edge_id="34" source="33" target="17"/>
+    <xaif:ControlFlowEdge edge_id="35" source="34" target="26"/>
   </xaif:ControlFlowGraph>
 
   <!-- ******************************************************************** -->
@@ -386,9 +403,9 @@
   <xaif:ControlFlowGraph vertex_id="3" scope_id="1" symbol_id="controlflow__27" annotation="{PU_Id#3}" controlflowgraph_scope_id="4">
     <xaif:ArgumentList/>
 
-    <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
+    <xaif:Entry vertex_id="35" annotation="{WHIRL_Id#}"/>
 
-    <xaif:BasicBlock vertex_id="2" scope_id="4" annotation="{WHIRL_Id#5:6:11:16:17}">
+    <xaif:BasicBlock vertex_id="36" scope_id="4" annotation="{WHIRL_Id#5:6:11:16:17}">
       <xaif:Marker statement_id="5" annotation="{WHIRL_Id#5} [passive: OPR_PRAGMA]"/>
       <xaif:SubroutineCall statement_id="6" scope_id="1" symbol_id="sub1__20">
         <xaif:Argument position="1">
@@ -410,10 +427,10 @@
       <xaif:Marker statement_id="17" annotation="{WHIRL_Id#17} [passive: OPR_RETURN]"/>
     </xaif:BasicBlock>
 
-    <xaif:Exit vertex_id="4" annotation="{WHIRL_Id#}"/>
+    <xaif:Exit vertex_id="38" annotation="{WHIRL_Id#}"/>
 
-    <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
-    <xaif:ControlFlowEdge edge_id="2" source="2" target="4"/>
+    <xaif:ControlFlowEdge edge_id="1" source="35" target="36"/>
+    <xaif:ControlFlowEdge edge_id="2" source="36" target="38"/>
   </xaif:ControlFlowGraph>
 
   <xaif:CallGraphEdge edge_id="1" source="3" target="1"/>

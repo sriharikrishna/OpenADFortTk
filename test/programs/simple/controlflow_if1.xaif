@@ -42,6 +42,20 @@
 
   </xaif:ScopeHierarchy>
 
+  <xaif:AliasSetList>
+    <xaif:AliasSet key="0">
+      <xaif:AliasRange from_virtual_address="1" to_virtual_address="1"/>
+    </xaif:AliasSet>
+  </xaif:AliasSetList>
+
+  <xaif:DUUDSetList>
+    <xaif:DUUDSet key="0"/>
+    <xaif:DUUDSet key="1"/>
+    <xaif:DUUDSet key="2">
+      <xaif:StatementId idRef=""/>
+    </xaif:DUUDSet>
+  </xaif:DUUDSetList>
+
   <!-- ******************************************************************** -->
   <!-- *** This is the PROGRAM routine *** -->
   <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="controlflow_if__20" annotation="{PU_Id#1}" controlflowgraph_scope_id="2">
@@ -52,7 +66,7 @@
     <xaif:BasicBlock vertex_id="2" scope_id="2" annotation="{WHIRL_Id#5:6}">
       <xaif:Marker statement_id="5" annotation="{WHIRL_Id#5} [passive: OPR_PRAGMA]"/>
       <xaif:Assignment statement_id="6">
-        <xaif:AssignmentLHS du_ud="1">
+        <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_1"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -64,7 +78,7 @@
     <xaif:Branch vertex_id="8" annotation="{WHIRL_Id#8}">
       <xaif:Condition>
         <xaif:BooleanOperation vertex_id="1" name="greater_or_equal"/>
-        <xaif:VariableReference vertex_id="2" du_ud="1">
+        <xaif:VariableReference vertex_id="2" du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_1"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="3" type="real" value="0.00000000000000000000e+00"/>
@@ -75,7 +89,7 @@
 
     <xaif:BasicBlock vertex_id="3" scope_id="2" annotation="{WHIRL_Id#13}">
       <xaif:Assignment statement_id="13">
-        <xaif:AssignmentLHS du_ud="2">
+        <xaif:AssignmentLHS du_ud="1">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="Y_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -95,7 +109,7 @@
 
     <xaif:BasicBlock vertex_id="4" scope_id="2" annotation="{WHIRL_Id#16}">
       <xaif:Assignment statement_id="16">
-        <xaif:AssignmentLHS du_ud="3">
+        <xaif:AssignmentLHS du_ud="1">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="Y_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>

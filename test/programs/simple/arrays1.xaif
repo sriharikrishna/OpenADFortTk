@@ -45,6 +45,51 @@
 
   </xaif:ScopeHierarchy>
 
+  <xaif:AliasSetList>
+    <xaif:AliasSet key="0">
+      <xaif:AliasRange from_virtual_address="1" to_virtual_address="1"/>
+    </xaif:AliasSet>
+  </xaif:AliasSetList>
+
+  <xaif:DUUDSetList>
+    <xaif:DUUDSet key="0"/>
+    <xaif:DUUDSet key="1"/>
+    <xaif:DUUDSet key="2">
+      <xaif:StatementId idRef=""/>
+    </xaif:DUUDSet>
+    <xaif:DUUDSet key="3">
+      <xaif:StatementId idRef="6"/>
+    </xaif:DUUDSet>
+    <xaif:DUUDSet key="4">
+      <xaif:StatementId idRef="17"/>
+    </xaif:DUUDSet>
+    <xaif:DUUDSet key="5">
+      <xaif:StatementId idRef="19"/>
+    </xaif:DUUDSet>
+    <xaif:DUUDSet key="6">
+      <xaif:StatementId idRef="6"/>
+      <xaif:StatementId idRef="32"/>
+    </xaif:DUUDSet>
+    <xaif:DUUDSet key="7">
+      <xaif:StatementId idRef="19"/>
+      <xaif:StatementId idRef="52"/>
+    </xaif:DUUDSet>
+    <xaif:DUUDSet key="8">
+      <xaif:StatementId idRef="32"/>
+      <xaif:StatementId idRef="72"/>
+    </xaif:DUUDSet>
+    <xaif:DUUDSet key="9">
+      <xaif:StatementId idRef="32"/>
+    </xaif:DUUDSet>
+    <xaif:DUUDSet key="10">
+      <xaif:StatementId idRef="52"/>
+      <xaif:StatementId idRef="72"/>
+    </xaif:DUUDSet>
+    <xaif:DUUDSet key="11">
+      <xaif:StatementId idRef="72"/>
+    </xaif:DUUDSet>
+  </xaif:DUUDSetList>
+
   <!-- ******************************************************************** -->
   <!-- *** This is the PROGRAM routine *** -->
   <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="arrays__20" annotation="{PU_Id#1}" controlflowgraph_scope_id="2">
@@ -65,7 +110,7 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="17">
-        <xaif:AssignmentLHS du_ud="2">
+        <xaif:AssignmentLHS du_ud="9">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="Y_5"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -75,7 +120,7 @@
       <xaif:Marker statement_id="19" annotation="{WHIRL_Id#19} [passive: OPR_ISTORE]"/>
       <xaif:Marker statement_id="30" annotation="{WHIRL_Id#30} [passive: OPR_STID]"/>
       <xaif:Assignment statement_id="32">
-        <xaif:AssignmentLHS du_ud="0">
+        <xaif:AssignmentLHS du_ud="11">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_4"/>
           <xaif:ArrayElementReference vertex_id="2">
             <xaif:Index>
@@ -88,7 +133,7 @@
           <xaif:Intrinsic vertex_id="1" name="sub_scal_scal" type="***"/>
           <xaif:Intrinsic vertex_id="2" name="add_scal_scal" type="***"/>
           <xaif:Intrinsic vertex_id="3" name="mul_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="4" du_ud="0">
+          <xaif:VariableReference vertex_id="4" du_ud="3">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_4"/>
             <xaif:ArrayElementReference vertex_id="2">
               <xaif:Index>
@@ -97,7 +142,7 @@
             </xaif:ArrayElementReference>
             <xaif:VariableReferenceEdge edge_id="1" source="1" target="2"/>
           </xaif:VariableReference>
-          <xaif:VariableReference vertex_id="5" du_ud="0">
+          <xaif:VariableReference vertex_id="5" du_ud="3">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_4"/>
             <xaif:ArrayElementReference vertex_id="2">
               <xaif:Index>
@@ -111,7 +156,7 @@
           <xaif:Constant vertex_id="6" type="real" value="3.14149999618530273438e+00"/>
           <xaif:ExpressionEdge edge_id="3" source="3" target="2" position="1"/>
           <xaif:ExpressionEdge edge_id="4" source="6" target="2" position="2"/>
-          <xaif:VariableReference vertex_id="7" du_ud="2">
+          <xaif:VariableReference vertex_id="7" du_ud="4">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="Y_5"/>
           </xaif:VariableReference>
           <xaif:ExpressionEdge edge_id="5" source="2" target="1" position="1"/>
