@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makefile,v 1.8 2004/05/28 15:18:45 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makefile,v 1.9 2004/08/05 18:34:45 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -38,15 +38,17 @@ exes: build_exes
 #  Binaries
 #-----------------------------------------------------------------
 
-EXEDIRS = whirl2xaif xaif2whirl testers
+EXEDIRS = whirl2sexp whirl2xaif xaif2whirl testers
 
 build_exes: build_libs
 	src=$(OPENADFORTTK)/src ; \
 	for exe in $(EXEDIRS) ; do \
-	  obj=$(OPENADFORTTK_OBJ_PATH)/exe-$$exe ; \
-	  mkdir -p $$obj ; \
-	  cd $$obj ; \
-	  $(MAKE) -f $$src/$$exe/Makefile SRCS=$$src/$$exe ; \
+	  if [ -d $$src/$$exe ] ; then \
+	    obj=$(OPENADFORTTK_OBJ_PATH)/exe-$$exe ; \
+	    mkdir -p $$obj ; \
+	    cd $$obj ; \
+	    $(MAKE) -f $$src/$$exe/Makefile SRCS=$$src/$$exe ; \
+	  fi ; \
 	done
 
 .PHONY: build_exes
