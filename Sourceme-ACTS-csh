@@ -1,6 +1,6 @@
 # -*-Mode: sh;-*-
 # For csh or tcsh
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.9 2003/12/02 13:44:08 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.10 2003/12/19 21:16:06 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
@@ -130,7 +130,7 @@ set ii_xaif="${XAIFSCHEMA}/schema/examples/inlinable_intrinsics.xaif"
 
 if ( "${PLATFORM}" == "i686-Cygwin" ) then 
   # convert to Windows path for XercesC
-  set ii_xaif=`cygpath -w ${ii_xaif}`
+  set ii_xaif="\`cygpath -w ${ii_xaif}\`"
 endif
 
 

@@ -1,16 +1,16 @@
 # -*-Mode: sh;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.11 2003/12/02 13:39:59 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.12 2003/12/19 21:16:06 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
 #############################################################################
 
-export WHIRL2XAIF="/cygdrive/c/Tmp/ACTS/whirl2xaif"
+export WHIRL2XAIF="/cygdrive/c/Tmp/Develop/whirl2xaif"
 
 PLATFORM=`cd ${WHIRL2XAIF}/src/config; ./hpcplatform`
 case $PLATFORM in
   i686-Cygwin) 
-    base="/cygdrive/c/Tmp/ACTS"
+    base="/cygdrive/c/Tmp/Develop"
     ;;
   i686-Linux | ia64-Linux) 
     base="/local/eraxxon"
@@ -26,11 +26,11 @@ esac
 export OPEN64_BASE="${base}/Open64"
 export OPENANALYSIS_BASE="${base}/OpenAnalysis"
 export XERCESC_BASE="${base}/xercesc"
-export XAIFBOOSTER_BASE="${base}"
-export BOOST_BASE="${base}/boost-1.30.2"
-export ANGEL_BASE="${base}/angel"
+export XAIFBOOSTER_BASE="${base}/ACTS"
+export BOOST_BASE="${base}/ACTS/boost-1.30.2"
+export ANGEL_BASE="${base}/ACTS/angel"
 
-XAIFSCHEMA="${base}/xaif-1.0"
+XAIFSCHEMA="${base}/ACTS/xaif-1.0"
 
 unset base
 
@@ -119,7 +119,7 @@ ii_xaif="${XAIFSCHEMA}/schema/examples/inlinable_intrinsics.xaif"
 
 if [ "${PLATFORM}" = "i686-Cygwin" ]; then 
   # convert to Windows path for XercesC
-  ii_xaif=`cygpath -w ${ii_xaif}`
+  ii_xaif="\`cygpath -w ${ii_xaif}\`"
 fi
 
 
