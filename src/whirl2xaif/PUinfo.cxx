@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.cxx,v 1.2 2003/05/14 01:10:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.cxx,v 1.3 2003/05/21 18:22:58 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -76,14 +76,15 @@
 
 #include <string.h>
 
-#include "whirl2f_common.h"
 
-#include "w2cf_parentize.h" /* For W2CF_Parent_Map */
-#include "mempool.h"
-#include "const.h"
-#include "wn_util.h"
-#include "PUinfo.h"
+#include "Open64BasicTypes.h"
 #include "targ_sim.h"
+
+
+#include "PUinfo.h"
+#include "whirl2f_common.h"
+#include "w2cf_parentize.h" /* For W2CF_Parent_Map */
+
 
 #define IS_RETURN_PREG(wn) \
         (ST_class(WN_st(wn)) == CLASS_PREG \
@@ -292,18 +293,19 @@ Get_Preg_Info(INT16 preg_num)
 static void
 Accumulate_Preg_Info(TY_IDX preg_ty, INT16 preg_num)
 {
+   ASSERT_FATAL(TY_Is_Scalar(preg_ty), 
+		(DIAG_A_STRING, 
+		 "Expected KIND_SCALAR symbol in Accumulate_Preg_Info()"));
+
+   if (preg_num == -1)
+     return;
+
    /* Given a preg with a certain number, update the information we
     * have about it.
     */
    PREG_INFO      *preg_info;
    INT             usage_kind;
 
-   if (preg_num == -1)
-     return;
-
-   Is_True(TY_Is_Scalar(preg_ty), 
-	   ("Expected KIND_SCALAR symbol in Accumulate_Preg_Info()"));
-   
    /* Get the preg info record corresponding to this usage.  Create one
     * if none exists.
     */
@@ -1036,22 +1038,19 @@ Accumulate_Expr_PUinfo(WN *root)
 	    break;
 	    
 	 case OPR_LDID:
-/*	    if (ST_sym_class(WN_st(wn)) == CLASS_PREG)
-	    {
-*/
-	       Accumulate_Preg_Info(ST_type(WN_st(wn)), WN_load_offset(wn));
-
-	       /* If we encounter an unexpected load of a return
-		* register, then update the CALLSITE to indicate that
-		* the return-registers must be written for the call.
-		*/
-                
-	       if (next_return_ldid == wn)
-		 next_return_ldid = NULL;
-	       else if (last_callsite != NULL ) /* && IS_RETURN_PREG(wn))  */
-		   CALLSITE_in_regs(last_callsite) = TRUE;
-/*	    } */
-	    break;
+	   if (ST_sym_class(WN_st(wn)) == CLASS_PREG) {
+	     Accumulate_Preg_Info(ST_type(WN_st(wn)), WN_load_offset(wn));
+	     
+	     /* If we encounter an unexpected load of a return
+	      * register, then update the CALLSITE to indicate that
+	      * the return-registers must be written for the call.
+	      */
+	     if (next_return_ldid == wn)
+	       next_return_ldid = NULL;
+	     else if (last_callsite != NULL ) /* && IS_RETURN_PREG(wn))  */
+	       CALLSITE_in_regs(last_callsite) = TRUE;
+	   }
+	   break;
 
 	 case OPR_LDA:
 	    /* Make certain this never occurs for pregs! */
