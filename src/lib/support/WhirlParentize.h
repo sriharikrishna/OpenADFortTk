@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlParentize.h,v 1.2 2004/02/19 22:02:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlParentize.h,v 1.3 2004/02/20 18:58:24 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -97,6 +97,10 @@ public:
     WN_MAP_Set(parentMap, (WN*)wn, (void *)parent);
   }
   
+  // GetMap: returns the parent map.  Intended to be only used with
+  // Open64 routines that want a parent map.
+  WN_MAP GetMap() const { return parentMap; }
+
 private:
   void Ctor();
   void Parentize(const WN* wn);
