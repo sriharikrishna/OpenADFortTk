@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.30 2004/06/30 23:45:41 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.31 2004/07/16 21:59:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -500,6 +500,10 @@ xlate_ExprOpUsingIntrinsicTable(IntrinsicXlationTable::XAIFOpr xopr,
     // FIXME: could use rtype for operator
     TY_IDX ty = WN_Tree_Type(opnd_wn[i]);
     TYPE_ID rty = TY_mtype(ty);      
+    
+    // Pointers and character strings often look like integers to the
+    // test below
+    if (TY_Is_Pointer(ty) || TY_Is_Character_String(ty)) { continue; }
     
     TYPE_ID newrty = MTYPE_UNKNOWN;
     if (MTYPE_is_integral(rty)) {
