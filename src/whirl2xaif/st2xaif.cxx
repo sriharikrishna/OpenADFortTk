@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.33 2004/06/02 18:51:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.34 2004/06/03 01:37:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -300,13 +300,13 @@ TCON2F_translate(TCON tvalue, BOOL is_logical)
 
 void 
 whirl2xaif::xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
-			       WNToScalarizedRefTab* nonscalarsymtab, 
+			       ScalarizedRefTab_W2X* nonscalarsymtab, 
 			       XlationContext& ctxt)
 {
   xos << BegElem("xaif:SymbolTable") << EndAttrs;
   
   xlate_SYMTAB(xos, symtab_lvl, ctxt);
-  xlate_WNToScalarizedRefTab(xos, nonscalarsymtab, ctxt);
+  xlate_ScalarizedRefTab(xos, nonscalarsymtab, ctxt);
   
   xos << EndElem;
 }
@@ -356,14 +356,14 @@ whirl2xaif::xlate_PREGTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
 
 
 void
-whirl2xaif::xlate_WNToScalarizedRefTab(xml::ostream& xos, WNToScalarizedRefTab* symtab, 
+whirl2xaif::xlate_ScalarizedRefTab(xml::ostream& xos, ScalarizedRefTab_W2X* symtab, 
 				  XlationContext& ctxt)
 {
 #if 0
   if (!symtab) { return; }
   
   // *** may be active and non active non-scalar syms
-  for (WNToScalarizedRefTabIterator it(*symtab); it.IsValid(); ++it) {
+  for (ScalarizedRefTabIterator it(*symtab); it.IsValid(); ++it) {
     WN* wn = it.CurrentSrc();
     ScalarizedRef* sym = it.CurrentTarg();
     

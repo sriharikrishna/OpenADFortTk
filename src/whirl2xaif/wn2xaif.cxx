@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.61 2004/06/02 18:51:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.62 2004/06/03 01:37:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -92,25 +92,6 @@ using namespace whirl2xaif;
 using namespace xml; // for xml::ostream, etc
 
 IntrinsicXlationTable whirl2xaif::IntrinsicTable(IntrinsicXlationTable::W2X);
-
-//************************** Forward Declarations ***************************
-
-// AddToWNToScalarizedRefTabOp: Given a WNToScalarizedRefTab, add references to it
-class AddToWNToScalarizedRefTabOp : public ForAllNonScalarRefsOp {
-public:
-  AddToWNToScalarizedRefTabOp(WNToScalarizedRefTab* symtab_);
-  ~AddToWNToScalarizedRefTabOp() { }
-  
-  WNToScalarizedRefTab* GetSymTab() { return symtab; }
-
-  // Given a non-scalar reference 'wn', create a dummy variable and
-  // add to the map.  
-  int operator()(const WN* wn);
-
-private:
-  WNToScalarizedRefTab* symtab;
-};
-
 
 //************************** Forward Declarations ***************************
 
@@ -277,10 +258,10 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ctxt.SetWNParentMap(&wnParentMap);
 
   // 1. Non-scalar symbol table
-  WNToScalarizedRefTab* symtab = new WNToScalarizedRefTab(); // FIXME
-  AddToWNToScalarizedRefTabOp op(symtab);
+  ScalarizedRefTab_W2X* symtab = new ScalarizedRefTab_W2X(); // FIXME
+  AddToScalarizedRefTabOp op(symtab);
   ForAllNonScalarRefs(fbody, op); //FIXME
-  ctxt.SetWNToScalarizedRefTab(symtab);
+  ctxt.SetScalarizedRefTab(symtab);
   
   // 2. WHIRL<->ID maps
   pair<WNToWNIdMap*, WNIdToWNMap*> wnmaps = CreateWhirlIdMaps(wn);
@@ -1066,73 +1047,6 @@ DumpCFGraphEdge(xml::ostream& xos, UINT eid, CFG::Edge* edge)
 	<< Attr("condition_value", condVal);
   }
   xos << EndElem;
-}
-
-//***************************************************************************
-//
-//***************************************************************************
-
-//FIXME: op should not be const because we call op(), which is non const.
-void 
-ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
-{
-  // Special base case
-  if (wn == NULL) { return; }
-
-  OPERATOR opr = WN_operator(wn);
-  if (IsNonScalarRef(wn)) {
-    
-    // Base case
-    int ret = op(wn); // FIXME: what to do on error?
-    
-    // Special recursive case: Since WHIRL stores are statements (not
-    // expressions) we need to check the RHS (kid0) of the implied
-    // assignment for non-scalar references.
-    if (OPERATOR_is_store(opr)) {
-      ForAllNonScalarRefs(WN_kid0(wn), op);
-    }
-
-  } else if (!OPERATOR_is_leaf(opr)) {
-    
-    // General recursive case
-    if (WN_operator(wn) == OPR_BLOCK) {
-      WN *kid = WN_first(wn);
-      while (kid) {
-	ForAllNonScalarRefs(kid, op);
-	kid = WN_next(kid);
-      }
-    } else {
-      for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
-	WN* kid = WN_kid(wn, kidno);
-	ForAllNonScalarRefs(kid, op);
-      }
-    }
-    
-  }
-}
-
-
-AddToWNToScalarizedRefTabOp::AddToWNToScalarizedRefTabOp(WNToScalarizedRefTab* symtab_)
-{ 
-  symtab = symtab_;
-  assert(symtab != NULL);
-}
-
-
-// Given a non-scalar reference 'wn', create a dummy variable and
-// add to the map.  
-int 
-AddToWNToScalarizedRefTabOp::operator()(const WN* wn) 
-{
-  // Base case
-#if 0 // FIXME
-  fprintf(stderr, "----------\n");
-  fdump_tree(stderr, wn); // FIXME: append this to a symtab somewhere
-#endif
-  
-  ScalarizedRef* sym = new ScalarizedRef();
-  bool ret = symtab->Insert(wn, sym);
-  return (ret) ? 0 : 1;
 }
 
 

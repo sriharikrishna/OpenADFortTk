@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.4 2004/06/02 19:56:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.5 2004/06/03 01:37:56 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -46,6 +46,100 @@ static const char* cat(const char* str, UINT num)
   return buf;
 #undef SYMBUF_SZ
 }
+
+
+//***************************************************************************
+// ScalarizedRefTab (helper types)
+//***************************************************************************
+
+UINT ScalarizedRefTab_Base::nextId = 0; // static member
+
+ScalarizedRefTab_Base::ScalarizedRefTab_Base()
+{
+  id = nextId++;
+  name = cat("*nonscalarstab*", id);
+}
+
+ScalarizedRefTab_Base::~ScalarizedRefTab_Base()
+{
+}
+
+
+//***************************************************************************
+// ScalarizedRefTab
+//***************************************************************************
+
+ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
+ScalarizedRefTab()
+{
+}
+
+ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
+~ScalarizedRefTab()
+{
+  // Clear table
+  for (iterator it = begin(); it != end(); ++it) {
+    delete (*it).second; // ScalarizedRef*
+  }
+  clear();
+}
+
+void
+ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
+Dump(std::ostream& o, const char* pre) const
+{
+  std::string p = pre;
+  std::string p1 = p + "  ";
+
+  o << p << "{ ================== Begin ScalarizedRefTab Dump ("
+    << size() << " Entries):\n";
+  
+  for (const_iterator it = begin(); it != end(); ++it) {
+    WN* wn = (*it).first;
+    ScalarizedRef* sym = (*it).second;
+    o << p1 << wn << " --> ";
+    sym->Dump(o);
+    o << std::endl;
+  }
+  o << p << "End ScalarizedRefTab Dump ================== }\n";
+}
+
+void
+ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
+DDump() const
+{
+  Dump(std::cerr);
+}
+
+//***************************************************************************
+// ScalarizedRef
+//***************************************************************************
+
+UINT ScalarizedRef::nextId = 0; // static member
+
+ScalarizedRef::ScalarizedRef()
+{
+  id = nextId++;
+  name = cat("*nonscalarsym*", id);  
+}
+
+ScalarizedRef::~ScalarizedRef()
+{
+}
+
+void 
+ScalarizedRef::Dump(std::ostream& o) const
+{
+  o << name;
+}
+
+void 
+ScalarizedRef::DDump() const
+{
+  Dump(std::cerr);
+}
+
+
 
 //***************************************************************************
 // 
@@ -188,80 +282,69 @@ WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2)
 }
 
 
-
-
 //***************************************************************************
-// WNToScalarizedRefTab
+//
 //***************************************************************************
 
-UINT WNToScalarizedRefTab::nextId = 0; // static member
-
-WNToScalarizedRefTab::WNToScalarizedRefTab()
+//FIXME: op should not be const because we call op(), which is non const.
+void 
+ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
 {
-  id = nextId++;
-  name = cat("*nonscalarstab*", id);
-}
+  // Special base case
+  if (wn == NULL) { return; }
 
-WNToScalarizedRefTab::~WNToScalarizedRefTab()
-{
-  // Clear table
-  for (iterator it = begin(); it != end(); ++it) {
-    delete (*it).second; // ScalarizedRef*
+  OPERATOR opr = WN_operator(wn);
+  if (IsNonScalarRef(wn)) {
+    
+    // Base case
+    int ret = op(wn); // FIXME: what to do on error?
+    
+    // Special recursive case: Since WHIRL stores are statements (not
+    // expressions) we need to check the RHS (kid0) of the implied
+    // assignment for non-scalar references.
+    if (OPERATOR_is_store(opr)) {
+      ForAllNonScalarRefs(WN_kid0(wn), op);
+    }
+
+  } else if (!OPERATOR_is_leaf(opr)) {
+    
+    // General recursive case
+    if (WN_operator(wn) == OPR_BLOCK) {
+      WN *kid = WN_first(wn);
+      while (kid) {
+	ForAllNonScalarRefs(kid, op);
+	kid = WN_next(kid);
+      }
+    } else {
+      for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
+	WN* kid = WN_kid(wn, kidno);
+	ForAllNonScalarRefs(kid, op);
+      }
+    }
+    
   }
-  clear();
 }
 
 
-void
-WNToScalarizedRefTab::Dump(std::ostream& o, const char* pre) const
-{
-  std::string p = pre;
-  std::string p1 = p + "  ";
+AddToScalarizedRefTabOp::AddToScalarizedRefTabOp(ScalarizedRefTab_W2X* symtab_)
+{ 
+  symtab = symtab_;
+  ASSERT_FATAL(symtab != NULL, (DIAG_A_STRING, "Programming Error."));
+}
 
-  o << p << "{ ================== Begin NonScalar SymTab Dump ("
-    << size() << " Entries):\n";
+
+// Given a non-scalar reference 'wn', create a dummy variable and
+// add to the map.  
+int 
+AddToScalarizedRefTabOp::operator()(const WN* wn) 
+{
+  // Base case
+#if 0 // FIXME
+  fprintf(stderr, "----------\n");
+  fdump_tree(stderr, wn); // FIXME: append this to a symtab somewhere
+#endif
   
-  for (const_iterator it = begin(); it != end(); ++it) {
-    WN* wn = (*it).first;
-    ScalarizedRef* sym = (*it).second;
-    o << p1 << wn << " --> ";
-    sym->Dump(o);
-    o << std::endl;
-  }
-  o << p << "End NonScalar SymTab Dump ================== }\n";
+  ScalarizedRef* sym = new ScalarizedRef();
+  bool ret = symtab->Insert(wn, sym);
+  return (ret) ? 0 : 1;
 }
-
-void
-WNToScalarizedRefTab::DDump() const
-{
-  Dump(std::cerr);
-}
-
-//***************************************************************************
-// ScalarizedRef
-//***************************************************************************
-
-UINT ScalarizedRef::nextId = 0; // static member
-
-ScalarizedRef::ScalarizedRef()
-{
-  id = nextId++;
-  name = cat("*nonscalarsym*", id);  
-}
-
-ScalarizedRef::~ScalarizedRef()
-{
-}
-
-void 
-ScalarizedRef::Dump(std::ostream& o) const
-{
-  o << name;
-}
-
-void 
-ScalarizedRef::DDump() const
-{
-  Dump(std::cerr);
-}
-

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.h,v 1.6 2004/04/29 21:28:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.h,v 1.7 2004/06/03 01:37:56 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -72,7 +72,7 @@ public:
   
   enum TableType { 
     W2X, // A table optimized for WHIRL->XAIF lookups
-    X2W  // A table optimized for XIAF->WHIRL lookups
+    X2W  // A table optimized for XAIF->WHIRL lookups
   };
 
   // WNOprClass: Three completely different kinds of WHIRL operators

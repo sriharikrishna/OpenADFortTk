@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.26 2004/04/29 21:29:09 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.27 2004/06/03 01:37:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -353,29 +353,6 @@ StmtLabelAnnotVal(const T& val_)
 {
   return AttrAnnotVal(XAIFStrings.tag_StmtLabel(), val_);
 }
-
-//***************************************************************************
-// 
-//***************************************************************************
-
-// FIXME: 
-// ForAllNonScalarRefsOp: Abstract base class for the operator passed
-// to the function 'ForAllNonScalarRefs(...)'.  Any caller of this
-// function must define its own operator object, using this class
-// as a base class and providing a definition for 'operator()'.
-class ForAllNonScalarRefsOp {
-public:
-  ForAllNonScalarRefsOp() { }
-  virtual ~ForAllNonScalarRefsOp() { }
-
-  // Given a non-scalar reference 'wn', does something interesting.
-  // Returns 0 on success; non-zero on error.
-  virtual int operator()(const WN* wn) = 0;
-private: 
-};
-
-void 
-ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op);
 
 
 //***************************************************************************

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.19 2004/06/02 18:51:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.20 2004/06/03 01:37:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -341,10 +341,10 @@ public:
   UJNumbers* GetWNToValNum() const { return wn2vnMap; }
   void SetWNToValNum(UJNumbers* x) { wn2vnMap = x; }
 
-  // WNToScalarizedRefTab: (We do not assume ownership of the table)
+  // ScalarizedRefTab: (We do not assume ownership of the table)
   ScalarizedRef* FindScalarizedRef(WN* wn);
-  WNToScalarizedRefTab* GetWNToScalarizedRefTab() const { return nssymtab; }
-  void SetWNToScalarizedRefTab(WNToScalarizedRefTab* x) { nssymtab = x; }
+  ScalarizedRefTab_W2X* GetScalarizedRefTab() const { return nssymtab; }
+  void SetScalarizedRefTab(ScalarizedRefTab_W2X* x) { nssymtab = x; }
   
   // -------------------------------------------------------
   // Misc
@@ -375,7 +375,7 @@ private:
   PUToPUIdMap* pu2idMap;
   WNToWNIdMap* wn2idMap;
   UJNumbers* wn2vnMap;
-  WNToScalarizedRefTab* nssymtab;
+  ScalarizedRefTab_W2X* nssymtab;
 
   CtxtStack ctxtstack;
 };
