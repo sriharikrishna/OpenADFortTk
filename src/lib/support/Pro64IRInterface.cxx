@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.21 2004/06/09 20:42:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.22 2004/06/11 19:45:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -428,7 +428,8 @@ Pro64IRInterface::GetStmtType (StmtHandle h)
   case OPR_STBITS:
   case OPR_ILDBITS:
   case OPR_ISTBITS:
-  case OPR_USE: // FIXME: how are these ordered?
+  case OPR_USE:       // FIXME: how are these ordered?
+  case OPR_INTERFACE: 
     ty = SIMPLE;
     break;
 
