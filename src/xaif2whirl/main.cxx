@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.21 2005/01/12 17:03:56 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.22 2005/01/12 20:01:25 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -236,7 +236,7 @@ ReadXAIF_DOM(const char* xaiffilenm)
   parser->setDoNamespaces(true);
   parser->setDoSchema(true);
   parser->setValidationSchemaFullChecking(true);
-  //parser->setCreateEntityReferenceNodes(true);
+  parser->setCreateEntityReferenceNodes(false);
   
   XAIF_DOMErrorHandler* errHandler = new XAIF_DOMErrorHandler();
   parser->setErrorHandler(errHandler);
