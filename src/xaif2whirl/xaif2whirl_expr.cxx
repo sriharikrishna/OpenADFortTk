@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.14 2004/04/08 13:53:41 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.15 2004/04/09 16:03:49 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -354,23 +354,13 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
     }
   } 
   else if (strcmp(type.c_str(), "bool") == 0) {
-    // Boolean constant: boolean values can be true/false or 1/0
-    // We use OPR_CONST instead of OPR_INTCONST so that we can set the
-    // boolean flag for a TY.
+    // Boolean constant: boolean values can be true/false or 1/0.
     unsigned int val = 1;
     const char* v = value.c_str();    
     if ((strcmp(v, "false") == 0) || (strcmp(v, "0") == 0)) {
       val = 0;
     }
-    
-    // Note: We use a boolean mtype for the new ST so that it is safe
-    // to set the associated TY's 'is_logical' flag. Because an
-    // OPR_CONST WN cannot have the boolean mtype, we do not use
-    // 'CreateConst'.
-    TCON tcon = Host_To_Targ(MTYPE_B, val); // use boolean mtype here
-    ST* st = New_Const_Sym(Enter_tcon(tcon), MTYPE_To_TY(TCON_ty(tcon)));
-    Set_TY_is_logical(ST_type(st));
-    wn = WN_CreateConst(OPC_I4CONST, st);
+    wn = CreateBoolConst(val);
   } 
   else if (strcmp(type.c_str(), "char") == 0) {
     // Character constant. Cf. cwh_stmt.cxx:349

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.14 2004/04/08 13:53:23 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.15 2004/04/09 16:03:49 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -192,6 +192,9 @@ CreateParm(WN *arg, UINT32 flag)
   TYPE_ID rtype = WN_rtype(arg);
   return WN_CreateParm(rtype, arg, MTYPE_To_TY(rtype), flag);
 }
+
+WN* 
+CreateBoolConst(unsigned int val);
 
 //***************************************************************************
 

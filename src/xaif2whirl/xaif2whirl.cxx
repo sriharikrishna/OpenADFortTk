@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.35 2004/04/08 19:27:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.36 2004/04/09 16:03:48 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -164,6 +164,9 @@ CreateOpenADReplacementBeg(const char* placeholder);
 
 static WN*
 CreateOpenADReplacementEnd();
+
+static WN* 
+CreateIfCondition(WN* condWN);
 
 static ST* 
 CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm);
@@ -523,7 +526,8 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
     }
     else if (XAIF_BBElemFilter::IsBBBranch(bbElem)) {
       // ---------------------------------------------------
-      // Begin a structured branch
+      // Begin a structured branch.  Note: in XAIF branches are
+      // 'structured switches'.
       // ---------------------------------------------------
       // FIXME: if a switch, set a ctxt flag to indicate generation of labels
       // FIXME: for switch must also know first block after switch/EndBranch
@@ -553,11 +557,16 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       
       // FIXME: for switches add a label at the front and end of each block
       
-      // 3. Translate condition expression
+      // 3. Translate condition expression. 
       DOMElement* cond = 
         GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
       DOMElement* condexpr = GetFirstChildElement(cond);      
       WN* condWN = TranslateExpression(condexpr, ctxt);
+      if (numOutEdges == 1 || numOutEdges == 2) {
+	// Because branches are 'structured switches', ensure we have
+	// a boolean expression for an 'if'.
+	condWN = CreateIfCondition(condWN);
+      }
       
       // 4. Create control flow statement
       WN* stmtWN = NULL;
@@ -757,7 +766,12 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
         GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
       DOMElement* condexpr = GetFirstChildElement(cond);      
       WN* condWN = TranslateExpression(condexpr, ctxt);
-      
+      if (numOutEdges == 1 || numOutEdges == 2) {
+	// Because branches are 'structured switches', ensure we have
+	// a boolean expression for an 'if'.
+	condWN = CreateIfCondition(condWN);
+      }
+
       // 4. Create control flow statement
       WN* labelWN = WN_CreateLabel(curLbl, 0 /*label_flag*/, NULL);
       WN* stmtWN = NULL;
@@ -1759,6 +1773,23 @@ CreateIntrinsicCall(OPERATOR opr, INTRINSIC intrn,
 }
 
 
+WN* 
+CreateBoolConst(unsigned int val)
+{
+  // We use OPR_CONST instead of OPR_INTCONST so that we can set the
+  // boolean flag for a TY.  Note, however, that an OPC_??CONST cannot
+  // have the boolean rtype.
+  
+  // Use a boolean mtype for the new ST so that it is safe to set the
+  // associated TY's 'is_logical' flag.
+  TCON tcon = Host_To_Targ(MTYPE_B, val); // use boolean mtype here
+  ST* st = New_Const_Sym(Enter_tcon(tcon), MTYPE_To_TY(TCON_ty(tcon)));
+  Set_TY_is_logical(ST_type(st));
+  WN* wn = WN_CreateConst(OPC_I4CONST, st);
+  return wn;
+}
+
+
 static WN*
 CreateOpenADReplacementBeg(const char* placeholder)
 {
@@ -1777,6 +1808,15 @@ CreateOpenADReplacementEnd()
 }
 
 
+static WN* 
+CreateIfCondition(WN* condWN)
+{
+  WN* zeroWN = CreateBoolConst(0);
+  WN* newcondWN = WN_NE(Boolean_type, condWN, zeroWN);
+  return newcondWN;
+}
+
+
 // CreateST: Creates and returns a WHIRL ST* at level 'level' with
 // name 'nm' using 'elem' to gather ST shape and storage class info.
 static ST* 
@@ -1789,7 +1829,7 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
   XercesStrX kind = XercesStrX(kindX);
   XercesStrX type = XercesStrX(typeX);
   XercesStrX shape = XercesStrX(shapeX);
-
+  
   bool active = GetActiveAttr(elem);
   
   assert( strcmp(kind.c_str(), "variable" ) == 0 ); // FIXME: assume only
@@ -1819,15 +1859,17 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
     ty = MY_Make_Array_Type(basicTy, ndim, len);
   }
   
-  // 3. Find storage class
+  // 3. Find storage class and export scope 
   ST_SCLASS sclass = SCLASS_AUTO; // default: auto implies local storage
+  ST_EXPORT escope = EXPORT_LOCAL_INTERNAL;
   if (level == GLOBAL_SYMTAB) {
-    sclass = SCLASS_COMMON; // SCLASS_PSTATIC; // FIXME
+    sclass = SCLASS_COMMON; // SCLASS_UGLOBAL SCLASS_PSTATIC // FIXME
+    escope = EXPORT_LOCAL;
   }
   
   // 4. Create the new symbol
   ST* st = New_ST(level);
-  ST_Init(st, Save_Str(nm), CLASS_VAR, sclass, EXPORT_LOCAL, ty);
+  ST_Init(st, Save_Str(nm), CLASS_VAR, sclass, escope, ty);
   
   return st;
 }
