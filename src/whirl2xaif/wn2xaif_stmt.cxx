@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.34 2004/04/08 13:52:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.35 2004/04/14 21:26:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -177,8 +177,7 @@ whirl2xaif::status
 whirl2xaif::WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // REMOVE
-  ASSERT_DBG_FATAL(XlationContext_io_stmt(ctxt) &&
-		   XlationContext_no_newline(ctxt),
+  ASSERT_DBG_FATAL(XlationContext_io_stmt(ctxt),
 		   (DIAG_W2F_UNEXPECTED_CONTEXT, "WN2F_implied_do"));
   
   /* This is a fortran implied do_loop, which can only occur as an
@@ -585,7 +584,6 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // that we should not need to use any special-casing for 
   // ADRTMP or VALTMP OPR_INTRINSIC_OP nodes, as these should be
   // handled appropriately by TranslateWN().
-  set_XlationContext_no_parenthesis(ctxt);
   BOOL has_stat = FALSE;
   BOOL first_nonemptyarg = FALSE;
   INT implicit_args;
@@ -721,7 +719,6 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     }
   }
   
-  reset_XlationContext_no_parenthesis(ctxt);
   reset_XlationContext_has_no_arr_elmt(ctxt);
   
   if (xlate_as == 0 || xlate_as == 1) {

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.26 2004/04/07 14:58:50 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.27 2004/04/14 21:26:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -394,7 +394,6 @@ whirl2xaif::WN2F_rsqrt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_rsqrt"));
 
    xos << "(1.0/SQRT(";
-   set_XlationContext_no_parenthesis(ctxt);
    xlate_Operand(xos, WN_kid(wn,0), result_ty,
 		 !TY_Is_Character_Reference(result_ty), ctxt);
    xos << "))";
@@ -593,8 +592,6 @@ whirl2xaif::WN2F_complex(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     xos << "WN2F_complex";
     break;
   }
-  /* No need to parenthesize subexpressions */
-  set_XlationContext_no_parenthesis(ctxt);
   
   xos << "("; /* getting real part */
   TranslateWN(xos, WN_kid0(wn), ctxt);
@@ -613,9 +610,6 @@ whirl2xaif::WN2F_bnor(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_BNOR, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_bnor"));
-  
-  /* No need to parenthesize subexpressions */
-  set_XlationContext_no_parenthesis(ctxt);
   
   xos << "NOT(IOR(";
   xlate_Operand(xos, WN_kid(wn,0), result_ty,
@@ -636,9 +630,6 @@ whirl2xaif::WN2F_lshr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_LSHR, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_lshr"));
-  
-  /* No need to parenthesize subexpressions */
-  set_XlationContext_no_parenthesis(ctxt);
   
   xos << "ISHIFT(";
   xlate_Operand(xos, WN_kid(wn,0), result_ty,

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.28 2004/03/19 16:54:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.29 2004/04/14 21:26:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -165,9 +165,9 @@ WN2F_Substring(xml::ostream& xos,
    {
       /* Need to generate substring expression "(l+1:l+size)" */
       xos << "(";
-      set_XlationContext_no_parenthesis(ctxt);
+      //set_XlationContext_no_parenthesis(ctxt);
       TranslateWN(xos, lower_bnd, ctxt);
-      reset_XlationContext_no_parenthesis(ctxt);
+      //reset_XlationContext_no_parenthesis(ctxt);
       xos << ":";
       if (WN_operator(lower_bnd) != OPR_INTCONST ||
 	  WN_const_val(lower_bnd) != 0)
@@ -1128,7 +1128,7 @@ WN2F_Arrsection_Slots(xml::ostream& xos, WN *wn, XlationContext& ctxt, BOOL pare
   if (array_dim>0) {
     if (parens) {
       xos << "(";
-      set_XlationContext_no_parenthesis(ctxt);
+      //set_XlationContext_no_parenthesis(ctxt);
     }
 # if 0 /* original code without thinking about co_array */
     for (dim = WN_num_dim(wn)-1; dim >= 0; dim--) {

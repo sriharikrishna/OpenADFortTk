@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.20 2004/02/26 14:24:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.21 2004/04/14 21:26:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -262,7 +262,7 @@ whirl2xaif::xlate_IO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    * IO statement, after beginning the statement on a new line and
    * setting the appropriate ctxt flags.  */
   set_XlationContext_io_stmt(ctxt);
-  set_XlationContext_no_newline(ctxt);
+  //set_XlationContext_no_newline(ctxt);
   
   const IOSTATEMENT ios = WN_IOSTMT(wn);
   ASSERT_FATAL(XlateWNio_HandlerTable[ios] != NULL,
@@ -532,7 +532,7 @@ xlate_IO_ITEM_control(xml::ostream& xos, WN* item, XlationContext& ctxt)
 		     ST_class(WN_st(WN_kid0(item))) == CLASS_CONST),
 		    (DIAG_W2F_UNEXPECTED_IOC,
 		     IOITEM_name(WN_IOITEM(item)), "xlate_IO_ITEM_control"));
-    reset_XlationContext_no_newline(ctxt);
+    //reset_XlationContext_no_newline(ctxt);
     xos << "FORMAT " << Num2Str(Origfmt_Ioctrl_Label, "%lld")
 	<< Targ_String_Address(STC_val(WN_st(WN_kid0(item))));
     break;
@@ -1038,7 +1038,7 @@ WN2F_ios_print(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   xos << "PRINT";
   
-  set_XlationContext_issue_ioc_asterisk(ctxt);
+  //set_XlationContext_issue_ioc_asterisk(ctxt);
   
   /* We do not really expect to have a unit specification for a "PRINT"
    * statement, but just in the case one occurs anyway, we skip it here.
@@ -1052,7 +1052,7 @@ WN2F_ios_print(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     xlate_IOList(xos, wn, iol_kid, ctxt);
   }
   
-  reset_XlationContext_issue_ioc_asterisk(ctxt);
+  //reset_XlationContext_issue_ioc_asterisk(ctxt);
   
 } /* WN2F_ios_print */
 
@@ -1071,7 +1071,7 @@ WN2F_ios_read(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   
   xos << "READ";
-  set_XlationContext_issue_ioc_asterisk(ctxt);
+  //set_XlationContext_issue_ioc_asterisk(ctxt);
   
   /* Determine whether or not we have the "READ f [,iolist]" format.
    */
@@ -1101,7 +1101,7 @@ WN2F_ios_read(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     xlate_IOList(xos, wn, iol_kid, ctxt);
   }
   
-  reset_XlationContext_issue_ioc_asterisk(ctxt);
+  //reset_XlationContext_issue_ioc_asterisk(ctxt);
   
 } /* WN2F_ios_read */
 
@@ -1120,7 +1120,7 @@ WN2F_ios_rewrite(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_rewrite"));
   
   xos << "REWRITE";
-  set_XlationContext_issue_ioc_asterisk(ctxt);
+  //set_XlationContext_issue_ioc_asterisk(ctxt);
   
   for (iol_kid = 0; 
        (iol_kid < WN_kid_count(wn)) && !IS_IO_ITEM_IOL(WN_kid(wn, iol_kid));
@@ -1136,7 +1136,7 @@ WN2F_ios_rewrite(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   if (iol_kid < WN_kid_count(wn))
     xlate_IOList(xos, wn, iol_kid, ctxt);
   
-  reset_XlationContext_issue_ioc_asterisk(ctxt);
+  //reset_XlationContext_issue_ioc_asterisk(ctxt);
   
 } /* WN2F_ios_rewrite */
 
@@ -1171,7 +1171,7 @@ WN2F_ios_write(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       << " [WRITE***]" << EndAttr;
   
 #if 0 // FIXME: comment out for now
-  set_XlationContext_issue_ioc_asterisk(ctxt);
+  //set_XlationContext_issue_ioc_asterisk(ctxt);
   
   INT  iol_kid;
   for (iol_kid = 0; 
@@ -1186,7 +1186,7 @@ WN2F_ios_write(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   if (iol_kid < WN_kid_count(wn))
     xlate_IOList(xos, wn, iol_kid, ctxt);
   
-  reset_XlationContext_issue_ioc_asterisk(ctxt);
+  //reset_XlationContext_issue_ioc_asterisk(ctxt);
 #endif
   xos << EndElem;
   
@@ -1207,7 +1207,7 @@ WN2F_ios_cr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	      (DIAG_W2F_UNEXPECTED_IOS, IOSTATEMENT_name(iostmt), 
 	       "WN2F_ios_cr"));
   
-  set_XlationContext_issue_ioc_asterisk(ctxt);
+  //set_XlationContext_issue_ioc_asterisk(ctxt);
   
   /* decide if read/write formatted/unformatted */
   if (iostmt == IOS_CR_FWF || iostmt == IOS_CR_FRF)
@@ -1238,7 +1238,7 @@ WN2F_ios_cr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   if (iol_kid < WN_kid_count(wn))
     xlate_IOList(xos, wn, iol_kid, ctxt);
   
-  reset_XlationContext_issue_ioc_asterisk(ctxt);
+  //reset_XlationContext_issue_ioc_asterisk(ctxt);
 #endif
   
   xos << EndElem;
