@@ -65,7 +65,7 @@
     <xaif:BasicBlock vertex_id="2" scope_id="2" annotation="{WHIRL_Id#5:6:8:16:22}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#5} [pragma]"/>
       <xaif:Assignment statement_id="2">
-        <xaif:AssignmentLHS alias="1">
+        <xaif:AssignmentLHS du_ud="1">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_7"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -73,7 +73,7 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="3">
-        <xaif:AssignmentLHS alias="0">
+        <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="TR_6"/>
           <xaif:ArrayElementReference vertex_id="2">
             <xaif:Index>
@@ -87,13 +87,13 @@
           <xaif:VariableReferenceEdge edge_id="1" source="1" target="2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:VariableReference vertex_id="1" alias="1">
+          <xaif:VariableReference vertex_id="1" du_ud="1">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_7"/>
           </xaif:VariableReference>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="4">
-        <xaif:AssignmentLHS alias="0">
+        <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="TR_6"/>
           <xaif:ArrayElementReference vertex_id="2">
             <xaif:Index>
@@ -107,7 +107,7 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="5">
-        <xaif:AssignmentLHS alias="0">
+        <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="TR_6"/>
           <xaif:ArrayElementReference vertex_id="2">
             <xaif:Index>
@@ -125,7 +125,7 @@
     <xaif:ForLoop vertex_id="3" annotation="{WHIRL_Id#28}">
       <!-- OPR_DO_LOOP -->
       <xaif:Initialization>
-        <xaif:AssignmentLHS alias="7">
+        <xaif:AssignmentLHS du_ud="7">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -134,7 +134,7 @@
       </xaif:Initialization>
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_lteq_scal_scal" type="***"/>
-        <xaif:VariableReference vertex_id="2" alias="6">
+        <xaif:VariableReference vertex_id="2" du_ud="6">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_4"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="3" type="integer" value="20"/>
@@ -142,12 +142,12 @@
         <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
       </xaif:Condition>
       <xaif:Update>
-        <xaif:AssignmentLHS alias="16">
+        <xaif:AssignmentLHS du_ud="16">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="2" alias="15">
+          <xaif:VariableReference vertex_id="2" du_ud="15">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_4"/>
           </xaif:VariableReference>
           <xaif:Constant vertex_id="3" type="integer" value="1"/>
@@ -159,7 +159,7 @@
 
     <xaif:BasicBlock vertex_id="4" scope_id="2" annotation="{WHIRL_Id#40:46:60:74}">
       <xaif:Assignment statement_id="1">
-        <xaif:AssignmentLHS alias="0">
+        <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="TI_5"/>
           <xaif:ArrayElementReference vertex_id="2">
             <xaif:Index>
@@ -169,17 +169,17 @@
           <xaif:VariableReferenceEdge edge_id="1" source="1" target="2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:VariableReference vertex_id="1" alias="9">
+          <xaif:VariableReference vertex_id="1" du_ud="9">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_4"/>
           </xaif:VariableReference>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="2">
-        <xaif:AssignmentLHS alias="0">
+        <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="A_1"/>
           <xaif:ArrayElementReference vertex_id="2">
             <xaif:Index>
-              <xaif:VariableReference vertex_id="1" alias="0">
+              <xaif:VariableReference vertex_id="1" du_ud="0">
                 <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="TI_5"/>
                 <xaif:ArrayElementReference vertex_id="2">
                   <xaif:Index>
@@ -193,7 +193,7 @@
           <xaif:VariableReferenceEdge edge_id="1" source="1" target="2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:VariableReference vertex_id="1" alias="0">
+          <xaif:VariableReference vertex_id="1" du_ud="0">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="TR_6"/>
             <xaif:ArrayElementReference vertex_id="2">
               <xaif:Index>
@@ -205,11 +205,11 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="3">
-        <xaif:AssignmentLHS alias="0">
+        <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="B_2"/>
           <xaif:ArrayElementReference vertex_id="2">
             <xaif:Index>
-              <xaif:VariableReference vertex_id="1" alias="0">
+              <xaif:VariableReference vertex_id="1" du_ud="0">
                 <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="TI_5"/>
                 <xaif:ArrayElementReference vertex_id="2">
                   <xaif:Index>
@@ -223,7 +223,7 @@
           <xaif:VariableReferenceEdge edge_id="1" source="1" target="2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:VariableReference vertex_id="1" alias="0">
+          <xaif:VariableReference vertex_id="1" du_ud="0">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="TR_6"/>
             <xaif:ArrayElementReference vertex_id="2">
               <xaif:Index>
@@ -235,11 +235,11 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="4">
-        <xaif:AssignmentLHS alias="0">
+        <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="C_3"/>
           <xaif:ArrayElementReference vertex_id="2">
             <xaif:Index>
-              <xaif:VariableReference vertex_id="1" alias="0">
+              <xaif:VariableReference vertex_id="1" du_ud="0">
                 <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="TI_5"/>
                 <xaif:ArrayElementReference vertex_id="2">
                   <xaif:Index>
@@ -253,7 +253,7 @@
           <xaif:VariableReferenceEdge edge_id="1" source="1" target="2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:VariableReference vertex_id="1" alias="0">
+          <xaif:VariableReference vertex_id="1" du_ud="0">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="TR_6"/>
             <xaif:ArrayElementReference vertex_id="2">
               <xaif:Index>
@@ -277,7 +277,7 @@
     <xaif:ForLoop vertex_id="8" annotation="{WHIRL_Id#89}">
       <!-- OPR_DO_LOOP -->
       <xaif:Initialization>
-        <xaif:AssignmentLHS alias="19">
+        <xaif:AssignmentLHS du_ud="19">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -286,7 +286,7 @@
       </xaif:Initialization>
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_lteq_scal_scal" type="***"/>
-        <xaif:VariableReference vertex_id="2" alias="18">
+        <xaif:VariableReference vertex_id="2" du_ud="18">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_4"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="3" type="integer" value="20"/>
@@ -294,12 +294,12 @@
         <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
       </xaif:Condition>
       <xaif:Update>
-        <xaif:AssignmentLHS alias="27">
+        <xaif:AssignmentLHS du_ud="27">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="2" alias="26">
+          <xaif:VariableReference vertex_id="2" du_ud="26">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_4"/>
           </xaif:VariableReference>
           <xaif:Constant vertex_id="3" type="integer" value="1"/>
@@ -311,11 +311,11 @@
 
     <xaif:BasicBlock vertex_id="9" scope_id="2" annotation="{WHIRL_Id#101:128:129:130:157}">
       <xaif:Assignment statement_id="1">
-        <xaif:AssignmentLHS alias="0">
+        <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="A_1"/>
           <xaif:ArrayElementReference vertex_id="2">
             <xaif:Index>
-              <xaif:VariableReference vertex_id="1" alias="22">
+              <xaif:VariableReference vertex_id="1" du_ud="22">
                 <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_4"/>
               </xaif:VariableReference>
             </xaif:Index>
@@ -325,11 +325,11 @@
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
           <xaif:Intrinsic vertex_id="2" name="div_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="3" alias="0">
+          <xaif:VariableReference vertex_id="3" du_ud="0">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="A_1"/>
             <xaif:ArrayElementReference vertex_id="2">
               <xaif:Index>
-                <xaif:VariableReference vertex_id="1" alias="22">
+                <xaif:VariableReference vertex_id="1" du_ud="22">
                   <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_4"/>
                 </xaif:VariableReference>
               </xaif:Index>
@@ -340,11 +340,11 @@
           <xaif:ExpressionEdge edge_id="1" source="3" target="2" position="1"/>
           <xaif:ExpressionEdge edge_id="2" source="4" target="2" position="2"/>
           <xaif:Intrinsic vertex_id="5" name="mul_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="6" alias="0">
+          <xaif:VariableReference vertex_id="6" du_ud="0">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="B_2"/>
             <xaif:ArrayElementReference vertex_id="2">
               <xaif:Index>
-                <xaif:VariableReference vertex_id="1" alias="22">
+                <xaif:VariableReference vertex_id="1" du_ud="22">
                   <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_4"/>
                 </xaif:VariableReference>
               </xaif:Index>
@@ -352,11 +352,11 @@
             <xaif:VariableReferenceEdge edge_id="1" source="1" target="2"/>
           </xaif:VariableReference>
           <xaif:Intrinsic vertex_id="7" name="sqrt_scal" type="***"/>
-          <xaif:VariableReference vertex_id="8" alias="0">
+          <xaif:VariableReference vertex_id="8" du_ud="0">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="C_3"/>
             <xaif:ArrayElementReference vertex_id="2">
               <xaif:Index>
-                <xaif:VariableReference vertex_id="1" alias="22">
+                <xaif:VariableReference vertex_id="1" du_ud="22">
                   <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="I_4"/>
                 </xaif:VariableReference>
               </xaif:Index>
@@ -411,7 +411,7 @@
     <xaif:BasicBlock vertex_id="15" scope_id="3" annotation="{WHIRL_Id#164:165:167:178:189:200:238:239:240:257:258}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#164} [pragma]"/>
       <xaif:Assignment statement_id="2">
-        <xaif:AssignmentLHS alias="1">
+        <xaif:AssignmentLHS du_ud="1">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -419,19 +419,19 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="3">
-        <xaif:AssignmentLHS alias="0">
+        <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="A_1"/>
 (          <xaif:Constant vertex_id="2" type="integer" value="1"/>
 :          <xaif:Constant vertex_id="3" type="integer" value="20"/>
 )        </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:VariableReference vertex_id="1" alias="1">
+          <xaif:VariableReference vertex_id="1" du_ud="1">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_4"/>
           </xaif:VariableReference>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="4">
-        <xaif:AssignmentLHS alias="0">
+        <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="B_2"/>
 (          <xaif:Constant vertex_id="2" type="integer" value="1"/>
 :          <xaif:Constant vertex_id="3" type="integer" value="20"/>
@@ -441,7 +441,7 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="5">
-        <xaif:AssignmentLHS alias="0">
+        <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="C_3"/>
 (          <xaif:Constant vertex_id="2" type="integer" value="1"/>
 :          <xaif:Constant vertex_id="3" type="integer" value="20"/>
@@ -451,7 +451,7 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="6">
-        <xaif:AssignmentLHS alias="0">
+        <xaif:AssignmentLHS du_ud="0">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="A_1"/>
 (          <xaif:Constant vertex_id="2" type="integer" value="1"/>
 :          <xaif:Constant vertex_id="3" type="integer" value="20"/>
@@ -459,7 +459,7 @@
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
           <xaif:Intrinsic vertex_id="2" name="div_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="3" alias="0">
+          <xaif:VariableReference vertex_id="3" du_ud="0">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="A_1"/>
 (            <xaif:Constant vertex_id="2" type="integer" value="1"/>
 :            <xaif:Constant vertex_id="3" type="integer" value="20"/>
@@ -468,13 +468,13 @@
           <xaif:ExpressionEdge edge_id="1" source="3" target="2" position="1"/>
           <xaif:ExpressionEdge edge_id="2" source="4" target="2" position="2"/>
           <xaif:Intrinsic vertex_id="5" name="mul_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="6" alias="0">
+          <xaif:VariableReference vertex_id="6" du_ud="0">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="B_2"/>
 (            <xaif:Constant vertex_id="2" type="integer" value="1"/>
 :            <xaif:Constant vertex_id="3" type="integer" value="20"/>
 )          </xaif:VariableReference>
           <xaif:Intrinsic vertex_id="7" name="sqrt_scal" type="***"/>
-          <xaif:VariableReference vertex_id="8" alias="0">
+          <xaif:VariableReference vertex_id="8" du_ud="0">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="C_3"/>
           </xaif:VariableReference>
           <xaif:ExpressionEdge edge_id="3" source="8" target="7" position="1"/>
@@ -509,7 +509,7 @@
     <xaif:BasicBlock vertex_id="18" scope_id="4" annotation="{WHIRL_Id#263:264:266:268:269:270:271}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#263} [pragma]"/>
       <xaif:Assignment statement_id="2">
-        <xaif:AssignmentLHS alias="1">
+        <xaif:AssignmentLHS du_ud="1">
           <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="X_3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -517,7 +517,7 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="3">
-        <xaif:AssignmentLHS alias="2">
+        <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="Y_4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>

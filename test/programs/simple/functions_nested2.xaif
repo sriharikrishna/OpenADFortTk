@@ -46,7 +46,7 @@
     <xaif:BasicBlock vertex_id="2" scope_id="2" annotation="{WHIRL_Id#5:6:10:11}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#5} [pragma]"/>
       <xaif:Assignment statement_id="2">
-        <xaif:AssignmentLHS alias="1">
+        <xaif:AssignmentLHS du_ud="1">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="N_1"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
@@ -86,7 +86,7 @@
 
     <xaif:BasicBlock vertex_id="7" scope_id="3" annotation="{WHIRL_Id#24}">
       <xaif:Assignment statement_id="1">
-        <xaif:AssignmentLHS alias="2">
+        <xaif:AssignmentLHS du_ud="2">
 FOO        </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Constant vertex_id="1" type="integer" value="1"/>
@@ -96,7 +96,7 @@ FOO        </xaif:AssignmentLHS>
 
     <xaif:BasicBlock vertex_id="8" scope_id="3" annotation="{WHIRL_Id#27}">
       <xaif:Assignment statement_id="1">
-        <xaif:AssignmentLHS alias="3">
+        <xaif:AssignmentLHS du_ud="3">
 FOO        </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Constant vertex_id="1" type="integer" value="5"/>
@@ -114,7 +114,7 @@ FOO        </xaif:AssignmentLHS>
       <!-- OPR_IF -->
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_eq_scal_scal" type="***"/>
-        <xaif:VariableReference vertex_id="2" alias="1">
+        <xaif:VariableReference vertex_id="2" du_ud="1">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="N_2"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="3" type="integer" value="1"/>

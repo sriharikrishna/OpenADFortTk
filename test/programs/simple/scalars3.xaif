@@ -39,18 +39,18 @@
     <xaif:BasicBlock vertex_id="2" scope_id="2" annotation="{WHIRL_Id#8:9:17}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#8} [pragma]"/>
       <xaif:Assignment statement_id="2">
-        <xaif:AssignmentLHS alias="1">
+        <xaif:AssignmentLHS du_ud="1">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="Y_3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="mul_scal_scal" type="***"/>
           <xaif:Intrinsic vertex_id="2" name="sin_scal" type="***"/>
-          <xaif:VariableReference vertex_id="3" alias="2">
+          <xaif:VariableReference vertex_id="3" du_ud="2">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X1_1"/>
           </xaif:VariableReference>
           <xaif:ExpressionEdge edge_id="1" source="3" target="2" position="1"/>
           <xaif:Intrinsic vertex_id="4" name="cos_scal" type="***"/>
-          <xaif:VariableReference vertex_id="5" alias="3">
+          <xaif:VariableReference vertex_id="5" du_ud="3">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X2_2"/>
           </xaif:VariableReference>
           <xaif:ExpressionEdge edge_id="2" source="5" target="4" position="1"/>

@@ -37,17 +37,17 @@
     <xaif:BasicBlock vertex_id="2" scope_id="2" annotation="{WHIRL_Id#5:6:14:18:19:20:43:44:45}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#5} [pragma]"/>
       <xaif:Assignment statement_id="2">
-        <xaif:AssignmentLHS alias="3">
+        <xaif:AssignmentLHS du_ud="3">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="sub_scal_scal" type="***"/>
           <xaif:Intrinsic vertex_id="2" name="add_scal_scal" type="***"/>
           <xaif:Intrinsic vertex_id="3" name="mul_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="4" alias="1">
+          <xaif:VariableReference vertex_id="4" du_ud="1">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_3"/>
           </xaif:VariableReference>
-          <xaif:VariableReference vertex_id="5" alias="1">
+          <xaif:VariableReference vertex_id="5" du_ud="1">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_3"/>
           </xaif:VariableReference>
           <xaif:ExpressionEdge edge_id="1" source="4" target="3" position="1"/>
@@ -55,7 +55,7 @@
           <xaif:Constant vertex_id="6" type="real" value="3.14149999618530273438e+00"/>
           <xaif:ExpressionEdge edge_id="3" source="3" target="2" position="1"/>
           <xaif:ExpressionEdge edge_id="4" source="6" target="2" position="2"/>
-          <xaif:VariableReference vertex_id="7" alias="2">
+          <xaif:VariableReference vertex_id="7" du_ud="2">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="Y_4"/>
           </xaif:VariableReference>
           <xaif:ExpressionEdge edge_id="5" source="2" target="1" position="1"/>
@@ -63,12 +63,12 @@
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:Assignment statement_id="3">
-        <xaif:AssignmentLHS alias="5">
+        <xaif:AssignmentLHS du_ud="5">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="IX_1"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="2" alias="4">
+          <xaif:VariableReference vertex_id="2" du_ud="4">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="JJJ_2"/>
           </xaif:VariableReference>
           <xaif:Constant vertex_id="3" type="integer" value="1"/>
