@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.42 2004/02/24 16:28:27 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.43 2004/02/24 20:45:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -266,9 +266,6 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     const char* vtype = GetCFGVertexType(&cfg, n);    
     SymTabId scopeId = ctxt.FindSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
     std::string ids = GetIDsForStmtsInBB(n, ctxt);
-    
-    if (vtype == XAIFStrings.elem_BBEndBranch() || // FIXME: hack
-	vtype == XAIFStrings.elem_BBEndLoop()) { ids = ""; }
       
     // 1. BB element begin tag
     xos << BegElem(vtype) << Attr("vertex_id", n->getId());
@@ -1193,7 +1190,9 @@ xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << EndElem;
 }
 
-// GetIDsForStmtsInBB:
+// GetIDsForStmtsInBB: Returns a colon separated list for ids of
+// statements within the basic block.  In the event that a statement
+// id maps to zero, it is *not* included in the list.
 static std::string
 GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt)
 {
@@ -1203,6 +1202,10 @@ GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt)
   for (CFG::NodeStatementsIterator stmtIt(node); (bool)stmtIt; ++stmtIt) {
     WN* wstmt = (WN *)((StmtHandle)stmtIt);
     WNId id = ctxt.FindWNId(wstmt);
+    
+    // Skip statements without a valid id
+    if (id == 0) { continue; }
+
     const char* str = Num2Str(id, "%lld");
     //std::cout << id << " --> " << str << " // ";
     
@@ -1232,30 +1235,36 @@ AddStructuredCFEndTags(WN* wn)
     WN* curWN = it.Wn();
     OPERATOR opr = WN_operator(curWN);
 
-    // Find structured control flow
-    const char* endty = NULL;
+    // Find structured control flow and insert placehoder statement
     const char* vty = GetStructuredCFGVertexType(curWN);
     if (vty == XAIFStrings.elem_BBForLoop() || 
 	vty == XAIFStrings.elem_BBPostLoop() ||
 	vty == XAIFStrings.elem_BBPreLoop()) {
-      endty = XAIFStrings.elem_BBEndLoop();
-    } 
-    else if (vty == XAIFStrings.elem_BBIf()) {
-      endty = XAIFStrings.elem_BBEndBranch();
+      //    do (...)
+      //      ...
+      // -->  EndLoop
+      WN* blkWN = NULL;
+      if (opr == OPR_DO_LOOP) { 
+	blkWN = WN_do_body(curWN); 
+      } else {
+	blkWN = WN_while_body(curWN);
+      }
+      WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndLoop());
+      WN_INSERT_BlockLast(blkWN, newWN);
     }
-    
-    // Insert end placeholder statement
-    if (endty) {
+    else if (vty == XAIFStrings.elem_BBIf()) {
+      //     if (...) {  } else {  }
+      // --> EndBranch
       WN* blkWN = FindParentWNBlock(wn, curWN);
-      WN* newWN = WN_CreateComment((char*)endty);
+      WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndBranch());
       WN_INSERT_BlockAfter(blkWN, curWN, newWN); // 'newWN' after 'curWN'
     }
-    
   }
 }
 
 
-// MassageOACFGIntoXAIFCFG: Convert an OpenAnalysis CFG into a valid XAIF CFG
+// MassageOACFGIntoXAIFCFG: Convert an OpenAnalysis CFG into a valid
+// XAIF CFG.  
 // 
 // 1. OpenAnalysis creates basic blocks with labels at the beginning
 // and branches at the end.  E.g. for TWOWAY_CONDITIONAL statements
@@ -1351,6 +1360,10 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
   // -------------------------------------------------------
   // 2. Recover OPR_DO_LOOPs
   // -------------------------------------------------------
+  
+  // This process can create empty basic blocks
+  DGraphNodeList toRemove; // holds basic blocks made empty
+
   for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
     CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
 
@@ -1378,6 +1391,9 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
 	  WN* wn = (WN *)((StmtHandle)stmtIt1);
 	  if ((wn == initWN) || (wn == updateWN)) {
 	    n1->erase((StmtHandle)wn);
+	    if (n1->size() == 0) {
+	      toRemove.push_back(n1);
+	    }
 	    break;
 	  }
 	}
@@ -1385,29 +1401,61 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
     }
   }
 
+  // Remove empty basic blocks
+  for (DGraphNodeList::iterator it = toRemove.begin(); 
+       it != toRemove.end(); ++it) {
+    DGraph::Node* n = (*it);
+    
+    // Find predecessor node.  If more than one, we cannot continue
+    if (n->num_incoming() > 1) {
+      continue;
+    }
+    DGraph::SourceNodesIterator sourceIt(n);
+    CFG::Node* pred = dynamic_cast<CFG::Node*>((DGraph::Node*)(sourceIt));
+    
+    // All outgoing edges of 'n' become outgoing edges of 'pred'
+    for (DGraph::OutgoingEdgesIterator outEdgeIt(n); 
+	 (bool)outEdgeIt; ++outEdgeIt) {
+      CFG::Edge* e = dynamic_cast<CFG::Edge*>((DGraph::Edge*)outEdgeIt);
+      CFG::Node* snk = dynamic_cast<CFG::Node*>(e->sink());
+      cfg->connect(pred, snk, e->getType());
+    }
+    
+    cfg->remove(n); // removes all outgoing and incoming edges
+    delete n;
+  }
+  toRemove.clear();
+
+  
   // -------------------------------------------------------
   // 3. Split basic blocks with EndLoop and EndBranch tags (FIXME)
   // -------------------------------------------------------
 
-  // EndLoop and EndBranch statments should be at the beginning of any
-  // basic block.
+  // EndBranch statments will be at the beginning of any basic block;
+  // EndLoop at the end.
   for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
     CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
     
     if (n->size() > 1) {
-      CFG::NodeStatementsIterator stmtIt(n);
-      WN* wn = (WN*)((StmtHandle)stmtIt);
-	
-      const char* vty = GetStructuredCFGVertexType(wn);
-      if (vty == XAIFStrings.elem_BBEndBranch() ||
-	  vty == XAIFStrings.elem_BBEndLoop()) {
-	
-	// advance iterator to find start of new basic block
-	++stmtIt;
-	WN* startWN = (WN*)((StmtHandle)stmtIt);
+      for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
+	WN* wn = (WN*)((StmtHandle)stmtIt);
 
-	CFG::Node* newblock = cfg->splitBlock(n, (StmtHandle)startWN);
-	cfg->connect(n, newblock, CFG::FALLTHROUGH_EDGE);
+	const char* vty = GetStructuredCFGVertexType(wn);
+	WN* startWN = NULL; // start of new basic block
+	if (vty == XAIFStrings.elem_BBEndBranch()) {
+	  ++stmtIt; // advance iterator to find start of new basic block
+	  assert((bool)stmtIt);
+	  startWN = (WN*)((StmtHandle)stmtIt);
+	}
+	else if (vty == XAIFStrings.elem_BBEndLoop()) {
+	  startWN = wn;
+	}
+	
+	if (startWN) {
+	  CFG::Node* newblock = cfg->splitBlock(n, (StmtHandle)startWN);
+	  cfg->connect(n, newblock, CFG::FALLTHROUGH_EDGE);
+	  break;
+	}
       }
     }
   }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.20 2004/02/23 18:24:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.21 2004/02/24 20:45:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -54,6 +54,9 @@
 #define wn2xaif_h
 
 //************************** System Include Files ***************************
+
+#include <vector> // STL
+#include <list>   // STL
 
 //************************** Open64 Include Files ***************************
 
@@ -117,6 +120,8 @@ class DGraph::Edge;
 
 typedef std::vector<DGraph::Node*> DGraphNodeVec;
 typedef std::vector<DGraph::Edge*> DGraphEdgeVec;
+
+typedef std::list<DGraph::Node*> DGraphNodeList;
 
 // SortDGraphNodes: Sorts DGraph nodes.  User must deallocate returned
 // object.
