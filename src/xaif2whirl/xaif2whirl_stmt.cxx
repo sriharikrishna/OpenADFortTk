@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.11 2004/05/03 18:06:18 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.12 2004/05/04 23:52:36 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -146,9 +146,9 @@ xaif2whirl::TranslateStmt(const DOMElement* stmt, XlationContext& ctxt)
 }
 
 
-// TranslateAssignmentSimple: Translates certain XAIF assignment
-// statements into special WHIRL assignment statements in order to
-// conform to WHIRL requirements.
+// TranslateAssignmentSimple: Translates certain XAIF constructs into
+// special WHIRL assignment statements in order to conform to WHIRL
+// requirements.
 WN* 
 xaif2whirl::TranslateAssignmentSimple(const DOMElement* elem, 
 				      XlationContext& ctxt)
