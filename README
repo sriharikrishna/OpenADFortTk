@@ -1,0 +1,121 @@
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.1.1.1 2003/05/13 21:54:08 eraxxon Exp $
+=============================================================================
+==
+== $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
+==
+== Location: ${WHIRL2XAIF}
+==
+=============================================================================
+
+Contents:
+  0. Building
+  1. Using
+  2. Brief comments on whirl2xaif sources
+
+=============================================================================
+
+0. Building on i686-Linux or sparc-SunOS
+--------------------
+
+Compiler: 
+  - for i686-Linux, I would suggest using GCC 3.0.4 or greater.
+  - for sparc-SunOS, Sun 5.3 is recommended
+
+Please use the same compiler for Open64, OpenAnalysis and whirl2xaif.
+
+Commands below are written for csh-variants.  For sh-variants replace
+  setenv VARIABLE "value"
+with
+  export VARIABLE="value"
+
+
+1. Prepare env. 
+
+   setenv WHIRL2XAIF ".../whirl2xaif"
+   source $WHIRL2XAIF/Sourceme-csh  [or Sourceme-sh for sh-variants]
+
+   setenv WHIRL2XAIF_OPEN64 ".../Open64/osprey1.0"
+
+2. Build Open64's be.so.  (Building whirl2f will ensure the correct
+   -Ddefines/symbols are included.)
+
+   Ensure the correct compiler is in your path.
+
+   E.g., for i686-Linux:
+     cd ${WHIRL2XAIF_OPEN64}/targ_ia32_ia64_linux/whirl2f 
+     make
+   
+3. Build OA.
+
+   Ensure the correct C++ compiler is used in 
+     ${WHIRL2XAIF}/../OpenAnalysis/Makefile
+  
+   cd ${WHIRL2XAIF}/../OpenAnalysis
+   make IRHANDLE=PTR
+
+4. Build whirl2xaif:
+
+   Ensure the correct C++ compiler is used in
+     ${WHIRL2XAIF}/src/Makeinclude.config.${WHIRL2XAIF_PLATFORM}
+
+   cd ${WHIRL2XAIF}/src
+   make 
+
+=============================================================================
+
+1. Using
+--------------------
+
+Currently the binary -- whirl2xaif -- is just stored with the build
+files in ${WHIRL2XAIF}/obj/${WHIRL2XAIF_PLATFORM}.  This directory was
+automatically created during the build.
+
+If you are using a csh-variant, execute a 'rehash' command to ensure
+that your path is fully searched.  On the other hand, bash should find
+the binary with no problem.
+
+There are some test programs in ${WHIRL2XAIF}/test.
+
+Example:
+  cd ${WHIRL2XAIF}/test/simple
+  mfef90 simple3.f90
+  whirl2xaif simple3.B
+
+=============================================================================
+
+2. Brief comments on whirl2xaif sources
+--------------------
+
+The sources are littered with FIXMEs and REMOVEs.  A great deal of
+unnecesary whirl2f stuff has been removed, but there is still more
+that will go.
+
+Some files you may be interested in:
+
+main.cxx        : the driver
+whirl2xaif.cxx  : interface for WHIRL->XAIF translater; translation driver
+
+wn2xaif.cxx      : top-level routines for translating WHIRL nodes
+wn2xiaf_stmt.cxx : routines for translating WHIRL statements
+wn2xaif_expr.cxx : routines for translating WHIRL expressions
+wn2xaif_mem.cxx  : routines for translating WHIRL memory refs 
+                   (references and assignments)
+
+st2f.cxx   : routines for translating WHIRL symbol table entries
+ty2f.cxx   : routines for translating WHIRL types
+tcon2f.cxx : routines for translating WHIRL constants
+
+Pro64IRInterface.cxx/h : OpenAnalysis interface for Open64's IR
+xmlostream.cxx/h       : xml::ostream class
+
+=============================================================================
+
+3. Misc
+--------------------
+
+Tar for whirl2xaif (gnutar):
+  tar cvf whirl2xaif.tar --exclude="whirl2xaif/obj" --exclude="*.B" whirl2xaif
+
+Tar for OA (gnutar):
+  tar cvf OpenAnalysis.tar --exclude="*.a" OpenAnalysis
+

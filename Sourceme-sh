@@ -1,0 +1,28 @@
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Sourceme-sh,v 1.1.1.1 2003/05/13 21:54:08 eraxxon Exp $
+
+#############################################################################
+
+if test -z "${HPCTOOLKIT}" ; then
+  echo "You must set your WHIRL2XAIF environment variable before sourcing"
+  echo "this file."
+  return 1
+fi
+
+#############################################################################
+# Set platform variables
+#############################################################################
+
+export WHIRL2XAIF_ARCH=`uname -p`
+if test "${WHIRL2XAIF_ARCH}" = "unknown" ; then
+  export WHIRL2XAIF_ARCH=`uname -m`
+fi
+
+export WHIRL2XAIF_OS=`uname -s`
+
+export WHIRL2XAIF_PLATFORM="${WHIRL2XAIF_ARCH}-${WHIRL2XAIF_OS}"
+
+#############################################################################
+# Set other variables
+#############################################################################
+
+export PATH="${WHIRL2XAIF}/obj/${WHIRL2XAIF_PLATFORM}/obj:${PATH}"
