@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.22 2004/06/11 19:45:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.23 2004/06/16 14:26:38 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -195,6 +195,8 @@ Pro64IRUseDefIterator::build_use_def_lists (WN *wn, int flags)
     int ndims = WN_kid_count(wn) >> 1;
     kid_beg = ndims + 1;
     kid_end = 2 * ndims;
+    ASSERT_FATAL(WN_operator(base) == OPR_LDA || WN_operator(base) == OPR_LDID,
+		 (DIAG_A_STRING, "Error!"));
     break; // fall through to recursion
   }
     
