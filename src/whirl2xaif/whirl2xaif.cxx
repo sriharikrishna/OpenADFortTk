@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.21 2004/01/13 21:10:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.22 2004/01/19 21:41:38 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -185,9 +185,9 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   CallGraph cgraph(irInterface, &irProcIter, (SymHandle)st);
 
   MassageOACallGraphIntoXAIFCallGraph(&cgraph);
-
   //cgraph->dump(cerr);
   
+  // 3. Dump CallGraph header info and ScopeHierarchy
   xos << BegElem("xaif:CallGraph")
       << Attr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
       << Attr("xmlns:xaif", "http://www.mcs.anl.gov/XAIF")
@@ -195,17 +195,21 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
       << Attr("program_name", "***myprog***")
       << Attr("prefix", "ADF90_");
   
+  ctxt.CreateContext();
   TranslateScopeHierarchy(xos, pu_forest, ctxt);
-
-  // 3. Dump CallGraph vertices
+  ctxt.DeleteContext();
+  
+  // 4. Dump CallGraph vertices
   for (CallGraph::NodesIterator nodeIt(cgraph); (bool)nodeIt; ++nodeIt) {
+    ctxt.CreateContext();
     CallGraph::Node* n = dynamic_cast<CallGraph::Node*>((DGraph::Node*)nodeIt);
     TranslatePU(xos, n, n->getID(), ctxt);
+    ctxt.DeleteContext();
   }
   
-  // 4. Dump CallGraph edges
+  // 5. Dump CallGraph edges
   for (CallGraph::EdgesIterator edgesIt(cgraph); (bool)edgesIt; ++edgesIt) {
-    CallGraph::Edge* e =
+    CallGraph::Edge* e = 
       dynamic_cast<CallGraph::Edge*>((DGraph::Edge*)edgesIt);
     CallGraph::Node* n1 = dynamic_cast<CallGraph::Node*>(e->source());
     CallGraph::Node* n2 = dynamic_cast<CallGraph::Node*>(e->sink());
@@ -215,7 +219,7 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
 	<< Attr("target", n2->getID()) << EndElem; // FIXME: DumpGraphEdge
   }
   
-  // 5. Done!
+  // 6. Done!
   xos << EndElem; /* xaif:CallGraph */
   
   delete stabmaps.first;
