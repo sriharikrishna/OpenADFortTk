@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.26 2004/02/02 17:18:37 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.27 2004/02/11 18:05:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -266,7 +266,7 @@ static void
 TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId, 
 			  XlationContext& ctxt)
 {
-  PU_RestoreGlobalState(pu);
+  PU_SetGlobalState(pu);
   
   // Translate current symbol table
   SymTabId scopeId = ctxt.FindSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
@@ -309,7 +309,7 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
 {
   if (!pu) { return; }
 
-  PU_RestoreGlobalState(pu);
+  PU_SetGlobalState(pu);
   
   xos << Comment(whirl2xaif_divider_comment);
   
@@ -778,8 +778,10 @@ FindCallToInlinedFn(const char* callee_nm, WN* wn);
 void 
 InlineTest(PU_Info* pu_forest)
 {
-  // Note: can only inline subroutines
-
+  // Note: can only inline subroutines; and only with variables are args
+  // Note: if we create entirely new functions, we will need to update
+  //   pu->sym_tab map.
+  
   // -------------------------------------------------------
   // 1. Find inlined functions (callee) named inline_x
   // -------------------------------------------------------
@@ -852,7 +854,7 @@ InlineTest(PU_Info* pu_forest)
   //   IPO_INLINE::Clone_Callee(...)
   
   // Global tables should point to callee
-  PU_RestoreGlobalState(calleePU);
+  PU_SetGlobalState(calleePU);
   
   // FIXME: allocates WN_mem_pool_ptr, which is used in IPO_CLONE::Copy_Node
   WN* bogus_wn = WN_CreateIntconst(OPC_I4INTCONST, 0);
@@ -889,7 +891,7 @@ InlineTest(PU_Info* pu_forest)
   //   IPO_INLINE::Walk_and_Update_Callee(...)
 
   // Global tables should point to caller (cloned tree uses caller's symtab)
-  PU_RestoreGlobalState(callerPU);
+  PU_SetGlobalState(callerPU);
   
   // * Recreate parent pointers
   // W2CF_Parentize(inlinedBodyWn); // WN_Parentize() - ipo_parent.cxx

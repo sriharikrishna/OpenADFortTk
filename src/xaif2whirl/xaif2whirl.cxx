@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.19 2004/01/29 23:16:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.20 2004/02/11 18:05:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -239,7 +239,7 @@ TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
   cout << XercesStrX(cfgElem->getNodeName()) << ": " << ST_name(st) << endl;
   
   // If we found the PU, translate
-  PU_RestoreGlobalState(pu);
+  PU_SetGlobalState(pu);
   
   WN *wn_pu = PU_Info_tree_ptr(pu);
   TranslateCFG(wn_pu, cfgElem, ctxt);
@@ -696,7 +696,7 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
   SYMTAB_IDX level = GLOBAL_SYMTAB; // Default: assume a global symbol
   if (pu) {
     // This is a PU-scoped symbol.  Restore global state for PU.
-    PU_RestoreGlobalState(pu);
+    PU_SetGlobalState(pu);
     level = CURRENT_SYMTAB; // PU_lexical_level
   }
   

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.15 2004/01/29 23:16:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.16 2004/02/11 18:05:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -86,7 +86,7 @@ Pro64IRProcIterator::prepare_current_pu()
 {
   if (IsValid()) {
     PU_Info *pu = (*pulist_iter);
-    PU_RestoreGlobalState(pu);
+    PU_SetGlobalState(pu);
   }
 }
 
