@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.cxx,v 1.3 2005/01/07 18:56:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.cxx,v 1.4 2005/01/17 15:22:50 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -72,11 +72,19 @@ sexp::ostream::~ostream()
 // Atom: specialization for 'const char*'
 template <>
 void 
-sexp::ostream::Atom(int aflags, const char* const & val)
+sexp::ostream::Atom(int xflags, const char* const & val)
 {
+  using namespace IOFlags;
+
   // Sanity check -- rely on BegAtom()
-  BegAtom(aflags);
-  (*this) << ((val) ? val : "");
+  BegAtom(xflags);
+  const char* outstr = (val) ? val : "";
+  if (IsFlag(xflags, A_DQUOTE)) {
+    EscapeString(outstr);
+  }
+  else {
+    (*this) << outstr;
+  }
   EndAtom();
 }
 
@@ -285,6 +293,22 @@ sexp::ostream::Comment(const char* str)
   (*this) << str;
   EndComment();
 }
+
+
+//****************************************************************************
+
+void
+sexp::ostream::EscapeString(const char* str)
+{
+  for (int i = 0; i < strlen(str); ++i) {
+    char c = str[i];
+    if (c == '\\' || c == '"') {
+      (*this) << '\\';
+    }
+    (*this) << c;    
+  }
+}
+
 
 //****************************************************************************
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.h,v 1.6 2005/01/07 18:56:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.h,v 1.7 2005/01/17 15:22:50 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -48,8 +48,8 @@ namespace sexp {
       NONE       = 0x00000000, // no flag
       
       // atom flags
-      A_SQUOTE   = 0x00000001, // single quote atom: 'x'
-      A_DQUOTE   = 0x00000002, // double quote atom: "x" 
+      A_SQUOTE   = 0x00000001, // single quote atom: 'x (tick-mark)
+      A_DQUOTE   = 0x00000002, // double quote atom: "x" (uses EscapeString)
       A_OCT      = 0x00000010, // use oct mode; revert to dec 
       A_HEX      = 0x00000020, // use hex mode; revert to dec
 
@@ -97,10 +97,10 @@ class ostream : public std::ostream {
 
   // Atom: Output the sexp-atom 'atom', leaving the stream ready to
   // accept another sexp. Uses the atom flag to override default
-  // formatting for this atom. [FIXME: escape certain chars?]
+  // formatting for this atom.
   // N.B.: See specializations below
   template <class T>
-    void Atom(int aflags, const T& val);
+    void Atom(int xflags, const T& val);
 
   template <class T>
     void Atom(const T& val) { Atom(IOFlags::NONE, val); }
@@ -128,10 +128,9 @@ class ostream : public std::ostream {
   void EndList();
     
 
-  // Quote: Quote the subsequent S-expression (atom or list)
+  // Quote: Quote the subsequent S-expression (atom or list) (e.g. 'x)
   void Quote();
-  
-  
+    
   // ---------------------------------------------------------
   
   // BegComment/EndComment: Ouput an arbitrary comment at the end of
@@ -144,6 +143,11 @@ class ostream : public std::ostream {
   // newline).  A previous incomplete start tag is closed.
   void Comment(const char* str);
 
+  // ---------------------------------------------------------
+
+  // EscapeString: Output an escaped string, ready for double quotes.
+  void EscapeString(const char* val);
+  
   // ---------------------------------------------------------
   
   // EndLine: Output a new line and set prepare indentation.
@@ -247,17 +251,17 @@ namespace sexp {
 
 template<class T> 
 void
-sexp::ostream::Atom(int aflags, const T& val)
+sexp::ostream::Atom(int xflags, const T& val)
 {
   // Sanity check -- rely on BegAtom()
-  BegAtom(aflags);
+  BegAtom(xflags);
   (*this) << val;
   EndAtom();
 }
 
 template <>
 void 
-sexp::ostream::Atom(int aflags, const char* const & val);
+sexp::ostream::Atom(int xflags, const char* const & val);
 
 }
 
@@ -419,9 +423,9 @@ operator<<(std::ostream& os, const AtomInfo_<T>& x)
 
 template<class T> 
 AtomInfo_<T>
-Atom(int aflags, const T& val)
+Atom(int xflags, const T& val)
 {
-  AtomInfo_<T> x(aflags, val);
+  AtomInfo_<T> x(xflags, val);
   return x;
 }
 
@@ -456,6 +460,32 @@ Comment(const char* str_)
   x.str = str_;
   return x;
 }
+
+
+// ---------------------------------------------------------
+// Escape
+// ---------------------------------------------------------
+
+struct EscapeStringInfo_ {
+  EscapeStringInfo_(const char* v) : val(v) { }
+  const char* val;
+};
+
+inline ostream& 
+operator<<(std::ostream& os, const EscapeStringInfo_& x)
+{
+  ostream& sos = dynamic_cast<ostream&>(os); // FIXME
+  sos.EscapeString(x.val);
+  return sos;
+}
+
+inline EscapeStringInfo_
+EscapeString(const char* val)
+{
+  EscapeStringInfo_ x(val);
+  return x;
+}
+
 
 // ---------------------------------------------------------
 // SetIndentAmnt
