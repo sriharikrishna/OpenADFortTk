@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.1 2004/06/01 22:21:09 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.2 2004/06/02 02:01:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -191,41 +191,41 @@ WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2)
 
 
 //***************************************************************************
-// NonScalarSymTab
+// ScalarizedRefTab
 //***************************************************************************
 
-UINT NonScalarSymTab::nextId = 0; // static member
+UINT ScalarizedRefTab::nextId = 0; // static member
 
-NonScalarSymTab::NonScalarSymTab()
+ScalarizedRefTab::ScalarizedRefTab()
 {
   id = nextId++;
   name = cat("*nonscalarstab*", id);
 }
 
-NonScalarSymTab::~NonScalarSymTab()
+ScalarizedRefTab::~ScalarizedRefTab()
 {
   // Clear table
-  for (NonScalarSymTabIterator it(*this); it.IsValid(); ++it) {
-    delete it.CurrentTarg(); // NonScalarSym*
+  for (ScalarizedRefTabIterator it(*this); it.IsValid(); ++it) {
+    delete it.CurrentTarg(); // ScalarizedRef*
   }
   wnToSymMap.clear();
 }
 
-NonScalarSym*
-NonScalarSymTab::Find(const WN* wn_) const
+ScalarizedRef*
+ScalarizedRefTab::Find(const WN* wn_) const
 {
   WN* wn = const_cast<WN*>(wn_); // WNToSymMap uses non const types
 
   WNToSymMapItC it = wnToSymMap.find(wn);
-  NonScalarSym* sym = (it == wnToSymMap.end()) ? NULL : (*it).second;
+  ScalarizedRef* sym = (it == wnToSymMap.end()) ? NULL : (*it).second;
   return sym;
 }
 
 bool
-NonScalarSymTab::Insert(const WN* wn_, const NonScalarSym* sym_)
+ScalarizedRefTab::Insert(const WN* wn_, const ScalarizedRef* sym_)
 {
   WN* wn = const_cast<WN*>(wn_); // WNToSymMap uses non const types
-  NonScalarSym* sym = const_cast<NonScalarSym*>(sym_);
+  ScalarizedRef* sym = const_cast<ScalarizedRef*>(sym_);
 
   WNToSymMapVal val = WNToSymMapVal(wn, sym);
   pair<WNToSymMapIt, bool> p = wnToSymMap.insert(val);
@@ -233,7 +233,7 @@ NonScalarSymTab::Insert(const WN* wn_, const NonScalarSym* sym_)
 }
 
 void
-NonScalarSymTab::Dump(std::ostream& o, const char* pre) const
+ScalarizedRefTab::Dump(std::ostream& o, const char* pre) const
 {
   std::string p = pre;
   std::string p1 = p + "  ";
@@ -241,9 +241,9 @@ NonScalarSymTab::Dump(std::ostream& o, const char* pre) const
   o << p << "{ ================== Begin NonScalar SymTab Dump ("
     << GetSize() << " Entries):\n";
   
-  for (NonScalarSymTabIterator it(*this); it.IsValid(); ++it) {
+  for (ScalarizedRefTabIterator it(*this); it.IsValid(); ++it) {
     WN* wn = it.CurrentSrc();
-    NonScalarSym* sym = it.CurrentTarg();
+    ScalarizedRef* sym = it.CurrentTarg();
     o << p1 << wn << " --> ";
     sym->Dump(o);
     o << std::endl;
@@ -252,49 +252,49 @@ NonScalarSymTab::Dump(std::ostream& o, const char* pre) const
 }
 
 void
-NonScalarSymTab::DDump() const
+ScalarizedRefTab::DDump() const
 {
   Dump(std::cerr);
 }
 
 //***************************************************************************
-// NonScalarSym
+// ScalarizedRef
 //***************************************************************************
 
-UINT NonScalarSym::nextId = 0; // static member
+UINT ScalarizedRef::nextId = 0; // static member
 
-NonScalarSym::NonScalarSym()
+ScalarizedRef::ScalarizedRef()
 {
   id = nextId++;
   name = cat("*nonscalarsym*", id);  
 }
 
-NonScalarSym::~NonScalarSym()
+ScalarizedRef::~ScalarizedRef()
 {
 }
 
 void 
-NonScalarSym::Dump(std::ostream& o) const
+ScalarizedRef::Dump(std::ostream& o) const
 {
   o << name;
 }
 
 void 
-NonScalarSym::DDump() const
+ScalarizedRef::DDump() const
 {
   Dump(std::cerr);
 }
 
 //***************************************************************************
-// NonScalarSymTabIterator
+// ScalarizedRefTabIterator
 //***************************************************************************
 
-NonScalarSymTabIterator::NonScalarSymTabIterator(const NonScalarSymTab& x)
+ScalarizedRefTabIterator::ScalarizedRefTabIterator(const ScalarizedRefTab& x)
   : symtab(x)
 {
   Reset();
 }
 
-NonScalarSymTabIterator::~NonScalarSymTabIterator()
+ScalarizedRefTabIterator::~ScalarizedRefTabIterator()
 {
 }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.39 2004/05/11 19:09:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.40 2004/06/02 02:01:29 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -136,6 +136,9 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   pair<PUToPUIdMap*, PUIdToPUMap*> pumaps = CreatePUIdMaps(pu_forest);
   ctxt.SetPUToIdMap(pumaps.first);
   delete pumaps.second;
+  
+  // FIXME: create map of non-scalar refs -> scalarized dummy symbols
+  
   
   // 2. Create CallGraph (massage OA version into XAIF version)
   Pro64IRProcIterator irProcIter(pu_forest);

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.31 2004/06/01 22:22:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.32 2004/06/02 02:01:29 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -300,13 +300,13 @@ TCON2F_translate(TCON tvalue, BOOL is_logical)
 
 void 
 whirl2xaif::xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
-			       NonScalarSymTab* nonscalarsymtab, 
+			       ScalarizedRefTab* nonscalarsymtab, 
 			       XlationContext& ctxt)
 {
   xos << BegElem("xaif:SymbolTable") << EndAttrs;
   
   xlate_SYMTAB(xos, symtab_lvl, ctxt);
-  xlate_NonScalarSymTab(xos, nonscalarsymtab, ctxt);
+  xlate_ScalarizedRefTab(xos, nonscalarsymtab, ctxt);
   
   xos << EndElem;
 }
@@ -356,16 +356,16 @@ whirl2xaif::xlate_PREGTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
 
 
 void
-whirl2xaif::xlate_NonScalarSymTab(xml::ostream& xos, NonScalarSymTab* symtab, 
+whirl2xaif::xlate_ScalarizedRefTab(xml::ostream& xos, ScalarizedRefTab* symtab, 
 				  XlationContext& ctxt)
 {
 #if 0
   if (!symtab) { return; }
   
   // *** may be active and non active non-scalar syms
-  for (NonScalarSymTabIterator it(*symtab); it.IsValid(); ++it) {
+  for (ScalarizedRefTabIterator it(*symtab); it.IsValid(); ++it) {
     WN* wn = it.CurrentSrc();
-    NonScalarSym* sym = it.CurrentTarg();
+    ScalarizedRef* sym = it.CurrentTarg();
     
     xos << BegElem("xaif:Symbol") << Attr("symbol_id", sym->GetName())
 	<< Attr("kind", "variable") << Attr("type", "nonscalar-***???")

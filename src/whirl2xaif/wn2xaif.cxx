@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.59 2004/06/01 22:22:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.60 2004/06/02 02:01:29 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -95,20 +95,20 @@ IntrinsicXlationTable whirl2xaif::IntrinsicTable(IntrinsicXlationTable::W2X);
 
 //************************** Forward Declarations ***************************
 
-// AddToNonScalarSymTabOp: Given a NonScalarSymTab, add references to it
-class AddToNonScalarSymTabOp : public ForAllNonScalarRefsOp {
+// AddToScalarizedRefTabOp: Given a ScalarizedRefTab, add references to it
+class AddToScalarizedRefTabOp : public ForAllNonScalarRefsOp {
 public:
-  AddToNonScalarSymTabOp(NonScalarSymTab* symtab_);
-  ~AddToNonScalarSymTabOp() { }
+  AddToScalarizedRefTabOp(ScalarizedRefTab* symtab_);
+  ~AddToScalarizedRefTabOp() { }
   
-  NonScalarSymTab* GetSymTab() { return symtab; }
+  ScalarizedRefTab* GetSymTab() { return symtab; }
 
   // Given a non-scalar reference 'wn', create a dummy variable and
   // add to the map.  
   int operator()(const WN* wn);
 
 private:
-  NonScalarSymTab* symtab;
+  ScalarizedRefTab* symtab;
 };
 
 
@@ -277,10 +277,10 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ctxt.SetWNParentMap(&wnParentMap);
 
   // 1. Non-scalar symbol table
-  NonScalarSymTab* symtab = new NonScalarSymTab(); // FIXME
-  AddToNonScalarSymTabOp op(symtab);
+  ScalarizedRefTab* symtab = new ScalarizedRefTab(); // FIXME
+  AddToScalarizedRefTabOp op(symtab);
   ForAllNonScalarRefs(fbody, op); //FIXME
-  ctxt.SetNonScalarSymTab(symtab);
+  ctxt.SetScalarizedRefTab(symtab);
   
   // 2. WHIRL<->ID maps
   pair<WNToWNIdMap*, WNIdToWNMap*> wnmaps = CreateWhirlIdMaps(wn);
@@ -610,7 +610,7 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos,
     
     // call 'xlate_derivedtype_ref'
     // Get the dummy variable (need the parent wn) FIXME
-    NonScalarSym* sym = ctxt.FindNonScalarSym(ctxt.GetWN_MR());
+    ScalarizedRef* sym = ctxt.FindScalarizedRef(ctxt.GetWN_MR());
     if (sym) {
       xos << BegElem("xaif:NONSCALAR") << Attr("id", sym->GetName())
 	  << EndAttrs;
@@ -795,7 +795,7 @@ whirl2xaif::xlate_MemRef(xml::ostream& xos,
        * is already set up correctly to handle the combined offsets.
        */
       WN* wn = ctxt.GetWN();
-      NonScalarSym* sym = ctxt.FindNonScalarSym(wn);
+      ScalarizedRef* sym = ctxt.FindScalarizedRef(wn);
       if (sym) {
 	xos << BegElem("xaif:NONSCALAR") << Attr("id", sym->GetName())
 	    << EndAttrs;
@@ -1112,7 +1112,7 @@ ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
 }
 
 
-AddToNonScalarSymTabOp::AddToNonScalarSymTabOp(NonScalarSymTab* symtab_)
+AddToScalarizedRefTabOp::AddToScalarizedRefTabOp(ScalarizedRefTab* symtab_)
 { 
   symtab = symtab_;
   assert(symtab != NULL);
@@ -1122,7 +1122,7 @@ AddToNonScalarSymTabOp::AddToNonScalarSymTabOp(NonScalarSymTab* symtab_)
 // Given a non-scalar reference 'wn', create a dummy variable and
 // add to the map.  
 int 
-AddToNonScalarSymTabOp::operator()(const WN* wn) 
+AddToScalarizedRefTabOp::operator()(const WN* wn) 
 {
   // Base case
 #if 0 // FIXME
@@ -1130,7 +1130,7 @@ AddToNonScalarSymTabOp::operator()(const WN* wn)
   fdump_tree(stderr, wn); // FIXME: append this to a symtab somewhere
 #endif
   
-  NonScalarSym* sym = new NonScalarSym();
+  ScalarizedRef* sym = new ScalarizedRef();
   bool ret = symtab->Insert(wn, sym);
   return (ret) ? 0 : 1;
 }

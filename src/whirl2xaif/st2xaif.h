@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.10 2004/05/07 20:04:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.11 2004/06/02 02:01:29 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -91,7 +91,7 @@
 
 //************************** Forward Declarations ***************************
 
-class NonScalarSymTab;
+class ScalarizedRefTab;
 
 //***************************************************************************
 
@@ -103,7 +103,7 @@ namespace whirl2xaif {
 
   extern void 
   xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
-		     NonScalarSymTab* nonscalarsymtab, 
+		     ScalarizedRefTab* nonscalarsymtab, 
 		     XlationContext& ctxt);
   
   extern void 
@@ -111,7 +111,7 @@ namespace whirl2xaif {
 	       XlationContext& ctxt);
   
   extern void 
-  xlate_NonScalarSymTab(xml::ostream& xos, NonScalarSymTab* symtab, 
+  xlate_ScalarizedRefTab(xml::ostream& xos, ScalarizedRefTab* symtab, 
 			XlationContext& ctxt);
   
   extern void 

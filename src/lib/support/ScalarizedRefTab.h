@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.1 2004/06/01 22:21:09 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.2 2004/06/02 02:01:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -57,25 +57,25 @@ WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2);
 
 
 //***************************************************************************
-// NonScalarSymTab
+// ScalarizedRefTab
 //***************************************************************************
 
-class NonScalarSym;
+class ScalarizedRef;
 
-// 'NonScalarSymTab' is a special symbol table for non scalar WHIRL
-// references (e.g. array and record accesses).
-class NonScalarSymTab {
+// 'ScalarizedRefTab' is a special symbol table mapping certain
+// non-scalar WHIRL references to dummy scalar variables
+class ScalarizedRefTab {
 public:
   // Constructor allocates an empty data structure
-  NonScalarSymTab();
-  virtual ~NonScalarSymTab();
+  ScalarizedRefTab();
+  virtual ~ScalarizedRefTab();
   
   // Find: find 
-  NonScalarSym* Find(const WN* wn) const;
+  ScalarizedRef* Find(const WN* wn) const;
   
   // Insert: insert <'wn','sym'> pair in the map and return true; if
   // 'wn' already exists, the operation fails and returns false.
-  bool Insert(const WN* wn, const NonScalarSym* sym);
+  bool Insert(const WN* wn, const ScalarizedRef* sym);
   
   // Return number of entries
   unsigned int GetSize() const { return wnToSymMap.size(); }
@@ -90,22 +90,22 @@ public:
   virtual void Dump(std::ostream& o = std::cerr, const char* pre = "") const;
   virtual void DDump() const;
   
-  friend class NonScalarSymTabIterator;
+  friend class ScalarizedRefTabIterator;
   
 protected:
   // Should not be used
-  NonScalarSymTab(const NonScalarSymTab& x) { }
-  NonScalarSymTab& operator=(const NonScalarSymTab& x) { return *this; }
+  ScalarizedRefTab(const ScalarizedRefTab& x) { }
+  ScalarizedRefTab& operator=(const ScalarizedRefTab& x) { return *this; }
 
 private: 
-  // A map of WN* to NonScalarSym*.
-  typedef std::map<WN*, NonScalarSym*> WNToSymMap;
+  // A map of WN* to ScalarizedRef*.
+  typedef std::map<WN*, ScalarizedRef*> WNToSymMap;
   typedef WNToSymMap::iterator         WNToSymMapIt;
   typedef WNToSymMap::const_iterator   WNToSymMapItC;
   typedef WNToSymMap::value_type       WNToSymMapVal;
 
 private: 
-  WNToSymMap wnToSymMap; // owns all NonScalarSym*
+  WNToSymMap wnToSymMap; // owns all ScalarizedRef*
 
   std::string name; // FIXME: 
   UINT id;
@@ -114,13 +114,13 @@ private:
 };
 
 //***************************************************************************
-// NonScalarSym
+// ScalarizedRef
 //***************************************************************************
 
-class NonScalarSym {
+class ScalarizedRef {
 public:
-  NonScalarSym();
-  virtual ~NonScalarSym();
+  ScalarizedRef();
+  virtual ~ScalarizedRef();
 
   // Return a globally unique dummy symbol name
   std::string& GetName() { return name; }
@@ -133,8 +133,8 @@ public:
 
 private:
   // These could make sense, but I just haven't implemented them yet
-  NonScalarSym(const NonScalarSym& x) { }
-  NonScalarSym& operator=(const NonScalarSym& x) { return *this; }
+  ScalarizedRef(const ScalarizedRef& x) { }
+  ScalarizedRef& operator=(const ScalarizedRef& x) { return *this; }
 
 private:
   std::string name; // FIXME:
@@ -145,14 +145,14 @@ private:
 
 
 //***************************************************************************
-// NonScalarSymTabIterator
+// ScalarizedRefTabIterator
 //***************************************************************************
 
-// 'NonScalarSymTabIterator': iterator for symbols in a 'NonScalarSymTab'
-class NonScalarSymTabIterator {
+// 'ScalarizedRefTabIterator': iterator for symbols in a 'ScalarizedRefTab'
+class ScalarizedRefTabIterator {
 public:   
-  NonScalarSymTabIterator(const NonScalarSymTab& x);
-  ~NonScalarSymTabIterator();
+  ScalarizedRefTabIterator(const ScalarizedRefTab& x);
+  ~ScalarizedRefTabIterator();
 
   // Returns the current WN* or NULL
   WN* CurrentSrc() const {
@@ -160,8 +160,8 @@ public:
     else { return NULL; }
   }
 
-  // Returns the current NonScalarSym*
-  NonScalarSym* CurrentTarg() const {
+  // Returns the current ScalarizedRef*
+  ScalarizedRef* CurrentTarg() const {
     if (it != symtab.wnToSymMap.end()) { return (*it).second; }
     else { return NULL; }
   }
@@ -177,15 +177,15 @@ public:
 
 private:
   // Should not be used
-  NonScalarSymTabIterator();
-  NonScalarSymTabIterator(const NonScalarSymTabIterator& x);
-  NonScalarSymTabIterator& operator=(const NonScalarSymTabIterator& x)
+  ScalarizedRefTabIterator();
+  ScalarizedRefTabIterator(const ScalarizedRefTabIterator& x);
+  ScalarizedRefTabIterator& operator=(const ScalarizedRefTabIterator& x)
     { return *this; }
 
 protected:
 private:
-  const NonScalarSymTab& symtab;
-  NonScalarSymTab::WNToSymMapItC it;
+  const ScalarizedRefTab& symtab;
+  ScalarizedRefTab::WNToSymMapItC it;
 };
 
 //***************************************************************************

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.14 2004/04/14 21:25:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.15 2004/06/02 02:01:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -200,8 +200,8 @@ XlationContext::FindVN(WN* wnexpr)
   return 0;
 }
 
-NonScalarSym* 
-XlationContext::FindNonScalarSym(WN* wn)
+ScalarizedRef* 
+XlationContext::FindScalarizedRef(WN* wn)
 {
   if (nssymtab) { return nssymtab->Find(wn); }
   return NULL;
