@@ -45,6 +45,10 @@
       <xaif:SymbolTable>
         <xaif:Symbol symbol_id="C_2" kind="variable" type="***" shape="***" annotation="{Sym_Id#2}" active="0"/>
         <xaif:Symbol symbol_id="P_4" kind="variable" type="***" shape="***" annotation="{Sym_Id#4}" active="0"/>
+        <xaif:Symbol symbol_id="scalarizedref0" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#14}" active="1"/>
+        <xaif:Symbol symbol_id="scalarizedref2" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#27}" active="1"/>
+        <xaif:Symbol symbol_id="scalarizedref3" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#35}" active="1"/>
+        <xaif:Symbol symbol_id="scalarizedref1" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#21}" active="1"/>
       </xaif:SymbolTable>
     </xaif:Scope>
 
@@ -58,6 +62,12 @@
         <xaif:Symbol symbol_id="P_6" kind="variable" type="***" shape="***" annotation="{Sym_Id#6}" active="0"/>
         <xaif:Symbol symbol_id="_END_7" kind="subroutine" type="void" annotation="{Sym_Id#7}"/>
         <xaif:Symbol symbol_id="t__1_8" kind="variable" type="***" shape="***" annotation="{Sym_Id#8}" active="0"/>
+        <xaif:Symbol symbol_id="scalarizedref4" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#63}" active="1"/>
+        <xaif:Symbol symbol_id="scalarizedref6" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#103}" active="1"/>
+        <xaif:Symbol symbol_id="scalarizedref7" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#106}" active="1"/>
+        <xaif:Symbol symbol_id="scalarizedref8" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#132}" active="1"/>
+        <xaif:Symbol symbol_id="scalarizedref9" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#135}" active="1"/>
+        <xaif:Symbol symbol_id="scalarizedref5" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#66}" active="1"/>
       </xaif:SymbolTable>
     </xaif:Scope>
 
@@ -95,30 +105,21 @@
       <xaif:Marker statement_id="2" annotation="{WHIRL_Id#13} [use coord2d_]"/>
       <xaif:Assignment statement_id="3">
         <xaif:AssignmentLHS du_ud="3">
-          <xaif:NONSCALAR id="scalarizedref0">
-            <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="P_4"/>
-%            <TYFLD ***name="R"/>
-          </xaif:NONSCALAR>
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="scalarizedref0"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="sqrt_scal" type="***" annotation="{IntrinsicKey#0_SQRT}"/>
           <xaif:Intrinsic vertex_id="2" name="add_scal_scal" type="***"/>
           <xaif:Intrinsic vertex_id="3" name="pow_scal_scal" type="***"/>
           <xaif:VariableReference vertex_id="4" du_ud="1">
-            <xaif:NONSCALAR id="scalarizedref1">
-              <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="C_2"/>
-%              <TYFLD ***name="X"/>
-            </xaif:NONSCALAR>
+            <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="scalarizedref1"/>
           </xaif:VariableReference>
           <xaif:ExpressionEdge edge_id="1" source="4" target="3" position="1"/>
           <xaif:Constant vertex_id="5" type="integer" value="2"/>
           <xaif:ExpressionEdge edge_id="2" source="5" target="3" position="2"/>
           <xaif:Intrinsic vertex_id="6" name="pow_scal_scal" type="***"/>
           <xaif:VariableReference vertex_id="7" du_ud="2">
-            <xaif:NONSCALAR id="scalarizedref2">
-              <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="C_2"/>
-%              <TYFLD ***name="Y"/>
-            </xaif:NONSCALAR>
+            <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="scalarizedref2"/>
           </xaif:VariableReference>
           <xaif:ExpressionEdge edge_id="3" source="7" target="6" position="1"/>
           <xaif:Constant vertex_id="8" type="integer" value="2"/>
@@ -134,10 +135,7 @@
       <xaif:Condition>
         <xaif:BooleanOperation vertex_id="1" name="equal"/>
         <xaif:VariableReference vertex_id="2" du_ud="3">
-          <xaif:NONSCALAR id="scalarizedref0">
-            <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="P_4"/>
-%            <TYFLD ***name="R"/>
-          </xaif:NONSCALAR>
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="scalarizedref0"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="3" type="real" value="0.0000000000e+00"/>
         <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
@@ -148,10 +146,7 @@
     <xaif:BasicBlock vertex_id="3" scope_id="3" annotation="{WHIRL_Id#35}">
       <xaif:Assignment statement_id="1">
         <xaif:AssignmentLHS du_ud="4">
-          <xaif:NONSCALAR id="scalarizedref3">
-            <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="P_4"/>
-%            <TYFLD ***name="THETA"/>
-          </xaif:NONSCALAR>
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="scalarizedref3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Constant vertex_id="1" type="real" value="0.0000000000e+00"/>
@@ -165,7 +160,6 @@
 >
       <xaif:VariableReference vertex_id="1" du_ud="8">
         <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="P_4"/>
-%        <TYFLD ***name="MSG"/>
       </xaif:VariableReference>
 =      <xaif:Constant vertex_id="2" type="string" value="because"/>
       <xaif:Marker statement_id="3" annotation="{WHIRL_Id#56} [return]"/>
@@ -176,23 +170,14 @@
     <xaif:BasicBlock vertex_id="4" scope_id="3" annotation="{WHIRL_Id#38}">
       <xaif:Assignment statement_id="1">
         <xaif:AssignmentLHS du_ud="7">
-          <xaif:NONSCALAR id="scalarizedref3">
-            <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="P_4"/>
-%            <TYFLD ***name="THETA"/>
-          </xaif:NONSCALAR>
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="scalarizedref3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:FunctionCall vertex_id="1" scope_id="1" symbol_id="ASIN_24">
             <xaif:Argument>
               <xaif:Intrinsic vertex_id="1" name="div_scal_scal" type="***"/>
-              <xaif:NONSCALAR id="scalarizedref2">
-                <xaif:SymbolReference vertex_id="2" scope_id="3" symbol_id="C_2"/>
-%                <TYFLD ***name="Y"/>
-              </xaif:NONSCALAR>
-              <xaif:NONSCALAR id="scalarizedref0">
-                <xaif:SymbolReference vertex_id="3" scope_id="3" symbol_id="P_4"/>
-%                <TYFLD ***name="R"/>
-              </xaif:NONSCALAR>
+              <xaif:SymbolReference vertex_id="2" scope_id="3" symbol_id="scalarizedref2"/>
+              <xaif:SymbolReference vertex_id="3" scope_id="3" symbol_id="scalarizedref0"/>
               <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
               <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
             </xaif:Argument>
@@ -223,10 +208,7 @@
       <xaif:Marker statement_id="2" annotation="{WHIRL_Id#62} [use coord2d_]"/>
       <xaif:Assignment statement_id="3">
         <xaif:AssignmentLHS du_ud="2">
-          <xaif:NONSCALAR id="scalarizedref5">
-            <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="t__1_8"/>
-%            <TYFLD ***name="X"/>
-          </xaif:NONSCALAR>
+          <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="scalarizedref4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:VariableReference vertex_id="1" du_ud="1">
@@ -236,10 +218,7 @@
       </xaif:Assignment>
       <xaif:Assignment statement_id="4">
         <xaif:AssignmentLHS du_ud="3">
-          <xaif:NONSCALAR id="scalarizedref6">
-            <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="t__1_8"/>
-%            <TYFLD ***name="Y"/>
-          </xaif:NONSCALAR>
+          <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="scalarizedref5"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Constant vertex_id="1" type="real" value="9.0000000000e+00"/>
@@ -248,33 +227,24 @@
 
       <xaif:VariableReference vertex_id="5" du_ud="4">
         <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="t__1_8"/>
-%        <TYFLD ***name="MSG"/>
       </xaif:VariableReference>
 =      <xaif:Constant vertex_id="6" type="string" value="why?"/>
       <xaif:Assignment statement_id="7">
         <xaif:AssignmentLHS du_ud="6">
-          <xaif:NONSCALAR id="scalarizedref8">
-            <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="C_2"/>
-          </xaif:NONSCALAR>
+          <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="C_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:VariableReference vertex_id="1" du_ud="5">
-            <xaif:NONSCALAR id="scalarizedref9">
-              <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="t__1_8"/>
-            </xaif:NONSCALAR>
+            <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="t__1_8"/>
           </xaif:VariableReference>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:SubroutineCall statement_id="8" scope_id="1" symbol_id="cart2polar__21">
         <xaif:Argument position="1">
-          <xaif:NONSCALAR id="scalarizedref8">
-            <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="C_2"/>
-          </xaif:NONSCALAR>
+          <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="C_2"/>
         </xaif:Argument>
         <xaif:Argument position="2">
-          <xaif:NONSCALAR id="scalarizedref10">
-            <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="P_6"/>
-          </xaif:NONSCALAR>
+          <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="P_6"/>
         </xaif:Argument>
       </xaif:SubroutineCall>
       <xaif:Marker statement_id="9" annotation="{WHIRL_Id#87} [comment]"/>
