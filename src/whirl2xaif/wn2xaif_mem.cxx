@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.14 2003/09/16 14:30:58 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.15 2003/10/01 16:32:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -486,12 +486,12 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   // Assignment
   if (!ctxt.IsAssign()) {
-    xos << BegElem("xaif:Assignment")
+    xos << BegElem(XAIFStrings.elem_Assign())
 	<< Attr("statement_id", ctxt.GetNewVId());
   }
   
   // LHS of assignment
-  xos << BegElem("xaif:AssignmentLHS") << EndAttrs;
+  xos << BegElem(XAIFStrings.elem_AssignLHS()) << EndAttrs;
   ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for LHS
   
   if (ST_class(base_st) == CLASS_PREG) { // FIXME
@@ -504,14 +504,17 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << EndElem;
   
   // RHS of assignment
-  xos << BegElem("xaif:AssignmentRHS") << EndAttrs;
+  BOOL logical = TY_is_logical(Ty_Table[ref_ty]); // FIXME
+  xos << BegElem(XAIFStrings.elem_AssignRHS()) << EndAttrs;
   ctxt.CreateContext(XlationContext::NOFLAG, wn);
+  if (logical) { set_XlationContext_has_logical_arg(ctxt); } // FIXME
   TranslateWN(xos, WN_kid0(wn), ctxt);
+  if (logical) { reset_XlationContext_has_logical_arg(ctxt); } // FIXME
   ctxt.DeleteContext();
   xos << EndElem;
 
   if (!ctxt.IsAssign()) {
-    xos << EndElem /* xaif:Assignment */;
+    xos << EndElem /* elem_Assign() */;
   }
   
   return EMPTY_WN2F_STATUS;
@@ -537,12 +540,12 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   
   // Assignment
   if (!ctxt.IsAssign()) {
-    xos << BegElem("xaif:Assignment") 
+    xos << BegElem(XAIFStrings.elem_Assign()) 
 	<< Attr("statement_id", ctxt.GetNewVId());
   }
   
   // LHS of assignment (dereference address)
-  xos << BegElem("xaif:AssignmentLHS") << EndAttrs;
+  xos << BegElem(XAIFStrings.elem_AssignLHS()) << EndAttrs;
   ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for LHS
 
   if (WN_operator(baseptr) == OPR_LDA || WN_operator(baseptr) == OPR_LDID) {
@@ -556,14 +559,14 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   xos << EndElem;
 
   // RHS of assignment
-  xos << BegElem("xaif:AssignmentRHS") << EndAttrs;
+  xos << BegElem(XAIFStrings.elem_AssignRHS()) << EndAttrs;
   ctxt.CreateContext(XlationContext::NOFLAG, wn);
   TranslateWN(xos, WN_kid0(wn), ctxt);
   ctxt.DeleteContext();
   xos << EndElem;
 
   if (!ctxt.IsAssign()) {
-    xos << EndElem /* xaif:Assignment */;
+    xos << EndElem /* elem_Assign() */;
   }
   
   return EMPTY_WN2F_STATUS;
@@ -725,7 +728,7 @@ xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
   bool newContext = false; // FIXME: abstract (symref, memref)
   if (!ctxt.IsVarRef()) {
-    xos << BegElem("xaif:VariableReference")
+    xos << BegElem(XAIFStrings.elem_VarRef())
 	<< Attr("vertex_id", ctxt.GetNewVId());
     ctxt.CreateContext(XlationContext::VARREF, wn); // FIXME: do we need wn?
     newContext = true; 
@@ -783,7 +786,7 @@ xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   if (newContext) {
     ctxt.DeleteContext();
-    xos << EndElem /* xaif:VariableReference */;
+    xos << EndElem /* elem_VarRef() */;
   }
   
   return EMPTY_WN2F_STATUS;
@@ -1220,12 +1223,12 @@ xlate_ArrayIndices(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    * column-major array layout, meaning the leftmost indexing
    * expression represents array elements laid out in contiguous
    * memory locations. */
-  xos << BegElem("xaif:ArrayElementReference") 
+  xos << BegElem(XAIFStrings.elem_ArrayElemRef()) 
       << Attr("vertex_id", ctxt.GetNewVId());
   for (INT32 dim = array_dim - 1; dim >= 0; --dim) {
-    xos << BegElem("xaif:Index");
+    xos << BegElem(XAIFStrings.elem_Index());
     ctxt.CreateContext(); 
-    ctxt.ResetVarRef(); // xaif:Index contains ExpressionType
+    ctxt.ResetVarRef(); // elem_Index() contains ExpressionType
     TranslateWN(xos, WN_array_index(wn, dim), ctxt);
     ctxt.DeleteContext();
     xos << EndElem;
@@ -1423,7 +1426,7 @@ WN2F_String_Argument(xml::ostream& xos, WN* base_parm, WN* length,
 static WN2F_STATUS 
 DumpVarRefEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid)
 {
-  xos << BegElem("xaif:VariableReferenceEdge") << Attr("edge_id", eid) 
+  xos << BegElem(XAIFStrings.elem_VarRefEdge()) << Attr("edge_id", eid)
       << Attr("source", srcid) << Attr("target", targid)
       << EndElem;
   return EMPTY_WN2F_STATUS;

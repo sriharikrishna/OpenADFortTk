@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.11 2003/09/17 19:42:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.12 2003/10/01 16:32:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -566,9 +566,12 @@ xlate_IO_ITEM_control(xml::ostream& xos, WN* item, XlationContext& ctxt)
   return TRUE;
 }
 
+namespace whirl2xaif {
 
 extern WN2F_STATUS // REMOVE
 WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+}; /* namespace whirl2xaif */
 
 static BOOL
 xlate_IO_ITEM_list(xml::ostream& xos, WN *item, XlationContext& ctxt)
@@ -1156,12 +1159,8 @@ WN2F_ios_write(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    * sequence of IOCs and a sequence of IOLs.  Use keywords only
    * when the IOC list is non-empty.
    */
-#if 0 // FIXME: comment out for now
-  xos << BegElem("xaif:SubroutineCall") 
+  xos << BegElem(XAIFStrings.elem_Marker())
       << Attr("statement_id", ctxt.GetNewVId())
-      << Attr("symbol_id", "WRITE***");
-#endif
-  xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
       << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
       << " [WRITE***]" << EndAttr;
   
@@ -1213,12 +1212,8 @@ WN2F_ios_cr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     io_op = "READ***" ;
   }
 
-#if 0 // FIXME: comment out for now  
-  xos << BegElem("xaif:SubroutineCall") 
+  xos << BegElem(XAIFStrings.elem_Marker())
       << Attr("statement_id", ctxt.GetNewVId())
-      << Attr("symbol_id", io_op);
-#endif  
-  xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
       << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
       << " [" << io_op << "]" << EndAttr;
 

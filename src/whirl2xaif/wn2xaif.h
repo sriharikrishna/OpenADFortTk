@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.12 2003/09/17 19:43:26 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.13 2003/10/01 16:32:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -151,9 +151,6 @@ xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 extern WN2F_STATUS 
 xlate_ALTENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-extern WN2F_STATUS 
-xlate_COMMENT(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-  
 extern WN2F_STATUS 
 xlate_ignore(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 

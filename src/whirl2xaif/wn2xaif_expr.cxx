@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.12 2003/09/05 21:41:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.13 2003/10/01 16:32:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1532,12 +1532,15 @@ whirl2xaif::xlate_INTCONST(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_INTCONST, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_INTCONST"));
-
+  
+  // FIXME: use xlate_CONST
   TCON tval = Host_To_Targ(WN_opc_rtype(wn), WN_const_val(wn));
-  std::string val = TCON2F_translate(tval, XlationContext_is_logical_arg(ctxt));
-
+  bool logical = XlationContext_is_logical_arg(ctxt);
+  std::string val = TCON2F_translate(tval, logical);  
+  const char* ty_str = (logical) ? "bool" : "integer";
+  
   xos << BegElem("xaif:Constant") << Attr("vertex_id", ctxt.GetNewVId()) 
-      << Attr("type", "integer") << Attr("value", val) << EndElem;
+      << Attr("type", ty_str) << Attr("value", val) << EndElem;
   
   return EMPTY_WN2F_STATUS;
 }
@@ -1555,7 +1558,7 @@ whirl2xaif::xlate_CONST(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   BOOL logical = (TY_is_logical(ty_idx) || XlationContext_is_logical_arg(ctxt));
   std::string val = TCON2F_translate(STC_val(WN_st(wn)), logical);
 
-  const char* ty_str = TranslateTYToSymType(ty_idx);
+  const char* ty_str = TranslateTYToSymType(ty_idx); // FIXME: logical
   if (!ty_str) { ty_str = "***"; }  
 
   xos << BegElem("xaif:Constant") << Attr("vertex_id", ctxt.GetNewVId())

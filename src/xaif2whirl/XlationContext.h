@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.h,v 1.3 2003/09/17 19:44:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.h,v 1.4 2003/10/01 16:32:38 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -58,8 +58,15 @@ public:
 
   enum Flags {
     NOFLAG           = 0x00000000,
-    VARREF           = 0x00000001, // within variable reference; inherited
-    LVALUE           = 0x00000002, // var ref should be an lvalue (inherited)
+
+    // Active entities; value and deriv portion of active varrefs (inherited)
+    ACTIVE           = 0x00000001, // entity is active (inherited)
+    ACTIVE_V         = 0x00000002, // N.B.: ACTIVE must also be set; V and D
+    ACTIVE_D         = 0x00000004, //   are mutually exclusive!
+
+    VARREF           = 0x00000010, // within variable reference; inherited
+    LVALUE           = 0x00000020, // var ref should be an lvalue (inherited)
+    ARRAY            = 0x00000040, // accessing an array (inherited)
   };
 
 public:
@@ -87,16 +94,36 @@ public:
   // -------------------------------------------------------
   // Flags
   // -------------------------------------------------------
+
+  // Within an active entity (inherited)
+  bool IsActive() const { return CurContext().AreFlags(ACTIVE); }
+  void SetActive()      { CurContext().SetFlags(ACTIVE); }
+  void ResetActive()    { CurContext().ResetFlags(ACTIVE); }
+
+  // Within an active.value varref (inherited)
+  bool IsActive_V() const { return (CurContext().AreFlags(ACTIVE | ACTIVE_V));}
+  void SetActive_V()      { CurContext().SetFlags(ACTIVE | ACTIVE_V); }
+  void ResetActive_V()    { CurContext().ResetFlags(ACTIVE_V); }
+
+  // Within an active.deriv varref (inherited)
+  bool IsActive_D() const { return (CurContext().AreFlags(ACTIVE | ACTIVE_D));}
+  void SetActive_D()      { CurContext().SetFlags(ACTIVE | ACTIVE_D); }
+  void ResetActive_D()    { CurContext().ResetFlags(ACTIVE_D); }
   
   // Within a variable reference (inherited)
-  BOOL IsVarRef() const { return CurContext().AreFlags(VARREF); }
+  bool IsVarRef() const { return CurContext().AreFlags(VARREF); }
   void SetVarRef()      { CurContext().SetFlags(VARREF); }
   void ResetVarRef()    { CurContext().ResetFlags(VARREF); }
 
   // variable reference should be an lvalue (inherited)
-  BOOL IsLValue() const { return CurContext().AreFlags(LVALUE); }
+  bool IsLValue() const { return CurContext().AreFlags(LVALUE); }
   void SetLValue()      { CurContext().SetFlags(LVALUE); }
   void ResetLValue()    { CurContext().ResetFlags(LVALUE); }
+
+  // Within an active entity (inherited)
+  bool IsArray() const { return CurContext().AreFlags(ARRAY); }
+  void SetArray()      { CurContext().SetFlags(ARRAY); }
+  void ResetArray()    { CurContext().ResetFlags(ARRAY); }
 
   // -------------------------------------------------------
   // Id maps

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.22 2003/09/18 19:17:54 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.23 2003/10/01 16:32:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -93,7 +93,6 @@
 #include "wn2xaif_expr.h"
 #include "wn2xaif_mem.h"
 #include "wn2xaif_io.h"
-#include "wn2xaif_pragma.h"
 #include "st2xaif.h"
 #include "ty2xaif.h"
 
@@ -319,8 +318,35 @@ whirl2xaif::TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {   
   if (!wn) { return EMPTY_WN2F_STATUS; }
   
-  OPERATOR opr = WN_opc_operator(wn);
+  OPERATOR opr = WN_operator(wn);
+  
+#if 1
   //xos << BegComment << "Translating " << OPERATOR_name(opr) << EndComment;
+  WNId id = ctxt.FindWNId(wn);
+#endif
+  
+  // Determine whether we are in a context where we expect this
+  // expression to have logically valued arguments, or whether we are
+  // entering a context where we expect this expression to be a
+  // logically valued argument.
+  OPCODE opc = WN_opcode(wn);
+  if (OPCODE_is_boolean(opc) && WN2F_expr_has_boolean_arg(opc)) { 
+    // We expect logical operands to this operator.  Note that this
+    // may also be a logical argument, so
+    // XlationContext_is_logical_arg(ctxt) may also be true.
+    set_XlationContext_has_logical_arg(ctxt);
+  } else if (XlationContext_has_logical_arg(ctxt)) { 
+    // This is a logical argument.  This is the only place where we
+    // should need to check whether this is expected to be a logical
+    // valued expression. I.e. the only place where we apply
+    // XlationContext_has_logical_arg(context).  However, it may be
+    // set at other places (e.g. in wn2f_stmt.c).
+    reset_XlationContext_has_logical_arg(ctxt);
+    set_XlationContext_is_logical_arg(ctxt);
+  } else {
+    reset_XlationContext_has_logical_arg(ctxt);
+    reset_XlationContext_is_logical_arg(ctxt);
+  }
   
   // Dispatch to the appropriate handler for this construct.
   return XlateWN_HandlerTable[opr](xos, wn, ctxt);
@@ -387,23 +413,26 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
     // n->longdump(&cfg, std::cerr); std::cerr << endl;
     
+    const char* vtype = GetCFGVertexType(&cfg, n);    
+    SymTabId scopeId = ctxt.FindSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
     std::string ids = GetIDsForStmtsInBB(n, ctxt);
-    const char* vtype = GetCFGVertexType(&cfg, n);
-
-    xos << BegElem(vtype) << Attr("vertex_id", n->getID()) 
-	<< WhirlIdAnnot(ids);
+    
+    // 1. BB element begin tag
+    xos << BegElem(vtype) << Attr("vertex_id", n->getID());
+    if (strcmp(vtype, "xaif:BasicBlock") == 0) { // FIXME: more elegant?
+      xos << Attr("scope_id", scopeId);
+    }
+    xos << WhirlIdAnnot(ids);
+    
+    // 2. BB element contents
     ctxt.CreateContext();
-    if (n->size() > 0) {
-      for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
-	WN* wstmt = (WN *)((StmtHandle)stmtIt);
-	xlate_BBStmt(xos, wstmt, ctxt);
-      }
-    } else if (strcmp(vtype, "xaif:BasicBlock") == 0) { // FIXME: more elegant?
-      // Output a xaif:Marker for otherwise empty basic blocks
-      xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
-	  << EndElem;
+    for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
+      WN* wstmt = (WN *)((StmtHandle)stmtIt);
+      xlate_BBStmt(xos, wstmt, ctxt);
     }
     ctxt.DeleteContext();
+    
+    // 3. BB element end tag
     xos << EndElem << std::endl;
   }
   
@@ -435,19 +464,8 @@ whirl2xaif::xlate_ALTENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ASSERT_DBG_FATAL(WN_opcode(wn) == OPC_ALTENTRY,
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_ALTENTRY"));
   
-  // Translate the function entry point
+  // Translate the function entry point (FIXME)
   xlate_EntryPoint(xos, wn, ctxt);
-  
-  return EMPTY_WN2F_STATUS;
-}
-
-WN2F_STATUS 
-whirl2xaif::xlate_COMMENT(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-  ASSERT_DBG_FATAL(WN_opcode(wn) == OPC_COMMENT,
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_COMMENT"));
-
-  // FIXME: save these somewhere
   
   return EMPTY_WN2F_STATUS;
 }
@@ -1106,7 +1124,7 @@ WN2F_Offset_Memref(xml::ostream& xos,
   }
 
   bool newContext = false;
-  if (!ctxt.IsVarRef()) {
+  if (!ctxt.IsVarRef()) { // FIXME: could be a xaif:Constant
     xos << BegElem("xaif:VariableReference")
 	<< Attr("vertex_id", ctxt.GetNewVId());
     ctxt.CreateContext(XlationContext::VARREF); // FIXME: do we need wn?
@@ -1140,7 +1158,7 @@ WN2F_Offset_Memref(xml::ostream& xos,
 #endif
 	
       if (TY_Is_Character_String(base_ty)) {
-	TranslateWN(xos, addr, ctxt); /* String lvalue */	  
+	TranslateWN(xos, addr, ctxt); /* String lvalue */
 	if (!XlationContext_has_no_arr_elmt(ctxt))
 	  TY2F_Translate_ArrayElt(xos, base_ty, offset);
       } else {
@@ -1151,8 +1169,7 @@ WN2F_Offset_Memref(xml::ostream& xos,
 	  reset_XlationContext_has_no_arr_elmt(ctxt);
       }
       
-    } else if ((WN_opc_operator(addr) == OPR_LDA
-		|| WN_opc_operator(addr) == OPR_LDID) 
+    } else if ((WN_operator(addr) == OPR_LDA || WN_operator(addr) == OPR_LDID) 
 	       && (TY_kind(base_ty) != KIND_STRUCT)
 	       && (Stab_Is_Common_Block(WN_st(addr)) 
 		   || Stab_Is_Equivalence_Block(WN_st(addr)))) {
@@ -1162,7 +1179,7 @@ WN2F_Offset_Memref(xml::ostream& xos,
       ASSERT_WARN(WN2F_Can_Assign_Types(ST_type(WN_st(addr)), base_ty) ,
 		  (DIAG_W2F_INCOMPATIBLE_TYS, "xlate_SymRef"));
       
-      if (WN_opc_operator(addr) == OPR_LDA)
+      if (WN_operator(addr) == OPR_LDA)
 	ctxt.ResetDerefAddr();
       xlate_SymRef(xos, WN_st(addr), addr_ty, ref_ty,
 			 offset + WN_lda_offset(addr) /*offset*/, ctxt);

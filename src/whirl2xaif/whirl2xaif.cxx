@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.16 2003/09/05 21:41:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.17 2003/10/01 16:32:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -258,8 +258,8 @@ TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId,
   
   // Generate an edge to parent // FIXME: use DumpGraphEdge
   xos << BegElem("xaif:ScopeEdge") << Attr("edge_id", ctxt.GetNewEId())
-      << Attr("source", parentId) 
-      << Attr("target", scopeId) << EndElem << std::endl;
+      << Attr("source", scopeId) 
+      << Attr("target", parentId) << EndElem << std::endl;
   
   // Recursively translate all children
   for (PU_Info *child = PU_Info_child(pu); child != NULL;

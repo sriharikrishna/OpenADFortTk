@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.h,v 1.6 2003/08/01 16:00:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.h,v 1.7 2003/10/01 16:32:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -68,14 +68,6 @@
 #include <include/Open64BasicTypes.h>
 
 #include <lib/support/xmlostream.h>
-
-
-namespace whirl2xaif {
-
-extern WN2F_STATUS 
-xlate_PRAGMA(xml::ostream& xos, WN *wn, XlationContext& context);
-
-}; /* namespace whirl2xaif */
 
 
 #endif /* wn2xaif_pragma_INCLUDED */
