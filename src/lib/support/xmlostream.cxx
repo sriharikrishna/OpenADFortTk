@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/xmlostream.cxx,v 1.4 2003/07/24 20:23:58 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/xmlostream.cxx,v 1.5 2004/08/05 18:35:24 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -73,8 +73,8 @@ xml::ostream::BegElem(const char* etag)
   throw (xml::ostream::Exception)
 {
   // Sanity check 
-  if (IsComment()) {
-    SetError();
+  if (IsStateComment()) {
+    SetStateError();
     throw Exception("BegElem: Within a comment!");
   }
   
@@ -94,11 +94,11 @@ xml::ostream::EndElem()
 {
   // Sanity check
   if ( !(IsState(ELEM_OPENA) || IsState(ELEM_OPENI) || IsState(ELEM_OPEN)) ) {
-    SetError();
+    SetStateError();
     throw Exception("EndElem: No currently open elements to end!");
   } 
-  if (IsComment()) {
-    SetError();
+  if (IsStateComment()) {
+    SetStateError();
     throw Exception("EndElem: Within a comment!");
   }
   
@@ -109,7 +109,8 @@ xml::ostream::EndElem()
 
   if (IsState(ELEM_OPENI)) {
     (*this) << "/>\n";
-  } else { // ELEM_OPEN
+  } 
+  else { // ELEM_OPEN
     std::string& etag = elemstack.front();
     Indent();
     (*this) << "</" << etag << ">\n";
@@ -119,7 +120,8 @@ xml::ostream::EndElem()
   elemstack.pop_front();
   if (elemstack.size() == 0) { 
     SetState(FINI);
-  } else {
+  } 
+  else {
     SetState(ELEM_OPEN);
   }
 }
@@ -130,11 +132,11 @@ xml::ostream::BegAttr(const char* attr)
 {
   // Sanity check
   if ( !(IsState(ELEM_OPENA) || IsState(ELEM_OPENI)) ) {
-    SetError();
+    SetStateError();
     throw Exception("BegAttr: No currently open element start tag!");
   }
-  if (IsComment()) {
-    SetError();
+  if (IsStateComment()) {
+    SetStateError();
     throw Exception("BegAttr: Within a comment!");
   }
 
@@ -151,11 +153,11 @@ xml::ostream::EndAttr()
 {
   // Sanity check
   if (!(IsState(ELEM_OPENA))) {
-    SetError();
+    SetStateError();
     throw Exception("EndAttr: No currently open attribute!");
   }
-  if (IsComment()) {
-    SetError();
+  if (IsStateComment()) {
+    SetStateError();
     throw Exception("EndAttr: Within a comment!");
   }
   
@@ -169,11 +171,11 @@ xml::ostream::EndAttrs()
 {
   // Sanity check
   if ( !(IsState(ELEM_OPENA) || IsState(ELEM_OPENI)) ) {
-    SetError();
+    SetStateError();
     throw Exception("EndAttrs: No currently open element start tag!");
   }
-  if (IsComment()) {
-    SetError();
+  if (IsStateComment()) {
+    SetStateError();
     throw Exception("EndAttrs: Within a comment!");
   }
   
@@ -190,8 +192,8 @@ void
 xml::ostream::BegComment()
 {
   // Sanity check
-  if (IsComment()) {
-    SetError();
+  if (IsStateComment()) {
+    SetStateError();
     throw Exception("BegComment: Already within a comment!");    
   }
   
@@ -201,21 +203,21 @@ xml::ostream::BegComment()
   Indent();
   (*this) << "<!-- ";
 
-  SetComment();
+  SetStateComment();
 }
 
 void
 xml::ostream::EndComment()
 {
   // Sanity check
-  if (!IsComment()) {
-    SetError();
+  if (!IsStateComment()) {
+    SetStateError();
     throw Exception("EndComment: Not within a comment!");
   }
   
   (*this) << " -->\n";
 
-  ResetComment();
+  ResetStateComment();
 }
 
 void

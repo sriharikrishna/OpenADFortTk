@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/xmlostream.h,v 1.6 2004/02/26 14:24:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/xmlostream.h,v 1.7 2004/08/05 18:35:24 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -178,12 +178,12 @@ class ostream : public std::ostream {
   void SetState(State st) { state = ((state & STMASK) | st); }
 
   // Access to state qualifiers
-  bool IsError() { return (state & ERR); }
-  void SetError() { state = (state | ERR); }
+  bool IsStateError() { return (state & ERR); }
+  void SetStateError() { state = (state | ERR); }
 
-  bool IsComment() { return (state & COMMENT); }
-  void SetComment() { state = (state | COMMENT); }
-  void ResetComment() { state = (state & ~COMMENT); }
+  bool IsStateComment() { return (state & COMMENT); }
+  void SetStateComment() { state = (state | COMMENT); }
+  void ResetStateComment() { state = (state & ~COMMENT); }
   
  private:
   ElemStack elemstack;
