@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.4 2004/03/02 21:04:00 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.5 2004/03/13 16:31:16 eraxxon Exp $
 # -*-makefile-*-
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -12,7 +12,7 @@
 include $(WHIRL2XAIF)/test/Makeinclude.config
 
 #############################################################################
-# Configuration for bloop tests:
+# Configuration
 #############################################################################
 
 .SUFFIXES: .f90
@@ -23,10 +23,15 @@ VPATH = .
 F90_MASTERS = $(shell ls *.f90)
 F90_MASTERS := $(filter-out $(F90_EXCEPTIONS), $(F90_MASTERS))
 
-MFEF90 = $(WHIRL2XAIF_OPEN64)/crayf90/sgi/mfef90
-W2F = $(WHIRL2XAIF_OPEN64)/whirl2f/whirl2f
-W2X = whirl2xaif
-NORM = $(WHIRL2XAIF)/test/util/normalize
+# Pipeline
+MFEF90  = $(WHIRL2XAIF_OPEN64)/crayf90/sgi/mfef90
+WHIRL2F = $(WHIRL2XAIF_OPEN64)/whirl2f/whirl2f
+XB_BB   = $(XAIFBOOSTERROOT)/xaifBooster/algorithms/BasicBlockPreaccumulation/test/t -c ${XAIFSCHEMAROOT}/schema/examples/inlinable_intrinsics.xaif
+W2X     = $(WHIRL2XAIF)/obj/$(WHIRL2XAIF_PLATFORM)/obj/whirl2xaif
+X2W     = $(WHIRL2XAIF)/obj/$(WHIRL2XAIF_PLATFORM)/obj/xaif2whirl
+PP      = perl $(WHIRL2XAIF)/postprocess/pp.pl
+
+NORM    = $(WHIRL2XAIF)/test/util/normalize
 
 #############################################################################
 # Building Rules for bloop tests:
@@ -34,9 +39,15 @@ NORM = $(WHIRL2XAIF)/test/util/normalize
 
 all: tests
 
-tests : run_tests post_tests
+.PHONY : all
 
-run_tests: 
+#############################################################################
+
+tests : tests_pre tests_run tests_post
+
+tests_pre : schema
+
+tests_run: 
 	@echo "*** EXCEPTIONS: $(F90_EXCEPTIONS) ***"
 	@for f in $(F90_MASTERS) ; do \
 	  f_B=`echo $${f} | sed s@.f90@.B@` ; \
@@ -47,21 +58,35 @@ run_tests:
 	  $(NORM) $${f_xaif} ; \
 	done
 
-run_w2f:
-	@for f in $(F90_MASTERS) ; do \
-	  f_B=`echo $${f} | sed s@.f90@.B@` ; \
-	  $(W2F) $${f_B} ; \
-	done
+#pipeline :
+#	$(MFEF90)   $(prog).F
+#	$(W2X)      $(prog).B -o $(prog).xaif
+#	$(XB_BB) -i $(prog).xaif -o $(prog).xb.xaif
+#	$(X2W)      $(prog).B $(prog).xb.xaif -o $(prog).xb.x2w.B
+#	$(WHIRL2F)  $(prog).xb.x2w.B
+#	$(PP)       $(prog).xb.x2w.w2f.f
 
-post_tests:
-	@rm -f *.mod-whirl
+tests_post:
 
-.PHONY : tests run_tests post_tests
+tests_clean:
+	rm -f *.mod-whirl
+	rm -f *.B
+
+schema : schema_clean
+	@if [ "$(WHIRL2XAIF_PLATFORM)" == "i686-Cygwin" ]; then \
+	  ln $(XAIFSCHEMAROOT)/schema/xaif*.xsd . ; \
+	else \
+	  ln -s $(XAIFSCHEMAROOT)/schema/xaif*.xsd . ; \
+	fi
+
+schema_clean :
+	rm -r -f *.xsd
+
+.PHONY : tests tests_pre tests_run tests_post tests_clean schema schema_clean
 
 #############################################################################
 
-clean : post_tests
-	@rm -f *.B
+clean : tests_clean schema_clean
 
 veryclean : clean
 
