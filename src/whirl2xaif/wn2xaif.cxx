@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.68 2004/06/22 21:08:40 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.69 2004/06/28 18:52:14 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -396,6 +396,30 @@ whirl2xaif::xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       << " ***" << EndComment;
   
   return whirl2xaif::good;
+}
+
+
+// FIXME: MOVE elsewhere
+bool
+IsActiveStmt(WN* wn, XlationContext& ctxt)
+{
+  bool active = false;
+  
+  OPERATOR opr = WN_operator(wn);
+
+  // if (OPERATOR_is_store(opr) || OPERATOR_is_call(opr)) { }
+
+  if (OPERATOR_is_call(opr)) {
+    // FIXME: For now we punt on calls and assume they are active.
+    active = true;
+  }
+  else if (OPERATOR_is_store(opr)) {
+    TY_IDX ty = WN_Tree_Type(wn);
+    const char* ty_str = TranslateTYToSymType(ty); // FIXME
+    active = (strcmp(ty_str, "real") == 0 || strcmp(ty_str, "complex") == 0);
+  }
+  
+  return active;
 }
 
 
@@ -1184,11 +1208,13 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     // skip bogus comment statement
   }
   else {
-    TranslateWN(xos, wn, ctxt);
+    if (IsActiveStmt(wn, ctxt)) {
+      TranslateWN(xos, wn, ctxt);
+    } else {
+      xlate_PassiveStmt(xos, wn, ctxt);
+    }
   }
 }
-
-
 
 
 // xlate_CFCondition: Translate the BB's control flow condition (Loops, Ifs)

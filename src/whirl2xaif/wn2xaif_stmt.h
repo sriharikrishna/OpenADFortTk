@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.12 2004/03/03 21:45:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.13 2004/06/28 18:52:15 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -67,6 +67,18 @@
 //************************** Forward Declarations ***************************
 
 //***************************************************************************
+
+//***************************************************************************
+// Passive Statements
+//***************************************************************************
+
+namespace whirl2xaif {
+
+  extern whirl2xaif::status 
+  xlate_PassiveStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+}; /* namespace whirl2xaif */
+
 
 //***************************************************************************
 // Structured Control Flow Statements

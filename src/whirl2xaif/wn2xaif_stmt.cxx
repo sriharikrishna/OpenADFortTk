@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.37 2004/06/17 13:33:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.38 2004/06/28 18:52:15 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -78,6 +78,42 @@ using namespace xml; // for xml::ostream, etc
 //***************************************************************************
 
 static BOOL WN2F_Skip_Stmt(WN *wn) { return FALSE; /* FIXME */ }
+
+
+//***************************************************************************
+// Passive Statements
+//***************************************************************************
+
+whirl2xaif::status 
+whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+{
+  OPERATOR opr = WN_operator(wn);
+  
+  // Short-circuit handling of the following:
+  // NOTE: we could incorporate these two routines into this one
+  switch (opr) {
+  case OPR_GOTO:
+    return xlate_GOTO(xos, wn, ctxt);
+  case OPR_LABEL:
+    return xlate_LABEL(xos, wn, ctxt);
+  case OPR_IO: 
+    return xlate_IO(xos, wn, ctxt);
+  default:
+    break;
+  }
+
+  // FIXME: cleanup AGOTO, RETURN, RETURN_VAL, PRAGMA, COMMENT, USE
+  //  INTRN_CASSIGNSTMT, INTRN_STOP, INTRN_STOP_F90, IO
+  
+  xos << BegElem(XAIFStrings.elem_Marker()) 
+      << Attr("statement_id", ctxt.GetNewVId())
+      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << " [passive: " << OPERATOR_name(opr) << "]" << EndAttr
+      << EndElem;
+  
+  return whirl2xaif::good;
+}
+
 
 //***************************************************************************
 // Structured Control Flow Statements: translation of these is
