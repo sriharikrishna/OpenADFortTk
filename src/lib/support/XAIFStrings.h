@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.8 2003/09/16 14:30:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.9 2003/09/17 19:42:43 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -79,6 +79,8 @@ public:
     ELEM_BBForLoop,
     ELEM_BBPreLoop,
     ELEM_BBPostLoop,
+
+    ELEM_Condition,
 
     // Statements
     ELEM_Assign,
@@ -214,6 +216,8 @@ public:
   XMLCh*      elem_BBForLoop_x() const { return x_strTbl[ELEM_BBForLoop]; }
   XMLCh*      elem_BBPreLoop_x() const { return x_strTbl[ELEM_BBPreLoop]; }
   XMLCh*      elem_BBPostLoop_x() const { return x_strTbl[ELEM_BBPostLoop]; }
+
+  XMLCh*      elem_Condition_x() const { return x_strTbl[ELEM_Condition]; }
 
   // Statements
   XMLCh*      elem_Assign_x() const { return x_strTbl[ELEM_Assign]; }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.8 2003/09/16 14:30:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.9 2003/09/17 19:42:43 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -80,6 +80,8 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "xaif:ForLoop",
   "xaif:PreLoop",
   "xaif:PostLoop",
+  
+  "xaif:Condition",
   
   // Statements
   "xaif:Assignment",

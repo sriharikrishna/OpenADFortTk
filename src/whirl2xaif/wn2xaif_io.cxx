@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.10 2003/09/05 21:41:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.11 2003/09/17 19:42:43 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -172,25 +172,10 @@ xlate_IO_ITEM_list(xml::ostream& xos, WN *item, XlationContext& ctxt);
 
 //************************** Forward Declarations ***************************
 
+// FIXME: REMOVE
 /* A rather special IOC item to replace an IOF_LABEL item.  This
  * value is only valid when XlationContext_origfmt_ioctrl is TRUE! */
 static UINT32       Origfmt_Ioctrl_Label;
-
-#define WN_IOITEM(x) ((IOITEM) WN_io_item(x))
-#define WN_IOSTMT(x) ((IOSTATEMENT) WN_io_statement(x))
-
-/* several craylib/dope items represent a no-op by a zero inconst...*/
-#define IS_IO_NULL_OPR(wn) ((WN_operator(wn) == OPR_INTCONST) && (WN_const_val(wn) == 0))
-
-#define IS_IO_ITEM_IOU(item) \
-   (WN_IOITEM(item) >= IOU_NONE && WN_IOITEM(item) <= IOU_INTERNAL)
-#define IS_IO_ITEM_IOF(item) \
-   ((WN_IOITEM(item) >= IOF_NONE && WN_IOITEM(item) <= IOF_CR_FMTSRC_DOPE))
-#define IS_IO_ITEM_IOC(item) \
-   (WN_IOITEM(item) >= IOC_ACCESS && WN_IOITEM(item) <= IOC_ERRFLAG)
-#define IS_IO_ITEM_IOL(item) \
-   ((WN_IOITEM(item) >= IOL_ARRAY && WN_IOITEM(item) <= IOL_VAR) || \
-    (WN_IOITEM(item) == IOL_DOPE))
 
 //***************************************************************************
 
@@ -253,7 +238,7 @@ Is_Cray_IO(IOSTATEMENT ios)
 WN2F_STATUS 
 whirl2xaif::xlate_IO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_IO, 
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_IO, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_IO"));
   
   // FIXME Should we use the string given by an IOC_VARFMT_ORIGFMT for a
@@ -324,12 +309,13 @@ whirl2xaif::xlate_IO_ITEM(xml::ostream& xos, WN* item, XlationContext& ctxt)
 // 
 //***************************************************************************
 
+// FIXME: merge with next function
 static void 
 xlate_IOControlList(xml::ostream& xos, WN *ios,
 		    INT from_kid, INT to_kid, XlationContext& ctxt)
 {
   // Emit an IO control list (IOU, IOF, and IOC)
-  for (INT ios_kid = from_kid; ios_kid <= to_kid; ios_kid++) {
+  for (INT ios_kid = from_kid; ios_kid <= to_kid; ++ios_kid) {
     xos << BegElem("xaif:Argument") << Attr("position", ios_kid+1); //FIXME
     ctxt.CreateContext();
     xlate_IO_ITEM(xos, WN_kid(ios, ios_kid), ctxt);
@@ -343,7 +329,7 @@ xlate_IOList(xml::ostream& xos, WN *ios, INT from_kid, XlationContext& ctxt)
 {
   /* Emit an IOL list, starting at the given kid index and
    * continuing to the last kid. */
-  for (INT ios_kid = from_kid; ios_kid < WN_kid_count(ios); ios_kid++) {
+  for (INT ios_kid = from_kid; ios_kid < WN_kid_count(ios); ++ios_kid) {
     xos << BegElem("xaif:Argument") << Attr("position", ios_kid+1); // FIXME
     ctxt.CreateContext();
     xlate_IO_ITEM(xos, WN_kid(ios, ios_kid), ctxt);
@@ -477,7 +463,8 @@ xlate_IO_ITEM_format(xml::ostream& xos, WN* item, XlationContext& ctxt)
    } /*switch*/
 
   return TRUE; // FIXME
-} /* xlate_IO_ITEM_format */
+}
+
 
 static BOOL
 xlate_IO_ITEM_control(xml::ostream& xos, WN* item, XlationContext& ctxt)
@@ -577,7 +564,7 @@ xlate_IO_ITEM_control(xml::ostream& xos, WN* item, XlationContext& ctxt)
   }
   
   return TRUE;
-} /* xlate_IO_ITEM_control */
+}
 
 
 extern WN2F_STATUS // REMOVE
@@ -659,7 +646,7 @@ xlate_IO_ITEM_list(xml::ostream& xos, WN *item, XlationContext& ctxt)
   } /* switch */
   
   return TRUE;
-} /* xlate_IO_ITEM_list */
+}
 
 
 //***************************************************************************
@@ -1209,19 +1196,20 @@ static void
 WN2F_ios_cr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // Craylibs IO - write/read The kids should be an IOS, with kids of IO_ITEMS
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_CR_FWF || WN_IOSTMT(wn) == IOS_CR_FWU 
-	      || WN_IOSTMT(wn) == IOS_CR_FRF || WN_IOSTMT(wn) == IOS_CR_FRU,
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_cr"));
+  IOSTATEMENT iostmt = WN_io_statement(wn);
+  ASSERT_WARN(iostmt == IOS_CR_FWF || iostmt == IOS_CR_FWU 
+	      || iostmt == IOS_CR_FRF || iostmt == IOS_CR_FRU,
+	      (DIAG_W2F_UNEXPECTED_IOS, IOSTATEMENT_name(iostmt), 
+	       "WN2F_ios_cr"));
   
   set_XlationContext_issue_ioc_asterisk(ctxt);
   
   /* decide if read/write formatted/unformatted */
-  if (WN_IOSTMT(wn) == IOS_CR_FWF || WN_IOSTMT(wn) == IOS_CR_FRF)
+  if (iostmt == IOS_CR_FWF || iostmt == IOS_CR_FRF)
     set_XlationContext_fmt_io(ctxt) ;
 
   const char* io_op = "WRITE***";
-  if (WN_IOSTMT(wn) == IOS_CR_FRF || WN_IOSTMT(wn) == IOS_CR_FRU) {
+  if (iostmt == IOS_CR_FRF || iostmt == IOS_CR_FRU) {
     io_op = "READ***" ;
   }
 
@@ -1245,7 +1233,7 @@ WN2F_ios_cr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xlate_IOControlList(xos, wn,
 		      0 /* from kid */, iol_kid-1 /* to kid */, ctxt);
   
-  /* Get the io_list */
+  /* Get the IOL (io_list) */
   if (iol_kid < WN_kid_count(wn))
     xlate_IOList(xos, wn, iol_kid, ctxt);
   

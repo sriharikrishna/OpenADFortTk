@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.4 2003/08/19 13:40:18 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.5 2003/09/17 19:42:43 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -170,6 +170,23 @@
  */
 
 #include <include/Open64BasicTypes.h>
+
+/* several craylib/dope items represent a no-op by a zero inconst...*/
+#define IS_IO_NULL_OPR(wn) ((WN_operator(wn) == OPR_INTCONST) && (WN_const_val(wn) == 0))
+
+#define WN_IOITEM(x) ((IOITEM) WN_io_item(x))
+#define WN_IOSTMT(x) ((IOSTATEMENT) WN_io_statement(x))
+
+#define IS_IO_ITEM_IOU(item) \
+   (WN_IOITEM(item) >= IOU_NONE && WN_IOITEM(item) <= IOU_INTERNAL)
+#define IS_IO_ITEM_IOF(item) \
+   ((WN_IOITEM(item) >= IOF_NONE && WN_IOITEM(item) <= IOF_CR_FMTSRC_DOPE))
+#define IS_IO_ITEM_IOC(item) \
+   (WN_IOITEM(item) >= IOC_ACCESS && WN_IOITEM(item) <= IOC_ERRFLAG)
+#define IS_IO_ITEM_IOL(item) \
+   ((WN_IOITEM(item) >= IOL_ARRAY && WN_IOITEM(item) <= IOL_VAR) || \
+    (WN_IOITEM(item) == IOL_DOPE))
+
 
 // FIXME: WE DON'T WANT THIS JUNK
 
