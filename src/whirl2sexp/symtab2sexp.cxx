@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.3 2004/08/09 14:34:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.4 2004/08/09 19:58:14 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -122,7 +122,6 @@ whirl2sexp::TranslateLocalSymbolTables(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
   sos << EndLine;
 
   xlate_LABEL_TAB(sos, stab_lvl);
-  sos << EndLine;
   
   sos << EndList;
 }
@@ -414,7 +413,32 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TY* typ)
 void
 whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, FLD* fld)
 {
+  using namespace sexp::IOFlags;
+  
+  FLD_HANDLE fldh(fld, (FLD_IDX)idx);
+  
   sos << BegList << Atom(idx);
+  
+  // name_idx
+  STR_IDX nmidx = FLD_name_idx(fldh);
+  const char* nm = FLD_name(fldh);
+  sos << BegList << Atom(A_DQUOTE, nm) << Atom(nmidx) << EndList;
+  
+  // type, ofst, bsize, bofst, flags, st
+  TY_IDX ty_idx = fld->type; // FLD_type(fldh) is not a simple accessor!
+  sos << GenSexpTy(ty_idx);
+  
+  UINT64 ofst = FLD_ofst(fldh);
+  UINT8 bsz = FLD_bsize(fldh);
+  UINT8 bofst = FLD_bofst(fldh);
+  sos << Atom(ofst) << Atom(bsz) << Atom(bofst);
+  
+  UINT16 flg = FLD_flags(fldh);
+  sos << GenBeginFlgList(flg) << EndList;
+  
+  ST_IDX st_idx = FLD_st(fldh);
+  sos << GenSexpSym(st_idx);
+  
   sos << EndList;
 }
 
@@ -423,6 +447,10 @@ void
 whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TYLIST* tyl)
 {
   sos << BegList << Atom(idx);
+  
+  TY_IDX ty_idx = TYLIST_type(*tyl);
+  sos << GenSexpTy(ty_idx);
+  
   sos << EndList;
 }
 
@@ -430,7 +458,48 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TYLIST* tyl)
 void
 whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ARB* arb)
 {
+  using namespace sexp::IOFlags;
+  
+  ARB_HANDLE arbh(arb, (ARB_IDX)idx);
+  
   sos << BegList << Atom(idx);
+  
+  // flags, dimension, co_dimension
+  UINT16 flg = ARB_flags(arbh);
+  UINT16 dim = ARB_dimension(arbh);
+  UINT16 codim = ARB_co_dimension(arbh);
+  sos << GenBeginFlgList(flg) << EndList << Atom(dim) << Atom(codim);
+  
+  // lbnd_val/(lbnd_var, lbnd_unused)
+  if (ARB_const_lbnd(arbh)) {
+    INT64 val = ARB_lbnd_val(arbh);
+    sos << BegList << Atom("const") << Atom(val) << EndList;
+  } 
+  else {
+    ST_IDX st_idx = ARB_lbnd_var(arbh);
+    sos << GenSexpSym(st_idx);
+  }
+  
+  // ubnd_val/(ubnd_var, ubnd_unused)
+  if (ARB_const_ubnd(arbh)) {
+    INT64 val = ARB_ubnd_val(arbh);
+    sos << BegList << Atom("const") << Atom(val) << EndList;
+  }
+  else {
+    ST_IDX st_idx = ARB_ubnd_var(arbh);
+    sos << GenSexpSym(st_idx);
+  }
+  
+  // stride_val/(stride_var, stride_unused)
+  if (ARB_const_stride(arbh)) {
+    INT64 val = ARB_stride_val(arbh);
+    sos << BegList << Atom("const") << Atom(val) << EndList;
+  }
+  else {
+    ST_IDX st_idx = ARB_stride_var(arbh);
+    sos << GenSexpSym(st_idx);
+  }
+  
   sos << EndList;
 }
 
@@ -489,7 +558,15 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, INITO* inito)
 void
 whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, INITV* initv)
 {
+  // see osprey1.0/common/com/irbdata_defs.h
   sos << BegList << Atom(idx);
+  
+  // next, kind, repeat1
+  sos << Atom(initv->next) << Atom(initv->kind) << Atom(initv->repeat1);
+  
+  // st/lab/lab1/mtype/tc/blk/pad, ofst/st2/repeat2/unused
+  sos << Atom(initv->St()) << Atom(initv->Ofst());
+  
   sos << EndList;
 }
 
@@ -516,7 +593,14 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ST_ATTR* sta)
 void
 whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, PREG* preg)
 {
+  using namespace sexp::IOFlags;
+  
   sos << BegList << Atom(idx);
+  
+  STR_IDX nmidx = PREG_name_idx(*preg);
+  const char* nm = PREG_name(*preg);
+  sos << BegList << Atom(A_DQUOTE, nm) << Atom(nmidx) << EndList;
+  
   sos << EndList;
 }
 
@@ -524,7 +608,20 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, PREG* preg)
 void
 whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, LABEL* lbl)
 {
+  using namespace sexp::IOFlags;
+
   sos << BegList << Atom(idx);
+  
+  // name_idx
+  STR_IDX nmidx = LABEL_name_idx(*lbl);
+  const char* nm = LABEL_name(*lbl);
+  sos << BegList << Atom(A_DQUOTE, nm) << Atom(nmidx) << EndList;
+    
+  // kind, flags
+  UINT32 knd = (UINT32)LABEL_kind(*lbl);
+  UINT32 flg = (UINT32)lbl->flags;
+  sos << Atom(knd) << GenBeginFlgList(flg) << EndList;
+  
   sos << EndList;
 }
 

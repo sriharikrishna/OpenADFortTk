@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.3 2004/08/09 14:34:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.4 2004/08/09 19:58:14 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -515,11 +515,61 @@ whirl2sexp::xlate_IO_ITEM(sexp::ostream& sos, WN* wn)
 //***************************************************************************
 
 whirl2sexp::status
-whirl2sexp::xlate_EVAL(sexp::ostream& sos, WN* wn)
+whirl2sexp::xlate_misc_stmt(sexp::ostream& sos, WN* wn)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_EVAL, FORTTK_UNEXPECTED_INPUT); 
+  OPERATOR opr = WN_operator(wn);
+  FORTTK_ASSERT(opr == OPR_EVAL ||
+		opr == OPR_PREFETCH || opr == OPR_PREFETCHX ||
+		opr == OPR_COMMENT || 
+		opr == OPR_TRAP || opr == OPR_ASSERT || opr == OPR_AFFIRM ||
+		opr == OPR_FORWARD_BARRIER || opr == OPR_BACKWARD_BARRIER ||
+		opr == OPR_DEALLOCA ||
+		opr == OPR_USE || opr == OPR_NAMELIST || 
+		opr == OPR_IMPLICIT_BND || opr == OPR_NULLIFY || 
+		opr == OPR_INTERFACE || opr == OPR_ARRAY_CONSTRUCT,
+		FORTTK_UNEXPECTED_INPUT);
   
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  // misc. statements 
+  //   EVAL:                kid0
+  //   PREFETCH:     flag,  kids
+  //   PREFETCHX:    flag,  kids
+  //   COMMENT:      stidx  
+  //   TRAP:         ofst,  kids
+  //   ASSERT:       ofst,  kids
+  //   AFFIRM:              kids
+  //   FBARRIER:            kids
+  //   BBARRIER:            kids
+  //   DEALLOCA:            kids
+  //   USE:          stidx, kids
+  //   NAMELIST:     stidx, kids
+  //   IMPLICIT_BND: 
+  //   NULLIFY:             kids
+  //   INTERFACE:    stidx, kids
+  //   ACONSTRUCT:          kids
+  
+  sos << BegList << GenSexpWNOpr(wn); // WN_OPR
+  
+  sos << BegList;                     // WN_ATTRS
+  if (OPERATOR_has_sym(opr)) {
+    ST_IDX st_idx = WN_st_idx(wn);  
+    sos << GenSexpSymRef(st_idx);
+  }
+  if (OPERATOR_has_offset(opr)) {
+    WN_OFFSET ofst = WN_offset(wn);
+    sos << Atom(ofst);
+  }
+  if (OPERATOR_has_flags(opr)) {
+    UINT32 flg = WN_flag(wn);
+    sos << GenBeginFlgList(flg) << EndList;
+  }
+  sos << EndList;
+
+  if (WN_kid_count(wn) > 0) {
+    sos << EndLine;
+  }
+  TranslateWNChildren(sos, wn); // KIDs
+  sos << EndList;
+
   return whirl2sexp::good;
 }
 
@@ -531,12 +581,13 @@ whirl2sexp::xlate_xPRAGMA(sexp::ostream& sos, WN* wn)
   FORTTK_ASSERT(opr == OPR_PRAGMA || opr == OPR_XPRAGMA, 
 		FORTTK_UNEXPECTED_INPUT); 
   
-  WN_OFFSET oset = WN_offset(wn);
+  UINT16 prag   = WN_pragma(wn);
+  UINT16 flg    = WN_pragma_flags(wn);
   ST_IDX st_idx = WN_st_idx(wn);
-  // WN_pragma_flags (FIXME)
   
   sos << BegList << GenSexpWNOpr(wn); // WN_OPR
-  sos << BegList << Atom(oset) << GenSexpSymRef(st_idx); // WN_ATTRS
+  sos << BegList << Atom(prag) << GenSexpSymRef(st_idx) // WN_ATTRS
+      << GenBeginFlgList(flg) << EndList;
   
   if (opr == OPR_PRAGMA) {
     INT64 cval = WN_const_val(wn);
@@ -546,81 +597,8 @@ whirl2sexp::xlate_xPRAGMA(sexp::ostream& sos, WN* wn)
     sos << EndList; // end WN_ATTRS
     TranslateWN(sos, WN_kid0(wn)); // KID 0
   }
-
+  
   sos << EndList;
-  return whirl2sexp::good;
-}
-
-
-whirl2sexp::status 
-whirl2sexp::xlate_PREFETCHx(sexp::ostream& sos, WN* wn)
-{
-  OPERATOR opr = WN_operator(wn);
-  FORTTK_ASSERT(opr == OPR_PREFETCH || opr == OPR_PREFETCHX, 
-		FORTTK_UNEXPECTED_INPUT); 
-  
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
-  return whirl2sexp::good;
-}
-
-
-whirl2sexp::status
-whirl2sexp::xlate_misc_stmt(sexp::ostream& sos, WN* wn)
-{
-  OPERATOR opr = WN_operator(wn);
-  FORTTK_ASSERT(opr == OPR_COMMENT || 
-		opr == OPR_USE || opr == OPR_NAMELIST || opr == OPR_INTERFACE,
-		FORTTK_UNEXPECTED_INPUT);
-
-  // misc. statements with an st_idx
-  
-  ST_IDX st_idx = WN_st_idx(wn);
-  
-  sos << BegList << GenSexpWNOpr(wn);                 // WN_OPR
-  sos << BegList << GenSexpSymRef(st_idx) << EndList; // WN_ATTRS
-  if (WN_kid_count(wn) > 0) {
-    sos << EndLine;
-  }
-  TranslateWNChildren(sos, wn); // KIDs
-  sos << EndList;
-
-  return whirl2sexp::good;
-}
-
-
-whirl2sexp::status 
-whirl2sexp::xlate_DEALLOCA(sexp::ostream& sos, WN* wn)
-{
-  FORTTK_ASSERT(WN_operator(wn) == OPR_DEALLOCA, FORTTK_UNEXPECTED_INPUT); 
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
-  return whirl2sexp::good;
-}
-
-
-whirl2sexp::status
-whirl2sexp::xlate_IMPLICIT_BND(sexp::ostream& sos, WN* wn)
-{
-  FORTTK_ASSERT(WN_operator(wn) == OPR_IMPLICIT_BND, FORTTK_UNEXPECTED_INPUT); 
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
-  return whirl2sexp::good;
-}
-
-
-whirl2sexp::status
-whirl2sexp::xlate_NULLIFY(sexp::ostream& sos, WN* wn)
-{
-  FORTTK_ASSERT(WN_operator(wn) == OPR_NULLIFY, FORTTK_UNEXPECTED_INPUT); 
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
-  return whirl2sexp::good;
-}
-
-
-whirl2sexp::status
-whirl2sexp::xlate_ARRAY_CONSTRUCT(sexp::ostream& sos, WN* wn)
-{
-  FORTTK_ASSERT(WN_operator(wn) == OPR_ARRAY_CONSTRUCT, 
-		FORTTK_UNEXPECTED_INPUT); 
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
   return whirl2sexp::good;
 }
 
@@ -636,11 +614,11 @@ whirl2sexp::xlate_LDA_LDMA(sexp::ostream& sos, WN* wn)
   FORTTK_ASSERT(WN_operator(wn) == OPR_LDA, FORTTK_UNEXPECTED_INPUT);
 
   ST_IDX    st_idx = WN_st_idx(wn);
-  WN_OFFSET oset   = WN_load_offset(wn);
+  WN_OFFSET ofst   = WN_load_offset(wn);
   TY_IDX    ty_idx = WN_ty(wn);
 
   sos << BegList << GenSexpWNOpr(wn); // WN_OPR
-  sos << BegList << GenSexpSymRef(st_idx) << Atom(oset)
+  sos << BegList << GenSexpSymRef(st_idx) << Atom(ofst)
       << GenSexpTyUse(ty_idx) << EndList; // WN_ATTRS
   sos << EndList;
   
@@ -655,12 +633,12 @@ whirl2sexp::xlate_LDID_STID(sexp::ostream& sos, WN* wn)
   FORTTK_ASSERT(opr == OPR_LDID || opr == OPR_STID, FORTTK_UNEXPECTED_INPUT);
   
   ST_IDX    st_idx = WN_st_idx(wn);
-  WN_OFFSET oset   = WN_offset(wn); // WN_load_offset, WN_store_offset
+  WN_OFFSET ofst   = WN_offset(wn); // WN_load_offset, WN_store_offset
   UINT      fldid  = WN_field_id(wn);
   TY_IDX    ty_idx = WN_ty(wn);
   
   sos << BegList << GenSexpWNOpr(wn); // WN_OPR
-  sos << BegList << GenSexpSymRef(st_idx) << Atom(oset) << Atom(fldid)
+  sos << BegList << GenSexpSymRef(st_idx) << Atom(ofst) << Atom(fldid)
       << GenSexpTyUse(ty_idx) << EndList; // WN_ATTRS
   if (opr == OPR_STID) {
     sos << EndLine;
@@ -679,10 +657,10 @@ whirl2sexp::xlate_IDNAME(sexp::ostream& sos, WN* wn)
   FORTTK_ASSERT(opr == OPR_IDNAME, FORTTK_UNEXPECTED_INPUT); 
   
   ST_IDX st_idx = WN_st_idx(wn);
-  WN_OFFSET oset = WN_idname_offset(wn);
+  WN_OFFSET ofst = WN_idname_offset(wn);
   
   sos << BegList << GenSexpWNOpr(wn) // WN_OPR
-      << BegList << GenSexpSymRef(st_idx) << Atom(oset) << EndList // WN_ATTRS
+      << BegList << GenSexpSymRef(st_idx) << Atom(ofst) << EndList // WN_ATTRS
       << EndList;
 }
 
@@ -695,10 +673,10 @@ whirl2sexp::xlate_xLOADx_xSTOREx(sexp::ostream& sos, WN* wn)
 		opr == OPR_ISTORE || opr == OPR_MSTORE || opr == OPR_ISTOREX,
 		FORTTK_UNEXPECTED_INPUT);
   
-  // ILOAD:   oset field_id ty_idx1 ty_idx2 kid0
-  // MLOAD:   oset field_id ty_idx          kid0 kid1  
-  // ISTORE:  oset field_id ty_idx          kid0 kid1
-  // MSTORE:  oset field_id ty_idx          kid0 kid1 kid2  
+  // ILOAD:   ofst field_id ty_idx1 ty_idx2 kid0
+  // MLOAD:   ofst field_id ty_idx          kid0 kid1  
+  // ISTORE:  ofst field_id ty_idx          kid0 kid1
+  // MSTORE:  ofst field_id ty_idx          kid0 kid1 kid2  
   // ILOADX:                ty_idx1 ty_idx2 kid0 kid1
   // ISTOREX:               ty_idx          kid0 kid1 kid2
 
@@ -709,9 +687,9 @@ whirl2sexp::xlate_xLOADx_xSTOREx(sexp::ostream& sos, WN* wn)
   sos << BegList;                     // WN_ATTRS
   if (opr == OPR_ILOAD || opr == OPR_MLOAD || 
       opr == OPR_ISTORE || opr == OPR_MSTORE) {
-    WN_OFFSET oset  = WN_load_offset(wn);
+    WN_OFFSET ofst  = WN_load_offset(wn);
     UINT      fldid = WN_field_id(wn);
-    sos << Atom(oset) << Atom(fldid);
+    sos << Atom(ofst) << Atom(fldid);
   }
   sos << GenSexpTyUse(ty_idx1);
   if (opr == OPR_ILOAD || opr == OPR_ILOADX) {
@@ -1001,24 +979,25 @@ WNXlationTable::InitEntry WNXlationTable::initTable[] = {
   { OPR_IO,                   &xlate_IO },
 
   // Statements: Other
-  { OPR_EVAL,                 &xlate_EVAL },
+  { OPR_EVAL,                 &xlate_misc_stmt },
   { OPR_PRAGMA,               &xlate_xPRAGMA },
   { OPR_XPRAGMA,              &xlate_xPRAGMA },
-  { OPR_PREFETCH,             &xlate_PREFETCHx },
-  { OPR_PREFETCHX,            &xlate_PREFETCHx },
+  { OPR_PREFETCH,             &xlate_misc_stmt },
+  { OPR_PREFETCHX,            &xlate_misc_stmt },
   { OPR_COMMENT,              &xlate_misc_stmt },
-  { OPR_TRAP,                 &xlate_unknown }, // FIXME
-  { OPR_ASSERT,               &xlate_unknown }, // FIXME
-  { OPR_FORWARD_BARRIER,      &xlate_unknown }, // FIXME
-  { OPR_BACKWARD_BARRIER,     &xlate_unknown }, // FIXME
-  { OPR_DEALLOCA,             &xlate_DEALLOCA },
+  { OPR_TRAP,                 &xlate_misc_stmt },
+  { OPR_ASSERT,               &xlate_misc_stmt },
+  { OPR_AFFIRM,               &xlate_misc_stmt },
+  { OPR_FORWARD_BARRIER,      &xlate_misc_stmt },
+  { OPR_BACKWARD_BARRIER,     &xlate_misc_stmt },
+  { OPR_DEALLOCA,             &xlate_misc_stmt },
 
   { OPR_USE,                  &xlate_misc_stmt },
   { OPR_NAMELIST,             &xlate_misc_stmt },
-  { OPR_IMPLICIT_BND,         &xlate_IMPLICIT_BND },  
-  { OPR_NULLIFY,              &xlate_NULLIFY },
+  { OPR_IMPLICIT_BND,         &xlate_misc_stmt },  
+  { OPR_NULLIFY,              &xlate_misc_stmt },
   { OPR_INTERFACE,            &xlate_misc_stmt },
-  { OPR_ARRAY_CONSTRUCT,      &xlate_ARRAY_CONSTRUCT },
+  { OPR_ARRAY_CONSTRUCT,      &xlate_misc_stmt },
   
   // Memory Access (or assignment and variable references)
   { OPR_LDA,                  &xlate_LDA_LDMA },  // Leaf

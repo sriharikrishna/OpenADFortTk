@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.i,v 1.1 2004/08/05 18:38:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.i,v 1.2 2004/08/09 19:58:14 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -152,29 +152,11 @@ namespace whirl2sexp {
   // Other Statements
   // ---------------------------------------------------------
 
-  extern whirl2sexp::status 
-  xlate_EVAL(sexp::ostream& sos, WN* wn);
-  
-  extern whirl2sexp::status 
-  xlate_xPRAGMA(sexp::ostream& sos, WN* wn);
-  
-  extern whirl2sexp::status 
-  xlate_PREFETCHx(sexp::ostream& sos, WN* wn);
-  
   extern whirl2sexp::status
   xlate_misc_stmt(sexp::ostream& sos, WN* wn);  
 
   extern whirl2sexp::status 
-  xlate_DEALLOCA(sexp::ostream& sos, WN* wn) ;
-
-  extern whirl2sexp::status
-  xlate_IMPLICIT_BND(sexp::ostream& sos, WN* wn); 
-  
-  extern whirl2sexp::status
-  xlate_NULLIFY(sexp::ostream& sos, WN* wn);
-  
-  extern whirl2sexp::status
-  xlate_ARRAY_CONSTRUCT(sexp::ostream& sos, WN* wn);
+  xlate_xPRAGMA(sexp::ostream& sos, WN* wn);  
   
 }; /* namespace whirl2sexp */
 
