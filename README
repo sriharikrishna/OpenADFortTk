@@ -1,4 +1,4 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.16 2004/03/03 16:30:08 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.17 2004/04/21 16:53:02 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
@@ -8,66 +8,85 @@
 =============================================================================
 
 Contents:
-  0. Obtaining
-  1. Building
-  2. Using
+  0. Prerequisites
+  1. Obtaining
+  2. Building
+  3. Using
 
 =============================================================================
 
-0. Obtaining
+0. Prerequisites
 --------------------
 
-Open64
+Currently we actively support the following platforms:
+  * i686-Linux
+  * i686-Cygwin
+
+Required packages:
+  Shells: sh/bash, csh/tcsh
+  Compilers:
+    GCC C, C++, F77 (preferably at least 3.3)
+  Other Tools:
+    GNU make (not a vendor make)
+    Perl 5.x (probably at least 5.6)
+
+
+[Notes:
+  - Open64 has problems with GCC 3.1 and 3.2.  Suggest 3.3 or greater.
+]
+
+=============================================================================
+
+1. Obtaining
+--------------------
+
+Open64 
+  [HiPerSoft cvs: user@koolkat2.cs.rice.edu:/Volumes/cvsrep/developer]
   cvs co Open64
 
 OpenAnalysis
+  [HiPerSoft cvs: user@koolkat2.cs.rice.edu:/Volumes/cvsrep/developer]
   cvs co OpenAnalysis
 
-xercesc [if necessary]
+xercesc
+  [HiPerSoft cvs: user@koolkat2.cs.rice.edu:/Volumes/cvsrep/developer]
   cvs co xercesc
 
 whirl2xaif
+  [HiPerSoft cvs: user@koolkat2.cs.rice.edu:/Volumes/cvsrep/developer]
   cvs co whirl2xaif
 
 xaifbooster, angel, boost
-  xaifbooster: Argonne bitkeeper /home/derivs/share/xaifBooster
+  xaifbooster
+    [MCS bitkeeper /home/derivs/share/xaifBooster]
     bk clone <user>@terra.mcs.anl.gov:/home/derivs/share/xaifBooster
 
-  boost: www.sourceforge.net or www.boost.org
-    [get tarball from above sites]    
-    http://prdownloads.sourceforge.net/boost/boost-1.30.2.tar.bz2?download
+    * Temporary CFR repository *
+    <user>@terra.mcs.anl.gov:/home/utke/bk_tmpRep/xaifBooster_CFR/xaifBooster
 
-  angel: www.sourceforge.net
-    SourceForge anonymous (pserver) CVS. (password: press Enter)
+  boost
+    [get tarball from www.sourceforge.net or www.boost.org]
 
-    cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/angellib login
-    cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/angellib co angel
-
-  * See notes in xaifBooster/INSTALL *
+  angel
+    [MCS bitkeeper /homes/utke/BK_Reps/CODE/angel]
+    bk clone <user>@terra.mcs.anl.gov:/homes/utke/BK_Reps/CODE/angel
 
 xaif-1.0
-  [bitkeeper]
   bk clone http://xaif.bkbits.net/xaif-1.0
 
 =============================================================================
 
-1. Building on i686-Linux or sparc-SunOS
+2. Building
 --------------------
 
-Compiler: 
-  - for i686-Linux, Open64 has problems with GCC 3.1 and 3.2.  Suggest 
-    3.3 or greater.
-  - for sparc-SunOS, Sun 5.3 is recommended
+Please use the same C++ compiler for Open64, OpenAnalysis and whirl2xaif!
 
-Please use the same compiler for Open64, OpenAnalysis and whirl2xaif.
-
-
-1. Prepare env using whirl2xaif/Sourceme-ACTS-csh/sh.
+1. Prepare env using whirl2xaif/Sourceme-ACTS-{csh,sh}.
    
    Open and make sure paths in first section are correct.  Then source
-   the file.
+   the appropriate file.
 
-   source whirl2xaif/Sourceme-ACTS-csh
+   source whirl2xaif/Sourceme-ACTS-{csh,sh}
 
 
 2. Build Open64's mfef90 (Open64 front end) and whirl2f (Open64 backend).
@@ -91,13 +110,13 @@ Please use the same compiler for Open64, OpenAnalysis and whirl2xaif.
    make CXX="<C++ compiler>" CXXFLAGS="<options such as -g or -O>"
 
 
-4. Build XercesC++ [if necessary]:
+4. Build XercesC++.
 
    cd ${XERCESC_BASE}
    make CXX="<C++ compiler>" CC="<C compiler>"
 
 
-5. Build whirl2xaif:
+5. Build whirl2xaif.
 
    Ensure the correct C++ compiler is used in
      ${WHIRL2XAIF}/src/Makeinclude.config.${WHIRL2XAIF_PLATFORM}
@@ -106,8 +125,8 @@ Please use the same compiler for Open64, OpenAnalysis and whirl2xaif.
    make 
 
 
-6. xaifbooster
- 
+6. Build xaifbooster.
+
    cd ${XAIFBOOSTER_BASE}/xaifBooster
    make
 
@@ -120,33 +139,25 @@ Please use the same compiler for Open64, OpenAnalysis and whirl2xaif.
 
 =============================================================================
 
-2. Using
+3. Using
 --------------------
 
 If you are using a csh-variant, execute a 'rehash' command to ensure
 that your path is fully searched.  On the other hand, bash should find
 the binary with no problem.
 
-The whole pipeline:
+The 'openad' script will run the whole pipeline.  E.g.,
+  openad -v --bb --x2w-structured myprogram.f90
 
-  mfef90 file.f90  --> file.B
-  whirl2xaif file.B -o file.xaif
-  
-  xboost_bb -i file.xaif -o file.xb.xaif
-
-    Note: Add following line to top of output file:
-    <?xml version="1.0" encoding="UTF-8"?>
-  
-  xaif2whirl file.B file.xb.xaif -o file.xb.x2w.B
-  whirl2f file.xb.x2w.B  --> file.xb.x2w.w2f.f
-  perl pp.pl file.xb.x2w.w2f.f  --> file.xb.x2w.w2f.pp.f
+Type "openad --help" for more information.
 
 
 =============================================================================
 =============================================================================
+[Prehistoric stuff]
 =============================================================================
 
-3. Brief comments on whirl2xaif sources
+4. Brief comments on whirl2xaif sources
 --------------------
 
 The sources are littered with FIXMEs and REMOVEs.  A great deal of
@@ -173,7 +184,7 @@ xmlostream.cxx/h       : xml::ostream class
 
 =============================================================================
 
-4. Misc
+5. Misc
 --------------------
 
 Originaly based on whirl2f, whirl2xaif has been changed significantly:
