@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.52 2004/04/16 18:37:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.53 2004/04/20 13:14:54 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -122,12 +122,6 @@ GetParamSymHandleSet(WN* wn_pu);
 static void
 xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-static const char*
-GetCFGVertexType(CFG* cfg, CFG::Node* n);
-
-static const char*
-GetCFGControlFlowVertexType(WN* wstmt);
-
 static void 
 xlate_CFCondition(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
@@ -136,9 +130,6 @@ xlate_LoopInitialization(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 static void 
 xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-static std::string
-GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt);
 
 
 static void
@@ -149,6 +140,66 @@ MassageOACFGIntoXAIFCFG(CFG* cfg);
 
 static void
 DumpCFGraphEdge(xml::ostream& xos, UINT eid, CFG::Edge* edge);
+
+//*************************** Forward Declarations ***************************
+
+static const char*
+GetCFGVertexType(CFG* cfg, CFG::Node* n);
+
+static const char*
+GetCFGControlFlowVertexType(WN* wstmt);
+
+static std::string
+GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt);
+
+static pair<bool, INT64>
+GetCFGEdgeCondVal(const CFG::Edge* edge);
+
+// lt_CFGEdge: Used to sort CFG::Edges by src, sink and condition value.
+struct lt_CFGEdge
+{
+  // return true if e1 < e2; false otherwise
+  bool operator()(const CFG::Edge* e1, const CFG::Edge* e2) const
+  {
+    unsigned int src1 = e1->source()->getId();
+    unsigned int src2 = e2->source()->getId();
+    if (src1 == src2) { 
+      unsigned int sink1 = e1->sink()->getId();
+      unsigned int sink2 = e2->sink()->getId();
+      if (sink1 == sink2) {
+	pair<bool, INT64> ret1 = GetCFGEdgeCondVal(e1);
+	bool hasCondVal1 = ret1.first;
+	INT64 condVal1 = ret1.second;
+
+	pair<bool, INT64> ret2 = GetCFGEdgeCondVal(e2);
+	bool hasCondVal2 = ret2.first;
+	INT64 condVal2 = ret2.second;
+	
+	if (hasCondVal1 && hasCondVal2) {
+	  return (condVal1 < condVal2);
+	} 
+	else if (hasCondVal1 /* && !hasCondVal2 */) {
+	  return false;  // e1 > e2
+	}
+	else if (hasCondVal2 /* && !hasCondVal1 */) {
+	  return true; // e1 < e2
+	}
+	else /* !hasCondVal1 && !hasCondVal2 */ {
+	  return false; // e1 == e2
+	}
+      } 
+      else { 
+	return (sink1 < sink2); 
+      }
+    } 
+    else {
+      return (src1 < src2);
+    }
+  }
+
+private:
+
+};
 
 //***************************************************************************
 // 
@@ -308,10 +359,10 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 #endif
   
   // Dump CFG edges (only those within the XAIF graph)
-  DGraphEdgeVec* edges = SortDGraphEdges(&cfg);
-  for (DGraphEdgeVec::iterator edgeIt = edges->begin(); 
+  CFGEdgeVec* edges = SortCFGEdges(&cfg);
+  for (CFGEdgeVec::iterator edgeIt = edges->begin(); 
        edgeIt != edges->end(); ++edgeIt) {
-    CFG::Edge* e = dynamic_cast<CFG::Edge*>(*edgeIt);
+    CFG::Edge* e = (*edgeIt);
     DGraph::Node* src = e->source();
     DGraph::Node* snk = e->sink();
     if (usedNodes.find(src) != usedNodes.end() && 
@@ -931,6 +982,23 @@ SortDGraphEdges(DGraph* g)
 }
 
 
+CFGEdgeVec*
+SortCFGEdges(CFG* g)
+{
+  CFGEdgeVec* vec = new CFGEdgeVec(g->num_edges());
+
+  DGraph::EdgesIterator it(*g);
+  for (int i = 0; (bool)it; ++it, ++i) {
+    (*vec)[i] = dynamic_cast<CFG::Edge*>((DGraph::Edge*)it);
+  }
+  
+  // Sort by source/target node ids (ascending)
+  std::sort(vec->begin(), vec->end(), lt_CFGEdge()); 
+  
+  return vec;
+}
+
+
 // DumpGraphEdge: see header.
 void 
 DumpGraphEdge(xml::ostream& xos, const char* nm, 
@@ -952,39 +1020,17 @@ DumpCFGraphEdge(xml::ostream& xos, UINT eid, CFG::Edge* edge)
 {
   CFG::Node* n1 = dynamic_cast<CFG::Node*>(edge->source());
   CFG::Node* n2 = dynamic_cast<CFG::Node*>(edge->sink());
+  
+  pair<bool, INT64> ret = GetCFGEdgeCondVal(edge);
+  bool hasCondVal = ret.first;
+  INT64 condVal = ret.second;
 
-  CFG::EdgeType ety = edge->getType();
-  WN* eexpr = (Pro64ExprHandle)edge->getExpr();
-  
-  bool xaifCondVal = false;
-  INT64 condVal = 0;
-  if (ety == CFG::TRUE_EDGE) {
-    xaifCondVal = true;
-    condVal = 1;
-  } 
-  else if (ety == CFG::MULTIWAY_EDGE && eexpr) {
-    xaifCondVal = true;
-    OPERATOR opr = WN_operator(eexpr);
-    if (opr == OPR_CASEGOTO) { // from an OPR_SWITCH
-      condVal = WN_const_val(eexpr);
-    } 
-    else if (opr == OPR_GOTO) { // from an OPR_COMPGOTO
-      // to find condVal, must find parent COMPGOTO and then find the
-      // index of this GOTO in the jumptable.
-      ASSERT_FATAL(false, (DIAG_UNIMPLEMENTED, "Unimplemented."));
-    } else {
-      ASSERT_FATAL(false, (DIAG_UNIMPLEMENTED, "Programming Error."));
-    }
-  }
-  
   xos << BegElem("xaif:ControlFlowEdge") 
       << Attr("edge_id", eid) 
       << Attr("source", n1->getId()) << Attr("target", n2->getId());
-  if (xaifCondVal) {
-    xos << Attr("has_condition_value", "true");
-    if (condVal != 0) {
-      xos << Attr("condition_value", condVal);
-    }
+  if (hasCondVal) {
+    xos << Attr("has_condition_value", "true")
+	<< Attr("condition_value", condVal);
   }
   xos << EndElem;
 }
@@ -1147,90 +1193,6 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 }
 
 
-// GetCFGVertexType: A CFG vertex is either an Entry, Exit,
-// BasicBlock, or a special structured control flow vertex (e.g., Branch,
-// ForLoop, PreLoop, PostLoop).  The string returned is from
-// 'XAIFStrings' which means users can compare on pointer value
-// (instead of using strcmp()).
-//
-// Vertices are classified by the statements contained within.  Since
-// the classifications are mutually exclusive, a vertex should not
-// contain two statements that correspond to structured control flow.
-//
-// FIXME: we know that loop and if BBs should only have one node in
-// them. because of MassageOA...
-static const char*
-GetCFGVertexType(CFG* cfg, CFG::Node* n)
-{
-  // We know these are cheap so they can be recomputed each time we are called
-  CFG::Node* entry = cfg->Entry();
-  CFG::Node* exit = cfg->Exit();
-  
-  if (n == entry) {
-    return XAIFStrings.elem_BBEntry();
-  } else if (n == exit) { 
-    return XAIFStrings.elem_BBExit();
-  }
-  
-  // FIXME: we do not need to iterate over all statements since
-  // control flow statements contructs will be in their own xaif:BB.
-  for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
-    WN* wstmt = (WN *)((StmtHandle)stmtIt);
-    const char* vty = GetCFGControlFlowVertexType(wstmt);
-    if (vty) { 
-      return vty; 
-    }
-  }
-  
-  return XAIFStrings.elem_BB(); // default, non-structured type
-}
-
-
-// GetCFGControlFlowVertexType: If the WHIRL statement corresponds to a
-// CFG *control flow* vertex, return that type.  Otherwise return NULL.
-// Returns strings from XAIFStrings.
-static const char*
-GetCFGControlFlowVertexType(WN* wstmt) // FIXME
-{
-  OPERATOR opr = WN_operator(wstmt);
-  switch (opr) {
-    
-    // In OA, loop nodes represent the *condition* (not the body).
-    // For a DO_LOOP, it additionally represents the initialization
-    // and update statements.
-  case OPR_DO_LOOP: 
-    return XAIFStrings.elem_BBForLoop();
-  case OPR_DO_WHILE: 
-    return XAIFStrings.elem_BBPostLoop();
-  case OPR_WHILE_DO:
-    return XAIFStrings.elem_BBPreLoop();
-
-    // In OA, IF nodes represent the *condition* (not the body)
-  case OPR_IF:
-  case OPR_TRUEBR:   // unstructured
-  case OPR_FALSEBR:  // unstructured
-    return XAIFStrings.elem_BBBranch();
-  case OPR_SWITCH:   // unstructured
-  case OPR_COMPGOTO: // unstructured
-    return XAIFStrings.elem_BBBranch();
-    
-    // Currently we use special comments to denote EndBranch and EndLoop
-  case OPR_COMMENT: 
-    {
-      static const char* endbr = XAIFStrings.elem_BBEndBranch();
-      static const char* endlp = XAIFStrings.elem_BBEndLoop();
-      const char* com = Index_To_Str(WN_GetComment(wstmt));
-      if (strcmp(com, endbr) == 0) {
-	return endbr;
-      } else if (strcmp(com, endlp) == 0) {
-	return endlp;
-      }
-      // fall through
-    }
-  }
-  
-  return NULL;
-}
 
 
 // xlate_CFCondition: Translate the BB's control flow condition (Loops, Ifs)
@@ -1265,36 +1227,6 @@ xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TranslateWN(xos, wn, ctxt);
   ctxt.DeleteContext();
   xos << EndElem;
-}
-
-
-// GetIDsForStmtsInBB: Returns a colon separated list for ids of
-// statements within the basic block.  In the event that a statement
-// id maps to zero, it is *not* included in the list.
-static std::string
-GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt)
-{
-  std::string idstr;
-  bool emptystr = true;
-  
-  for (CFG::NodeStatementsIterator stmtIt(node); (bool)stmtIt; ++stmtIt) {
-    WN* wstmt = (WN *)((StmtHandle)stmtIt);
-    WNId id = ctxt.FindWNId(wstmt);
-    
-    // Skip statements without a valid id
-    if (id == 0) { continue; }
-
-    const char* str = Num2Str(id, "%lld");
-    //std::cout << id << " --> " << str << " // ";
-    
-    if (!emptystr) {
-      idstr += ":";
-    }
-    idstr += str;
-    emptystr = false;
-  }
- 
-  return idstr;
 }
 
 
@@ -1565,6 +1497,158 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
     }
   }
   
+}
+
+
+//***************************************************************************
+
+// GetCFGVertexType: A CFG vertex is either an Entry, Exit,
+// BasicBlock, or a special structured control flow vertex (e.g., Branch,
+// ForLoop, PreLoop, PostLoop).  The string returned is from
+// 'XAIFStrings' which means users can compare on pointer value
+// (instead of using strcmp()).
+//
+// Vertices are classified by the statements contained within.  Since
+// the classifications are mutually exclusive, a vertex should not
+// contain two statements that correspond to structured control flow.
+//
+// FIXME: we know that loop and if BBs should only have one node in
+// them. because of MassageOA...
+static const char*
+GetCFGVertexType(CFG* cfg, CFG::Node* n)
+{
+  // We know these are cheap so they can be recomputed each time we are called
+  CFG::Node* entry = cfg->Entry();
+  CFG::Node* exit = cfg->Exit();
+  
+  if (n == entry) {
+    return XAIFStrings.elem_BBEntry();
+  } else if (n == exit) { 
+    return XAIFStrings.elem_BBExit();
+  }
+  
+  // FIXME: we do not need to iterate over all statements since
+  // control flow statements contructs will be in their own xaif:BB.
+  for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
+    WN* wstmt = (WN *)((StmtHandle)stmtIt);
+    const char* vty = GetCFGControlFlowVertexType(wstmt);
+    if (vty) { 
+      return vty; 
+    }
+  }
+  
+  return XAIFStrings.elem_BB(); // default, non-structured type
+}
+
+
+// GetCFGControlFlowVertexType: If the WHIRL statement corresponds to a
+// CFG *control flow* vertex, return that type.  Otherwise return NULL.
+// Returns strings from XAIFStrings.
+static const char*
+GetCFGControlFlowVertexType(WN* wstmt) // FIXME
+{
+  OPERATOR opr = WN_operator(wstmt);
+  switch (opr) {
+    
+    // In OA, loop nodes represent the *condition* (not the body).
+    // For a DO_LOOP, it additionally represents the initialization
+    // and update statements.
+  case OPR_DO_LOOP: 
+    return XAIFStrings.elem_BBForLoop();
+  case OPR_DO_WHILE: 
+    return XAIFStrings.elem_BBPostLoop();
+  case OPR_WHILE_DO:
+    return XAIFStrings.elem_BBPreLoop();
+
+    // In OA, IF nodes represent the *condition* (not the body)
+  case OPR_IF:
+  case OPR_TRUEBR:   // unstructured
+  case OPR_FALSEBR:  // unstructured
+    return XAIFStrings.elem_BBBranch();
+  case OPR_SWITCH:   // unstructured
+  case OPR_COMPGOTO: // unstructured
+    return XAIFStrings.elem_BBBranch();
+    
+    // Currently we use special comments to denote EndBranch and EndLoop
+  case OPR_COMMENT: 
+    {
+      static const char* endbr = XAIFStrings.elem_BBEndBranch();
+      static const char* endlp = XAIFStrings.elem_BBEndLoop();
+      const char* com = Index_To_Str(WN_GetComment(wstmt));
+      if (strcmp(com, endbr) == 0) {
+	return endbr;
+      } else if (strcmp(com, endlp) == 0) {
+	return endlp;
+      }
+      // fall through
+    }
+  }
+  
+  return NULL;
+}
+
+
+// GetIDsForStmtsInBB: Returns a colon separated list for ids of
+// statements within the basic block.  In the event that a statement
+// id maps to zero, it is *not* included in the list.
+static std::string
+GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt)
+{
+  std::string idstr;
+  bool emptystr = true;
+  
+  for (CFG::NodeStatementsIterator stmtIt(node); (bool)stmtIt; ++stmtIt) {
+    WN* wstmt = (WN *)((StmtHandle)stmtIt);
+    WNId id = ctxt.FindWNId(wstmt);
+    
+    // Skip statements without a valid id
+    if (id == 0) { continue; }
+
+    const char* str = Num2Str(id, "%lld");
+    //std::cout << id << " --> " << str << " // ";
+    
+    if (!emptystr) {
+      idstr += ":";
+    }
+    idstr += str;
+    emptystr = false;
+  }
+ 
+  return idstr;
+}
+
+
+// GetCFGEdgeCondVal: Given a CFG edge, returns a pair indicating
+// whether the edge has a condition value, and if so, its value.
+// (There is no reserved NULL value for the condition value; it should
+// only be used when the first part of the pair is true!)
+static pair<bool, INT64>
+GetCFGEdgeCondVal(const CFG::Edge* edge)
+{
+  CFG::EdgeType ety = edge->getType();
+  WN* eexpr = (Pro64ExprHandle)edge->getExpr();
+  
+  bool hasCondVal = false;
+  INT64 condVal = 0;
+  if (ety == CFG::TRUE_EDGE) {
+    hasCondVal = true;
+    condVal = 1;
+  } 
+  else if (ety == CFG::MULTIWAY_EDGE && eexpr) {
+    hasCondVal = true;
+    OPERATOR opr = WN_operator(eexpr);
+    if (opr == OPR_CASEGOTO) { // from an OPR_SWITCH
+      condVal = WN_const_val(eexpr);
+    } 
+    else if (opr == OPR_GOTO) { // from an OPR_COMPGOTO
+      // to find condVal, must find parent COMPGOTO and then find the
+      // index of this GOTO in the jumptable.
+      ASSERT_FATAL(false, (DIAG_UNIMPLEMENTED, "Unimplemented."));
+    } else {
+      ASSERT_FATAL(false, (DIAG_UNIMPLEMENTED, "Programming Error."));
+    }
+  }
+  return pair<bool, INT64>(hasCondVal, condVal);
 }
 
 

@@ -375,10 +375,10 @@
     <xaif:ControlFlowEdge edge_id="19" source="18" target="3"/>
     <xaif:ControlFlowEdge edge_id="20" source="18" target="5"/>
     <xaif:ControlFlowEdge edge_id="21" source="19" target="9" has_condition_value="true" condition_value="1"/>
-    <xaif:ControlFlowEdge edge_id="22" source="19" target="9" has_condition_value="true" condition_value="31"/>
-    <xaif:ControlFlowEdge edge_id="23" source="19" target="9" has_condition_value="true" condition_value="21"/>
-    <xaif:ControlFlowEdge edge_id="24" source="19" target="10" has_condition_value="true" condition_value="22"/>
-    <xaif:ControlFlowEdge edge_id="25" source="19" target="10" has_condition_value="true" condition_value="2"/>
+    <xaif:ControlFlowEdge edge_id="22" source="19" target="9" has_condition_value="true" condition_value="21"/>
+    <xaif:ControlFlowEdge edge_id="23" source="19" target="9" has_condition_value="true" condition_value="31"/>
+    <xaif:ControlFlowEdge edge_id="24" source="19" target="10" has_condition_value="true" condition_value="2"/>
+    <xaif:ControlFlowEdge edge_id="25" source="19" target="10" has_condition_value="true" condition_value="22"/>
     <xaif:ControlFlowEdge edge_id="26" source="19" target="11" has_condition_value="true" condition_value="3"/>
     <xaif:ControlFlowEdge edge_id="27" source="19" target="11" has_condition_value="true" condition_value="23"/>
     <xaif:ControlFlowEdge edge_id="28" source="19" target="12" has_condition_value="true" condition_value="4"/>

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.23 2004/04/08 13:52:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.24 2004/04/20 13:14:54 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -120,6 +120,7 @@ class DGraph::Edge;
 
 typedef std::vector<DGraph::Node*> DGraphNodeVec;
 typedef std::vector<DGraph::Edge*> DGraphEdgeVec;
+typedef std::vector<CFG::Edge*> CFGEdgeVec;
 
 typedef std::list<DGraph::Node*> DGraphNodeList;
 
@@ -132,6 +133,11 @@ SortDGraphNodes(DGraph* g);
 // object.
 extern DGraphEdgeVec*
 SortDGraphEdges(DGraph* g);
+
+// SortCFGEdges: Sorts CFG edges.  User must deallocate returned
+// object.
+extern CFGEdgeVec*
+SortCFGEdges(CFG* g);
 
 
 //***************************************************************************
