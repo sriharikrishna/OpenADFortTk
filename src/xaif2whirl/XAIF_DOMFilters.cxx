@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.2 2003/08/08 20:04:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.3 2003/08/11 14:24:23 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -121,6 +121,32 @@ GetLastChildElement(DOMNode* n)
     }
   }
   return NULL;
+}
+
+//****************************************************************************
+
+short
+XAIF_ScopeElemFilter::acceptNode(const DOMNode *node) const
+{
+  const XMLCh* name = node->getNodeName();
+  if ( (node->getNodeType() == DOMNode::ELEMENT_NODE)
+       && XMLString::equals(name, XAIFStrings.elem_Scope_x()) ) {
+    return FILTER_ACCEPT;
+  }
+  return FILTER_SKIP;
+}
+
+//****************************************************************************
+
+short
+XAIF_SymbolElemFilter::acceptNode(const DOMNode *node) const
+{
+  const XMLCh* name = node->getNodeName();
+  if ( (node->getNodeType() == DOMNode::ELEMENT_NODE)
+       && XMLString::equals(name, XAIFStrings.elem_Symbol_x()) ) {
+    return FILTER_ACCEPT;
+  }
+  return FILTER_SKIP;
 }
 
 //****************************************************************************

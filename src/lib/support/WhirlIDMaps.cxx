@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.cxx,v 1.1 2003/08/01 15:59:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.cxx,v 1.2 2003/08/11 14:24:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -22,13 +22,14 @@
 //*************************** User Include Files ****************************
 
 #include "WhirlIDMaps.h"
+#include "Pro64IRInterface.h"
 
 //************************** Forward Declarations ***************************
 
 //***************************************************************************
 
 pair<WNIdToWNMap*, WNToWNIdMap*> 
-CreateWhirlIDMaps(WN* wn)
+CreateWhirlIdMaps(WN* wn)
 {
   static UINT nextId = 0; // 0 reserved as NULL
   
@@ -48,5 +49,38 @@ CreateWhirlIDMaps(WN* wn)
   }
   
   return make_pair(wnIdToWNMap, wnToWNIdMap);
+}
+
+//***************************************************************************
+
+static void
+CreatePUIdMaps_PU(PU_Info* pu, PUIdToPUMap* puIdToPUMap, UINT& nextId);
+
+PUIdToPUMap* 
+CreatePUIdMaps(PU_Info* pu_forest)
+{
+  static UINT nextId = 1; // FIXME: start with 2 for now!
+  
+  PUIdToPUMap* puIdToPUMap = new PUIdToPUMap();
+  
+  // Translate each PU, descending into children first
+  for (PU_Info *pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
+    CreatePUIdMaps_PU(pu, puIdToPUMap, nextId);
+  }
+  
+  return puIdToPUMap;
+}
+
+static void
+CreatePUIdMaps_PU(PU_Info* pu, PUIdToPUMap* puIdToPUMap, UINT& nextId)
+{
+  UINT32 id = ++nextId;
+  puIdToPUMap->Insert(id, pu);
+  
+  // Recursively translate all children
+  for (PU_Info *child = PU_Info_child(pu); child != NULL;
+       child = PU_Info_next(child)) {
+    CreatePUIdMaps_PU(pu, puIdToPUMap, nextId);
+  }
 }
 

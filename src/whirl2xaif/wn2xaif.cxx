@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.15 2003/08/08 19:51:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.16 2003/08/11 14:24:23 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -361,7 +361,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   AddToNonScalarSymTabOp op(symtab);
   ForAllNonScalarRefs(fbody, op); //FIXME
 
-  pair<WNIdToWNMap*, WNToWNIdMap*> wnmaps = CreateWhirlIDMaps(wn);
+  pair<WNIdToWNMap*, WNToWNIdMap*> wnmaps = CreateWhirlIdMaps(wn);
   
   ctxt.CreateContext(XlationContext::NOFLAG, symtab, wnmaps.second);
 

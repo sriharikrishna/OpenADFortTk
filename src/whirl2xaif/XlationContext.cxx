@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.7 2003/08/08 19:51:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.8 2003/08/11 14:24:23 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -59,7 +59,7 @@
 //*************************** User Include Files ****************************
 
 #include "XlationContext.h"
-#include "SymTab.h"
+#include <lib/support/SymTab.h>
 
 //************************** Forward Declarations ***************************
 

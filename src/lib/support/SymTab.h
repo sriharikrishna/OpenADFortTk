@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.4 2003/07/24 20:30:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.5 2003/08/11 14:24:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -64,7 +64,43 @@ private:
 private:
   STTABToScopeIdMap stabToScopeIdMap;
 };
+
+
+//***************************************************************************
+// XAIFSymToWhirlSymMap (FIXME)
+//***************************************************************************
+
+class XAIFSymToWhirlSymMap 
+{
+public:
+  // Constructor allocates an empty data structure
+  XAIFSymToWhirlSymMap();
+  virtual ~XAIFSymToWhirlSymMap();
   
+  // Find: Returns NULL if not found
+  ST* Find(const char* scopeid, const char* symid) const;
+  
+  // Insert: insert <'scopeid'+'symid', ST*> pair in the map and
+  // return true; if the key already exists, the operation fails and
+  // returns false.
+  bool Insert(const char* scopeid, const char* symid, const ST* st);
+  
+  // Return number of entries
+  unsigned int GetSize() const { return strToSTMap.size(); }
+
+  static std::string MakeKey(const char* scopeid, const char* symid);
+  
+private:
+  typedef std::map<std::string, ST*>    StringToSTMap;
+  typedef StringToSTMap::iterator       StringToSTMapIt;
+  typedef StringToSTMap::const_iterator StringToSTMapItC;
+  typedef StringToSTMap::value_type     StringToSTMapVal;
+
+private:
+  StringToSTMap strToSTMap;
+};
+
+
 //***************************************************************************
 // NonScalarSym
 //***************************************************************************
@@ -94,6 +130,7 @@ private:
   
   static UINT nextId; // for globally uniqe id numbers
 };
+
 
 //***************************************************************************
 // NonScalarSymTab

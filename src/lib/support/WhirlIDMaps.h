@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.2 2003/08/08 19:51:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.3 2003/08/11 14:24:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -35,6 +35,7 @@
 
 //************************** Forward Declarations ***************************
 
+typedef UINT PUId;
 typedef UINT WNId;
 
 //***************************************************************************
@@ -73,8 +74,12 @@ public:
 //***************************************************************************
 
 namespace WhirlIDMaps_hidden {
+
+  typedef std::map<PUId, PU_Info*> PUIdToPUBaseMap;
+
   typedef std::map<WNId, WN*> WNIdToWNBaseMap;
   typedef std::map<WN*, WNId> WNToWNIdBaseMap;
+
 }; /* namespace WhirlIDMaps_hidden */
 
 //***************************************************************************
@@ -148,11 +153,52 @@ public:
 // 
 //***************************************************************************
 
+// ---------------------------------------------------------
+// PUIdToPUMap
+// ---------------------------------------------------------
+
+class PUIdToPUMap : public WhirlIDMaps_hidden::PUIdToPUBaseMap {
+public:
+  PUIdToPUMap() { }
+  ~PUIdToPUMap() { }
+
+  PU_Info*
+  Find(PUId id) 
+  {
+    using namespace WhirlIDMaps_hidden;
+
+    PU_Info* result = NULL;
+    
+    PUIdToPUBaseMap::iterator it = this->find(id);
+    if (it != this->end()) {
+      result = (*it).second;
+    }
+    
+    return result;
+  }
+
+  void
+  Insert(PUId id, PU_Info* pu)
+  {
+    this->insert(make_pair(id, pu)); // do not add duplicates!
+  }
+  
+};
+
+
+
+//***************************************************************************
+// 
+//***************************************************************************
+
 // CreateWhirlIDMaps: Create persistent ID <-> WN* maps.  IDs are
 // guaranteed to be unique within the PU.  The user is responsible for
 // freeing the returned maps.
 pair<WNIdToWNMap*, WNToWNIdMap*> 
-CreateWhirlIDMaps(WN* wn);
+CreateWhirlIdMaps(WN* wn);
+
+PUIdToPUMap* 
+CreatePUIdMaps(PU_Info* pu_forest);
 
 //***************************************************************************
 

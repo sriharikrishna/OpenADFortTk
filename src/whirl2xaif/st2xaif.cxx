@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.13 2003/08/01 16:00:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.14 2003/08/11 14:24:23 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -114,7 +114,7 @@
 #include "st2xaif.h"
 #include "init2f.h"
 
-#include "SymTab.h"
+#include <lib/support/SymTab.h>
 
 //************************** Forward Declarations ***************************
 
@@ -412,7 +412,7 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
 		     (DIAG_W2F_DECLARE_RETURN_PARAM, "xlate_STDecl_VAR"));
   }
 #endif
-
+  
   const char* st_name = W2CF_Symtab_Nameof_St(st);
   ST* base = ST_base(st);
   TY_IDX ty = ST_type(st);

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.cxx,v 1.4 2003/07/24 20:30:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.cxx,v 1.5 2003/08/11 14:24:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -32,20 +32,19 @@
 //***************************************************************************
 
 // FIXME
+// Create a new symbol name
 static const char* cat(const char* str, UINT num)
 {
-  // 39 bytes hold a 128-bit uint in base 10. [log(2^128)]
+// 39 bytes hold a 128-bit uint in base 10. [log(2^128)]
 #define SYMBUF_SZ (32 + 39 + 1)
   static char buf[SYMBUF_SZ];
-  
-  // Create a new symbol name
   snprintf(buf, SYMBUF_SZ, "%s%d", str, num);
   return buf;
 #undef SYMBUF_SZ
 }
 
 //***************************************************************************
-// 
+// StabToScopeIdMap
 //***************************************************************************
 
 StabToScopeIdMap::StabToScopeIdMap()
@@ -76,6 +75,55 @@ StabToScopeIdMap::Insert(const ST_TAB* sttab_, const UINT id)
   STTABToScopeIdMapVal val = STTABToScopeIdMapVal(sttab, id);
   pair<STTABToScopeIdMapIt, bool> p = stabToScopeIdMap.insert(val);
   return p.second;
+}
+
+
+//***************************************************************************
+// XAIFSymToWhirlSymMap
+//***************************************************************************
+
+XAIFSymToWhirlSymMap::XAIFSymToWhirlSymMap()
+{
+}
+
+XAIFSymToWhirlSymMap::~XAIFSymToWhirlSymMap()
+{
+  strToSTMap.clear();
+}
+
+ST*
+XAIFSymToWhirlSymMap::Find(const char* scopeid, const char* symid) const
+{
+  std::string key = MakeKey(scopeid, symid);
+
+  StringToSTMapItC it = strToSTMap.find(key);
+  ST* st = (it == strToSTMap.end()) ? NULL : (*it).second;
+  return st;
+}
+
+bool
+XAIFSymToWhirlSymMap::Insert(const char* scopeid, const char* symid, 
+			     const ST* st_)
+{
+  std::string key = MakeKey(scopeid, symid);
+  ST* st = const_cast<ST*>(st_); // the map uses non const types
+  
+  StringToSTMapVal val = StringToSTMapVal(key, st);
+  pair<StringToSTMapIt, bool> p = strToSTMap.insert(val);
+  return p.second;
+}
+
+std::string 
+XAIFSymToWhirlSymMap::MakeKey(const char* scopeid, const char* symid)
+{
+  // Reserve enough space for null terminators and concatination char
+  std::string key;
+  key.reserve(strlen(scopeid) + strlen(symid) + 3);
+
+  key += scopeid;
+  key += ".";
+  key += symid;
+  return key;
 }
 
 //***************************************************************************

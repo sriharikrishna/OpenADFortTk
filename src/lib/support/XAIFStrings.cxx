@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.2 2003/08/08 19:51:28 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.3 2003/08/11 14:24:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -43,16 +43,35 @@ XAIFStringRepository XAIFStrings;
 
 // Note: The order must match the enumeration!
 const char* XAIFStringRepository::c_strTbl[] = {
+  // -----------------------------------------------------
+  
   // Common attributes
   "annotation",
   "vertex_id",
   "edge_id",
   "scope_id",
   "symbol_id",
+  "source",
+  "target",
+  
+  // -----------------------------------------------------
 
+  // xaif:ScopeHierarchy, xaif:Scope, xaif:SymbolTable
+  "xaif:ScopeHierarchy",
+  "xaif:Scope",
+  "xaif:SymbolTable",
+
+  // xaif:Symbol
+  "xaif:Symbol",
+  "kind",
+  "type",
+  "shape",
+  
+  // -----------------------------------------------------
+  
   // xaif:ControlFlowGraph
   "xaif:ControlFlowGraph",
-
+  
   // xaif:BasicBlock
   "xaif:BasicBlock",
   "xaif:Entry",
@@ -62,10 +81,23 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "xaif:PreLoop",
   "xaif:PostLoop",
   
-  // xaif:BasicBlock statements
+  // Statements
   "xaif:Assignment",
   "xaif:SubroutineCall",
   "xaif:Nop",
+
+  // Expressions
+  "xaif:VariableReference"
+  "xaif:Constant"
+  "xaif:Intrinsic"
+  "xaif:FunctionCall"
+  "xaif:BooleanOperation"
+
+  "xaif:SymbolReference",
+
+  "xaif:ExpressionEdge",
+
+  // -----------------------------------------------------
   
   // Special tags
   "[WHIRLIDS]"

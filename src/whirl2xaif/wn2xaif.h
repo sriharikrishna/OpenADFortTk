@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.8 2003/08/01 16:00:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.9 2003/08/11 14:24:23 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -246,7 +246,7 @@ ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op);
 BOOL WN2F_Can_Assign_Types(TY_IDX t1, TY_IDX t2);
 
 //FIXME: locate elsewhere...
-#include "SymTab.h" // FIXME
+#include <lib/support/SymTab.h> // FIXME
 
 // Given a symbol table, add references to it
 class AddToNonScalarSymTabOp : public ForAllNonScalarRefsOp {

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.3 2003/08/08 20:04:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.4 2003/08/11 14:24:23 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -40,9 +40,12 @@
 #include "XercesStrX.h"
 
 #include <lib/support/Pro64IRInterface.h>
+#include <lib/support/SymTab.h> // for XAIFSymToWhirlSymMap
 #include <lib/support/WhirlIDMaps.h>
 #include <lib/support/XAIFStrings.h>
 #include <lib/support/diagnostics.h>
+
+#include <OpenAnalysis/Utils/DGraph.h>
 
 //*************************** Forward Declarations ***************************
 
@@ -51,6 +54,9 @@ using std::endl;
 
 static void
 TranslateCallGraph(PU_Info* pu_forest, DOMDocument* doc, XlationContext& ctxt);
+
+static XAIFSymToWhirlSymMap*
+TranslateScopeHierarchy(DOMDocument* doc, XlationContext& ctxt);
 
 static void
 TranslateCFG(PU_Info* pu_forest, DOMElement* cfgElem, XlationContext& ctxt);
@@ -94,7 +100,29 @@ GetWNIdList(const char* idstr);
 
 //****************************************************************************
 
+static void
+xlate_Scope(DOMElement* elem, XAIFSymToWhirlSymMap* symMap, 
+	    XlationContext& ctxt);
 
+//****************************************************************************
+
+// FIXME: used with CreateExpressionGraph
+typedef std::map<std::string, DGraph::Node*> IdToNodeMap;
+
+class MyDGNode : public DGraph::Node {
+public:
+  MyDGNode(DOMElement* e_) : e(e_) { }
+  virtual ~MyDGNode() { }
+
+  DOMElement* GetElem() { return e; }
+  
+private:
+  DOMElement* e;
+};
+
+//****************************************************************************
+
+// TranslateIR: 
 void
 xaif2whirl::TranslateIR(PU_Info* pu_forest, DOMDocument* doc)
 {
@@ -108,11 +136,17 @@ xaif2whirl::TranslateIR(PU_Info* pu_forest, DOMDocument* doc)
 }
 
 
+// TranslateCallGraph: 
 static void
 TranslateCallGraph(PU_Info* pu_forest, DOMDocument* doc, XlationContext& ctxt)
 {
   // FIXME: Do something about the ScopeHeirarchy
+  PUIdToPUMap* pumap = CreatePUIdMaps(pu_forest);
+  ctxt.SetIdToPUMap(pumap);
 
+  XAIFSymToWhirlSymMap* symmap = TranslateScopeHierarchy(doc, ctxt);
+  ctxt.SetXAIFSymToWhirlSymMap(symmap);
+  
   // -------------------------------------------------------
   // Translate each ControlFlowGraph in the CallGraph
   // -------------------------------------------------------
@@ -125,29 +159,55 @@ TranslateCallGraph(PU_Info* pu_forest, DOMDocument* doc, XlationContext& ctxt)
     TranslateCFG(pu_forest, elem, ctxt);
   }
   it->release();
+  
+  delete pumap;
+  delete symmap;
 }
 
 
+// TranslateScopeHierarchy: 
+static XAIFSymToWhirlSymMap*
+TranslateScopeHierarchy(DOMDocument* doc, XlationContext& ctxt)
+{
+  XAIFSymToWhirlSymMap* symMap = new XAIFSymToWhirlSymMap;
+
+  // -------------------------------------------------------
+  // Enter symbols for all Scopes in the ScopeHierarchy
+  // -------------------------------------------------------
+  DOMNodeIterator* it = 
+    doc->createNodeIterator(doc, DOMNodeFilter::SHOW_ALL, 
+			    new XAIF_ScopeElemFilter(), true);
+  for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
+    DOMElement* elem = dynamic_cast<DOMElement*>(node);
+    xlate_Scope(elem, symMap, ctxt);
+  }
+  it->release();
+  
+  return symMap;
+}
+
+
+// TranslateCFG: 
 static void
 TranslateCFG(PU_Info* pu_forest, DOMElement* cfgElem, XlationContext& ctxt)
 {
   //FIXME: 
-  const XMLCh* name = cfgElem->getAttribute(XAIFStrings.attr_annot_x());
-  const XMLCh* scopeId = cfgElem->getAttribute(XAIFStrings.attr_scopeId_x());
-  const XMLCh* symId = cfgElem->getAttribute(XAIFStrings.attr_symId_x());
+  const XMLCh* nameX = cfgElem->getAttribute(XAIFStrings.attr_annot_x());
+  const XMLCh* scopeIdX = cfgElem->getAttribute(XAIFStrings.attr_scopeId_x());
+  const XMLCh* symIdX = cfgElem->getAttribute(XAIFStrings.attr_symId_x());
   
-  XercesStrX nameStr = XercesStrX(name);
-  XercesStrX scopeIdStr = XercesStrX(scopeId);
-  XercesStrX symIdStr = XercesStrX(symId);
+  XercesStrX name = XercesStrX(nameX);
+  XercesStrX scopeId = XercesStrX(scopeIdX);
+  XercesStrX symId = XercesStrX(symIdX);
 
-  cout << XercesStrX(cfgElem->getNodeName()) << ": " << nameStr 
-       << " // " << scopeIdStr << ", " << symIdStr << endl;
+  cout << XercesStrX(cfgElem->getNodeName()) << ": " << name 
+       << " // " << scopeId << ", " << symId << endl;
 
   // -------------------------------------------------------
   // Try to find the matching PU; if so, translate XAIF CFG to WHIRL PU.
   // -------------------------------------------------------
-  PU_Info* pu = FindPUForCFG(pu_forest, nameStr.c_str(), scopeIdStr.c_str(),
-			     symIdStr.c_str());
+  PU_Info* pu = FindPUForCFG(pu_forest, name.c_str(), scopeId.c_str(),
+			     symId.c_str());
   if (!pu) { return; }
 
 
@@ -161,12 +221,13 @@ TranslateCFG(PU_Info* pu_forest, DOMElement* cfgElem, XlationContext& ctxt)
 }
 
 
-// Given an XAIF CFG rooted at 'cfgElem' and its corresponding WHIRL
-// tree 'wn_pu', modify the WHIRL to reflect the XAIF.
+// TranslateCFG: Given an XAIF CFG rooted at 'cfgElem' and its
+// corresponding WHIRL tree 'wn_pu', modify the WHIRL to reflect the
+// XAIF.
 static void
 TranslateCFG(WN *wn_pu, DOMElement* cfgElem, XlationContext& ctxt)
 {
-  pair<WNIdToWNMap*, WNToWNIdMap*> wnmaps = CreateWhirlIDMaps(wn_pu);
+  pair<WNIdToWNMap*, WNToWNIdMap*> wnmaps = CreateWhirlIdMaps(wn_pu);
   ctxt.SetIdToWNMap(wnmaps.first);
   ctxt.SetWNToIdMap(wnmaps.second);
   
@@ -187,17 +248,15 @@ TranslateCFG(WN *wn_pu, DOMElement* cfgElem, XlationContext& ctxt)
   fprintf(stderr, "\n----------------------------------------------------\n");
   fdump_tree(stderr, wn_pu);
 
-
   delete wnmaps.first;
   delete wnmaps.second;
 }
 
 
+// TranslateBB: 
 static void
 TranslateBB(WN *wn_pu, DOMElement* bbElem, XlationContext& ctxt)
 {
-  WNIdToWNMap* wnmap = ctxt.GetIdToWNMap();
-
   WN* firstWN = NULL, *lastWN = NULL;
   while ( FindNextStmtInterval(firstWN, lastWN, bbElem, ctxt) ) {
 
@@ -238,22 +297,22 @@ TranslateBB(WN *wn_pu, DOMElement* bbElem, XlationContext& ctxt)
 
 //****************************************************************************
 
+// FIXME: This should use PU ID!!
 
 // FindPUForCFG: Find the PU in 'pu_forest' that matches the name and
 // scope/symbol ids.  If name is non-empty, the scopeId and symId
 // should be non-empty.
-// FIXME: this is just a linear search
 static PU_Info*
 FindPUForCFG(PU_Info* pu_forest, const char* name, 
 	     const char* scopeIdStr, const char* symIdStr)
 {
-  unsigned long symId = strtol(symIdStr, (char **)NULL, 10);
-  
   if (!name || name[0] == '\0'
       || !scopeIdStr || scopeIdStr[0] == '\0'
       || !symIdStr || symIdStr == '\0') {
     return NULL;
   }
+
+  unsigned long symId = strtol(symIdStr, (char **)NULL, 10);
   
   Pro64IRProcIterator procIt(pu_forest);
   for ( ; procIt.IsValid(); ++procIt) { 
@@ -405,6 +464,19 @@ FindSafeInsertionPoint(WN* blckWN, WN* stmtWN)
 }
 
 
+// GetPUId: Returns the PUId attached to the node FIXME
+static PUId
+GetPUId(DOMElement* elem)
+{
+  // FIXME: we need to use real scope tags
+  const XMLCh* attrX = elem->getAttribute(XAIFStrings.attr_Vid_x());
+  XercesStrX attr = XercesStrX(attrX);
+  
+  PUId id = strtol(attr.c_str(), (char **)NULL, 10);
+  return id;
+}
+
+
 // GetWNIdList: Returns a list of any WHIRLIDs attached to the
 // annotation attribute.
 //
@@ -453,17 +525,39 @@ GetWNIdList(const char* idstr)
 //****************************************************************************
 
 
-WN* 
+static WN* 
 xlate_Assignment(DOMElement* elem, XlationContext& ctxt);
 
-WN* 
+static WN* 
 xlate_SubroutineCall(DOMElement* elem, XlationContext& ctxt);
 
-WN*
+static WN*
 xlate_AssignmentLHS(DOMElement* elem, XlationContext& ctxt);
 
-WN*
+static WN*
 xlate_AssignmentRHS(DOMElement* elem, XlationContext& ctxt);
+
+
+static WN*
+TranslateExpression(DOMElement* elem, XlationContext& ctxt);
+
+static WN*
+xlate_Expression(DGraph* g, MyDGNode* n, XlationContext& ctxt);
+
+static WN*
+xlate_VarRef(DOMElement* elem, XlationContext& ctxt, bool lvalue);
+
+static WN*
+xlate_Constant(DOMElement* elem, XlationContext& ctxt);
+
+
+
+static ST*
+GetST(DOMElement* elem, XlationContext& ctxt);
+
+DGraph* 
+CreateExpressionGraph(DOMNode* node);
+
 
 
 static WN* 
@@ -473,9 +567,9 @@ TranslateStmt(DOMElement* stmt, XlationContext& ctxt)
   
   const XMLCh* name = stmt->getNodeName();
   if (XMLString::equals(name, XAIFStrings.elem_Assign_x())) {
-    wn = xlate_SubroutineCall(stmt, ctxt);
-  } else if (XMLString::equals(name, XAIFStrings.elem_SubCall_x())) {
     wn = xlate_Assignment(stmt, ctxt);
+  } else if (XMLString::equals(name, XAIFStrings.elem_SubCall_x())) {
+    wn = xlate_SubroutineCall(stmt, ctxt);
   } else if (XMLString::equals(name, XAIFStrings.elem_Nop_x())) {
     // nothing
   } else {
@@ -486,38 +580,309 @@ TranslateStmt(DOMElement* stmt, XlationContext& ctxt)
 }
 
 
-WN* 
+static WN* 
 xlate_Assignment(DOMElement* elem, XlationContext& ctxt)
 {
-  xlate_AssignmentLHS(elem, ctxt);
-  xlate_AssignmentRHS(elem, ctxt);
+  WN* lhs = xlate_AssignmentLHS(GetFirstChildElement(elem), ctxt);
+  WN* rhs = xlate_AssignmentRHS(GetLastChildElement(elem), ctxt);
+  // FIXME: should we try to select btwn STID and ISTORE, etc?
+  
+  // ISTORE
+
   WN* wn = WN_CreateAssert(0, WN_CreateIntconst(OPC_I4INTCONST, (INT64)1));
   return wn;
 }
 
-WN* 
+static WN* 
 xlate_SubroutineCall(DOMElement* elem, XlationContext& ctxt)
 {
   WN* wn = WN_CreateAssert(0, WN_CreateIntconst(OPC_I4INTCONST, (INT64)1));
   return wn;
 }
 
-WN*
+static WN*
 xlate_AssignmentLHS(DOMElement* elem, XlationContext& ctxt)
 {
+  // VariableReferenceType
+  WN* wn = xlate_VarRef(GetFirstChildElement(elem), ctxt, true);
+  return wn;
+}
+
+static WN*
+xlate_AssignmentRHS(DOMElement* elem, XlationContext& ctxt)
+{
+  // ExpressionType
+  WN* wn = TranslateExpression(elem, ctxt);
+  return wn;
+}
+
+// TranslateExpression: Given the first node in an expression graph... 
+static WN*
+TranslateExpression(DOMElement* elem, XlationContext& ctxt)
+{
+  // Slurp expression into a graph (DAG)
+  DGraph* g = CreateExpressionGraph(elem);
+  
+  MyDGNode* n = dynamic_cast<MyDGNode*>(g->root());
+  
+  WN* wn = xlate_Expression(g, n, ctxt);
+  delete g;
+
+  return wn;
+}
+
+static WN*
+xlate_Expression(DGraph* g, MyDGNode* n, XlationContext& ctxt)
+{
+  // Recursively translate the DAG (tree) rooted at this node
+  DOMElement* elem = n->GetElem();
+  assert(elem); // FIXME
+  
+  const XMLCh* name = elem->getNodeName();
+  if (XMLString::equals(name, XAIFStrings.elem_VarRef_x())) {
+    return xlate_VarRef(elem, ctxt, false);
+  } else if (XMLString::equals(name, XAIFStrings.elem_Constant_x())) {
+    return xlate_Constant(elem, ctxt);
+  } else if (XMLString::equals(name, XAIFStrings.elem_Intrinsic_x())) {
+    
+    // is unary
+    // is binary
+    // is ternary
+
+    // translate the children
+    
+    // find a function pointer to the appropriate tranlation function
+    
+    // children are expressions
+    return NULL;
+
+  } else if (XMLString::equals(name, XAIFStrings.elem_FuncCall_x())) {
+    // children are expressions
+    // find number of arguments
+    return NULL;
+
+  } else if (XMLString::equals(name, XAIFStrings.elem_BoolOp_x())) {
+    // children are expressions
+    return NULL;
+
+  }
+}
+
+
+// FIXME the third argument should be a part of 'ctxt'
+static WN*
+xlate_VarRef(DOMElement* elem, XlationContext& ctxt, bool lvalue)
+{
+  assert(lvalue);
+  
+  const XMLCh* name = elem->getNodeName();
+  //XercesStrX nameStr = XercesStrX(name);
+  assert(XMLString::equals(name, XAIFStrings.elem_SymRef_x()));
+  
+  ST* st = GetST(elem, ctxt);
+  
+  // FIXME: LDID? // LDA // opcode
+  // ***FIXME***
+  // WN* wn = WN_CreateLda(OPC_F8LDA, 0, TY_pointer(ST_type(st)), st);
+
   return NULL;
 }
 
-WN*
-xlate_AssignmentRHS(DOMElement* elem, XlationContext& ctxt)
+
+static WN*
+xlate_Constant(DOMElement* elem, XlationContext& ctxt)
 {
   return NULL;
 }
 
 
-#if 0
-TranslateVarRef
 
-TranslateExpression(WHIRL*, exprgraph, context);
-// "VariableReference|Constant|Intrinsic|FunctionCall|BooleanOperation"
-#endif
+static ST*
+GetST(DOMElement* elem, XlationContext& ctxt)
+{
+  const XMLCh* scopeIdX = elem->getAttribute(XAIFStrings.attr_scopeId_x());
+  const XMLCh* symIdX = elem->getAttribute(XAIFStrings.attr_symId_x());
+
+  XercesStrX scopeId = XercesStrX(scopeIdX);
+  XercesStrX symId = XercesStrX(symIdX);
+
+  assert(strcmp(scopeId.c_str(), "") != 0);
+  assert(strcmp(symId.c_str(), "") != 0);
+
+  return ctxt.FindSym(scopeId.c_str(), symId.c_str());
+}
+
+//****************************************************************************
+
+
+// CreateExpressionGraph: Given the first element in an XAIF
+// expression graph, returns a DGraph where where graph nodes point to
+// nodes in the DOM tree.  When walking from root to children, one
+// descends incoming edges.
+DGraph* 
+CreateExpressionGraph(DOMNode* node)
+{
+  DGraph* g = new DGraph;
+  IdToNodeMap m;
+  
+  // FIXME: for now we assume the root node is the FIRST node
+  // Root: no outgoing vertices
+
+  DOMNode* n = node; 
+  do {
+    // Only examine element node
+    if (n->getNodeType() != DOMNode::ELEMENT_NODE) { continue; }
+    
+    DOMElement* e = dynamic_cast<DOMElement*>(n);
+    
+    const XMLCh* name = e->getNodeName();
+    if (XMLString::equals(name, XAIFStrings.elem_ExprEdge_x())) {
+      // Add an edge to the graph
+      
+      // Find src and target (sink) nodes
+      const XMLCh* srcX = e->getAttribute(XAIFStrings.attr_source_x());
+      const XMLCh* targX = e->getAttribute(XAIFStrings.attr_target_x());
+      XercesStrX src = XercesStrX(srcX);
+      XercesStrX targ = XercesStrX(targX);
+      // FIXME: how best to deal with 'position' 
+      // we need to sort the edges by position
+
+      MyDGNode* gn1 = NULL, *gn2 = NULL; // src and targ
+      
+      IdToNodeMap::iterator it = m.find(src.c_str());
+      if (it != m.end()) { 
+	gn1 = dynamic_cast<MyDGNode*>((*it).second); 
+      }
+      
+      it = m.find(targ.c_str());
+      if (it != m.end()) { 
+	gn2 = dynamic_cast<MyDGNode*>((*it).second); 
+      }
+      
+      assert(gn1 && gn2); // FIXME
+      
+      DGraph::Edge* ge = new DGraph::Edge(gn1, gn2);
+      g->add(ge);
+      
+    } else {
+      // Add a vertex to the graph
+      const XMLCh* vidX = e->getAttribute(XAIFStrings.attr_Vid_x());
+      XercesStrX vid = XercesStrX(vidX);
+      
+      MyDGNode* gn = new MyDGNode(e);
+      g->add(gn);
+    }
+    
+  } while ( (n = n->getNextSibling()) );
+  
+  return g;
+}
+
+//****************************************************************************
+
+static void
+xlate_SymbolTable(DOMElement* STElem, const char* scopeId, PU_Info* pu, 
+		  XAIFSymToWhirlSymMap* symMap);
+
+static void
+xlate_Symbol(DOMElement* elem, const char* scopeId, PU_Info* pu, 
+	     XAIFSymToWhirlSymMap* symMap);
+
+
+static void
+xlate_Scope(DOMElement* elem, XAIFSymToWhirlSymMap* symMap, 
+	    XlationContext& ctxt)
+{
+  // FIXME: 
+  // Find the corresponding WHIRL scope (only PUs for now)
+  // Currently, scopes may refer to either the global scope (id = 1)
+  // or PUs (id > 1). 
+  PUId id = GetPUId(elem);
+  PU_Info* pu = NULL;
+  if (id > 1) {
+    pu = ctxt.FindPU(id);
+  }
+  
+  // FIXME
+  const XMLCh* scopeIdX = elem->getAttribute(XAIFStrings.attr_Vid_x());
+  XercesStrX scopeId = XercesStrX(scopeIdX);
+
+  // Translate the xaif:SymbolTable (the only child)
+  DOMElement* symtabElem = GetFirstChildElement(elem);
+  xlate_SymbolTable(symtabElem, scopeId.c_str(), pu, symMap); 
+}  
+
+static void
+xlate_SymbolTable(DOMElement* STElem, const char* scopeId, PU_Info* pu, 
+		  XAIFSymToWhirlSymMap* symMap)
+{
+  // For all xaif:Symbol in the xaif:SymbolTable
+
+  DOMDocument* doc = STElem->getOwnerDocument();
+  DOMNodeIterator* it = 
+    doc->createNodeIterator(STElem, DOMNodeFilter::SHOW_ALL, 
+			    new XAIF_SymbolElemFilter(), true);
+  for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
+    DOMElement* elem = dynamic_cast<DOMElement*>(node);
+    xlate_Symbol(elem, scopeId, pu, symMap);
+  }
+  it->release();
+
+}
+
+// FIXME: only handles global and PU scopes
+static void
+xlate_Symbol(DOMElement* elem, const char* scopeId, PU_Info* pu, 
+	     XAIFSymToWhirlSymMap* symMap)
+{
+  // 1. Initialize
+  SYMTAB_IDX level = GLOBAL_SYMTAB; // Default: assume a global symbol
+  if (pu) {
+    // This is a PU-scoped symbol.  Restore local symbol tables
+    RestoreOpen64PUGlobalVars(pu);
+    level = CURRENT_SYMTAB; // PU_lexical_level
+  }
+
+  // 2. Find or Create symbol
+  ST* st = NULL;
+
+  const XMLCh* symIdX = elem->getAttribute(XAIFStrings.attr_symId_x());
+  XercesStrX symId = XercesStrX(symIdX);
+  static const char* tag = "SymbolTable_";//FIXME: add explicit ST tag
+  
+  if (strncmp(symId.c_str(), tag, strlen(tag)) == 0) {
+    // Create the symbol
+    st = New_ST(level);
+    //string symstr = symId.c_str();
+    
+    const XMLCh* kindX = elem->getAttribute(XAIFStrings.attr_kind_x());
+    const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
+    const XMLCh* shapeX = elem->getAttribute(XAIFStrings.attr_shape_x());
+
+    XercesStrX kind = XercesStrX(kindX);
+    XercesStrX type = XercesStrX(typeX);
+    XercesStrX shape = XercesStrX(shapeX);
+    
+    assert( strcmp(kind.c_str(), "variable" ) == 0 ); // FIXME: assume only
+    assert( strcmp(type.c_str(), "double" ) == 0 );   // scalar, doubles
+    assert( strcmp(shape.c_str(), "scalar" ) == 0 );
+    
+    ST_Init(st, Save_Str(symId.c_str()), CLASS_VAR, SCLASS_AUTO, EXPORT_LOCAL,
+	    MTYPE_To_TY(MTYPE_F8));
+    
+  } else {
+    // Find the symbol
+    UINT32 idx = strtol(symId.c_str(), (char **)NULL, 10);
+    assert(idx != 0);
+    st = &(Scope_tab[level].st_tab->Entry(idx));
+  }
+  
+  // 3. Add the symbol to the map
+  symMap->Insert(scopeId, symId.c_str(), st);
+  
+  // 4. Finalize
+  if (pu) {
+    SaveOpen64PUGlobalVars(pu);
+  }
+} 
+

@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/Makefile,v 1.5 2003/08/01 16:00:45 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/Makefile,v 1.6 2003/08/11 14:24:22 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -54,8 +54,7 @@ OBJS = \
 	wn_attr.o \
 	PUinfo.o \
 	\
-	SymTab.o \
-	XlationContext.o 
+	XlationContext.o
 
 ####################
 

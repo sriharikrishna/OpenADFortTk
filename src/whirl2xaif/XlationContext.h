@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.8 2003/08/01 16:00:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.9 2003/08/11 14:24:23 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -64,9 +64,8 @@
 
 //*************************** User Include Files ****************************
 
-#include "SymTab.h"
-
-#include "lib/support/WhirlIDMaps.h"
+#include <lib/support/WhirlIDMaps.h>
+#include <lib/support/SymTab.h>
 
 //************************** Forward Declarations ***************************
 
