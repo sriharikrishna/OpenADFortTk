@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.6 2004/03/13 16:32:07 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.7 2004/03/19 16:55:09 eraxxon Exp $
 # -*-makefile-*-
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -16,7 +16,7 @@ include $(WHIRL2XAIF)/test/Makeinclude.config
 #############################################################################
 
 .SUFFIXES: .f90
-F90_EXCEPTIONS = types_derived1.f90 types_derived2.f90
+F90_EXCEPTIONS =
 
 VPATH = .
 
@@ -50,12 +50,11 @@ tests_pre : schema
 tests_run: 
 	@echo "*** EXCEPTIONS: $(F90_EXCEPTIONS) ***"
 	@for f in $(F90_MASTERS) ; do \
-	  f_B=`echo $${f} | sed s@.f90@.B@` ; \
-	  f_xaif=`echo $${f} | sed s@.f90@.xaif@` ; \
+	  fbase=`echo $${f} | sed s@.f90@@` ; \
 	  echo $${f}... ; \
 	  $(MFEF90) $${f} ; \
-	  $(W2X) $${f_B} -o $${f_xaif} ; \
-	  $(NORM) $${f_xaif} ; \
+	  $(W2X) $${fbase}.B -o $${fbase}.xaif ; \
+	  $(NORM) $${fbase}.xaif ; \
 	done
 
 #pipeline :
