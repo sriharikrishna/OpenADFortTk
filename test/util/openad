@@ -191,6 +191,7 @@ sub undefEnvVarErr
   my $XAIFSCHEMAROOT = undef;
   
   my $f_RE = undef;
+  my $F_RE = undef;
   my $f90_RE = undef;
 
   sub RunOpenADPipeline 
@@ -202,9 +203,9 @@ sub undefEnvVarErr
       ConfigRunOpenADPipeline($mode);
     }
     
-    # Find base name of file. Support following extensions: .f90, .f 
+    # Find base name of file. Support following extensions: .f90, .f, .F
     my $base = $fortranfile;
-    my $num = ($base =~ s/(?:$f90_RE)|(?:$f_RE)//); 
+    my $num = ($base =~ s/(?:$f90_RE)|(?:$f_RE)|(?:$F_RE)//); 
     if ($num == 0) {
       print STDOUT "Unknown file type: ${fortranfile}\n";
       exit(-1);
@@ -291,6 +292,7 @@ sub undefEnvVarErr
     $XB = "${XB_alg} -c ${ii_xaif}";
     
     $f_RE = '.f$';
+    $F_RE = '.F$';
     $f90_RE = '.f90$';
 
     ConfigSchema();
