@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.18 2004/05/07 20:04:58 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.19 2004/07/28 19:04:42 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -134,10 +134,6 @@ namespace xaif2whirl {
   bool
   IsTagPresent(const char* annotstr, const char* tag);
 
-  // Get the value of the tag IntrinsicKey
-  std::string
-  GetIntrinsicKey(const DOMElement* elem);
-
   // Get the appropriate persistant id from the element 'elem'.  See
   // detailed descriptions for generic functions below.
   SymTabId
@@ -154,6 +150,14 @@ namespace xaif2whirl {
   
   IdList<WNId>*
   GetWNIdList(const DOMElement* elem);
+
+  // Get the value of the tag IntrinsicKey
+  std::string
+  GetIntrinsicKey(const DOMElement* elem);
+
+  // Get the value of the tag PregId
+  PREG_IDX
+  GetPregId(const DOMElement* elem);
   
   // GetId, GetIdList: Returns an id or list of ids from the given tag
   // within the annotation attribute.  For the non-list version, 0 is

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.31 2004/07/16 21:59:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.32 2004/07/28 19:04:42 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -589,6 +589,7 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
   ST* st = sym->GetST();
   TY_IDX ty = ST_type(st);
   TYPE_ID rty, dty;
+  WN_OFFSET oset = 0;
   
   // -------------------------------------------------------
   // 1. Determine which type of load to use
@@ -615,7 +616,7 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
     // OPR_LDA
     TY_IDX ty_ptr = Stab_Pointer_To(ty);
     rty = TY_mtype(ty_ptr); // Pointer_Mtype
-    wn = WN_CreateLda(OPR_LDA, rty, MTYPE_V, 0, ty_ptr, st, 0);
+    wn = WN_CreateLda(OPR_LDA, rty, MTYPE_V, oset, ty_ptr, st, 0);
   } 
   else {
     // OPR_LDID
@@ -629,8 +630,12 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
       if (MTYPE_is_unsigned(dty)) { rty = DefaultMTypeUInt; }
       else if (MTYPE_is_signed(dty)) { rty = DefaultMTypeInt; }
     }
-
-    wn = WN_CreateLdid(OPR_LDID, rty, dty, 0, st, ty, 0);
+    
+    if (ST_class(st) == CLASS_PREG) {
+      oset = GetPregId(elem);
+    }
+    
+    wn = WN_CreateLdid(OPR_LDID, rty, dty, oset, st, ty, 0);
   } 
   return wn;
 }
@@ -643,6 +648,7 @@ xlate_SymbolReferenceSimple(const DOMElement* elem, XlationContext& ctxt)
 {
   Symbol* sym = GetSymbol(elem, ctxt);
   ST* st = sym->GetST();
+  ASSERT_FATAL(ST_class(st) != CLASS_PREG, (DIAG_A_STRING, "Unimplemented: We must propagate both symbol and preg offset information to our callers."));
   return st;
 }
 
