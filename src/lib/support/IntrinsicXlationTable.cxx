@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.8 2004/04/29 21:28:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.9 2004/05/11 17:50:26 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -75,6 +75,7 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
 
   { { WNExpr, OPR_MOD, NULL, 2 },
                         { XAIFIntrin, "bogus_mod_scal_scal", NULL, 2 } },
+  // ?OPR_CALL "MOD" (intrn_info.cxx)
   { { WNExpr, OPR_REM, NULL, 2 },
                         { XAIFIntrin, "bogus_rem_scal_scal", NULL, 2 } },
 
@@ -116,6 +117,7 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
   // Rounding, conversion
   { { WNExpr, OPR_ABS, NULL, 1 },
                         { XAIFIntrin, "bogus_abs_scal", NULL, 1 } },
+  // ?OPR_CALL "ABS" (intrn_info.cxx)  
   { { WNExpr, OPR_RND, NULL, 1 },
                         { XAIFIntrin, "bogus_round_scal", NULL, 1 } },
   { { WNExpr, OPR_TRUNC, NULL, 1 },
