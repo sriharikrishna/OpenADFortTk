@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.33 2004/03/19 16:54:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.34 2004/04/08 13:52:36 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -251,8 +251,9 @@ whirl2xaif::xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
-      << " [goto " << WN_label_number(wn) << "]" << EndAttr
+      << BegAttr("annotation") 
+      << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << StmtGotoAnnotVal(WN_label_number(wn)) << EndAttr
       << EndElem;
   
   return whirl2xaif::good;
@@ -404,8 +405,9 @@ whirl2xaif::xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   xos << BegElem(XAIFStrings.elem_Marker())
       << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
-      << " [label " << WN_label_number(wn) << "]" << EndAttr
+      << BegAttr("annotation") 
+      << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << StmtLabelAnnotVal(WN_label_number(wn)) << EndAttr
       << EndElem;
   
   return whirl2xaif::good;

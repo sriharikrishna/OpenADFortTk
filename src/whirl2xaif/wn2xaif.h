@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.22 2004/03/03 16:31:41 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.23 2004/04/08 13:52:36 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -322,6 +322,19 @@ WhirlIdAnnotVal(const T& val_)
   return AttrAnnotVal(XAIFStrings.tag_WHIRLId(), val_);
 }
 
+template<class T> 
+AttrAnnotInfo_<T>
+StmtGotoAnnotVal(const T& val_)
+{
+  return AttrAnnotVal(XAIFStrings.tag_StmtGoto(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+StmtLabelAnnotVal(const T& val_)
+{
+  return AttrAnnotVal(XAIFStrings.tag_StmtLabel(), val_);
+}
 
 //***************************************************************************
 // 
