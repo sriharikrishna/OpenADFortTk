@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.5 2003/12/19 21:06:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.6 2004/01/25 02:43:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -52,6 +52,10 @@
 #include "file_util.h"	    // New_Extension, Last_Pathname_Component
 #include "tracing.h"        // trace routines
 
+//************************ OpenAnalysis Include Files ***********************
+
+#include <OpenAnalysis/Utils/Exception.h>
+
 //*************************** User Include Files ****************************
 
 #include "xaif2whirl.h"
@@ -61,8 +65,6 @@
 #include <lib/support/diagnostics.h>
 #include <lib/support/WhirlIO.h>
 #include <lib/support/XAIFStrings.h>
-
-#include <OpenAnalysis/Utils/Exception.h>
 
 //*************************** Forward Declarations ***************************
 

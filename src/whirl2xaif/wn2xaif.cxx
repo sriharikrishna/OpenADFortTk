@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.29 2003/12/29 20:44:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.30 2004/01/25 02:43:25 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -327,7 +327,7 @@ whirl2xaif::TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   OPERATOR opr = WN_operator(wn);
   
-#if 1
+#if 0
   //xos << BegComment << "Translating " << OPERATOR_name(opr) << EndComment;
   WNId id = ctxt.FindWNId(wn);
 #endif
@@ -453,7 +453,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	<< Attr("source", n1->getID()) 
 	<< Attr("target", n2->getID()) << EndElem; // FIXME: DumpGraphEdge
   }
-
+  
   // -------------------------------------------------------
   // Cleanup
   // -------------------------------------------------------
@@ -1481,9 +1481,6 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
 
 /////////////////////////////////////////////////////////////////////////////
 // FIXME: REMOVE
-
-// FIXME: REMOVE: defined in main.cxx
-extern bool opt_testTypes;
 void CONVERT_TYPES_TESTER(SYMTAB_IDX symtab_lvl);
 
 TY_IDX
