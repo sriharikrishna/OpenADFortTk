@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.27 2004/02/11 18:05:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.28 2004/02/13 20:18:55 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -197,7 +197,7 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
       << Attr("xmlns:xaif", "http://www.mcs.anl.gov/XAIF")
       << Attr("xsi:schemaLocation", "http://www.mcs.anl.gov/XAIF xaif.xsd")
       << Attr("program_name", "***myprog***")
-      << Attr("prefix", "ADF90_");
+      << Attr("prefix", "OpenAD_");
   
   ctxt.CreateContext();
   TranslateScopeHierarchy(xos, pu_forest, ctxt);
