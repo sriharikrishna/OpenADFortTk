@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.54 2004/04/28 15:24:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.55 2004/05/07 20:04:33 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -118,6 +118,9 @@ xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 static set<SymHandle>* 
 GetParamSymHandleSet(WN* wn_pu);
+
+static const char*
+xlate_intent(WN* parm);
 
 static void
 xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt);
@@ -306,7 +309,8 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // Translate the function header
   // -------------------------------------------------------
   xlate_EntryPoint(xos, wn, ctxt); 
-  
+  xos << std::endl;
+
   // -------------------------------------------------------
   // Translate CFG (et al.) to XAIF
   // -------------------------------------------------------
@@ -1135,32 +1139,73 @@ AddToNonScalarSymTabOp::operator()(const WN* wn)
 // Helpers
 //***************************************************************************
 
+// xlate_EntryPoint: Translates a function entry or alternate entry
+// point, with parameter declarations.  
+// FIXME: XAIF doesn't support alt-entry.
 static void
 xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  // Translates a function entry or alternate entry point, with
-  // parameter declarations.  FIXME
-  OPCODE opc = WN_opcode(wn);
-  ASSERT_DBG_FATAL(opc == OPC_ALTENTRY || opc == OPC_FUNC_ENTRY,
+  OPERATOR opr = WN_operator(wn);
+  ASSERT_DBG_FATAL(opr == OPR_ALTENTRY || opr == OPR_FUNC_ENTRY,
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_EntryPoint"));
   
-  INT nparam = (opc == OPC_ALTENTRY) ? WN_kid_count(wn) : WN_num_formals(wn);
+  ST* func_st = &St_Table[WN_entry_name(wn)];
+  TY_IDX func_ty = ST_pu_type(func_st);
+  TY_IDX return_ty = Func_Return_Type(func_ty);
   
-  // Accumulate the parameter ST entries
-  ST** param_st = (ST **)alloca((nparam + 1) * sizeof(ST *));  
-  for (INT param = 0; param < nparam; param++) {
-    param_st[param] = WN_st(WN_formal(wn, param));
+  // Accumulate the parameter ST entries  // FIXME: GetParamSymHandleSet
+  INT nparam = (opr == OPR_ALTENTRY) ? WN_kid_count(wn) : WN_num_formals(wn);
+  ST** params_st = (ST **)alloca((nparam + 1) * sizeof(ST *));  
+  for (INT parm = 0; parm < nparam; parm++) {
+    params_st[parm] = WN_st(WN_formal(wn, parm));
   }
-  param_st[nparam] = NULL; // terminate the list
+  params_st[nparam] = NULL; // terminate the list
+
+  // Parameter name-list. Skip any implicit "length" parameters
+  // associated with character strings.  Such implicit parameters
+  // should be at the end of the parameter list. FIXME
+  xos << BegElem("xaif:ArgumentList");
   
-  // Write out the entry point with parameter declarations on a new line.
-  xlate_Params(xos, wn, &St_Table[WN_entry_name(wn)], param_st, nparam, ctxt);
-  xos << std::endl;
+  INT first_parm = ST2F_FIRST_PARAM_IDX(func_ty);
+  INT implicit_parms = 0;
+  UINT position = 1;
+  for (INT parm = first_parm; parm < (nparam - implicit_parms); parm++) {
+
+    WN* parm_wn = WN_formal(wn, parm);    
+    ST* parm_st = params_st[parm]; //WN_st(parm_wn);
+    
+    if (!ST_is_return_var(parm_st)) {
+      // FIXME: abstract (SymbolReference)
+      ST_TAB* sttab = Scope_tab[ST_level(parm_st)].st_tab;
+      SymTabId scopeid = ctxt.FindSymTabId(sttab);
+      
+      xos << BegElem("xaif:ArgumentSymbolReference")
+	  << Attr("position", position) 
+	  << Attr("scope_id", scopeid) << AttrSymId(parm_st)
+	  << Attr("intent", xlate_intent(parm_wn))
+	//<< WhirlIdAnnot(ctxt.FindWNId(parm_wn))
+	  << EndElem;
+      
+      position++;
+    }
+    
+    if (STAB_PARAM_HAS_IMPLICIT_LENGTH(parm_st)) {
+      implicit_parms++;
+      
+      /* FIXME: is function returning character_TY? if length follows */
+      /* address - skip over it, but account for ',' in arg list */
+      if ( ((parm == first_parm) && (params_st[parm+1] != NULL)) 
+	   && (ST_is_value_parm(parm_st) 
+	       && ST_is_value_parm(params_st[parm+1]))
+	   && (return_ty != (TY_IDX)0 && TY_kind(return_ty) == KIND_VOID) ) {
+	parm++;
+	params_st[parm] = NULL; 
+	implicit_parms--;
+      }
+    }
+  }
   
-#if 0 // FIXME/REMOVE  
-  ST2F_func_header(xos, wn, &St_Table[WN_entry_name(wn)], 
-		   param_st, nparam, opc == OPC_ALTENTRY, ctxt);
-#endif
+  xos << EndElem /* xaif:ArgumentList */;
 }
 
 
@@ -1179,6 +1224,23 @@ GetParamSymHandleSet(WN* wn_pu)
   return params;
 }
 
+static const char*
+xlate_intent(WN* parm)
+{
+  if ( WN_parm_flag(parm) == 0 || WN_Parm_By_Reference(parm) 
+       || WN_Parm_Dummy(parm)) {
+    return "inout"; 
+  }
+  else if (WN_Parm_By_Value(parm)) {
+    return "in";
+  } 
+  else if (WN_Parm_Out(parm)) {
+    return "out";
+  }
+  else {
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Unknown intent type."));
+  }
+}
 
 // xlate_BBStmt: Given a statement within an XAIF basic block,
 // properly translate it.
