@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.32 2004/04/07 16:00:56 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.33 2004/04/08 13:53:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -103,7 +103,8 @@ xlate_CFG(WN* wn_pu, DGraph* cfg, MyDGNode* root, XlationContext& ctxt,
 	  bool structuredCF = false);
 
 static WN*
-TranslateBasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt);
+TranslateBasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt,
+		    bool skipMarkeredGotoAndLabels);
 
 //*************************** Forward Declarations ***************************
 
@@ -363,8 +364,9 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   // Collect the list of CFGs we need to translate.  
   list<DOMElement*> cfglist;
   if (XAIF_CFGElemFilter::IsReplaceList(cfgElem)) {
-    for (DOMElement* e = GetFirstChildElement(cfgElem); (e); 
-	 e = GetNextSiblingElement(e, XAIFStrings.elem_Replacement_x())) {
+    const XMLCh* elemName = XAIFStrings.elem_Replacement_x();
+    for (DOMElement* e = GetChildElement(cfgElem, elemName); 
+	 (e); e = GetNextSiblingElement(e, elemName)) {
       cfglist.push_back(e);
     }
   }
@@ -861,8 +863,11 @@ xlate_CFG_BasicBlock(WN *wn_pu, MyDGNode* curBB, MyDGNode* nextBB,
 {
   DOMElement* bbElem = curBB->GetElem();
   
-  // 1. Translate
-  WN* stmtblk = TranslateBasicBlock(wn_pu, bbElem, ctxt);
+  // 1. Translate (if we add our own goto's and labels, then we need
+  // to throw away any original goto and lable at the end and
+  // beginning of the block)
+  bool skipGotoAndLabels = addGotoAndLabel;
+  WN* stmtblk = TranslateBasicBlock(wn_pu, bbElem, ctxt, skipGotoAndLabels);
   
   // 2. If necessary, add a label to front and goto at end
   if (addGotoAndLabel) {
@@ -881,7 +886,8 @@ xlate_CFG_BasicBlock(WN *wn_pu, MyDGNode* curBB, MyDGNode* nextBB,
 
 // TranslateBasicBlock: Translate a non-control-flow basic block
 static WN*
-TranslateBasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
+TranslateBasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt,
+		    bool skipMarkeredGotoAndLabels)
 {
   WN* blkWN = WN_CreateBlock();
 
@@ -908,15 +914,22 @@ TranslateBasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
     
     WN* wn = NULL;
     if (XAIF_BBStmtElemFilter::IsMarker(stmt)) {
-      WNId id = GetWNId(stmt);
-      WN* foundWN = wnmap->Find(id, true /* mustFind */);
-      wn = WN_COPY_Tree(foundWN);
-      PatchWNStmt(wn, ctxt); // FIXME
+      bool isGotoOrLabel = (IsTagPresent(stmt, XAIFStrings.tag_StmtGoto()) ||
+			    IsTagPresent(stmt, XAIFStrings.tag_StmtLabel()));
+      bool skip = (isGotoOrLabel && skipMarkeredGotoAndLabels);
+      if (!skip) {
+	WNId id = GetWNId(stmt);
+	WN* foundWN = wnmap->Find(id, true /* mustFind */);
+	wn = WN_COPY_Tree(foundWN);
+	PatchWNStmt(wn, ctxt); // FIXME
+      }
     }
     else {
       wn = TranslateStmt(stmt, ctxt);
     }
-    WN_INSERT_BlockLast(blkWN, wn);
+    if (wn) {
+      WN_INSERT_BlockLast(blkWN, wn);
+    }
   }
   it->release();
   
@@ -1428,7 +1441,7 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
 
 
 //****************************************************************************
-// XAIF Attribute retrieval funtionss
+// Attribute retrieval and 'annotation' attribute functions
 //****************************************************************************
 
 bool
@@ -1500,6 +1513,23 @@ unsigned int
 xaif2whirl::GetPositionAttr(const DOMElement* elem)
 {
   return GetIntAttr(elem, XAIFStrings.attr_position_x(), 0 /* default */);
+}
+
+
+bool
+xaif2whirl::IsTagPresent(const DOMElement* elem, const char* tag)
+{
+  const XMLCh* annot = (elem) ? elem->getAttribute(XAIFStrings.attr_annot_x())
+    : NULL;
+  XercesStrX annotStr = XercesStrX(annot);
+  return IsTagPresent(annotStr.c_str(), tag);
+}
+
+
+bool
+xaif2whirl::IsTagPresent(const char* annotstr, const char* tag)
+{
+  return (strstr(annotstr, tag) != NULL);
 }
 
 
@@ -1839,7 +1869,7 @@ XAIFTyToWHIRLTy(const char* type)
     ty = MTYPE_To_TY(MTYPE_F8);
   } 
   else if (strcmp(type, "integer") == 0) {
-    ty = MTYPE_To_TY(MTYPE_I8); 
+    ty = MTYPE_To_TY(MTYPE_I4); // FIXME_INTSZ
   } 
   else {
     // don't know about anything else yet
