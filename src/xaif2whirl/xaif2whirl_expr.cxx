@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.16 2004/04/13 16:40:59 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.17 2004/04/29 21:29:43 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -102,9 +102,8 @@ xlate_BooleanOperation(DGraph* g, MyDGNode* n, XlationContext& ctxt);
 
 static WN*
 xlate_ExprOpUsingIntrinsicTable(IntrinsicXlationTable::XAIFOpr xopr, 
-				const char* xoprNm,
+				const char* xoprNm, const char* xIntrinKey,
 				DGraph* g, MyDGNode* n, XlationContext& ctxt);
-
 
 static WN*
 xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt);
@@ -397,8 +396,11 @@ xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
   XercesStrX nm = XercesStrX(nmX);
   
+  std::string key = GetIntrinsicKey(elem);
+
   IntrinsicXlationTable::XAIFOpr xopr = IntrinsicXlationTable::XAIFIntrin;
-  WN* wn = xlate_ExprOpUsingIntrinsicTable(xopr, nm.c_str(), g, n, ctxt);
+  WN* wn = xlate_ExprOpUsingIntrinsicTable(xopr, nm.c_str(), key.c_str(), 
+					   g, n, ctxt);
   return wn;
 }
 
@@ -430,7 +432,7 @@ xlate_BooleanOperation(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   XercesStrX nm = XercesStrX(nmX);
   
   IntrinsicXlationTable::XAIFOpr xopr = IntrinsicXlationTable::XAIFBoolOp;
-  WN* wn = xlate_ExprOpUsingIntrinsicTable(xopr, nm.c_str(), g, n, ctxt);
+  WN* wn = xlate_ExprOpUsingIntrinsicTable(xopr, nm.c_str(), NULL, g, n, ctxt);
   return wn;
 }
 
@@ -441,11 +443,11 @@ xlate_BooleanOperation(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 // of WHIRL call.
 static WN*
 xlate_ExprOpUsingIntrinsicTable(IntrinsicXlationTable::XAIFOpr xopr, 
-				const char* xoprNm,
+				const char* xoprNm, const char* xIntrinKey,
 				DGraph* g, MyDGNode* n, XlationContext& ctxt)
 {
   IntrinsicXlationTable::WHIRLInfo* info = 
-    IntrinsicTable.FindWHIRLInfo(xopr, xoprNm);
+    IntrinsicTable.FindWHIRLInfo(xopr, xoprNm, xIntrinKey);
   if (!info) {
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Bad Intrinsic."));
   }
