@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.10 2004/02/10 15:24:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.11 2004/02/11 18:06:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -330,8 +330,9 @@ whirltester::TestIR_whirl2f(std::ostream& os, PU_Info* pu_forest)
   static const int bufSZ = 1024 * 1024;
   static char buf[bufSZ];
   Diag_Set_Phase("WHIRL tester: TestIR_whirl2f");
+  PU_AllocBEGlobalSymtab();
   W2F_Init();
-
+  
   if (!pu_forest) { return 0; }
   
   Pro64IRProcIterator procIt(pu_forest);
@@ -339,6 +340,7 @@ whirltester::TestIR_whirl2f(std::ostream& os, PU_Info* pu_forest)
     
     // The PU_Info* for this PU
     PU_Info* pu = (PU_Info*)procIt.Current();
+    PU_AllocBELocalSymtab(pu);
     
     // The root of the WHIRL tree and a statement to translate
     WN* wn_pu = PU_Info_tree_ptr(pu);
@@ -357,10 +359,12 @@ whirltester::TestIR_whirl2f(std::ostream& os, PU_Info* pu_forest)
     W2F_Translate_Wn_Str(buf, bufSZ-1, wn);
     os << buf << endl;
     
+    PU_FreeBELocalSymtab(pu);
     break;
   }
   
   W2F_Fini();
+  PU_FreeBEGlobalSymtab();
   return 0;
 }
 
