@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.10 2004/05/24 13:27:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.11 2004/05/27 16:19:37 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -129,6 +129,8 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
   { { WNExpr, OPR_FLOOR, NULL, 1 },
                         { XAIFIntrin, "bogus_floor_scal", NULL, 1 } },
 
+  { { WNCall, OPR_CALL, "REAL", 1 },
+                        { XAIFIntrin, "bogus_real_scal", NULL, 1 } },
   { { WNCall, OPR_CALL, "DBLE", 1 },
                         { XAIFIntrin, "bogus_dble_scal", NULL, 1 } },
 
