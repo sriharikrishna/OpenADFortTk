@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.7 2003/10/14 20:26:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.8 2004/06/02 19:56:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -52,7 +52,7 @@ public:
   ~IdList() { }
 
   // Returns 0 if not found
-  T Find(T id) 
+  T Find(T id) const
   {
     typename std::list<T>::iterator it;
     for (it = this->begin(); it != this->end(); ++it) {
@@ -115,17 +115,10 @@ public:
   ~SymTabToSymTabIdMap() { }
 
   SymTabId
-  Find(ST_TAB* wn)
+  Find(ST_TAB* wn) const
   {
-    using namespace SymTabMaps_hidden;
-
-    SymTabId result = 0;
-    
-    SymTabToSymTabIdBaseMap::iterator it = this->find(wn);
-    if (it != this->end()) {
-      result = (*it).second;
-    }
-    
+    const_iterator it = this->find(wn);
+    SymTabId result = (it == this->end()) ? 0 : (*it).second;
     return result;
   }
 
@@ -150,13 +143,11 @@ public:
   ~SymTabIdToSymTabMap() { }
 
   pair<ST_TAB*, PU_Info*>
-  Find(SymTabId id) 
+  Find(SymTabId id) const
   {
-    using namespace SymTabMaps_hidden;
-
     pair<ST_TAB*, PU_Info*> result(NULL, NULL);
     
-    SymTabIdToSymTabBaseMap::iterator it = this->find(id);
+    const_iterator it = this->find(id);
     if (it != this->end()) {
       result = (*it).second;
     }
@@ -201,21 +192,14 @@ public:
   ~PUToPUIdMap() { }
 
   PUId
-  Find(PU_Info* pu, bool mustFind = false) 
+  Find(PU_Info* pu, bool mustFind = false) const
   {
-    using namespace PUMaps_hidden;
-
-    PUId result = 0;
-    
-    PUToPUIdBaseMap::iterator it = this->find(pu);
-    if (it != this->end()) {
-      result = (*it).second;
-    }
+    const_iterator it = this->find(pu);
+    PUId result = (it == this->end()) ? 0 : (*it).second;
     
     if (mustFind && result == 0) {
       ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Could not find entry!"));
     }
-
     return result;
   }
 
@@ -233,21 +217,14 @@ public:
   ~PUIdToPUMap() { }
 
   PU_Info*
-  Find(PUId id, bool mustFind = false) 
+  Find(PUId id, bool mustFind = false) const
   {
-    using namespace PUMaps_hidden;
-
-    PU_Info* result = NULL;
-    
-    PUIdToPUBaseMap::iterator it = this->find(id);
-    if (it != this->end()) {
-      result = (*it).second;
-    }
+    const_iterator it = this->find(id);
+    PU_Info* result = (it == this->end()) ? NULL : (*it).second;
     
     if (mustFind && result == NULL) {
       ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Could not find entry!"));
     }
-
     return result;
   }
 
@@ -277,21 +254,14 @@ public:
   ~WNToWNIdMap() { }
 
   WNId
-  Find(WN* wn, bool mustFind = false)
+  Find(WN* wn, bool mustFind = false) const
   {
-    using namespace WhirlMaps_hidden;
-
-    WNId result = 0;
-    
-    WNToWNIdBaseMap::iterator it = this->find(wn);
-    if (it != this->end()) {
-      result = (*it).second;
-    }
+    const_iterator it = this->find(wn);
+    WNId result = (it == this->end()) ? 0 : (*it).second;
     
     if (mustFind && result == 0) {
       ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Could not find entry!"));
     }
-    
     return result;
   }
 
@@ -309,21 +279,14 @@ public:
   ~WNIdToWNMap() { }
 
   WN*
-  Find(WNId id, bool mustFind = false) 
+  Find(WNId id, bool mustFind = false) const
   {
-    using namespace WhirlMaps_hidden;
-
-    WN* result = NULL;
-    
-    WNIdToWNBaseMap::iterator it = this->find(id);
-    if (it != this->end()) {
-      result = (*it).second;
-    }
+    const_iterator it = this->find(id);
+    WN* result = (it == this->end()) ? NULL : (*it).second;
     
     if (mustFind && result == NULL) {
       ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Could not find entry!"));
     }
-    
     return result;
   }
 
