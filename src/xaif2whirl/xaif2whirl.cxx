@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.37 2004/04/09 16:26:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.38 2004/04/13 16:40:27 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -34,7 +34,6 @@ using std::map;
 
 //************************* Xerces Include Files ****************************
 
-#include <xercesc/dom/DOMNodeIterator.hpp>
 #include <xercesc/dom/DOMDocument.hpp>
 #include <xercesc/dom/DOMNode.hpp>
 #include <xercesc/dom/DOMElement.hpp>
@@ -69,9 +68,6 @@ using std::endl;
 using namespace xaif2whirl;
 
 IntrinsicXlationTable xaif2whirl::IntrinsicTable(IntrinsicXlationTable::X2W);
-
-// FIXME: We need to convert DOMNodeIterators to children iterators!
-// -- we are touching the whole subtree!
 
 // FIXME
 extern xaif2whirl::AlgorithmType opt_algorithm;
@@ -170,6 +166,9 @@ CreateIfCondition(WN* condWN);
 
 static ST* 
 CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm);
+
+static ST* 
+ConvertIntoGlobalST(ST* st);
 
 static void 
 DeclareActiveModule();
@@ -272,16 +271,11 @@ TranslateCallGraph(PU_Info* pu_forest, const DOMDocument* doc,
   // -------------------------------------------------------
   // Translate each ControlFlowGraph in the CallGraph
   // -------------------------------------------------------
-  DOMDocument* d = const_cast<DOMDocument*>(doc); // Xerces can't take a const!
-  DOMNodeIterator* it = 
-    d->createNodeIterator((DOMNode*)doc, DOMNodeFilter::SHOW_ALL, 
-                          new XAIF_CFGElemFilter(), true);
-  for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
-    DOMElement* elem = dynamic_cast<DOMElement*>(node);
-
+  XAIF_CFGElemFilter filt;
+  for (DOMElement* elem = GetChildElement(doc->getDocumentElement(), &filt);
+       (elem); elem = GetNextSiblingElement(elem, &filt)) {
     TranslateCFG(pu_forest, elem, ctxt);
   }
-  it->release();
   
   delete symmap;
 }
@@ -294,15 +288,17 @@ TranslateScopeHierarchy(const DOMDocument* doc, XlationContext& ctxt)
 {
   XAIFSymToSymbolMap* symMap = new XAIFSymToSymbolMap;
 
-  DOMDocument* d = const_cast<DOMDocument*>(doc); // Xerces can't take a const!
-  DOMNodeIterator* it = 
-    d->createNodeIterator((DOMNode*)doc, DOMNodeFilter::SHOW_ALL, 
-                          new XAIF_ScopeElemFilter(), true);
-  for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
-    DOMElement* elem = dynamic_cast<DOMElement*>(node);
+  // Get the ScopeHierarchy element
+  DOMElement* scopeHier = GetChildElement(doc->getDocumentElement(), 
+					  XAIFStrings.elem_ScopeHierarchy_x());
+  ASSERT_FATAL(scopeHier, (DIAG_A_STRING, "ScopeHierarchy!"));
+  
+  // For each Scope in the ScopeHierarchy, examine each symbol
+  XAIF_ScopeElemFilter filt;
+  for (DOMElement* elem = GetChildElement(scopeHier, &filt);
+       (elem); elem = GetNextSiblingElement(elem, &filt)) {
     xlate_Scope(elem, symMap, ctxt);
   }
-  it->release();
   
   return symMap;
 }
@@ -367,9 +363,9 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   // Collect the list of CFGs we need to translate.  
   list<DOMElement*> cfglist;
   if (XAIF_CFGElemFilter::IsReplaceList(cfgElem)) {
-    const XMLCh* elemName = XAIFStrings.elem_Replacement_x();
-    for (DOMElement* e = GetChildElement(cfgElem, elemName); 
-         (e); e = GetNextSiblingElement(e, elemName)) {
+    XAIF_ElemFilter filter(XAIFStrings.elem_Replacement_x());
+    for (DOMElement* e = GetChildElement(cfgElem, &filter); 
+         (e); e = GetNextSiblingElement(e, &filter)) {
       cfglist.push_back(e);
     }
   }
@@ -380,37 +376,34 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   // -------------------------------------------------------
   // 2. Translate each XAIF CFG into WHIRL
   // -------------------------------------------------------
-  WN* newstmtblk = WN_CreateBlock();
+  WN* newstmtblkWN = WN_CreateBlock();
   for (list<DOMElement*>::iterator it = cfglist.begin(); 
        it != cfglist.end(); ++it) {
-    DOMElement* e = (*it);
-    DGraph* cfg = CreateCFGraph(e);
+    DOMElement* cfgelm = (*it);
+    DGraph* cfg = CreateCFGraph(cfgelm);
     
     if (opt_algorithm == ALG_BB_PATCHING) { 
-      DOMDocument* doc = e->getOwnerDocument();
-      DOMNodeIterator* it = 
-        doc->createNodeIterator((DOMNode*)e, DOMNodeFilter::SHOW_ALL, 
-                                new XAIF_BBElemFilter(false), true);
-      for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
-        DOMElement* elem = dynamic_cast<DOMElement*>(node);
-        TranslateBB_OLD(wn_pu, elem, ctxt);
+      XAIF_BBElemFilter filt(false /* edges */);
+      for (DOMElement* elem = GetChildElement(cfgelm, &filt);
+	   (elem); elem = GetNextSiblingElement(elem, &filt)) {
+	TranslateBB_OLD(wn_pu, elem, ctxt);
       }
-      it->release();
     } 
     else {
       MyDGNode* root = dynamic_cast<MyDGNode*>(cfg->root());
       bool structuredCF = (opt_algorithm == ALG_STRUCTURED_CF);
-      WN* cfgblk = xlate_CFG(wn_pu, cfg, root, ctxt, structuredCF);
-      if (XAIF_CFGElemFilter::IsReplacement(e)) {
-        const XMLCh* pX = e->getAttribute(XAIFStrings.attr_placeholder_x());
+      WN* cfgblkWN = xlate_CFG(wn_pu, cfg, root, ctxt, structuredCF);
+      if (XAIF_CFGElemFilter::IsReplacement(cfgelm)) {
+        const XMLCh* pX = 
+	  cfgelm->getAttribute(XAIFStrings.attr_placeholder_x());
         XercesStrX p = XercesStrX(pX);
         
         WN* begWN = CreateOpenADReplacementBeg(p.c_str());
         WN* endWN = CreateOpenADReplacementEnd();
-        WN_INSERT_BlockFirst(cfgblk, begWN);
-        WN_INSERT_BlockLast(cfgblk, endWN);
+        WN_INSERT_BlockFirst(cfgblkWN, begWN);
+        WN_INSERT_BlockLast(cfgblkWN, endWN);
       }
-      WN_INSERT_BlockLast(newstmtblk, cfgblk);
+      WN_INSERT_BlockLast(newstmtblkWN, cfgblkWN);
     }
     delete cfg;
   }
@@ -428,13 +421,13 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
     }
     
     // Splice in newly translated WHIRL 
-    for (WN* kid = WN_first(newstmtblk); (kid); /* */) {
+    for (WN* kid = WN_first(newstmtblkWN); (kid); /* */) {
       WN* nextkid = WN_next(kid); // must find next 'kid' now!
-      WN_EXTRACT_FromBlock(newstmtblk, kid);
+      WN_EXTRACT_FromBlock(newstmtblkWN, kid);
       WN_INSERT_BlockLast(funcblk, kid);
       kid = nextkid;
     }
-    WN_Delete(newstmtblk); // not recursive -- should be empty
+    WN_Delete(newstmtblkWN); // not recursive -- should be empty
   }
   
   // -------------------------------------------------------
@@ -973,13 +966,9 @@ TranslateBasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt,
   // -------------------------------------------------------
   // 2. Translate statements
   // -------------------------------------------------------
-  DOMDocument* doc = bbElem->getOwnerDocument();
-  DOMNodeIterator* it = 
-    doc->createNodeIterator((DOMNode*)bbElem, DOMNodeFilter::SHOW_ALL, 
-                            new XAIF_BBStmtElemFilter(), true);
-  for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
-    DOMElement* stmt = dynamic_cast<DOMElement*>(node);
-    
+  XAIF_BBStmtElemFilter filt;
+  for (DOMElement* stmt = GetChildElement(bbElem, &filt);
+       (stmt); stmt = GetNextSiblingElement(stmt, &filt)) {
     WN* wn = NULL;
     if (XAIF_BBStmtElemFilter::IsMarker(stmt)) {
       bool isGotoOrLabel = (IsTagPresent(stmt, XAIFStrings.tag_StmtGoto()) ||
@@ -999,7 +988,6 @@ TranslateBasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt,
       WN_INSERT_BlockLast(blkWN, wn);
     }
   }
-  it->release();
   
   return blkWN;
 }
@@ -1448,15 +1436,11 @@ xlate_SymbolTable(const DOMElement* elem, const char* scopeId, PU_Info* pu,
                   XAIFSymToSymbolMap* symMap)
 {
   // For all xaif:Symbol in the xaif:SymbolTable
-  DOMDocument* doc = elem->getOwnerDocument();
-  DOMNodeIterator* it = 
-    doc->createNodeIterator((DOMNode*)elem, DOMNodeFilter::SHOW_ALL, 
-                            new XAIF_SymbolElemFilter(), true);
-  for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
-    DOMElement* e = dynamic_cast<DOMElement*>(node);
+  XAIF_SymbolElemFilter filt;
+  for (DOMElement* e = GetChildElement(elem, &filt);
+       (e); e = GetNextSiblingElement(e, &filt)) {
     xlate_Symbol(e, scopeId, pu, symMap);
   }
-  it->release();
 }
 
 
@@ -1863,7 +1847,7 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
   ST_SCLASS sclass = SCLASS_AUTO; // default: auto implies local storage
   ST_EXPORT escope = EXPORT_LOCAL_INTERNAL;
   if (level == GLOBAL_SYMTAB) {
-    sclass = SCLASS_COMMON; // SCLASS_UGLOBAL SCLASS_PSTATIC // FIXME
+    sclass = SCLASS_COMMON;
     escope = EXPORT_LOCAL;
   }
   
@@ -1871,7 +1855,62 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
   ST* st = New_ST(level);
   ST_Init(st, Save_Str(nm), CLASS_VAR, sclass, escope, ty);
   
+  // 5. For global symbols, modify and add to a global/common block
+  if (level == GLOBAL_SYMTAB) {
+    //FIXME ConvertIntoGlobalST(st);
+  }
+  
   return st;
+}
+
+
+static ST* 
+ConvertIntoGlobalST(ST* st)
+{
+  static ST* OpenADCommonBlockST = NULL;
+  static TY_IDX OpenADCommonBlockTY = 0;
+  static UINT64 OpenADCommonBlockOffset = 0;
+  static FLD_HANDLE OpenADCommonBlockLastField = FLD_HANDLE();
+  
+  // Create common block ST if necessary
+  bool isFirst = false;
+  if (!OpenADCommonBlockST) {
+    // cf. cwh_stab_common_ST()
+    isFirst = true;
+
+    INT64 sz = 0;
+    TY& ty = New_TY(OpenADCommonBlockTY); // sets 'OpenADCommonBlockTY'
+    TY_Init(ty, sz, KIND_STRUCT, MTYPE_M, Save_Str(".openad.common."));
+    // Note: Common block fields are created below
+    
+    OpenADCommonBlockST = New_ST(GLOBAL_SYMTAB);
+    ST_Init(OpenADCommonBlockST, Save_Str("OpenADGlobals"), CLASS_VAR, 
+	    SCLASS_COMMON, EXPORT_LOCAL, OpenADCommonBlockTY);
+    
+    //Set_ST_base(ST& s, *OpenADCommonBlock); // base symbol at the procedure?
+    //Set_ST_ofst(ST& s, UINT64 offset);
+  }
+  
+  // Create a new field for common block type
+  FLD_HANDLE fld = New_FLD();
+  TY_IDX fldTy = ST_type(st);
+  FLD_Init(fld, Save_Str(ST_name(st)), fldTy, OpenADCommonBlockOffset);
+  if (isFirst) {
+    Set_TY_fld(OpenADCommonBlockTY, fld);
+  } else {
+    Clear_FLD_last_field(OpenADCommonBlockLastField); // fld is now the last
+  }
+  Set_FLD_last_field(fld);
+  OpenADCommonBlockLastField = fld;
+  
+  // Increase size of common block
+  UINT64 sz = TY_size(ST_type(st));
+  OpenADCommonBlockOffset += sz;
+  Set_TY_size(OpenADCommonBlockTY, sz);
+  
+  // Modify/Add 'st' to common block
+  Set_ST_base(*st, *OpenADCommonBlockST);
+  Set_ST_ofst(*st, OpenADCommonBlockOffset);
 }
 
 
@@ -2040,13 +2079,9 @@ CreateCFGraph(const DOMElement* cfgElem)
   // -------------------------------------------------------
   // Create the graph
   // -------------------------------------------------------
-  DOMDocument* doc = cfgElem->getOwnerDocument();
-  DOMNodeIterator* it = 
-    doc->createNodeIterator((DOMNode*)cfgElem, DOMNodeFilter::SHOW_ALL, 
-                            new XAIF_BBElemFilter(), true);
-  for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
-    DOMElement* elem = dynamic_cast<DOMElement*>(node);
-
+  XAIF_BBElemFilter filt;
+  for (DOMElement* elem = GetChildElement(cfgElem, &filt);
+       (elem); elem = GetNextSiblingElement(elem, &filt)) {
     if (XAIF_BBElemFilter::IsEdge(elem)) {
       // Add an edge to the graph. 
       
@@ -2079,9 +2114,7 @@ CreateCFGraph(const DOMElement* cfgElem)
         g->set_root(gn);
       }
     } 
-    
   }
-  it->release();
   
   return g;
 }
