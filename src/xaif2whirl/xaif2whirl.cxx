@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.59 2004/10/06 22:10:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.60 2004/12/01 21:24:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -2133,6 +2133,7 @@ ConvertIntoGlobalST(ST* st)
   // Modify/Add 'st' to common block
   Set_ST_base(*st, *OpenADCommonBlockST);
   Set_ST_ofst(*st, OpenADCommonBlockOffset);
+
   return st;
 }
 
