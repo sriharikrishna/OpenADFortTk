@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.6 2003/12/05 13:42:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.7 2003/12/08 14:52:09 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -121,9 +121,14 @@ TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn,
   } 
 
   OPERATOR opr = WN_operator(wn);
-  
-  if (IsVarRefTranslatableToXAIF(wn) || opr == OPR_STID) {
-    // Base case
+  // OPR_STID is a special case.  It is a base case in the sense the
+  // it represents a LHS definition; but it is also a recursive case
+  // because uses are embedded in its RHS subtree.
+  bool varref = IsVarRefTranslatableToXAIF(wn);
+  bool recur = false;
+
+  // Base case
+  if (varref || opr == OPR_STID) {
     VN vn = vnmap.Find((ExprHandle)wn);
     
     os << "VN = " << vn << endl;
@@ -131,9 +136,12 @@ TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn,
     tree->dump(os);
     delete tree;
 
-  } else if (!OPERATOR_is_leaf(opr)) {
+    if (opr == OPR_STID) { recur = true; }
+  } 
+
+  // General recursive case
+  if ( (!varref || recur) && !OPERATOR_is_leaf(opr) ) {
     
-    // General recursive case
     if (WN_operator(wn) == OPR_BLOCK) {
       WN *kid = WN_first(wn);
       while (kid) {
