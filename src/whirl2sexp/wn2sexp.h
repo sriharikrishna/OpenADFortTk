@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.h,v 1.2 2004/08/06 17:29:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.h,v 1.3 2004/12/08 22:10:06 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -183,6 +183,7 @@ operator<<(std::ostream& os, const GenBeginFlgListInfo_<T>& x)
   
   T val = x.val;
   
+  using namespace sexp;
   using namespace sexp::IOFlags;
   sos << BegList << Atom("flg") << Atom(A_HEX, val);
   // Do not end the list!

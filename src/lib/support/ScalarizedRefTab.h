@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.10 2004/06/28 21:30:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.11 2004/12/08 22:09:29 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -146,6 +146,7 @@ class ScalarizedRefTab
 typedef ScalarizedRefTab<ScalarizedRefTab_Base::W2X> 
   ScalarizedRefTab_W2X;
 
+template <>
 class ScalarizedRefTab<ScalarizedRefTab_Base::W2X>
   : public ScalarizedRefTab_Base,
     public FortTk::BaseMap<WN*, ScalarizedRef*> {

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.h,v 1.3 2004/08/09 14:34:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.h,v 1.4 2004/12/08 22:10:06 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -185,7 +185,7 @@ namespace whirl2sexp {
     
     void operator()(UINT32 idx, T* entry) const { 
       xlate_SYMTAB_entry(sos, idx, entry);
-      sos << EndLine;
+      sos << sexp::EndLine;
     }
     
   private:

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/BaseMap.h,v 1.3 2004/07/30 17:50:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/BaseMap.h,v 1.4 2004/12/08 22:09:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -50,7 +50,7 @@ public:
   Find(const FromTy x, bool mustFind = false) const
   {
     typename std::map<FromTy, ToTy>::const_iterator it = find(x);
-    ToTy y = (it == end()) ? 0 /*NULL*/ : (*it).second;
+    ToTy y = (it == this->end()) ? 0 /*NULL*/ : (*it).second;
     
     if (mustFind && y == 0 /*NULL*/) {
       FORTTK_DIE("BaseMap: Could not find entry for key '" << x << "'");
@@ -71,8 +71,8 @@ public:
   // Dump: Dump that integer values in the map
   virtual void Dump(std::ostream& o = std::cerr) const {
     o << "{ Map:\n";
-    for (typename std::map<FromTy, ToTy>::const_iterator it = begin(); 
-	 it != end(); ++it) {
+    for (typename std::map<FromTy, ToTy>::const_iterator it = this->begin(); 
+	 it != this->end(); ++it) {
       o << "(" << it->first << " --> " << it->second << ")\n";
     }
     o << "}\n";

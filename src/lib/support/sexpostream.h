@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.h,v 1.4 2004/10/06 22:10:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.h,v 1.5 2004/12/08 22:09:29 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -242,6 +242,8 @@ class ostream : public std::ostream {
 // Definitions/specializations for sexp::ostream member template functions
 //***************************************************************************
 
+namespace sexp {
+
 template<class T> 
 void
 sexp::ostream::Atom(int aflags, const T& val)
@@ -256,6 +258,7 @@ template <>
 void 
 sexp::ostream::Atom(int aflags, const char* const & val);
 
+}
 
 //***************************************************************************
 // sexp::ostream operators that take no arguments
