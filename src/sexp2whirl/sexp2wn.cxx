@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.7 2005/02/01 00:42:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.8 2005/02/01 15:36:27 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -131,8 +131,15 @@ sexp2whirl::GetWhirlTy(sexp_t* sx)
 		FORTTK_UNEXPECTED_INPUT);
   
   // Convert ty_idx
-  sexp_t* ty_idx_sx = get_elem2(sx);
-  TY_IDX ty_idx = get_value_ui32(ty_idx_sx);
+  // - ignore name
+  sexp_t* idx_sx = get_elem2(sx);
+  sexp_t* algn_sx = get_elem3(sx);
+  UINT32 idx = get_value_ui32(idx_sx);
+  UINT32 algn = get_value_ui32(algn_sx);
+  
+  TY_IDX ty_idx = make_TY_IDX(idx);
+  Set_TY_align(ty_idx, algn);
+  
   return ty_idx;
 }
 

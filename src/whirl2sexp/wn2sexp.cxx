@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.11 2005/02/01 00:42:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.12 2005/02/01 15:36:27 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -107,9 +107,12 @@ operator<<(std::ostream& os, const GenSexpTyInfo_& x)
 
   TY_IDX ty_idx = x.val;
   const char* nm = TY_name(ty_idx);
-  
+  UINT32 idx = TY_id(ty_idx);
+  UINT32 algn = TY_align(ty_idx);
+
   using namespace sexp::IOFlags;
-  sos << BegList << Atom(SexpTags::TY) << Atom(A_DQUOTE, nm) << Atom(ty_idx)
+  sos << BegList 
+      << Atom(SexpTags::TY) << Atom(A_DQUOTE, nm) << Atom(idx) << Atom(algn)
       << EndList;
   
   return sos;
