@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.10 2004/07/30 17:50:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.11 2004/07/31 19:47:33 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -237,11 +237,15 @@ IsRefSimpleScalar(const WN* wn)
     // (for stores, only check LHS (kid1))
     TY_IDX baseobj_ty = WN_GetBaseObjType(wn);
     TY_IDX refobj_ty = WN_GetRefObjType(wn);
+    if (opr == OPR_LDA || opr == OPR_LDMA) {
+      // dereference the pointer (assume Fortran)
+      refobj_ty = TY_pointed(refobj_ty);
+    }
     return (IsRefScalar(baseobj_ty, refobj_ty));
   }
     
   } // switch
-  
+    
   return false;
 }
 
