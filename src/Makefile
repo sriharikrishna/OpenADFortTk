@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makefile,v 1.11 2004/12/20 15:19:34 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makefile,v 1.12 2005/01/13 14:23:23 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -38,10 +38,10 @@ exes: build_exes
 #  Binaries
 #-----------------------------------------------------------------
 
-EXEDIRS = whirl2sexp    whirl2xaif xaif2whirl testers
+EXEDIRS = whirl2xaif xaif2whirl testers
 
-ifdef OPENADFORTTK_SEXP
-  EXEDIRS += sexp2whirl
+ifdef BUILD_WHIRL2SEXP_AND_SEXP2WHIRL
+  EXEDIRS += whirl2sexp sexp2whirl
 endif
 
 build_exes: build_libs
