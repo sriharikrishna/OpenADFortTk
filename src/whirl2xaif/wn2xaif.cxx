@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.69 2004/06/28 18:52:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.70 2004/06/29 16:57:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1206,6 +1206,7 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   else if (vty == XAIFStrings.elem_BBEndBranch() ||
 	   vty == XAIFStrings.elem_BBEndLoop()) {
     // skip bogus comment statement
+    //xos << Comment(vty);
   }
   else {
     if (IsActiveStmt(wn, ctxt)) {
@@ -1426,8 +1427,8 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
   // -------------------------------------------------------
   
   // This process can create empty basic blocks
-  DGraphNodeList toRemove; // holds basic blocks made empty
-
+  DGraphNodeList toRemove; // basic blocks made empty (slated for removal)
+  
   for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
     CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
 
@@ -1492,21 +1493,35 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
 
   
   // -------------------------------------------------------
-  // 3. Split basic blocks with EndLoop and EndBranch tags (FIXME)
+  // 3. Split basic blocks with EndLoop and EndBranch tags
   // -------------------------------------------------------
+  
+  // Note: some blocks will have to be split more than once.  E.g. 
+  //   EndBr
+  //   Assignment
+  //   EndLoop
+  
+  std::list< pair<CFG::Node*, WN*> > toSplit; // nodes to split
+  
+  bool changed = true; // FIXME: this is really bad/inefficient
+  while (changed) {
+    changed = false;
 
-  // EndBranch statments will be the first or second statment
-  // (switches) of a basic block; EndLoop at the end.
-  for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
-    CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
-    
-    if (n->size() > 1) {
+    // EndBranch statments will be the first or second statment
+    // (switches) of a basic block; EndLoop at the end.
+    for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
+      CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
+      
+      if ( !(n->size() > 1) ) { 
+	continue;
+      }
+      
     restart_loop:
       unsigned int stmtcount = 1;
       for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; 
 	   ++stmtIt, ++stmtcount) {
 	WN* wn = (WN*)((StmtHandle)stmtIt);
-
+	
 	const char* vty = GetCFGControlFlowVertexType(wn);
 	WN* startWN = NULL; // start of new basic block
 	if (vty == XAIFStrings.elem_BBEndBranch()) {
@@ -1525,18 +1540,26 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
 	  startWN = wn;
 	}
 	
-	if (startWN) {
-	  CFG::Node* newblock = cfg->splitBlock(n, (StmtHandle)startWN);
-	  cfg->connect(n, newblock, CFG::FALLTHROUGH_EDGE);
-	  bool foo = false;
-	  if (foo) {
-	    n->longdump(cfg);
-	    newblock->longdump(cfg);
-	  }
+	if (startWN) { // delay so we don't break iteration
+	  toSplit.push_back(make_pair(n, startWN));	  
 	  break;
 	}
       }
     }
+    
+    // Split basic blocks
+    for (std::list< pair<CFG::Node*, WN*> >::iterator it = toSplit.begin();
+	 it != toSplit.end(); ++it) {
+      changed = true;
+      CFG::Node* n = (*it).first;
+      WN* startWN = (*it).second;
+      
+      CFG::Node* newblock = cfg->splitBlock(n, (StmtHandle)startWN);
+      cfg->connect(n, newblock, CFG::FALLTHROUGH_EDGE);
+      //n->longdump(cfg);
+      //newblock->longdump(cfg);
+    }
+    toSplit.clear();
   }
   
 }
