@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.13 2004/03/29 23:41:13 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.14 2004/04/05 20:57:43 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -188,7 +188,11 @@ public:
   // -----------------------------------------------------------------------
   short acceptNode(const DOMNode *node) const;
 
-  static bool IsStmt(const DOMNode *node);
+  static bool IsAnyStmt(const DOMNode *node);
+  
+  static bool IsAssign(const DOMNode *node);
+  static bool IsSubCall(const DOMNode *node);
+  static bool IsInlinableSubCall(const DOMNode *node);
   static bool IsMarker(const DOMNode *node);
   static bool IsDerivProp(const DOMNode *node);
 

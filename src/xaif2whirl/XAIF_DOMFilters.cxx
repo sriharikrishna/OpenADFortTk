@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.14 2004/03/29 23:41:13 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.15 2004/04/05 20:57:43 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -414,23 +414,39 @@ XAIF_BBElemFilter::IsEdge(const DOMNode *node)
 short
 XAIF_BBStmtElemFilter::acceptNode(const DOMNode *node) const
 {
-  if ( (node->getNodeType() == DOMNode::ELEMENT_NODE) && IsStmt(node) ) {
+  if ( (node->getNodeType() == DOMNode::ELEMENT_NODE) && IsAnyStmt(node) ) {
     return FILTER_ACCEPT;
   }
   return FILTER_SKIP;
 }
 
-
 bool 
-XAIF_BBStmtElemFilter::IsStmt(const DOMNode *node)
+XAIF_BBStmtElemFilter::IsAnyStmt(const DOMNode *node)
 {
-  const XMLCh* name = node->getNodeName();
-  return (XMLString::equals(name, XAIFStrings.elem_Assign_x())
-	  || XMLString::equals(name, XAIFStrings.elem_SubCall_x())
-	  || XMLString::equals(name, XAIFStrings.elem_Marker_x())
-	  || XMLString::equals(name, XAIFStrings.elem_DerivProp_x()));
+  return (IsAssign(node) || IsSubCall(node) || IsInlinableSubCall(node)
+	  || IsMarker(node) || IsDerivProp(node));
 }
 
+bool 
+XAIF_BBStmtElemFilter::IsAssign(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_Assign_x()));
+}
+
+bool 
+XAIF_BBStmtElemFilter::IsSubCall(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_SubCall_x()));
+}
+
+bool 
+XAIF_BBStmtElemFilter::IsInlinableSubCall(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_InlinableSubCall_x()));
+}
 
 bool 
 XAIF_BBStmtElemFilter::IsMarker(const DOMNode *node)
