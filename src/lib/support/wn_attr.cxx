@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.5 2003/08/19 13:40:18 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.6 2003/11/26 14:49:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -73,11 +73,7 @@
  * abstract away from this, we define the macro INTRN_high_level_name.
  * NOT TRUE anymore, but keep this cause I'm not sure which they really want.
  */
-#ifdef BUILD_WHIRL2C
-#define INTRN_high_level_name INTRN_c_name
-#else /*BUILD_WHIRL2F*/
 #define INTRN_high_level_name INTRN_specific_name
-#endif
 
 
 /*--------- Hidden utility to get type info about a cvtl node ---------*
@@ -170,72 +166,22 @@ WN_get_tld_type(const WN* wn) {
   }
 }
 
-UINT
-WN_num_var_refs(WN *wn, const ST *st, STAB_OFFSET st_ofst)
-{
-   /* Count the number of nodes that references the object or address
-    * denoted by the given ST.  Only count LDID, STID or LDA references.
-    */
-   UINT      counter = 0;
-   WN_ITER  *wn_iter;
-   const WN *subtree;
-
-   for (wn_iter = WN_WALK_TreeIter(wn); 
-	wn_iter != NULL;
-	wn_iter = WN_WALK_TreeNext(wn_iter))
-   {
-      subtree = WN_ITER_wn(wn_iter);
-      if (subtree != NULL)
-	 switch (WN_opc_operator(subtree))
-	 {
-	 case OPR_LDID:
-	 case OPR_STID:
-	 case OPR_LDA:
-	    if (WN_st(subtree) == st && WN_offset(subtree) == st_ofst)
-	       counter += 1;
-	    break;
-      
-	 default:
-	    break;
-	 }
-   } /*loop*/
-   return counter;
-} /* WN_num_var_refs */
-
 
 const char *
 WN_intrinsic_name(INTRINSIC intr_opc)
 {
-   const char *name;
-   
-   Is_True(INTRINSIC_FIRST<=intr_opc && intr_opc<=INTRINSIC_LAST,
-	   ("Intrinsic Opcode (%d) out of range", intr_opc)); 
-   if (INTRN_high_level_name(intr_opc) != NULL)
-      name = INTRN_high_level_name(intr_opc);
-#ifdef BUILD_WHIRL2F
-   else
-   {
-/*      ASSERT_WARN(FALSE, 
-		  (DIAG_A_STRING,
-		   StrCat("Missing intrinsic name ", 
-				   get_intrinsic_name(intr_opc))));
-*/
-      name = get_intrinsic_name(intr_opc);
-   }
-#else /*BUILD_WHIRL2C*/
-   else if (INTRN_rt_name(intr_opc) != NULL)
-      name = INTRN_rt_name(intr_opc);
-   else
-   {
-      Is_True(FALSE, 
-	      ("Expected \"high_level\" or \"rt\" name in WN_intrinsic_name()"));
-      name =
-	 StrCat("<INTR: ", Num2Str(intr_opc, "%lld"), ">");
-   }
-#endif /*BUILD_WHIRL2F*/
-
-   return name;
-} /* WN_intrinsic_name */
+  const char *name = NULL;
+  Is_True(INTRINSIC_FIRST<=intr_opc && intr_opc<=INTRINSIC_LAST,
+	  ("Intrinsic Opcode (%d) out of range", intr_opc)); 
+  
+  if (INTRN_high_level_name(intr_opc) != NULL) {
+    name = INTRN_high_level_name(intr_opc);
+  } else {
+    name = get_intrinsic_name(intr_opc);
+  }
+  
+  return name;
+}
 
 
 TY_IDX
@@ -322,13 +268,10 @@ WN_intrinsic_return_ty(OPCODE wn_opc, INTRINSIC intr_opc, const WN *call)
 BOOL 
 WN_intrinsic_return_to_param(TY_IDX return_ty)
 {
-   /* We assume there is only one case when the return value
-    * cannot be passed through registers, namely for a quad
-    * precision complex number.
-    */
-   return (TY_mtype(return_ty) == MTYPE_CQ);
-
-} /* WN_intrinsic_return_to_param */
+  // Assume there is only one case when the return value cannot be
+  // passed through registers: a quad precision complex number.
+  return (TY_mtype(return_ty) == MTYPE_CQ);
+}
 
 
 WN *

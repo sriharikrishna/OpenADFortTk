@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.19 2003/10/10 17:25:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.20 2003/11/26 14:49:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -56,7 +56,7 @@
  * Revision history:
  *  07-May-95 - Original Version
  *
- * Description:
+ * Description: FIXME
  *
  *    See st2f.h for a description of the exported functions and 
  *    variables.  This module translates ST nodes into variable and
@@ -356,41 +356,7 @@ private:
   
 };
 
-// FIXME
 
-// WHIRL symbol table types primer.  See the WHIRL symbol table
-//   documentation for more info.
-//
-//   SYMTAB: not actually a type, but refers to all of the tables at a
-//   particular level/scope.  Besides a global scope, there is a local
-//   scope for each nested PU.  Each scope contains a number of different
-//   tables, some of which are common to all levels (e.g. ST_TAB) and
-//   some of which are specific to global (e.g. PU_TAB) or local
-//   levels (e.g. LABEL_TAB).
-// 
-//   SYMTAB_IDX: The type of an index into the scope table
-//   'Scope_tab[]'.  The global scope is always at the index
-//   'GLOBAL_SYMTAB'; the scope for the current lexical PU is at index
-//   'CURRENT_SYMTAB'.  (This is set by the whirl reader function
-//   'Read_Local_Info()'.)
-//
-//   ST_TAB: The type of the symbol table proper, a table that appears
-//   at all lexical levels.
-//
-//   ST_IDX: A two-part index into any ST_TAB within the 'Scope_tab[]'.
-//   The two-part bit field contains an index into the ST_TAB at a
-//   certain lexical level.
-//
-//   ST: The type of a ST_TAB entry.
-//
-//   Scope_tab[]: an array of SCOPE's, indexed by SYMTAB_IDX, the
-//   lexical level.  A SCOPE contains pointers to all the tables for a
-//   lexical level, including a ST_TAB.
-//
-//   St_Table[]: Essentially a class wrapper for 'Scope_tab[]' with
-//   member functions for indexing both the 'Scope_tab[]' and the
-//   appropriate ST_TAB with a ST_IDX. (TABLE_INDEXED_BY_LEVEL8_AND_INDEX24)
-//
 
 // FIXME: move to xlateSYMTAB.cxx
 // xlate_SYMTAB: Translate a WHIRL SYMTAB (a collection of tables) to

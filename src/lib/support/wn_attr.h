@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.5 2003/09/17 19:42:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.6 2003/11/26 14:49:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -88,10 +88,6 @@
  *   WN_compgoto_has_default_case:
  *   WN_switch_has_default_case:
  *      TRUE if the computed goto is blessed with a default case.
- *
- *   WN_num_var_refs:
- *      Return the number of references (LDID, STID, LDA) to the given
- *      ST in the given WN tree.
  *
  *   WN_is_constant_expr:
  *      Return TRUE if we have an OPR_INTCONST or an OPR_CONST; otherwise
@@ -201,8 +197,6 @@
 
 #define WN_switch_num_cases(wn) WN_num_entries(wn)
 #define WN_switch_has_default_case(wn) (WN_kid_count(wn) == 3)
-
-extern UINT WN_num_var_refs(WN *wn, const ST *st, STAB_OFFSET st_ofst);
 
 #define WN_opc_rtype(wn) WN_rtype(wn)
 #define WN_opc_operator(wn) WN_operator(wn)
