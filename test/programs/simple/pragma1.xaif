@@ -192,7 +192,7 @@
 
     <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
     <xaif:ControlFlowEdge edge_id="2" source="2" target="3"/>
-    <xaif:ControlFlowEdge edge_id="3" source="3" target="4" has_condition_value="true"/>
+    <xaif:ControlFlowEdge edge_id="3" source="3" target="4" has_condition_value="true" condition_value="1"/>
     <xaif:ControlFlowEdge edge_id="4" source="3" target="6"/>
     <xaif:ControlFlowEdge edge_id="5" source="4" target="9"/>
     <xaif:ControlFlowEdge edge_id="6" source="6" target="8"/>

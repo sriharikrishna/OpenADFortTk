@@ -38,9 +38,10 @@
     <xaif:Scope vertex_id="4" annotation="{SymTab_Id#4}">
       <xaif:SymbolTable>
         <xaif:Symbol symbol_id="BOGUS_1" kind="variable" type="real" shape="scalar" annotation="{Sym_Id#1}" active="1"/>
-        <xaif:Symbol symbol_id="sub1__2" kind="subroutine" type="void" annotation="{Sym_Id#2}"/>
-        <xaif:Symbol symbol_id="sub2__3" kind="subroutine" type="void" annotation="{Sym_Id#3}"/>
-        <xaif:Symbol symbol_id="_END_4" kind="subroutine" type="void" annotation="{Sym_Id#4}"/>
+        <xaif:Symbol symbol_id="ONE_2" kind="variable" type="integer" shape="scalar" annotation="{Sym_Id#2}" active="0"/>
+        <xaif:Symbol symbol_id="sub1__3" kind="subroutine" type="void" annotation="{Sym_Id#3}"/>
+        <xaif:Symbol symbol_id="sub2__4" kind="subroutine" type="void" annotation="{Sym_Id#4}"/>
+        <xaif:Symbol symbol_id="_END_5" kind="subroutine" type="void" annotation="{Sym_Id#5}"/>
       </xaif:SymbolTable>
     </xaif:Scope>
 
@@ -158,10 +159,10 @@
     <xaif:ControlFlowEdge edge_id="6" source="6" target="8"/>
     <xaif:ControlFlowEdge edge_id="7" source="7" target="8"/>
     <xaif:ControlFlowEdge edge_id="8" source="8" target="9"/>
-    <xaif:ControlFlowEdge edge_id="9" source="10" target="3"/>
-    <xaif:ControlFlowEdge edge_id="10" source="10" target="4"/>
-    <xaif:ControlFlowEdge edge_id="11" source="10" target="5"/>
-    <xaif:ControlFlowEdge edge_id="12" source="10" target="6"/>
+    <xaif:ControlFlowEdge edge_id="9" source="10" target="3" has_condition_value="true" condition_value="1"/>
+    <xaif:ControlFlowEdge edge_id="10" source="10" target="4" has_condition_value="true" condition_value="3"/>
+    <xaif:ControlFlowEdge edge_id="11" source="10" target="5" has_condition_value="true" condition_value="5"/>
+    <xaif:ControlFlowEdge edge_id="12" source="10" target="6" has_condition_value="true" condition_value="8"/>
     <xaif:ControlFlowEdge edge_id="13" source="10" target="7"/>
   </xaif:ControlFlowGraph>
 
@@ -373,15 +374,15 @@
     <xaif:ControlFlowEdge edge_id="18" source="17" target="7"/>
     <xaif:ControlFlowEdge edge_id="19" source="18" target="3"/>
     <xaif:ControlFlowEdge edge_id="20" source="18" target="5"/>
-    <xaif:ControlFlowEdge edge_id="21" source="19" target="9"/>
-    <xaif:ControlFlowEdge edge_id="22" source="19" target="9"/>
-    <xaif:ControlFlowEdge edge_id="23" source="19" target="9"/>
-    <xaif:ControlFlowEdge edge_id="24" source="19" target="10"/>
-    <xaif:ControlFlowEdge edge_id="25" source="19" target="10"/>
-    <xaif:ControlFlowEdge edge_id="26" source="19" target="11"/>
-    <xaif:ControlFlowEdge edge_id="27" source="19" target="11"/>
-    <xaif:ControlFlowEdge edge_id="28" source="19" target="12"/>
-    <xaif:ControlFlowEdge edge_id="29" source="19" target="12"/>
+    <xaif:ControlFlowEdge edge_id="21" source="19" target="9" has_condition_value="true" condition_value="1"/>
+    <xaif:ControlFlowEdge edge_id="22" source="19" target="9" has_condition_value="true" condition_value="31"/>
+    <xaif:ControlFlowEdge edge_id="23" source="19" target="9" has_condition_value="true" condition_value="21"/>
+    <xaif:ControlFlowEdge edge_id="24" source="19" target="10" has_condition_value="true" condition_value="22"/>
+    <xaif:ControlFlowEdge edge_id="25" source="19" target="10" has_condition_value="true" condition_value="2"/>
+    <xaif:ControlFlowEdge edge_id="26" source="19" target="11" has_condition_value="true" condition_value="3"/>
+    <xaif:ControlFlowEdge edge_id="27" source="19" target="11" has_condition_value="true" condition_value="23"/>
+    <xaif:ControlFlowEdge edge_id="28" source="19" target="12" has_condition_value="true" condition_value="4"/>
+    <xaif:ControlFlowEdge edge_id="29" source="19" target="12" has_condition_value="true" condition_value="24"/>
     <xaif:ControlFlowEdge edge_id="30" source="19" target="13"/>
     <xaif:ControlFlowEdge edge_id="31" source="20" target="6"/>
     <xaif:ControlFlowEdge edge_id="32" source="20" target="8"/>
@@ -400,7 +401,7 @@
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#108} [pragma]"/>
       <xaif:SubroutineCall statement_id="2" scope_id="1" symbol_id="sub1__20">
         <xaif:Argument position="1">
-          <xaif:Constant vertex_id="1" type="integer" value="1"/>
+          <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="ONE_2"/>
         </xaif:Argument>
         <xaif:Argument position="2">
           <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="BOGUS_1"/>
@@ -408,7 +409,7 @@
       </xaif:SubroutineCall>
       <xaif:SubroutineCall statement_id="3" scope_id="1" symbol_id="sub2__26">
         <xaif:Argument position="1">
-          <xaif:Constant vertex_id="1" type="integer" value="1"/>
+          <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="ONE_2"/>
         </xaif:Argument>
         <xaif:Argument position="2">
           <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="BOGUS_1"/>
