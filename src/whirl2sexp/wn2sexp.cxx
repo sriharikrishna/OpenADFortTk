@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.7 2005/01/07 19:00:17 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.8 2005/01/12 20:01:13 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -202,8 +202,8 @@ operator<<(std::ostream& os, const GenSexpTyUseInfo_& x)
   TY* ty = (ty_idx != 0) ? &Ty_Table[ty_idx] : NULL;
   
   const char* nm = NULL;
-  UINT idx = 0;
-  UINT algn = 0;
+  UINT32 idx = 0;
+  UINT32 algn = 0;
   if (ty) {
     nm = TY_name(ty_idx);
     idx = TY_id(ty_idx);
@@ -336,7 +336,11 @@ whirl2sexp::xlate_GOTOx_LABEL(sexp::ostream& sos, WN* wn)
   INT32 lbl = WN_label_number(wn);
   sos << BegList << GenSexpWNOpr(wn); // WN_OPR
   sos << BegList << Atom(lbl);        // WN_ATTRS
-  if (opr == OPR_LABEL) {
+  if (opr == OPR_GOTO_OUTER_BLOCK) {
+    UINT32 lbl_lvl = WN_label_level(wn);
+    sos << Atom(lbl_lvl) << EndList;
+  }
+  else if (opr == OPR_LABEL) {
     UINT32 flg = WN_label_flag(wn);
     sos << GenBeginFlgList(flg) << EndList;
   }
@@ -476,7 +480,7 @@ whirl2sexp::xlate_xCALL(sexp::ostream& sos, WN* wn)
   } 
   else {
     INTRINSIC intrn = WN_intrinsic(wn);
-    const char* nm = INTRINSIC_name(intrn);
+    const char* nm = INTRINSIC_name(intrn); // FIXME: use name
     sos << BegList << Atom("intrn") << Atom(nm) << Atom(intrn) << EndList;
   }
   if (opr != OPR_VFCALL) {
@@ -506,6 +510,7 @@ whirl2sexp::xlate_IO(sexp::ostream& sos, WN* wn)
   using namespace sexp::IOFlags;
   sos << BegList << GenSexpWNOpr(wn); // WN_OPR
   sos << BegList                      // WN_ATTRS
+    // FIXME: use only ios name
       << BegList << Atom("ios") << Atom(A_DQUOTE, nm) << Atom(ios) << EndList
       << GenBeginFlgList(flg) << EndList
       << EndList << EndLine;
@@ -519,6 +524,8 @@ whirl2sexp::xlate_IO(sexp::ostream& sos, WN* wn)
 whirl2sexp::status 
 whirl2sexp::xlate_IO_ITEM(sexp::ostream& sos, WN* wn)
 {
+  FORTTK_ASSERT(WN_operator(wn) == OPR_IO_ITEM, FORTTK_UNEXPECTED_INPUT);
+  
   IOITEM ioi    = WN_io_item(wn);
   TY_IDX ty_idx = WN_ty(wn);
   const char* nm = IOITEM_name(ioi);
@@ -526,6 +533,7 @@ whirl2sexp::xlate_IO_ITEM(sexp::ostream& sos, WN* wn)
   using namespace sexp::IOFlags;
   sos << BegList << GenSexpWNOpr(wn); // WN_OPR
   sos << BegList                      // WN_ATTRS
+    // FIXME: use name
       << BegList << Atom("ioi") << Atom(A_DQUOTE, nm) << Atom(ioi) << EndList
       << GenSexpTyUse(ty_idx)
       << EndList;
@@ -610,7 +618,7 @@ whirl2sexp::xlate_xPRAGMA(sexp::ostream& sos, WN* wn)
   FORTTK_ASSERT(opr == OPR_PRAGMA || opr == OPR_XPRAGMA, 
 		FORTTK_UNEXPECTED_INPUT); 
   
-  UINT16 prag   = WN_pragma(wn);
+  WN_PRAGMA_ID prag = (WN_PRAGMA_ID)WN_pragma(wn);
   UINT16 flg    = WN_pragma_flags(wn);
   ST_IDX st_idx = WN_st_idx(wn);
   
@@ -640,15 +648,17 @@ whirl2sexp::xlate_xPRAGMA(sexp::ostream& sos, WN* wn)
 whirl2sexp::status 
 whirl2sexp::xlate_LDA_LDMA(sexp::ostream& sos, WN* wn)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_LDA, FORTTK_UNEXPECTED_INPUT);
+  OPERATOR opr = WN_operator(wn);
+  FORTTK_ASSERT(opr == OPR_LDA || opr == OPR_LDMA, FORTTK_UNEXPECTED_INPUT);
 
   ST_IDX    st_idx = WN_st_idx(wn);
   WN_OFFSET ofst   = WN_load_offset(wn);
   TY_IDX    ty_idx = WN_ty(wn);
+  UINT      fldid  = WN_field_id(wn);
 
   sos << BegList << GenSexpWNOpr(wn); // WN_OPR
   sos << BegList << GenSexpSymRef(st_idx) << Atom(ofst)
-      << GenSexpTyUse(ty_idx) << EndList; // WN_ATTRS
+      << GenSexpTyUse(ty_idx) << Atom(fldid) << EndList; // WN_ATTRS
   sos << EndList;
   
   return whirl2sexp::good;
@@ -663,12 +673,12 @@ whirl2sexp::xlate_LDID_STID(sexp::ostream& sos, WN* wn)
   
   ST_IDX    st_idx = WN_st_idx(wn);
   WN_OFFSET ofst   = WN_offset(wn); // WN_load_offset, WN_store_offset
-  UINT      fldid  = WN_field_id(wn);
   TY_IDX    ty_idx = WN_ty(wn);
+  UINT      fldid  = WN_field_id(wn);
   
   sos << BegList << GenSexpWNOpr(wn); // WN_OPR
-  sos << BegList << GenSexpSymRef(st_idx) << Atom(ofst) << Atom(fldid)
-      << GenSexpTyUse(ty_idx) << EndList; // WN_ATTRS
+  sos << BegList << GenSexpSymRef(st_idx) << Atom(ofst) 
+      << GenSexpTyUse(ty_idx) << Atom(fldid) << EndList; // WN_ATTRS
   if (opr == OPR_STID) {
     sos << EndLine;
     TranslateWN(sos, WN_kid0(wn)); // KID 0
@@ -796,7 +806,12 @@ whirl2sexp::xlate_CVT_CVTL(sexp::ostream& sos, WN* wn)
   FORTTK_ASSERT(opr == OPR_CVT || opr == OPR_CVTL, FORTTK_UNEXPECTED_INPUT);
 
   sos << BegList << GenSexpWNOpr(wn); // WN_OPR
-  sos << BegList << EndList;          // WN_ATTRS
+  sos << BegList;                     // WN_ATTRS
+  if (opr == OPR_CVTL) {
+    INT16 cvtlbits = WN_cvtl_bits(wn);
+    sos << Atom(cvtlbits);
+  }
+  sos << EndList;
   TranslateWN(sos, WN_kid0(wn));
   sos << EndList;
 
