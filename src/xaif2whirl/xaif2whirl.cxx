@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.29 2004/03/29 23:41:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.30 2004/04/05 21:00:01 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -65,25 +65,13 @@ using namespace xaif2whirl;
 
 IntrinsicXlationTable xaif2whirl::IntrinsicTable(IntrinsicXlationTable::X2W);
 
-unsigned int MyDGNode::nextId = 1;
+// FIXME: We need to convert DOMNodeIterators to children iterators!
+// -- we are touching the whole subtree!
 
-// sort_CondVal: Used to sort operands of (arguments to) an expression
-// by the "position" attribute
-struct sort_CondVal
-{
-  sort_CondVal(bool ascending_ = true) : ascending(ascending_) { }
-  
-  // return true if e1 < e2; false otherwise
-  bool operator()(const MyDGEdge* e1, const MyDGEdge* e2) const
-  {
-    unsigned int cond1 = GetCondAttr(e1->GetElem());
-    unsigned int cond2 = GetCondAttr(e2->GetElem());
-    return (ascending) ? (cond1 < cond2) : (cond1 > cond2);
-  }
-
-private:
-  bool ascending;
-};
+// FIXME
+extern xaif2whirl::AlgorithmType opt_algorithm;
+extern bool opt_typeChangeInWHIRL;
+TY_IDX ActiveTypeTyIdx; // FIXME: just for temporary testing
 
 //*************************** Forward Declarations ***************************
 
@@ -98,30 +86,32 @@ static void
 TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
 	     XlationContext& ctxt);
 
+//*************************** Forward Declarations ***************************
+
+// ControlFlowGraph
+
 static void
 TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt);
 
-static pair<WN*, MyDGNode*>
-xlate_CFG(WN* wn_pu, DGraph* cfg, MyDGNode* startNode, 
-	  set<DOMElement*>& xlated /*FIXME*/, XlationContext& ctxt);
+static WN*
+xlate_CFG(WN* wn_pu, DGraph* cfg, MyDGNode* root, XlationContext& ctxt, 
+	  bool structuredCF = false);
 
 static WN*
-TranslateBB(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt);
-static WN*
-xlate_BasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt);
+TranslateBasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt);
+
+//*************************** Forward Declarations ***************************
+
+// ControlFlowGraph -- basic block patching algorithm
 
 static void
 TranslateBB_OLD(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt);
-static void
-xlate_BasicBlock_OLD(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt);
 
 static void
-xlate_BBCondition(WN* wn_pu, const DOMElement* bbElem, XlationContext& ctxt);
-
-static DGraph* 
-CreateCFGraph(const DOMElement* elem);
-
-//*************************** Forward Declarations ***************************
+xlate_BasicBlock_OLD(WN *wn_pu, const DOMElement* bbElem, 
+		     XlationContext& ctxt);
+static void
+xlate_BBCond_OLD(WN* wn_pu, const DOMElement* bbElem, XlationContext& ctxt);
 
 static bool
 FindNextStmtInterval(const DOMElement* bbElem, IdList<WNId>* bbIdList, 
@@ -143,7 +133,9 @@ FindSafeInsertionPoint(WN* blckWN, WN* stmtWN);
 static void
 RemoveFromWhirlIdMaps(WN* wn, WNToWNIdMap* wn2idmap, WNIdToWNMap* id2wnmap);
 
-//****************************************************************************
+//*************************** Forward Declarations ***************************
+
+// Scopes and Symbols
 
 static void
 xlate_Scope(const DOMElement* elem, XAIFSymToSymbolMap* symMap, 
@@ -157,17 +149,9 @@ static void
 xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
 	     XAIFSymToSymbolMap* symMap);
 
-static ST* 
-CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm);
+//*************************** Forward Declarations ***************************
 
-// FIXME: temporary
-static TY_IDX
-XAIFTyToWHIRLTy(const char* type);
-
-// FIXME (Note: TYPE_ID and TY_IDX are typedef'd to the same type, so
-// overloading is not possible!)
-static TY_IDX MY_Make_Array_Type1 (TYPE_ID elem_ty, INT32 ndim, INT64 len);
-static TY_IDX MY_Make_Array_Type (TY_IDX elem_ty, INT32 ndim, INT64 len);
+// WHIRL Creation functions
 
 static WN*
 CreateOpenADReplacementBeg(const char* placeholder);
@@ -175,16 +159,52 @@ CreateOpenADReplacementBeg(const char* placeholder);
 static WN*
 CreateOpenADReplacementEnd();
 
-// FIXME
-extern bool opt_algBBPatching;
-extern bool opt_typeChangeInWHIRL;
-TY_IDX ActiveTypeTyIdx; // FIXME: just for temporary testing
+static ST* 
+CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm);
+
 static void 
 DeclareActiveModule();
 
-// FIXME: We need to convert DOMNodeIterators to children iterators!
-// -- we are touching the whole subtree!
+// FIXME (Note: TYPE_ID and TY_IDX are typedef'd to the same type, so
+// overloading is not possible!)
+static TY_IDX MY_Make_Array_Type1 (TYPE_ID elem_ty, INT32 ndim, INT64 len);
+static TY_IDX MY_Make_Array_Type (TY_IDX elem_ty, INT32 ndim, INT64 len);
 
+static TY_IDX
+XAIFTyToWHIRLTy(const char* type); // FIXME: temporary
+
+//*************************** Forward Declarations ***************************
+
+// MyDGNode routines
+
+unsigned int MyDGNode::nextId = 1;
+
+// sort_CondVal: Used to sort operands of (arguments to) an expression
+// by the "position" attribute
+struct sort_CondVal
+{
+  sort_CondVal(bool ascending_ = true) : ascending(ascending_) { }
+  
+  // return true if e1 < e2; false otherwise
+  bool operator()(const MyDGEdge* e1, const MyDGEdge* e2) const
+  {
+    unsigned int cond1 = GetCondAttr(e1->GetElem());
+    unsigned int cond2 = GetCondAttr(e2->GetElem());
+    return (ascending) ? (cond1 < cond2) : (cond1 > cond2);
+  }
+
+private:
+  bool ascending;
+};
+
+static DGraph* 
+CreateCFGraph(const DOMElement* elem);
+
+//****************************************************************************
+
+
+//****************************************************************************
+// Top level translation routines
 //****************************************************************************
 
 // TranslateIR: 
@@ -304,6 +324,15 @@ TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
 }
 
 
+//****************************************************************************
+// ControlFlowGraph
+//****************************************************************************
+
+static WN*
+xlate_CFG_BasicBlock(WN *wn_pu, MyDGNode* curBB, MyDGNode* nextBB,
+		     XlationContext& ctxt, bool addGotoAndLabel);
+
+
 // TranslateCFG: Given an XAIF CFG or XAIF Replacement rooted at
 // 'cfgElem' and its corresponding WHIRL tree 'wn_pu', modify the
 // WHIRL to reflect the XAIF.
@@ -338,8 +367,7 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
     DOMElement* e = (*it);
     DGraph* cfg = CreateCFGraph(e);
     
-    if (opt_algBBPatching) { 
-      // FIXME: Translate-Patch each BasicBlock in the CFG      
+    if (opt_algorithm == ALG_BB_PATCHING) { 
       DOMDocument* doc = e->getOwnerDocument();
       DOMNodeIterator* it = 
 	doc->createNodeIterator((DOMNode*)e, DOMNodeFilter::SHOW_ALL, 
@@ -351,10 +379,9 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
       it->release();
     } 
     else {
-      set<DOMElement*> xlated;
       MyDGNode* root = dynamic_cast<MyDGNode*>(cfg->root());
-      pair<WN*, MyDGNode*> ret = xlate_CFG(wn_pu, cfg, root, xlated, ctxt);
-      WN* cfgblk = ret.first;
+      bool structuredCF = (opt_algorithm == ALG_STRUCTURED_CF);
+      WN* cfgblk = xlate_CFG(wn_pu, cfg, root, ctxt, structuredCF);
       if (XAIF_CFGElemFilter::IsReplacement(e)) {
 	const XMLCh* pX = e->getAttribute(XAIFStrings.attr_placeholder_x());
 	XercesStrX p = XercesStrX(pX);
@@ -372,7 +399,7 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   // -------------------------------------------------------
   // 3. Replace old WHIRL code with newly translated WHIRL
   // -------------------------------------------------------
-  if (!opt_algBBPatching) { 
+  if (opt_algorithm != ALG_BB_PATCHING) { 
     // Delete old WHIRL
     WN* funcblk = WN_func_body(wn_pu);
     for (WN* kid = WN_first(funcblk); (kid); /* */) {
@@ -400,40 +427,66 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
 
 
 // xlate_CFG: Given the original WHIRL tree, a CFG structure
-// representing the XAIF CFG, and a CFG node pointing to a CFG
-// subgraph, translate the CFG into a block of WHIRL statements.
+// representing the XAIF CFG, and the root CFG node, translate the CFG
+// into a block of WHIRL statements.  If the CFG contains only
+// structured control flow, 'structured' should be true; the WHIRL
+// will also contain goto-less nested and structured control flow.
+// Otherwise, 'structured' should be false and the WHIRL will contain
+// labels and gotos.
 //
-// FIXME: splice or copy?
-// During translation, non-numerical statements that were represented
-// by xaif:Marker will be spliced out of the original WHIRL tree and
-// placed in the return block.  It is expected that the *caller* will
-// splice the returned block containing new (and original statements)
-// back into the WHIRL tree.
+// During translation, the non-numerical WHIRL statements represented
+// by xaif:Marker will be copied from the original WHIRL tree and
+// placed in the returned block.  It is expected that the *caller*
+// will splice the returned block containing new statements back into
+// the WHIRL FUNC_ENTRY.
 //
-// Note: This routine will not translate any blocks that are
-// unreachable (i.e. dead code).
-// 
-// Note: The CFG node (MyDGNode) id forms an implicit label number for
-// each basic block.  We do not worry about interfering with original
-// labels because we do not keep them.
+// Note: This routine will not translate any basic blocks in the CFG
+// that are unreachable from 'startNode' (i.e. dead code). [FIXME unstructured]
 
-// Return value <new block of WHIRL, ending MyDGNode(NULL means Exit>
 static pair<WN*, MyDGNode*>
-xlate_CFG(WN* wn_pu, DGraph* cfg, MyDGNode* startNode, 
-	  set<DOMElement*>& xlated /*FIXME*/, XlationContext& ctxt)
+xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode, 
+		set<DOMElement*>& xlated, XlationContext& ctxt);
+
+static WN*
+xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode, 
+		  set<DOMElement*>& xlated, XlationContext& ctxt);
+
+static WN*
+xlate_CFG(WN* wn_pu, DGraph* cfg, MyDGNode* root, XlationContext& ctxt, 
+	  bool structuredCF)
+{
+  WN* blkWN = NULL;
+  set<DOMElement*> xlated;
+  if (structuredCF) {
+    pair<WN*, MyDGNode*> ret = xlate_CFGstruct(wn_pu, cfg, root, xlated, ctxt);
+    blkWN = ret.first;
+  } else {
+    blkWN = xlate_CFGunstruct(wn_pu, cfg, root, xlated, ctxt);
+  }
+  return blkWN;
+}
+
+
+// xlate_CFGstruct: Helper for translating a structured CFG.  The
+// algorithm uses the structured CF and recursion to implicitly create
+// nested control flow.
+//
+// Return value: <new-WHIRL-stmt-block, ending-basic-block> (If the
+// latter is NULL, it means we saw the Exit basic block)
+static pair<WN*, MyDGNode*>
+xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode, 
+		set<DOMElement*>& xlated, XlationContext& ctxt)
 {
   WN* blkWN = WN_CreateBlock();
   
-  // FIXME: need some context info to know whether to generate a label or goto
-
   bool continueIteration = true;
   MyDGNode* curNode = startNode;
   while (curNode && continueIteration) {
 
     DOMElement* bbElem = curNode->GetElem();
     
-    // Guard against retranslation (e.g. following back goto edge) [FIXME]
-    // [May not ultimately need this. If we do, create set in a wrapper]
+    // Guard against retranslation (e.g. following back goto edge)
+    // [FIXME: May not ultimately need this.]
     set<DOMElement*>::iterator it = xlated.find(bbElem);
     if (it == xlated.end()) {
       xlated.insert(bbElem);
@@ -444,20 +497,18 @@ xlate_CFG(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
     if (XAIF_BBElemFilter::IsBBEntry(bbElem) ||
 	XAIF_BBElemFilter::IsBBExit(bbElem) ||
 	XAIF_BBElemFilter::IsBB(bbElem)) {
-      // A non-structured control flow basic block
-      // 1. Get successor basic block (should not be multiple outgoing edges)
-      MyDGNode* nextNode = GetSuccessor(curNode);
-      
-      // 2. Translate
-      WN* stmtblk = TranslateBB(wn_pu, bbElem, ctxt);
-      // FIXME: possibly add a label at the front; goto nextNode at end
-      WN_INSERT_BlockLast(blkWN, stmtblk);
-      
+      // ---------------------------------------------------
+      // A non-control-flow basic block
+      // ---------------------------------------------------
+      MyDGNode* nextNode = GetSuccessor(curNode); // at most one outgoing edge
+      WN* stmts = xlate_CFG_BasicBlock(wn_pu, curNode, nextNode, ctxt, false);
+      WN_INSERT_BlockLast(blkWN, stmts);
       curNode = nextNode;
     }
     else if (XAIF_BBElemFilter::IsBBBranch(bbElem)) {
-      // Structured CF and recursion implicitly creates nests
-      
+      // ---------------------------------------------------
+      // Begin a structured branch
+      // ---------------------------------------------------
       // FIXME: if a switch, set a ctxt flag to indicate generation of labels
       // FIXME: for switch must also know first block after switch/EndBranch
       unsigned int numOutEdges = curNode->num_outgoing();
@@ -478,14 +529,14 @@ xlate_CFG(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       MyDGNode* endBrNode = NULL;
       for (int i = 0; i < outedges.size(); ++i) {
 	MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
-	pair<WN*, MyDGNode*> ret = xlate_CFG(wn_pu, cfg, n, xlated, ctxt);
+	pair<WN*, MyDGNode*> ret = 
+	  xlate_CFGstruct(wn_pu, cfg, n, xlated, ctxt);
 	childblksWN[i] = ret.first;
-	endBrNode = ret.second; // EndBranch FIXME
-	// -- not necessarily an EndBranch if a goto jumped out or in a level
+	endBrNode = ret.second; // will be EndBranch for structured-CF
       }
       
       // FIXME: for switches add a label at the front and end of each block
-
+      
       // 3. Translate condition expression
       DOMElement* cond = 
 	GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
@@ -506,20 +557,180 @@ xlate_CFG(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       curNode = GetSuccessor(endBrNode);
     }
     else if (XAIF_BBElemFilter::IsBBEndBr(bbElem)) {
-      // End translation of this sub-graph of the CFG
+      // ---------------------------------------------------
+      // End a structured branch
+      // ---------------------------------------------------
       continueIteration = false;
     }
     else if (XAIF_BBElemFilter::IsBBForLoop(bbElem) ||
 	     XAIF_BBElemFilter::IsBBPreLoop(bbElem) ||
 	     XAIF_BBElemFilter::IsBBPostLoop(bbElem)) {
-      // structured CF and recursion implicitly creates nests
+      // ---------------------------------------------------
+      // Begin a structured loop
+      // ---------------------------------------------------
       
       // 1. Gather children
       MyDGNode* body = GetSuccessorAlongEdge(curNode, 1);
       MyDGNode* fallthru = GetSuccessorAlongEdge(curNode, 0);
       
       // 2. Translate (recursively) loop body
-      pair<WN*, MyDGNode*> ret = xlate_CFG(wn_pu, cfg, body, xlated, ctxt);
+      pair<WN*, MyDGNode*> ret = 
+	xlate_CFGstruct(wn_pu, cfg, body, xlated, ctxt);
+      WN* bodyWN = ret.first;
+      
+      // 3. Translate condition expression
+      DOMElement* cond = 
+	GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
+      DOMElement* condexpr = GetFirstChildElement(cond);      
+      WN* condWN = TranslateExpression(condexpr, ctxt);
+      
+      DOMElement *init = NULL, *update = NULL;
+      WN *initWN = NULL, *updateWN = NULL;
+      if (XAIF_BBElemFilter::IsBBForLoop(bbElem)) {
+	// Note: initWN and updateWN are STIDs
+	init = GetChildElement(bbElem, XAIFStrings.elem_LpInit_x());
+	update = GetChildElement(bbElem, XAIFStrings.elem_LpUpdate_x());
+	initWN = TranslateStmt(init, ctxt);
+	updateWN = TranslateStmt(update, ctxt);
+      }
+      
+      // 4. Create control flow statement
+      WN* stmtWN = NULL;
+      if (XAIF_BBElemFilter::IsBBForLoop(bbElem)) {
+	WN* idxWN = WN_CreateIdname(WN_store_offset(initWN), WN_st(initWN));
+	stmtWN = WN_CreateDO(idxWN, initWN, condWN, updateWN, bodyWN, NULL);
+      }
+      else if (XAIF_BBElemFilter::IsBBPreLoop(bbElem)) {
+	stmtWN = WN_CreateWhileDo(condWN, bodyWN);
+      }
+      else if (XAIF_BBElemFilter::IsBBPostLoop(bbElem)) {
+	stmtWN = WN_CreateDoWhile(condWN, bodyWN);
+      }
+      
+      WN_INSERT_BlockLast(blkWN, stmtWN);
+      curNode = fallthru;
+    }      
+    else if (XAIF_BBElemFilter::IsBBEndLoop(bbElem)) {
+      // ---------------------------------------------------
+      // End a structured loop
+      // ---------------------------------------------------
+      continueIteration = false;
+    }
+    else {
+      ASSERT_FATAL(blkWN, (DIAG_A_STRING, "Programming error."));
+    }
+  }
+  
+  return make_pair(blkWN, curNode);
+}
+
+
+// xlate_CFGunstruct: Helper for translating an unstructured CFG.  
+// 
+// Note: The CFG node (MyDGNode) id forms an implicit label number for
+// each basic block.  We do not worry about interfering with original
+// labels because we do not keep them.
+static WN*
+xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode, 
+		  set<DOMElement*>& xlated, XlationContext& ctxt)
+{
+  WN* blkWN = WN_CreateBlock();
+  
+  for (DGraph::DFSIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
+    MyDGNode* curNode = dynamic_cast<MyDGNode*>((DGraph::Node*)nodeIt);
+    
+    DOMElement* bbElem = curNode->GetElem();
+    
+    // Guard against retranslation (e.g. following back goto edge)
+    // [FIXME: May not ultimately need this.]
+    set<DOMElement*>::iterator it = xlated.find(bbElem);
+    if (it == xlated.end()) {
+      xlated.insert(bbElem);
+    } else {
+      continue; // we have already translated this basic block
+    }
+    
+    if (XAIF_BBElemFilter::IsBBEntry(bbElem) ||
+	XAIF_BBElemFilter::IsBBExit(bbElem) ||
+	XAIF_BBElemFilter::IsBB(bbElem)) {
+      // ---------------------------------------------------
+      // A non-control-flow basic block
+      // ---------------------------------------------------
+      MyDGNode* nextNode = GetSuccessor(curNode); // at most one outgoing edge
+      WN* stmts = xlate_CFG_BasicBlock(wn_pu, curNode, nextNode, ctxt, true);
+      WN_INSERT_BlockLast(blkWN, stmts);
+    }
+    else if (XAIF_BBElemFilter::IsBBBranch(bbElem)) {
+      // ---------------------------------------------------
+      // A branch with possibly unstructured control flow
+      // ---------------------------------------------------
+      // FIXME: if a switch, set a ctxt flag to indicate generation of labels
+      // FIXME: for switch must also know first block after switch/EndBranch
+      unsigned int numOutEdges = curNode->num_outgoing();
+      
+      // 1. Gather all outgoing edges, sorted by condition (specially
+      // sort two-way branches into true-false order.)
+      vector<MyDGEdge*> outedges(numOutEdges, NULL);
+      DGraph::OutgoingEdgesIterator it = 
+	DGraph::OutgoingEdgesIterator(curNode);
+      for (int i = 0; (bool)it; ++it, ++i) {
+	outedges[i] = dynamic_cast<MyDGEdge*>((DGraph::Edge*)it);
+      }
+      std::sort(outedges.begin(), outedges.end(), 
+		sort_CondVal((numOutEdges != 2)));
+      
+      // 2. Create WHIRL branch 
+      vector<WN*> childblksWN(numOutEdges, NULL);
+      for (int i = 0; i < outedges.size(); ++i) {
+	MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
+	WN* gotoWN = WN_CreateGoto(n->getId());
+	childblksWN[i] = gotoWN;
+      }
+      
+      // FIXME: for switches add a label at the front and end of each block
+      
+      // 3. Translate condition expression
+      DOMElement* cond = 
+	GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
+      DOMElement* condexpr = GetFirstChildElement(cond);      
+      WN* condWN = TranslateExpression(condexpr, ctxt);
+      
+      // 4. Create control flow statement
+      WN* labelWN = WN_CreateLabel(curNode->getId(), 0 /*label_flag*/, NULL);
+      WN* stmtWN = NULL;
+      if (numOutEdges == 1 || numOutEdges == 2) {
+	WN* thenWN = childblksWN[0];
+	WN* elseWN = (numOutEdges == 2) ? childblksWN[1] : WN_CreateBlock();
+	stmtWN = WN_CreateIf(condWN, thenWN, elseWN);
+      } else {
+	ASSERT_FATAL(false, (DIAG_A_STRING, "Unimplemented.")); // switch
+      }
+      
+      WN_INSERT_BlockLast(blkWN, labelWN);
+      WN_INSERT_BlockLast(blkWN, stmtWN);
+    }
+    else if (XAIF_BBElemFilter::IsBBEndBr(bbElem)) {
+      // ---------------------------------------------------
+      // EndBranch: a dummy basic block
+      // ---------------------------------------------------
+      MyDGNode* nextNode = GetSuccessor(curNode); // at most one outgoing edge
+      WN* stmts = xlate_CFG_BasicBlock(wn_pu, curNode, nextNode, ctxt, true);
+      WN_INSERT_BlockLast(blkWN, stmts);
+    }
+    else if (XAIF_BBElemFilter::IsBBForLoop(bbElem) ||
+	     XAIF_BBElemFilter::IsBBPreLoop(bbElem) ||
+	     XAIF_BBElemFilter::IsBBPostLoop(bbElem)) {
+#if 0 // FIXME
+      // ---------------------------------------------------
+      // A loop with possibly unstructured control flow
+      // ---------------------------------------------------
+      // 1. Gather children
+      MyDGNode* body = GetSuccessorAlongEdge(curNode, 1);
+      MyDGNode* fallthru = GetSuccessorAlongEdge(curNode, 0);
+      
+      // 2. Translate (recursively) loop body
+      pair<WN*, MyDGNode*> ret = 
+	xlate_CFGstruct(wn_pu, cfg, body, xlated, ctxt);
       WN* bodyWN = ret.first;
       
       // 3. Translate condition expression
@@ -552,60 +763,52 @@ xlate_CFG(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       
       WN_INSERT_BlockLast(blkWN, stmtWN);
       curNode = fallthru;
+#endif
     }      
     else if (XAIF_BBElemFilter::IsBBEndLoop(bbElem)) {
-      // End translation of this sub-graph of the CFG
-      continueIteration = false;
+      // ---------------------------------------------------
+      // The loop back-branch
+      // ---------------------------------------------------
+      // FIXME
     }
     else {
       ASSERT_FATAL(blkWN, (DIAG_A_STRING, "Programming error."));
     }
   }
   
-  return make_pair(blkWN, curNode);
-}
+  return blkWN;
+}  
 
 
-// TranslateBB:
+// xlate_CFG_BasicBlock: Translate a non-control-flow basic block with
+// at-most one successor.
 static WN*
-TranslateBB(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
+xlate_CFG_BasicBlock(WN *wn_pu, MyDGNode* curBB, MyDGNode* nextBB,
+		     XlationContext& ctxt, bool addGotoAndLabel)
 {
-  WN* wn = NULL;
+  DOMElement* bbElem = curBB->GetElem();
   
-  if (XAIF_BBElemFilter::IsBB(bbElem)) {
-    wn = xlate_BasicBlock(wn_pu, bbElem, ctxt);
-  }
-  else if (XAIF_BBElemFilter::IsBBEntry(bbElem) ||
-	   XAIF_BBElemFilter::IsBBExit(bbElem)) {
-    wn = WN_CreateBlock(); 
-    // FIXME: move to xlate_BasicBlock when it is not reliant on whirlids
-  } 
+  // 1. Translate
+  WN* stmtblk = TranslateBasicBlock(wn_pu, bbElem, ctxt);
   
-  return wn;
-}
-
-static void
-TranslateBB_OLD(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
-{
-  if (XAIF_BBElemFilter::IsBB(bbElem)) {
-      xlate_BasicBlock_OLD(wn_pu, bbElem, ctxt);
-  } 
-  else if (XAIF_BBElemFilter::IsBBBranch(bbElem)
-	   || XAIF_BBElemFilter::IsBBPreLoop(bbElem)
-	   || XAIF_BBElemFilter::IsBBPostLoop(bbElem)) {
-    xlate_BBCondition(wn_pu, bbElem, ctxt);
-  } 
-  else if (XAIF_BBElemFilter::IsBBForLoop(bbElem)) {
-    // FIXME: what to do with ForLoops?
-  } 
-  else {
-    // skip anything else for now
+  // 2. If necessary, add a label to front and goto at end
+  if (addGotoAndLabel) {
+    WN* labelWN = WN_CreateLabel(curBB->getId(), 0 /*label_flag*/, NULL);
+    WN_INSERT_BlockFirst(stmtblk, labelWN);
+    
+    if (nextBB) {
+      WN* gotoWN = WN_CreateGoto(nextBB->getId());
+      WN_INSERT_BlockLast(stmtblk, gotoWN); 
+    }
   }
+  
+  return stmtblk;
 }
 
 
+// TranslateBasicBlock: Translate a non-control-flow basic block
 static WN*
-xlate_BasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
+TranslateBasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
 {
   WN* blkWN = WN_CreateBlock();
 
@@ -646,6 +849,31 @@ xlate_BasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
   
   return blkWN;
 }
+
+
+//****************************************************************************
+// ControlFlowGraph -- basic block patching algorithm
+//****************************************************************************
+
+static void
+TranslateBB_OLD(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
+{
+  if (XAIF_BBElemFilter::IsBB(bbElem)) {
+      xlate_BasicBlock_OLD(wn_pu, bbElem, ctxt);
+  } 
+  else if (XAIF_BBElemFilter::IsBBBranch(bbElem)
+	   || XAIF_BBElemFilter::IsBBPreLoop(bbElem)
+	   || XAIF_BBElemFilter::IsBBPostLoop(bbElem)) {
+    xlate_BBCond_OLD(wn_pu, bbElem, ctxt);
+  } 
+  else if (XAIF_BBElemFilter::IsBBForLoop(bbElem)) {
+    // FIXME: what to do with ForLoops?
+  } 
+  else {
+    // skip anything else for now
+  }
+}
+
 
 static void
 xlate_BasicBlock_OLD(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
@@ -722,7 +950,7 @@ xlate_BasicBlock_OLD(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
 
 
 static void
-xlate_BBCondition(WN* wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
+xlate_BBCond_OLD(WN* wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
 {
   // -------------------------------------------------------
   // 1. Find corresponding WHIRL condition node
@@ -764,69 +992,6 @@ xlate_BBCondition(WN* wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
   PatchWNExpr(wn, condKid /* kidno */, ctxt);
 }
 
-
-//****************************************************************************
-
-// CreateCFGraph: Given an XAIF control flow graph, create and
-// return a CFG where CFG nodes point to XAIF CVG vertices.
-static DGraph* 
-CreateCFGraph(const DOMElement* cfgElem)
-{
-  MyDGNode::resetIds();
-  DGraph* g = new DGraph;
-  VertexIdToMyDGNodeMap m;
-  
-  // -------------------------------------------------------
-  // Create the graph
-  // -------------------------------------------------------
-  DOMDocument* doc = cfgElem->getOwnerDocument();
-  DOMNodeIterator* it = 
-    doc->createNodeIterator((DOMNode*)cfgElem, DOMNodeFilter::SHOW_ALL, 
-			    new XAIF_BBElemFilter(), true);
-  for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
-    DOMElement* elem = dynamic_cast<DOMElement*>(node);
-
-    if (XAIF_BBElemFilter::IsEdge(elem)) {
-      // Add an edge to the graph. 
-      
-      // Find src and target (sink) nodes. 
-      const XMLCh* srcX = elem->getAttribute(XAIFStrings.attr_source_x());
-      const XMLCh* targX = elem->getAttribute(XAIFStrings.attr_target_x());
-      XercesStrX src = XercesStrX(srcX);
-      XercesStrX targ = XercesStrX(targX);
-
-      MyDGNode* gn1 = m[std::string(src.c_str())];  // source
-      MyDGNode* gn2 = m[std::string(targ.c_str())]; // target
-      ASSERT_FATAL(gn1 && gn2, (DIAG_A_STRING, "Programming error."));
-
-      MyDGEdge* ge = new MyDGEdge(gn1, gn2, elem); // src, targ
-      g->add(ge);
-    } 
-    else {
-      // Add a vertex to the graph
-      const XMLCh* vidX = elem->getAttribute(XAIFStrings.attr_Vid_x());
-      XercesStrX vid = XercesStrX(vidX);
-      ASSERT_FATAL(strlen(vid.c_str()) > 0, (DIAG_A_STRING, "Error."));
-      
-      MyDGNode* gn = new MyDGNode(elem);
-      g->add(gn);
-      m[std::string(vid.c_str())] = gn;
-      
-      // Set the graph root if necessary
-      const XMLCh* name = elem->getNodeName();
-      if (XMLString::equals(name, XAIFStrings.elem_BBEntry_x())) {
-	g->set_root(gn);
-      }
-    } 
-    
-  }
-  it->release();
-  
-  return g;
-}
-
-
-//****************************************************************************
 
 // FindNextStmtInterval: Finds the next translation interval within
 // the XAIF BB 'bbElem' given the current interval.  The current
@@ -1051,6 +1216,8 @@ RemoveFromWhirlIdMaps(WN* wn, WNToWNIdMap* wn2idmap, WNIdToWNMap* id2wnmap)
 
 
 //****************************************************************************
+// Scopes and Symbols
+//****************************************************************************
 
 Symbol*
 xaif2whirl::GetSymbol(const DOMElement* elem, XlationContext& ctxt)
@@ -1101,6 +1268,7 @@ GetOrCreateBogusTmpSymbol(XlationContext& ctxt)
 }
 
 
+//****************************************************************************
 
 static void
 xlate_Scope(const DOMElement* elem, XAIFSymToSymbolMap* symMap, 
@@ -1182,62 +1350,8 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
 } 
 
 
-// CreateST: Creates and returns a WHIRL ST* at level 'level' with
-// name 'nm' using 'elem' to gather ST shape and storage class info.
-static ST* 
-CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
-{
-  const XMLCh* kindX = elem->getAttribute(XAIFStrings.attr_kind_x());
-  const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
-  const XMLCh* shapeX = elem->getAttribute(XAIFStrings.attr_shape_x());    
-
-  XercesStrX kind = XercesStrX(kindX);
-  XercesStrX type = XercesStrX(typeX);
-  XercesStrX shape = XercesStrX(shapeX);
-
-  bool active = GetActiveAttr(elem);
-  
-  assert( strcmp(kind.c_str(), "variable" ) == 0 ); // FIXME: assume only
-    
-  // 1. Find basic type according to 'type' and 'active'
-  TY_IDX basicTy = XAIFTyToWHIRLTy(type.c_str());
-  if (opt_typeChangeInWHIRL) {
-    if (active) {
-      basicTy = ActiveTypeTyIdx;
-    } 
-  }
-  
-  // 2. Modify basic type according to the (non-scalar) shapes
-  TY_IDX ty;
-  if (strcmp(shape.c_str(), "scalar") == 0) {
-    ty = basicTy;
-  } else {
-    // Note: cf. be/com/wn_instrument.cxx:1253 for example creating vector
-    INT32 ndim = 0;
-    INT64 len = 1000; // FIXME: this is fixed size!!
-    if (strcmp(shape.c_str(), "vector") == 0) {
-      ndim = 1;
-    } else {
-      // FIXME: add tensors
-      ASSERT_FATAL(false, (DIAG_A_STRING, "Programming error."));
-    }
-    ty = MY_Make_Array_Type(basicTy, ndim, len);
-  }
-  
-  // 3. Find storage class
-  ST_SCLASS sclass = SCLASS_AUTO; // default: auto implies local storage
-  if (level == GLOBAL_SYMTAB) {
-    sclass = SCLASS_COMMON; // SCLASS_PSTATIC; // FIXME
-  }
-  
-  // 4. Create the new symbol
-  ST* st = New_ST(level);
-  ST_Init(st, Save_Str(nm), CLASS_VAR, sclass, EXPORT_LOCAL, ty);
-  
-  return st;
-}
-
-
+//****************************************************************************
+// XAIF Attribute retrieval funtionss
 //****************************************************************************
 
 bool
@@ -1432,6 +1546,8 @@ xaif2whirl::GetIdList(const char* idstr, const char* tag)
 
 
 //****************************************************************************
+// WHIRL Creation functions
+//****************************************************************************
 
 WN*
 CreateCallToIntrin(TYPE_ID rtype, const char* fname, unsigned int argc)
@@ -1482,74 +1598,77 @@ CreateIntrinsicCall(OPERATOR opr, INTRINSIC intrn,
 }
 
 
-//****************************************************************************
-
-MyDGNode*
-GetSuccessor(MyDGNode* node, bool succIsOutEdge)
+static WN*
+CreateOpenADReplacementBeg(const char* placeholder)
 {
-  MyDGNode* succ = NULL;
-  int numSucc = (succIsOutEdge) ? node->num_outgoing() : node->num_incoming();
-  ASSERT_FATAL(numSucc <= 1, (DIAG_A_STRING, "Programming error."));
-  if ( !(numSucc == 1) ) {
-    return succ;
-  }
-  
-  if (succIsOutEdge) {
-    DGraph::SinkNodesIterator it = DGraph::SinkNodesIterator(node);
-    succ = dynamic_cast<MyDGNode*>((DGraph::Node*)it);
-  }
-  else {
-    DGraph::SourceNodesIterator it = DGraph::SourceNodesIterator(node);
-    succ = dynamic_cast<MyDGNode*>((DGraph::Node*)it);
-  }
-  return succ;
+  std::string com = "$OpenAD$ BEGIN REPLACEMENT ";
+  com += placeholder;
+  WN* comWN = WN_CreateComment((char*)com.c_str());
+  return comWN;
 }
 
 
-MyDGNode*
-GetSuccessorAlongEdge(MyDGNode* node, unsigned int condition, 
-		      bool succIsOutEdge)
+static WN*
+CreateOpenADReplacementEnd()
 {
-  MyDGNode* succ = NULL;
-  int numSucc = (succIsOutEdge) ? node->num_outgoing() : node->num_incoming();
+  WN* comWN = WN_CreateComment("$OpenAD$ END REPLACEMENT");
+  return comWN;
+}
+
+
+// CreateST: Creates and returns a WHIRL ST* at level 'level' with
+// name 'nm' using 'elem' to gather ST shape and storage class info.
+static ST* 
+CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
+{
+  const XMLCh* kindX = elem->getAttribute(XAIFStrings.attr_kind_x());
+  const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
+  const XMLCh* shapeX = elem->getAttribute(XAIFStrings.attr_shape_x());    
+
+  XercesStrX kind = XercesStrX(kindX);
+  XercesStrX type = XercesStrX(typeX);
+  XercesStrX shape = XercesStrX(shapeX);
+
+  bool active = GetActiveAttr(elem);
   
-  if (succIsOutEdge) {
-    DGraph::OutgoingEdgesIterator it = DGraph::OutgoingEdgesIterator(node);
-    for ( ; (bool)it; ++it) {
-      MyDGEdge* edge = dynamic_cast<MyDGEdge*>((DGraph::Edge*)it);
-      DOMElement* e = edge->GetElem();
-      
-      unsigned int cond = GetCondAttr(e);
-      if (condition == cond) {
-	succ = dynamic_cast<MyDGNode*>(edge->sink());
-	break;
-      }
+  assert( strcmp(kind.c_str(), "variable" ) == 0 ); // FIXME: assume only
+    
+  // 1. Find basic type according to 'type' and 'active'
+  TY_IDX basicTy = XAIFTyToWHIRLTy(type.c_str());
+  if (opt_typeChangeInWHIRL) {
+    if (active) {
+      basicTy = ActiveTypeTyIdx;
+    } 
+  }
+  
+  // 2. Modify basic type according to the (non-scalar) shapes
+  TY_IDX ty;
+  if (strcmp(shape.c_str(), "scalar") == 0) {
+    ty = basicTy;
+  } else {
+    // Note: cf. be/com/wn_instrument.cxx:1253 for example creating vector
+    INT32 ndim = 0;
+    INT64 len = 1000; // FIXME: this is fixed size!!
+    if (strcmp(shape.c_str(), "vector") == 0) {
+      ndim = 1;
+    } else {
+      // FIXME: add tensors
+      ASSERT_FATAL(false, (DIAG_A_STRING, "Programming error."));
     }
+    ty = MY_Make_Array_Type(basicTy, ndim, len);
   }
-  else {
-    ASSERT_FATAL(false, (DIAG_A_STRING, "Transform into a template."));
+  
+  // 3. Find storage class
+  ST_SCLASS sclass = SCLASS_AUTO; // default: auto implies local storage
+  if (level == GLOBAL_SYMTAB) {
+    sclass = SCLASS_COMMON; // SCLASS_PSTATIC; // FIXME
   }
-  return succ;
-}
-
-
-//****************************************************************************
-
-static TY_IDX
-XAIFTyToWHIRLTy(const char* type)
-{
-  TY_IDX ty = 0;
-  if (strcmp(type, "real") == 0) {
-    ty = MTYPE_To_TY(MTYPE_F8);
-  } 
-  else if (strcmp(type, "integer") == 0) {
-    ty = MTYPE_To_TY(MTYPE_I8); 
-  } 
-  else {
-    // don't know about anything else yet
-    ASSERT_FATAL(false, (DIAG_A_STRING, "Programming error."));
-  }
-  return ty;
+  
+  // 4. Create the new symbol
+  ST* st = New_ST(level);
+  ST_Init(st, Save_Str(nm), CLASS_VAR, sclass, EXPORT_LOCAL, ty);
+  
+  return st;
 }
 
 
@@ -1634,21 +1753,134 @@ MY_Make_Array_Type (TY_IDX elem_ty, INT32 ndim, INT64 len)
 
 } // Make_Array_Type
 
+
+static TY_IDX
+XAIFTyToWHIRLTy(const char* type)
+{
+  TY_IDX ty = 0;
+  if (strcmp(type, "real") == 0) {
+    ty = MTYPE_To_TY(MTYPE_F8);
+  } 
+  else if (strcmp(type, "integer") == 0) {
+    ty = MTYPE_To_TY(MTYPE_I8); 
+  } 
+  else {
+    // don't know about anything else yet
+    ASSERT_FATAL(false, (DIAG_A_STRING, "Programming error."));
+  }
+  return ty;
+}
+
+
+//****************************************************************************
+// MyDGNode routines
 //****************************************************************************
 
-
-static WN*
-CreateOpenADReplacementBeg(const char* placeholder)
+MyDGNode*
+GetSuccessor(MyDGNode* node, bool succIsOutEdge)
 {
-  std::string com = "$OpenAD$ BEGIN REPLACEMENT ";
-  com += placeholder;
-  WN* comWN = WN_CreateComment((char*)com.c_str());
-  return comWN;
+  MyDGNode* succ = NULL;
+  int numSucc = (succIsOutEdge) ? node->num_outgoing() : node->num_incoming();
+  ASSERT_FATAL(numSucc <= 1, (DIAG_A_STRING, "Programming error."));
+  if ( !(numSucc == 1) ) {
+    return succ;
+  }
+  
+  if (succIsOutEdge) {
+    DGraph::SinkNodesIterator it = DGraph::SinkNodesIterator(node);
+    succ = dynamic_cast<MyDGNode*>((DGraph::Node*)it);
+  }
+  else {
+    DGraph::SourceNodesIterator it = DGraph::SourceNodesIterator(node);
+    succ = dynamic_cast<MyDGNode*>((DGraph::Node*)it);
+  }
+  return succ;
 }
 
-static WN*
-CreateOpenADReplacementEnd()
+
+MyDGNode*
+GetSuccessorAlongEdge(MyDGNode* node, unsigned int condition, 
+		      bool succIsOutEdge)
 {
-  WN* comWN = WN_CreateComment("$OpenAD$ END REPLACEMENT");
-  return comWN;
+  MyDGNode* succ = NULL;
+  int numSucc = (succIsOutEdge) ? node->num_outgoing() : node->num_incoming();
+  
+  if (succIsOutEdge) {
+    DGraph::OutgoingEdgesIterator it = DGraph::OutgoingEdgesIterator(node);
+    for ( ; (bool)it; ++it) {
+      MyDGEdge* edge = dynamic_cast<MyDGEdge*>((DGraph::Edge*)it);
+      DOMElement* e = edge->GetElem();
+      
+      unsigned int cond = GetCondAttr(e);
+      if (condition == cond) {
+	succ = dynamic_cast<MyDGNode*>(edge->sink());
+	break;
+      }
+    }
+  }
+  else {
+    ASSERT_FATAL(false, (DIAG_A_STRING, "Transform into a template."));
+  }
+  return succ;
 }
+
+
+// CreateCFGraph: Given an XAIF control flow graph, create and
+// return a CFG where CFG nodes point to XAIF CVG vertices.
+static DGraph* 
+CreateCFGraph(const DOMElement* cfgElem)
+{
+  MyDGNode::resetIds();
+  DGraph* g = new DGraph;
+  VertexIdToMyDGNodeMap m;
+  
+  // -------------------------------------------------------
+  // Create the graph
+  // -------------------------------------------------------
+  DOMDocument* doc = cfgElem->getOwnerDocument();
+  DOMNodeIterator* it = 
+    doc->createNodeIterator((DOMNode*)cfgElem, DOMNodeFilter::SHOW_ALL, 
+			    new XAIF_BBElemFilter(), true);
+  for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
+    DOMElement* elem = dynamic_cast<DOMElement*>(node);
+
+    if (XAIF_BBElemFilter::IsEdge(elem)) {
+      // Add an edge to the graph. 
+      
+      // Find src and target (sink) nodes. 
+      const XMLCh* srcX = elem->getAttribute(XAIFStrings.attr_source_x());
+      const XMLCh* targX = elem->getAttribute(XAIFStrings.attr_target_x());
+      XercesStrX src = XercesStrX(srcX);
+      XercesStrX targ = XercesStrX(targX);
+
+      MyDGNode* gn1 = m[std::string(src.c_str())];  // source
+      MyDGNode* gn2 = m[std::string(targ.c_str())]; // target
+      ASSERT_FATAL(gn1 && gn2, (DIAG_A_STRING, "Programming error."));
+
+      MyDGEdge* ge = new MyDGEdge(gn1, gn2, elem); // src, targ
+      g->add(ge);
+    } 
+    else {
+      // Add a vertex to the graph
+      const XMLCh* vidX = elem->getAttribute(XAIFStrings.attr_Vid_x());
+      XercesStrX vid = XercesStrX(vidX);
+      ASSERT_FATAL(strlen(vid.c_str()) > 0, (DIAG_A_STRING, "Error."));
+      
+      MyDGNode* gn = new MyDGNode(elem);
+      g->add(gn);
+      m[std::string(vid.c_str())] = gn;
+      
+      // Set the graph root if necessary
+      const XMLCh* name = elem->getNodeName();
+      if (XMLString::equals(name, XAIFStrings.elem_BBEntry_x())) {
+	g->set_root(gn);
+      }
+    } 
+    
+  }
+  it->release();
+  
+  return g;
+}
+
+//****************************************************************************
