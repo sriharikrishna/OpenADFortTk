@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.11 2004/02/11 18:06:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.12 2004/02/17 18:55:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -27,8 +27,8 @@
 //************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
-#include "w2f_driver.h"    // W2F_*
-#include "ir_reader.h"     // fdump_tree
+#include "ir_reader.h"      // fdump_tree
+#include "w2f_driver.h"     // W2F_*
 
 //************************ OpenAnalysis Include Files ***********************
 
@@ -329,29 +329,28 @@ whirltester::TestIR_whirl2f(std::ostream& os, PU_Info* pu_forest)
 {
   static const int bufSZ = 1024 * 1024;
   static char buf[bufSZ];
+  
   Diag_Set_Phase("WHIRL tester: TestIR_whirl2f");
+  if (!pu_forest) { return 0; }
+  
   PU_AllocBEGlobalSymtab();
   W2F_Init();
-  
-  if (!pu_forest) { return 0; }
   
   Pro64IRProcIterator procIt(pu_forest);
   for ( ; procIt.IsValid(); ++procIt) { 
     
     // The PU_Info* for this PU
     PU_Info* pu = (PU_Info*)procIt.Current();
-    PU_AllocBELocalSymtab(pu);
     
     // The root of the WHIRL tree and a statement to translate
     WN* wn_pu = PU_Info_tree_ptr(pu);
-    WN* wn = PleaseGetMeSomething(wn_pu); // WN_func_body(wn_pu);
-    
-    // find some node to translate
+    WN* wn = PleaseGetMeSomething(wn_pu);
+
+    PU_AllocBELocalSymtab(pu);
     W2F_Push_PU(wn_pu, wn);
     
     // Translate and output
     os << "----> The tree:" << endl;
-    IR_set_dump_order(TRUE); // Preorder dump
     fdump_tree(stdout, wn);
     os << endl;
     
@@ -359,6 +358,7 @@ whirltester::TestIR_whirl2f(std::ostream& os, PU_Info* pu_forest)
     W2F_Translate_Wn_Str(buf, bufSZ-1, wn);
     os << buf << endl;
     
+    W2F_Pop_PU();
     PU_FreeBELocalSymtab(pu);
     break;
   }
@@ -373,15 +373,29 @@ PleaseGetMeSomething(WN* wn_pu)
 {
   WN_TREE_CONTAINER<PRE_ORDER> wtree(wn_pu);
   WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
-  
+
+  // Find the first non-empty block
+  WN* blk = NULL;
   for (it = wtree.begin(); it != wtree.end(); ++it) {
     WN* curWN = it.Wn();
     OPERATOR opr = WN_operator(curWN);
     if (opr == OPR_BLOCK && WN_first(curWN)) { // non-empty block
-      return curWN;
+      blk = curWN;
+      break;
     }
   }
-  return NULL;
+  
+  if (blk) {
+    // Create a comment and insert it into the block
+    WN* com1 = WN_CreateComment("$OpenAD$ BEGIN FRAGMENT(1)");
+    WN_INSERT_BlockFirst(blk, com1);
+    
+    WN* com2 = WN_CreateComment("$OpenAD$ END FRAGMENT(1)");
+    WN_INSERT_BlockLast(blk, com2);
+  }
+  
+  // Return body of the wn_pu
+  return WN_func_body(wn_pu); // blk;
 }
 
 
