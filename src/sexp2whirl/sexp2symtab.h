@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.h,v 1.5 2005/01/12 20:01:01 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.h,v 1.6 2005/01/17 15:23:06 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -159,10 +159,10 @@ namespace sexp2whirl {
 
 
   UINT32
-  xlate_TCON_STR_TAB_entry(sexp_t* sx);
+  xlate_TCON_STR_TAB_entry(sexp_t* sx, std::string& buf);
 
   UINT32
-  xlate_STR_TAB_entry(sexp_t* sx);
+  xlate_STR_TAB_entry(sexp_t* sx, std::string& buf);
   
 
   // xlate_SYMTAB_entry: Templated access to translation routines

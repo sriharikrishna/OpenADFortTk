@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.cxx,v 1.5 2005/01/12 20:01:01 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.cxx,v 1.6 2005/01/17 15:23:06 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -90,9 +90,10 @@ xlate_SYMTAB(RELATED_SEGMENTED_ARRAY<T, block_size>& table,
 }
 
 
-void 
+void
 xlate_SYMTAB(sexp_t* str_tab, const char* table_nm,
-			 UINT32 (*xlate_entry)(sexp_t*))
+	     UINT32 (*xlate_entry)(sexp_t*, std::string& buf), 
+	     std::string& buf)
 {
   using namespace sexp;
   
@@ -104,9 +105,9 @@ xlate_SYMTAB(sexp_t* str_tab, const char* table_nm,
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, table_nm) == 0,
 		FORTTK_UNEXPECTED_INPUT);
   
-  // Translate each entry
+  // Translate each entry, building up buffer
   for (sexp_t* entry = get_elem1(str_tab); entry; entry = get_next(entry)) {
-    xlate_entry(entry);
+    xlate_entry(entry, buf);
   }
 }
 
@@ -137,6 +138,7 @@ sexp2whirl::TranslateGlobalSymbolTables(sexp_t* gbl_symtab, int flags)
     // FIXME: if the above is FALSE we must do the following:
     // action is one of: none, RESERVE_IDX, RESERVE_IDX && create_special_syms
     Initialize_Strtab (0x1000);	// start with 4Kbytes for strtab.
+    // FIXME: not necessary
     
     UINT32 dummy_idx;
     memset (&New_PU ((PU_IDX&) dummy_idx), '\0', sizeof(PU));
@@ -154,6 +156,7 @@ sexp2whirl::TranslateGlobalSymbolTables(sexp_t* gbl_symtab, int flags)
         idx = Tcon_Table.Insert (Zero);	// index 0: dummy
         // SKIP: init of consts
 	Initialize_TCON_strtab (1024);	// string table for TCONs
+        // FIXME: not necessary
 
     New_Scope(GLOBAL_SYMTAB, Malloc_Mem_Pool, TRUE /*reserve_index_zero*/);
 
@@ -337,7 +340,16 @@ sexp2whirl::xlate_TCON_TAB(sexp_t* tcon_tab)
 void 
 sexp2whirl::xlate_TCON_STR_TAB(sexp_t* str_tab)
 {
-  xlate_SYMTAB(str_tab, SexpTags::TCON_STR_TAB, &xlate_TCON_STR_TAB_entry);
+  // Details: Each char-array is preceeded by size info.  If the
+  // char-array is less than 0xff bytes, the first byte contains the
+  // size.  Otherwise the first byte is 0xff and the next 4 bytes hold
+  // the size (UINT32).  The index points to the first byte in the
+  // string!
+  // E.g.: -xxx0-yyy0 [where - is size info; xxx and yyy are strings]
+  std::string buf(1, '\0'); // initialize (cf. STR_TAB<STR>::init_hash)
+  xlate_SYMTAB(str_tab, SexpTags::TCON_STR_TAB,
+	       &xlate_TCON_STR_TAB_entry, buf);
+  Initialize_TCON_strtab(buf.c_str(), buf.size());
 }
 
 
@@ -375,7 +387,13 @@ sexp2whirl::xlate_ST_ATTR_TAB(sexp_t* st_attr_tab, SYMTAB_IDX stab_lvl)
 void 
 sexp2whirl::xlate_STR_TAB(sexp_t* str_tab)
 {
-  xlate_SYMTAB(str_tab, SexpTags::STR_TAB, &xlate_STR_TAB_entry);
+  // Details: The first entry in the buffer is NULL and thus every
+  // string is preceeded by a NULL.  The index points to the first
+  // byte in the string!
+  // E.g: 0xxx0yyy0zzz0  [where xxx, yyy, and zzz are strings]
+  std::string buf(1, '\0'); // initialize (cf. STR_TAB<STR>::init_hash)
+  xlate_SYMTAB(str_tab, SexpTags::STR_TAB, &xlate_STR_TAB_entry, buf);
+  Initialize_Strtab(buf.c_str(), buf.size());
 }
 
 
@@ -915,29 +933,69 @@ sexp2whirl::xlate_PREG_TAB_entry(sexp_t* sx)
 
 
 UINT32
-sexp2whirl::xlate_TCON_STR_TAB_entry(sexp_t* sx)
+sexp2whirl::xlate_TCON_STR_TAB_entry(sexp_t* sx, std::string& buf)
 {
   using namespace sexp;
   
   // char_array
   sexp_t* str_sx = get_elem1(sx);
   const char* str = get_value(str_sx);
-  UINT32 idx = Save_StrN(str, strlen(str)+1);
+  
+  // Add to TCON_STR_TAB buffer (cf. xlate_TCON_STR_TAB)
+  char prefix[6];
+  UINT32 len = strlen(str) + 1; // include terminator
+  UINT32 plen = 0;
+  if (len < 0xff) {
+    prefix[0] = (char)len;
+    prefix[1] = '\0';
+    plen = 1;
+  }
+  else {
+    prefix[0] = (char)0xff;
+    char* lenchar = (char*)&len;
+    for (INT i = 0; i < 4; ++i) { // unaligned assignment of UINT32
+      prefix[i+1] = lenchar[i];
+    }
+    prefix[5] = '\0';
+    plen = 5;
+  }
+  
+  UINT32 idx = buf.size()-1 + plen; // idx of first byte of 'str'
+  buf.append(prefix, plen);
+  buf.append(str, len); // include terminator
+  
+  //UINT32 idx1 = Save_StrN(str, len); FIXME
+  
+  // sanity check
+  sexp_t* idxorig_sx = get_elem0(sx);
+  UINT32 idxorig = get_value_ui32(idxorig_sx);
+  FORTTK_ASSERT(idx == idxorig, "TCON_STR_TAB indices are inconsistent");
+  //FORTTK_ASSERT(idx1 == idxorig, "TCON_STR_TAB error");
   
   return idx;
 }
 
 
 UINT32
-sexp2whirl::xlate_STR_TAB_entry(sexp_t* sx)
+sexp2whirl::xlate_STR_TAB_entry(sexp_t* sx, std::string& buf)
 {
   using namespace sexp;
   
   // string
   sexp_t* str_sx = get_elem1(sx);
   const char* str = get_value(str_sx);
-  STR_IDX idx = Save_Str(str);
   
+  // Add to STR_TAB buffer (cf. xlate_STR_TAB)
+  UINT32 idx = buf.size(); // idx of first byte of 'str'
+  buf.append(str, strlen(str) + 1); // include terminator
+  
+  // STR_IDX idx1 = Save_Str(str); FIXME
+  
+  // sanity check
+  sexp_t* idxorig_sx = get_elem0(sx);
+  UINT32 idxorig = get_value_ui32(idxorig_sx);
+  FORTTK_ASSERT(idx == idxorig, "STR_TAB indices are inconsistent");
+
   return idx;
 }
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.8 2005/01/07 19:00:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.9 2005/01/17 15:23:06 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -245,7 +245,8 @@ whirl2sexp::xlate_TCON_STR_TAB(sexp::ostream& sos)
   // Details: Each char-array is preceeded by size info.  If the
   // char-array is less than 0xff bytes, the first byte contains the
   // size.  Otherwise the first byte is 0xff and the next 4 bytes hold
-  // the size.
+  // the size (UINT32).  The index points to the first byte in the
+  // string!
   // E.g.: -xxx0-yyy0 [where - is size info; xxx and yyy are strings]
   const char* buf = Index_to_char_array(0); // the whole buffer
   UINT32 last_idx = TCON_strtab_size() - 1;
@@ -310,7 +311,8 @@ whirl2sexp::xlate_STR_TAB(sexp::ostream& sos)
   // implementation details. Yuck.  
 
   // Details: The first entry in the buffer is NULL and thus every
-  // string is preceeded by a NULL.
+  // string is preceeded by a NULL.  The index points to the first
+  // byte in the string!
   // E.g: 0xxx0yyy0zzz0  [where xxx, yyy, and zzz are strings]
   const char* buf = Index_To_Str(0); // the whole buffer
   STR_IDX last_idx = STR_Table_Size() - 1;
