@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.9 2003/12/04 23:17:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.10 2003/12/05 13:41:54 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -888,14 +888,14 @@ BuildExprTreeForWN(ExprTree* tree, WN* wn)
   tree->add(root);
 
   // FIXME: check this out
-  if (OPCODE_has_sym(opcode)) {
+  if (OPERATOR_has_sym(opr)) {
     root->setSymHandle((SymHandle)WN_st(wn));
   }
   // FIXME: if constant add special handle
-
+  
   // 3. Create sub trees for each child and link them to the parent
   // parent node (we know this will never be OPR_BLOCK)
-  if (!OPCODE_is_leaf(opcode)) {
+  if ( !(OPERATOR_is_leaf(opr) || opr == OPR_STID) ) {
     for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
       WN* kid_wn = WN_kid(wn, kidno);
       
