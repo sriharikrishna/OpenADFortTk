@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.h,v 1.7 2005/01/07 19:00:17 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.h,v 1.8 2005/02/01 22:03:18 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -65,10 +65,13 @@ namespace whirl2sexp {
   xlate_ST_TAB(sexp::ostream& sos, const SCOPE& scope);
 
   void 
-  xlate_TY_TAB(sexp::ostream& sos);
+  xlate_ST_ATTR_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl);
 
   void 
   xlate_PU_TAB(sexp::ostream& sos);
+
+  void 
+  xlate_TY_TAB(sexp::ostream& sos);
 
   void 
   xlate_FLD_TAB(sexp::ostream& sos);
@@ -93,9 +96,6 @@ namespace whirl2sexp {
 
   void 
   xlate_BLK_TAB(sexp::ostream& sos);
-
-  void 
-  xlate_ST_ATTR_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl);
   
   void 
   xlate_STR_TAB(sexp::ostream& sos);
@@ -120,10 +120,13 @@ namespace whirl2sexp {
   xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ST* st);
   
   void
-  xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TY* ty);
+  xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ST_ATTR* sta);
 
   void
   xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, PU* pu);
+
+  void
+  xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TY* ty);
   
   void
   xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, FLD* fld);
@@ -145,10 +148,7 @@ namespace whirl2sexp {
 
   void
   xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, BLK* blk);
-  
-  void
-  xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ST_ATTR* sta);
-  
+    
   void
   xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, LABEL* lbl);
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.cxx,v 1.7 2005/02/01 00:42:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.cxx,v 1.8 2005/02/01 22:03:18 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -126,58 +126,7 @@ whirl2sexp::DumpWN(WN* wn, int flags)
 void
 GenHeader(sexp::ostream& sos)
 {
-  using namespace sexp;
-
-  sos << Comment("*** Summary ***")
-      << Comment("WHIRL      ::= (whirl GBL_SYMTAB PU_FOREST)")
-      << Comment("GBL_SYMTAB ::= (gbl_symtab GBL_TAB1..GBL_TABn)")
-      << Comment("PU_FOREST  ::= (pu_forest PU_TREE*) !! list of PU_TREEs")
-      << Comment("PU_TREE    ::= (pu_tree PU PU_TREE*) | NULL")
-      << Comment("PU         ::= (pu PU_SYM PU_SYMTAB WN_AST)")
-      << Comment("PU_SYMTAB  ::= (pu_symtab PU_TAB1..PU_TABn)")
-      << Comment("WN_AST     ::= (WN_OPR WN_ATTRS WN_AST*) | NULL");
-
-  sos << Comment("");
-
-  sos << Comment("*** Symbol Table Details ***")
-      << Comment("GBL_SYMTAB ::= (gbl_symtab FILE_INFO")
-      << Comment("                           ST_TAB")
-      << Comment("                           PU_TAB")
-      << Comment("                  TY_TAB FLD_TAB TYLIST_TAB ARB_TAB")
-      << Comment("                  BLK_TAB TCON_TAB INITO_TAB ST_ATTR_TAB")
-      << Comment("                  STR_TAB)")
-      << Comment("PU_SYMTAB  ::= (pu_symtab ST_TAB INITO_TAB ST_ATTR_TAB")
-      << Comment("                  PREG_TAB LABEL_TAB)")
-      << Comment("")
-      << Comment("FILE_INFO   ::= (file_info ...)")
-      << Comment("ST_TAB      ::= (st_tab ST_TAB_NTRY*) !! also a PU_SYMTAB")
-      << Comment("PU_TAB      ::= (pu_tab PU_TAB_NTRY*)")
-      << Comment("TY_TAB      ::= (ty_tab TY_TAB_NTRY*)")
-      << Comment("FLD_TAB     ::= (fld_tab ...)")
-      << Comment("TYLIST_TAB  ::= (tylist_tab ...)")
-      << Comment("ARB_TAB     ::= (arb_tab ...)")
-      << Comment("BLK_TAB     ::= (blk_tab ...)")
-      << Comment("TCON_TAB    ::= (tcon_tab ...)")
-      << Comment("INITO_TAB   ::= (inito_tab ...)   !! also a PU_SYMTAB")
-      << Comment("ST_ATTR_TAB ::= (st_attr_tab ...) !! also a PU_SYMTAB")
-      << Comment("STR_TAB     ::= (str_tab ...)")
-      << Comment("PREG_TAB    ::= (preg_tab ...)    !! PU_SYMTAB")
-      << Comment("LABEL_TAB   ::= (label_tab ...)   !! PU_SYMTAB")
-      << Comment("")
-      << Comment("ST_TAB_NTRY ::= (IDX SYM_CLASS STORAGE_CLASS EXPORT_CLASS NAME_IDX/TCON TYPE/PU/BLK BASE_IDX OFFSET (FLG FLAGS FLAGS_EXT) ST_IDX)")
-      << Comment("PU_TAB_NTRY ::= (IDX PROTOTYPE LEXICAL_LEVEL GP_GROUP SRC_LANG TARGET_IDX (FLG FLAGS))")
-      << Comment("TY_TAB_NTRY ::= (IDX KIND NAME_IDX MTYPE SIZE (FLG FLAGS) (OTHER))")
-      << Comment("")
-      << Comment("ST  ::= (st HSTR SCOPE_IDX IDX)")
-      << Comment("TY  ::= (ty HSTR IDX)")
-      << Comment("")
-      << Comment("HSTR (helper string) is a (possibly empty) quoted string.");
-  
-  sos << Comment("");
-  
-  sos << Comment("*** AST Details ***")
-      << Comment("WN_OPR     ::= operator rtype dtype")
-      << Comment("WN_ATTRS   ::= ((attr1 ...) (attr2 ...) (attr3 ...) ...)");
+  sos << SexpTags::get_grammar();
 }
 
 

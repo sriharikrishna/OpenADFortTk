@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.h,v 1.7 2005/02/01 00:42:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.h,v 1.8 2005/02/01 22:03:18 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -67,10 +67,13 @@ namespace sexp2whirl {
   xlate_ST_TAB(sexp_t* st_tab, const SCOPE& scope);
 
   void 
-  xlate_TY_TAB(sexp_t* ty_tab);
+  xlate_ST_ATTR_TAB(sexp_t* st_attr_tab, SYMTAB_IDX stab_lvl);
 
   void 
   xlate_PU_TAB(sexp_t* pu_tab);
+
+  void 
+  xlate_TY_TAB(sexp_t* ty_tab);
 
   void 
   xlate_FLD_TAB(sexp_t* fld_tab);
@@ -95,9 +98,6 @@ namespace sexp2whirl {
 
   void 
   xlate_BLK_TAB(sexp_t* blk_tab);
-
-  void 
-  xlate_ST_ATTR_TAB(sexp_t* st_attr_tab, SYMTAB_IDX stab_lvl);
   
   void 
   xlate_STR_TAB(sexp_t* str_tab);
@@ -121,11 +121,14 @@ namespace sexp2whirl {
   ST*
   xlate_ST_TAB_entry(sexp_t* sx);
   
-  TY*
-  xlate_TY_TAB_entry(sexp_t* sx);
+  ST_ATTR*
+  xlate_ST_ATTR_TAB_entry(sexp_t* sx);
 
   PU*
   xlate_PU_TAB_entry(sexp_t* sx);
+
+  TY*
+  xlate_TY_TAB_entry(sexp_t* sx);
 
   FLD*
   xlate_FLD_TAB_entry(sexp_t* sx);
@@ -147,9 +150,6 @@ namespace sexp2whirl {
 
   BLK*
   xlate_BLK_TAB_entry(sexp_t* sx);
-  
-  ST_ATTR*
-  xlate_ST_ATTR_TAB_entry(sexp_t* sx);
   
   LABEL*
   xlate_LABEL_TAB_entry(sexp_t* sx);
@@ -177,12 +177,16 @@ namespace sexp2whirl {
   xlate_SYMTAB_entry<ST>(sexp_t* sx) { return xlate_ST_TAB_entry(sx); }
   
   template <>
-  inline TY* 
-  xlate_SYMTAB_entry<TY>(sexp_t* sx) { return xlate_TY_TAB_entry(sx); }
+  inline ST_ATTR* 
+  xlate_SYMTAB_entry<ST_ATTR>(sexp_t* sx) { return xlate_ST_ATTR_TAB_entry(sx); }
   
   template <>
   inline PU* 
   xlate_SYMTAB_entry<PU>(sexp_t* sx) { return xlate_PU_TAB_entry(sx); }
+
+  template <>
+  inline TY* 
+  xlate_SYMTAB_entry<TY>(sexp_t* sx) { return xlate_TY_TAB_entry(sx); }
   
   template <>
   inline FLD* 
@@ -211,11 +215,7 @@ namespace sexp2whirl {
   template <>
   inline BLK* 
   xlate_SYMTAB_entry<BLK>(sexp_t* sx) { return xlate_BLK_TAB_entry(sx); }
-  
-  template <>
-  inline ST_ATTR* 
-  xlate_SYMTAB_entry<ST_ATTR>(sexp_t* sx) { return xlate_ST_ATTR_TAB_entry(sx); }
-  
+    
   template <>
   inline LABEL* 
   xlate_SYMTAB_entry<LABEL>(sexp_t* sx) { return xlate_LABEL_TAB_entry(sx); }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.cxx,v 1.8 2005/02/01 00:42:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.cxx,v 1.9 2005/02/01 22:03:18 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -169,14 +169,17 @@ sexp2whirl::TranslateGlobalSymbolTables(sexp_t* gbl_symtab, int flags)
   
   sexp_t* st_tab_sx = get_next(file_info_sx);
   xlate_ST_TAB(st_tab_sx, GLOBAL_SYMTAB);
-  
-  sexp_t* ty_tab_sx = get_next(st_tab_sx);
-  xlate_TY_TAB(ty_tab_sx);
 
-  sexp_t* pu_tab_sx = get_next(ty_tab_sx);
+  sexp_t* st_attr_tab_sx = get_next(st_tab_sx);
+  xlate_ST_ATTR_TAB(st_attr_tab_sx, GLOBAL_SYMTAB);
+  
+  sexp_t* pu_tab_sx = get_next(st_attr_tab_sx);
   xlate_PU_TAB(pu_tab_sx);
 
-  sexp_t* fld_tab_sx = get_next(pu_tab_sx);
+  sexp_t* ty_tab_sx = get_next(pu_tab_sx);
+  xlate_TY_TAB(ty_tab_sx);
+
+  sexp_t* fld_tab_sx = get_next(ty_tab_sx);
   xlate_FLD_TAB(fld_tab_sx);
 
   sexp_t* arb_tab_sx = get_next(fld_tab_sx);
@@ -200,10 +203,7 @@ sexp2whirl::TranslateGlobalSymbolTables(sexp_t* gbl_symtab, int flags)
   sexp_t* blk_tab_sx = get_next(initv_tab_sx);
   xlate_BLK_TAB(blk_tab_sx);
 
-  sexp_t* st_attr_tab_sx = get_next(blk_tab_sx);
-  xlate_ST_ATTR_TAB(st_attr_tab_sx, GLOBAL_SYMTAB);
-
-  sexp_t* str_tab_sx = get_next(st_attr_tab_sx);
+  sexp_t* str_tab_sx = get_next(blk_tab_sx);
   xlate_STR_TAB(str_tab_sx);
 
   // Special initialization of WHIRL symbol tables (disable)
@@ -234,7 +234,10 @@ sexp2whirl::TranslateLocalSymbolTables(sexp_t* pu_symtab, SYMTAB_IDX stab_lvl,
   sexp_t* st_tab_sx = get_elem1(pu_symtab);
   xlate_ST_TAB(st_tab_sx, stab_lvl);
 
-  sexp_t* label_tab_sx = get_next(st_tab_sx);
+  sexp_t* st_attr_tab_sx = get_next(st_tab_sx);
+  xlate_ST_ATTR_TAB(st_attr_tab_sx, stab_lvl);
+
+  sexp_t* label_tab_sx = get_next(st_attr_tab_sx);
   xlate_LABEL_TAB(label_tab_sx, stab_lvl);
 
   sexp_t* preg_tab_sx = get_next(label_tab_sx);
@@ -242,9 +245,6 @@ sexp2whirl::TranslateLocalSymbolTables(sexp_t* pu_symtab, SYMTAB_IDX stab_lvl,
 
   sexp_t* inito_tab_sx = get_next(preg_tab_sx);
   xlate_INITO_TAB(inito_tab_sx, stab_lvl);
-
-  sexp_t* st_attr_tab_sx = get_next(inito_tab_sx);
-  xlate_ST_ATTR_TAB(st_attr_tab_sx, stab_lvl);
 }
 
 
@@ -288,14 +288,17 @@ sexp2whirl::xlate_ST_TAB(sexp_t* st_tab, SYMTAB_IDX stab_lvl)
 void 
 sexp2whirl::xlate_ST_TAB(sexp_t* st_tab, const SCOPE& scope)
 {
+  // RELATED_SEGMENTED_ARRAY
   FORTTK_DIE(FORTTK_UNIMPLEMENTED);
 }
 
 
 void 
-sexp2whirl::xlate_TY_TAB(sexp_t* ty_tab)
+sexp2whirl::xlate_ST_ATTR_TAB(sexp_t* st_attr_tab, SYMTAB_IDX stab_lvl)
 {
-  xlate_SYMTAB(Ty_tab /*Ty_Table*/, ty_tab, SexpTags::TY_TAB);
+  // RELATED_SEGMENTED_ARRAY
+  xlate_SYMTAB(*Scope_tab[stab_lvl].st_attr_tab, st_attr_tab, 
+	       SexpTags::ST_ATTR_TAB);
 }
 
 
@@ -303,6 +306,13 @@ void
 sexp2whirl::xlate_PU_TAB(sexp_t* pu_tab)
 {
   xlate_SYMTAB(Pu_Table, pu_tab, SexpTags::PU_TAB);
+}
+
+
+void 
+sexp2whirl::xlate_TY_TAB(sexp_t* ty_tab)
+{
+  xlate_SYMTAB(Ty_tab /*Ty_Table*/, ty_tab, SexpTags::TY_TAB);
 }
 
 
@@ -369,15 +379,6 @@ void
 sexp2whirl::xlate_BLK_TAB(sexp_t* blk_tab)
 {
   xlate_SYMTAB(Blk_Table, blk_tab, SexpTags::BLK_TAB);
-}
-
-
-void 
-sexp2whirl::xlate_ST_ATTR_TAB(sexp_t* st_attr_tab, SYMTAB_IDX stab_lvl)
-{
-  // RELATED_SEGMENTED_ARRAY
-  xlate_SYMTAB(*Scope_tab[stab_lvl].st_attr_tab, st_attr_tab, 
-	       SexpTags::ST_ATTR_TAB);
 }
 
 
@@ -485,6 +486,74 @@ sexp2whirl::xlate_ST_TAB_entry(sexp_t* sx)
 }
 
 
+ST_ATTR*
+sexp2whirl::xlate_ST_ATTR_TAB_entry(sexp_t* sx)
+{
+  using namespace sexp;
+  
+  ST_ATTR* st_attr = TYPE_MEM_POOL_ALLOC(ST_ATTR, MEM_pu_pool_ptr);
+  
+  // st_idx
+  sexp_t* st_idx_sx = get_elem1(sx);
+  ST_IDX st_idx = GetWhirlSym(st_idx_sx);
+  Set_ST_ATTR_st_idx(*st_attr, st_idx);
+  
+  // kind
+  sexp_t* knd_sx = get_next(st_idx_sx);
+  const char* knd_nm = get_value(knd_sx);
+  ST_ATTR_KIND knd = Name_To_ST_ATTR_Kind(knd_nm);
+  st_attr->kind = knd;
+  
+  // reg_id/section_name
+  sexp_t* reg_id_sx = get_next(knd_sx);
+  PREG_NUM reg_id = get_value_ui32(reg_id_sx);
+  Set_ST_ATTR_reg_id(*st_attr, reg_id);
+  
+  return st_attr;
+}
+
+
+PU*
+sexp2whirl::xlate_PU_TAB_entry(sexp_t* sx)
+{
+  using namespace sexp;
+  
+  PU* pu = TYPE_MEM_POOL_ALLOC(PU, MEM_pu_pool_ptr);
+  
+  // prototype
+  sexp_t* ty_idx_sx = get_elem1(sx);
+  TY_IDX ty_idx = GetWhirlTy(ty_idx_sx);
+  Set_PU_prototype(*pu, ty_idx);
+  
+  // lexical_level
+  sexp_t* lvl_sx = get_next(ty_idx_sx);
+  SYMTAB_IDX lvl = (SYMTAB_IDX)get_value_ui32(lvl_sx);
+  Set_PU_lexical_level(*pu, lvl);
+    
+  // gp_group
+  sexp_t* gp_sx = get_next(lvl_sx);
+  UINT8 gp = (UINT8)get_value_ui32(gp_sx);
+  Set_PU_gp_group(*pu, gp);
+  
+  // src_lang
+  sexp_t* srclang_sx = get_next(gp_sx);
+  const char* srclang_str = GetWhirlFlg(srclang_sx);
+  pu->src_lang = (mUINT8)Str_To_PU_SRC_LANG_FLAGS(srclang_str);
+  
+  // target_idx
+  sexp_t* targidx_sx = get_next(srclang_sx);
+  TARGET_INFO_IDX targidx = get_value_ui32(targidx_sx);
+  Set_PU_target_idx(*pu, targidx);
+  
+  // flags
+  sexp_t* flags_sx = get_next(targidx_sx);
+  const char* flags_str = GetWhirlFlg(flags_sx);
+  pu->flags = Str_To_PU_FLAGS(flags_str);
+
+  return pu;
+}
+
+
 TY*
 sexp2whirl::xlate_TY_TAB_entry(sexp_t* sx)
 {
@@ -553,47 +622,6 @@ sexp2whirl::xlate_TY_TAB_entry(sexp_t* sx)
   }
   
   return ty;
-}
-
-
-PU*
-sexp2whirl::xlate_PU_TAB_entry(sexp_t* sx)
-{
-  using namespace sexp;
-  
-  PU* pu = TYPE_MEM_POOL_ALLOC(PU, MEM_pu_pool_ptr);
-  
-  // prototype
-  sexp_t* ty_idx_sx = get_elem1(sx);
-  TY_IDX ty_idx = GetWhirlTy(ty_idx_sx);
-  Set_PU_prototype(*pu, ty_idx);
-  
-  // lexical_level
-  sexp_t* lvl_sx = get_next(ty_idx_sx);
-  SYMTAB_IDX lvl = (SYMTAB_IDX)get_value_ui32(lvl_sx);
-  Set_PU_lexical_level(*pu, lvl);
-    
-  // gp_group
-  sexp_t* gp_sx = get_next(lvl_sx);
-  UINT8 gp = (UINT8)get_value_ui32(gp_sx);
-  Set_PU_gp_group(*pu, gp);
-  
-  // src_lang
-  sexp_t* srclang_sx = get_next(gp_sx);
-  const char* srclang_str = GetWhirlFlg(srclang_sx);
-  pu->src_lang = (mUINT8)Str_To_PU_SRC_LANG_FLAGS(srclang_str);
-  
-  // target_idx
-  sexp_t* targidx_sx = get_next(srclang_sx);
-  TARGET_INFO_IDX targidx = get_value_ui32(targidx_sx);
-  Set_PU_target_idx(*pu, targidx);
-  
-  // flags
-  sexp_t* flags_sx = get_next(targidx_sx);
-  const char* flags_str = GetWhirlFlg(flags_sx);
-  pu->flags = Str_To_PU_FLAGS(flags_str);
-
-  return pu;
 }
 
 
@@ -856,33 +884,6 @@ sexp2whirl::xlate_BLK_TAB_entry(sexp_t* sx)
   blk->Set_scninfo_idx(scninfo_idx);
   
   return blk;
-}
-
-
-ST_ATTR*
-sexp2whirl::xlate_ST_ATTR_TAB_entry(sexp_t* sx)
-{
-  using namespace sexp;
-  
-  ST_ATTR* st_attr = TYPE_MEM_POOL_ALLOC(ST_ATTR, MEM_pu_pool_ptr);
-  
-  // st_idx
-  sexp_t* st_idx_sx = get_elem1(sx);
-  ST_IDX st_idx = GetWhirlSym(st_idx_sx);
-  Set_ST_ATTR_st_idx(*st_attr, st_idx);
-  
-  // kind
-  sexp_t* knd_sx = get_next(st_idx_sx);
-  const char* knd_nm = get_value(knd_sx);
-  ST_ATTR_KIND knd = Name_To_ST_ATTR_Kind(knd_nm);
-  st_attr->kind = knd;
-  
-  // reg_id/section_name
-  sexp_t* reg_id_sx = get_next(knd_sx);
-  PREG_NUM reg_id = get_value_ui32(reg_id_sx);
-  Set_ST_ATTR_reg_id(*st_attr, reg_id);
-  
-  return st_attr;
 }
 
 

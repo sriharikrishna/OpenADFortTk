@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.11 2005/02/01 00:42:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.12 2005/02/01 22:03:18 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -44,19 +44,19 @@ whirl2sexp::TranslateGlobalSymbolTables(sexp::ostream& sos, int flags)
   // Cf. symtab_defs.h, Write_Global_Info(), Read_Global_Info()
   //
   // GLOBAL_SYMTAB_TABLES: There are 13 tables in the global symtab.
-  //   FILE_INFO     (File_info)
-  //   ST_TAB        (St_Table)      [global and local]
-  //   TYPE_TABLE    (Ty_Table)
-  //     PU_TAB        (Pu_Table)
-  //     FLD_TAB     (Fld_Table)
-  //     ARB_TAB     (Arb_Table)
-  //     TYLIST_TAB  (Tylist_Table)
-  //   TCON_TAB      (Tcon_Table) 
-  //     TCON_STR_TAB (TCON_strtab)
-  //   INITO_TABLE   (Inito_Table)   [global and local]
-  //   INITV_TAB     (Initv_Table)
-  //   BLK_TAB       (Blk_Table)
-  //   ST_ATTR_TABLE (St_Attr_Table) [global and local]
+  //   FILE_INFO        (File_info)
+  //   ST_TAB           (St_Table)      [global and local]
+  //     ST_ATTR_TABLE  (St_Attr_Table) [global and local]
+  //   PU_TAB           (Pu_Table)
+  //   TYPE_TABLE       (Ty_Table)
+  //     FLD_TAB        (Fld_Table)
+  //     ARB_TAB        (Arb_Table)
+  //     TYLIST_TAB     (Tylist_Table)
+  //   TCON_TAB         (Tcon_Table) 
+  //     TCON_STR_TAB   (TCON_strtab)
+  //   INITO_TABLE      (Inito_Table)   [global and local]
+  //     INITV_TAB      (Initv_Table)
+  //   BLK_TAB          (Blk_Table)
   // String table
   //   STR_TABLE   (Str_Table) [source code strings, not string constants]
   
@@ -67,11 +67,14 @@ whirl2sexp::TranslateGlobalSymbolTables(sexp::ostream& sos, int flags)
   
   xlate_ST_TAB(sos, GLOBAL_SYMTAB);
   sos << EndLine;
+
+  xlate_ST_ATTR_TAB(sos, GLOBAL_SYMTAB);
+  sos << EndLine;
   
-  xlate_TY_TAB(sos);
+  xlate_PU_TAB(sos);
   sos << EndLine;
 
-  xlate_PU_TAB(sos);
+  xlate_TY_TAB(sos);
   sos << EndLine;
 
   xlate_FLD_TAB(sos);
@@ -98,9 +101,6 @@ whirl2sexp::TranslateGlobalSymbolTables(sexp::ostream& sos, int flags)
   xlate_BLK_TAB(sos);
   sos << EndLine;
   
-  xlate_ST_ATTR_TAB(sos, GLOBAL_SYMTAB);
-  sos << EndLine;
-
   xlate_STR_TAB(sos);
   
   sos << EndList;
@@ -115,26 +115,26 @@ whirl2sexp::TranslateLocalSymbolTables(sexp::ostream& sos, SYMTAB_IDX stab_lvl,
   // 
   // LOCAL_SYMTAB_TABLES: There are 5 tables in the local symtab. 
   //   ST_TAB
+  //     ST_ATTR_TAB
   //   LABEL_TABLE (Label_Table)
   //   PREG_TABLE  (Preg_Table)
   //   INITO_TAB
-  //   ST_ATTR_TAB
   
   sos << BegList << Atom(SexpTags::PU_SYMTAB) << EndLine;
   
   xlate_ST_TAB(sos, stab_lvl);
   sos << EndLine;
 
+  xlate_ST_ATTR_TAB(sos, stab_lvl);
+  sos << EndLine;
+  
   xlate_LABEL_TAB(sos, stab_lvl);
   sos << EndLine;
 
   xlate_PREG_TAB(sos, stab_lvl);
   sos << EndLine;
-
-  xlate_INITO_TAB(sos, stab_lvl);
-  sos << EndLine;
   
-  xlate_ST_ATTR_TAB(sos, stab_lvl);
+  xlate_INITO_TAB(sos, stab_lvl);
   
   sos << EndList;
 }
@@ -174,6 +174,15 @@ whirl2sexp::xlate_ST_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
 
 
 void 
+whirl2sexp::xlate_ST_ATTR_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
+{
+  sos << BegList << Atom(SexpTags::ST_ATTR_TAB) << EndLine;
+  For_all(St_Attr_Table, stab_lvl, xlate_SYMTAB_entry_op<ST_ATTR>(sos));
+  sos << EndList;
+}
+
+
+void 
 whirl2sexp::xlate_ST_TAB(sexp::ostream& sos, const SCOPE& scope)
 {
   sos << BegList << Atom(SexpTags::ST_TAB) << EndLine;
@@ -183,19 +192,19 @@ whirl2sexp::xlate_ST_TAB(sexp::ostream& sos, const SCOPE& scope)
 
 
 void 
-whirl2sexp::xlate_TY_TAB(sexp::ostream& sos)
+whirl2sexp::xlate_PU_TAB(sexp::ostream& sos)
 {
-  sos << BegList << Atom(SexpTags::TY_TAB) << EndLine;
-  For_all(Ty_Table, xlate_SYMTAB_entry_op<TY>(sos));
+  sos << BegList << Atom(SexpTags::PU_TAB) << EndLine;
+  For_all(Pu_Table, xlate_SYMTAB_entry_op<PU>(sos));
   sos << EndList;
 }
 
 
 void 
-whirl2sexp::xlate_PU_TAB(sexp::ostream& sos)
+whirl2sexp::xlate_TY_TAB(sexp::ostream& sos)
 {
-  sos << BegList << Atom(SexpTags::PU_TAB) << EndLine;
-  For_all(Pu_Table, xlate_SYMTAB_entry_op<PU>(sos));
+  sos << BegList << Atom(SexpTags::TY_TAB) << EndLine;
+  For_all(Ty_Table, xlate_SYMTAB_entry_op<TY>(sos));
   sos << EndList;
 }
 
@@ -291,15 +300,6 @@ whirl2sexp::xlate_BLK_TAB(sexp::ostream& sos)
 {
   sos << BegList << Atom(SexpTags::BLK_TAB) << EndLine;
   For_all(Blk_Table, xlate_SYMTAB_entry_op<BLK>(sos));
-  sos << EndList;
-}
-
-
-void 
-whirl2sexp::xlate_ST_ATTR_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
-{
-  sos << BegList << Atom(SexpTags::ST_ATTR_TAB) << EndLine;
-  For_all(St_Attr_Table, stab_lvl, xlate_SYMTAB_entry_op<ST_ATTR>(sos));
   sos << EndList;
 }
 
@@ -414,6 +414,62 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ST* st)
 
 
 void
+whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ST_ATTR* sta)
+{
+  sos << BegList << Atom(idx);
+  
+  // st_idx
+  ST_IDX st_idx = ST_ATTR_st_idx(*sta);
+  sos << GenSexpSym(st_idx);
+  
+  // kind
+  ST_ATTR_KIND knd = ST_ATTR_kind(*sta);
+  const char* knd_nm = ST_ATTR_Kind_Name(knd);
+  sos << Atom(knd_nm);
+  
+  // reg_id/section_name
+  PREG_NUM val = ST_ATTR_reg_id(*sta);
+  sos << Atom(val);
+  
+  sos << EndList;
+}
+
+
+void
+whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, PU* pu)
+{
+  sos << BegList << Atom(idx);
+  
+  // prototype
+  TY_IDX ty_idx = PU_prototype(*pu);
+  sos << GenSexpTy(ty_idx);
+  
+  // lexical_level
+  UINT lvl = (UINT)PU_lexical_level(*pu);
+  sos << Atom(lvl);
+  
+  // gp_group
+  UINT gp = (UINT)PU_gp_group(*pu);
+  sos << Atom(gp);
+  
+  // src_lang
+  UINT64 srclang = PU_src_lang(*pu);
+  const char* srclang_str = PU_SRC_LANG_FLAGS_To_Str(srclang);
+  sos << GenSexpFlg(srclang_str);
+  
+  // target_idx
+  TARGET_INFO_IDX targidx = PU_target_idx(*pu);
+  sos << Atom(targidx);
+
+  // flags
+  const char* flg_str = PU_FLAGS_To_Str(pu->flags);
+  sos << GenSexpFlg(flg_str);
+
+  sos << EndList;
+}
+
+
+void
 whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TY* typ)
 {
   using namespace sexp::IOFlags;
@@ -466,40 +522,6 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TY* typ)
   }
   sos << EndList;
   
-  sos << EndList;
-}
-
-
-void
-whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, PU* pu)
-{
-  sos << BegList << Atom(idx);
-  
-  // prototype
-  TY_IDX ty_idx = PU_prototype(*pu);
-  sos << GenSexpTy(ty_idx);
-  
-  // lexical_level
-  UINT lvl = (UINT)PU_lexical_level(*pu);
-  sos << Atom(lvl);
-  
-  // gp_group
-  UINT gp = (UINT)PU_gp_group(*pu);
-  sos << Atom(gp);
-  
-  // src_lang
-  UINT64 srclang = PU_src_lang(*pu);
-  const char* srclang_str = PU_SRC_LANG_FLAGS_To_Str(srclang);
-  sos << GenSexpFlg(srclang_str);
-  
-  // target_idx
-  TARGET_INFO_IDX targidx = PU_target_idx(*pu);
-  sos << Atom(targidx);
-
-  // flags
-  const char* flg_str = PU_FLAGS_To_Str(pu->flags);
-  sos << GenSexpFlg(flg_str);
-
   sos << EndList;
 }
 
@@ -699,28 +721,6 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, BLK* blk)
   // scninfo_idx
   sos << Atom(blk->Scninfo_idx());
 
-  sos << EndList;
-}
-
-
-void
-whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ST_ATTR* sta)
-{
-  sos << BegList << Atom(idx);
-  
-  // st_idx
-  ST_IDX st_idx = ST_ATTR_st_idx(*sta);
-  sos << GenSexpSym(st_idx);
-  
-  // kind
-  ST_ATTR_KIND knd = ST_ATTR_kind(*sta);
-  const char* knd_nm = ST_ATTR_Kind_Name(knd);
-  sos << Atom(knd_nm);
-  
-  // reg_id/section_name
-  PREG_NUM val = ST_ATTR_reg_id(*sta);
-  sos << Atom(val);
-  
   sos << EndList;
 }
 
