@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.13 2004/05/28 15:50:27 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.14 2004/06/28 18:52:31 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -470,10 +470,22 @@ xlate_Saxpy(const DOMElement* elem, XlationContext& ctxt, bool saxpy)
 WN*
 xaif2whirl::PatchWNStmt(WN* wn, XlationContext& ctxt)
 {
+  WN* patchedWN = NULL;
+  
   OPERATOR opr = WN_operator(wn);
   if (opr == OPR_IO) {
     PatchWN_IO(wn, ctxt);
+    patchedWN = wn;
+  } 
+  else if (OPERATOR_is_call(opr)) {
+    // FIXME: for now, no need to do anything.  all calls are active
+    // and all arguments are variables
   }
+  else if (OPERATOR_is_store(opr)) {
+    patchedWN = PatchWNExpr(wn, 0 /* kid */, ctxt);
+  }
+  
+  return patchedWN;
 }
 
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.28 2004/06/17 13:33:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.29 2004/06/28 18:52:31 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -900,6 +900,10 @@ CreateExpressionGraph(const DOMElement* elem, bool varRef)
 
 
 //****************************************************************************
+
+// FIXME: this can use the parent map that is in ctxt now. The new
+// signature could be:
+//  PatchWNExpr(WN* wn, XlationContext& ctxt)
 
 // PatchWNExpr: Descends through the expression rooted at
 // WN_kid(parent, kidno), modifying variable references with a

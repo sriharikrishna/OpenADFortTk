@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.53 2004/06/22 21:37:27 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.54 2004/06/28 18:52:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -883,9 +883,6 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
         childblksWN[i] = gotoblkWN;
       }
 
-      // FIXME: for switches add a label at the front and end of each block
-      // FIXME: for switch must also know first block after switch/EndBranch
-      
       // 3. Translate condition expression
       DOMElement* cond = 
         GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
@@ -905,6 +902,9 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
 	WN_INSERT_BlockLast(blkWN, ifWN);
       } 
       else {
+	// FIXME: for switches add a label at the front and end of each block
+	// FIXME: for switch must also know first block after switch/EndBranch
+	
         ASSERT_FATAL(false, (DIAG_A_STRING, "Unimplemented.")); // switch
       }
     }
