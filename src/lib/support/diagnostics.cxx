@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.cxx,v 1.5 2004/01/25 02:40:42 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.cxx,v 1.6 2004/03/04 16:58:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -82,19 +82,20 @@
 
 //***************************************************************************
 
+int DBG_LVL_PUB = 0;
+
 static char        Diag_Phase_Name[80] = "";
 static FILE       *Diag_File = NULL;
 static int         Diag_Max_Diags = 10;  /* Default */
 static int         Diag_Warn_Count = 0;
 static const char *Diag_File_Location = NULL;
 static int         Diag_Line_Location = 0;
-static int         Diag_SrcLine_Location = 0;
-static int         Diag_SrcCol_Location = 0;
 
 static const char *Diag_Msg[DIAG_LAST+1];
 
 
-void Diag_Init(void)
+void
+Diag_Init(void)
 {
    int diag;
 
@@ -191,25 +192,27 @@ void Diag_Init(void)
 } /* Diag_Init */
 
 
-void Diag_Exit(void)
+void
+Diag_Exit(void)
 {
-   /* Close the diagnostics file if one is open */
-   if (Diag_File != NULL)
-   {
-      fclose (Diag_File);
-      Diag_File = NULL;
-   }
-} /* Diag_Exit */
+  /* Close the diagnostics file if one is open */
+  if (Diag_File != NULL) {
+    fclose (Diag_File);
+    Diag_File = NULL;
+  }
+}
 
 
-void Diag_Set_Phase(const char *phase_name)
+void 
+Diag_Set_Phase(const char *phase_name)
 {
-   Set_Error_Phase(phase_name); /* Initiate the common error handler */
-   (void)strcpy(Diag_Phase_Name, phase_name);
-} /* Diag_Set_Phase */
+  Set_Error_Phase(phase_name); /* Initiate the common error handler */
+  (void)strcpy(Diag_Phase_Name, phase_name);
+}
 
 
-void Diag_Set_File(const char *filename)
+void 
+Diag_Set_File(const char *filename)
 {
    /* Initiate the common error handler */
    Set_Error_File(filename);
@@ -240,39 +243,35 @@ void Diag_Set_File(const char *filename)
    else
       fprintf(stderr,
 	      "Attempt to open name-less file as error file is ignored\n");
-} /* Diag_Set_File */
+}
 
 
-void Diag_Set_Max_Diags(int max_allowed_diags)
+void
+Diag_Set_Max_Diags(int max_allowed_diags)
 {
-   Diag_Max_Diags = max_allowed_diags;
-} /* Diag_Set_Max_Diags */
+  Diag_Max_Diags = max_allowed_diags;
+}
 
 
-int Diag_Get_Warn_Count(void)
+int 
+Diag_Get_Warn_Count(void)
 {
-   return Diag_Warn_Count;
-} /* Diag_Get_Warn_Count */
+  return Diag_Warn_Count;
+}
 
 
-void Diag_Set_Location(const char *file_name, int line_number)
+//***************************************************************************
+
+void 
+Diag_Set_Location(const char *file_name, int line_number)
 {
-   Diag_File_Location = file_name;
-   Diag_Line_Location = line_number;
-} /* Diag_Set_Location */
+  Diag_File_Location = file_name;
+  Diag_Line_Location = line_number;
+}
 
 
-void Diag_Set_Srcpos(SRCPOS srcpos)
-{
-   USRCPOS usrcpos;
-   USRCPOS_srcpos(usrcpos) = srcpos;
-
-   Diag_SrcLine_Location = USRCPOS_linenum(usrcpos);
-   Diag_SrcCol_Location = USRCPOS_column(usrcpos);
-} /* Diag_Set_Srcpos */
-
-
-void Diag_Warning(DIAG_CODE code, ...)
+void 
+Diag_Warning(DIAG_CODE code, ...)
 {
    char    diag_char[512];
    va_list arg_ptr;
@@ -300,7 +299,8 @@ void Diag_Warning(DIAG_CODE code, ...)
 } /* Diag_Warning */
 
 
-void Diag_Fatal(DIAG_CODE code, ...)
+void 
+Diag_Fatal(DIAG_CODE code, ...)
 {
   char    diag_char[512];
   va_list arg_ptr;
@@ -322,96 +322,3 @@ void Diag_Fatal(DIAG_CODE code, ...)
   exit(1);
 } /* Diag_Fatal */
 
-
-void Diag_User_Warning(DIAG_CODE code, ...)
-{
-   char    diag_char[512];
-   va_list arg_ptr;
-  
-   (void)sprintf(&diag_char[0], 
-		 "WARNING %d: line %d, column %d: %s\n", 
-		 code, 
-		 Diag_SrcLine_Location,
-		 Diag_SrcCol_Location,
-		 Diag_Msg[code]);
-      
-   va_start(arg_ptr, code);
-   vfprintf(stderr, &diag_char[0], arg_ptr);
-   va_end(arg_ptr);
-} /* Diag_User_Warning */
-
-
-void Diag_User_Fatal(DIAG_CODE code, ...)
-{
-   char    diag_char[512];
-   va_list arg_ptr;
-  
-   (void)sprintf(&diag_char[0], 
-		 "FATAL ERROR: line %d, column %d: %s\n", 
-		 Diag_SrcLine_Location,
-		 Diag_SrcCol_Location,
-		 Diag_Msg[code]);
-      
-   va_start(arg_ptr, code);
-   vfprintf(stderr, &diag_char[0], arg_ptr);
-   va_end(arg_ptr);
-
-   exit(1);
-} /* Diag_User_Fatal */
-
-
-void Diag_Warning_Srcpos(DIAG_CODE code, ...)
-{
-   char    diag_char[512];
-   va_list arg_ptr;
-  
-   if (Diag_Max_Diags > Diag_Warn_Count)
-   {
-      if (Diag_File_Location != NULL)
-	 (void)sprintf(&diag_char[0], 
-		       "%s(%s:%d): WARNING %d: line %d: %s\n", 
-		       Diag_Phase_Name,
-		       Diag_File_Location, Diag_Line_Location,
-		       code, 
-		       Diag_SrcLine_Location,
-		       Diag_Msg[code]);
-      else
-	 (void)sprintf(&diag_char[0], 
-		       "%s: WARNING %d: line %d: %s\n", 
-		       Diag_Phase_Name, 
-		       code, 
-		       Diag_SrcLine_Location,
-		       Diag_Msg[code]);
-      
-      va_start(arg_ptr, code);
-      vfprintf(stderr, &diag_char[0], arg_ptr);
-      va_end(arg_ptr);
-
-      Diag_Warn_Count++;
-   }
-} /* Diag_Warning_Srcpos */
-
-
-void Diag_Fatal_Srcpos(DIAG_CODE code, ...)
-{
-   char    diag_char[512];
-   va_list arg_ptr;
-
-   if (Diag_File_Location != NULL)
-      (void)sprintf(&diag_char[0], 
-		    "%s(%s:%d): FATAL ERROR: line %d: %s\n", 
-		    Diag_Phase_Name, 
-		    Diag_File_Location, Diag_Line_Location, 
-		    Diag_SrcLine_Location,
-		    Diag_Msg[code]);
-   else
-      (void)sprintf(&diag_char[0], 
-		    "%s: FATAL ERROR: line %d: %s\n", 
-		    Diag_Phase_Name, Diag_SrcLine_Location, Diag_Msg[code]);
-      
-   va_start(arg_ptr, code);
-   vfprintf(stderr, &diag_char[0], arg_ptr);
-   va_end(arg_ptr);
-
-   exit(1);
-} /* Diag_Fatal_Srcpos */

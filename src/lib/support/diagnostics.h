@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.7 2004/02/27 00:36:09 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.8 2004/03/04 16:58:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -99,25 +99,6 @@
  *          by a call to Diag_Exit().
  *          
  *
- *    User Errors
- *    -----------
- *       The arguments (diag_args) must have the format:
- *
- *          (DIAG_CODE, args)
- *
- *       where DIAG_CODE is one of the enumerated values and args is
- *       a comma separated list of values corresponding to the format
- *       directives in the diagnostic message (see diagnostics.c).
- *
- *       USER_WARNING: 
- *          Emits warnings about a condition in the original source
- *          program, in terms of line/column numbers from the original
- *          source-file.
- *       USER_WARNING: 
- *          Emits a fatal error and terminates execution without further 
- *          processing (EXIT(1)).
- *
- *
  *    Diagnostics Reporting
  *    ---------------------
  *       The arguments (diag_args) must have the format:
@@ -139,14 +120,6 @@
  *          diagnostics based on the diag_args when the truth-value 
  *          is FALSE and exit with error code (1).
  *
- *       ASSERT_WARN_SRCPOS:
- *          Same as ASSERT_WARN, but will include the srcpos in the
- *          emitted diagnostic message.
- *
- *       ASSERT_FATAL_SRCPOS:
- *          Same as ASSERT_FATAL, but will include the srcpos in the
- *          emitted diagnostic message.
- *
  *       ASSERT_DBG_WARN:
  *          Same as ASSERT_WARN, but only to be emitted during the
  *          development of the tool.  I.e. customer's should never
@@ -167,8 +140,6 @@
 #include <stdio.h>		    /* for stderr */
 
 //************************** Open64 Include Files ***************************
-
-#include <include/Open64BasicTypes.h> /* "srcpos.h" */
 
 //*************************** User Include Files ****************************
 
@@ -286,19 +257,8 @@ typedef enum Diag_Code
       /* ------------------- Diagnostics macros -------------------*/
       /* ----------------------------------------------------------*/
 
-#define USER_WARNING(a_truth, diag_args, wn) \
-   DIAG_USER_SRCPOS(a_truth, Diag_User_Warning, diag_args, wn)
-
-#define USER_FATAL(a_truth, diag_args, wn) \
-   DIAG_USER_SRCPOS(a_truth, Diag_User_Fatal, diag_args, wn)
-
-
 #ifdef Is_True_On
 
-#define ASSERT_WARN_SRCPOS(a_truth, diag_args, wn) \
-   DIAG_ASSERT_LOC_SRCPOS(a_truth, Diag_Warning, diag_args, wn)
-#define ASSERT_FATAL_SRCPOS(a_truth, diag_args, wn) \
-   DIAG_ASSERT_LOC_SRCPOS(a_truth, Diag_Fatal, diag_args, wn)
 #define ASSERT_WARN(a_truth, diag_args) \
    DIAG_ASSERT_LOC(a_truth, Diag_Warning, diag_args)
 #define ASSERT_FATAL(a_truth, diag_args) \
@@ -321,44 +281,17 @@ typedef enum Diag_Code
    /* ------- Hidden functions/macros (NEVER CALL THESE) -------*/
    /* ----------------------------------------------------------*/
 
-#define DIAG_USER_SRCPOS(a_truth, diag_handler, diag_args, wn) \
-   ((a_truth) ? \
-    (void) 1 :  \
-    (Diag_Set_Srcpos(WN_Get_Linenum(wn)), \
-     diag_handler  diag_args))
-  
 #define DIAG_ASSERT_LOC(a_truth, diag_handler, diag_args) \
    ((a_truth) ? \
     (void) 1 :  \
     (Diag_Set_Location(__FILE__, __LINE__), diag_handler  diag_args))
 
-#define DIAG_ASSERT_LOC_SRCPOS(a_truth, diag_handler, diag_args, wn) \
-   ((a_truth) ? \
-    (void) 1 :  \
-    (Diag_Set_Location(__FILE__, __LINE__), \
-     Diag_Set_Srcpos(WN_Get_Linenum(wn)), \
-     diag_handler  diag_args))
-
 #define DIAG_ASSERT_NOLOC(a_truth, diag_handler, diag_args) \
    ((a_truth) ? (void) 1 : diag_handler  diag_args)
 
-#define DIAG_ASSERT_NOLOC_SRCPOS(a_truth, diag_handler, diag_args, wn) \
-   ((a_truth) ? \
-    (void) 1 : \
-    (Diag_Set_Srcpos(WN_Get_Linenum(wn)), \
-     diag_handler  diag_args))
-
 extern void Diag_Set_Location(const char *file_name, int line_number);
-extern void Diag_Set_Srcpos(SRCPOS srcpos);
-extern void Diag_User_Warning(DIAG_CODE code, ...);
-extern void Diag_User_Fatal(DIAG_CODE code, ...);
 extern void Diag_Warning(DIAG_CODE code, ...);
 extern void Diag_Fatal(DIAG_CODE code, ...);
-extern void Diag_Warning_Srcpos(DIAG_CODE code, ...);
-extern void Diag_Fatal_Srcpos(DIAG_CODE code, ...);
-
 
 #endif /* diagnostics_INCLUDED */
-
-
 
