@@ -1,4 +1,4 @@
-// $Id: xmlostream.test.cxx,v 1.1 2004/01/25 02:35:10 eraxxon Exp $
+// $Id: xmlostream.test.cxx,v 1.2 2004/01/29 15:54:37 eraxxon Exp $
 // -*-C++-*-
 
 //***************************************************************************
@@ -19,6 +19,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
+using std::string;
 
 //************************** Boost Include Files ****************************
 
@@ -26,6 +28,7 @@
 #include <boost/test/unit_test.hpp>
 
 using boost::unit_test_framework::test_suite;
+using boost::test_toolbox::output_test_stream;
 
 //*************************** User Include Files ****************************
 
@@ -60,7 +63,8 @@ void
 Test1() 
 {
   // A simple example that calls xml::ostream the class methods directly
-  xml::ostream os(std::cout.rdbuf());
+  output_test_stream bos;
+  xml::ostream os(bos.rdbuf());
   
   os.SetIndentStep(3);
   os.SetIndentAmnt(3);
@@ -73,32 +77,47 @@ Test1()
   os.EndElem();
   os.EndElem();
   os << std::endl;
+
+  string bos_str = bos.str();
+  std::cout << bos_str;
+  BOOST_CHECK(bos_str.length() > 0);
 }
 
 void
 Test2() 
 {
   // A more concise way of writing the above, using xml::ostream operators
-  xml::ostream os(std::cout.rdbuf());
+  output_test_stream bos1;
+  xml::ostream os1(std::cout.rdbuf());
 
-  // Note that the indendation will go to the left not the right!
-  os << SetIndentStep(-2) << SetIndentAmnt(10);
+  output_test_stream bos2;
+  xml::ostream os2(std::cout.rdbuf());
   
+  // Note that the indendation will go to the left not the right!
   BOOST_CHECKPOINT("Test 2a");
-  os << BegElem("Elem1") << Attr("attr1", 123) << Attr("attr2", "true!");
-  os << BegElem("Elem2") << EndElem;
-  os << EndElem;
-  os << std::endl;
+  os1 << SetIndentStep(-2) << SetIndentAmnt(10);
+  os1 << BegElem("Elem1") << Attr("attr1", 123) << Attr("attr2", "true!");
+  os1 << BegElem("Elem2") << EndElem;
+  os1 << EndElem;
+  os1 << std::endl;
   
   // Same as above, but uses explicit begin and end attribute operators
   BOOST_CHECKPOINT("Test 2b");
-  os << BegElem("Elem1") 
-     << BegAttr("attr1") << 123 << EndAttr
-     << BegAttr("attr2") << "tr" << "ue!" << EndAttr
-     << EndAttrs;
-  os << BegElem("Elem2") << EndElem;
-  os << EndElem;
-  os << std::endl;
+  os2 << SetIndentStep(-2) << SetIndentAmnt(10);
+  os2 << BegElem("Elem1") 
+      << BegAttr("attr1") << 123 << EndAttr
+      << BegAttr("attr2") << "tr" << "ue!" << EndAttr
+      << EndAttrs;
+  os2 << BegElem("Elem2") << EndElem;
+  os2 << EndElem;
+  os2 << std::endl;
+  
+  string bos1_str = bos1.str();
+  string bos2_str = bos2.str();
+  BOOST_CHECK(bos1_str == bos2_str);
+  
+  std::cout << bos1_str;
+  std::cout << bos2_str;
 }
 
 void
