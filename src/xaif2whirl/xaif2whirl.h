@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.16 2004/04/29 21:30:17 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.17 2004/04/30 20:39:40 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -67,7 +67,10 @@ namespace xaif2whirl {
   // FIXME: relocate...
   Symbol*
   GetSymbol(const DOMElement* elem, XlationContext& ctxt);
-  
+
+  const TYPE_ID DefaultMTypeInt = MTYPE_I8;
+  const TYPE_ID DefaultMTypeUInt = MTYPE_U8;
+
 }; /* namespace xaif2whirl */
 
 Symbol*
