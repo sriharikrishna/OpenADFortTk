@@ -100,9 +100,9 @@ foo        </xaif:AssignmentLHS>
   <xaif:ControlFlowGraph vertex_id="2" scope_id="1" symbol_id="functiontest__21" annotation="{PU_Id#2}">
     <xaif:ArgumentList/>
 
-    <xaif:Entry vertex_id="8" annotation="{WHIRL_Id#}"/>
+    <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
 
-    <xaif:BasicBlock vertex_id="9" scope_id="3" annotation="{WHIRL_Id#23:24:29:30}">
+    <xaif:BasicBlock vertex_id="2" scope_id="3" annotation="{WHIRL_Id#23:24:29:30}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#23} [pragma]"/>
       <xaif:Assignment statement_id="2">
         <xaif:AssignmentLHS du_ud="2">
@@ -122,15 +122,15 @@ foo        </xaif:AssignmentLHS>
       <xaif:Marker statement_id="4" annotation="{WHIRL_Id#30} [return]"/>
     </xaif:BasicBlock>
 
-    <xaif:BasicBlock vertex_id="10" scope_id="3" annotation="{WHIRL_Id#31}">
+    <xaif:BasicBlock vertex_id="3" scope_id="3" annotation="{WHIRL_Id#31}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#31} [return]"/>
     </xaif:BasicBlock>
 
-    <xaif:Exit vertex_id="11" annotation="{WHIRL_Id#}"/>
+    <xaif:Exit vertex_id="4" annotation="{WHIRL_Id#}"/>
 
-    <xaif:ControlFlowEdge edge_id="1" source="8" target="9"/>
-    <xaif:ControlFlowEdge edge_id="2" source="9" target="11"/>
-    <xaif:ControlFlowEdge edge_id="3" source="10" target="11"/>
+    <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
+    <xaif:ControlFlowEdge edge_id="2" source="2" target="4"/>
+    <xaif:ControlFlowEdge edge_id="3" source="3" target="4"/>
   </xaif:ControlFlowGraph>
 
   <xaif:CallGraphEdge edge_id="1" source="2" target="1"/>

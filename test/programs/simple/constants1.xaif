@@ -89,17 +89,17 @@
   <xaif:ControlFlowGraph vertex_id="3" scope_id="1" symbol_id="test__24" annotation="{PU_Id#2}">
     <xaif:ArgumentList/>
 
-    <xaif:Entry vertex_id="5" annotation="{WHIRL_Id#}"/>
+    <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
 
-    <xaif:BasicBlock vertex_id="6" scope_id="3" annotation="{WHIRL_Id#24:25}">
+    <xaif:BasicBlock vertex_id="2" scope_id="3" annotation="{WHIRL_Id#24:25}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#24} [pragma]"/>
       <xaif:Marker statement_id="2" annotation="{WHIRL_Id#25} [return]"/>
     </xaif:BasicBlock>
 
-    <xaif:Exit vertex_id="7" annotation="{WHIRL_Id#}"/>
+    <xaif:Exit vertex_id="3" annotation="{WHIRL_Id#}"/>
 
-    <xaif:ControlFlowEdge edge_id="1" source="6" target="7"/>
-    <xaif:ControlFlowEdge edge_id="2" source="5" target="6"/>
+    <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
+    <xaif:ControlFlowEdge edge_id="2" source="2" target="3"/>
   </xaif:ControlFlowGraph>
 
 </xaif:CallGraph>
