@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.13 2004/04/07 14:59:40 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.14 2004/04/08 13:53:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -349,7 +349,7 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
     if (ctxt.IsArrayIdx() || ctxt.IsExprSimple()) {
       wn = WN_CreateIntconst(OPC_I4INTCONST, val);
     } else {
-      TCON tcon = Host_To_Targ(MTYPE_I4, val); // FIXME: was _I8
+      TCON tcon = Host_To_Targ(MTYPE_I4, val); // FIXME_INTSZ
       wn = Make_Const(tcon); 
     }
   } 
@@ -578,8 +578,8 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
     
     // FIXME: take care of small integer types
     if (MTYPE_byte_size(dty) < 4) {
-      if (MTYPE_is_unsigned(dty)) { rty = MTYPE_U8; }
-      else if (MTYPE_is_signed(dty)) { rty = MTYPE_I8; }
+      if (MTYPE_is_unsigned(dty)) { rty = MTYPE_U4; } // FIXME_INTSZ
+      else if (MTYPE_is_signed(dty)) { rty = MTYPE_I4; } // FIXME_INTSZ
     }
 
     wn = WN_CreateLdid(OPR_LDID, rty, dty, 0, st, ty, 0);
@@ -909,13 +909,13 @@ GetRTypeFromOpands(vector<WN*>& opands)
   ASSERT_FATAL(opands_num > 0, (DIAG_A_STRING, "Programming error."));
   
   // 1. Gather types for operands
-  vector<TY_IDX> opands_ty(opands_num); // FIXME
+  vector<TY_IDX> opands_ty(opands_num);
   vector<TYPE_ID> opands_mty(opands_num);
   for (int i = 0; i < opands_num; ++i) {
-    // FIXME: change WN_Tree_Type to accept the CALL node
-    //TY_IDX ty = WN_Tree_Type(opands[i]); // TYPE_ID 
-    // opands_ty[i] = ty;
-    opands_mty[i] = WN_rtype(opands[i]); // TY_mtype(ty); // FIXME
+    TY_IDX ty = WN_Tree_Type(opands[i]);
+    opands_ty[i] = ty;
+    opands_mty[i] = TY_mtype(ty);
+    // FIXME: old: opands_mty[i] = WN_rtype(opands[i]);
   }
 
   // 2. Find an appropriate mtype for operands

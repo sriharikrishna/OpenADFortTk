@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.8 2004/03/29 23:41:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.9 2004/04/08 13:53:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -546,10 +546,14 @@ CreateAssignment(WN* lhs, WN* rhs)
   // We always use ISTORE (instead of e.g. STID) for generality.  This
   // will not be an issue because the intension is for this WHIRL to
   // be translated to source code.
-  
-  // FIXME: first argument is bogus // WN_Tree_Type(rhs)
-  TY_IDX ty = Make_Pointer_Type(MTYPE_To_TY(MTYPE_F8));
-  WN* wn = WN_Istore(MTYPE_F8, 0, ty, lhs, rhs, 0);
+
+  TY_IDX ty = WN_Tree_Type(lhs); // should be a pointer type
+  TY_IDX rhs_ty = WN_Tree_Type(rhs);
+  TYPE_ID dtype = TY_mtype(rhs_ty);
+  if (dtype == MTYPE_STR) {
+    dtype = MTYPE_U1;
+  }
+  WN* wn = WN_Istore(dtype, 0, ty, lhs, rhs, 0);
   return wn;
 }
 
