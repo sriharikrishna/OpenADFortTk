@@ -1,4 +1,4 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.12 2003/12/02 13:19:57 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.13 2003/12/12 21:31:47 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
@@ -31,10 +31,20 @@ whirl2xaif
   cvs co whirl2xaif
 
 xaifbooster, angel, boost
-  [xaifbooster: Argonne bitkeeper /home/derivs/share/xaifBooster]
-  bk clone <user>@terra.mcs.anl.gov:/home/derivs/share/xaifBooster
+  xaifbooster: Argonne bitkeeper /home/derivs/share/xaifBooster
+    bk clone <user>@terra.mcs.anl.gov:/home/derivs/share/xaifBooster
 
-  [angel, boost, respectively: www.sourceforge.net, www.boost.org]  
+  boost: www.sourceforge.net or www.boost.org
+    [get tarball from above sites]    
+    http://prdownloads.sourceforge.net/boost/boost-1.30.2.tar.bz2?download
+
+  angel: www.sourceforge.net
+    SourceForge anonymous (pserver) CVS. (password: press Enter)
+
+    cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/angellib login
+    cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/angellib co angel
+
+  * See notes in xaifBooster/INSTALL *
 
 xaif-1.0
   [bitkeeper]
@@ -99,7 +109,7 @@ Please use the same compiler for Open64, OpenAnalysis and whirl2xaif.
 
 6. xaifbooster
  
-   cd ${XAIFBOOSTER_BASE}
+   cd ${XAIFBOOSTER_BASE}/xaifBooster
    make
 
    cd ${ANGEL_BASE}
