@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.38 2004/04/13 16:40:27 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.39 2004/04/14 21:27:15 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -126,8 +126,8 @@ FindIntervalBoundary(const DOMElement* elem, IdList<WNId>* bbIdList,
                      WNIdToWNMap* wnmap, WN* blkWN, int boundary);
 
 static WN* 
-FindWNBlock(const DOMElement* bbElem, WN* wn_pu, 
-            IdList<WNId>* idlist, WNIdToWNMap* wnmap);
+FindWNBlock(const DOMElement* bbElem, IdList<WNId>* idlist, 
+	    XlationContext& ctxt);
 
 static WN* 
 FindSafeInsertionPoint(WN* blckWN, WN* stmtWN);
@@ -356,6 +356,12 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   // -------------------------------------------------------
   // 1. Create auxiliary data structures
   // -------------------------------------------------------
+  
+  // 0. WHIRL parent map
+  WhirlParentMap wnParentMap(wn_pu);
+  ctxt.SetWNParentMap(&wnParentMap);
+  
+  // 1. WHIRL<->ID maps
   pair<WNToWNIdMap*, WNIdToWNMap*> wnmaps = CreateWhirlIdMaps(wn_pu);
   ctxt.SetWNToIdMap(wnmaps.first);
   ctxt.SetIdToWNMap(wnmaps.second);
@@ -491,21 +497,27 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
 {
   WN* blkWN = WN_CreateBlock();
   
+  // ---------------------------------------------------
+  // We must generate labels FIXME
+  // ---------------------------------------------------
+  static unsigned int nextLblCntr = 1; // 0 is reserved
+  map<MyDGNode*, unsigned> nodeToLblMap;
+  
+  // Initialize label maps
+  for (DGraph::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
+    MyDGNode* n = dynamic_cast<MyDGNode*>((DGraph::Node*)nodeIt);
+    nodeToLblMap[n] = nextLblCntr++;
+  }
+  
+  // ---------------------------------------------------
+  // Translate, beginning with 'startNode'
+  // ---------------------------------------------------
   bool continueIteration = true;
   MyDGNode* curNode = startNode;
   while (curNode && continueIteration) {
 
     DOMElement* bbElem = curNode->GetElem();
-    
-    // Guard against retranslation (e.g. following back goto edge)
-    // [FIXME: May not ultimately need this.]
-    set<DOMElement*>::iterator it = xlated.find(bbElem);
-    if (it == xlated.end()) {
-      xlated.insert(bbElem);
-    } else {
-      break; // we have already translated this basic block
-    }
-    
+        
     if (XAIF_BBElemFilter::IsBBEntry(bbElem) ||
         XAIF_BBElemFilter::IsBBExit(bbElem) ||
         XAIF_BBElemFilter::IsBB(bbElem)) {
@@ -522,8 +534,6 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       // Begin a structured branch.  Note: in XAIF branches are
       // 'structured switches'.
       // ---------------------------------------------------
-      // FIXME: if a switch, set a ctxt flag to indicate generation of labels
-      // FIXME: for switch must also know first block after switch/EndBranch
       unsigned int numOutEdges = curNode->num_outgoing();
       
       // 1. Gather all outgoing edges, sorted by condition (specially
@@ -542,37 +552,66 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       MyDGNode* endBrNode = NULL;
       for (int i = 0; i < outedges.size(); ++i) {
         MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
-        pair<WN*, MyDGNode*> ret = 
-          xlate_CFGstruct(wn_pu, cfg, n, xlated, ctxt);
-        childblksWN[i] = ret.first;
-        endBrNode = ret.second; // will be EndBranch for structured-CF
+        pair<WN*, MyDGNode*> p = xlate_CFGstruct(wn_pu, cfg, n, xlated, ctxt);
+        childblksWN[i] = p.first;
+        endBrNode = p.second; // will be EndBranch for structured-CF
       }
-      
-      // FIXME: for switches add a label at the front and end of each block
+      MyDGNode* nextNode = GetSuccessor(endBrNode);
       
       // 3. Translate condition expression. 
       DOMElement* cond = 
         GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
       DOMElement* condexpr = GetFirstChildElement(cond);      
       WN* condWN = TranslateExpression(condexpr, ctxt);
-      if (numOutEdges == 1 || numOutEdges == 2) {
+      if (numOutEdges == 2) {
 	// Because branches are 'structured switches', ensure we have
 	// a boolean expression for an 'if'.
 	condWN = CreateIfCondition(condWN);
       }
       
-      // 4. Create control flow statement
-      WN* stmtWN = NULL;
-      if (numOutEdges == 1 || numOutEdges == 2) {
-        WN* thenWN = childblksWN[0];
-        WN* elseWN = (numOutEdges == 2) ? childblksWN[1] : WN_CreateBlock();
-        stmtWN = WN_CreateIf(condWN, thenWN, elseWN);
+      // 4. Create branch control flow
+      if (numOutEdges == 2) {
+        WN* ifWN = WN_CreateIf(condWN, childblksWN[0], childblksWN[1]);
+	WN_INSERT_BlockLast(blkWN, ifWN);
       } else {
         ASSERT_FATAL(false, (DIAG_A_STRING, "Unimplemented.")); // switch
-      }      
-      WN_INSERT_BlockLast(blkWN, stmtWN);
 
-      curNode = GetSuccessor(endBrNode);
+	// find default --
+	unsigned lastlbl = nodeToLblMap[nextNode];
+
+	// Add a label/goto at the front/end of each block
+	for (int i = 0; i < outedges.size(); ++i) {
+	  MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
+	  WN* nblkWN = childblksWN[i];
+	  
+	  WN* lblWN = WN_CreateLabel(nodeToLblMap[n], 0 /*label_flag*/, NULL);
+	  WN_INSERT_BlockFirst(nblkWN, lblWN);
+	  WN* gotoWN = WN_CreateGoto(lastlbl);
+	  WN_INSERT_BlockLast(nblkWN, gotoWN);
+	}
+	
+	// Create casegoto for each block
+	WN* casegotoBlkWN = WN_CreateBlock();
+	for (int i = 0; i < outedges.size(); ++i) {
+	  MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
+	  INT64 caseval = 0; // FIXME
+	  WN* wn = WN_CreateCasegoto(caseval, nodeToLblMap[n]);
+	  WN_INSERT_BlockLast(casegotoBlkWN, wn);
+	}
+	
+#if 0	
+	// create switch
+	WN* switchWN = WN_CreateSwitch(INT32 num_entries, // num cases in casegotoblk
+			    condWN, // switch expression
+			    casegotoBlkWN, // casegoto block
+			    WN *deflt, // goto with default target or NULL
+			    lastlbl);
+	WN_INSERT_BlockLast(blkWN, switchWN);
+#endif
+	// add switch blocks
+      }
+      
+      curNode = nextNode;
     }
     else if (XAIF_BBElemFilter::IsBBEndBr(bbElem)) {
       // ---------------------------------------------------
@@ -592,9 +631,8 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       MyDGNode* fallthru = GetSuccessorAlongEdge(curNode, 0);
       
       // 2. Translate (recursively) loop body
-      pair<WN*, MyDGNode*> ret = 
-        xlate_CFGstruct(wn_pu, cfg, body, xlated, ctxt);
-      WN* bodyWN = ret.first;
+      pair<WN*, MyDGNode*> p = xlate_CFGstruct(wn_pu, cfg, body, xlated, ctxt);
+      WN* bodyWN = p.first;
       
       // 3. Translate condition expression (and update/init statements)
       DOMElement* cond = 
@@ -684,7 +722,7 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
     // See notes on translating loops below
     DOMElement* bbElem = n->GetElem();
     if (XAIF_BBElemFilter::IsBBForLoop(bbElem) ||
-	XAIF_BBElemFilter::IsBBPostLoop(bbElem)) {
+        XAIF_BBElemFilter::IsBBPostLoop(bbElem)) {
       nodeToLoopContLblMap[n] = nextLblCntr++;
     } 
     else if (XAIF_BBElemFilter::IsBBPreLoop(bbElem)) {
@@ -701,17 +739,6 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
     DOMElement* bbElem = curNode->GetElem();
     unsigned curLbl = nodeToLblMap[curNode];
     
-#if 0
-    // Guard against retranslation (e.g. following back goto edge)
-    // [FIXME: May not ultimately need this.]
-    set<DOMElement*>::iterator it = xlated.find(bbElem);
-    if (it == xlated.end()) {
-      xlated.insert(bbElem);
-    } else {
-      continue; // we have already translated this basic block
-    }
-#endif
-    
     if (XAIF_BBElemFilter::IsBBEntry(bbElem) ||
         XAIF_BBElemFilter::IsBBExit(bbElem) ||
         XAIF_BBElemFilter::IsBB(bbElem)) {
@@ -727,8 +754,6 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       // ---------------------------------------------------
       // A branch with possibly unstructured control flow
       // ---------------------------------------------------
-      // FIXME: if a switch, set a ctxt flag to indicate generation of labels
-      // FIXME: for switch must also know first block after switch/EndBranch
       unsigned int numOutEdges = curNode->num_outgoing();
       
       // 1. Gather all outgoing edges, sorted by condition (specially
@@ -742,7 +767,7 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       std::sort(outedges.begin(), outedges.end(), 
                 sort_CondVal((numOutEdges != 2)));
       
-      // 2. Create WHIRL branch 
+      // 2. Create gotos for each child block
       vector<WN*> childblksWN(numOutEdges, NULL);
       for (int i = 0; i < outedges.size(); ++i) {
         MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
@@ -751,33 +776,30 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
 	WN_INSERT_BlockFirst(gotoblkWN, gotoWN);
         childblksWN[i] = gotoblkWN;
       }
-      
+
       // FIXME: for switches add a label at the front and end of each block
+      // FIXME: for switch must also know first block after switch/EndBranch
       
       // 3. Translate condition expression
       DOMElement* cond = 
         GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
       DOMElement* condexpr = GetFirstChildElement(cond);      
       WN* condWN = TranslateExpression(condexpr, ctxt);
-      if (numOutEdges == 1 || numOutEdges == 2) {
+      if (numOutEdges == 2) {
 	// Because branches are 'structured switches', ensure we have
 	// a boolean expression for an 'if'.
 	condWN = CreateIfCondition(condWN);
       }
 
-      // 4. Create control flow statement
-      WN* labelWN = WN_CreateLabel(curLbl, 0 /*label_flag*/, NULL);
-      WN* stmtWN = NULL;
-      if (numOutEdges == 1 || numOutEdges == 2) {
-        WN* thenWN = childblksWN[0];
-        WN* elseWN = (numOutEdges == 2) ? childblksWN[1] : WN_CreateBlock();
-        stmtWN = WN_CreateIf(condWN, thenWN, elseWN);
+      // 4. Create branch control flow
+      WN* lblWN = WN_CreateLabel(curLbl, 0 /*label_flag*/, NULL);
+      WN_INSERT_BlockLast(blkWN, lblWN);
+      if (numOutEdges == 2) {
+	WN* ifWN = WN_CreateIf(condWN, childblksWN[0], childblksWN[1]);
+	WN_INSERT_BlockLast(blkWN, ifWN);
       } else {
         ASSERT_FATAL(false, (DIAG_A_STRING, "Unimplemented.")); // switch
       }
-      
-      WN_INSERT_BlockLast(blkWN, labelWN);
-      WN_INSERT_BlockLast(blkWN, stmtWN);
     }
     else if (XAIF_BBElemFilter::IsBBEndBr(bbElem)) {
       // ---------------------------------------------------
@@ -932,8 +954,8 @@ xlate_CFG_BasicBlock(WN *wn_pu, MyDGNode* curBB, XlationContext& ctxt,
   
   // 2. If necessary, add a label to front and goto at end
   if (skipGotoAndLabels) {
-    WN* labelWN = WN_CreateLabel(curBBLbl, 0 /*label_flag*/, NULL);
-    WN_INSERT_BlockFirst(stmtblk, labelWN);
+    WN* lblWN = WN_CreateLabel(curBBLbl, 0 /*label_flag*/, NULL);
+    WN_INSERT_BlockFirst(stmtblk, lblWN);
     
     if (nextBBLbl != 0) {
       WN* gotoWN = WN_CreateGoto(nextBBLbl);
@@ -955,10 +977,9 @@ TranslateBasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt,
   // -------------------------------------------------------
   // 1. Find some info now to prevent several recalculations
   // -------------------------------------------------------
-  IdList<WNId>* idlist = GetWNIdList(bbElem); // FIXME
-  WNIdToWNMap* wnmap = ctxt.GetIdToWNMap();
   // FIXME: use parent map -- w2x does not need to generate this id list 
-  WN* origblkWN = FindWNBlock(bbElem, wn_pu, idlist, wnmap);
+  IdList<WNId>* idlist = GetWNIdList(bbElem); // FIXME
+  WN* origblkWN = FindWNBlock(bbElem, idlist, ctxt);
   if (idlist->size() > 0) { 
     ASSERT_FATAL(origblkWN, (DIAG_A_STRING, "Programming error."));
   }
@@ -976,7 +997,7 @@ TranslateBasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt,
       bool skip = (isGotoOrLabel && skipMarkeredGotoAndLabels);
       if (!skip) {
         WNId id = GetWNId(stmt);
-        WN* foundWN = wnmap->Find(id, true /* mustFind */);
+        WN* foundWN = ctxt.FindWN(id, true /* mustFind */);
         wn = WN_COPY_Tree(foundWN);
         PatchWNStmt(wn, ctxt); // FIXME
       }
@@ -1023,9 +1044,8 @@ xlate_BasicBlock_OLD(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
   // -------------------------------------------------------
   // 1. Find some info now to prevent several recalculations
   // -------------------------------------------------------
-  IdList<WNId>* idlist = GetWNIdList(bbElem); // FIXME
-  WNIdToWNMap* wnmap = ctxt.GetIdToWNMap();
-  WN* blkWN = FindWNBlock(bbElem, wn_pu, idlist, wnmap);
+  IdList<WNId>* idlist = GetWNIdList(bbElem);
+  WN* blkWN = FindWNBlock(bbElem, idlist, ctxt);
   if (idlist->size() > 0) { 
     ASSERT_FATAL(blkWN, (DIAG_A_STRING, "Programming error."));
   }
@@ -1035,7 +1055,7 @@ xlate_BasicBlock_OLD(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
   // -------------------------------------------------------  
   DOMElement* begXAIF = NULL, *endXAIF = NULL;
   WN* begWN = NULL, *endWN = NULL;
-  while (FindNextStmtInterval(bbElem, idlist, wnmap, blkWN,
+  while (FindNextStmtInterval(bbElem, idlist, ctxt.GetIdToWNMap(), blkWN,
                               begXAIF, endXAIF, begWN, endWN)) {
     
     // We now have two non-NULL intervals.  [begWN, endWN] represents
@@ -1079,7 +1099,7 @@ xlate_BasicBlock_OLD(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
        stmt = GetNextSiblingElement(stmt, XAIFStrings.elem_Marker_x())) {
     WNId id = GetWNId(stmt);
     if (id != 0) {
-      WN* wn = wnmap->Find(id, true /* mustFind */);
+      WN* wn = ctxt.FindWN(id, true /* mustFind */);
       PatchWNStmt(wn, ctxt);
     }
   }
@@ -1300,16 +1320,20 @@ FindIntervalBoundary(const DOMElement* elem, IdList<WNId>* bbIdList,
 // FindWNBlock: Given an XAIF basic block element, find the
 // corresponding WHIRL block.
 static WN* 
-FindWNBlock(const DOMElement* bbElem, WN* wn_pu, 
-            IdList<WNId>* idlist, WNIdToWNMap* wnmap)
+FindWNBlock(const DOMElement* bbElem, IdList<WNId>* idlist, 
+	    XlationContext& ctxt)
 {
   // We pass 'idlist' to avoid continual reparsing
   WN* wn = NULL;
   if (idlist->size() > 0) {
     WNId id = idlist->front();
-    wn = wnmap->Find(id, true /* mustFind */);
+    wn = ctxt.FindWN(id, true /* mustFind */);
   }
-  WN* blk = FindParentWNBlock(wn_pu, wn);
+  
+  WN* blk = NULL;
+  if (wn) {
+    blk = ctxt.FindParentBlockWN(wn);
+  }
   return blk;
 }
 
