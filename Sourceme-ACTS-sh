@@ -1,0 +1,103 @@
+# -*-Mode: sh;-*-
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.1 2003/10/10 20:48:32 eraxxon Exp $
+
+#############################################################################
+# Set platform variables (duplicated in whirl2xaif Sourceme-sh)
+#############################################################################
+
+export WHIRL2XAIF_ARCH=`uname -p`
+if test "${WHIRL2XAIF_ARCH}" = "unknown" ; then
+  export WHIRL2XAIF_ARCH=`uname -m`
+fi
+
+export WHIRL2XAIF_OS=`uname -s`
+
+export WHIRL2XAIF_PLATFORM="${WHIRL2XAIF_ARCH}-${WHIRL2XAIF_OS}"
+
+#############################################################################
+# System dependent
+#############################################################################
+
+# i686-Linux
+myscratch="/scratch/eraxxon"
+o64targ="targ_ia32_ia64_linux"
+
+#############################################################################
+# Open64
+#############################################################################
+
+open64="${myscratch}/Open64"
+
+alias mfef90="${open64}/osprey1.0/${o64targ}/crayf90/sgi/mfef90"
+alias whirl2f="${open64}/osprey1.0/${o64targ}/whirl2f/whirl2f"
+alias whirl2f90="${open64}/osprey1.0/${o64targ}/whirl2f/whirl2f90"
+alias ir_b2a="${open64}/osprey1.0/${o64targ}/ir_tools/ir_b2a"
+alias ir_size="${open64}/osprey1.0/${o64targ}/ir_tools/ir_size"
+
+#############################################################################
+# whirl2xaif helpers
+#############################################################################
+
+## OpenAnalysis
+openanal="${HOME}/Develop/OpenAnalysis"
+
+## Xerces C++
+xercesc="${HOME}/Develop/xercesc/${WHIRL2XAIF_PLATFORM}"
+if test -z "${LD_LIBRARY_PATH}" ; then
+  export LD_LIBRARY_PATH="${xercesc}/lib"
+else
+  export LD_LIBRARY_PATH="${xercesc}/lib:${LD_LIBRARY_PATH}"
+fi
+
+#############################################################################
+# whirl2xaif
+#############################################################################
+
+export WHIRL2XAIF="${HOME}/Develop/whirl2xaif"
+source ${WHIRL2XAIF}/Sourceme-sh
+
+export WHIRL2XAIF_OPEN64="${open64}/osprey1.0"
+export WHIRL2XAIF_OA="${openanal}"
+export WHIRL2XAIF_XERCESC="${xercesc}"
+
+#############################################################################
+# xaifbooster
+#############################################################################
+
+# boost: http://www.boost.org/libs/graph/doc/
+# angel: sourceforge 
+
+acts="${myscratch}/ACTS"
+
+export XERCESCROOT="${xercesc}"
+export XAIFBOOSTERROOT="${acts}/ALL/xaifbooster"
+export XAIF_DIR="${acts}/ALL/xaifbooster"
+export BOOSTROOT="${acts}/boost_1_29_0"
+export BOOST_ROOT="${acts}/boost_1_29_0"
+export BOOST_DIR="${acts}/boost_1_29_0"
+export ANGELROOT="${acts}/angel"
+export ANGEL_DIR="${acts}/angel"
+
+xaif_bk="${myscratch}/ACTS/xaif-1.0/schema"
+xaif="${myscratch}/ACTS/ALL/xaif_1.0"
+
+alias xboostread="${XAIF_DIR}/system/tests/t -c ${xaif}/ii.xaif"
+alias xboost="${XAIF_DIR}/angel_interface/test/t -c ${xaif}/ii.xaif"
+
+# will be consolidated into:
+# XERCESCROOT=/sandbox/xerces-c-src2_2_0 # as above
+# ANGELROOT=/sandbox/CVS/angel
+# BOOSTROOT=/sandbox/boost_1_29_0
+# XAIFBOOSTERROOT=/sandbox/CVS/ALL/xaifbooster
+
+#############################################################################
+
+unset myscratch
+unset open64
+unset o64targ
+unset openanal
+unset xercesc
+unset acts
+unset xaif_bk
+unset xaif
+

@@ -1,0 +1,136 @@
+# -*-Mode: sh;-*-
+# For csh or tcsh
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.1 2003/10/10 20:48:58 eraxxon Exp $
+
+#############################################################################
+# Set platform variables (duplicated in whirl2xaif Sourceme-csh)
+#############################################################################
+
+setenv WHIRL2XAIF_ARCH `uname -p`
+if ( ${WHIRL2XAIF_ARCH} == "unknown" ) then
+  setenv WHIRL2XAIF_ARCH `uname -m`
+endif
+
+setenv WHIRL2XAIF_OS `uname -s`
+
+setenv WHIRL2XAIF_PLATFORM "${WHIRL2XAIF_ARCH}-${WHIRL2XAIF_OS}"
+
+#############################################################################
+# System dependent
+#############################################################################
+
+switch ($WHIRL2XAIF_PLATFORM)
+case alpha-OSF1:
+  set myscratch="/bogus/path"
+  set o64targ="bogus_targ"
+  breaksw
+case i686-Linux:
+  set myscratch="/scratch/eraxxon"
+  set o64targ="targ_ia32_ia64_linux"
+  breaksw
+case ia64-Linux:
+  set myscratch="/scratch/eraxxon"
+  set o64targ="targ_ia64_ia64_linux"
+  breaksw
+case mips-IRIX64:
+  set myscratch="/net/basuri4/eraxxon"
+  set o64targ="targ_mips_irix"
+  breaksw
+case sparc-SunOS:
+  set myscratch="/net/basuri4/eraxxon"
+  set o64targ="targ_sparc_solaris"
+  breaksw
+default:
+  echo "OSTYPE '$OSTYPE' is unknown..."
+  breaksw
+endsw
+
+# alpha-OSF1 -> /import/basuri4/eraxxon/HPCToolkit/obj/alpha
+# alpha-OSF1.net -> /net/basuri4/eraxxon/HPCToolkit/obj/alpha
+# mips-IRIX64 -> /net/basuri4/eraxxon/HPCToolkit/obj/mips
+# sparc-SunOS -> /net/basuri4/eraxxon/HPCToolkit/obj/sparc
+
+#############################################################################
+# Open64
+#############################################################################
+
+set open64="${myscratch}/Open64"
+
+alias mfef90  ${open64}/osprey1.0/${o64targ}/crayf90/sgi/mfef90
+alias whirl2f ${open64}/osprey1.0/${o64targ}/whirl2f/whirl2f
+alias whirl2f90 ${open64}/osprey1.0/${o64targ}/whirl2f/whirl2f90
+alias ir_b2a  ${open64}/osprey1.0/${o64targ}/ir_tools/ir_b2a
+alias ir_size ${open64}/osprey1.0/${o64targ}/ir_tools/ir_size
+
+#############################################################################
+# whirl2xaif helpers
+#############################################################################
+
+## OpenAnalysis
+set openanal="${HOME}/Develop/OpenAnalysis"
+
+## Xerces C++
+set xercesc="${HOME}/Develop/xercesc/${WHIRL2XAIF_PLATFORM}"
+if ( ! $?LD_LIBRARY_PATH ) then
+  setenv LD_LIBRARY_PATH "${xercesc}/lib"
+else
+  setenv LD_LIBRARY_PATH "${xercesc}/lib:${LD_LIBRARY_PATH}"
+endif
+
+#############################################################################
+# whirl2xaif
+#############################################################################
+
+setenv WHIRL2XAIF "${HOME}/Develop/whirl2xaif"
+source ${WHIRL2XAIF}/Sourceme-csh
+
+setenv WHIRL2XAIF_OPEN64  "${open64}/osprey1.0"
+setenv WHIRL2XAIF_OA      "${openanal}"
+setenv WHIRL2XAIF_XERCESC "${xercesc}"
+
+#############################################################################
+# xaifbooster
+#############################################################################
+
+# boost: http://www.boost.org/libs/graph/doc/
+# angel: sourceforge 
+
+set acts="${myscratch}/ACTS"
+
+setenv XERCESCROOT "${xercesc}"
+setenv XAIFBOOSTERROOT "${acts}/ALL/xaifbooster"
+setenv XAIF_DIR "${acts}/ALL/xaifbooster"
+setenv BOOSTROOT "${acts}/boost_1_29_0"
+setenv BOOST_ROOT "${acts}/boost_1_29_0"
+setenv BOOST_DIR "${acts}/boost_1_29_0"
+setenv ANGELROOT "${acts}/angel"
+setenv ANGEL_DIR "${acts}/angel"
+
+set xaif_bk="${myscratch}/ACTS/xaif-1.0/schema"
+set xaif="${myscratch}/ACTS/ALL/xaif_1.0"
+
+alias xboostread "${XAIF_DIR}/system/tests/t -c ${xaif}/ii.xaif"
+alias xboost "${XAIF_DIR}/angel_interface/test/t -c ${xaif}/ii.xaif"
+
+# will be consolidated into:
+# XERCESCROOT=/sandbox/xerces-c-src2_2_0 # as above
+# ANGELROOT=/sandbox/CVS/angel
+# BOOSTROOT=/sandbox/boost_1_29_0
+# XAIFBOOSTERROOT=/sandbox/CVS/ALL/xaifbooster
+
+# until we have a different spot we will keep it in
+# Uwe's CVS directory in where
+# reps are: ALL/xaifbooster ALL/xaif_1.0 ALL/xaifbooster_talk
+# CVS_RSH=
+# CVSROOT=/home/naumann/CVSHOME
+
+#############################################################################
+
+unset myscratch
+unset open64
+unset o64targ
+unset openanal
+unset xercesc
+unset acts
+unset xaif_bk
+unset xaif
