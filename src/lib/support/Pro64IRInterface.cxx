@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.18 2004/03/19 16:53:13 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.19 2004/04/16 18:35:00 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -727,7 +727,7 @@ Pro64IRInterface::GetTargetLabel (StmtHandle h, int n)
 int
 Pro64IRInterface::NumUMultiTargets (StmtHandle h)
 { 
-  WN *wn = (WN *) h;
+  WN* wn = (WN*)h;
 
   // FIXME: Support also OPR_XGOTO?
   if (WN_operator(wn) == OPR_COMPGOTO || WN_operator(wn) == OPR_SWITCH) {
@@ -743,17 +743,18 @@ Pro64IRInterface::NumUMultiTargets (StmtHandle h)
 StmtLabel
 Pro64IRInterface::GetUMultiTargetLabel (StmtHandle h, int targetIndex)
 {
-  WN *wn = (WN *) h;
+  WN* wn = (WN*)h;
   StmtLabel target_label = 0;
-  WN *curr_goto;
+  WN* curr_goto = NULL;
 
   // Whirl has a number of multiway branches: OPR_SWITCH, OPR_COMPGOTO,
   // and OPR_XGOTO. SWITCH and COMPGOTO are redundant in the sense that
   // SWITCH could be used for any COMPGOTO. Nevertheless, we have to handle
   // them all.
   // FIXME: XGOTO is a lowered form of COMPGOTO which isn't handled here yet. 
-  assert (WN_operator(wn) == OPR_COMPGOTO || WN_operator(wn) == OPR_SWITCH);
-  if (WN_operator(wn) == OPR_COMPGOTO) {
+  OPERATOR opr = WN_operator(wn);
+  assert(opr == OPR_COMPGOTO || opr == OPR_SWITCH);
+  if (opr == OPR_COMPGOTO) {
     assert(WN_operator(WN_kid1(wn)) == OPR_BLOCK);
     curr_goto = WN_first(WN_kid1(wn));
   } else {
@@ -761,22 +762,20 @@ Pro64IRInterface::GetUMultiTargetLabel (StmtHandle h, int targetIndex)
     curr_goto = WN_first(WN_switch_table(wn));
   }
   
-  // For COMPGOTO, kid 1 is an OPR_BLOCK which contains the dispatch table.
-  // It is a list of OPR_GOTOs to the corresponding targets. SWITCH is
-  // similar, except its table is a list of OPR_CASEGOTOs.
+  // For COMPGOTO, kid 1 is an OPR_BLOCK which contains the dispatch
+  // table as a list of OPR_GOTOs to the corresponding targets. SWITCH
+  // is similar, except its table is a list of OPR_CASEGOTOs.
   //
   // Below is somewhat inefficient, but the method wants random access to the
   // targets, while Whirl blocks have to be traversed sequentially.
   int curr_idx = 0;
-  while (curr_goto) {
+  for ( ; (curr_goto); curr_goto = WN_next(curr_goto), ++curr_idx) {
     if (curr_idx == targetIndex) {
       assert(WN_operator(curr_goto) == OPR_GOTO 
 	     || WN_operator(curr_goto) == OPR_CASEGOTO);
       target_label = (StmtLabel) WN_label_number(curr_goto);
       break;
     }
-    curr_goto = WN_next(curr_goto);
-    ++curr_idx;
   }
   assert(curr_idx == targetIndex); // Ensure target is found...
   
@@ -812,13 +811,30 @@ Pro64IRInterface::GetUMultiCatchallLabel (StmtHandle h)
 
 // Given an unstructured multi-way branch, return the condition expression
 // corresponding to target 'targetIndex'. The n targets are indexed [0..n-1].
+// For OPR_SWITCH, return an OPR_CASEGOTO; for OPR_COMPGOTO, return OPR_GOTO.
 ExprHandle
 Pro64IRInterface::GetUMultiCondition (StmtHandle h, int targetIndex)
 {
-  // FIXME: It isn't yet decided whether or not this function is needed in
-  // the IR interface.
-  assert(0);
-  return 0;
+  // Cf. GetUMultiTargetLabel (no need for assertions here)
+  WN* wn = (WN*)h;
+  WN* curr_goto = NULL;
+  ExprHandle condExpr = 0;
+
+  OPERATOR opr = WN_operator(wn);
+  if (opr == OPR_COMPGOTO) {
+    curr_goto = WN_first(WN_kid1(wn));
+  } else {
+    curr_goto = WN_first(WN_switch_table(wn));
+  }
+  
+  int curr_idx = 0;
+  for ( ; (curr_goto); curr_goto = WN_next(curr_goto), ++curr_idx) {
+    if (curr_idx == targetIndex) {
+      condExpr = (ExprHandle)curr_goto; // OPR_CASEGOTO or OPR_GOTO
+      break;
+    }
+  }
+  return condExpr;
 }
 
 
