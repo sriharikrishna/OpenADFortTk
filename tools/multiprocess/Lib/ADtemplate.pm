@@ -17,19 +17,33 @@ sub module {
     return $scan->match(qr/^ module $TB/ix);
 }
 
+sub function {
+    my($scan) = FTscan->new($_[0]);
+
+    return $scan->match(qr/^ function $TB/ix);
+}
+
 sub is_module {
     my($in) = @_;
     my($ff) = $in->filter(\&module);
     
     return ($ff->lines()+0);
 }
+
+sub is_function {
+    my($in) = @_;
+    my($ff) = $in->filter(\&function);
+    
+    return ($ff->lines()+0);
+}
+
 sub instantiate {
     my($self,$src) = @_;
 
-# !! HACK !! to find out if unit is a module  :-] :-]
-# (no rewrite of modules
+# !! HACK !! to find out if unit is a module or function :-] :-]
+# (no rewrite of modules or functions)
 #
-    return $src if (is_module($src));
+    return $src if (is_module($src) || is_function($src));
     _init();
     $src->map(\&readit);
     my($retn) = $self->{ff};
