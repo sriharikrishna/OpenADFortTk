@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.13 2004/01/19 21:42:24 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.14 2004/01/25 02:38:59 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -39,6 +39,8 @@
 
 //*************************** User Include Files ****************************
 
+#include <lib/support/diagnostics.h>
+
 #include "Pro64IRInterface.h"
 
 //*************************** Forward Declarations ***************************
@@ -61,6 +63,9 @@ BuildExprTreeForWN(ExprTree* tree, WN* wn);
 void 
 RestoreOpen64PUGlobalVars(PU_Info *pu)
 {
+  ST_IDX st = PU_Info_proc_sym(pu);
+  DBGMSG(2, "** Restoring Open64 global vars for '%s' **", ST_name(st));
+  
   // The PU is in memory (change some global pointers around)
   assert(PU_Info_state(pu, WT_TREE) == Subsect_InMem);
   Current_Map_Tab = PU_Info_maptab(pu);
@@ -74,6 +79,9 @@ RestoreOpen64PUGlobalVars(PU_Info *pu)
 void
 SaveOpen64PUGlobalVars(PU_Info *pu)
 {
+  ST_IDX st = PU_Info_proc_sym(pu);
+  DBGMSG(2, "** Saving Open64 global vars for '%s' **", ST_name(st));
+  
   Set_PU_Info_symtab_ptr(pu, NULL);   // FIXME:SYMTAB
   Save_Local_Symtab(CURRENT_SYMTAB, pu);
   // Can we make this save itself and all its parents
@@ -181,8 +189,8 @@ Pro64IRUseDefIterator::Pro64IRUseDefIterator (WN *subtree, int uses_or_defs)
 }
 
 
-// Determine the nodes corresponding to the uses (r-values) of 't' or to
-// the definitions (l-values) of 't'.
+// Determine the nodes corresponding to the uses (r-values) of 'wn' or to
+// the definitions (l-values) of 'wn'.
 //
 // These are stored in the given private members uses_node_list and
 // defs_node_lists.
@@ -193,82 +201,115 @@ Pro64IRUseDefIterator::Pro64IRUseDefIterator (WN *subtree, int uses_or_defs)
 void
 Pro64IRUseDefIterator::build_use_def_lists (WN *wn, int flags)
 {
-  // FIXME: var refs used in callsites are assumed to be definitions
-  enum { OuterMost_OPR_ARRAY = 1 };
-  OPERATOR opr = WN_operator (wn);
+  enum { 
+    NoFlag              = 0x00000000,
+    OuterMost_OPR_ARRAY = 0x00000001,
+    PARM_ByValue        = 0x00000010,
+    PARM_ByRef          = 0x00000020,
+  };
+
+  OPERATOR opr = WN_operator(wn);
+  int kid_beg = 0;
+  int kid_end = WN_kid_count(wn) - 1;
 
   switch (opr) {
-  // FIXME: ISTOREBITS, ISTOREX, MSTORE?    
+    // -----------------------------------------------------
+    // Base cases
+    // -----------------------------------------------------
+  case OPR_LDA:
+  case OPR_LDMA:
   case OPR_LDID:
   case OPR_LDBITS:
   case OPR_IDNAME:
-    assert (OPERATOR_has_sym (opr));
-    uses_node_list.push_back (wn);
-    return;
-  case OPR_STID:
-  case OPR_STBITS:
-    assert (OPERATOR_has_sym (opr));
-    defs_node_list.push_back (wn);
-    break;
-  case OPR_LDA:
-    assert (OPERATOR_has_sym (opr));
-    // Perhaps strange, but Whirl has the notion of taking the address of a
-    // constant.  The FORTRAN call foo(2) in Whirl is foo(OPR_LDA(2)). We
-    // don't want a constant noted as a use or def.
-    if (ST_sym_class (WN_st (wn)) != CLASS_CONST) {
-      uses_node_list.push_back (wn);
+    assert(OPERATOR_has_sym(opr));
+    
+    // We don't want a constant classified as a use or def: Perhaps
+    // strange, but WHIRL has the notion of taking the address of a
+    // constant.  The FORTRAN call foo(2) in Whirl is foo(OPR_LDA(2)).
+    if (opr == OPR_LDA && ST_sym_class(WN_st(wn)) == CLASS_CONST) { return; }
+    
+    // Classify pass-by-reference params as defs
+    if ((flags & PARM_ByRef)) {
+      defs_node_list.push_back(wn);
+    } else {
+      uses_node_list.push_back(wn);
     }
     return;
-  case OPR_LDMA:
-    assert (OPERATOR_has_sym (opr));
-    uses_node_list.push_back (wn);
-    return;
-  case OPR_ISTORE:
-    // Process kid0, the RHS of the store.
-    build_use_def_lists (WN_kid0 (wn), 0);
-    // Process kid1, the LHS of the store.
-    build_use_def_lists (WN_kid1 (wn), OuterMost_OPR_ARRAY);
-    return;
+    
+    // -----------------------------------------------------
+    // Recursive cases
+    // -----------------------------------------------------    
   case OPR_ARRAY:
-  case OPR_ARRSECTION:
+  case OPR_ARRSECTION: {
     // Kid 0 is an LDA or LDID which represents the base of the array being
     // referenced or defined. Only an outermost OPR_ARRAY of a subtree will
     // ever represent a definition of an array section or element (e.g., In
     // reference A(G(I)) = X, variable A is a definition, while G is a use).
-    WN *base = WN_kid0 (wn);
-    assert (WN_operator (base) == OPR_LDA || WN_operator (base) == OPR_LDID);
+    WN *base = WN_kid0(wn);
+    assert(WN_operator(base) == OPR_LDA || WN_operator(base) == OPR_LDID);
     if ((flags & OuterMost_OPR_ARRAY)) {
-      defs_node_list.push_back (base);
+      defs_node_list.push_back(base);
     } else {
-      uses_node_list.push_back (base);
+      uses_node_list.push_back(base);
     }
-    flags &= ~OuterMost_OPR_ARRAY;
+    flags &= ~OuterMost_OPR_ARRAY; // reset
+    
     // Kids 1..n are dimensions, which we need to ignore. Kids n+1..2n
     // are the index expressions.
-    int ndims = WN_kid_count (wn) >> 1;
-    for (int kid = 0; kid < ndims; kid++) {
-      if (! OPERATOR_is_stmt (WN_operator (WN_kid (wn, kid+ndims+1)))) {
-        build_use_def_lists (WN_kid (wn, kid+ndims+1), flags);
-      }
-    } // for kids
+    int ndims = WN_kid_count(wn) >> 1;
+    kid_beg = ndims + 1;
+    kid_end = 2 * ndims;
+    break; // fall through to recursion
+  }
+    
+  case OPR_STID:
+  case OPR_STBITS:
+    assert(OPERATOR_has_sym(opr));
+    defs_node_list.push_back(wn);
+    break; // fall through to recursion
+    
+  case OPR_ISTORE:
+    // Process kid0, the RHS of the store.
+    build_use_def_lists(WN_kid0(wn), NoFlag);
+    // Process kid1, the LHS of the store.
+    build_use_def_lists(WN_kid1(wn), OuterMost_OPR_ARRAY);
     return;
+    
+  // ISTOREBITS, ISTOREX, MSTORE (FIXME)
+    
+  case OPR_CALL:
+  case OPR_ICALL:
+  case OPR_VFCALL:
+  case OPR_PICCALL:
+  case OPR_INTRINSIC_CALL:
+    // skip any dummy parameters appended after actual parameters
+    kid_end = WN_num_actuals(wn) - 1;
+    break; // fall through to recursion
+    
+  default: 
+    break; // fall through to recursion
   } // switch
+  
+  // -----------------------------------------------------
+  // Recur on all kids of this node, adding embedded uses and defs.
+  // -----------------------------------------------------
 
-
-  // Recursively visit all kids (that aren't statements) adding their
-  // uses and defs.  
-  int kid_beg = 0;
-  int num_kids = WN_kid_count (wn);
-  if (OPERATOR_is_call(opr)) {
-    num_kids = WN_num_actuals(wn);
+  // Test for pass by reference on the first level children of PARMs
+  // FIXME: What about PARM(ILOAD(...))
+  if ((opr == OPR_PARM) && (WN_Parm_By_Reference(wn) || WN_Parm_Out(wn))) {
+    flags |= PARM_ByRef;
+  } else {
+    flags &= ~PARM_ByRef; // reset
   }
   
-  for (int kid = kid_beg; kid < num_kids; kid++) {
-    // FIXME: E.g.: MPY(CALL( ), CALL( ))
-    //if (! OPERATOR_is_stmt (WN_operator (WN_kid (wn, kid)))) {
-      build_use_def_lists (WN_kid (wn, kid), flags);
-    //}
-  } // for kids
+  // Note: Be careful about testing that kids are not statements using
+  // OPERATOR_is_stmt().  Consider: MPY(CALL(...), CALL(...)): The
+  // multiply is an expression but the calls are classified as
+  // statements!
+  for (int kid = kid_beg; kid <= kid_end; ++kid) {    
+    WN* wn_kid = WN_kid(wn, kid);
+    build_use_def_lists(wn_kid, flags);
+  }
 }
 
 
