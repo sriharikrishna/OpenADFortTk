@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.8 2004/02/17 18:54:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.9 2004/02/18 18:41:43 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -74,8 +74,8 @@ using std::cerr;
 using std::endl;
 
 
-static INT
-real_main(INT argc, char **argv);
+static int
+real_main(int argc, char **argv);
 
 
 static int
@@ -106,8 +106,8 @@ bool opt_typeChangeInWHIRL = false;
 //****************************************************************************
 
 
-INT
-main(INT argc, char **argv)
+int
+main(int argc, char **argv)
 {
   try {
     return real_main(argc, argv);
@@ -123,8 +123,8 @@ main(INT argc, char **argv)
   // FIXME: catch badalloc?
 }
 
-static INT
-real_main(INT argc, char **argv)
+static int
+real_main(int argc, char **argv)
 {
   int ret;
 

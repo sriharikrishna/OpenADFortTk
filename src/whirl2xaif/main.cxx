@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.15 2004/02/17 22:40:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.16 2004/02/18 18:41:43 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -81,8 +81,8 @@
 
 //************************** Forward Declarations ***************************
 
-static INT 
-real_main(INT argc, char **argv);
+static int
+real_main(int argc, char **argv);
 
 static void 
 OpenFile(std::ofstream& fs, const char* filename);
@@ -106,7 +106,7 @@ void InlineTest(PU_Info* pu_forest);
 
 //***************************************************************************
 
-INT
+int
 main(int argc, char **argv)
 {
   try {
@@ -127,8 +127,8 @@ main(int argc, char **argv)
   // FIXME: catch badalloc?
 }
 
-static INT
-real_main(INT argc, char **argv)
+static int
+real_main(int argc, char **argv)
 {
   // -------------------------------------------------------
   // 1. Open64 Initialization
