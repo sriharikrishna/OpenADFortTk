@@ -1,6 +1,6 @@
 # -*-Mode: sh;-*-
 # For csh or tcsh
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.6 2003/11/13 16:10:53 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.7 2003/11/26 14:50:15 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
@@ -105,11 +105,13 @@ if ( "${PLATFORM}" == "i686-Cygwin" ) then
 
 else 
 
+  set lpath="${XERCESCROOT}/lib:${OPEN64TARG}/whirl2f"
   if ( ! $?LD_LIBRARY_PATH ) then
-    setenv LD_LIBRARY_PATH "${XERCESCROOT}/lib"
+    setenv LD_LIBRARY_PATH "${lpath}"
   else
-    setenv LD_LIBRARY_PATH "${XERCESCROOT}/lib:${LD_LIBRARY_PATH}"
+    setenv LD_LIBRARY_PATH "${lpath}:${LD_LIBRARY_PATH}"
   endif
+  unset lpath
 
 endif
 
