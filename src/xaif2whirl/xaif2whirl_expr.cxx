@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.22 2004/05/07 17:11:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.23 2004/05/28 15:17:33 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -988,8 +988,8 @@ GetWNExprOpcode(OPERATOR opr, vector<WN*>& opands)
     // sqrt: f, z
     rty = GetMType(MTYPE_CLASS_FLOAT, MTYPE_byte_size(rty));
   } 
-  else if (opr == OPR_TRUNC) {
-    // trunc: i
+  else if (opr == OPR_TRUNC || opr == OPR_MOD) {
+    // trunc, mod: i
     rty = GetMType(MTYPE_CLASS_INTEGER, MTYPE_byte_size(rty));
   } 
   else if (opr == OPR_EQ || opr == OPR_NE || opr == OPR_GT || opr == OPR_GE ||
