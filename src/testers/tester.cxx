@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.3 2003/12/02 20:30:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.4 2003/12/03 16:03:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -98,8 +98,16 @@ TestIR_OA_ForEachWNPU(std::ostream& os, WN* wn_pu)
   Pro64IRInterface irInterface;
   Pro64IRStmtIterator irStmtIter(fbody);
   CFG cfg(irInterface, &irStmtIter, (SymHandle)WN_st(wn_pu), true);
-  ValueNumbers vnmap(cfg);
+
+  // Accumulate the ST* for parameters
+  std::set<SymHandle> params;
+  INT nparam = WN_num_formals(wn_pu);
+  for (int i = 0; i < nparam; ++i) {
+    ST* st = WN_st(WN_formal(wn_pu, i));
+    params.insert((SymHandle)st);
+  }
   
+  ValueNumbers vnmap(cfg, params);
   TestIR_OA_ForEachVarRef(os, wn_pu, vnmap);
 }
 
@@ -116,6 +124,7 @@ TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn, ValueNumbers& vnmap)
     // Base case
     VN vn = vnmap.Find((ExprHandle)wn);
     
+    os << "VN = " << vn << endl;
     ExprTree* tree = GetExprTreeForExprHandle((ExprHandle)wn);
     tree->dump(os);
     delete tree;
