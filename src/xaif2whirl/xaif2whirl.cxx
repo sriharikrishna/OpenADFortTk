@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.54 2004/06/28 18:52:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.55 2004/07/27 19:25:38 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -342,7 +342,11 @@ TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
   // -------------------------------------------------------
   // Translate, modifying 'wn_pu'
   // -------------------------------------------------------
-  TranslateCFG(wn_pu, cfgElem, ctxt);
+  // FIXME:TEMPORARY -- module routines
+  ST* st = ST_ptr(PU_Info_proc_sym(pu));
+  if (!ST_is_in_module(st)) { // FIXME:TEMPORARY -- module routines?  
+    TranslateCFG(wn_pu, cfgElem, ctxt);
+  }
   
 #if 0
   fprintf(stderr, "\n----------------------------------------------------\n");
@@ -387,6 +391,11 @@ static WN*
 xlate_CFG_BasicBlock(WN *wn_pu, MyDGNode* curBB, XlationContext& ctxt, 
 		     bool skipMarkeredGotoAndLabels = true, 
 		     unsigned newCurBBLbl = 0, unsigned newNextBBLbl = 0);
+
+static WN*
+xlate_CFG_BranchMulti(MyDGNode* curNode, WN* condWN, unsigned lastLbl,
+		      vector<MyDGEdge*>& outedges,
+		      map<MyDGNode*, unsigned>& nodeToLblMap);
 
 
 // TranslateCFG: Given an XAIF CFG or XAIF Replacement rooted at
@@ -618,30 +627,8 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       // 'structured switches'.
       // ---------------------------------------------------
       unsigned int numOutEdges = curNode->num_outgoing();
-      
-      // 1. Gather all outgoing edges, sorted by condition (specially
-      // sort two-way branches into true-false order.)
-      vector<MyDGEdge*> outedges(numOutEdges, NULL);
-      DGraph::OutgoingEdgesIterator it = 
-        DGraph::OutgoingEdgesIterator(curNode);
-      for (int i = 0; (bool)it; ++it, ++i) {
-        outedges[i] = dynamic_cast<MyDGEdge*>((DGraph::Edge*)it);
-      }
-      std::sort(outedges.begin(), outedges.end(), 
-                sort_CondVal((numOutEdges != 2)));
 
-      // 2. Translate (recursively) each child block of this branch
-      vector<WN*> childblksWN(numOutEdges, NULL);
-      MyDGNode* endBrNode = NULL;
-      for (int i = 0; i < outedges.size(); ++i) {
-        MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
-        pair<WN*, MyDGNode*> p = xlate_CFGstruct(wn_pu, cfg, n, xlated, ctxt);
-        childblksWN[i] = p.first;
-        endBrNode = p.second; // will be EndBranch for structured-CF
-      }
-      MyDGNode* nextNode = GetSuccessor(endBrNode);
-      
-      // 3. Translate condition expression. 
+      // 1. Translate condition expression. 
       DOMElement* cond = 
         GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
       DOMElement* condexpr = GetFirstChildElement(cond);      
@@ -652,19 +639,38 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
 	condWN = CreateIfCondition(condWN);
       }
       
+      // 2. Gather all outgoing edges, sorted by condition (specially
+      // sort two-way branches into true-false order.)
+      vector<MyDGEdge*> outedges(numOutEdges, NULL);
+      DGraph::OutgoingEdgesIterator it = 
+        DGraph::OutgoingEdgesIterator(curNode);
+      for (int i = 0; (bool)it; ++it, ++i) {
+        outedges[i] = dynamic_cast<MyDGEdge*>((DGraph::Edge*)it);
+      }
+      std::sort(outedges.begin(), outedges.end(), 
+                sort_CondVal((numOutEdges != 2)));
+
+      // 3. Translate (recursively) each child block of this branch
+      vector<WN*> childblksWN(numOutEdges, NULL);
+      MyDGNode* endBrNode = NULL;
+      for (int i = 0; i < outedges.size(); ++i) {
+        MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
+        pair<WN*, MyDGNode*> p = xlate_CFGstruct(wn_pu, cfg, n, xlated, ctxt);
+        childblksWN[i] = p.first;
+        endBrNode = p.second; // will be EndBranch for structured-CF
+      }
+      MyDGNode* nextNode = GetSuccessor(endBrNode);
+      
       // 4. Create branch control flow
       if (numOutEdges == 2) {
         WN* ifWN = WN_CreateIf(condWN, childblksWN[0], childblksWN[1]);
 	WN_INSERT_BlockLast(blkWN, ifWN);
       } 
       else {
-	// Case values are in ascending order; the default case (if any)
-	// will be at the beginning and have a false condition attribute
-	
 	// Find the branch-around (or last) label
 	unsigned lastLbl = nodeToLblMap[nextNode];
-
-	// Add a label/goto at the front/end of each block
+	
+	// Add a LABEL/GOTO at the front/end of each successor block
 	for (int i = 0; i < outedges.size(); ++i) {
 	  MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
 	  WN* nblkWN = childblksWN[i];
@@ -675,35 +681,13 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
 	  WN_INSERT_BlockLast(nblkWN, gotoWN);
 	}
 	generateLbl = true; // add label to front of successor
-
-	// Create default goto if necessary
-	WN* defltWN = NULL;
-	int defltIdx = -1;
-	if (!GetHasConditionAttr(outedges[0]->GetElem())) {
-	  defltIdx = 0;
-	  MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[0]->sink());
-	  unsigned gotolbl = nodeToLblMap[n];
-	  defltWN = WN_CreateGoto(gotolbl);
-	}
 	
-	// Create casegoto for each block
-	WN* casegotoBlkWN = WN_CreateBlock();
-	int numcases = outedges.size() - (defltIdx + 1);
-	for (int i = defltIdx + 1; i < outedges.size(); ++i) {
-	  DOMElement* elemEdge = outedges[i]->GetElem();
-	  MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
-	  
-	  INT64 caseval = GetCondAttr(elemEdge);
-	  WN* wn = WN_CreateCasegoto(caseval, nodeToLblMap[n]);
-	  WN_INSERT_BlockLast(casegotoBlkWN, wn);
-	}
-
-	// Create switch
-	WN* switchWN = WN_CreateSwitch(numcases, condWN, casegotoBlkWN,
-				       defltWN, lastLbl);
+	// Create SWITCH with CASEGOTOs
+	WN* switchWN = xlate_CFG_BranchMulti(curNode, condWN, lastLbl,
+					     outedges, nodeToLblMap);
 	WN_INSERT_BlockLast(blkWN, switchWN);
 	
-	// Add switch blocks
+	// Add switch blocks right after SWITCH
 	for (int i = 0; i < childblksWN.size(); ++i) {
 	  WN_INSERT_BlockLast(blkWN, childblksWN[i]);
 	}
@@ -861,29 +845,8 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       // A branch with possibly unstructured control flow
       // ---------------------------------------------------
       unsigned int numOutEdges = curNode->num_outgoing();
-      
-      // 1. Gather all outgoing edges, sorted by condition (specially
-      // sort two-way branches into true-false order.)
-      vector<MyDGEdge*> outedges(numOutEdges, NULL);
-      DGraph::OutgoingEdgesIterator it = 
-        DGraph::OutgoingEdgesIterator(curNode);
-      for (int i = 0; (bool)it; ++it, ++i) {
-        outedges[i] = dynamic_cast<MyDGEdge*>((DGraph::Edge*)it);
-      }
-      std::sort(outedges.begin(), outedges.end(), 
-                sort_CondVal((numOutEdges != 2)));
-      
-      // 2. Create gotos for each child block
-      vector<WN*> childblksWN(numOutEdges, NULL);
-      for (int i = 0; i < outedges.size(); ++i) {
-        MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
-	WN* gotoblkWN = WN_CreateBlock();
-        WN* gotoWN = WN_CreateGoto(nodeToLblMap[n]);
-	WN_INSERT_BlockFirst(gotoblkWN, gotoWN);
-        childblksWN[i] = gotoblkWN;
-      }
 
-      // 3. Translate condition expression
+      // 1. Translate condition expression
       DOMElement* cond = 
         GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
       DOMElement* condexpr = GetFirstChildElement(cond);      
@@ -893,19 +856,43 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
 	// a boolean expression for an 'if'.
 	condWN = CreateIfCondition(condWN);
       }
+      
+      // 2. Gather all outgoing edges, sorted by condition (specially
+      // sort two-way branches into true-false order.)
+      vector<MyDGEdge*> outedges(numOutEdges, NULL);
+      DGraph::OutgoingEdgesIterator it = 
+        DGraph::OutgoingEdgesIterator(curNode);
+      for (int i = 0; (bool)it; ++it, ++i) {
+        outedges[i] = dynamic_cast<MyDGEdge*>((DGraph::Edge*)it);
+      }
+      std::sort(outedges.begin(), outedges.end(), 
+                sort_CondVal((numOutEdges != 2)));
 
-      // 4. Create branch control flow
+      // 3. Create branch control flow
       WN* lblWN = WN_CreateLabel(curLbl, 0 /*label_flag*/, NULL);
       WN_INSERT_BlockLast(blkWN, lblWN);
       if (numOutEdges == 2) {
+	// Create GOTOs for each child block
+	vector<WN*> childblksWN(numOutEdges, NULL);
+	for (int i = 0; i < outedges.size(); ++i) {
+	  MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
+	  WN* gotoblkWN = WN_CreateBlock();
+	  WN* gotoWN = WN_CreateGoto(nodeToLblMap[n]);
+	  WN_INSERT_BlockFirst(gotoblkWN, gotoWN);
+	  childblksWN[i] = gotoblkWN;
+	}
+	
+	// Create IF with GOTOs
 	WN* ifWN = WN_CreateIf(condWN, childblksWN[0], childblksWN[1]);
 	WN_INSERT_BlockLast(blkWN, ifWN);
       } 
       else {
-	// FIXME: for switches add a label at the front and end of each block
-	// FIXME: for switch must also know first block after switch/EndBranch
+	unsigned lastLbl = 0; // do not know last label
 	
-        ASSERT_FATAL(false, (DIAG_A_STRING, "Unimplemented.")); // switch
+	// Create SWITCH with CASEGOTOs
+	WN* switchWN = xlate_CFG_BranchMulti(curNode, condWN, lastLbl,
+					     outedges, nodeToLblMap);
+	WN_INSERT_BlockLast(blkWN, switchWN);
       }
     }
     else if (XAIF_BBElemFilter::IsBBEndBr(bbElem)) {
@@ -1086,6 +1073,45 @@ xlate_CFG_BasicBlock(WN *wn_pu, MyDGNode* curBB, XlationContext& ctxt,
   }
   
   return stmtblk;
+}
+
+
+// xlate_CFG_BranchMulti: abstract translation of multi-way branches
+static WN*
+xlate_CFG_BranchMulti(MyDGNode* curNode, WN* condWN, unsigned lastLbl,
+		      vector<MyDGEdge*>& outedges,
+		      map<MyDGNode*, unsigned>& nodeToLblMap)
+{
+  // Case values are in ascending order; the default case (if any)
+  // will be at the beginning and have a false condition attribute
+  
+  // Create default goto if necessary
+  WN* defltWN = NULL;
+  int defltIdx = -1;
+  if (!GetHasConditionAttr(outedges[0]->GetElem())) {
+    defltIdx = 0;
+    MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[0]->sink());
+    unsigned gotolbl = nodeToLblMap[n];
+    defltWN = WN_CreateGoto(gotolbl);
+  }
+  
+  // Create casegoto for each block
+  WN* casegotoBlkWN = WN_CreateBlock();
+  int numcases = outedges.size() - (defltIdx + 1);
+  for (int i = defltIdx + 1; i < outedges.size(); ++i) {
+    DOMElement* elemEdge = outedges[i]->GetElem();
+    MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
+    
+    INT64 caseval = GetCondAttr(elemEdge);
+    WN* wn = WN_CreateCasegoto(caseval, nodeToLblMap[n]);
+    WN_INSERT_BlockLast(casegotoBlkWN, wn);
+  }
+  
+  // Create switch
+  WN* switchWN = WN_CreateSwitch(numcases, condWN, casegotoBlkWN,
+				 defltWN, lastLbl);
+  
+  return switchWN;
 }
 
 
