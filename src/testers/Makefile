@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/Attic/Makefile,v 1.5 2004/02/11 14:30:37 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/Attic/Makefile,v 1.6 2004/02/27 00:36:32 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -35,6 +35,7 @@ VPATH = $(SRCS)
 # objects are placed wherever the compilation is done
 OBJS = \
 	main.o \
+	Args.o \
 	tester.o
 
 ####################

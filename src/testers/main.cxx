@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v 1.6 2004/02/26 14:24:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v 1.7 2004/02/27 00:36:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -29,11 +29,11 @@
 
 #include "cmplrs/rcodes.h"  // return codes
 #include "tracing.h"        // trace routines
-#include "file_util.h"	    // New_Extension, Last_Pathname_Component
 #include "ir_reader.h"      // fdump_tree
 
 //*************************** User Include Files ****************************
 
+#include "Args.h"
 #include "tester.h"
 
 #include <lib/support/diagnostics.h>
@@ -52,20 +52,6 @@ OpenFile(std::ofstream& fs, const char* filename);
 static void 
 CloseFile(std::ofstream& fs);
 
-static void 
-ProcessCommandLine(int, char **);
-
-//************************** Forward Declarations ***************************
-
-std::string ProgramName;
-std::string WHIRL_filename;
-
-// Options
-bool opt_ir = false;
-bool opt_oa = false;
-bool opt_whirl2f = false;
-bool opt_dumpIR = false;
-
 //***************************************************************************
 
 int
@@ -74,8 +60,12 @@ main(int argc, char **argv)
   try {
     return real_main(argc, argv);
   }
-  catch (Exception &e /* OpenAnalysis -- should be in namespace */) {
+  catch (Exception& e /* OpenAnalysis -- should be in namespace */) {
     e.report(cerr);
+    exit(1);
+  }
+  catch (CmdLineParser::Exception& e) {
+    e.Report(cerr); // fatal error
     exit(1);
   }
   catch (...) {
@@ -85,7 +75,7 @@ main(int argc, char **argv)
 }
 
 static int
-real_main(int argc, char **argv)
+real_main(int argc, char* argv[])
 {
   // -------------------------------------------------------
   // 1. Open64 Initialization
@@ -117,27 +107,27 @@ real_main(int argc, char **argv)
   Diag_Set_Max_Diags(100); // Maximum 100 warnings by default
   Diag_Set_Phase("WHIRL Harness");
 
-  ProcessCommandLine(argc, argv);
+  Args args(argc, argv);
   
   // -------------------------------------------------------
   // 3. Read WHIRL IR
   // -------------------------------------------------------
-  PU_Info* pu_forest = ReadIR(WHIRL_filename.c_str());
+  PU_Info* pu_forest = ReadIR(args.whirlFileNm.c_str());
   PrepareIR(pu_forest); // used in whirl2xaif, xaif2whirl
 
   // -------------------------------------------------------
   // 4. Do something
   // -------------------------------------------------------  
   
-  if (opt_dumpIR) { 
+  if (args.dumpIR) { 
     DumpIR(pu_forest); 
   }
   
-  if (opt_ir) {
+  if (args.runMode == 1) {
     whirltester::TestIR(std::cout, pu_forest);
-  } else if (opt_oa) {
+  } else if (args.runMode == 2) {
     whirltester::TestIR_OA(std::cout, pu_forest);
-  } else if (opt_whirl2f) {
+  } else if (args.runMode == 3) {
     whirltester::TestIR_whirl2f(std::cout, pu_forest);
   }
   
@@ -162,85 +152,24 @@ real_main(int argc, char **argv)
 
 
 //***************************************************************************
-// from be/be/driver_util.c (FIXME: convert to getopts)
+// 
 //***************************************************************************
 
-/* Default file extensions: */
-#define IRB_FILE_EXTENSION ".B" /* WHIRL file */
+#include "file_util.h" // New_Extension, Last_Pathname_Component
 
-// ProcessCommandLine: Process the command line arguments. Evaluate
-// all flags and set up global options.
-//
-// Note: Src_File_Name, Irb_File_Name, Obj_File_Name are globals
-static void
-ProcessCommandLine(int argc, char **argv)
-{
-  ProgramName = Last_Pathname_Component(argv[0]);
-
-  /* Check the command line flags: */
-  BOOL dashdash_flag = FALSE;
-  char* opt;
+#if 0
+  // progname = Last_Pathname_Component(argv[0]);
+  // new_name = New_Extension(Src_File_Name, IRB_FILE_EXTENSION);
   
-  for (INT16 i = 1; i < argc; i++) {
-    // -------------------------------------------------------
-    // A '--' signifies no more options
-    // -------------------------------------------------------
-    if (argv[i] != NULL && (strcmp(argv[i], "--") == 0)) {
-      dashdash_flag = TRUE;
-      continue;
-    }
-    
-    if ( !dashdash_flag && argv[i] != NULL && *(argv[i]) == '-' ) {
-      // -------------------------------------------------------
-      // An option (beginning with '-')
-      // -------------------------------------------------------
-      opt = argv[i]+1; // points to option name, skipping '-'
-
-      if (strcmp(opt, "ir") == 0) { 
-        opt_ir = true;
-        continue;
-      }
-      if (strcmp(opt, "oa") == 0) { 
-        opt_oa = true;
-        continue;
-      }
-      if (strcmp(opt, "w2f") == 0) { 
-        opt_whirl2f = true;
-        continue;
-      }
-      
-      if (strcmp(opt, "d") == 0) { 
-        opt_dumpIR = true;
-        continue;
-      }
-      
-    } else if (argv[i] != NULL) {
-      // -------------------------------------------------------
-      // A non-option or immediately after a '--'
-      // -------------------------------------------------------
-      dashdash_flag = FALSE;
-      Src_File_Name = argv[i];
-    } 
-  }
-
-  if (Src_File_Name == NULL) {
-    ErrMsg(EC_No_Sources);
-    exit(RC_USER_ERROR); // FIXME: return error
-  }
-  
-  // WHIRL file name
-  WHIRL_filename = New_Extension(Src_File_Name, IRB_FILE_EXTENSION);
-  Irb_File_Name = (char*)WHIRL_filename.c_str(); // make Open64 happy
-    
   // We want the output files to be created in the current directory,
   // so strip off any directory path, and substitute the suffix 
   // appropriately.
   // new_file = New_Extension(Last_Pathname_Component(Src_File_Name), ".xaif");
-}
+  
+  // Src_File_Name, Irb_File_Name, Obj_File_Name are from Open64 "glob.h"
+  // Src_File_Name = Irb_File_Name = (char*)WHIRL_filename.c_str();
+#endif
 
-
-//***************************************************************************
-// 
 //***************************************************************************
 
 static void 
