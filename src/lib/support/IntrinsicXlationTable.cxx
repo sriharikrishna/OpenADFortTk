@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.11 2004/05/27 16:19:37 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.12 2004/05/28 15:18:27 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -51,7 +51,10 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
 
   // -------------------------------------------------------
   // WHIRL calls, expressions and intrinsics that correspond to XAIF
-  // Intrinsics
+  // Intrinsics.  
+  //
+  // For OPR_INTRINSIC_OP, the WHIRL string is the INTRINSIC_basename()
+  // (cf. wintrinsic.h, wutil.cxx)
   // -------------------------------------------------------
 
   // Common mathematical functions
@@ -74,8 +77,11 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
                         { XAIFIntrin, "sqrt_scal", "2_SQRT", 1 } },
 
   { { WNExpr, OPR_MOD, NULL, 2 },
-                        { XAIFIntrin, "bogus_mod_scal_scal", NULL, 2 } },
+                        { XAIFIntrin, "bogus_mod_scal_scal", "0_WN_MOD", 2 } },
+  { { WNIntrinOp, OPR_INTRINSIC_OP, "AMOD", 2 }, 
+                        { XAIFIntrin, "bogus_mod_scal_scal", "1_CALL_MOD", 2 } },
   // ?OPR_CALL "MOD" (intrn_info.cxx)
+
   { { WNExpr, OPR_REM, NULL, 2 },
                         { XAIFIntrin, "bogus_rem_scal_scal", NULL, 2 } },
 
@@ -96,12 +102,8 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
   { { WNCall, OPR_CALL, "DLOG", 1 },
                         { XAIFIntrin, "ln_scal", "1_DLOG", 1 } }, 
 
-  // Intrinsics: The WHIRL string is the INTRINSIC_basename()
-  // (cf. wintrinsic.h, wutil.cxx)
   { { WNIntrinOp, OPR_INTRINSIC_OP, "EXPEXPR", 2 }, 
                         { XAIFIntrin, "pow_scal_scal", NULL, 2 } },
-  { { WNIntrinOp, OPR_INTRINSIC_OP, "AMOD", 2 }, 
-                        { XAIFIntrin, "bogus_mod_scal_scal", NULL, 2 } },
 
   { { WNIntrinOp, OPR_INTRINSIC_OP, "CEQEXPR", 2 }, 
                         { XAIFIntrin, "bogus_string_eq_scal_scal", NULL, 2 } },
