@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.h,v 1.5 2004/12/20 15:18:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.h,v 1.6 2005/01/05 20:51:31 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -108,7 +108,7 @@ namespace whirl2sexp {
 
 
 //***************************************************************************
-// Function objects to translate individual table entries
+// Functions and functors to translate individual table entries
 //***************************************************************************
 
 namespace whirl2sexp {
