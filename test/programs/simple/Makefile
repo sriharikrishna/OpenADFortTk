@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.18 2004/05/11 17:48:34 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.19 2004/05/28 15:18:46 eraxxon Exp $
 # -*-makefile-*-
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -57,7 +57,7 @@ WHIRL2F = $(OPENADFORTTK_OPEN64)/whirl2f/whirl2f
 W2X     = $(OPENADFORTTK)/obj/$(OPENADFORTTK_PLATFORM)/obj/whirl2xaif
 NORM    = $(OPENADFORTTK)/test/util/normalize
 
-OPENAD  = $(OPENADFORTTK)/obj/$(OPENADFORTTK_PLATFORM)/obj/openad
+OPENAD  = $(OPENADROOT)/bin/openad
 
 #############################################################################
 # Building Rules for bloop tests:

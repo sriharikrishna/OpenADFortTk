@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makefile,v 1.7 2004/05/11 17:48:33 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makefile,v 1.8 2004/05/28 15:18:45 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -81,15 +81,12 @@ install: install_real install_post
 
 install_real: exes
 
-install_post: install_scripts
-
-install_scripts:
-	cp -f $(OPENADFORTTK)/test/util/openad $(OPENADFORTTK_OBJ_PATH)/.
+install_post: 
 
 # uninstall everything
 uninstall: clean
 
-.PHONY: install install_real install_post install_scripts uninstall
+.PHONY: install install_real install_post uninstall
 
 
 #-----------------------------------------------------------------
