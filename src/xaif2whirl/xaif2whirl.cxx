@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.34 2004/04/08 19:15:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.35 2004/04/08 19:27:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -744,8 +744,10 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       vector<WN*> childblksWN(numOutEdges, NULL);
       for (int i = 0; i < outedges.size(); ++i) {
         MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
+	WN* gotoblkWN = WN_CreateBlock();
         WN* gotoWN = WN_CreateGoto(nodeToLblMap[n]);
-        childblksWN[i] = gotoWN;
+	WN_INSERT_BlockFirst(gotoblkWN, gotoWN);
+        childblksWN[i] = gotoblkWN;
       }
       
       // FIXME: for switches add a label at the front and end of each block
