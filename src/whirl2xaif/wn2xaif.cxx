@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.21 2003/09/17 19:43:26 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.22 2003/09/18 19:17:54 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -393,9 +393,15 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     xos << BegElem(vtype) << Attr("vertex_id", n->getID()) 
 	<< WhirlIdAnnot(ids);
     ctxt.CreateContext();
-    for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
-      WN* wstmt = (WN *)((StmtHandle)stmtIt);
-      xlate_BBStmt(xos, wstmt, ctxt);
+    if (n->size() > 0) {
+      for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
+	WN* wstmt = (WN *)((StmtHandle)stmtIt);
+	xlate_BBStmt(xos, wstmt, ctxt);
+      }
+    } else if (strcmp(vtype, "xaif:BasicBlock") == 0) { // FIXME: more elegant?
+      // Output a xaif:Marker for otherwise empty basic blocks
+      xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
+	  << EndElem;
     }
     ctxt.DeleteContext();
     xos << EndElem << std::endl;
