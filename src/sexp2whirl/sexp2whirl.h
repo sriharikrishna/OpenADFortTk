@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2whirl.h,v 1.2 2004/12/20 15:18:13 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2whirl.h,v 1.3 2005/01/05 20:51:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -57,6 +57,9 @@ namespace sexp2whirl {
   
   // Dump to std::cout
   extern void DumpIR(sexp_t* ir, int flags);
+
+  // Convert to a diagnostic message string 
+  extern const char* ErrIR(sexp_t* ir, int flags = 0);
   
 }; /* namespace sexp2whirl */
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.h,v 1.2 2004/12/23 16:28:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.h,v 1.3 2005/01/05 20:51:10 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -110,56 +110,57 @@ namespace sexp2whirl {
 
 
 //***************************************************************************
-// Function objects to translate individual table entries
+// Functions to translate individual table entries
 //***************************************************************************
 
 namespace sexp2whirl {
   
   ST*
   xlate_ST_TAB_entry(sexp_t* sx);
-
-#if 0
-  void
-  xlate_SYMTAB_entry(sexp_t* sx, UINT32 idx, ST* st);
-#endif  
   
   PU*
   xlate_PU_TAB_entry(sexp_t* sx);
 
-  void
-  xlate_SYMTAB_entry(sexp_t* sx, UINT32 idx, TY* ty);
+  TY*
+  xlate_TY_TAB_entry(sexp_t* sx);
 
-  void
-  xlate_SYMTAB_entry(sexp_t* sx, UINT32 idx, FLD* fld);
+  FLD*
+  xlate_FLD_TAB_entry(sexp_t* sx);
 
-  void
-  xlate_SYMTAB_entry(sexp_t* sx, UINT32 idx, TYLIST* tyl);
+  TYLIST*
+  xlate_TYLIST_TAB_entry(sexp_t* sx);
 
-  void
-  xlate_SYMTAB_entry(sexp_t* sx, UINT32 idx, ARB* arb);
+  ARB*
+  xlate_ARB_TAB_entry(sexp_t* sx);
   
-  void
-  xlate_SYMTAB_entry(sexp_t* sx, UINT32 idx, BLK* blk);
+  BLK*
+  xlate_BLK_TAB_entry(sexp_t* sx);
   
-  void
-  xlate_SYMTAB_entry(sexp_t* sx, UINT32 idx, TCON* tcon);
+  TCON*
+  xlate_TCON_TAB_entry(sexp_t* sx);
 
-  void
-  xlate_SYMTAB_entry(sexp_t* sx, UINT32 idx, INITO* inito);
+  INITO*
+  xlate_INITO_TAB_entry(sexp_t* sx);
 
-  void
-  xlate_SYMTAB_entry(sexp_t* sx, UINT32 idx, INITV* initv);
+  INITV*
+  xlate_INITV_TAB_entry(sexp_t* sx);
 
-  void
-  xlate_SYMTAB_entry(sexp_t* sx, UINT32 idx, ST_ATTR* sta);
+  ST_ATTR*
+  xlate_ST_ATTR_TAB_entry(sexp_t* sx);
   
-  void
-  xlate_SYMTAB_entry(sexp_t* sx, UINT32 idx, PREG* preg);
+  PREG*
+  xlate_PREG_TAB_entry(sexp_t* sx);
 
-  void
-  xlate_SYMTAB_entry(sexp_t* sx, UINT32 idx, LABEL* lbl);
+  LABEL*
+  xlate_LABEL_TAB_entry(sexp_t* sx);
   
 
+  // xlate_SYMTAB_entry: Templated access to translation routines
+  template <typename T>
+  T*
+  xlate_SYMTAB_entry(sexp_t* sx)
+  { FORTTK_DIE("Must not be called (template specialization must exist)"); }
+  
 }; /* namespace sexp2whirl */
 
 

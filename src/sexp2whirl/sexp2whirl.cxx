@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2whirl.cxx,v 1.3 2004/12/23 16:28:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2whirl.cxx,v 1.4 2005/01/05 20:51:10 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -27,6 +27,7 @@
 //*************************** User Include Files ****************************
 
 #include "sexp2whirl.h"
+using sexp2whirl::ErrIR;
 #include "sexp2wn.h"
 #include "sexp2symtab.h"
 
@@ -64,6 +65,22 @@ sexp2whirl::TranslateIR(sexp_t* ir, int flags)
 }
 
 
+const char* 
+sexp2whirl::ErrIR(sexp_t* ir, int flags)
+{
+  const int sz = 1 << 20;
+  char* buf = new char[sz];
+  
+  if (ir) {
+    int rval = print_sexp(buf, sz, ir);
+  } 
+  else {
+    strcpy(buf, "null");
+  }
+  return buf; // must be deleted, but ignore for generating errors
+}
+
+
 void 
 sexp2whirl::DumpIR(sexp_t* ir, int flags)
 {
@@ -88,17 +105,21 @@ xlate_IR(sexp_t* ir_sx, int flags)
   using namespace sexp;
   
   // Sanity check
-  FORTTK_ASSERT(is_list(ir_sx), FORTTK_UNEXPECTED_INPUT);  
+  FORTTK_ASSERT(ir_sx && is_list(ir_sx), 
+		FORTTK_UNEXPECTED_INPUT << ErrIR(ir_sx));
 
   sexp_t* tag_sx = get_elem0(ir_sx);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::WHIRL) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		FORTTK_UNEXPECTED_INPUT << ErrIR(tag_sx));
 
   // Translate GBL_SYMTAB and PU_FOREST
   sexp_t* gbl_symtab_sx = get_elem1(ir_sx);
   sexp_t* pu_forest_sx  = get_elem2(ir_sx);
-  FORTTK_ASSERT(gbl_symtab_sx && pu_forest_sx, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(gbl_symtab_sx, 
+		FORTTK_UNEXPECTED_INPUT << ErrIR(gbl_symtab_sx));
+  FORTTK_ASSERT(pu_forest_sx, 
+		FORTTK_UNEXPECTED_INPUT << ErrIR(pu_forest_sx));
   
   sexp2whirl::TranslateGlobalSymbolTables(gbl_symtab_sx, flags);
   PU_Info* pu_forest = xlate_PUForest(pu_forest_sx, flags);
@@ -115,7 +136,8 @@ xlate_PUForest(sexp_t* pu_forest_sx, int flags)
   using namespace sexp;
 
   // Sanity check
-  FORTTK_ASSERT(is_list(pu_forest_sx), FORTTK_UNEXPECTED_INPUT);  
+  FORTTK_ASSERT(pu_forest_sx && is_list(pu_forest_sx), 
+		FORTTK_UNEXPECTED_INPUT);  
   
   sexp_t* tag_sx = get_elem0(pu_forest_sx);
   const char* tagstr = get_value(tag_sx);
@@ -194,7 +216,7 @@ xlate_PU(sexp_t* pu_sx, int flags)
   using namespace sexp;
 
   // Sanity check
-  FORTTK_ASSERT(is_list(pu_sx), FORTTK_UNEXPECTED_INPUT);  
+  FORTTK_ASSERT(pu_sx && is_list(pu_sx), FORTTK_UNEXPECTED_INPUT);  
   
   sexp_t* tag_sx = get_elem0(pu_sx);
   const char* tagstr = get_value(tag_sx);
