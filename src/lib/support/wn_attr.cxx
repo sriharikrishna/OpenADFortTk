@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.11 2004/03/23 18:08:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.12 2004/07/01 18:32:13 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -468,6 +468,11 @@ WN_GetBaseObjType(const WN* wn)
       ty = WN_ty(wn);
       break;
       
+    // ARRAYs
+    case OPR_ARRAY:
+      ty = WN_GetBaseObjType(WN_kid0(wn));
+      break;
+
     // STOREs represent the left-hand-side expression
     case OPR_STID: 
     case OPR_STBITS:
