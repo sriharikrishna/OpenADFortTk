@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makefile,v 1.4 2003/09/05 21:44:35 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makefile,v 1.5 2004/04/13 16:39:03 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -77,12 +77,19 @@ endif
 #-----------------------------------------------------------------
 
 # install everything
-install: exes
+install: install_real install_post
+
+install_real: exes
+
+install_post: install_scripts
+
+install_scripts:
+	cp -f ../test/util/openad $(WHIRL2XAIF_OBJ_PATH)/.
 
 # uninstall everything
 uninstall: clean
 
-.PHONY: install uninstall
+.PHONY: install install_real install_post install_scripts uninstall
 
 
 #-----------------------------------------------------------------
