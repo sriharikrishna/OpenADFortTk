@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.51 2004/04/14 21:26:31 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.52 2004/04/16 18:37:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -957,21 +957,36 @@ DumpCFGraphEdge(xml::ostream& xos, UINT eid, CFG::Edge* edge)
   WN* eexpr = (Pro64ExprHandle)edge->getExpr();
   
   bool xaifCondVal = false;
-  if (ety == CFG::TRUE_EDGE || (ety == CFG::MULTIWAY_EDGE && eexpr)) {
+  INT64 condVal = 0;
+  if (ety == CFG::TRUE_EDGE) {
     xaifCondVal = true;
+    condVal = 1;
   } 
+  else if (ety == CFG::MULTIWAY_EDGE && eexpr) {
+    xaifCondVal = true;
+    OPERATOR opr = WN_operator(eexpr);
+    if (opr == OPR_CASEGOTO) { // from an OPR_SWITCH
+      condVal = WN_const_val(eexpr);
+    } 
+    else if (opr == OPR_GOTO) { // from an OPR_COMPGOTO
+      // to find condVal, must find parent COMPGOTO and then find the
+      // index of this GOTO in the jumptable.
+      ASSERT_FATAL(false, (DIAG_UNIMPLEMENTED, "Unimplemented."));
+    } else {
+      ASSERT_FATAL(false, (DIAG_UNIMPLEMENTED, "Programming Error."));
+    }
+  }
   
   xos << BegElem("xaif:ControlFlowEdge") 
       << Attr("edge_id", eid) 
       << Attr("source", n1->getId()) << Attr("target", n2->getId());
   if (xaifCondVal) {
     xos << Attr("has_condition_value", "true");
-    if (eexpr) {
-      xos << Attr("condition_value", "FIXME");
+    if (condVal != 0) {
+      xos << Attr("condition_value", condVal);
     }
   }
   xos << EndElem;
-
 }
 
 //***************************************************************************
@@ -1378,7 +1393,7 @@ AddControlFlowEndTags(WN* wn, WhirlParentMap* wnParentMap)
 //     </xaif:Asignment>
 //   </xaif:BasicBlock>
 // 
-//   <xaif:If>
+//   <xaif:Branch>
 //     <xaif:Condition...
 //     </xaif:Condition>
 //   </xaif:If>
