@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.5 2004/06/03 01:37:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.6 2004/06/03 13:15:36 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -132,6 +132,10 @@ public:
   ScalarizedRefTab();
   virtual ~ScalarizedRefTab();
   
+  // Create: Fills in map
+  void
+  Create(PU_Info* pu);
+  
   // Find: a version with const params for convenience
   ScalarizedRef* 
   Find(const WN* x_) const
@@ -172,7 +176,12 @@ private:
 
 class ScalarizedRefTabMap_W2X 
   : public ScalarizedRefTab_Map<PU_Info*, ScalarizedRefTab_W2X*> {
-    
+  
+  // FIXME: delete memory ***
+
+  void
+  Create(PU_Info* pu_forest);
+  
 };
 
 #if 0

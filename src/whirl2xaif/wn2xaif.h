@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.27 2004/06/03 01:37:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.28 2004/06/03 13:15:37 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -68,7 +68,6 @@
 #include "XlationContext.h"
 #include <lib/support/xmlostream.h>
 #include <lib/support/XAIFStrings.h>
-#include <lib/support/IntrinsicXlationTable.h>
 
 //************************** Forward Declarations ***************************
 
@@ -77,9 +76,7 @@
 //***************************************************************************
 
 namespace whirl2xaif {
-  
-  extern IntrinsicXlationTable IntrinsicTable;
-  
+    
   // TranslateWN: Given a translation context, translates the given
   // WHIRL node, emitting output to 'xos'.
   extern whirl2xaif::status 

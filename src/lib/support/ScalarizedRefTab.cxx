@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.5 2004/06/03 01:37:56 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.6 2004/06/03 13:15:36 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -25,6 +25,7 @@
 
 //*************************** User Include Files ****************************
 
+#include "Pro64IRInterface.h"
 #include "ScalarizedRefTab.h"
 
 #include "stab_attr.h"
@@ -66,6 +67,24 @@ ScalarizedRefTab_Base::~ScalarizedRefTab_Base()
 
 
 //***************************************************************************
+// ScalarizedRefTabMap
+//***************************************************************************
+
+void
+ScalarizedRefTabMap_W2X::Create(PU_Info* pu_forest)
+{  
+  Pro64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.IsValid(); ++procIt) { 
+    PU_Info* pu = (PU_Info*)procIt.Current();
+    
+    ScalarizedRefTab_W2X* tab = new ScalarizedRefTab_W2X;
+    tab->Create(pu);
+    Insert(pu, tab);
+  }
+}
+
+
+//***************************************************************************
 // ScalarizedRefTab
 //***************************************************************************
 
@@ -78,10 +97,23 @@ ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
 ~ScalarizedRefTab()
 {
   // Clear table
+#if 0 // FIXME *** problem: many WN* can point to one ScalarizedRef
   for (iterator it = begin(); it != end(); ++it) {
     delete (*it).second; // ScalarizedRef*
   }
   clear();
+#endif
+}
+
+
+void
+ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
+Create(PU_Info* pu)
+{ 
+  // for each non-scalar-ref 
+  //   create hash of ref
+  //   if <hash, sym> already in map, use that symbol
+  //   else: add <hash, new sym> to map
 }
 
 void

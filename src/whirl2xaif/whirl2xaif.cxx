@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.40 2004/06/02 02:01:29 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.41 2004/06/03 13:15:36 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -75,6 +75,10 @@
 
 using namespace whirl2xaif;
 using namespace xml; // for xml::ostream, etc
+
+IntrinsicXlationTable whirl2xaif::IntrinsicTable(IntrinsicXlationTable::W2X);
+
+ScalarizedRefTabMap_W2X whirl2xaif::ScalarizedRefTableMap;
 
 //***************************************************************************
 

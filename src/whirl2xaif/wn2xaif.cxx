@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.62 2004/06/03 01:37:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.63 2004/06/03 13:15:36 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -84,14 +84,11 @@
 #include "ty2xaif.h"
 
 #include <lib/support/SymTab.h>
-#include <lib/support/ScalarizedRefTab.h>
 
 //************************** Forward Declarations ***************************
 
 using namespace whirl2xaif;
 using namespace xml; // for xml::ostream, etc
-
-IntrinsicXlationTable whirl2xaif::IntrinsicTable(IntrinsicXlationTable::W2X);
 
 //************************** Forward Declarations ***************************
 
