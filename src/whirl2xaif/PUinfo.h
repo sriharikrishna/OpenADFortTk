@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.h,v 1.4 2004/02/17 18:53:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.h,v 1.5 2004/02/20 18:57:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -66,17 +66,6 @@
  *   return-sites, and function return types respectively.  The
  *   interface is as follows:
  *
- *  Exported state variables:
- *  -------------------------
- *
- *    PUinfo_current_func:
- *      Denotes the OPR_FUNC_ENTRY node for the current function
- *      being processed.  This variable is initialized by 
- *      PUinfo_init(), and we provide macros to access the
- *      return type and the ST for the function.  
- *      PUINFO_RETURN_TO_PARAM is TRUE when the current PU returns
- *      through the first parameter (e.g. for large structs).
- *
  *  Interface routines:
  *  -------------------
  *    PUinfo_init_pu:
@@ -100,21 +89,8 @@
 
 #include <include/Open64BasicTypes.h>
 
-  /*----- Information about the current function, return type etc. ----*/
-  /*-------------------------------------------------------------------*/
-
 extern void PUinfo_init_pu(const WN *wn, WN *body_part_of_interest);
 extern void PUinfo_exit_pu(void);
-
-extern const WN* PUinfo_current_func;
-
-#define PUINFO_FUNC_ST     WN_st(PUinfo_current_func)
-#define PUINFO_FUNC_TY     ST_pu_type(PUINFO_FUNC_ST)
-#define PUINFO_FUNC_NAME   W2CF_Symtab_Nameof_St(PUINFO_FUNC_ST)
-
-#define PUINFO_RETURN_TY        Func_Return_Type(PUINFO_FUNC_TY)
-#define PUINFO_RETURN_PARAM     WN_st(WN_formal(PUinfo_current_func, 0))
-#define PUINFO_RETURN_TO_PARAM  Func_Return_To_Param(PUINFO_FUNC_TY)
 
 #endif /* PUinfo_INCLUDED */
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.23 2004/02/19 22:02:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.24 2004/02/20 18:57:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -107,7 +107,6 @@
 //*************************** User Include Files ****************************
 
 #include "whirl2xaif.i"
-#include "PUinfo.h"
 #include "wn2xaif.h"
 #include "ty2xaif.h"
 #include "st2xaif.h"
@@ -521,7 +520,7 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
   }
 #endif
   
-  const char* st_name = ST_name(st); // W2CF_Symtab_Nameof_St(st);
+  const char* st_name = ST_name(st);
   ST* base = ST_base(st);
   TY_IDX ty = ST_type(st);
   
@@ -580,17 +579,18 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
   } else if (TY_Is_Pointer(ty) && !TY_is_f90_pointer(ty) 
 	     && ST_sclass(st) != SCLASS_FORMAL) {
 
-    const char* pointee_name = W2CF_Symtab_Nameof_St_Pointee(st);
-
+    const char* drefName = ST_name(st); // prepend "deref_"
+    
     /* Declare pointee with the name specified in the symbol table */
-    xos << pointee_name;
+    xos << "deref_" << drefName;
     if (TY_ptr_as_array(Ty_Table[ty]))
       TY2F_translate(xos, Stab_Array_Of(TY_pointed(ty), 0/*size*/));
     else
       TY2F_translate(xos, TY_pointed(ty));
 
     /* Declare the pointer object */
-    xos << "POINTER(" << st_name << ',' << pointee_name << ')' << std::endl;
+    xos << "POINTER(" << st_name << ',' << "deref_" << drefName << ')' 
+	<< std::endl;
 
   } else if (ST_sclass(st) == SCLASS_FORMAL && !ST_is_value_parm(st)) {
     /* ie, regular f77 dummy argument, expect pointer TY     */
@@ -715,7 +715,7 @@ xlate_STDecl_TYPE(xml::ostream& xos, ST *st, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
 		    ST_sym_class(st), "xlate_STDecl_TYPE"));
 
-  const char  *st_name = W2CF_Symtab_Nameof_St(st);
+  const char  *st_name = ST_name(st);
   TY_IDX       ty_rt = ST_type(st);
 
 #if 0 // REMOVE
@@ -747,23 +747,12 @@ xlate_STUse_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
   ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_VAR, 
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
 		    ST_sym_class(st), "xlate_STUse_VAR"));
+  
+  // Note: for functions, check that st is a return var using
+  //   ST_is_return_var(st)) (cf. whirl2f)
 
-  TY_IDX return_ty = PUINFO_RETURN_TY; // FIXME
-
-  /* Note that we do not trust the ST_is_return_var() flag,
-   * unless the return_ty is non-void.  This is due to purple,
-   * which may change a function into a subroutine.
-   */
-  if ((return_ty != (TY_IDX) 0 && TY_kind(return_ty) == KIND_SCALAR 
-       && ST_is_return_var(st))
-      /* REMOVE || (PUINFO_RETURN_TO_PARAM && st == PUINFO_RETURN_PARAM) */) {
-    /* If we have a reference to the implicit return-variable, then
-     * refer to the function return value.
-     */
-    xos << PUINFO_FUNC_NAME;
-  }
 #if 0 // FIXME xlate_SymRef moves from 'base' to 'field' (cannot reciprocate)
-  else if (Stab_Is_Based_At_Common_Or_Equivalence(st)) {
+  if (Stab_Is_Based_At_Common_Or_Equivalence(st)) {
     /* Reference the corresponding field in the common block (we do this
      * only to ensure that the name referenced matches the one used for
      * the member of the common-block at the place of declaration).  Note
@@ -775,16 +764,16 @@ xlate_STUse_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
 		 ST_type(st) /*object-type*/, 
 		 ST_ofst(st) /*object-ofst*/, ctxt);
   }
+  //else {
 #endif
-  else {
-    // FIXME: abstract
-    ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-    SymTabId scopeid = ctxt.FindSymTabId(sttab);
-
-    xos << BegElem("xaif:SymbolReference") 
-	<< Attr("vertex_id", ctxt.GetNewVId())
-	<< Attr("scope_id", scopeid) << AttrSymId(st) << EndElem;
-  }
+  
+  // FIXME: abstract
+  ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
+  SymTabId scopeid = ctxt.FindSymTabId(sttab);
+  
+  xos << BegElem("xaif:SymbolReference") 
+      << Attr("vertex_id", ctxt.GetNewVId())
+      << Attr("scope_id", scopeid) << AttrSymId(st) << EndElem;
 }
 
 
@@ -796,7 +785,7 @@ xlate_STUse_FUNC(xml::ostream& xos, ST *st, XlationContext& ctxt)
 		    ST_sym_class(st), "xlate_STUse_FUNC"));
   
   xos << BegElem("***use_func") << Attr("id", ctxt.GetNewVId())
-      << Attr("_type", -1) << Attr("value", W2CF_Symtab_Nameof_St(st)) 
+      << Attr("_type", -1) << Attr("value", ST_name(st)) 
       << EndElem;
   
   //REMOVE Set_BE_ST_w2fc_referenced(st);
@@ -858,8 +847,8 @@ ST2F_deref_translate(xml::ostream& xos, ST *st, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
 		    ST_sym_class(st), "ST2F_deref_translate"));
   
-  /* Consider this a reference to the pointer value */
-  xos << "{deref***} " << W2CF_Symtab_Nameof_St_Pointee(st);
+  /* reference to the pointer value; cf. W2CF_Symtab_Nameof_St_Pointee */
+  xos << "{deref***} " << "deref_" << ST_name(st);
   //REMOVE Set_BE_ST_w2fc_referenced(st);
 }
 
@@ -935,7 +924,7 @@ ST2F_func_header(xml::ostream& xos, WN* wn,
   ST *rslt = NULL;
   BOOL needcom = 1;
   BOOL has_result = 0;
-  const char * func_name = W2CF_Symtab_Nameof_St(st);
+  const char * func_name = ST_name(st);
   
   ASSERT_DBG_FATAL(TY_kind(funtype) == KIND_FUNCTION,
 		   (DIAG_W2F_UNEXPECTED_SYMBOL, "ST2F_func_header"));
@@ -1006,7 +995,7 @@ ST2F_func_header(xml::ostream& xos, WN* wn,
 	 param < num_params - implicit_params; 
 	 param++) {
       if (!ST_is_return_var(params[param]))  
-	xos << W2CF_Symtab_Nameof_St(params[param]);
+	xos << ST_name(params[param]);
       else {
 	rslt = params[param];
 	needcom = 0;
@@ -1049,9 +1038,9 @@ ST2F_func_header(xml::ostream& xos, WN* wn,
   /* need to see if the result variable has same name with the function's 
    * name,if it does,don't declare the result variable
    */  
-  if (rslt !=NULL && strcasecmp(W2CF_Symtab_Nameof_St(rslt), func_name)) { 
+  if (rslt !=NULL && strcasecmp(ST_name(rslt), func_name)) { 
     has_result = 1;
-    xos << " result(" << W2CF_Symtab_Nameof_St(rslt) << ')';
+    xos << " result(" << ST_name(rslt) << ')';
   }
   
   xos << std::endl;
@@ -1066,7 +1055,7 @@ ST2F_func_header(xml::ostream& xos, WN* wn,
   
   while (stmt != NULL) {
     if (WN_operator(stmt) == OPR_USE) {
-      st_name = W2CF_Symtab_Nameof_St(WN_st(stmt));
+      st_name = ST_name(WN_st(stmt));
       xos << "use " << st_name;
       if (WN_rtype(stmt) == 1)
         xos << ",only:";
@@ -1074,8 +1063,8 @@ ST2F_func_header(xml::ostream& xos, WN* wn,
 	xos << ",";
       
       for(k=0;k< WN_kid_count(stmt);k=k+2 ) {
-	st_name = W2CF_Symtab_Nameof_St(WN_st(WN_kid(stmt,k)));
-	st_name1= W2CF_Symtab_Nameof_St(WN_st(WN_kid(stmt,k+1)));
+	st_name = ST_name(WN_st(WN_kid(stmt,k)));
+	st_name1= ST_name(WN_st(WN_kid(stmt,k+1)));
 
         if (k==0) { ; }
         else {  xos << ","; }
@@ -1103,24 +1092,24 @@ ST2F_func_header(xml::ostream& xos, WN* wn,
       if (params[param] != NULL) { 
 	// && TY_kind(ST_type(params[param])) != == KIND_POINTER 
 	
-	if (strcasecmp(W2CF_Symtab_Nameof_St(params[param]), func_name)) {
+	if (strcasecmp(ST_name(params[param]), func_name)) {
 	  
 	  if (ST_is_optional_argument(params[param])) {
-	    xos << "OPTIONAL " << W2CF_Symtab_Nameof_St(params[param]);
+	    xos << "OPTIONAL " << ST_name(params[param]);
 	    xos << std::endl;
 	  }
 	  if (ST_is_intent_in_argument(params[param])) {
-	    xos << "INTENT(IN) " << W2CF_Symtab_Nameof_St(params[param]);
+	    xos << "INTENT(IN) " << ST_name(params[param]);
 	    xos << std::endl;
 	  }
 	  if (ST_is_intent_out_argument(params[param])) {
-	    xos << "INTENT(OUT) " << W2CF_Symtab_Nameof_St(params[param]);
+	    xos << "INTENT(OUT) " << ST_name(params[param]);
 	    xos << std::endl;
 	  }
 
 	  TranslateSTDecl(xos, params[param], ctxt);
 	  //xos << std::endl;
-	} else if (!strcasecmp(W2CF_Symtab_Nameof_St(rslt), func_name)) {
+	} else if (!strcasecmp(ST_name(rslt), func_name)) {
 	  TranslateSTDecl(xos, params[param], ctxt);
 	  //xos << std::endl;
 	}
@@ -1139,8 +1128,6 @@ ST2F_Use_Preg(xml::ostream& xos,
   /* Append the name of the preg to the token-list and declare the
    * preg in the current PU context unless it is already declared.
    */
-  const char *preg_name = W2CF_Symtab_Nameof_Preg(preg_ty, preg_idx);
-
 #if 0
   preg_ty = PUinfo_Preg_Type(preg_ty, preg_idx);
   
@@ -1151,7 +1138,12 @@ ST2F_Use_Preg(xml::ostream& xos,
   }
 #endif
   
-  xos << preg_name;
+  if (preg_idx > Last_Dedicated_Preg_Offset) {
+    xos << Preg_Name(preg_idx);
+  } else {
+    xos << "reg" << preg_idx;
+  }
+  
 } /* ST2F_Use_Preg */
 
 void 
@@ -1171,14 +1163,14 @@ ST2F_Declare_Tempvar(TY_IDX ty, UINT idx)
        */
       ty = Stab_Mtype_To_Ty(Pointer_Mtype);
    }
-   Append_Token_String(tmp_tokens, W2CF_Symtab_Nameof_Tempvar(idx)); /* name */
+   tmp_tokens << "tmp" << idx; /* name */
    TY2F_translate(tmp_tokens, ty);                                   /* type */
   if (ST_is_in_module(Scope_tab[Current_scope].st) &&
       !PU_is_nested_func(Pu_Table[ST_pu(Scope_tab[Current_scope].st)]))
      {
        Append_F77_Indented_Newline(tmp_tokens, 1, NULL/*label*/);
        Append_Token_String(tmp_tokens,"PRIVATE ");
-       Append_Token_String(tmp_tokens, W2CF_Symtab_Nameof_Tempvar(idx));
+       tmp_tokens << "tmp" << idx;
      }
 
    Append_And_Reclaim_Token_List(PUinfo_local_decls, &tmp_tokens);

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.i,v 1.10 2004/02/17 22:24:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.i,v 1.11 2004/02/20 18:57:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -61,7 +61,6 @@
 
 #include <lib/support/stab_attr.h>
 #include <lib/support/wn_attr.h>
-#include <lib/support/w2cf_symtab.h>
 
 #include <lib/support/WhirlIDMaps.h>
 #include <lib/support/xmlostream.h>
@@ -101,7 +100,7 @@ operator<<(std::ostream& os, const AttrSymTab_& x)
 {
   xml::ostream& xos = dynamic_cast<xml::ostream&>(os); // FIXME
 
-  const char* st_name = ST_name(x.st); // W2CF_Symtab_Nameof_St(st);
+  const char* st_name = ST_name(x.st);
   SymId st_id = (SymId)ST_index(x.st);
   
   xos << xml::BegAttr(XAIFStrings.attr_symId())

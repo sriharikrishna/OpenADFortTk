@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.cxx,v 1.10 2004/02/17 22:40:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.cxx,v 1.11 2004/02/20 18:57:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -91,12 +91,12 @@
 
 #include "init2f.h"
 #include "whirl2xaif.i"
-#include "PUinfo.h"
 #include "wn2xaif.h"
 #include "st2xaif.h"
 #include "ty2xaif.h"
-#include <lib/support/xmlostream.h>
 #include "XlationContext.h"
+
+#include <lib/support/xmlostream.h>
 
 //************************** Forward Declarations ***************************
 
@@ -852,7 +852,7 @@ INIT2F_Prepend_Equivalence(xml::ostream& xos,
    xos << "EQUIVALENCE(";
    //FIXME Append_And_Copy_Token_List(xos, name1_tokens); (append)
    xos << ",";
-   Append_Token_String(xos, W2CF_Symtab_Nameof_Tempvar(tmpvar_idx));
+   xos << "tmp" << tmpvar_idx;
    xos << ")";
 
 } /* INIT2F_Prepend_Equivalence */
@@ -1455,7 +1455,7 @@ INIT2F_Implied_DoLoop(xml::ostream& xos,        /* Append to this buffer */
       Reclaim_Token_Buffer(abase_tokens);
       Set_Current_Indentation(current_indent);
 
-      Append_Token_String(aref_tokens, W2CF_Symtab_Nameof_Tempvar(avar_idx));
+      aref_tokens << "tmp" << avar_idx;
       Stab_Unlock_Tmpvar(avar_idx);
    }
    else
@@ -1464,15 +1464,15 @@ INIT2F_Implied_DoLoop(xml::ostream& xos,        /* Append to this buffer */
    }
    
    /* Generate the implied do-loop */
-   ivar_name = W2CF_Symtab_Nameof_Tempvar(ivar_idx);
+   ivar_name = "tmp"; // + ivar_idx
    xos << "(";
    Append_And_Reclaim_Token_List(xos, &aref_tokens);
    xos << "(";
-   Append_Token_String(xos, ivar_name);
+   xos << ivar_name << ivar_idx;
    xos << ")";
 
    xos << ",";
-   Append_Token_String(xos, ivar_name);
+   xos << ivar_name << ivar_idx;
    xos << "=";
 
 # if 0//June

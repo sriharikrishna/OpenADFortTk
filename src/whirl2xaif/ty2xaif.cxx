@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.17 2004/02/17 22:40:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.18 2004/02/20 18:57:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -71,9 +71,8 @@
 
 //*************************** User Include Files ****************************
 
-#include "ty2xaif.h"
 #include "whirl2xaif.i"
-#include "PUinfo.h"
+#include "ty2xaif.h"
 #include "wn2xaif.h"
 #include "st2xaif.h"
 #include "wn2xaif_mem.h"
@@ -562,15 +561,15 @@ TY2F_Fld_Name(FLD_HANDLE fld,
     * e.g. for common block members and equivalences, so we need to treat
     * them similar to the way we would treat regular objects.
     */
-   const char *fld_name;
+   const char *fld_name = NULL;
 
-   if (common_or_equivalence && !alt_return_name)
-     fld_name = W2CF_Symtab_Nameof_Fld(fld);
-   else {
+   if (common_or_equivalence && !alt_return_name) {
      fld_name = FLD_name(fld);
-     if (fld_name == NULL || *fld_name == '\0')
-       fld_name = W2CF_Symtab_Nameof_Fld(fld);
+   } else {
+     fld_name = FLD_name(fld);
    }
+   if (fld_name == NULL || *fld_name == '\0') { fld_name = "anon-fld"; }
+
    return fld_name;
 } /* TY2F_Fld_Name */
 
@@ -615,9 +614,9 @@ TY2F_Equivalence_FldList(xml::ostream& xos,
       else if (FLD_equivalence(fld) || !*common_block_equivalenced)
 	{
 	  xos << std::endl;
-	  TY2F_Equivalence(xos,
-			   W2CF_Symtab_Nameof_Tempvar(equiv_var_idx),
-			   TY2F_Fld_Name(fld_iter, TRUE/*equiv*/, FALSE/*alt_ret*/),
+	  const char* tmpvar = StrCat("tmp", Num2Str(equiv_var_idx, "%d"));
+	  TY2F_Equivalence(xos, tmpvar, TY2F_Fld_Name(fld_iter, TRUE/*equiv*/,
+						      FALSE/*alt_ret*/),
 			   ofst + FLD_ofst(fld));
 	  if (!FLD_equivalence(fld))
 	    *common_block_equivalenced = TRUE;
@@ -683,7 +682,7 @@ TY2F_Translate_Structure(xml::ostream& xos, TY_IDX ty)
   xos << std::endl;
   
   /* Emit structure header */
-  xos << "TYPE " << W2CF_Symtab_Nameof_Ty(ty);
+  xos << "TYPE " << TY_name(ty);
   
   if (TY_is_sequence(ty_rt)) {
     xos << std::endl << "SEQUENCE ";
@@ -745,16 +744,16 @@ TY2F_Translate_EquivCommon_PtrFld(xml::ostream& xos, FLD_HANDLE fld)
 
   // Declare the pointee and the pointer field of the
   // common/eqivalence block.
-  const char  *pointee_name = W2CF_Symtab_Nameof_Fld_Pointee(fld);
   const char  *fld_name = TY2F_Fld_Name(fld, TRUE/*comm,equiv*/, 
 					FALSE/*alt_ret_name*/);
+  const char *pointee_name = "dref_"; // W2CF_Symtab_Nameof_Fld_Pointee(fld);
   
-  xos << pointee_name;
+  xos << pointee_name << fld_name;
   TY2F_translate(xos, TY_pointed(FLD_type(fld)), ctxt);
   xos << std::endl;
   
   /* Declare the pointer type */
-  xos << "POINTER(" << fld_name << ',' << pointee_name << ')';
+  xos << "POINTER(" << fld_name << ',' << pointee_name << fld_name << ')';
 }
 
 static void
@@ -1100,7 +1099,7 @@ TY2F_struct(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
 		    TY_kind(ty_rt), "TY2F_struct"));
   
-  xos << "(" << W2CF_Symtab_Nameof_Ty(ty) << ")" << "TYPE";
+  xos << "(" << TY_name(ty) << ")" << "TYPE";
   
 #if 0 // see Open64 stab_attr.cxx; if needed simulate thru XlationContext
   if (!TY_is_translated_to_c(ty)) {
@@ -1151,7 +1150,7 @@ TY2F_pointer(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt)
     if (TY_kind(TY_pointed(ty)) == KIND_STRUCT) {
 #if 0
       Prepend_Token_String(xos,",POINTER ::");
-      Prepend_Token_String(xos,W2CF_Symtab_Nameof_Ty(TY_pointed(ty)));
+      Prepend_Token_String(xos, TY_name(TY_pointed(ty)));
 #endif
       TY2F_translate(xos,Be_Type_Tbl(Pointer_Mtype), ctxt);
       
@@ -1362,11 +1361,10 @@ TY2F_Translate_Fld_Path(xml::ostream&   xos,
    */
   while (fld_path != NULL) {
     FLD_HANDLE f (fld_path->fld);
-    const char* str;
-    if (deref && TY_Is_Pointer(FLD_type(f)))
-      str = W2CF_Symtab_Nameof_Fld_Pointee(f);
-    else
-      str = TY2F_Fld_Name(f, member_of_common, alt_ret_name);
+    const char* str = TY2F_Fld_Name(f, member_of_common, alt_ret_name);
+    if (deref && TY_Is_Pointer(FLD_type(f))) {
+      str = StrCat("deref_", str); // W2CF_Symtab_Nameof_Fld_Pointee(f);
+    }
     xos << BegElem("TYFLD") << Attr("***name", str) << EndElem;
 
     member_of_common = FALSE; /* Can only be true first time around */

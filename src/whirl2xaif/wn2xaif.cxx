@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.36 2004/02/19 22:02:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.37 2004/02/20 18:57:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -84,7 +84,6 @@
 #include "wn2xaif_io.h"
 #include "st2xaif.h"
 #include "ty2xaif.h"
-#include "PUinfo.h"
 
 //************************** Forward Declarations ***************************
 
@@ -882,7 +881,7 @@ SortDGraphEdges(DGraph* g)
     (*vec)[i] = (DGraph::Edge*)it;
   }
   
-  // Sort by id (ascending)
+  // Sort by source/target node ids (ascending)
   std::sort(vec->begin(), vec->end(), DGraph::lt_Edge()); 
   
   return vec;
@@ -961,10 +960,8 @@ ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
 static void
 xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  //FIXME
-  // This will translate an alternate or function entry point with
-  // parameter declarations into Fortran.  Note that the 
-  // PUinfo_current_func will not change as a result of this call. (FIXME)
+  // Translates a function entry or alternate entry point, with
+  // parameter declarations.  FIXME
   OPCODE opc = WN_opcode(wn);
   ASSERT_DBG_FATAL(opc == OPC_ALTENTRY || opc == OPC_FUNC_ENTRY,
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_EntryPoint"));
@@ -981,7 +978,7 @@ xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // Write out the entry point with parameter declarations on a new line.
   xlate_Params(xos, wn, &St_Table[WN_entry_name(wn)], param_st, nparam, ctxt);
   xos << std::endl;
-
+  
 #if 0 // FIXME/REMOVE  
   ST2F_func_header(xos, wn, &St_Table[WN_entry_name(wn)], 
 		   param_st, nparam, opc == OPC_ALTENTRY, ctxt);

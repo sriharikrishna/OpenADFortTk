@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.cxx,v 1.9 2004/02/17 22:40:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.cxx,v 1.10 2004/02/20 18:57:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -94,7 +94,17 @@
 /*------------------ Some PU state variables --------------------------*
  *---------------------------------------------------------------------*/
 
-const WN          *PUinfo_current_func = NULL; /* OPR_FUNC_ENTRY node */
+// extern const WN* PUinfo_current_func; 
+const WN* PUinfo_current_func = NULL; // OPR_FUNC_ENTRY node, or 'wn_pu'
+
+#define PUINFO_FUNC_ST     WN_st(PUinfo_current_func)
+#define PUINFO_FUNC_TY     ST_pu_type(PUINFO_FUNC_ST)
+#define PUINFO_FUNC_NAME   W2CF_Symtab_Nameof_St(PUINFO_FUNC_ST) /*ST_name()*/
+
+#define PUINFO_RETURN_TY        Func_Return_Type(PUINFO_FUNC_TY)
+#define PUINFO_RETURN_PARAM     WN_st(WN_formal(PUinfo_current_func, 0))
+#define PUINFO_RETURN_TO_PARAM  Func_Return_To_Param(PUINFO_FUNC_TY)
+
 
 /*--------------- Information about the local PU symbols --------------
  *
@@ -132,36 +142,31 @@ Enter_Local_Syms_Into_Symtab(const ST *func_st)
 void 
 PUinfo_init_pu(const WN *pu, WN *body_part_of_interest)
 {
-   /* TODO: Handle nested procedures and call/return list stacks.
-    * NOTE: This should never cause side-effects to the incoming
-    *       PU (e.g. creating a pointer type), without making
-    *       sure this is handled by W2C_Pop_Pu() in w2c_driver.c
-    *       and W2F_Pop_Pu() in w2f_driver.c.xc
-    */
-   Is_True(WN_operator(pu) == OPR_FUNC_ENTRY,
-	   ("Expected an OPR_FUNC_ENTRY node in PUinfo_init()"));
-   Is_True(PUinfo_current_func == NULL, ("Unexpected in PUinfo_init_pu()"));
-
-   PUinfo_current_func = pu; /* PUINFO_RETURN_TY uses this! */
-
-   /* Push a new symbol-table for name-disambiguation, and enter 
-    * every pseudo-register, variable, function, constant, and type
-    * of this PU scope into the symbol-table.  The former 
-    * accumulative prepass over the expression trees should have 
-    * determined all preg uses.
-    */
-   W2CF_Symtab_Push();
-   Enter_Local_Syms_Into_Symtab(&St_Table[WN_entry_name(pu)]);
-   
-} /* PUinfo_init_pu */
+  /* TODO: Handle nested procedures and call/return list stacks.
+   * NOTE: This should never cause side-effects to the incoming
+   *       PU (e.g. creating a pointer type), without making
+   *       sure this is handled by W2C_Pop_Pu() in w2c_driver.c
+   *       and W2F_Pop_Pu() in w2f_driver.c.xc  */
+  Is_True(WN_operator(pu) == OPR_FUNC_ENTRY, ("UnOh"));
+  Is_True(PUinfo_current_func == NULL, ("Unexpected in PUinfo_init_pu()"));
+  PUinfo_current_func = pu; /* PUINFO_RETURN_TY uses this! */
+  
+  /* Push a new symbol-table for name-disambiguation, and enter 
+   * every pseudo-register, variable, function, constant, and type
+   * of this PU scope into the symbol-table.  The former 
+   * accumulative prepass over the expression trees should have 
+   * determined all preg uses. */
+  W2CF_Symtab_Push();
+  Enter_Local_Syms_Into_Symtab(&St_Table[WN_entry_name(pu)]);
+}
 
 
 void 
 PUinfo_exit_pu(void)
 {
-   /* Pop the current symbol-table for name-disambiguation */
-   W2CF_Symtab_Pop();
-   
-   PUinfo_current_func = NULL; /* Reset the PU state */
-} /* PUinfo_exit_pu */
+  /* Pop the current symbol-table for name-disambiguation */
+  W2CF_Symtab_Pop();
+  PUinfo_current_func = NULL; /* Reset the PU state */
+}
+
 

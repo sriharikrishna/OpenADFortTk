@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.23 2004/02/18 18:41:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.24 2004/02/20 18:57:42 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -76,9 +76,8 @@
 
 //*************************** User Include Files ****************************
 
-#include "wn2xaif_mem.h"
 #include "whirl2xaif.i"
-#include "PUinfo.h"
+#include "wn2xaif_mem.h"
 #include "wn2xaif.h"
 #include "st2xaif.h"
 #include "ty2xaif.h"
@@ -646,7 +645,7 @@ whirl2xaif::WN2F_pstid(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       * instead.
       */
      UINT tmp_idx = Stab_Lock_Tmpvar(WN_ty(wn), &ST2F_Declare_Tempvar);
-     Append_Token_String(xos, W2CF_Symtab_Nameof_Tempvar(tmp_idx));
+     xos << "tmp" << tmp_idx;
      Stab_Unlock_Tmpvar(tmp_idx);
    } else {
      xlate_SymRef(xos,

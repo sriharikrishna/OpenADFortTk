@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.16 2004/02/19 22:02:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.17 2004/02/20 18:57:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -82,11 +82,10 @@
 //*************************** User Include Files ****************************
 
 #include "whirl2xaif.i"
-#include "PUinfo.h"
+#include "wn2xaif_io.h"
 #include "wn2xaif.h"
 #include "st2xaif.h"
 #include "ty2xaif.h"
-#include "wn2xaif_io.h"
 #include "wn2xaif_mem.h"
 
 //************************** Forward Declarations ***************************
@@ -240,7 +239,9 @@ whirl2xaif::xlate_IO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_IO, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_IO"));
-  
+
+  static UINT32 unique_label = 99999U; 
+
   // Initialize table on demand for now
   if (!HandlerTableInitialized) { // FIXME
     WN2F_Io_initialize();
@@ -255,7 +256,7 @@ whirl2xaif::xlate_IO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	ios_kid++);
   if (ios_kid < WN_kid_count(wn)) {
     set_XlationContext_origfmt_ioctrl(ctxt);
-    Origfmt_Ioctrl_Label = W2CF_Symtab_Unique_Label();
+    Origfmt_Ioctrl_Label = unique_label--; // cf. W2CF_Symtab_Unique_Label
   }
   
   /* FIXME Now dispatch to the appropriate handler routine for each kind of

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.32 2004/02/19 22:02:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.33 2004/02/20 18:57:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -77,10 +77,8 @@
 #include "whirl2xaif.i"
 #include "wn2xaif.h"
 #include "st2xaif.h"
-#include "PUinfo.h"
 
 #include <lib/support/Pro64IRInterface.h>
-#include <lib/support/WhirlParentize.h>
 
 //************************** Forward Declarations ***************************
 
@@ -90,15 +88,6 @@ using namespace xml; // for xml::ostream, etc
 //***************************************************************************
 
 BOOL WN2F_F90_pu = FALSE; /* Global variable indicating F90 or F77: REMOVE */
-
-static void W2F_Init(void);
-static void W2F_Fini(void);
-static void W2F_Push_PU(WN *pu, WN *body_part_of_interest);
-static void W2F_Pop_PU(void);
-static BOOL Check_PU_Pushed(const char *caller_name);
-
-static void W2F_Enter_Global_Symbols(void);
-static void W2F_Undo_Whirl_Side_Effects(void);
 
 //***************************************************************************
 
@@ -145,7 +134,6 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   XlationContext ctxt;
 
   DumpTranslationHeaderComment(xos); // FIXME (optional)
-  W2F_Init(); // FIXME
   
   // Initialize global id maps
   pair<SymTabToSymTabIdMap*, SymTabIdToSymTabMap*> stabmaps =
@@ -207,8 +195,6 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   
   delete stabmaps.first;
   delete pumaps.first;
-
-  W2F_Fini(); // FIXME
 }
 
 
@@ -241,6 +227,7 @@ TranslateScopeHierarchy(xml::ostream& xos, PU_Info* pu_forest,
   xos << std::endl;
 }
 
+
 static void
 TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId, 
 			  XlationContext& ctxt)
@@ -267,6 +254,7 @@ TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId,
   }
 }
 
+
 //***************************************************************************
 
 static void
@@ -281,6 +269,7 @@ TranslatePU(xml::ostream& xos, CallGraph::Node* n, UINT32 vertexId,
   xos << std::endl;
   xos.flush();
 }
+
 
 static void
 TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
@@ -319,33 +308,34 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
   xos << EndElem; // xaif:ControlFlowGraph
 }
 
+
 static void
 TranslateWNPU(xml::ostream& xos, WN *wn_pu, XlationContext& ctxt)
 {
   const char* const caller_err_phase = Get_Error_Phase();
   Diag_Set_Phase("WHIRL to XAIF: translate PU");
   Start_Timer(T_W2F_CU);
-
+  
   Is_True(WN_opcode(wn_pu) == OPC_FUNC_ENTRY, 
 	  ("Invalid opcode for TranslateWNPU()"));
-
-  const BOOL pu_is_pushed = (PUinfo_current_func == wn_pu);
-  if (!pu_is_pushed) { W2F_Push_PU(wn_pu, WN_func_body(wn_pu)); }
   
-  /* Set the flag for an F90 program unit */
-  PU& pu = Pu_Table[ST_pu( WN_st(PUinfo_current_func) )]; // FIXME: 
-  WN2F_F90_pu = PU_f90_lang(pu) != 0;
-
+  Stab_initialize();                      // FIXME/REMOVE
+  PU& pu = Pu_Table[ST_pu(WN_st(wn_pu))]; // FIXME: set F90 flag
+  WN2F_F90_pu = (PU_f90_lang(pu) != 0);
+  
   TranslateWN(xos, wn_pu, ctxt);
   
-  if (!pu_is_pushed) { W2F_Pop_PU(); }
-  
-  W2F_Undo_Whirl_Side_Effects();
+  Stab_finalize();     // FIXME/REMOVE
+  Stab_Free_Tmpvars(); // undo possible side-effect on incoming WHIRL tree
+  Stab_Free_Namebufs();
   
   Stop_Timer(T_W2F_CU);
   Diag_Set_Phase(caller_err_phase);
 }
 
+
+//***************************************************************************
+// 
 //***************************************************************************
 
 // MassageOACallGraphIntoXAIFCallGraph: Process CallGraph to eliminate
@@ -389,8 +379,6 @@ MassageOACallGraphIntoXAIFCallGraph(CallGraph* cg)
 }
 
 
-//***************************************************************************
-
 static void 
 DumpTranslationHeaderComment(xml::ostream& xos)
 {
@@ -412,143 +400,7 @@ DumpTranslationHeaderComment(xml::ostream& xos)
 // 
 //***************************************************************************
 
-static void
-W2F_Init(void)
-{
-  W2CF_Symtab_Push(); /* Push global (i.e. first ) symbol table */
-  W2F_Enter_Global_Symbols(); // REMOVE
-}
-
-static void
-W2F_Fini(void)
-{
-  W2CF_Symtab_Terminate();
-}
-
-static void 
-W2F_Push_PU(WN *pu, WN *body_part_of_interest)
-{
-  Stab_initialize();
-  PUinfo_init_pu(pu, body_part_of_interest); // Get current PU name and ST
-}
-
-static void 
-W2F_Pop_PU(void)
-{
-  PUinfo_exit_pu();
-  Stab_finalize();
-}
-
-static BOOL
-Check_PU_Pushed(const char *caller_name)
-{
-  if (PUinfo_current_func == NULL)
-    fprintf(stderr, "NOTE: Ignored call to %s()!\n", caller_name);
-  return (PUinfo_current_func != NULL);
-}
-
-
-// W2F_Undo_Whirl_Side_Effects: This subroutine must be called after
-// every translation phase which may possibly create side-effects
-// in the incoming WHIRL tree.  The translation should thus become
-// side-effect free as far as concerns the incoming WHIRL tree.
-static void
-W2F_Undo_Whirl_Side_Effects(void)
-{
-  Stab_Free_Tmpvars();
-  Stab_Free_Namebufs();
-}
-
-
-/* ====================================================================
- *                   Setting up the global symbol table
- *                   ----------------------------------
- *
- * W2F_Enter_Global_Symtab: Enter the global symbols into the w2f
- * symbol table.  The global symbol-table should be the top-of the
- * stack at this point.
- *
- * ==================================================================== 
- */
-
-// function object to enter FLD names in w2f symbol table. 
-// See call in W2F_Enter_Global_Symbols
-struct enter_fld
-{
-  void operator() (UINT32 ty_idx, const TY* typ) const 
-  {
-    const TY & ty = (*typ);
-
-    if (TY_kind(ty) == KIND_STRUCT) {
-      (void)W2CF_Symtab_Nameof_Ty(ty_idx);
-      
-      FLD_HANDLE fld = TY_flist(ty);
-      FLD_ITER fld_iter = Make_fld_iter(fld);
-      do {
-	FLD_HANDLE fld_rt (fld_iter);
-	
-	if (TY_Is_Pointer(FLD_type(fld_rt)))
-	  (void)W2CF_Symtab_Nameof_Fld_Pointee(fld);
-	(void)W2CF_Symtab_Nameof_Fld(fld);
-	
-      } while (!FLD_last_field (fld_iter++)); 
-    }
-  }
-};
-
-// function object to enter fn & varbl names in w2f symbol table. 
-// See call in W2F_Enter_Global_Symbols.
-struct enter_st 
-{
-  void operator() (UINT32 idx, const ST * st) const 
-  {
-    if ((ST_sym_class(st) == CLASS_VAR && !ST_is_not_used(st)) || 
-	ST_sym_class(st) == CLASS_FUNC) {
-      TY_IDX ty ;
-      
-      (void)W2CF_Symtab_Nameof_St(st);
-      
-      if (ST_sym_class(st) == CLASS_VAR)
-	ty = ST_type(st);
-      else
-	ty = ST_pu_type(st);
-      
-      if (TY_Is_Pointer(ty))
-	(void)W2CF_Symtab_Nameof_St_Pointee(st);
-    }
-  }
-};
-
-static void
-W2F_Enter_Global_Symbols(void)
-{
-  /* Enter_Sym_Info for every struct or class type in the current 
-   * symbol table, with associated fields.  Do this prior to any
-   * variable declarations, just to ensure that field names and
-   * common block names retain their names to the extent this is
-   * possible.
-   */
-  For_all(Ty_Table, enter_fld());
-  
-  /* Enter_Sym_Info for every variable and function in the current 
-   * (global) symbol table.  Note that we always invent names for the
-   * pointees of Fortran pointers, since the front-end invariably
-   * does not generate ST entries for these.
-   */
-  For_all(St_Table, GLOBAL_SYMTAB, enter_st());
-  
-#if 0
-  // FIX constants ??
-  FOR_ALL_CONSTANTS(st, const_idx) {
-    if (ST_symclass(st) != CLASS_SYM_CONST)
-      (void)W2CF_Symtab_Nameof_St(st);
-  }
-#endif
-}
-
-
-//***************************************************************************
-
+#include <lib/support/WhirlParentize.h>
 #include <vector>
 using std::vector;
 

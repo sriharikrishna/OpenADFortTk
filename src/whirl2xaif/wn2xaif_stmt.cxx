@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.25 2004/02/18 18:41:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.26 2004/02/20 18:57:42 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -64,11 +64,10 @@
 //*************************** User Include Files ****************************
 
 #include "whirl2xaif.i"
-#include "PUinfo.h"
+#include "wn2xaif_stmt.h"
 #include "wn2xaif.h"
 #include "st2xaif.h"
 #include "ty2xaif.h"
-#include "wn2xaif_stmt.h"
 #include "wn2xaif_mem.h"
 #include "wn2xaif_io.h"
 #include "init2f.h"
@@ -941,7 +940,7 @@ whirl2xaif::xlate_USE(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status
 whirl2xaif::WN2F_namelist_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  const char *st_name =  W2CF_Symtab_Nameof_St(WN_st(wn));
+  const char *st_name =  ST_name(WN_st(wn));
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_NAMELIST,
 		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_namelist_stmt"));
   if (ST_is_external(WN_st(wn))) {
@@ -950,7 +949,7 @@ whirl2xaif::WN2F_namelist_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     xos << "NAMELIST /" << st_name << " /";
     int k ;
     for(k=0;k< WN_kid_count(wn);k++ ) {
-      st_name = W2CF_Symtab_Nameof_St(WN_st(WN_kid(wn,k)));
+      st_name = ST_name(WN_st(WN_kid(wn,k)));
       Set_BE_ST_w2fc_referenced(WN_st(WN_kid(wn,k)));
       if (k==0)
 	;
@@ -984,7 +983,7 @@ whirl2xaif::WN2F_nullify_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << "NULLIFY (";
   
   for(k=0;k< WN_kid_count(wn);k++ ) {
-    st_name = W2CF_Symtab_Nameof_St(WN_st(WN_kid(wn,k)));
+    st_name = ST_name(WN_st(WN_kid(wn,k)));
     Set_BE_ST_w2fc_referenced(WN_st(WN_kid(wn,k)));
     if (k!=0)
       xos << ",";
@@ -1061,7 +1060,7 @@ static const char unnamed_interface[] = "unnamed interface";
       
       if (ST_is_in_module(st) ) {
 	xos << "module procedure ";
-	Append_Token_String(xos, W2CF_Symtab_Nameof_St(st));     
+	Append_Token_String(xos, ST_name(st));     
       } else {
 	if (return_ty != (TY_IDX) 0 && TY_kind(return_ty) != KIND_VOID) {
           xos << "FUNCTION";
@@ -1088,7 +1087,7 @@ static const char unnamed_interface[] = "unnamed interface";
 	  xos << "SUBROUTINE";
 	}
 	
-	Append_Token_String(xos, W2CF_Symtab_Nameof_St(st));
+	Append_Token_String(xos, ST_name(st));
 	
 	/* Emit the parameter name-list, if one is present, and skip any
 	 * implicit "length" parameters associated with character strings.
@@ -1118,7 +1117,7 @@ static const char unnamed_interface[] = "unnamed interface";
 		  else
 		    isFirstArg = FALSE;
 		  Append_Token_String(xos,
-				      W2CF_Symtab_Nameof_St(param_st[param]));
+				      ST_name(param_st[param]));
 		  
 		  /* Bug: next and last param may be implicit */
 		  /* this causes the argument list to end with a comma (radu@par.univie.ac.at) */
@@ -1135,12 +1134,12 @@ static const char unnamed_interface[] = "unnamed interface";
 	  xos << "()";
 	}
 	
-	if (rslt !=NULL && strcasecmp(W2CF_Symtab_Nameof_St(st), 
-				      W2CF_Symtab_Nameof_St(rslt)) != 0) {
+	if (rslt !=NULL && strcasecmp(ST_name(st), 
+				      ST_name(rslt)) != 0) {
 	  /* append the RESULT option only if it is different from the function name */
 	  /* (radu@par.univie.ac.at) */
 	  xos << "result(";
-	  Append_Token_String(xos, W2CF_Symtab_Nameof_St(rslt));
+	  Append_Token_String(xos, ST_name(rslt));
 	  xos << ")";
 	}
 	/* Emit parameter declarations, indented and on a new line */
@@ -1153,17 +1152,17 @@ static const char unnamed_interface[] = "unnamed interface";
 	    if (ST_is_optional_argument(param_st[param])) {
 	      xos << std::endl;
 	      xos << "OPTIONAL ";
-	      Append_Token_String(xos, W2CF_Symtab_Nameof_St(param_st[param]));
+	      Append_Token_String(xos, ST_name(param_st[param]));
 	    }
 	    if (ST_is_intent_in_argument(param_st[param])) {
 	      xos << std::endl;
 	      xos << "INTENT(in) ";
-	      Append_Token_String(xos, W2CF_Symtab_Nameof_St(param_st[param]));
+	      Append_Token_String(xos, ST_name(param_st[param]));
 	    }
 	    if (ST_is_intent_out_argument(param_st[param])) {
 	      xos << std::endl;
 	      xos << "INTENT(out) ";
-	      Append_Token_String(xos, W2CF_Symtab_Nameof_St(param_st[param]));
+	      Append_Token_String(xos, ST_name(param_st[param]));
 	    }
 	  }
 	
