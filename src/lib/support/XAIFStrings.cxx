@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.18 2004/04/29 21:28:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.19 2004/05/06 21:53:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -76,7 +76,10 @@ const char* XAIFStringRepository::c_strTbl[] = {
   // xaif:ControlFlowGraph, xaif:ReplacementList, xaif:Replacement
   "xaif:ControlFlowGraph",
   "xaif:ReplacementList", 
-
+  
+  "xaif:ArgumentList",
+  "xaif:ArgumentSymbolReference",
+  
   "xaif:Replacement",
   "placeholder",
   
@@ -160,6 +163,7 @@ const char* XAIFStringRepository::c_strTbl[] = {
   
   "{StmtGoto#",
   "{StmtLabel#",
+  "{StmtReturn#",
 
   "{IntrinsicKey#",
 

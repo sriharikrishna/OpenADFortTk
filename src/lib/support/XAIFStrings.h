@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.18 2004/04/29 21:28:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.19 2004/05/06 21:53:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -75,7 +75,10 @@ public:
     // xaif:ControlFlowGraph, xaif:ReplacementList, xaif:Replacement
     ELEM_CFG,
     ELEM_ReplaceList,
-
+    
+    ELEM_ArgList,
+    ELEM_ArgSymRef,
+    
     ELEM_Replacement,
     ATTR_placeholder,
     
@@ -158,8 +161,9 @@ public:
     TAG_PUId,     // Tags a colon-separated list of PU ids
     TAG_WHIRLId,  // Tags a colon-separated list of WHIRL (WN) ids
     
-    TAG_StmtGoto,  // Tags a goto statement
-    TAG_StmtLabel, // Tags a label statement
+    TAG_StmtGoto,   // Tags a goto statement
+    TAG_StmtLabel,  // Tags a label statement
+    TAG_StmtReturn, // Tags a return statement
     
     TAG_IntrinsicKey, // Tags an intrinsic to disambiguate translation
     
@@ -250,6 +254,11 @@ public:
   XMLCh*      elem_CFG_x() const { return x_strTbl[ELEM_CFG]; }
   const char* elem_ReplaceList() const { return c_strTbl[ELEM_ReplaceList]; }
   XMLCh*      elem_ReplaceList_x() const { return x_strTbl[ELEM_ReplaceList]; }
+
+  const char* elem_ArgList() const { return c_strTbl[ELEM_ArgList]; }
+  XMLCh*      elem_ArgList_x() const { return x_strTbl[ELEM_ArgList]; }
+  const char* elem_ArgSymRef() const { return c_strTbl[ELEM_ArgSymRef]; }
+  XMLCh*      elem_ArgSymRef_x() const { return x_strTbl[ELEM_ArgSymRef]; }
   
   const char* elem_Replacement() const { return c_strTbl[ELEM_Replacement]; }
   XMLCh*      elem_Replacement_x() const { return x_strTbl[ELEM_Replacement]; }
@@ -384,6 +393,9 @@ public:
   
   const char* tag_StmtLabel() const   { return c_strTbl[TAG_StmtLabel]; }
   XMLCh*      tag_StmtLabel_x() const { return x_strTbl[TAG_StmtLabel]; }
+  
+  const char* tag_StmtReturn() const   { return c_strTbl[TAG_StmtReturn]; }
+  XMLCh*      tag_StmtReturn_x() const { return x_strTbl[TAG_StmtReturn]; }
   
   const char* tag_IntrinsicKey() const   { return c_strTbl[TAG_IntrinsicKey]; }
   XMLCh*      tag_IntrinsicKey_x() const { return x_strTbl[TAG_IntrinsicKey]; }
