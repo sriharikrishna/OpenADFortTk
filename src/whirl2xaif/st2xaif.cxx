@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.29 2004/05/07 20:04:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.30 2004/05/28 15:18:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -306,8 +306,7 @@ whirl2xaif::xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
   xos << BegElem("xaif:SymbolTable") << EndAttrs;
   
   xlate_SYMTAB(xos, symtab_lvl, ctxt);
-  //xlate_PREGTAB(xos, symtab_lvl, ctxt); // REMOVE
-  //xlate_NonScalarSymTab(xos, nonscalarsymtab, ctxt);
+  xlate_NonScalarSymTab(xos, nonscalarsymtab, ctxt);
   
   xos << EndElem;
 }
@@ -346,25 +345,6 @@ whirl2xaif::xlate_SYMTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
 }
 
 #if 0
-
-class xlate_PREG_TAB {
-public:
-  xlate_PREG_TAB(xml::ostream& xos_, SYMTAB_IDX symtab_, XlationContext& ctxt_)
-    : xos(xos_), symtab(symtab_), ctxt(ctxt_)
-  { } 
-
-  // A function object applied to every entry of a ST_TAB
-  void operator()(UINT32, PREG* preg) const 
-  { 
-    TranslateSTDecl(xos, preg, ctxt);
-  }
-  
-private:
-  xml::ostream&   xos;
-  SYMTAB_IDX      symtab;
-  XlationContext& ctxt;  
-};
-
 void 
 whirl2xaif::xlate_PREGTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
 			  XlationContext& ctxt)
@@ -372,7 +352,6 @@ whirl2xaif::xlate_PREGTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
   // 'For_all' applies 'operator()' to every entry of Preg_Table.
   For_all(Preg_Table, symtab_lvl, xlate_PREG_TAB(xos, symtab_lvl, ctxt));
 }
-
 #endif
 
 
@@ -380,48 +359,17 @@ void
 whirl2xaif::xlate_NonScalarSymTab(xml::ostream& xos, NonScalarSymTab* symtab, 
 				  XlationContext& ctxt)
 {
-  xos << BegElem("xaif:SymbolTable") << Attr("id", symtab->GetName());
-  
-  xos << BegElem("xaif:Property") << Attr("id", ctxt.GetNewVId()) 
-      << Attr("name", "kind") << Attr("value", "nonscalar_stab") << EndElem;
-  
+#if 0
+  // *** may be active and non active non-scalar syms
   for (NonScalarSymTabIterator it(*symtab); it.IsValid(); ++it) {
     WN* wn = it.CurrentSrc();
     NonScalarSym* sym = it.CurrentTarg();
-    xos << BegElem("xaif:Symbol") << Attr("id", sym->GetName()) << EndElem;
-  }
-  
-  xos << EndElem << std::endl;
-}
-
-
-// FIXME: REMOVE
-static void
-WN2F_Append_Symtab_Consts(xml::ostream& xos, SYMTAB_IDX symtab)
-{
-#if 0 // note: defined out in original code
-  /* Declare static variables for symbolic constants */
-  FOR_ALL_CONSTANTS(st, const_idx) 
-  {
-    /* TODO: Full support for sym_consts */
-    if (tokens != NULL) {
-      xos << std::endl;
-      TranslateSTDecl(xos, st, ctxt);
-    }
-  }
+    
+    xos << BegElem("xaif:Symbol") << Attr("symbol_id", sym->GetName())
+	<< Attr("kind", "variable") << Attr("type", "***???")
+	<< Attr("shape", "***???") << Attr("active", "***???") << EndElem;
+  }  
 #endif
-}
-
-// FIXME: REMOVE: 
-static void
-WN2F_Append_Symtab_Vars(xml::ostream& xos, SYMTAB_IDX symtab)
-{
-  /* Declare identifiers from the new symbol table, provided they
-   * represent functions or variables that are either common or
-   * that have been referenced/used.
-   */
-  XlationContext ctxt;
-  For_all(St_Table, symtab, xlate_ST_TAB(xos, symtab, ctxt));
 }
 
 
