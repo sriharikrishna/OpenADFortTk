@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.10 2003/10/10 17:57:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.11 2004/03/03 16:31:26 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -150,7 +150,7 @@ public:
   
   static bool IsAnyBB(const DOMNode *node);
   static bool IsBB(const DOMNode *node);
-  static bool IsBBIf(const DOMNode *node);
+  static bool IsBBBranch(const DOMNode *node);
   static bool IsBBForLoop(const DOMNode *node);
   static bool IsBBPreLoop(const DOMNode *node);
   static bool IsBBPostLoop(const DOMNode *node);

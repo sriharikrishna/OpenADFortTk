@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.12 2004/02/24 16:28:27 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.13 2004/03/03 16:31:26 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -80,7 +80,7 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "xaif:BasicBlock",
   "xaif:Entry",
   "xaif:Exit",
-  "xaif:If",
+  "xaif:Branch",
   "xaif:ForLoop",
   "xaif:PreLoop",
   "xaif:PostLoop",

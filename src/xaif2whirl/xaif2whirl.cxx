@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.24 2004/02/27 20:21:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.25 2004/03/03 16:31:26 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -291,7 +291,7 @@ TranslateBB(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
 {
   if (XAIF_BBElemFilter::IsBB(bbElem)) {
     xlate_BasicBlock(wn_pu, bbElem, ctxt);
-  } else if (XAIF_BBElemFilter::IsBBIf(bbElem)
+  } else if (XAIF_BBElemFilter::IsBBBranch(bbElem)
 	     || XAIF_BBElemFilter::IsBBPreLoop(bbElem)
 	     || XAIF_BBElemFilter::IsBBPostLoop(bbElem)) {
     xlate_BBCondition(wn_pu, bbElem, ctxt);
