@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.1 2003/07/24 20:26:53 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.2 2003/08/01 15:54:23 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -34,8 +34,11 @@ VPATH = $(SRCS)
 OBJS = \
 	Pro64IRInterface.o \
 	WhirlIO.o \
+	WhirlIDMaps.o \
 	\
 	xmlostream.o \
+	XAIFStrings.o \
+	\
 	diagnostics.o
 
 
@@ -46,7 +49,7 @@ OBJS = \
 CXXFLAGS := $(USER_CXXFLAGS) 
 CFLAGS := $(USER_CFLAGS) 
 IFLAGS := $(USER_C_IFLAGS) -I. -I$(VPATH) -I$(WHIRL2XAIF_INCLUDE_PATH) \
-	$(OPEN64_IFLAGS) $(OA_IFLAGS)
+	$(OPEN64_IFLAGS) $(OA_IFLAGS) $(XERCES_IFLAGS)
 
 #############################################################################
 # Compiling Rules:
