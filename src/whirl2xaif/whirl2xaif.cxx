@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.23 2004/01/25 02:43:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.24 2004/01/26 15:48:18 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -187,7 +187,7 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   Pro64IRProcIterator irProcIter(pu_forest);
   ST* st = ST_ptr(PU_Info_proc_sym(pu_forest));
   CallGraph cgraph(irInterface, &irProcIter, (SymHandle)st);
-
+  
   MassageOACallGraphIntoXAIFCallGraph(&cgraph);
   //cgraph->dump(cerr);
   
@@ -380,13 +380,34 @@ TranslateWNPU(xml::ostream& xos, WN *wn_pu, XlationContext& ctxt)
 static void
 MassageOACallGraphIntoXAIFCallGraph(CallGraph* cg)
 {
-  // FIXME: for now we eliminate nodes without a definition.  The
-  // iteration should not be broken during this operation.
-  for (CallGraph::NodesIterator nodeIt(*cg); (bool)nodeIt; ++nodeIt) {
-    CallGraph::Node* n = dynamic_cast<CallGraph::Node*>((DGraph::Node*)nodeIt);
-    if (!n->GetDef()) {
-      cg->remove(n);
-      delete n;
+  // FIXME: for now we eliminate nodes without a definition.  Note
+  // that the iteration *can* be broken so we have to start over each
+  // time! Yuck!
+  
+  bool needToRemoveANode = true;
+  while (needToRemoveANode) {
+    
+    bool deletedANode = false;
+    for (CallGraph::NodesIterator it(*cg); (bool)it; ++it) {
+      CallGraph::Node* n = dynamic_cast<CallGraph::Node*>((DGraph::Node*)it);
+      if (!n->GetDef()) {
+	IFDBG(2) {
+	  IRInterface& ir = cg->GetIRInterface();
+	  const char* nm = ir.GetSymNameFromSymHandle(n->GetSym());
+	  std::cout << "* Removing '" << nm << "' from CallGraph\n";
+	}
+	cg->remove(n);
+	delete n;
+	deletedANode = true;
+	break; // break because deletion can mess up iteration!
+      }
+    }
+    
+    if (deletedANode) {
+      // restart iteration and look for more node to delete
+    } else {
+      // no more nodes need to be removed
+      needToRemoveANode = false;      
     }
   }
 }
@@ -751,7 +772,7 @@ Check_PU_Pushed(const char *caller_name)
 
 //***************************************************************************
 
-//#define FIXME_TRANSLATE_PARAMS
+#define FIXME_TRANSLATE_PARAMS
 
 #include <vector>
 using std::vector;
@@ -913,10 +934,12 @@ InlineTest(PU_Info* pu_forest)
     WN_next (WN_prev (callsiteWN)) = WN_next (callsiteWN);
     WN_prev (WN_next (callsiteWN)) = WN_prev (callsiteWN);
   }
-  
+
+#if 0  
   IR_set_dump_order(TRUE); // Preorder dump
   WN* callerWN = PU_Info_tree_ptr(callerPU);
   dump_tree(callerWN);
+#endif
   
   SaveOpen64PUGlobalVars(callerPU);
 }
