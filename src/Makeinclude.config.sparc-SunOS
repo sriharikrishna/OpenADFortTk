@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makeinclude.config.sparc-SunOS,v 1.4 2003/08/01 15:53:11 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makeinclude.config.sparc-SunOS,v 1.5 2003/10/29 01:52:50 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -11,6 +11,8 @@
 #############################################################################
 # Site/machine/architecture dependent configuration 
 #############################################################################
+
+DSOext = so
 
 #-----------------------------------------------------------------
 #  Compilers and building tools

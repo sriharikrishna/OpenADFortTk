@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/Makefile,v 1.8 2003/09/05 21:41:53 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/Makefile,v 1.9 2003/10/29 01:52:50 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -59,10 +59,15 @@ CXXFLAGS := $(USER_CXXFLAGS)
 CFLAGS := $(USER_CFLAGS)
 IFLAGS := $(USER_C_IFLAGS) -I. -I$(VPATH) -I$(WHIRL2XAIF_INCLUDE_PATH) \
 	$(OPEN64_IFLAGS) $(OA_IFLAGS) $(XERCES_IFLAGS)
-LDFLAGS := $(USER_C_LDFLAGS) $(OA_LDFLAGS) $(XERCES_LDFLAGS) -lm -ldl
+LDFLAGS := $(USER_C_LDFLAGS) $(OA_LDFLAGS) $(XERCES_LDFLAGS) -lm
+
+#FIXMEcygwin
+ifneq ($(PLATFORM),i686-Cygwin)
+  LDFLAGS += -ldl
+endif
 
 LIBS = $(LIBRARY) $(WHIRL2XAIF_OBJ_PATH)/$(LIB_SUPPORT) \
-	$(OPEN64)/$(O64TARG)/whirl2f/be.so
+	$(OPEN64)/$(O64TARG)/whirl2f/be.$(DSOext)
 
 #	$(WHIRL2XAIF_OBJ_PATH)/$(LIB_WHIRLREADER) \
 #	$(WHIRL2XAIF_OBJ_PATH)/$(LIB_COMUTIL) 
