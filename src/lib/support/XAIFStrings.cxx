@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.15 2004/03/24 13:32:33 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.16 2004/03/29 23:40:07 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -73,10 +73,16 @@ const char* XAIFStringRepository::c_strTbl[] = {
   
   // -----------------------------------------------------
   
-  // xaif:ControlFlowGraph
+  // xaif:ControlFlowGraph, xaif:ReplacementList, xaif:Replacement
   "xaif:ControlFlowGraph",
+  "xaif:ReplacementList", 
+
+  "xaif:Replacement",
+  "placeholder",
   
   "xaif:ControlFlowEdge",
+  "has_condition_value",
+  "condition_value",
   
   // xaif:BasicBlock
   "xaif:BasicBlock",
@@ -90,7 +96,9 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "xaif:EndBranch",
   "xaif:EndLoop",
   
+  "xaif:Initialization",
   "xaif:Condition",
+  "xaif:Update",
   
   // Statements
   "xaif:Assignment",

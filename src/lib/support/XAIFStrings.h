@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.15 2004/03/24 13:32:33 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.16 2004/03/29 23:40:07 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -72,10 +72,16 @@ public:
 
     // -----------------------------------------------------
 
-    // xaif:ControlFlowGraph
+    // xaif:ControlFlowGraph, xaif:ReplacementList, xaif:Replacement
     ELEM_CFG,
+    ELEM_ReplaceList,
 
+    ELEM_Replacement,
+    ATTR_placeholder,
+    
     ELEM_CFGEdge,
+    ATTR_hasCondval,
+    ATTR_condval,
     
     // xaif:BasicBlock
     ELEM_BB,
@@ -89,7 +95,9 @@ public:
     ELEM_BBEndBranch,
     ELEM_BBEndLoop,
     
+    ELEM_LpInit,
     ELEM_Condition,
+    ELEM_LpUpdate,
 
     // Statements
     ELEM_Assign,
@@ -235,9 +243,20 @@ public:
   // xaif:ControlFlowGraph
   const char* elem_CFG() const { return c_strTbl[ELEM_CFG]; }
   XMLCh*      elem_CFG_x() const { return x_strTbl[ELEM_CFG]; }
+  const char* elem_ReplaceList() const { return c_strTbl[ELEM_ReplaceList]; }
+  XMLCh*      elem_ReplaceList_x() const { return x_strTbl[ELEM_ReplaceList]; }
   
+  const char* elem_Replacement() const { return c_strTbl[ELEM_Replacement]; }
+  XMLCh*      elem_Replacement_x() const { return x_strTbl[ELEM_Replacement]; }
+  const char* attr_placeholder() const { return c_strTbl[ATTR_placeholder]; }
+  XMLCh*      attr_placeholder_x() const { return x_strTbl[ATTR_placeholder]; }
+
   const char* elem_CFGEdge() const { return c_strTbl[ELEM_CFGEdge]; }
   XMLCh*      elem_CFGEdge_x() const { return x_strTbl[ELEM_CFGEdge]; }
+  const char* attr_hasCondval() const { return c_strTbl[ATTR_hasCondval]; }
+  XMLCh*      attr_hasCondval_x() const { return x_strTbl[ATTR_hasCondval]; }
+  const char* attr_condval() const { return c_strTbl[ATTR_condval]; }
+  XMLCh*      attr_condval_x() const { return x_strTbl[ATTR_condval]; }
 
   // xaif:BasicBlock
   const char* elem_BB() const { return c_strTbl[ELEM_BB]; }
@@ -260,8 +279,12 @@ public:
   const char* elem_BBEndLoop() const { return c_strTbl[ELEM_BBEndLoop]; }
   XMLCh*      elem_BBEndLoop_x() const { return x_strTbl[ELEM_BBEndLoop]; }
 
+  const char* elem_LpInit() const { return c_strTbl[ELEM_LpInit]; }
+  XMLCh*      elem_LpInit_x() const { return x_strTbl[ELEM_LpInit]; }
   const char* elem_Condition() const { return c_strTbl[ELEM_Condition]; }
   XMLCh*      elem_Condition_x() const { return x_strTbl[ELEM_Condition]; }
+  const char* elem_LpUpdate() const { return c_strTbl[ELEM_LpUpdate]; }
+  XMLCh*      elem_LpUpdate_x() const { return x_strTbl[ELEM_LpUpdate]; }
 
   // Statements
   const char* elem_Assign() const { return c_strTbl[ELEM_Assign]; }
