@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.13 2004/04/08 13:52:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.14 2004/06/01 22:22:13 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -41,6 +41,7 @@
 #include "tester.h"
 
 #include <lib/support/SymTab.h>
+#include <lib/support/ScalarizedRefTab.h>
 #include <lib/support/diagnostics.h>
 
 //*************************** Forward Declarations ***************************

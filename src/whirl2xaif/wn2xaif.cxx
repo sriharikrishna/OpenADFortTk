@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.58 2004/05/28 15:17:59 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.59 2004/06/01 22:22:14 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -84,6 +84,7 @@
 #include "ty2xaif.h"
 
 #include <lib/support/SymTab.h>
+#include <lib/support/ScalarizedRefTab.h>
 
 //************************** Forward Declarations ***************************
 
@@ -609,8 +610,7 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos,
     
     // call 'xlate_derivedtype_ref'
     // Get the dummy variable (need the parent wn) FIXME
-    WN* wn = ctxt.GetWN(); // FIXME
-    NonScalarSym* sym = ctxt.FindNonScalarSym(wn);
+    NonScalarSym* sym = ctxt.FindNonScalarSym(ctxt.GetWN_MR());
     if (sym) {
       xos << BegElem("xaif:NONSCALAR") << Attr("id", sym->GetName())
 	  << EndAttrs;

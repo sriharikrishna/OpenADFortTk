@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.24 2004/05/28 22:34:59 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.25 2004/06/01 22:22:14 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -47,10 +47,11 @@ using std::vector;
 
 #include <lib/support/Pro64IRInterface.h>
 #include <lib/support/SymTab.h>    // for XAIFSymToWhirlSymMap
+#include <lib/support/ScalarizedRefTab.h>
 #include <lib/support/WhirlIDMaps.h>
+#include <lib/support/XAIFStrings.h>
 #include <lib/support/wn_attr.h>   // for WN_Tree_Type
 #include <lib/support/stab_attr.h> // for Stab_Pointer_To
-#include <lib/support/XAIFStrings.h>
 #include <lib/support/diagnostics.h>
 
 //*************************** Forward Declarations ***************************
