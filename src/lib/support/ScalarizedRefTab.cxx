@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.6 2004/06/03 13:15:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.7 2004/06/09 20:42:29 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -19,9 +19,16 @@
 
 //************************** System Include Files ***************************
 
+#include <sstream>
+
 //************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
+
+
+//************************ OpenAnalysis Include Files ***********************
+
+#include <OpenAnalysis/ValueNumbers/ExprTree.h>
 
 //*************************** User Include Files ****************************
 
@@ -70,15 +77,32 @@ ScalarizedRefTab_Base::~ScalarizedRefTab_Base()
 // ScalarizedRefTabMap
 //***************************************************************************
 
+ScalarizedRefTabMap_W2X::ScalarizedRefTabMap_W2X()
+{
+}
+
+ScalarizedRefTabMap_W2X::~ScalarizedRefTabMap_W2X()
+{
+  for (iterator it = begin(); it != end(); ++it) {
+    delete (*it).second; // ScalarizedRefTab_W2X*
+  }
+  clear();
+}
+
 void
-ScalarizedRefTabMap_W2X::Create(PU_Info* pu_forest)
-{  
+ScalarizedRefTabMap_W2X::Create(PU_Info* pu_forest, 
+				ScalarizedRef::CreateOp* newref)
+{ 
+  ScalarizedRef::CreateOpDefault defnewref;
+  if (!newref) {
+    newref = &defnewref;
+  }
+  
   Pro64IRProcIterator procIt(pu_forest);
   for ( ; procIt.IsValid(); ++procIt) { 
     PU_Info* pu = (PU_Info*)procIt.Current();
     
-    ScalarizedRefTab_W2X* tab = new ScalarizedRefTab_W2X;
-    tab->Create(pu);
+    ScalarizedRefTab_W2X* tab = new ScalarizedRefTab_W2X(pu, newref);
     Insert(pu, tab);
   }
 }
@@ -96,24 +120,31 @@ ScalarizedRefTab()
 ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
 ~ScalarizedRefTab()
 {
-  // Clear table
-#if 0 // FIXME *** problem: many WN* can point to one ScalarizedRef
-  for (iterator it = begin(); it != end(); ++it) {
-    delete (*it).second; // ScalarizedRef*
+  // Clear table ref pool
+  for (ScalarizedRefPoolTy::iterator it = scalarizedRefPool.begin();
+       it != scalarizedRefPool.end(); ++it) {
+    delete (*it); // ScalarizedRef*
   }
+  scalarizedRefPool.clear();
+  
+  // Clear Table
   clear();
-#endif
 }
 
 
 void
 ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
-Create(PU_Info* pu)
+Create(PU_Info* pu, ScalarizedRef::CreateOp* newref)
 { 
-  // for each non-scalar-ref 
-  //   create hash of ref
-  //   if <hash, sym> already in map, use that symbol
-  //   else: add <hash, new sym> to map
+  ScalarizedRef::CreateOpDefault defnewref;
+  if (!newref) {
+    newref = &defnewref;
+  }
+  
+  WN* wn_pu = PU_Info_tree_ptr(pu);
+  WN* fbody = WN_func_body(wn_pu);
+  AddToScalarizedRefTabOp op(this, pu, *newref);
+  ForAllNonScalarRefs(fbody, op);
 }
 
 void
@@ -152,7 +183,7 @@ UINT ScalarizedRef::nextId = 0; // static member
 ScalarizedRef::ScalarizedRef()
 {
   id = nextId++;
-  name = cat("*nonscalarsym*", id);  
+  name = cat("scalarizedref", id);
 }
 
 ScalarizedRef::~ScalarizedRef()
@@ -172,7 +203,6 @@ ScalarizedRef::DDump() const
 }
 
 
-
 //***************************************************************************
 // 
 //***************************************************************************
@@ -183,8 +213,6 @@ ScalarizedRef::DDump() const
 bool 
 IsVarRefTranslatableToXAIF(const WN* wn)
 {
-  // FIXME: IsScalarRef should perhaps be is_translatable_to_xaif
-
   OPERATOR opr = WN_operator(wn);
   if (!OPERATOR_is_expression(opr)) { return false; }
   
@@ -358,10 +386,19 @@ ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
 }
 
 
-AddToScalarizedRefTabOp::AddToScalarizedRefTabOp(ScalarizedRefTab_W2X* symtab_)
+AddToScalarizedRefTabOp::
+AddToScalarizedRefTabOp(ScalarizedRefTab_W2X* tab_, 
+			PU_Info* curpu_,
+			ScalarizedRef::CreateOp& newref_)
+  : tab(tab_), curpu(curpu_), newrefop(newref_)
 { 
-  symtab = symtab_;
-  ASSERT_FATAL(symtab != NULL, (DIAG_A_STRING, "Programming Error."));
+  ASSERT_FATAL(tab, (DIAG_A_STRING, "Programming Error."));
+  ir = Pro64IRInterface();
+}
+
+AddToScalarizedRefTabOp::~AddToScalarizedRefTabOp()
+{
+  workmap.clear();
 }
 
 
@@ -370,13 +407,28 @@ AddToScalarizedRefTabOp::AddToScalarizedRefTabOp(ScalarizedRefTab_W2X* symtab_)
 int 
 AddToScalarizedRefTabOp::operator()(const WN* wn) 
 {
-  // Base case
-#if 0 // FIXME
-  fprintf(stderr, "----------\n");
-  fdump_tree(stderr, wn); // FIXME: append this to a symtab somewhere
-#endif
+  // create a hash of this reference
+  ExprTree *e = ir.GetExprTreeForExprHandle((ExprHandle)wn);
+  ostringstream o;
+  e->str(o);
+  string s = o.str();
   
-  ScalarizedRef* sym = new ScalarizedRef();
-  bool ret = symtab->Insert(wn, sym);
-  return (ret) ? 0 : 1;
+  // if <hash, sym> not already in workmap, insert <hash, new sym>
+  ScalarizedRef* sym = NULL;
+  WorkMapTy::iterator it = workmap.find(s);
+  if (it == workmap.end()) {
+    sym = newrefop(curpu, wn, s.c_str());
+    workmap.insert(make_pair(s, sym));
+  } else {
+    sym = (*it).second;
+  }
+  
+#if 0
+  cout << "Ref: '" << s << "' --> "; sym->Dump(cout); cout << endl;
+  fdump_tree(stdout, (WN*)wn);
+#endif  
+
+  // insert <wn, sym> in tab
+  tab->Insert(wn, sym);
 }
+
