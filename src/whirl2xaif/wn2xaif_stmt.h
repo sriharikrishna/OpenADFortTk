@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.13 2004/06/28 18:52:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.14 2004/08/05 18:36:07 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -174,7 +174,7 @@ namespace whirl2xaif {
   WN2F_eval(xml::ostream& xos, WN *wn, XlationContext& ctxt);
   
   extern whirl2xaif::status 
-  xlate_PRAGMA(xml::ostream& xos, WN *wn, XlationContext& context);
+  xlate_PRAGMA(xml::ostream& xos, WN *wn, XlationContext& ctxt);
   
   extern whirl2xaif::status 
   xlate_PREFETCH(xml::ostream& xos, WN *wn, XlationContext& ctxt);

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.13 2004/06/03 01:37:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.14 2004/08/05 18:36:07 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -50,8 +50,8 @@
 //
 //***************************************************************************
 
-#ifndef st2f_INCLUDED
-#define st2f_INCLUDED
+#ifndef st2xaif_INCLUDED
+#define st2xaif_INCLUDED
 /* ====================================================================
  * ====================================================================
  *
@@ -147,5 +147,5 @@ ST2F_Declare_Tempvar(TY_IDX ty, UINT idx);
    (Func_Return_To_Param(funtype)? \
     (Func_Return_Character(funtype)? 2 : 1) : 0)
 
-#endif /* st2f_INCLUDED */
+#endif /* st2xaif_INCLUDED */
 

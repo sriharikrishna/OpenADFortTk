@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.32 2004/07/30 17:51:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.33 2004/08/05 18:36:07 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -691,6 +691,13 @@ whirl2xaif::WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status
 whirl2xaif::xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  // N.B.: WHIRL indices are 0-based and memory layout is row-major
+  // (right-most index represents contiguous elements).  
+  // In contrast, Fortran indices are 1-based and memory layout is
+  // column-major (left-most index represents contiguous elements).
+  // To convert WHIRL indices into a Fortran index expression, reverse
+  // their order and denormalize to base 1.
+  
   /* Note that array indices have been normalized to assume the
    * array is based at index zero.  Since a base at index 1 is
    * the default for Fortran, we denormalize to base 1 here. */
