@@ -1,6 +1,6 @@
 # -*-Mode: sh;-*-
 # For csh or tcsh
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.11 2003/12/29 20:44:02 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.12 2004/01/25 02:35:38 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
@@ -95,6 +95,7 @@ setenv WHIRL2XAIF_OPEN64BASE "${OPEN64_BASE}/osprey1.0"
 setenv WHIRL2XAIF_OPEN64  "${OPEN64ROOT}"
 setenv WHIRL2XAIF_OA      "${OPENANALYSISROOT}"
 setenv WHIRL2XAIF_XERCESC "${XERCESCROOT}"
+setenv WHIRL2XAIF_BOOST   "${BOOSTROOT}"
 
 #############################################################################
 # Paths

@@ -1,5 +1,5 @@
 # -*-Mode: sh;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.12 2003/12/19 21:16:06 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.13 2004/01/25 02:35:38 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
@@ -84,6 +84,7 @@ export WHIRL2XAIF_OPEN64BASE="${OPEN64_BASE}/osprey1.0"
 export WHIRL2XAIF_OPEN64="${OPEN64ROOT}"
 export WHIRL2XAIF_OA="${OPENANALYSISROOT}"
 export WHIRL2XAIF_XERCESC="${XERCESCROOT}"
+export WHIRL2XAIF_BOOST="${BOOSTROOT}"
 
 #############################################################################
 # Paths
