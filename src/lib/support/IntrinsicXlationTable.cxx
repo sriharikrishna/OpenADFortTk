@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.12 2004/05/28 15:18:27 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.13 2004/05/28 22:34:39 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -77,10 +77,11 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
                         { XAIFIntrin, "sqrt_scal", "2_SQRT", 1 } },
 
   { { WNExpr, OPR_MOD, NULL, 2 },
-                        { XAIFIntrin, "bogus_mod_scal_scal", "0_WN_MOD", 2 } },
+                        { XAIFIntrin, "bogus_mod_scal_scal", "0_MOD_WN", 2 } },
   { { WNIntrinOp, OPR_INTRINSIC_OP, "AMOD", 2 }, 
-                        { XAIFIntrin, "bogus_mod_scal_scal", "1_CALL_MOD", 2 } },
-  // ?OPR_CALL "MOD" (intrn_info.cxx)
+                        { XAIFIntrin, "bogus_mod_scal_scal", "1_AMOD", 2 } },
+  { { WNIntrinOp, OPR_INTRINSIC_OP, "DMOD", 2 }, 
+                        { XAIFIntrin, "bogus_mod_scal_scal", "2_DMOD", 2 } },
 
   { { WNExpr, OPR_REM, NULL, 2 },
                         { XAIFIntrin, "bogus_rem_scal_scal", NULL, 2 } },
@@ -139,20 +140,20 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
   // Logical (and bitwise logical) operations
 
   { { WNExpr, OPR_BNOT, NULL, 1 },
-                        { XAIFBoolOp, "not", "0_not_bitwise", 1 } },
+                        { XAIFBoolOp, "not", "1_not_bitwise", 1 } },
   { { WNExpr, OPR_BAND, NULL, 2 },
-                        { XAIFBoolOp, "and", "0_and_bitwise", 2 } },
+                        { XAIFBoolOp, "and", "1_and_bitwise", 2 } },
   { { WNExpr, OPR_BIOR, NULL, 2 },
-                        { XAIFBoolOp, "or", "0_or_bitwise", 2 } },
+                        { XAIFBoolOp, "or", "1_or_bitwise", 2 } },
   { { WNExpr, OPR_BXOR, NULL, 2 },
-                        { XAIFBoolOp, "xor", "0_xor_bitwise", 2 } },
+                        { XAIFBoolOp, "xor", "1_xor_bitwise", 2 } },
 
   { { WNExpr, OPR_LNOT, NULL, 1 },
-                        { XAIFBoolOp, "not", "1_not_logical", 1 } },
+                        { XAIFBoolOp, "not", "0_not_logical", 1 } },
   { { WNExpr, OPR_LAND, NULL, 2 },
-                        { XAIFIntrin, "and", "1_and_logical", 2 } },
+                        { XAIFIntrin, "and", "0_and_logical", 2 } },
   { { WNExpr, OPR_LIOR, NULL, 2 },
-                        { XAIFIntrin, "or", "1_or_logical", 2 } },
+                        { XAIFIntrin, "or", "0_or_logical", 2 } },
   { { WNExpr, OPR_CAND, NULL, 2 },
                         { XAIFIntrin, "bogus_cand_scal_scal", NULL, 2 } },
   { { WNExpr, OPR_CIOR, NULL, 2 },
