@@ -44,7 +44,7 @@
   </xaif:ScopeHierarchy>
 
   <!-- ******************************************************************** -->
-  <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="ex__20" annotation="{PU_Id#1}">
+  <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="ex__20" annotation="{PU_Id#1}" controlflowgraph_scope_id="2">
     <xaif:ArgumentList>
       <xaif:ArgumentSymbolReference position="1" scope_id="2" symbol_id="A_1" intent="inout" annotation="{WHIRL_Id#2}"/>
       <xaif:ArgumentSymbolReference position="2" scope_id="2" symbol_id="B_2" intent="inout" annotation="{WHIRL_Id#3}"/>

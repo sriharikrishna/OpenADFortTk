@@ -80,7 +80,7 @@
   </xaif:ScopeHierarchy>
 
   <!-- ******************************************************************** -->
-  <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="globals__20" annotation="{PU_Id#1}">
+  <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="globals__20" annotation="{PU_Id#1}" controlflowgraph_scope_id="2">
     <xaif:ArgumentList/>
 
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
@@ -96,7 +96,7 @@
   </xaif:ControlFlowGraph>
 
   <!-- ******************************************************************** -->
-  <xaif:ControlFlowGraph vertex_id="2" scope_id="1" symbol_id="compute__25" annotation="{PU_Id#2}">
+  <xaif:ControlFlowGraph vertex_id="2" scope_id="1" symbol_id="compute__25" annotation="{PU_Id#2}" controlflowgraph_scope_id="3">
     <xaif:ArgumentList>
       <xaif:ArgumentSymbolReference position="1" scope_id="3" symbol_id="X_1" intent="inout" annotation="{WHIRL_Id#7}"/>
       <xaif:ArgumentSymbolReference position="2" scope_id="3" symbol_id="Y_2" intent="inout" annotation="{WHIRL_Id#8}"/>
@@ -150,7 +150,7 @@
   </xaif:ControlFlowGraph>
 
   <!-- ******************************************************************** -->
-  <xaif:ControlFlowGraph vertex_id="3" scope_id="1" symbol_id="myloop__30" annotation="{PU_Id#3}">
+  <xaif:ControlFlowGraph vertex_id="3" scope_id="1" symbol_id="myloop__30" annotation="{PU_Id#3}" controlflowgraph_scope_id="4">
     <xaif:ArgumentList>
       <xaif:ArgumentSymbolReference position="1" scope_id="4" symbol_id="X_1" intent="inout" annotation="{WHIRL_Id#26}"/>
       <xaif:ArgumentSymbolReference position="2" scope_id="4" symbol_id="Y_2" intent="inout" annotation="{WHIRL_Id#27}"/>
@@ -271,7 +271,7 @@
 
   <!-- ******************************************************************** -->
   <!-- *** This is the PROGRAM routine *** -->
-  <xaif:ControlFlowGraph vertex_id="4" scope_id="1" symbol_id="scopingtest__38" annotation="{PU_Id#4}">
+  <xaif:ControlFlowGraph vertex_id="4" scope_id="1" symbol_id="scopingtest__38" annotation="{PU_Id#4}" controlflowgraph_scope_id="5">
     <xaif:ArgumentList/>
 
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>

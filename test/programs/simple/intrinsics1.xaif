@@ -59,7 +59,7 @@
   </xaif:ScopeHierarchy>
 
   <!-- ******************************************************************** -->
-  <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="ad_types__20" annotation="{PU_Id#1}">
+  <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="ad_types__20" annotation="{PU_Id#1}" controlflowgraph_scope_id="2">
     <xaif:ArgumentList/>
 
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
@@ -76,7 +76,7 @@
 
   <!-- ******************************************************************** -->
   <!-- *** This is the PROGRAM routine *** -->
-  <xaif:ControlFlowGraph vertex_id="2" scope_id="1" symbol_id="intrinsics__26" annotation="{PU_Id#2}">
+  <xaif:ControlFlowGraph vertex_id="2" scope_id="1" symbol_id="intrinsics__26" annotation="{PU_Id#2}" controlflowgraph_scope_id="3">
     <xaif:ArgumentList/>
 
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>

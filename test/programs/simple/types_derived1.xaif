@@ -65,7 +65,7 @@
   </xaif:ScopeHierarchy>
 
   <!-- ******************************************************************** -->
-  <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="coordrec__20" annotation="{PU_Id#1}">
+  <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="coordrec__20" annotation="{PU_Id#1}" controlflowgraph_scope_id="2">
     <xaif:ArgumentList/>
 
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
@@ -81,7 +81,7 @@
   </xaif:ControlFlowGraph>
 
   <!-- ******************************************************************** -->
-  <xaif:ControlFlowGraph vertex_id="2" scope_id="1" symbol_id="distancefromorigin__21" annotation="{PU_Id#2}">
+  <xaif:ControlFlowGraph vertex_id="2" scope_id="1" symbol_id="distancefromorigin__21" annotation="{PU_Id#2}" controlflowgraph_scope_id="3">
     <xaif:ArgumentList>
       <xaif:ArgumentSymbolReference position="1" scope_id="3" symbol_id="C_3" intent="in" annotation="{WHIRL_Id#7}"/>
     </xaif:ArgumentList>
@@ -130,7 +130,7 @@
 
   <!-- ******************************************************************** -->
   <!-- *** This is the PROGRAM routine *** -->
-  <xaif:ControlFlowGraph vertex_id="4" scope_id="1" symbol_id="dosomething__23" annotation="{PU_Id#3}">
+  <xaif:ControlFlowGraph vertex_id="4" scope_id="1" symbol_id="dosomething__23" annotation="{PU_Id#3}" controlflowgraph_scope_id="4">
     <xaif:ArgumentList/>
 
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>

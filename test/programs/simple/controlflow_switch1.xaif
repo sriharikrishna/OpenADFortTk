@@ -67,7 +67,7 @@
   </xaif:ScopeHierarchy>
 
   <!-- ******************************************************************** -->
-  <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="sub1__20" annotation="{PU_Id#1}">
+  <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="sub1__20" annotation="{PU_Id#1}" controlflowgraph_scope_id="2">
     <xaif:ArgumentList>
       <xaif:ArgumentSymbolReference position="1" scope_id="2" symbol_id="I_1" intent="in" annotation="{WHIRL_Id#2}"/>
       <xaif:ArgumentSymbolReference position="2" scope_id="2" symbol_id="BOGUS_2" intent="inout" annotation="{WHIRL_Id#3}"/>
@@ -184,7 +184,7 @@
   </xaif:ControlFlowGraph>
 
   <!-- ******************************************************************** -->
-  <xaif:ControlFlowGraph vertex_id="2" scope_id="1" symbol_id="sub2__26" annotation="{PU_Id#2}">
+  <xaif:ControlFlowGraph vertex_id="2" scope_id="1" symbol_id="sub2__26" annotation="{PU_Id#2}" controlflowgraph_scope_id="3">
     <xaif:ArgumentList>
       <xaif:ArgumentSymbolReference position="1" scope_id="3" symbol_id="DAYOFMONTH_1" intent="in" annotation="{WHIRL_Id#40}"/>
       <xaif:ArgumentSymbolReference position="2" scope_id="3" symbol_id="BOGUS_2" intent="inout" annotation="{WHIRL_Id#41}"/>
@@ -409,7 +409,7 @@
 
   <!-- ******************************************************************** -->
   <!-- *** This is the PROGRAM routine *** -->
-  <xaif:ControlFlowGraph vertex_id="3" scope_id="1" symbol_id="controlflow__27" annotation="{PU_Id#3}">
+  <xaif:ControlFlowGraph vertex_id="3" scope_id="1" symbol_id="controlflow__27" annotation="{PU_Id#3}" controlflowgraph_scope_id="4">
     <xaif:ArgumentList/>
 
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>

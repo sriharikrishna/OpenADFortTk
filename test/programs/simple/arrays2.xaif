@@ -74,7 +74,7 @@
   </xaif:ScopeHierarchy>
 
   <!-- ******************************************************************** -->
-  <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="compute1__20" annotation="{PU_Id#1}">
+  <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="compute1__20" annotation="{PU_Id#1}" controlflowgraph_scope_id="2">
     <xaif:ArgumentList/>
 
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
@@ -420,7 +420,7 @@
   </xaif:ControlFlowGraph>
 
   <!-- ******************************************************************** -->
-  <xaif:ControlFlowGraph vertex_id="4" scope_id="1" symbol_id="compute2__28" annotation="{PU_Id#2}">
+  <xaif:ControlFlowGraph vertex_id="4" scope_id="1" symbol_id="compute2__28" annotation="{PU_Id#2}" controlflowgraph_scope_id="3">
     <xaif:ArgumentList/>
 
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
@@ -516,7 +516,7 @@
 
   <!-- ******************************************************************** -->
   <!-- *** This is the PROGRAM routine *** -->
-  <xaif:ControlFlowGraph vertex_id="5" scope_id="1" symbol_id="f77_f90_arrays__31" annotation="{PU_Id#3}">
+  <xaif:ControlFlowGraph vertex_id="5" scope_id="1" symbol_id="f77_f90_arrays__31" annotation="{PU_Id#3}" controlflowgraph_scope_id="4">
     <xaif:ArgumentList/>
 
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>

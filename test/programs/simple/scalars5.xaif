@@ -68,7 +68,7 @@
   </xaif:ScopeHierarchy>
 
   <!-- ******************************************************************** -->
-  <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="d_head__20" annotation="{PU_Id#1}">
+  <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="d_head__20" annotation="{PU_Id#1}" controlflowgraph_scope_id="2">
     <xaif:ArgumentList>
       <xaif:ArgumentSymbolReference position="1" scope_id="2" symbol_id="X_1" intent="in" annotation="{WHIRL_Id#2}"/>
       <xaif:ArgumentSymbolReference position="2" scope_id="2" symbol_id="D_X_2" intent="in" annotation="{WHIRL_Id#3}"/>
@@ -263,7 +263,7 @@
 
   <!-- ******************************************************************** -->
   <!-- *** This is the PROGRAM routine *** -->
-  <xaif:ControlFlowGraph vertex_id="4" scope_id="1" symbol_id="deriv__24" annotation="{PU_Id#2}">
+  <xaif:ControlFlowGraph vertex_id="4" scope_id="1" symbol_id="deriv__24" annotation="{PU_Id#2}" controlflowgraph_scope_id="3">
     <xaif:ArgumentList/>
 
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
