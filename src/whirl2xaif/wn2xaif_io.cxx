@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.24 2004/07/30 17:51:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.25 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -476,7 +476,7 @@ xlate_IO_ITEM_control(xml::ostream& xos, WN* item, XlationContext& ctxt)
   case IOC_KEY:
     /* TODO: associate this with IOC_KEY */
     FORTTK_DEVMSG(0, FORTTK_UNIMPLEMENTED << "IOC" << IOITEM_name(item_kind));
-    xos << BegComment << "ctr=" << IOITEM_name(item_kind) << "=<???>"
+    xos << BegComment << "ctr=" << IOITEM_name(item_kind) << "=< ??? >"
 	<< EndComment;
     break;
     

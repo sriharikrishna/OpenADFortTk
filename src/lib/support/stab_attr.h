@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.9 2004/07/28 01:28:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.10 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -451,7 +451,7 @@ FLD_Is_Bitfield(FLD_HANDLE fld, FLD_HANDLE next_fld, INT64 max_size)
   /* fld must not be a member of a union! */
   return !FLD_equivalence(fld) &&
     (FLD_is_bit_field(fld) ||
-     (next_fld.Is_Null () && max_size < TY_size(FLD_type(fld))) ||
+     (next_fld.Is_Null () && max_size < (INT64)TY_size(FLD_type(fld))) ||
      (!next_fld.Is_Null() && !FLD_equivalence(next_fld) &&
       FLD_ofst(next_fld) - FLD_ofst(fld) < TY_size(FLD_type(fld))));
 }

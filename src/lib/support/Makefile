@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.17 2005/02/01 21:53:31 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.18 2005/03/19 22:54:50 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -33,7 +33,8 @@ VPATH = $(SRCS)
 
 OBJS = \
 	IntrinsicXlationTable.o \
-	Pro64IRInterface.o \
+	Open64IRInterface.o \
+	OAMaps.o \
 	SymTab.o \
 	ScalarizedRefTab.o \
 	WhirlGlobalStateUtils.o \

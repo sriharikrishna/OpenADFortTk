@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.cxx,v 1.7 2004/06/30 23:45:17 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.cxx,v 1.8 2005/03/19 22:54:50 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -22,7 +22,7 @@
 //*************************** User Include Files ****************************
 
 #include "WhirlIDMaps.h"
-#include "Pro64IRInterface.h"
+#include "Open64IRInterface.hpp"
 
 //************************** Forward Declarations ***************************
 
@@ -83,9 +83,9 @@ WNToWNIdTabMap::~WNToWNIdTabMap()
 void 
 WNToWNIdTabMap::Create(PU_Info* pu_forest)
 {
-  Pro64IRProcIterator procIt(pu_forest);
-  for ( ; procIt.IsValid(); ++procIt) { 
-    PU_Info* pu = (PU_Info*)procIt.Current();
+  Open64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.isValid(); ++procIt) { 
+    PU_Info* pu = (PU_Info*)procIt.current().hval();
     WN* wn_pu = PU_Info_tree_ptr(pu);
     
     WNToWNIdMap* tab = new WNToWNIdMap(wn_pu);
@@ -106,7 +106,7 @@ WNToWNIdTabMap::Destroy()
 // Optional routines for map creation
 //***************************************************************************
 
-// CreateSymTabIdMaps: Create id's based on Pro64IRProcIterator.
+// CreateSymTabIdMaps: Create id's based on Open64IRProcIterator.
 // N.B. this must restore global symtab state for each pu
 void
 CreateSymTabIdMaps(PU_Info* pu_forest, 
@@ -124,9 +124,9 @@ CreateSymTabIdMaps(PU_Info* pu_forest,
   }
   
   // Enter all local symtabs (one symtab per PU)
-  Pro64IRProcIterator procIt(pu_forest);
-  for ( ; procIt.IsValid(); ++procIt) { 
-    PU_Info* pu = (PU_Info*)procIt.Current();    
+  Open64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.isValid(); ++procIt) { 
+    PU_Info* pu = (PU_Info*)procIt.current().hval();    
     
     ++nextId; // create new id
     if (x) {
@@ -139,16 +139,16 @@ CreateSymTabIdMaps(PU_Info* pu_forest,
 }
 
 
-// CreatePUIdMaps: Create id's based on Pro64IRProcIterator. 
+// CreatePUIdMaps: Create id's based on Open64IRProcIterator. 
 void
 CreatePUIdMaps(PU_Info* pu_forest, PUToPUIdMap* x, PUIdToPUMap* y)
 {
   static UINT nextId = 0; // 0 reserved as NULL
   
   // Enter all PUs
-  Pro64IRProcIterator procIt(pu_forest);
-  for ( ; procIt.IsValid(); ++procIt) { 
-    PU_Info* pu = (PU_Info*)procIt.Current();    
+  Open64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.isValid(); ++procIt) { 
+    PU_Info* pu = (PU_Info*)procIt.current().hval();    
     
     ++nextId; // create new id
     if (x) {

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.48 2004/07/30 17:51:44 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.49 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -61,9 +61,7 @@
 
 //************************ OpenAnalysis Include Files ***********************
 
-#include <OpenAnalysis/CallGraph/CallGraph.h>
-
-#include <lib/support/Pro64IRInterface.h>
+#include <lib/support/Open64IRInterface.hpp>
 
 //*************************** User Include Files ****************************
 
@@ -78,6 +76,7 @@ using namespace xml; // for xml::ostream, etc
 
 IntrinsicXlationTable   whirl2xaif::IntrinsicTable(IntrinsicXlationTable::W2X);
 
+PUToOAAnalInfoMap       whirl2xaif::OAAnalMap;
 ScalarizedRefTabMap_W2X whirl2xaif::ScalarizedRefTableMap;
 WNToWNIdTabMap          whirl2xaif::WNToWNIdTableMap;
 
@@ -96,8 +95,12 @@ TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId,
 			  XlationContext& ctxt);
 
 static void
-TranslatePU(xml::ostream& xos, CallGraph::Node* n, UINT32 vertexId,
-	    XlationContext& ctxt);
+TranslateAnalMaps(xml::ostream& xos, PU_Info* pu_forest, XlationContext& ctxt);
+
+static void
+TranslatePU(xml::ostream& xos, 
+            OA::OA_ptr<OA::CallGraph::CallGraphStandard::Node> n, 
+	    UINT32 vertexId, XlationContext& ctxt);
 
 static void 
 TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
@@ -106,9 +109,6 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
 static void 
 TranslateWNPU(xml::ostream& xos, WN* pu, XlationContext& ctxt);
 
-
-static void
-MassageOACallGraphIntoXAIFCallGraph(CallGraph* cg);
 
 static void 
 DumpTranslationHeaderComment(xml::ostream& xos);
@@ -120,47 +120,50 @@ DumpTranslationHeaderComment(xml::ostream& xos);
 void
 whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
 {
+  using namespace OA::CallGraph;
+
   Diag_Set_Phase("WHIRL to XAIF: translate IR");
   //IntrinsicTable.DDump();
   
   if (!pu_forest) { return; }
   
   // -------------------------------------------------------
-  // 1. Initialization
+  // 1. Initialization (Much of this information must be collected
+  // here because it is part of the CallGraph instead of a
+  // ControlFlowGraph)
   // -------------------------------------------------------
-  Pro64IRInterface irInterface;
+  OA::OA_ptr<Open64IRInterface> irInterface;
+  irInterface = new Open64IRInterface;
+  Open64IRInterface::initContextState(pu_forest);
   xml::ostream xos(os.rdbuf());
   XlationContext ctxt;
 
   DumpTranslationHeaderComment(xos); // FIXME (optional)
-  
+
   // Initialize global id maps
+  // NOTE: Do this first so that ids will match in back-translation
   SymTabToSymTabIdMap* stabmap = new SymTabToSymTabIdMap(pu_forest);
   ctxt.SetSymTabToIdMap(stabmap);
   
   PUToPUIdMap* pumap = new PUToPUIdMap(pu_forest);
   ctxt.SetPUToIdMap(pumap);
-
+  
   WNToWNIdTableMap.Create(pu_forest); // Note: could make this local
   
-  // Create scalarized var reference table.  Note: At the moment we
-  // must create all tables in memory because they must be available
-  // for the ScopeHeirarchy.  
+  // Initialize and create inter/intra analysis information
+  OAAnalMap.Create(pu_forest);
+  ctxt.SetActivity(OAAnalMap.GetInterActive());
+  
+  // Create scalarized var reference table
   ScalarizedRefTableMap.Create(pu_forest);
   
   // -------------------------------------------------------
-  // 2. Create and dump CallGraph
+  // 2. Generate XAIF CallGraph
   // -------------------------------------------------------
+  OA::OA_ptr<OA::CallGraph::CallGraphStandard> cgraph = 
+    OAAnalMap.GetCallGraph();
 
-  // Create CallGraph (massage OA version into XAIF version)
-  Pro64IRProcIterator irProcIter(pu_forest);
-  ST* st = ST_ptr(PU_Info_proc_sym(pu_forest));
-  CallGraph cgraph(irInterface, &irProcIter, (SymHandle)st);
-  
-  MassageOACallGraphIntoXAIFCallGraph(&cgraph);
-  //cgraph->dump(cerr);
-  
-  // Dump CallGraph header info and ScopeHierarchy
+  // CallGraph header info
   xos << BegElem("xaif:CallGraph")
       << Attr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
       << Attr("xmlns:xaif", "http://www.mcs.anl.gov/XAIF")
@@ -168,28 +171,33 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
       << Attr("program_name", "***myprog***")
       << Attr("prefix", "OpenAD_");
   
+  // ScopeHierarchy
   ctxt.CreateContext();
   TranslateScopeHierarchy(xos, pu_forest, ctxt);
   ctxt.DeleteContext();
   
-  // Dump CallGraph vertices
-  DGraphNodeVec* nodes = SortDGraphNodes(&cgraph);
+  // Analysis Info Maps
+  TranslateAnalMaps(xos, pu_forest, ctxt);
+  
+  // CallGraph vertices
+  DGraphNodeVec* nodes = SortDGraphNodes(cgraph);
   for (DGraphNodeVec::iterator nodeIt = nodes->begin();
        nodeIt != nodes->end(); ++nodeIt) {
     ctxt.CreateContext();
-    CallGraph::Node* n = dynamic_cast<CallGraph::Node*>(*nodeIt);
+    OA::OA_ptr<CallGraphStandard::Node> n = 
+      (*nodeIt).convert<CallGraphStandard::Node>();
     TranslatePU(xos, n, n->getId(), ctxt);
     ctxt.DeleteContext();
   }
   delete nodes;
   
-  // Dump CallGraph edges
-  DGraphEdgeVec* edges = SortDGraphEdges(&cgraph);
+  // CallGraph edges
+  DGraphEdgeVec* edges = SortDGraphEdges(cgraph);
   for (DGraphEdgeVec::iterator edgeIt = edges->begin(); 
        edgeIt != edges->end(); ++edgeIt) {
-    CallGraph::Edge* e = dynamic_cast<CallGraph::Edge*>(*edgeIt);
-    CallGraph::Node* n1 = dynamic_cast<CallGraph::Node*>(e->source());
-    CallGraph::Node* n2 = dynamic_cast<CallGraph::Node*>(e->sink());
+    OA::OA_ptr<OA::DGraph::Interface::Edge> e = (*edgeIt);
+    OA::OA_ptr<OA::DGraph::Interface::Node> n1 = e->source();
+    OA::OA_ptr<OA::DGraph::Interface::Node> n2 = e->sink();
     DumpCallGraphEdge(xos, ctxt.GetNewEId(), n1->getId(), n2->getId());
   }
   delete edges;
@@ -243,7 +251,7 @@ TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId,
 {
   PU_SetGlobalState(pu);
   
-  // We need WHIRL<->ID maps for translating ScalarizedRefs
+  // Need WHIRL<->ID maps for translating ScalarizedRefs
   WNToWNIdMap* wnmap = WNToWNIdTableMap.Find(pu);
   ctxt.SetWNToIdMap(wnmap);
   
@@ -267,15 +275,74 @@ TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId,
   }
 }
 
+//***************************************************************************
+
+static void
+TranslateAnalMaps(xml::ostream& xos, PU_Info* pu_forest, XlationContext& ctxt)
+{
+  // -------------------------------------------------------
+  // AliasSetList
+  // -------------------------------------------------------
+  xos << BegElem("xaif:AliasSetList");
+
+  xos << BegElem("xaif:AliasSet") << Attr("key", 0);
+  xos << BegElem("xaif:AliasRange") << Attr("from_virtual_address", 1) << Attr("to_virtual_address", 1) << EndElem;
+  xos << EndElem; // xaif:AliasSet
+
+  xos << EndElem; // xaif:AliasSetList
+  xos << std::endl;
+  
+  // -------------------------------------------------------
+  // DUUDSetList: The first two elements are the *same* for each procedure.
+  // -------------------------------------------------------
+  xos << BegElem("xaif:DUUDSetList");
+  Open64IRProcIterator procIt(pu_forest);
+  for (int procCnt = 1; procIt.isValid(); ++procIt, ++procCnt) {
+    PU_Info* pu = (PU_Info*)procIt.current().hval();
+    
+    OAAnalInfo* oaAnal = OAAnalMap.Find(pu);
+    WNToWNIdMap* wnmap = WNToWNIdTableMap.Find(pu);
+    
+    OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchains = oaAnal->GetUDDUChainsXAIF();
+    OA::OA_ptr<OA::XAIF::UDDUChainsXAIF::ChainIterator> chainIter 
+      = udduchains->getChainIterator();
+    for ( ; chainIter->isValid(); ++(*chainIter)) {
+      OA::OA_ptr<OA::XAIF::UDDUChainsXAIF::ChainStmtIterator> siter 
+        = chainIter->currentChainStmtIterator();
+      int chainid = chainIter->currentId(); // 0-2 are same for each proc
+
+      if ((0 <= chainid && chainid <= 2) && procCnt != 1) { continue; }
+      
+      xos << BegElem("xaif:DUUDSet") << Attr("key", chainid);
+      for ( ; siter->isValid(); (*siter)++ ) {
+        OA::StmtHandle stmt = siter->current();
+	WN* stmtWN = (WN*)(stmt.hval());
+	WNId stmtid = wnmap->Find(stmtWN);
+	xos << BegElem("xaif:StatementId");
+	if (stmtWN == NULL) {
+	  xos << Attr("idRef", "");
+ 	}
+	else {
+	  xos << Attr("idRef", stmtid);
+	}
+	xos << EndElem;
+      }
+      xos << EndElem; // xaif:DUUDSet
+    }
+  }
+  xos << EndElem; // xaif:DUUDSetList
+  xos << std::endl;
+}
 
 //***************************************************************************
 
 static void
-TranslatePU(xml::ostream& xos, CallGraph::Node* n, UINT32 vertexId,
-	    XlationContext& ctxt)
+TranslatePU(xml::ostream& xos, 
+            OA::OA_ptr<OA::CallGraph::CallGraphStandard::Node> n, 
+	    UINT32 vertexId, XlationContext& ctxt)
 {
   // FIXME: A more general test will be needed
-  PU_Info* pu = (PU_Info*)n->GetDef();
+  PU_Info* pu = (PU_Info*)n->getProc().hval();
   FORTTK_ASSERT(pu, FORTTK_UNEXPECTED_INPUT << "PU is NULL");
   
   TranslatePU(xos, pu, n->getId(), ctxt);
@@ -354,43 +421,6 @@ TranslateWNPU(xml::ostream& xos, WN *wn_pu, XlationContext& ctxt)
 // 
 //***************************************************************************
 
-// MassageOACallGraphIntoXAIFCallGraph: Process CallGraph to eliminate
-// synthetic edges.
-//   - eliminate special Open64 functions and inlinable intrinsics
-//   - need to figure out what to do with non-inlinable intrinsics
-//  
-static void
-MassageOACallGraphIntoXAIFCallGraph(CallGraph* cg)
-{
-  // -------------------------------------------------------
-  // 1. For now we eliminate nodes without a definition.  
-  // -------------------------------------------------------
-  
-  DGraphNodeList toRemove; // holds basic blocks made empty
-  
-  for (CallGraph::NodesIterator it(*cg); (bool)it; ++it) {
-    CallGraph::Node* n = dynamic_cast<CallGraph::Node*>((DGraph::Node*)it);
-    if (!n->GetDef()) {
-      FORTTK_DIAGIF_DEV(2) {
-	IRInterface& ir = cg->GetIRInterface();
-	const char* nm = ir.GetSymNameFromSymHandle(n->GetSym());
-	std::cout << "* Removing '" << nm << "' from CallGraph\n";
-      }
-      toRemove.push_back(n);
-    }
-  }
-  
-  // Remove empty basic blocks
-  for (DGraphNodeList::iterator it = toRemove.begin(); 
-       it != toRemove.end(); ++it) {
-    DGraph::Node* n = (*it);
-    cg->remove(n);
-    delete n;
-  }
-  toRemove.clear();
-}
-
-
 static void 
 DumpTranslationHeaderComment(xml::ostream& xos)
 {
@@ -407,10 +437,6 @@ DumpTranslationHeaderComment(xml::ostream& xos)
       << Comment(whirl2xaif_divider_comment) << std::endl;
 }
 
-
-//***************************************************************************
-// 
-//***************************************************************************
 
 #if 0
   static char buf[32]; // easily hold a 64 bit number

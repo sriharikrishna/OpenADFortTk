@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.14 2005/03/16 21:27:56 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.15 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -576,6 +576,8 @@ WN_Call_Last_Arg_Idx(const WN* wn)
   case OPR_PICCALL: 
     idx = WN_kid_count(wn) - 2;
     break;
+  default: 
+    break; // fall through
   }
   return idx;
 }

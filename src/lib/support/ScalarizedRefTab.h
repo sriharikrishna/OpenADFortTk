@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.11 2004/12/08 22:09:29 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.12 2005/03/19 22:54:50 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -34,7 +34,7 @@
 //*************************** User Include Files ****************************
 
 #include "BaseMap.h"
-#include "Pro64IRInterface.h"
+#include "Open64IRInterface.hpp"
 #include "diagnostics.h"
 
 //************************** Forward Declarations ***************************
@@ -359,7 +359,7 @@ private:
   ScalarizedRefTab_W2X* tab;
   PU_Info* curpu;
   
-  Pro64IRInterface ir;
+  OA::OA_ptr<Open64IRInterface> ir;
   WorkMapTy workmap;
 };
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.23 2004/08/05 18:36:54 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.24 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -67,7 +67,7 @@ using std::cout;
 
 //************************ OpenAnalysis Include Files ***********************
 
-#include <OpenAnalysis/Utils/Exception.h>
+#include <OpenAnalysis/Utils/Exception.hpp>
 
 //*************************** User Include Files ****************************
 
@@ -116,7 +116,7 @@ main(int argc, char **argv)
     e.Report(cerr);
     exit(1);
   }
-  catch (Exception& e /* OpenAnalysis -- should be in namespace */) {
+  catch (OA::Exception& e) {
     e.report(cerr);
     exit(1);
   }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.30 2004/10/06 22:10:31 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.31 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -62,6 +62,10 @@
 
 #include <include/Open64BasicTypes.h>
 
+//************************ OpenAnalysis Include Files ***********************
+
+#include <OpenAnalysis/CFG/CFGStandard.hpp> // for DGraphStandard, CFG::Edge
+
 //*************************** User Include Files ****************************
 
 #include "whirl2xaif.i"
@@ -116,30 +120,34 @@ extern WN_OFFSET WN2F_Sum_Offsets(WN *addr);
 // Graph utilities
 //***************************************************************************
 
-class DGraph;
-class DGraph::Node;
-class DGraph::Edge;
+//typedef std::vector<OA::DGraph::DGraphStandard::Node*> DGraphNodeVec;
+//typedef std::vector<OA::DGraph::DGraphStandard::Edge*> DGraphEdgeVec;
+//typedef std::vector<OA::CFG::CFGStandard::Edge*> CFGEdgeVec;
+//typedef std::vector<OA::DGraph::DGraphStandard::Node> DGraphNodeVec;
+//typedef std::vector<OA::DGraph::DGraphStandard::Edge> DGraphEdgeVec;
+typedef std::vector<OA::OA_ptr<OA::DGraph::Interface::Node> > DGraphNodeVec;
+typedef std::vector<OA::OA_ptr<OA::DGraph::Interface::Edge> > DGraphEdgeVec;
+//typedef std::vector<OA::CFG::CFGStandard::Edge> CFGEdgeVec;
+typedef std::vector<OA::OA_ptr<OA::CFG::Interface::Edge> > CFGEdgeVec;
 
-typedef std::vector<DGraph::Node*> DGraphNodeVec;
-typedef std::vector<DGraph::Edge*> DGraphEdgeVec;
-typedef std::vector<CFG::Edge*> CFGEdgeVec;
-
-typedef std::list<DGraph::Node*> DGraphNodeList;
 
 // SortDGraphNodes: Sorts DGraph nodes.  User must deallocate returned
 // object.
 extern DGraphNodeVec*
-SortDGraphNodes(DGraph* g);
+SortDGraphNodes(OA::OA_ptr<OA::DGraph::Interface> g);
+//SortDGraphNodes(OA::OA_ptr<OA::DGraph::DGraphStandard> g);
 
 // SortDGraphEdges: Sorts DGraph edges.  User must deallocate returned
 // object.
 extern DGraphEdgeVec*
-SortDGraphEdges(DGraph* g);
+SortDGraphEdges(OA::OA_ptr<OA::DGraph::Interface> g);
+//SortDGraphEdges(OA::OA_ptr<OA::DGraph::DGraphStandard> g);
 
 // SortCFGEdges: Sorts CFG edges.  User must deallocate returned
 // object.
 extern CFGEdgeVec*
-SortCFGEdges(CFG* g);
+SortCFGEdges(OA::OA_ptr<OA::CFG::Interface> g);
+//SortCFGEdges(OA::OA_ptr<OA::CFG::CFGStandard> g);
 
 
 //***************************************************************************

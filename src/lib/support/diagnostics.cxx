@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.cxx,v 1.9 2005/02/01 22:31:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.cxx,v 1.10 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -123,6 +123,7 @@ const char* FORTTK_UNEXPECTED_INPUT =
   "Unexpected input: ";
 const char* FORTTK_UNEXPECTED_OPR = 
   "Unexpected operator: ";
+
 
 void
 Diag_Init(void)

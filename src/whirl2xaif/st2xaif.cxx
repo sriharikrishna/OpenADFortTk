@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.40 2004/10/06 22:10:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.41 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -300,7 +300,7 @@ whirl2xaif::xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
 			       XlationContext& ctxt)
 {
   xos << BegElem("xaif:SymbolTable") << EndAttrs;
-  
+
   xlate_SYMTAB(xos, symtab_lvl, ctxt);
   xlate_ScalarizedRefTab(xos, nonscalarsymtab, ctxt);
   
@@ -472,9 +472,26 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
     
     const char* shape_str = TranslateTYToSymShape(ty);
     if (!shape_str) { shape_str = "***"; }
-    
-    int active = (strcmp(ty_str, "real") == 0 // FIXME: xlate_ScalarizedRefTab
+
+    int active = (strcmp(ty_str, "real") == 0 // FIXME: see xlate_STDecl_VAR
 		  || strcmp(ty_str, "complex") == 0) ? 1 : 0; 
+#if 0    
+    int active = (ctxt.IsActiveSym(st)) ? 1 : 0;
+    if (strcmp(ty_str, "integer") == 0) {
+      active = false;
+      static const char* txt1 = "unactivating the activated symbol '";
+      static const char* txt2 = "' of integral type";
+      if (CURRENT_SYMTAB == GLOBAL_SYMTAB) {
+	FORTTK_MSG(0, "warning: within global scope: " << txt1 << ST_name(st) 
+		   << txt2);
+      }
+      else {
+	ST_IDX pu_st = PU_Info_proc_sym(Current_PU_Info);
+	FORTTK_MSG(0, "warning: within " << ST_name(pu_st) << ": "
+		   << txt1 << ST_name(st) << txt2);
+      }
+    }
+#endif
     
     SymId st_id = (SymId)ST_index(st);
     xos << BegElem("xaif:Symbol") << AttrSymId(st)

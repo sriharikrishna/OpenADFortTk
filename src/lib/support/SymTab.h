@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.12 2004/10/06 22:10:29 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.13 2005/03/19 22:54:50 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -35,6 +35,32 @@
 #include "WhirlIDMaps.h"
 
 //************************** Forward Declarations ***************************
+
+//***************************************************************************
+// Stuff copied from SymTab.cpp in UseNewOA-Open64
+//***************************************************************************
+bool 
+IsVarRefTranslatableToXAIF(const WN* wn);
+
+
+bool
+IsScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty);
+
+bool
+IsNonScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty);
+
+bool
+IsNonScalarRef(const WN* wn);
+
+// WN2F_Can_Assign_Types: This determines whether or not a value of
+// type t1 can be used anywhere we expect a value of type t2.  When
+// this condition is TRUE, yet t1 is different from t2, we expect the
+// implicit Fortran type coersion to transform an object of one type
+// to the other. [FIXME-orig. text]
+bool
+WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2);
+
+
 
 //***************************************************************************
 // XAIFSymToSymbolMap (FIXME)

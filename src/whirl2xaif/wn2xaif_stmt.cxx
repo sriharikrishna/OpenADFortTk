@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.39 2004/07/30 17:51:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.40 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1084,8 +1084,8 @@ static const char unnamed_interface[] = "unnamed interface";
 		  
 		  /* Bug: next and last param may be implicit */
 		  /* this causes the argument list to end with a comma (radu@par.univie.ac.at) */
-		  /* if (param+1 < num_params)
-		     /*     xos << ","; */
+		  /* if (param+1 < num_params) */
+		  /*     xos << ","; */
                    } else
 		     rslt = param_st[param];
 		

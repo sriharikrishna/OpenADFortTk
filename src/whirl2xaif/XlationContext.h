@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.20 2004/06/03 01:37:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.21 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -64,14 +64,14 @@
 
 //************************ OpenAnalysis Include Files ***********************
 
-#include <OpenAnalysis/CFG/CFG.h>
-#include <OpenAnalysis/ValueNumbers/ValueNumbers.h>
+typedef unsigned long VN;
 
 //*************************** User Include Files ****************************
 
 #include <lib/support/XlationCtxt.h>
 #include <lib/support/WhirlParentize.h>
 #include <lib/support/WhirlIDMaps.h>
+#include <lib/support/OAMaps.h>
 #include <lib/support/SymTab.h>
 #include <lib/support/ScalarizedRefTab.h>
 
@@ -336,10 +336,25 @@ public:
   WNToWNIdMap* GetWNToIdMap() const { return wn2idMap; }
   void SetWNToIdMap(WNToWNIdMap* x) { wn2idMap = x; }
 
-  // WN* -> ValNum: (We do not assume ownership of the map)
-  VN FindVN(WN* wnexpr);
-  UJNumbers* GetWNToValNum() const { return wn2vnMap; }
-  void SetWNToValNum(UJNumbers* x) { wn2vnMap = x; }
+  // ST*, WN* -> Activity: (We do not assume ownership of the map)
+  int IsActiveSym(ST* st)
+    { return activity->isActive(OA::SymHandle((OA::irhandle_t)st)); }
+  int IsActiveStmt(PU_Info* pu, WN* wn)
+    { return activity->isActive(OA::ProcHandle((OA::irhandle_t)pu),
+				OA::StmtHandle((OA::irhandle_t)wn)); }
+  int IsActiveVarRef(PU_Info* pu, WN* wn) 
+    { return activity->isActive(OA::ProcHandle((OA::irhandle_t)pu),
+				OA::MemRefHandle((OA::irhandle_t)wn)); }
+  void SetActivity(OA::OA_ptr<OA::Activity::InterActive> x) 
+    { activity = x; }
+
+  // WN* -> UDDUChainsId: (We do not assume ownership of the map)
+  int FindUDDUChainId(WN* wnexpr);
+  OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> GetUDDUChains() const 
+    { return udduchains; }
+  void SetUDDUChains(OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> x)
+    { udduchains = x; }
+  
 
   // ScalarizedRefTab: (We do not assume ownership of the table)
   ScalarizedRef* FindScalarizedRef(WN* wn);
@@ -374,7 +389,8 @@ private:
   SymTabToSymTabIdMap* stab2idMap;
   PUToPUIdMap* pu2idMap;
   WNToWNIdMap* wn2idMap;
-  UJNumbers* wn2vnMap;
+  OA::OA_ptr<OA::Activity::InterActive> activity;
+  OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchains;
   ScalarizedRefTab_W2X* nssymtab;
 
   CtxtStack ctxtstack;

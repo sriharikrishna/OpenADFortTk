@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.24 2004/07/30 17:51:44 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.25 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1388,7 +1388,7 @@ TY2F_Point_At_Path(FLD_PATH_INFO * path, STAB_OFFSET off)
   /* given a fld path, return a pointer to */
   /* the slot at the given offset          */
   while (path != NULL) {
-    if (FLD_ofst(path->fld) >= off)
+    if ((INT64)FLD_ofst(path->fld) >= off)
       break ;    
     path=path->next;
   }

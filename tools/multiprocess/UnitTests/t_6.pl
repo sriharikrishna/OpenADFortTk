@@ -257,13 +257,13 @@ C
 C
 C     **** statements ****
 C
-C     $OpenAD$ BEGIN REPLACEMENT 1
+C     $OpenAD BEGIN REPLACEMENT 1
       T1%v = (X%v*Y%v)
       T2%v = (Y%v+X%v*T1%v)
       Y%v = (T1%v+T2%v)
       RETURN
-C     $OpenAD$ END REPLACEMENT
-C     $OpenAD$ BEGIN REPLACEMENT 2
+C     $OpenAD END REPLACEMENT
+C     $OpenAD BEGIN REPLACEMENT 2
       OpenAD_Symbol_2%v = (X%v*Y%v)
       OpenAD_Symbol_0%v = Y%v
       OpenAD_Symbol_1%v = X%v
@@ -304,8 +304,8 @@ C     $OpenAD$ BEGIN REPLACEMENT 2
           double_tape(double_tape_pointer) = OpenAD_Symbol_21
           double_tape_pointer = double_tape_pointer+1
       RETURN
-C     $OpenAD$ END REPLACEMENT
-C     $OpenAD$ BEGIN REPLACEMENT 3
+C     $OpenAD END REPLACEMENT
+C     $OpenAD BEGIN REPLACEMENT 3
           double_tape_pointer = double_tape_pointer-1
           OpenAD_Symbol_22 = double_tape(double_tape_pointer)
           OpenAD_Symbol_17%d = OpenAD_Symbol_17%d+T1%d*OpenAD_Symbol_22
@@ -333,44 +333,44 @@ C     $OpenAD$ BEGIN REPLACEMENT 3
       OpenAD_Symbol_29 = 1
           Y%d = Y%d+OpenAD_Symbol_17%d*OpenAD_Symbol_29
           OpenAD_Symbol_17%d = 0.0d0
-C     $OpenAD$ END REPLACEMENT
+C     $OpenAD END REPLACEMENT
       END SUBROUTINE
 U1
     $inl_ff = <<'INL';
         subroutine push(x)
-C $OpenAD$  INLINE DECLS
+C $OpenAD  INLINE DECLS
           use OpenAD_tape
           implicit none
           double precision :: x
 
-C   $OpenAD$ END DECLS
+C   $OpenAD END DECLS
           double_tape(double_tape_pointer)=x
           double_tape_pointer=double_tape_pointer+1
         end subroutine push
         subroutine pop(x)
-C $OpenAD$  INLINE DECLS
+C $OpenAD  INLINE DECLS
           use OpenAD_tape
           implicit none
           double precision :: x
 
-C   $OpenAD$ END DECLS
+C   $OpenAD END DECLS
           double_tape_pointer=double_tape_pointer-1
           x=double_tape(double_tape_pointer)
         end subroutine pop
         subroutine saxpy(a,x,y)
-C $OpenAD$  INLINE DECLS
+C $OpenAD  INLINE DECLS
           double precision, intent(in) :: a
           type(active), intent(in) :: x
           type(active), intent(inout) :: y
         
-C   $OpenAD$ END DECLS
+C   $OpenAD END DECLS
           y%d=y%d+x%d*a
         end subroutine saxpy
         subroutine zeroderiv(x)
-C $OpenAD$  INLINE DECLS
+C $OpenAD  INLINE DECLS
           type(active), intent(out) :: x
 
-C   $OpenAD$ END DECLS
+C   $OpenAD END DECLS
           x%d=0.0d0
         end subroutine zeroderiv
 INL
@@ -467,13 +467,13 @@ C
 C
 C     **** statements ****
 C
-C     $OpenAD$ BEGIN REPLACEMENT 1
+C     $OpenAD BEGIN REPLACEMENT 1
       __value__(T1) = (__value__(X) * __value__(Y))
       __value__(T2) = (__value__(Y) + __value__(X) * __value__(T1))
       __value__(Y) = (__value__(T1) + __value__(T2))
       RETURN
-C     $OpenAD$ END REPLACEMENT
-C     $OpenAD$ BEGIN REPLACEMENT 2
+C     $OpenAD END REPLACEMENT
+C     $OpenAD BEGIN REPLACEMENT 2
       __value__(OpenAD_Symbol_2) = (__value__(X) * __value__(Y))
       __value__(OpenAD_Symbol_0) = __value__(Y)
       __value__(OpenAD_Symbol_1) = __value__(X)
@@ -506,70 +506,70 @@ C     $OpenAD$ BEGIN REPLACEMENT 2
      >  __value__(OpenAD_Symbol_14) * __value__(OpenAD_Symbol_9))
       __value__(OpenAD_Symbol_20) = __value__(OpenAD_Symbol_0)
       __value__(OpenAD_Symbol_21) = __value__(OpenAD_Symbol_1)
-C     $OpenAD$ INLINE push(subst)
+C     $OpenAD INLINE push(subst)
       CALL push(__deriv__(OpenAD_Symbol_14))
-C     $OpenAD$ INLINE push(subst)
+C     $OpenAD INLINE push(subst)
       CALL push(__deriv__(OpenAD_Symbol_16))
-C     $OpenAD$ INLINE push(subst)
+C     $OpenAD INLINE push(subst)
       CALL push(__deriv__(OpenAD_Symbol_18))
-C     $OpenAD$ INLINE push(subst)
+C     $OpenAD INLINE push(subst)
       CALL push(__deriv__(OpenAD_Symbol_19))
-C     $OpenAD$ INLINE push(subst)
+C     $OpenAD INLINE push(subst)
       CALL push(__deriv__(OpenAD_Symbol_20))
-C     $OpenAD$ INLINE push(subst)
+C     $OpenAD INLINE push(subst)
       CALL push(__deriv__(OpenAD_Symbol_21))
       RETURN
-C     $OpenAD$ END REPLACEMENT
-C     $OpenAD$ BEGIN REPLACEMENT 3
-C     $OpenAD$ INLINE Pop(subst)
+C     $OpenAD END REPLACEMENT
+C     $OpenAD BEGIN REPLACEMENT 3
+C     $OpenAD INLINE Pop(subst)
       CALL Pop(__deriv__(OpenAD_Symbol_22))
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(__deriv__(OpenAD_Symbol_22), __deriv__(T1), __deriv__(
      > OpenAD_Symbol_17))
-C     $OpenAD$ INLINE Pop(subst)
+C     $OpenAD INLINE Pop(subst)
       CALL Pop(__deriv__(OpenAD_Symbol_23))
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(__deriv__(OpenAD_Symbol_23), __deriv__(T1), __deriv__(
      > OpenAD_Symbol_15))
-C     $OpenAD$ INLINE ZeroDeriv(subst)
+C     $OpenAD INLINE ZeroDeriv(subst)
       CALL ZeroDeriv(__deriv__(T1))
-C     $OpenAD$ INLINE Pop(subst)
+C     $OpenAD INLINE Pop(subst)
       CALL Pop(__deriv__(OpenAD_Symbol_24))
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(__deriv__(OpenAD_Symbol_24), __deriv__(Y), __deriv__(
      > OpenAD_Symbol_15))
-C     $OpenAD$ INLINE Pop(subst)
+C     $OpenAD INLINE Pop(subst)
       CALL Pop(__deriv__(OpenAD_Symbol_25))
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(__deriv__(OpenAD_Symbol_25), __deriv__(Y), __deriv__(
      > OpenAD_Symbol_17))
-C     $OpenAD$ INLINE ZeroDeriv(subst)
+C     $OpenAD INLINE ZeroDeriv(subst)
       CALL ZeroDeriv(__deriv__(Y))
-C     $OpenAD$ INLINE Pop(subst)
+C     $OpenAD INLINE Pop(subst)
       CALL Pop(__deriv__(OpenAD_Symbol_26))
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(__deriv__(OpenAD_Symbol_26), __deriv__(T2), __deriv__(
      > OpenAD_Symbol_17))
-C     $OpenAD$ INLINE Pop(subst)
+C     $OpenAD INLINE Pop(subst)
       CALL Pop(__deriv__(OpenAD_Symbol_27))
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(__deriv__(OpenAD_Symbol_27), __deriv__(T2), __deriv__(
      > OpenAD_Symbol_15))
-C     $OpenAD$ INLINE ZeroDeriv(subst)
+C     $OpenAD INLINE ZeroDeriv(subst)
       CALL ZeroDeriv(__deriv__(T2))
       OpenAD_Symbol_28 = 1
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(OpenAD_Symbol_28, __deriv__(OpenAD_Symbol_15),
      >  __deriv__(X))
-C     $OpenAD$ INLINE ZeroDeriv(subst)
+C     $OpenAD INLINE ZeroDeriv(subst)
       CALL ZeroDeriv(__deriv__(OpenAD_Symbol_15))
       OpenAD_Symbol_29 = 1
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(OpenAD_Symbol_29, __deriv__(OpenAD_Symbol_17),
      >  __deriv__(Y))
-C     $OpenAD$ INLINE ZeroDeriv(subst)
+C     $OpenAD INLINE ZeroDeriv(subst)
       CALL ZeroDeriv(__deriv__(OpenAD_Symbol_17))
-C     $OpenAD$ END REPLACEMENT
+C     $OpenAD END REPLACEMENT
       END SUBROUTINE
 FF
     $w2f1_pp = <<'W2F1PP';
@@ -629,13 +629,13 @@ C
 C
 C     **** statements ****
 C
-C     $OpenAD$ BEGIN REPLACEMENT 1
+C     $OpenAD BEGIN REPLACEMENT 1
       T1%v = (X%v*Y%v)
       T2%v = (Y%v+X%v*T1%v)
       Y%v = (T1%v+T2%v)
       RETURN
-C     $OpenAD$ END REPLACEMENT
-C     $OpenAD$ BEGIN REPLACEMENT 2
+C     $OpenAD END REPLACEMENT
+C     $OpenAD BEGIN REPLACEMENT 2
       OpenAD_Symbol_2%v = (X%v*Y%v)
       OpenAD_Symbol_0%v = Y%v
       OpenAD_Symbol_1%v = X%v
@@ -663,62 +663,62 @@ C     $OpenAD$ BEGIN REPLACEMENT 2
      +_Symbol_9%v)
       OpenAD_Symbol_20%v = OpenAD_Symbol_0%v
       OpenAD_Symbol_21%v = OpenAD_Symbol_1%v
-C     $OpenAD$ INLINE push(subst)
+C     $OpenAD INLINE push(subst)
       CALL push(OpenAD_Symbol_14)
-C     $OpenAD$ INLINE push(subst)
+C     $OpenAD INLINE push(subst)
       CALL push(OpenAD_Symbol_16)
-C     $OpenAD$ INLINE push(subst)
+C     $OpenAD INLINE push(subst)
       CALL push(OpenAD_Symbol_18)
-C     $OpenAD$ INLINE push(subst)
+C     $OpenAD INLINE push(subst)
       CALL push(OpenAD_Symbol_19)
-C     $OpenAD$ INLINE push(subst)
+C     $OpenAD INLINE push(subst)
       CALL push(OpenAD_Symbol_20)
-C     $OpenAD$ INLINE push(subst)
+C     $OpenAD INLINE push(subst)
       CALL push(OpenAD_Symbol_21)
       RETURN
-C     $OpenAD$ END REPLACEMENT
-C     $OpenAD$ BEGIN REPLACEMENT 3
-C     $OpenAD$ INLINE Pop(subst)
+C     $OpenAD END REPLACEMENT
+C     $OpenAD BEGIN REPLACEMENT 3
+C     $OpenAD INLINE Pop(subst)
       CALL Pop(OpenAD_Symbol_22)
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(OpenAD_Symbol_22,T1,OpenAD_Symbol_17)
-C     $OpenAD$ INLINE Pop(subst)
+C     $OpenAD INLINE Pop(subst)
       CALL Pop(OpenAD_Symbol_23)
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(OpenAD_Symbol_23,T1,OpenAD_Symbol_15)
-C     $OpenAD$ INLINE ZeroDeriv(subst)
+C     $OpenAD INLINE ZeroDeriv(subst)
       CALL ZeroDeriv(T1)
-C     $OpenAD$ INLINE Pop(subst)
+C     $OpenAD INLINE Pop(subst)
       CALL Pop(OpenAD_Symbol_24)
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(OpenAD_Symbol_24,Y,OpenAD_Symbol_15)
-C     $OpenAD$ INLINE Pop(subst)
+C     $OpenAD INLINE Pop(subst)
       CALL Pop(OpenAD_Symbol_25)
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(OpenAD_Symbol_25,Y,OpenAD_Symbol_17)
-C     $OpenAD$ INLINE ZeroDeriv(subst)
+C     $OpenAD INLINE ZeroDeriv(subst)
       CALL ZeroDeriv(Y)
-C     $OpenAD$ INLINE Pop(subst)
+C     $OpenAD INLINE Pop(subst)
       CALL Pop(OpenAD_Symbol_26)
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(OpenAD_Symbol_26,T2,OpenAD_Symbol_17)
-C     $OpenAD$ INLINE Pop(subst)
+C     $OpenAD INLINE Pop(subst)
       CALL Pop(OpenAD_Symbol_27)
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(OpenAD_Symbol_27,T2,OpenAD_Symbol_15)
-C     $OpenAD$ INLINE ZeroDeriv(subst)
+C     $OpenAD INLINE ZeroDeriv(subst)
       CALL ZeroDeriv(T2)
       OpenAD_Symbol_28 = 1
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(OpenAD_Symbol_28,OpenAD_Symbol_15,X)
-C     $OpenAD$ INLINE ZeroDeriv(subst)
+C     $OpenAD INLINE ZeroDeriv(subst)
       CALL ZeroDeriv(OpenAD_Symbol_15)
       OpenAD_Symbol_29 = 1
-C     $OpenAD$ INLINE Saxpy(subst,subst,subst)
+C     $OpenAD INLINE Saxpy(subst,subst,subst)
       CALL Saxpy(OpenAD_Symbol_29,OpenAD_Symbol_17,Y)
-C     $OpenAD$ INLINE ZeroDeriv(subst)
+C     $OpenAD INLINE ZeroDeriv(subst)
       CALL ZeroDeriv(OpenAD_Symbol_17)
-C     $OpenAD$ END REPLACEMENT
+C     $OpenAD END REPLACEMENT
       END SUBROUTINE
 W2F1PP
     $inl_src = <<'INL_SRC';
@@ -778,13 +778,13 @@ C
 C
 C     **** statements ****
 C
-C     $OpenAD$ BEGIN REPLACEMENT 1
+C     $OpenAD BEGIN REPLACEMENT 1
       T1%v = (X%v*Y%v)
       T2%v = (Y%v+X%v*T1%v)
       Y%v = (T1%v+T2%v)
       RETURN
-C     $OpenAD$ END REPLACEMENT
-C     $OpenAD$ BEGIN REPLACEMENT 2
+C     $OpenAD END REPLACEMENT
+C     $OpenAD BEGIN REPLACEMENT 2
       OpenAD_Symbol_2%v = (X%v*Y%v)
       OpenAD_Symbol_0%v = Y%v
       OpenAD_Symbol_1%v = X%v
@@ -825,8 +825,8 @@ C     $OpenAD$ BEGIN REPLACEMENT 2
           double_tape(double_tape_pointer) = OpenAD_Symbol_21
           double_tape_pointer = double_tape_pointer+1
       RETURN
-C     $OpenAD$ END REPLACEMENT
-C     $OpenAD$ BEGIN REPLACEMENT 3
+C     $OpenAD END REPLACEMENT
+C     $OpenAD BEGIN REPLACEMENT 3
           double_tape_pointer = double_tape_pointer-1
           OpenAD_Symbol_22 = double_tape(double_tape_pointer)
           OpenAD_Symbol_17%d = OpenAD_Symbol_17%d+T1%d*OpenAD_Symbol_22
@@ -854,7 +854,7 @@ C     $OpenAD$ BEGIN REPLACEMENT 3
       OpenAD_Symbol_29 = 1
           Y%d = Y%d+OpenAD_Symbol_17%d*OpenAD_Symbol_29
           OpenAD_Symbol_17%d = 0.0d0
-C     $OpenAD$ END REPLACEMENT
+C     $OpenAD END REPLACEMENT
       END SUBROUTINE
 INL_SRC
 }

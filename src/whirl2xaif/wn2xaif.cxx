@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.74 2004/10/06 22:10:31 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.75 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -68,9 +68,9 @@
 
 //************************ OpenAnalysis Include Files ***********************
 
-#include <OpenAnalysis/CFG/CFG.h>
-#include <OpenAnalysis/ValueNumbers/ValueNumbers.h>
-#include <lib/support/Pro64IRInterface.h>
+#include <OpenAnalysis/CFG/ManagerCFGStandard.hpp>
+
+#include <lib/support/Open64IRInterface.hpp>
 
 //*************************** User Include Files ****************************
 
@@ -95,7 +95,7 @@ using namespace xml; // for xml::ostream, etc
 static void
 xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-static set<SymHandle>* 
+static set<OA::SymHandle>* 
 GetParamSymHandleSet(WN* wn_pu);
 
 static const char*
@@ -115,35 +115,30 @@ xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 
 static void
-AddControlFlowEndTags(WN* wn, WhirlParentMap* wnParentMap);
-
-static void
-MassageOACFGIntoXAIFCFG(CFG* cfg);
-
-static void
-DumpCFGraphEdge(xml::ostream& xos, UINT eid, CFG::Edge* edge);
+DumpCFGraphEdge(xml::ostream& xos, UINT eid, 
+                OA::OA_ptr<OA::CFG::Interface::Edge> edge);
 
 //*************************** Forward Declarations ***************************
 
 static const char*
-GetCFGVertexType(CFG* cfg, CFG::Node* n);
-
-static const char*
-GetCFGControlFlowVertexType(WN* wstmt);
+GetLoopReversalType(OA::OA_ptr<OA::CFG::Interface> cfg, 
+		    OA::OA_ptr<OA::CFG::Interface::Node> n);
 
 static std::string
-GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt);
+GetIDsForStmtsInBB(OA::OA_ptr<OA::CFG::Interface::Node> node, 
+                   XlationContext& ctxt);
 
 // NOTE: removed static for Sun's compiler (supposed to be in unnamed
 // namespace now)
 pair<bool, INT64>
-GetCFGEdgeCondVal(const CFG::Edge* edge);
+GetCFGEdgeCondVal(const OA::OA_ptr<OA::CFG::Interface::Edge> edge);
 
 // lt_CFGEdge: Used to sort CFG::Edges by src, sink and condition value.
 struct lt_CFGEdge
 {
   // return true if e1 < e2; false otherwise
-  bool operator()(const CFG::Edge* e1, const CFG::Edge* e2) const
+  bool operator()(const OA::OA_ptr<OA::CFG::Interface::Edge> e1, 
+		  const OA::OA_ptr<OA::CFG::Interface::Edge> e2) const
   {
     unsigned int src1 = e1->source()->getId();
     unsigned int src2 = e2->source()->getId();
@@ -243,6 +238,9 @@ whirl2xaif::TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status
 whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  using namespace OA::CFG;
+  using namespace OA::DGraph;
+
   FORTTK_ASSERT(WN_operator(wn) == OPR_FUNC_ENTRY, FORTTK_UNEXPECTED_INPUT); 
   
   WN* fbody = WN_func_body(wn);
@@ -251,36 +249,25 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // Collect auxillary data
   // -------------------------------------------------------
   
-  // 0. WHIRL parent map
+  // 0. WHIRL parent map (FIXME: compute at callgraph)
   WhirlParentMap wnParentMap(wn);
   ctxt.SetWNParentMap(&wnParentMap);
+
+  // 1. OpenAnalysis info
+  OA::ProcHandle proc((OA::irhandle_t)Current_PU_Info);
+
+  OAAnalInfo* oaAnal = OAAnalMap.Find(Current_PU_Info);
+  OA::OA_ptr<OA::CFG::Interface> cfg = 
+    OAAnalMap.GetCFGEach()->getCFGResults(proc);
+  ctxt.SetUDDUChains(oaAnal->GetUDDUChainsXAIF());
   
-  // 1. Non-scalar symbol table
+  // 2. Non-scalar symbol table
   ScalarizedRefTab_W2X* tab = ScalarizedRefTableMap.Find(Current_PU_Info);
   ctxt.SetScalarizedRefTab(tab);
   
-  // 2. WHIRL<->ID maps
+  // 3. WHIRL<->ID maps
   WNToWNIdMap* wnmap = WNToWNIdTableMap.Find(Current_PU_Info);
   ctxt.SetWNToIdMap(wnmap);
-  
-  AddControlFlowEndTags(wn, &wnParentMap); // FIXME
-  
-  // 3. OpenAnalysis CFG
-  Pro64IRInterface irInterface;
-  Pro64IRStmtIterator irStmtIter(fbody);
-  CFG::resetIds();
-  CFG cfg(irInterface, &irStmtIter, (SymHandle)WN_st(wn), true);
-  if (0) { cfg.dump(); }
-  
-  // 4. OpenAnalysis UJ numbers
-  set<SymHandle>* params = GetParamSymHandleSet(wn);
-  UJNumbers vnmap(cfg, *params);
-  delete params;
-  ctxt.SetWNToValNum(&vnmap);
-  
-  // 5. Massage CFG (wait until after Uwe numbers have been computed)
-  MassageOACFGIntoXAIFCFG(&cfg);
-  if (0) { cfg.dump(); }
   
   // -------------------------------------------------------
   // Translate the function header
@@ -295,10 +282,10 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   // Dump CFG vertices (basic blocks) in sorted order ('normalized')
   // Note: It might seem that instead of sorting, we could simply use
-  // DGraph::DFSIterator.  However, procedures can have unreachable
-  // code that will not be found with a DFS.  A simple example of this
-  // is that WHIRL often has two OPR_RETURNs at the end of a
-  // procedure.
+  // DGraphStandard::DFSIterator.  However, procedures can have
+  // unreachable code that will not be found with a DFS.  A simple
+  // example of this is that WHIRL often has two OPR_RETURNs at the
+  // end of a procedure.
 #if 0 // FIXME
   DGraphNodeVec* nodes = SortDGraphNodes(&cfg);
   for (DGraphNodeVec::iterator nodeIt = nodes->begin(); 
@@ -307,13 +294,14 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   // try a BFS iterator.  too bad for dead code. (actually DFS-- BFS
   // not yet implmented) -- toposort FIXME
-  std::set<DGraph::Node*> usedNodes;
-  for (DGraph::DFSIterator nodeIt(cfg); (bool)nodeIt; ++nodeIt) {
-    CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
+  std::set<OA::OA_ptr<OA::CFG::Interface::Node> > usedNodes;
+  OA::OA_ptr<OA::CFG::Interface::DFSIterator> nodeItPtr = cfg->getDFSIterator();
+  for (; nodeItPtr->isValid(); ++(*nodeItPtr)) {
+      OA::OA_ptr<OA::CFG::Interface::Node> n = nodeItPtr->current();
     usedNodes.insert(n);
     // n->longdump(&cfg, std::cerr); std::cerr << endl;
     
-    const char* vtype = GetCFGVertexType(&cfg, n);    
+    const char* vtype = GetCFGVertexType(cfg, n);
     SymTabId scopeId = ctxt.FindSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
     std::string ids = GetIDsForStmtsInBB(n, ctxt);
       
@@ -322,12 +310,17 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     if (vtype == XAIFStrings.elem_BB()) {
       xos << Attr("scope_id", scopeId);
     }
+    else if (vtype == XAIFStrings.elem_BBForLoop()) {
+      xos << Attr("reversal", GetLoopReversalType(cfg,n));
+    }
     xos << WhirlIdAnnot(ids);
     
     // 2. BB element contents
     ctxt.CreateContext();
-    for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
-      WN* wstmt = (WN *)((StmtHandle)stmtIt);
+    OA::OA_ptr<OA::CFG::Interface::NodeStatementsIterator> stmtItPtr
+      = n->getNodeStatementsIterator();
+    for (; stmtItPtr->isValid(); ++(*stmtItPtr)) {
+      WN* wstmt = (WN *)stmtItPtr->current().hval();
       xlate_BBStmt(xos, wstmt, ctxt);
     }
     ctxt.DeleteContext();
@@ -338,19 +331,20 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 #if 0
   delete nodes;
 #endif
-  
+
   // Dump CFG edges (only those within the XAIF graph)
-  CFGEdgeVec* edges = SortCFGEdges(&cfg);
+  CFGEdgeVec* edges = SortCFGEdges(cfg);
   for (CFGEdgeVec::iterator edgeIt = edges->begin(); 
        edgeIt != edges->end(); ++edgeIt) {
-    CFG::Edge* e = (*edgeIt);
-    DGraph::Node* src = e->source();
-    DGraph::Node* snk = e->sink();
+    OA::OA_ptr<OA::CFG::Interface::Edge> e = (*edgeIt);
+    OA::OA_ptr<OA::CFG::Interface::Node> src = e->source();
+    OA::OA_ptr<OA::CFG::Interface::Node> snk = e->sink();
     if (usedNodes.find(src) != usedNodes.end() && 
 	usedNodes.find(snk) != usedNodes.end()) {
       DumpCFGraphEdge(xos, ctxt.GetNewEId(), e);
     }
   }
+
   delete edges;
   
   // -------------------------------------------------------
@@ -455,7 +449,7 @@ whirl2xaif::xlate_PregRef(xml::ostream& xos, ST* st, TY_IDX preg_ty,
   if (!ctxt.IsVarRef()) {
     xos << BegElem(XAIFStrings.elem_VarRef())
 	<< Attr("vertex_id", ctxt.GetNewVId())
-	<< Attr("du_ud", ctxt.FindVN(ctxt.GetWN_MR()));
+	<< Attr("du_ud", ctxt.FindUDDUChainId(ctxt.GetWN_MR()));
     closeVarRef = true; 
   }
 
@@ -537,7 +531,7 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos,
   if (!constant && !ctxt.IsVarRef()) {
     xos << BegElem(XAIFStrings.elem_VarRef())
 	<< Attr("vertex_id", ctxt.GetNewVId())
-	<< Attr("du_ud", ctxt.FindVN(ref_wn));
+	<< Attr("du_ud", ctxt.FindUDDUChainId(ref_wn));
     ctxt.CreateContext(XlationContext::VARREF);
     newContext = true; 
   }
@@ -712,7 +706,7 @@ whirl2xaif::xlate_MemRef(xml::ostream& xos,
   if (!constant && !ctxt.IsVarRef()) {
     xos << BegElem(XAIFStrings.elem_VarRef())
 	<< Attr("vertex_id", ctxt.GetNewVId())
-	<< Attr("du_ud", ctxt.FindVN(ctxt.GetWN_MR()));
+	<< Attr("du_ud", ctxt.FindUDDUChainId(ctxt.GetWN_MR()));
     ctxt.CreateContext(XlationContext::VARREF); // FIXME: do we need wn?
     newContext = true; 
   }
@@ -961,6 +955,9 @@ WN2F_Sum_Offsets(WN *addr)
   case OPR_INTCONST:
     sum = WN_const_val(addr);
     break;
+
+  default: 
+    break; // fall through
   }
   return sum;
 }
@@ -980,47 +977,47 @@ WN2F_Address_Of(xml::ostream& xos)
 //***************************************************************************
 
 DGraphNodeVec*
-SortDGraphNodes(DGraph* g)
+SortDGraphNodes(OA::OA_ptr<OA::DGraph::Interface> g)
 {
-  DGraphNodeVec* vec = new DGraphNodeVec(g->num_nodes());
+  DGraphNodeVec* vec = new DGraphNodeVec(g->getNumNodes());
 
-  DGraph::NodesIterator it(*g);
-  for (int i = 0; (bool)it; ++it, ++i) {
-    (*vec)[i] = (DGraph::Node*)it;
+  OA::OA_ptr<OA::DGraph::Interface::NodesIterator> it = g->getNodesIterator();
+  for (int i = 0; it->isValid(); ++(*it), ++i) {
+    (*vec)[i] = it->current();
   }
   
   // Sort by id (ascending)
-  std::sort(vec->begin(), vec->end(), BaseGraph::lt_Node());
+  //std::sort(vec->begin(), vec->end(), (*(g->getNodeCompare())));
+  std::sort(vec->begin(), vec->end(), OA::DGraph::DGraphStandard::lt_Node());
   
   return vec;
 }
 
-
 DGraphEdgeVec*
-SortDGraphEdges(DGraph* g)
+SortDGraphEdges(OA::OA_ptr<OA::DGraph::Interface> g)
 {
-  DGraphEdgeVec* vec = new DGraphEdgeVec(g->num_edges());
+  DGraphEdgeVec* vec = new DGraphEdgeVec(g->getNumEdges());
 
-  DGraph::EdgesIterator it(*g);
-  for (int i = 0; (bool)it; ++it, ++i) {
-    (*vec)[i] = (DGraph::Edge*)it;
+  OA::OA_ptr<OA::DGraph::Interface::EdgesIterator> it = g->getEdgesIterator();
+  for (int i = 0; it->isValid(); ++(*it), ++i) {
+    (*vec)[i] = it->current();
   }
   
   // Sort by source/target node ids (ascending)
-  std::sort(vec->begin(), vec->end(), DGraph::lt_Edge()); 
+  std::sort(vec->begin(), vec->end(), OA::DGraph::DGraphStandard::lt_Edge()); 
   
   return vec;
 }
 
 
 CFGEdgeVec*
-SortCFGEdges(CFG* g)
+SortCFGEdges(OA::OA_ptr<OA::CFG::Interface> g)
 {
-  CFGEdgeVec* vec = new CFGEdgeVec(g->num_edges());
+  CFGEdgeVec* vec = new CFGEdgeVec(g->getNumEdges());
 
-  DGraph::EdgesIterator it(*g);
-  for (int i = 0; (bool)it; ++it, ++i) {
-    (*vec)[i] = dynamic_cast<CFG::Edge*>((DGraph::Edge*)it);
+  OA::OA_ptr<OA::CFG::Interface::EdgesIterator> it = g->getEdgesIterator();
+  for (int i = 0; it->isValid(); ++(*it), ++i) {
+    (*vec)[i] = it->current();
   }
   
   // Sort by source/target node ids (ascending)
@@ -1047,10 +1044,13 @@ DumpGraphEdge(xml::ostream& xos, const char* nm,
 
 // DumpCFGraphEdge: Dump a CFG edge
 static void
-DumpCFGraphEdge(xml::ostream& xos, UINT eid, CFG::Edge* edge)
+DumpCFGraphEdge(xml::ostream& xos, UINT eid, 
+                OA::OA_ptr<OA::CFG::Interface::Edge> edge)
 {
-  CFG::Node* n1 = dynamic_cast<CFG::Node*>(edge->source());
-  CFG::Node* n2 = dynamic_cast<CFG::Node*>(edge->sink());
+  using namespace OA::CFG;
+
+  OA::OA_ptr<OA::CFG::Interface::Node> n1 = edge->source();
+  OA::OA_ptr<OA::CFG::Interface::Node> n2 = edge->sink();
   
   pair<bool, INT64> ret = GetCFGEdgeCondVal(edge);
   bool hasCondVal = ret.first;
@@ -1140,15 +1140,15 @@ xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 // GetParamSymHandleSet: Return a set of SymHandles representing the
 // parameters of the OPR_FUNC_ENTRY.
-static set<SymHandle>* 
+static set<OA::SymHandle>* 
 GetParamSymHandleSet(WN* wn_pu)
 {
   // Accumulate the ST* for parameters
-  set<SymHandle>* params = new set<SymHandle>;
+  set<OA::SymHandle>* params = new set<OA::SymHandle>;
   INT nparam = WN_num_formals(wn_pu);
   for (int i = 0; i < nparam; ++i) {
     ST* st = WN_st(WN_formal(wn_pu, i));
-    params->insert((SymHandle)st);
+    params->insert(OA::SymHandle((OA::irhandle_t)st));
   }
   return params;
 }
@@ -1256,479 +1256,61 @@ xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 //***************************************************************************
 
-// AddControlFlowEndTags: Add control flow end tags
-// FIXME: assumes fully structured control flow???
-static void
-AddControlFlowEndTags(WN* wn, WhirlParentMap* wnParentMap)
-{
-  // FIXME: we should be skipping most expression sub trees like
-  // interface to NewOA.
-  
-  WN_TREE_CONTAINER<PRE_ORDER> wtree(wn);
-  WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
-  for (it = wtree.begin(); it != wtree.end(); ++it) {
-    WN* curWN = it.Wn();
-    OPERATOR opr = WN_operator(curWN);
-    
-    const char* vty = GetCFGControlFlowVertexType(curWN);
-    if (!vty) { continue; }
-    
-    // Find structured (and some unstructured) control flow and insert
-    // placehoder statement.
-    if (vty == XAIFStrings.elem_BBForLoop() || 
-	vty == XAIFStrings.elem_BBPostLoop() ||
-	vty == XAIFStrings.elem_BBPreLoop()) {
-      // do (...)
-      //   ...
-      // * EndLoop
-      // enddo
-      WN* blkWN = NULL;
-      if (opr == OPR_DO_LOOP) { 
-	blkWN = WN_do_body(curWN); 
-      } else {
-	blkWN = WN_while_body(curWN);
-      }
-      WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndLoop());
-      WN_INSERT_BlockLast(blkWN, newWN);
-    }
-    else if (vty == XAIFStrings.elem_BBBranch()) {
-      WN* ipWN = NULL;
-      if (opr == OPR_SWITCH) {
-	//   switch(...) [unstructured]
-	//     casegoto L2
-	//     casegoto L3
-	//   end
-	//   L2 ... L3 ...
-	//   L1 (branch-around-label: beginning of code after switch)
-	// * EndBranch
-	INT32 lbl = WN_last_label(curWN);
-	for (WN* x = WN_next(curWN); x; x = WN_next(x)) {
-	  if (WN_operator(x) == OPR_LABEL && WN_label_number(x) == lbl) {
-	    ipWN = x;
-	    break;
-	  }
-	}
-      } 
-      else {
-	//   if (...) { ... }  OR   if (...) goto77 [unstructured]
-	//   else { ... }         * EndBranch      
-	//   endif                                
-	// * EndBranch
-	ipWN = curWN;
-      }
-      if (ipWN) {
-	WN* blkWN = wnParentMap->FindBlock(ipWN);
-	WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndBranch());
-	WN_INSERT_BlockAfter(blkWN, ipWN, newWN); // 'newWN' after 'ipWN'
-      }
-    }
-  }
-}
-
-
-// MassageOACFGIntoXAIFCFG: Convert an OpenAnalysis CFG into a valid
-// XAIF CFG.  
-// 
-// 1. OpenAnalysis creates basic blocks with labels at the beginning
-// and branches at the end.  E.g. for TWOWAY_CONDITIONAL and
-// MULTIWAY_CONDITIONAL statements OpenAnalysis may generate BBs such
-// as:
-//
-// Code:                   | BBs:
-//   x = 5                 |          x = 5
-//   if (x .eq. 5) then    |          if (x .eq. 5)
-//     x = 6               |       _______/\_________
-//   else                  |      /                  \
-//     x = 7               |  x = 6                  x = 7
-//   ...                   |      \-------  ---------/
-//                         |              \/
-//                         |            ......
-// 
-// While OA creates correct BBs, in order to create valid XAIF, the
-// first BB must be split so that the if condition can be placed
-// within xaif:If.  We create a new BB here so that the translation
-// into XAIF is easy:
-// 
-//   <xaif:BasicBlock>
-//     <xaif:Assignment...
-//     </xaif:Asignment>
-//   </xaif:BasicBlock>
-// 
-//   <xaif:Branch>
-//     <xaif:Condition...
-//     </xaif:Condition>
-//   </xaif:If>
-// 
-// 2. OpenAnalysis places the initialization and update nodes of
-// OPR_DO_LOOPs in the appropriate BB: they are virtually (but not
-// really) spliced out of the OPR_DO_LOOPs.  For example an
-// OPR_DO_LOOP node with initialization, condition, update, and a
-// block of statements may become:
-//
-//                   ....
-//                   DO_LOOP initialization
-//                              |
-//                              v
-//                      DO_LOOP condition <--------------|
-//                      _______/\________                |
-//                     /                 \               |
-//                    |            DO_LOOP statements    |
-//                    |            DO_LOOP update     ---| 
-//                    v
-//                  .....
-//
-// Because XAIF can preserve and exploit high level control strucures
-// such as OPR_DO_LOOP, we want to *remove* the initialization and
-// update statement so they can be placed in the special xaif:ForLoop
-// construct.  xaif2whirl also depends on this transformation.
-//
-// [When xaif2whirl deletes the translation interval for the first BB
-// above (for subsequent replacement), it actually deletes the whole
-// OPR_DO_LOOP node!  Testing for special conditions doesn't help much
-// because when WHIRL is created from the new XAIF, we do not know how to
-// replace the deleted loop initialization node.]
-//
-// 3. Split basic blocks with EndLoop and EndBranch tags.  EndLoop and
-// EndBranch are taged statements inserted into WHIRL so that
-// corresponding CFG nodes will identify structured loops and
-// branches.  Since EndLoops and EndBranches must be mpty BBs we must
-// split any would in them into BasicBlocks.
-// 
-static void
-MassageOACFGIntoXAIFCFG(CFG* cfg)
-{
-  IRInterface& irInterface = cfg->GetIRInterface();
-
-  typedef std::list< pair<DGraphNodeList::iterator, WN*> > MySplitList;
-
-  DGraphNodeList workList;  
-  MySplitList toSplit; // nodes to split
-  
-  // -------------------------------------------------------
-  // 1. Find BBs with conditionals and split them
-  // -------------------------------------------------------
-
-  // a. Collect all BBs with more that one stmt into 'workList'
-  for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
-    CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
-    if ( (n->size() > 1) ) { 
-      workList.push_back(n);
-    }
-  }
-  
-  // b. Iterate over 'workList' nodes.  For each node examine the
-  // statements.  If a conditional is found at the end of the BB,
-  // split it.  A block will only need to be split at most once.
-  for (DGraphNodeList::iterator nodeIt = workList.begin(); 
-       nodeIt != workList.end(); ++nodeIt) {
-    CFG::Node* n = dynamic_cast<CFG::Node*>(*nodeIt);
-    // n->longdump(cfg, std::cerr);
-    
-    for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
-      StmtHandle stmt = (StmtHandle)stmtIt;
-      
-      IRStmtType ty = irInterface.GetStmtType(stmt);
-      if (ty == STRUCT_TWOWAY_CONDITIONAL
-	  || ty == USTRUCT_TWOWAY_CONDITIONAL_T
-	  || ty == USTRUCT_TWOWAY_CONDITIONAL_F
-	  || ty == STRUCT_MULTIWAY_CONDITIONAL
-	  || ty == USTRUCT_MULTIWAY_CONDITIONAL) {
-	toSplit.push_back(make_pair(nodeIt, (WN*)stmt));
-	break;
-      }
-    }
-  }
-  
-  // c. Split blocks
-  for (MySplitList::iterator it = toSplit.begin(); 
-       it != toSplit.end(); ++it) {
-    DGraphNodeList::iterator nodeIt = (*it).first;
-    CFG::Node* n = dynamic_cast<CFG::Node*>(*nodeIt);
-    WN* startWN = (*it).second;
-    
-    CFG::Node* newblock = cfg->splitBlock(n, (StmtHandle)startWN);
-    cfg->connect(n, newblock, CFG::FALLTHROUGH_EDGE);
-    //n->longdump(cfg);
-    //newblock->longdump(cfg);
-  }
-  toSplit.clear();
-  
-  // d. clear 'workList'
-  workList.clear();
-  
-  
-  // -------------------------------------------------------
-  // 2. Recover OPR_DO_LOOPs
-  // -------------------------------------------------------
-  
-  // This process can create empty basic blocks
-  DGraphNodeList toRemove; // basic blocks made empty (slated for removal)
-  
-  for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
-    CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
-
-    // Use CFG nodes representing the OPR_DO_LOOP condition to find
-    // initialization and update information.  With this info, remove
-    // the initialization and update statements from whatever BB they
-    // may be in.  New basic blocks are not created.
-
-    // FIXME: use a better classification method 
-    if (GetCFGVertexType(cfg, n) == XAIFStrings.elem_BBForLoop()) {
-      assert(n->size() == 1);
-      CFG::NodeStatementsIterator stmtIt(n); 
-      WN* loopWN = (WN *)((StmtHandle)stmtIt);
-
-      WN* initWN = WN_start(loopWN);
-      WN* updateWN = WN_step(loopWN);
-      
-      // FIXME: this is a terrible way of doing this, but the point is
-      // to test correctness for now.
-      for (CFG::NodesIterator nodeIt1(*cfg); (bool)nodeIt1; ++nodeIt1) {
-	CFG::Node* n1 = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt1);
-
-	for (CFG::NodeStatementsIterator stmtIt1(n1); (bool)stmtIt1;
-	     ++stmtIt1) {
-	  WN* wn = (WN *)((StmtHandle)stmtIt1);
-	  if ((wn == initWN) || (wn == updateWN)) {
-	    n1->erase((StmtHandle)wn);
-	    if (n1->size() == 0 && wn == updateWN) {
-	      toRemove.push_back(n1); // ONLY erase update 
-	    }                         // [EndLoop] --> [update] --backedge-->
-	    break;
-	  }
-	}
-      }
-    }
-  }
-
-  // Remove empty basic blocks
-  for (DGraphNodeList::iterator it = toRemove.begin(); 
-       it != toRemove.end(); ++it) {
-    DGraph::Node* n = (*it);
-    
-    // Find predecessor node.  If more than one, we cannot continue
-    if (n->num_incoming() > 1) {
-      continue;
-    }
-    DGraph::SourceNodesIterator sourceIt(n);
-    CFG::Node* pred = dynamic_cast<CFG::Node*>((DGraph::Node*)(sourceIt));
-    
-    // All outgoing edges of 'n' become outgoing edges of 'pred'
-    for (DGraph::OutgoingEdgesIterator outEdgeIt(n); 
-	 (bool)outEdgeIt; ++outEdgeIt) {
-      CFG::Edge* e = dynamic_cast<CFG::Edge*>((DGraph::Edge*)outEdgeIt);
-      CFG::Node* snk = dynamic_cast<CFG::Node*>(e->sink());
-      cfg->connect(pred, snk, e->getType());
-    }
-    
-    cfg->remove(n); // removes all outgoing and incoming edges
-    delete n;
-  }
-  toRemove.clear();
-  
-  
-  // -------------------------------------------------------
-  // 3. Split basic blocks with EndLoop and EndBranch tags
-  // -------------------------------------------------------
-  
-  // Notes:
-  //  - EndBranch statments will be the first or second statment
-  //   (switches) of a basic block; EndLoop at the end.
-  //  - Some blocks will have to be split more than once, requiring an
-  //    iterative algoritihm. E.g.
-  //      EndBr
-  //      Assignment
-  //      EndLoop
-  
-  // uses 'workList'
-  // uses 'toSplit'
-  std::list<DGraphNodeList::iterator> toRem;
-  
-  // a. Collect all BBs with more that one stmt into 'workList'
-  for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
-    CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
-    if ( (n->size() > 1) ) { 
-      workList.push_back(n);
-    }
-  }
-  
-  // b. Iterate until 'workList' is empty (fixed-point is reached).  
-  // Each node in the worklist is guaranteed to have more than one stmt.
-  while (!workList.empty()) {
-    
-    for (DGraphNodeList::iterator nodeIt = workList.begin(); 
-	 nodeIt != workList.end(); ++nodeIt) {
-      CFG::Node* n = dynamic_cast<CFG::Node*>(*nodeIt);
-      
-      // 1. Find split-point for this node.  If there is none, remove it
-      // from 'workList'
-    restart_loop:
-      
-      WN* bbSplitPointWN = NULL; // start of new basic block
-      unsigned int stmtcount = 1;
-      for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; 
-	   ++stmtIt, ++stmtcount) {
-	WN* wn = (WN*)((StmtHandle)stmtIt);
-	
-	const char* vty = GetCFGControlFlowVertexType(wn);
-	if (vty == XAIFStrings.elem_BBEndBranch()) {
-	  // If EndBranch is not the first stmt, move it to the
-	  // beginning and restart the loop
-	  if (stmtcount > 1) {
-	    n->erase((StmtHandle)wn);
-	    n->add_front((StmtHandle)wn);
-	    goto restart_loop;
-	  }
-	  ++stmtIt; // advance iterator to find start of new basic block
-	  assert((bool)stmtIt);
-	  bbSplitPointWN = (WN*)((StmtHandle)stmtIt);
-	  break;
-	}
-	else if (vty == XAIFStrings.elem_BBEndLoop()) {
-	  bbSplitPointWN = wn;
-	  break;
-	}
-      }
-      
-      if (bbSplitPointWN) {
-	toSplit.push_back(make_pair(nodeIt, bbSplitPointWN));
-      } else {
-	toRem.push_back(nodeIt);
-      }
-    }
-        
-    // 2. Split basic blocks
-    for (MySplitList::iterator it = toSplit.begin(); 
-	 it != toSplit.end(); ++it) {
-      DGraphNodeList::iterator nodeIt = (*it).first;
-      CFG::Node* n = dynamic_cast<CFG::Node*>(*nodeIt);
-      WN* startWN = (*it).second;
-      
-      CFG::Node* newblock = cfg->splitBlock(n, (StmtHandle)startWN);
-      cfg->connect(n, newblock, CFG::FALLTHROUGH_EDGE);
-      //n->longdump(cfg);
-      //newblock->longdump(cfg);
-
-      // Remove BBs with less than 1 stmt; add others
-      if (newblock->size() > 1) {
-	workList.push_back(newblock);
-      }
-      if ( !(n->size() > 1) ) {
-	toRem.push_back(nodeIt);
-      }
-    }
-    toSplit.clear();
-
-    // 3. Remove nodes from 'workList'
-    for (std::list<DGraphNodeList::iterator>::iterator it = toRem.begin(); 
-	 it != toRem.end(); ++it) {
-      workList.erase(*it); // *it is type DGraphNodeList::iterator
-    }
-    toRem.clear();
-  }
-  
-}
-
-
-//***************************************************************************
-
-// GetCFGVertexType: A CFG vertex is either an Entry, Exit,
-// BasicBlock, or a special structured control flow vertex (e.g., Branch,
-// ForLoop, PreLoop, PostLoop).  The string returned is from
-// 'XAIFStrings' which means users can compare on pointer value
-// (instead of using strcmp()).
-//
-// Vertices are classified by the statements contained within.  Since
-// the classifications are mutually exclusive, a vertex should not
-// contain two statements that correspond to structured control flow.
-//
-// FIXME: we know that loop and if BBs should only have one node in
-// them. because of MassageOA...
+// GetLoopReversalType:
 static const char*
-GetCFGVertexType(CFG* cfg, CFG::Node* n)
+GetLoopReversalType(OA::OA_ptr<OA::CFG::Interface> cfg, 
+		    OA::OA_ptr<OA::CFG::Interface::Node> n)
 {
-  // We know these are cheap so they can be recomputed each time we are called
-  CFG::Node* entry = cfg->Entry();
-  CFG::Node* exit = cfg->Exit();
-  
-  if (n == entry) {
-    return XAIFStrings.elem_BBEntry();
-  } else if (n == exit) { 
-    return XAIFStrings.elem_BBExit();
-  }
-  
-  // FIXME: we do not need to iterate over all statements since
-  // control flow statements contructs will be in their own xaif:BB.
-  for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
-    WN* wstmt = (WN *)((StmtHandle)stmtIt);
+  const char* loopTy = "anonymous";
+
+  // Find the WN corresponding to xaif:ForLoop
+  WN* loopWN = NULL;
+  OA::OA_ptr<OA::CFG::Interface::NodeStatementsIterator> stmtIt
+    = n->getNodeStatementsIterator();
+  for (; stmtIt->isValid(); ++(*stmtIt)) {
+    OA::StmtHandle st = stmtIt->current();
+    WN* wstmt = (WN*)st.hval();
     const char* vty = GetCFGControlFlowVertexType(wstmt);
-    if (vty) { 
-      return vty; 
+    if (vty == XAIFStrings.elem_BBForLoop()) { 
+      loopWN = wstmt;
+      break;
     }
   }
   
-  return XAIFStrings.elem_BB(); // default, non-structured type
-}
+  FORTTK_ASSERT(loopWN, "Could not find WN corresponding to xaif:ForLoop");
 
-
-// GetCFGControlFlowVertexType: If the WHIRL statement corresponds to a
-// CFG *control flow* vertex, return that type.  Otherwise return NULL.
-// Returns strings from XAIFStrings.
-static const char*
-GetCFGControlFlowVertexType(WN* wstmt) // FIXME
-{
-  OPERATOR opr = WN_operator(wstmt);
-  switch (opr) {
-    
-    // In OA, loop nodes represent the *condition* (not the body).
-    // For a DO_LOOP, it additionally represents the initialization
-    // and update statements.
-  case OPR_DO_LOOP: 
-    return XAIFStrings.elem_BBForLoop();
-  case OPR_DO_WHILE: 
-    return XAIFStrings.elem_BBPostLoop();
-  case OPR_WHILE_DO:
-    return XAIFStrings.elem_BBPreLoop();
-
-    // In OA, IF nodes represent the *condition* (not the body)
-  case OPR_IF:
-  case OPR_TRUEBR:   // unstructured
-  case OPR_FALSEBR:  // unstructured
-    return XAIFStrings.elem_BBBranch();
-  case OPR_SWITCH:   // unstructured
-  case OPR_COMPGOTO: // unstructured
-    return XAIFStrings.elem_BBBranch();
-    
-    // Currently we use special comments to denote EndBranch and EndLoop
-  case OPR_COMMENT: 
-    {
-      static const char* endbr = XAIFStrings.elem_BBEndBranch();
-      static const char* endlp = XAIFStrings.elem_BBEndLoop();
-      const char* com = Index_To_Str(WN_GetComment(wstmt));
-      if (strcmp(com, endbr) == 0) {
-	return endbr;
-      } else if (strcmp(com, endlp) == 0) {
-	return endlp;
+  // Check for a PRAGMA immediately before
+  WN* pragWN = WN_prev(loopWN);
+  if (pragWN && WN_operator(pragWN) == OPR_PRAGMA) {
+    WN_PRAGMA_ID prag = (WN_PRAGMA_ID)WN_pragma(pragWN);
+    if (prag == WN_PRAGMA_OPENAD_XXX) {
+      static const char* TXT = "\"simple loop";
+      const char* txt = Targ_Print(NULL, WN_val(pragWN)); // CLASS_CONST
+      if (strncasecmp(txt, TXT, strlen(TXT)) == 0) {
+	loopTy = "explicit";
       }
-      // fall through
     }
   }
   
-  return NULL;
+  return loopTy;
 }
-
 
 // GetIDsForStmtsInBB: Returns a colon separated list for ids of
 // statements within the basic block.  In the event that a statement
 // id maps to zero, it is *not* included in the list.
 static std::string
-GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt)
+GetIDsForStmtsInBB(OA::OA_ptr<OA::CFG::Interface::Node> node, 
+                   XlationContext& ctxt)
 {
+  using namespace OA::CFG;
+  
   std::string idstr;
   bool emptystr = true;
   
-  for (CFG::NodeStatementsIterator stmtIt(node); (bool)stmtIt; ++stmtIt) {
-    WN* wstmt = (WN *)((StmtHandle)stmtIt);
+  OA::OA_ptr<OA::CFG::Interface::NodeStatementsIterator> stmtItPtr
+    = node->getNodeStatementsIterator();
+  for (; stmtItPtr->isValid(); ++(*stmtItPtr)) {
+    WN* wstmt = (WN *)stmtItPtr->current().hval();
     WNId id = ctxt.FindWNId(wstmt);
     
     // Skip statements without a valid id
@@ -1753,18 +1335,20 @@ GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt)
 // (There is no reserved NULL value for the condition value; it should
 // only be used when the first part of the pair is true!)
 pair<bool, INT64>
-GetCFGEdgeCondVal(const CFG::Edge* edge)
+GetCFGEdgeCondVal(const OA::OA_ptr<OA::CFG::Interface::Edge> edge)
 {
-  CFG::EdgeType ety = edge->getType();
-  WN* eexpr = (Pro64ExprHandle)edge->getExpr();
+  using namespace OA::CFG;
+  
+  Interface::EdgeType ety = edge->getType();
+  WN* eexpr = (WN*)edge->getExpr().hval();
   
   bool hasCondVal = false;
   INT64 condVal = 0;
-  if (ety == CFG::TRUE_EDGE) {
+  if (ety == Interface::TRUE_EDGE) {
     hasCondVal = true;
     condVal = 1;
   } 
-  else if (ety == CFG::MULTIWAY_EDGE && eexpr) {
+  else if (ety == Interface::MULTIWAY_EDGE && eexpr) {
     hasCondVal = true;
     OPERATOR opr = WN_operator(eexpr);
     if (opr == OPR_CASEGOTO) { // from an OPR_SWITCH
@@ -1950,12 +1534,12 @@ unsigned int WNXlationTable::initTableSz = INIT_TABLE_SZ;
 WNXlationTable::WNXlationTable()
 {
   // Initialize table with default handler
-  for (int i = 0; i < tableSz; ++i) {
+  for (unsigned int i = 0; i < tableSz; ++i) {
     table[i] = &xlate_unknown;
   }
   
   // Initialize the table using 'initTable'
-  for (int i = 0; i < initTableSz; ++i) {
+  for (unsigned int i = 0; i < initTableSz; ++i) {
     table[initTable[i].opr] = initTable[i].fn;
   }
   

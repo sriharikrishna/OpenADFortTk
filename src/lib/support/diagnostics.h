@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.10 2004/08/09 14:35:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.11 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -236,7 +236,7 @@ FortTk_TheMostVisitedBreakpointInHistory(const char* filenm = NULL,
 // (Equivalent to FORTTK_DIE.) Based on Jean Utke's code in xaifBooster.
 #define FORTTK_THROW(streamArgs)                                      \
   { std::ostringstream WeIrDnAmE;                                     \
-    WeIrDnAmE << streamArgs;                                          \
+    WeIrDnAmE << streamArgs << std::ends;                             \
     throw FortTk::FatalException(WeIrDnAmE.str(), __FILE__, __LINE__); }
 
 #endif
@@ -362,21 +362,25 @@ typedef enum Diag_Code
 
 #ifdef Is_True_On
 
-//#define XXX_ASSERT_WARN(a_truth, diag_args) \
-//   DIAG_ASSERT_LOC(a_truth, Diag_Warning, diag_args)
-//#define ASSERT_FATAL(a_truth, diag_args) \
-//   DIAG_ASSERT_LOC(a_truth, Diag_Fatal, diag_args)
-//#define ASSERT_DBG_WARN XXX_ASSERT_WARN
-//#define ASSERT_DBG_FATAL ASSERT_FATAL
+/*
+#define XXX_ASSERT_WARN(a_truth, diag_args) \
+   DIAG_ASSERT_LOC(a_truth, Diag_Warning, diag_args)
+#define ASSERT_FATAL(a_truth, diag_args) \
+   DIAG_ASSERT_LOC(a_truth, Diag_Fatal, diag_args)
+#define ASSERT_DBG_WARN XXX_ASSERT_WARN
+#define ASSERT_DBG_FATAL ASSERT_FATAL
+*/
 
 #else /* !defined(Is_True_On) */
 
-//#define XXX_ASSERT_WARN(a_truth, diag_args) \
-//   DIAG_ASSERT_NOLOC(a_truth, Diag_Warning, diag_args)
-//#define ASSERT_FATAL(a_truth, diag_args) \
-//   DIAG_ASSERT_NOLOC(a_truth, Diag_Fatal, diag_args)
-//# define ASSERT_DBG_WARN(a_truth, diag_args) ((void) 1)
-//# define ASSERT_DBG_FATAL(a_truth, diag_args) ((void) 1)
+/*
+#define XXX_ASSERT_WARN(a_truth, diag_args) \
+   DIAG_ASSERT_NOLOC(a_truth, Diag_Warning, diag_args)
+#define ASSERT_FATAL(a_truth, diag_args) \
+   DIAG_ASSERT_NOLOC(a_truth, Diag_Fatal, diag_args)
+# define ASSERT_DBG_WARN(a_truth, diag_args) ((void) 1)
+# define ASSERT_DBG_FATAL(a_truth, diag_args) ((void) 1)
+*/
 
 #endif /*Is_True_On*/
 

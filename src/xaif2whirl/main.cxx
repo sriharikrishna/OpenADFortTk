@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.23 2005/01/17 19:35:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.24 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -51,7 +51,7 @@
 
 //************************ OpenAnalysis Include Files ***********************
 
-#include <OpenAnalysis/Utils/Exception.h>
+#include <OpenAnalysis/Utils/Exception.hpp>
 
 //*************************** User Include Files ****************************
 
@@ -110,7 +110,7 @@ main(int argc, char **argv)
     e.Report(cerr);
     exit(1);
   }
-  catch (Exception &e /* OpenAnalysis -- should be in namespace */) {
+  catch (OA::Exception &e) {
     e.report(cerr);
     exit(1);
   }
@@ -269,7 +269,7 @@ ReadXAIF_DOM(const char* xaiffilenm)
     errorsOccured = true;
   }
   FORTTK_ASSERT(!errorsOccured, "Parse Error.");
-
+  
   return parser;
 }
 

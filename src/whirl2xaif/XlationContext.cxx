@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.16 2004/07/30 17:51:44 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.17 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -72,7 +72,7 @@
 XlationContext::XlationContext()
   : flags(0), 
     wnParentMap(NULL), stab2idMap(NULL), pu2idMap(NULL), wn2idMap(NULL),
-    wn2vnMap(NULL), nssymtab(NULL)
+    nssymtab(NULL)
 {
   ctxtstack.push_front(Ctxt());
 }
@@ -193,10 +193,13 @@ XlationContext::FindWNId(WN* wn)
   return 0;
 }
 
-VN
-XlationContext::FindVN(WN* wnexpr)
+int
+XlationContext::FindUDDUChainId(WN* wnexpr)
 {
-  if (wn2vnMap) { return wn2vnMap->Find((ExprHandle)wnexpr); }
+  if (!udduchains.ptrEqual(NULL)) { 
+    OA::MemRefHandle h((OA::irhandle_t)wnexpr);
+    return udduchains->getUDDUChainId(h);
+  }
   return 0;
 }
 

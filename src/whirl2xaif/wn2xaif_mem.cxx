@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.34 2004/10/06 22:10:31 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.35 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -413,7 +413,12 @@ whirl2xaif::xlate_ILOAD(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TY_IDX ref_ty = WN_GetRefObjType(wn);
   
   // Translate into a reference (dereference address???)
-  ctxt.CurContext().SetWN(wn);
+  WN* ctxtWN = wn; 
+  if (WN_operator(baseptr) == OPR_ARRAY) {
+    // FIXME: for du_ud numbers; ARRAY, not ILOAD, is top of ref
+    ctxtWN = baseptr; 
+  }
+  ctxt.CurContext().SetWN(ctxtWN);
   if (WN_operator(baseptr) == OPR_LDA || WN_operator(baseptr) == OPR_LDID)
     set_XlationContext_has_no_arr_elmt(ctxt); // FIXME
   
@@ -449,9 +454,9 @@ whirl2xaif::WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   /* Get the object to be loaded */
   xlate_MemRef(xos, WN_kid0(wn), /* base-symbol */
-		     base_ty, /* base-type */
-		     TY_pointed(WN_ty(wn)), /* object-type */
-		     WN_load_offset(wn), /* object-ofst */ ctxt);
+	       base_ty, /* base-type */
+	       TY_pointed(WN_ty(wn)), /* object-type */
+	       WN_load_offset(wn), /* object-ofst */ ctxt);
 
   return whirl2xaif::good;
 }
@@ -482,7 +487,7 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // LHS of assignment
   WN* lhs = wn; // OPR_STID represents the LHS of the assignment
   xos << BegElem(XAIFStrings.elem_AssignLHS()) 
-      << Attr("du_ud", ctxt.FindVN(lhs)) << EndAttrs;
+      << Attr("du_ud", ctxt.FindUDDUChainId(lhs)) << EndAttrs;
   ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for LHS
   
   if (ST_class(base_st) == CLASS_PREG) { // FIXME
@@ -534,14 +539,13 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   // LHS of assignment (dereference address)
   WN* lhs = baseptr;
   xos << BegElem(XAIFStrings.elem_AssignLHS()) 
-      << Attr("du_ud", ctxt.FindVN(lhs)) << EndAttrs;
+      << Attr("du_ud", ctxt.FindUDDUChainId(lhs)) << EndAttrs;
   ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for LHS
   
   if (WN_operator(baseptr) == OPR_LDA || WN_operator(baseptr) == OPR_LDID) {
     set_XlationContext_has_no_arr_elmt(ctxt);
   }
-  xlate_MemRef(xos, baseptr, baseptr_ty, ref_ty, WN_store_offset(wn),
-		     ctxt);
+  xlate_MemRef(xos, baseptr, baseptr_ty, ref_ty, WN_store_offset(wn), ctxt);
   reset_XlationContext_has_no_arr_elmt(ctxt); 
 
   ctxt.DeleteContext();
@@ -715,7 +719,7 @@ whirl2xaif::xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   if (!ctxt.IsVarRef()) {
     xos << BegElem(XAIFStrings.elem_VarRef())
 	<< Attr("vertex_id", ctxt.GetNewVId())
-	<< Attr("du_ud", ctxt.FindVN(wn));
+	<< Attr("du_ud", ctxt.FindUDDUChainId(wn));
     ctxt.CreateContext(XlationContext::VARREF, wn); // FIXME: do we need wn?
     newContext = true; 
   }
@@ -737,7 +741,7 @@ whirl2xaif::xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     if (WN_operator(kid) == OPR_LDID 
 	&& ST_sclass(WN_st(kid)) == SCLASS_FORMAL 
 	&& !ST_is_value_parm(WN_st(kid))
-	&& WN_element_size(wn) == TY_size(array_ty)
+	&& WN_element_size(wn) == (INT64)TY_size(array_ty)
 	&& WN_num_dim(wn) == 1
 	&& WN_operator(WN_array_index(wn, 0)) == OPR_INTCONST 
 	&& WN_const_val(WN_array_index(wn, 0)) == 0 
@@ -1014,7 +1018,7 @@ whirl2xaif::WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
          ST_sclass(WN_st(kid)) == SCLASS_FORMAL &&
          !ST_is_value_parm(WN_st(kid))          &&
-         WN_element_size(wn) == TY_size(array_ty)       &&
+         WN_element_size(wn) == (INT64)TY_size(array_ty)       &&
          WN_num_dim(wn) == 1                            &&
          WN_operator(WN_array_index(wn, 0)) == OPR_INTCONST &&
          WN_const_val(WN_array_index(wn, 0)) == 0       &&
@@ -1215,7 +1219,8 @@ WN2F_array_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,
   // (TY_Is_Array(array_ty) && TY_AR_ndims(array_ty) >= WN_num_dim(wn)) 
   FORTTK_ASSERT_WARN((TY_AR_ndims(array_ty) == WN_num_dim(wn)),
 		     "array dimension mismatch");
-  FORTTK_ASSERT_WARN((TY_size(TY_AR_etype(array_ty)) == WN_element_size(wn)) 
+  FORTTK_ASSERT_WARN(((INT64)TY_size(TY_AR_etype(array_ty)) 
+		        == WN_element_size(wn)) 
 		     || WN_element_size(wn) < 0 
 		     || TY_size(TY_AR_etype(array_ty)) == 0,
 		     "access/declaration mismatch in array element size");
@@ -1237,8 +1242,8 @@ WN2F_arrsection_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,
   if (TY_Is_Array(array_ty) && TY_AR_ndims(array_ty) >= WN_num_dim(wn)) {
     /* Cannot currently handle differing element sizes at place of
      * array declaration versus place of array access (TODO?). */
-    
-    FORTTK_ASSERT_WARN((TY_size(TY_AR_etype(array_ty)) == WN_element_size(wn))
+    FORTTK_ASSERT_WARN(((INT64)TY_size(TY_AR_etype(array_ty)) 
+			  == WN_element_size(wn))
 		       || WN_element_size(wn) < 0 
 		       || TY_size(TY_AR_etype(array_ty)) == 0,
 		       "access/declaration mismatch in array element size");

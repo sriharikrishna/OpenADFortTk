@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.13 2005/01/19 22:54:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.14 2005/03/19 22:54:50 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -27,11 +27,10 @@
 
 //************************ OpenAnalysis Include Files ***********************
 
-#include <OpenAnalysis/ValueNumbers/ExprTree.h>
+#include <OpenAnalysis/ExprTree/ExprTree.hpp>
 
 //*************************** User Include Files ****************************
 
-#include "Pro64IRInterface.h"
 #include "ScalarizedRefTab.h"
 
 #include "stab_attr.h"
@@ -87,9 +86,9 @@ ScalarizedRefTabMap_W2X::~ScalarizedRefTabMap_W2X()
 void
 ScalarizedRefTabMap_W2X::Create(PU_Info* pu_forest)
 { 
-  Pro64IRProcIterator procIt(pu_forest);
-  for ( ; procIt.IsValid(); ++procIt) { 
-    PU_Info* pu = (PU_Info*)procIt.Current();
+  Open64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.isValid(); ++procIt) { 
+    PU_Info* pu = (PU_Info*)procIt.current().hval();
     
     ScalarizedRefTab_W2X* tab = new ScalarizedRefTab_W2X(pu);
     Insert(pu, tab);
@@ -437,7 +436,7 @@ AddToScalarizedRefTabOp(ScalarizedRefTab_W2X* tab_, PU_Info* curpu_)
   : tab(tab_), curpu(curpu_)
 { 
   FORTTK_ASSERT(tab_, FORTTK_UNEXPECTED_INPUT);
-  ir = Pro64IRInterface();
+  ir = new Open64IRInterface();
 }
 
 AddToScalarizedRefTabOp::~AddToScalarizedRefTabOp()
@@ -452,9 +451,10 @@ int
 AddToScalarizedRefTabOp::operator()(const WN* wn) 
 {
   // create a hash of this reference
-  ExprTree *e = ir.GetExprTreeForExprHandle((ExprHandle)wn);
+  OA::OA_ptr<OA::ExprTree::ExprTree> e = 
+    ir->getExprTree(OA::ExprHandle((OA::irhandle_t)wn));
   ostringstream o;
-  e->str(o);
+  e->dump(o, ir); // e->str(o);
   string s = o.str();
   
   // if <hash, sym> not already in workmap, insert <hash, new sym>

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.cxx,v 1.10 2004/07/28 01:28:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.cxx,v 1.11 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -417,10 +417,10 @@ Stab_Get_Mload_Ty(TY_IDX base, STAB_OFFSET offset, STAB_OFFSET size)
    
    Is_True(TY_Is_Structured(base),
 	   ("Expected pointer to struct/union type in TY2C_Get_Mload_Ty()"));
-   Is_True(TY_size(base) <= size,
+   Is_True((INT64)TY_size(base) <= size,
 	   ("Expected struct/union type >= size in TY2C_Get_Mload_Ty()"));
    
-   if (TY_size(base) == size ||
+   if ((INT64)TY_size(base) == size ||
        (TY_size(base) == 0 && TY_flist(Ty_Table[base]).Is_Null ()))
    {
       /* End of recursive descent into the structure, so return
@@ -443,7 +443,7 @@ Stab_Get_Mload_Ty(TY_IDX base, STAB_OFFSET offset, STAB_OFFSET size)
 	 /* Search for a struct or union field of the expected size */
 	 while (! next_fld.Is_Null () &&
 		(!TY_Is_Structured(FLD_type(this_fld)) ||
-		 TY_size(FLD_type(this_fld)) < size))
+		 (INT64)TY_size(FLD_type(this_fld)) < size))
 	 {
 	    this_fld = next_fld;
 	    next_fld = FLD_next(next_fld);
@@ -452,18 +452,18 @@ Stab_Get_Mload_Ty(TY_IDX base, STAB_OFFSET offset, STAB_OFFSET size)
       else /* TY_Is_Struct(TY_pointed(base)) */
       {
 	 /* Search for a struct or union field at the expected offset */
-	 while (! next_fld.Is_Null () && FLD_ofst(next_fld) <= offset)
+	 while (! next_fld.Is_Null () && (INT64)FLD_ofst(next_fld) <= offset)
 	 {
 	    this_fld = next_fld;
 	    next_fld = FLD_next(next_fld);
 	 }
       }
       
-      Is_True(! this_fld.Is_Null () &&
-	      FLD_ofst(this_fld) <= offset           &&
-	      FLD_ofst(next_fld) >= offset           &&
+      Is_True(!this_fld.Is_Null () &&
+	      (INT64)FLD_ofst(this_fld) <= offset           &&
+	      (INT64)FLD_ofst(next_fld) >= offset           &&
 	      (TY_Is_Structured(FLD_type(this_fld))) &&
-	      TY_size(FLD_type(this_fld)) >= size, 
+	      (INT64)TY_size(FLD_type(this_fld)) >= size, 
 	      ("Could not find a field as expected in TY2C_Get_Mload_Ty()"));
 
       ty = Stab_Get_Mload_Ty(FLD_type(this_fld), 
@@ -824,7 +824,7 @@ Stab_Lock_Tmpvar(TY_IDX ty,
 void
 Stab_Unlock_Tmpvar(UINT idx)
 {
-   Is_True(idx < Next_Tmpvar_Idx, 
+   Is_True((INT)idx < Next_Tmpvar_Idx, 
 	   ("Tmpvar index out of range in Stab_Unlock_Tmpvar()"));
    
    TmpVar[idx].locked = FALSE;

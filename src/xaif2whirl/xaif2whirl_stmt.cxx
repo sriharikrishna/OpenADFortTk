@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.21 2005/01/19 22:06:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.22 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -43,7 +43,7 @@
 #include "XAIF_DOMFilters.h"
 #include "XercesStrX.h"
 
-#include <lib/support/Pro64IRInterface.h>
+#include <lib/support/Open64IRInterface.hpp>
 #include <lib/support/SymTab.h> // for XAIFSymToWhirlSymMap
 #include <lib/support/WhirlIDMaps.h>
 #include <lib/support/wn_attr.h>   // for WN_Tree_Type

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.17 2004/12/15 21:03:42 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.18 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -32,9 +32,10 @@
 
 //************************ OpenAnalysis Include Files ***********************
 
-#include <OpenAnalysis/ValueNumbers/ValueNumbers.h>
-#include <OpenAnalysis/ValueNumbers/ExprTree.h>
-#include <lib/support/Pro64IRInterface.h>
+//#include <OpenAnalysis/ValueNumbers/ExprTree.h>
+#include <OpenAnalysis/ExprTree/ExprTree.hpp>
+
+#include <lib/support/Open64IRInterface.hpp>
 
 //*************************** User Include Files ****************************
 
@@ -53,7 +54,7 @@ static int
 DumpExprTree(std::ostream& os, WN* wn);
 
 static int
-DumpExprTree(std::ostream& os, ExprTree* tree);
+DumpExprTree(std::ostream& os, OA::OA_ptr<OA::ExprTree::ExprTree> tree);
 
 //****************************************************************************
 
@@ -90,11 +91,11 @@ whirltester::TestIR(std::ostream& os, PU_Info* pu_forest)
 static int
 TestForEachPU(std::ostream& os, PU_Info* pu_forest)
 {
-  Pro64IRProcIterator procIt(pu_forest);
-  for ( ; procIt.IsValid(); ++procIt) { 
+  Open64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.isValid(); ++procIt) { 
     
     // The PU_Info* for this PU
-    PU_Info* pu = (PU_Info*)procIt.Current();
+    PU_Info* pu = (PU_Info*)procIt.current().hval();
 
     // The root of the WHIRL tree
     WN* wn_pu = PU_Info_tree_ptr(pu);
@@ -169,51 +170,58 @@ RecursiveFnWN(std::ostream& os, WN* wn)
 //****************************************************************************
 
 static int
-DumpExprNode(std::ostream& os, ExprTree::Node* node, Pro64IRInterface& ir);
+DumpExprNode(std::ostream& os, OA::OA_ptr<OA::ExprTree::ExprTree::Node> node, 
+             OA::OA_ptr<Open64IRInterface> ir);
 
 static int
 DumpExprTree(std::ostream& os, WN* wn)
 {
-  static Pro64IRInterface ir;
+  OA::OA_ptr<Open64IRInterface> ir;
+  ir = new Open64IRInterface;
 
   OPERATOR opr = WN_operator(wn);
   if (OPERATOR_is_expression(opr)) {
-    ExprTree* tree = ir.GetExprTreeForExprHandle((ExprHandle)wn);
+      OA::OA_ptr<OA::ExprTree::ExprTree> tree = 
+      ir->getExprTree(OA::ExprHandle((OA::irhandle_t)wn));
     DumpExprTree(os, tree);
-    delete tree;
   }
   
   return 0;
 }
 
 static int
-DumpExprTree(std::ostream& os, ExprTree* tree)
+DumpExprTree(std::ostream& os, OA::OA_ptr<OA::ExprTree> tree)
 {
-  static Pro64IRInterface ir;
+  OA::OA_ptr<Open64IRInterface> ir;
+  ir = new Open64IRInterface;
   
-  Tree::PreOrderIterator nodes_iter(*tree);
-  for ( ; (bool)nodes_iter; ++nodes_iter) {
-    ExprTree::Node* node = 
-      dynamic_cast<ExprTree::Node*>((Tree::Node*)nodes_iter);
+  OA::Tree::PreOrderIterator nodes_iter(*tree);
+  for ( ; nodes_iter.isValid(); ++nodes_iter) {
+      OA::OA_ptr<OA::ExprTree::Node> node 
+        = nodes_iter.current().convert<OA::ExprTree::Node>();
     DumpExprNode(os, node, ir);
   }
-
+  
   return 0;
 }
 
 static int
-DumpExprNode(std::ostream& os, ExprTree::Node* node, Pro64IRInterface& ir)
+DumpExprNode(std::ostream& os, OA::OA_ptr<OA::ExprTree::Node> node, 
+             OA::OA_ptr<Open64IRInterface> ir)
 {
+#if 0
   std::string& attr = node->getAttr();
   os << "{ " << attr;
   
   if (node->isSym()) {
-    const char* nm = ir.GetSymNameFromSymHandle(node->getSymHandle());
+    const char* nm = ir.toString(node->getSymHandle());
     os << " sym: " << nm; 
   } else if (node->isConst()) {
     os << " const"; 
   }
   os << " }";
+#endif
+
   return 0;
 }
 
@@ -225,9 +233,11 @@ DumpExprNode(std::ostream& os, ExprTree::Node* node, Pro64IRInterface& ir)
 static int
 TestIR_OA_ForEachWNPU(std::ostream& os, WN* wn_pu);
 
+#if 0 
 static void
 TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn, 
-			Pro64IRInterface& ir, UJNumbers& vnmap);
+			Open64IRInterface& ir, UJNumbers& vnmap);
+#endif
 
 int
 whirltester::TestIR_OA(std::ostream& os, PU_Info* pu_forest)
@@ -236,11 +246,11 @@ whirltester::TestIR_OA(std::ostream& os, PU_Info* pu_forest)
   
   if (!pu_forest) { return 0; }
 
-  Pro64IRProcIterator procIt(pu_forest);
-  for ( ; procIt.IsValid(); ++procIt) { 
+  Open64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.isValid(); ++procIt) { 
     
     // The PU_Info* for this PU
-    PU_Info* pu = (PU_Info*)procIt.Current();
+    PU_Info* pu = (PU_Info*)procIt.current().hval();
 
     // The root of the WHIRL tree
     WN* wn_pu = PU_Info_tree_ptr(pu);
@@ -255,8 +265,9 @@ TestIR_OA_ForEachWNPU(std::ostream& os, WN* wn_pu)
 {
   WN* fbody = WN_func_body(wn_pu);
 
-  Pro64IRInterface irInterface;
-  Pro64IRStmtIterator irStmtIter(fbody);
+#if 0  
+  Open64IRInterface irInterface;
+  Open64IRStmtIterator irStmtIter(fbody);
   CFG cfg(irInterface, &irStmtIter, (SymHandle)WN_st(wn_pu), true);
 
   // Accumulate the ST* for parameters
@@ -266,15 +277,18 @@ TestIR_OA_ForEachWNPU(std::ostream& os, WN* wn_pu)
     ST* st = WN_st(WN_formal(wn_pu, i));
     params.insert((SymHandle)st);
   }
-  
+
   UJNumbers vnmap(cfg, params);
   TestIR_OA_ForEachVarRef(os, wn_pu, irInterface, vnmap);
+#endif
+
   return 0;
 }
 
+#if 0
 static void
 TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn, 
-			Pro64IRInterface& ir, UJNumbers& vnmap)
+			Open64IRInterface& ir, UJNumbers& vnmap)
 {
   if (wn == NULL) {
     // Base case
@@ -318,6 +332,7 @@ TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn,
     }
   }
 }
+#endif
 
 
 //****************************************************************************
@@ -339,11 +354,11 @@ whirltester::TestIR_whirl2f(std::ostream& os, PU_Info* pu_forest)
   PU_AllocBEGlobalSymtab();
   W2F_Init();
   
-  Pro64IRProcIterator procIt(pu_forest);
-  for ( ; procIt.IsValid(); ++procIt) { 
+  Open64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.isValid(); ++procIt) { 
     
     // The PU_Info* for this PU
-    PU_Info* pu = (PU_Info*)procIt.Current();
+    PU_Info* pu = (PU_Info*)procIt.current().hval();
     
     // The root of the WHIRL tree and a statement to translate
     WN* wn_pu = PU_Info_tree_ptr(pu);

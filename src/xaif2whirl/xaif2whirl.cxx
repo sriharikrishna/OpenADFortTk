@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.60 2004/12/01 21:24:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.61 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -51,7 +51,7 @@ using std::map;
 #include "XAIF_DOMFilters.h"
 #include "XercesStrX.h"
 
-#include <lib/support/Pro64IRInterface.h>
+#include <lib/support/Open64IRInterface.hpp>
 #include <lib/support/SymTab.h> // for XAIFSymToWhirlSymMap
 #include <lib/support/WhirlIDMaps.h>
 #include <lib/support/WhirlParentize.h>
@@ -100,7 +100,8 @@ static void
 TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt);
 
 static WN*
-xlate_CFG(WN* wn_pu, DGraph* cfg, MyDGNode* root, XlationContext& ctxt, 
+xlate_CFG(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+          OA::OA_ptr<MyDGNode> root, XlationContext& ctxt, 
           bool structuredCF = false);
 
 static WN*
@@ -190,6 +191,9 @@ My_FLD_get_to_field(TY_IDX struct_ty_idx, UINT64 ofst); // FIXME
 static TY_IDX MY_Make_Array_Type1 (TYPE_ID elem_ty, INT32 ndim, INT64 len);
 static TY_IDX MY_Make_Array_Type (TY_IDX elem_ty, INT32 ndim, INT64 len);
 
+static TY_IDX Create_New_Array_Type(TY_IDX old_array_ty);
+
+
 static TY_IDX
 XAIFTyToWHIRLTy(const char* type); // FIXME: temporary
 
@@ -206,7 +210,8 @@ struct sort_CondVal
   sort_CondVal(bool ascending_ = true) : ascending(ascending_) { }
   
   // return true if e1 < e2; false otherwise
-  bool operator()(const MyDGEdge* e1, const MyDGEdge* e2) const
+  bool operator()(const OA::OA_ptr<MyDGEdge> e1, 
+                  const OA::OA_ptr<MyDGEdge> e2) const
   {
     unsigned int cond1 = GetCondAttr(e1->GetElem());
     unsigned int cond2 = GetCondAttr(e2->GetElem());
@@ -217,17 +222,17 @@ private:
   bool ascending;
 };
 
-static DGraph* 
+static OA::OA_ptr<OA::DGraph::Interface> 
 CreateCFGraph(const DOMElement* elem);
 
-static list<DGraph::Node*>*
-TopologicalSort(DGraph* graph);
+static list<OA::OA_ptr<OA::DGraph::Interface::Node> >*
+TopologicalSort(OA::OA_ptr<OA::DGraph::Interface> graph);
 
 static void
-DDumpDotGraph(DGraph* graph);
+DDumpDotGraph(OA::OA_ptr<OA::DGraph::Interface> graph);
 
 static void
-DumpDotGraph(std::ostream& os, DGraph* graph);
+DumpDotGraph(std::ostream& os, OA::OA_ptr<OA::DGraph::Interface> graph);
 
 //****************************************************************************
 
@@ -389,14 +394,16 @@ TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
 
 
 static WN*
-xlate_CFG_BasicBlock(WN *wn_pu, MyDGNode* curBB, XlationContext& ctxt, 
+xlate_CFG_BasicBlock(WN *wn_pu, OA::OA_ptr<MyDGNode> curBB, 
+		     XlationContext& ctxt, 
 		     bool skipMarkeredGotoAndLabels = true, 
 		     unsigned newCurBBLbl = 0, unsigned newNextBBLbl = 0);
 
 static WN*
-xlate_CFG_BranchMulti(MyDGNode* curNode, WN* condWN, unsigned lastLbl,
-		      vector<MyDGEdge*>& outedges,
-		      map<MyDGNode*, unsigned>& nodeToLblMap);
+xlate_CFG_BranchMulti(OA::OA_ptr<MyDGNode> curNode, WN* condWN, 
+		      unsigned lastLbl,
+		      vector<OA::OA_ptr<MyDGEdge> >& outedges,
+		      map<OA::OA_ptr<MyDGNode>, unsigned>& nodeToLblMap);
 
 
 // TranslateCFG: Given an XAIF CFG or XAIF Replacement rooted at
@@ -478,7 +485,7 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   for (list<DOMElement*>::iterator it = cfglist.begin(); 
        it != cfglist.end(); ++it) {
     DOMElement* cfgelm = (*it);
-    DGraph* cfg = CreateCFGraph(cfgelm);
+    OA::OA_ptr<OA::DGraph::Interface> cfg = CreateCFGraph(cfgelm);
     
     if (opt_algorithm == ALG_BB_PATCHING) { 
       XAIF_BBElemFilter filt(false /* edges */);
@@ -488,7 +495,7 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
       }
     } 
     else {
-      MyDGNode* root = dynamic_cast<MyDGNode*>(cfg->root());
+      OA::OA_ptr<MyDGNode> root = cfg->getSource().convert<MyDGNode>();
       bool structuredCF = (opt_algorithm == ALG_STRUCTURED_CF);
       WN* cfgblkWN = xlate_CFG(wn_pu, cfg, root, ctxt, structuredCF);
       if (XAIF_CFGElemFilter::IsReplacement(cfgelm)) {
@@ -503,7 +510,6 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
       }
       WN_INSERT_BlockLast(newstmtblkWN, cfgblkWN);
     }
-    delete cfg;
   }
   
   // -------------------------------------------------------
@@ -553,22 +559,26 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
 // Note: This routine will not translate any basic blocks in the CFG
 // that are unreachable from 'startNode' (i.e. dead code). [FIXME unstructured]
 
-static pair<WN*, MyDGNode*>
-xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode, 
-                set<DOMElement*>& xlated, XlationContext& ctxt);
+static pair<WN*, OA::OA_ptr<MyDGNode> >
+xlate_CFGstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+        OA::OA_ptr<MyDGNode> startNode, set<DOMElement*>& xlated, 
+		XlationContext& ctxt);
 
 static WN*
-xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode, 
-                  set<DOMElement*>& xlated, XlationContext& ctxt);
+xlate_CFGunstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+          OA::OA_ptr<MyDGNode> startNode, set<DOMElement*>& xlated, 
+		  XlationContext& ctxt);
 
 static WN*
-xlate_CFG(WN* wn_pu, DGraph* cfg, MyDGNode* root, XlationContext& ctxt, 
+xlate_CFG(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+          OA::OA_ptr<MyDGNode> root, XlationContext& ctxt, 
           bool structuredCF)
 {
   WN* blkWN = NULL;
   set<DOMElement*> xlated;
   if (structuredCF) {
-    pair<WN*, MyDGNode*> ret = xlate_CFGstruct(wn_pu, cfg, root, xlated, ctxt);
+    pair<WN*, OA::OA_ptr<MyDGNode> > ret = 
+        xlate_CFGstruct(wn_pu, cfg, root, xlated, ctxt);
     blkWN = ret.first;
   } else {
     blkWN = xlate_CFGunstruct(wn_pu, cfg, root, xlated, ctxt);
@@ -583,21 +593,26 @@ xlate_CFG(WN* wn_pu, DGraph* cfg, MyDGNode* root, XlationContext& ctxt,
 //
 // Return value: <new-WHIRL-stmt-block, ending-basic-block> (If the
 // latter is NULL, it means we saw the Exit basic block)
-static pair<WN*, MyDGNode*>
-xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode, 
-                set<DOMElement*>& xlated, XlationContext& ctxt)
+static pair<WN*, OA::OA_ptr<MyDGNode> >
+xlate_CFGstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+        OA::OA_ptr<MyDGNode> startNode, set<DOMElement*>& xlated, 
+		XlationContext& ctxt)
 {
+  using namespace OA::CFG;  
+
   WN* blkWN = WN_CreateBlock();
   
   // ---------------------------------------------------
   // We must generate labels FIXME
   // ---------------------------------------------------
   static unsigned int nextLblCntr = 1; // 0 is reserved
-  map<MyDGNode*, unsigned> nodeToLblMap;
+  map<OA::OA_ptr<MyDGNode>, unsigned> nodeToLblMap;
   
   // Initialize label maps
-  for (DGraph::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
-    MyDGNode* n = dynamic_cast<MyDGNode*>((DGraph::Node*)nodeIt);
+  OA::OA_ptr<OA::DGraph::Interface::NodesIterator> nodeIt 
+    = cfg->getNodesIterator();
+  for ( ; nodeIt->isValid(); ++(*nodeIt)) {
+    OA::OA_ptr<MyDGNode> n = nodeIt->current().convert<MyDGNode>();
     nodeToLblMap[n] = nextLblCntr++;
   }
   
@@ -606,8 +621,8 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
   // ---------------------------------------------------
   bool continueIteration = true;
   bool generateLbl = false;
-  MyDGNode* curNode = startNode;
-  while (curNode && continueIteration) {
+  OA::OA_ptr<MyDGNode> curNode = startNode;
+  while (!curNode.ptrEqual(NULL) && continueIteration) {
 
     DOMElement* bbElem = curNode->GetElem();
     unsigned curLbl = nodeToLblMap[curNode];
@@ -618,7 +633,7 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       // ---------------------------------------------------
       // A non-control-flow basic block
       // ---------------------------------------------------
-      MyDGNode* nextNode = GetSuccessor(curNode); // at most one outgoing edge
+        OA::OA_ptr<MyDGNode> nextNode = GetSuccessor(curNode); // at most one outgoing edge
       unsigned lbl = (generateLbl) ? curLbl : 0;
       WN* stmts = xlate_CFG_BasicBlock(wn_pu, curNode, ctxt, true, lbl);
       WN_INSERT_BlockLast(blkWN, stmts);
@@ -645,25 +660,27 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       
       // 2. Gather all outgoing edges, sorted by condition (specially
       // sort two-way branches into true-false order.)
-      vector<MyDGEdge*> outedges(numOutEdges, NULL);
-      DGraph::OutgoingEdgesIterator it = 
-        DGraph::OutgoingEdgesIterator(curNode);
-      for (int i = 0; (bool)it; ++it, ++i) {
-        outedges[i] = dynamic_cast<MyDGEdge*>((DGraph::Edge*)it);
+      OA::OA_ptr<MyDGEdge> tmp; tmp = NULL;
+      vector<OA::OA_ptr<MyDGEdge> > outedges(numOutEdges, tmp);
+      OA::OA_ptr<OA::DGraph::Interface::OutgoingEdgesIterator> it = 
+        curNode->getOutgoingEdgesIterator();
+      for (int i = 0; it->isValid(); ++(*it), ++i) {
+        outedges[i] = it->current().convert<MyDGEdge>();
       }
       std::sort(outedges.begin(), outedges.end(), 
                 sort_CondVal((numOutEdges != 2)));
 
       // 3. Translate (recursively) each child block of this branch
       vector<WN*> childblksWN(numOutEdges, NULL);
-      MyDGNode* endBrNode = NULL;
-      for (int i = 0; i < outedges.size(); ++i) {
-        MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
-        pair<WN*, MyDGNode*> p = xlate_CFGstruct(wn_pu, cfg, n, xlated, ctxt);
+      OA::OA_ptr<MyDGNode> endBrNode; endBrNode = NULL;
+      for (unsigned i = 0; i < outedges.size(); ++i) {
+        OA::OA_ptr<MyDGNode> n = outedges[i]->sink().convert<MyDGNode>();
+        pair<WN*, OA::OA_ptr<MyDGNode> > p 
+            = xlate_CFGstruct(wn_pu, cfg, n, xlated, ctxt);
         childblksWN[i] = p.first;
         endBrNode = p.second; // will be EndBranch for structured-CF
       }
-      MyDGNode* nextNode = GetSuccessor(endBrNode);
+      OA::OA_ptr<MyDGNode> nextNode = GetSuccessor(endBrNode);
       
       // 4. Create branch control flow
       if (numOutEdges == 2) {
@@ -675,8 +692,8 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
 	unsigned lastLbl = nodeToLblMap[nextNode];
 	
 	// Add a LABEL/GOTO at the front/end of each successor block
-	for (int i = 0; i < outedges.size(); ++i) {
-	  MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
+	for (unsigned i = 0; i < outedges.size(); ++i) {
+	  OA::OA_ptr<MyDGNode> n = outedges[i]->sink().convert<MyDGNode>();
 	  WN* nblkWN = childblksWN[i];
 	  
 	  WN* lblWN = WN_CreateLabel(nodeToLblMap[n], 0 /*label_flag*/, NULL);
@@ -692,7 +709,7 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
 	WN_INSERT_BlockLast(blkWN, switchWN);
 	
 	// Add switch blocks right after SWITCH
-	for (int i = 0; i < childblksWN.size(); ++i) {
+	for (unsigned i = 0; i < childblksWN.size(); ++i) {
 	  WN_INSERT_BlockLast(blkWN, childblksWN[i]);
 	}
       }
@@ -715,11 +732,12 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       bool isDoLoop = (XAIF_BBElemFilter::IsBBForLoop(bbElem));
 
       // 1. Gather children
-      MyDGNode* body = GetSuccessorAlongEdge(curNode, 1);
-      MyDGNode* fallthru = GetSuccessorAlongEdge(curNode, 0);
+      OA::OA_ptr<MyDGNode> body = GetSuccessorAlongEdge(curNode, 1);
+      OA::OA_ptr<MyDGNode> fallthru = GetSuccessorAlongEdge(curNode, 0);
       
       // 2. Translate (recursively) loop body
-      pair<WN*, MyDGNode*> p = xlate_CFGstruct(wn_pu, cfg, body, xlated, ctxt);
+      pair<WN*, OA::OA_ptr<MyDGNode> > p 
+          = xlate_CFGstruct(wn_pu, cfg, body, xlated, ctxt);
       WN* bodyWN = p.first;
       
       // 3. Translate condition expression (and update/init statements)
@@ -780,17 +798,22 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
 // each basic block.  We do not worry about interfering with original
 // labels because we do not keep them.
 static WN*
-xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode, 
-                  set<DOMElement*>& xlated, XlationContext& ctxt)
+xlate_CFGunstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+        OA::OA_ptr<MyDGNode> startNode, set<DOMElement*>& xlated, 
+		XlationContext& ctxt)
 {
+  using namespace OA::DGraph;
+  using namespace OA::CFG;
+
   WN* blkWN = WN_CreateBlock();
 
   // Topological sort to ensure that, e.g., the exit node is last
-  list<DGraph::Node*>* topoSortedCFG = TopologicalSort(cfg);  
+  list<OA::OA_ptr<OA::DGraph::Interface::Node> >* topoSortedCFG 
+      = TopologicalSort(cfg);
 
 #if 0
   std::cerr << "TopoSort: ";
-  for (list<DGraph::Node*>::iterator it = topoSortedCFG->begin(); 
+  for (list<DGraphStandard::Node*>::iterator it = topoSortedCFG->begin(); 
        it != topoSortedCFG->end(); ++it) {
     MyDGNode* n = dynamic_cast<MyDGNode*>(*it);
     std::cerr << n->getId() << " "; 
@@ -803,13 +826,14 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
   // the WHIRL code.  We use two maps to remember label values.
   // ---------------------------------------------------
   static unsigned int nextLblCntr = 1; // 0 is reserved
-  map<MyDGNode*, unsigned> nodeToLblMap;
-  map<MyDGNode*, unsigned> nodeToLoopContLblMap;
+  map<OA::OA_ptr<MyDGNode>, unsigned> nodeToLblMap;
+  map<OA::OA_ptr<MyDGNode>, unsigned> nodeToLoopContLblMap;
   
   // Initialize label maps
-  for (list<DGraph::Node*>::iterator it = topoSortedCFG->begin(); 
+  for (list<OA::OA_ptr<OA::DGraph::Interface::Node> >::iterator it 
+       = topoSortedCFG->begin(); 
        it != topoSortedCFG->end(); ++it) {
-    MyDGNode* n = dynamic_cast<MyDGNode*>(*it);
+    OA::OA_ptr<MyDGNode> n = (*it).convert<MyDGNode>();
     nodeToLblMap[n] = nextLblCntr++;
     
     // See notes on translating loops below
@@ -826,9 +850,10 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
   // ---------------------------------------------------
   // Translate in topological order
   // ---------------------------------------------------
-  for (list<DGraph::Node*>::iterator it = topoSortedCFG->begin(); 
+  for (list<OA::OA_ptr<OA::DGraph::Interface::Node> >::iterator it 
+       = topoSortedCFG->begin(); 
        it != topoSortedCFG->end(); ++it) {
-    MyDGNode* curNode = dynamic_cast<MyDGNode*>(*it);
+      OA::OA_ptr<MyDGNode> curNode = (*it).convert<MyDGNode>();
     DOMElement* bbElem = curNode->GetElem();
     unsigned curLbl = nodeToLblMap[curNode];
     
@@ -838,8 +863,8 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       // ---------------------------------------------------
       // A non-control-flow basic block
       // ---------------------------------------------------
-      MyDGNode* nextNode = GetSuccessor(curNode); // at most one outgoing edge
-      unsigned nextLbl = (nextNode) ? nodeToLblMap[nextNode] : 0;
+      OA::OA_ptr<MyDGNode> nextNode = GetSuccessor(curNode); // at most one outgoing edge
+      unsigned nextLbl = (!nextNode.ptrEqual(NULL)) ? nodeToLblMap[nextNode] : 0;
       WN* stmts = xlate_CFG_BasicBlock(wn_pu, curNode, ctxt, true, 
 				       curLbl, nextLbl);
       WN_INSERT_BlockLast(blkWN, stmts);
@@ -863,11 +888,12 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       
       // 2. Gather all outgoing edges, sorted by condition (specially
       // sort two-way branches into true-false order.)
-      vector<MyDGEdge*> outedges(numOutEdges, NULL);
-      DGraph::OutgoingEdgesIterator it = 
-        DGraph::OutgoingEdgesIterator(curNode);
-      for (int i = 0; (bool)it; ++it, ++i) {
-        outedges[i] = dynamic_cast<MyDGEdge*>((DGraph::Edge*)it);
+      OA::OA_ptr<MyDGEdge> tmp; tmp = NULL;
+      vector<OA::OA_ptr<MyDGEdge> > outedges(numOutEdges, tmp);
+      OA::OA_ptr<OA::DGraph::Interface::OutgoingEdgesIterator> it
+          = curNode->getOutgoingEdgesIterator();
+      for (int i = 0; it->isValid(); ++(*it), ++i) {
+        outedges[i] = it->current().convert<MyDGEdge>();
       }
       std::sort(outedges.begin(), outedges.end(), 
                 sort_CondVal((numOutEdges != 2)));
@@ -878,8 +904,8 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       if (numOutEdges == 2) {
 	// Create GOTOs for each child block
 	vector<WN*> childblksWN(numOutEdges, NULL);
-	for (int i = 0; i < outedges.size(); ++i) {
-	  MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
+	for (unsigned i = 0; i < outedges.size(); ++i) {
+          OA::OA_ptr<MyDGNode> n = outedges[i]->sink().convert<MyDGNode>();
 	  WN* gotoblkWN = WN_CreateBlock();
 	  WN* gotoWN = WN_CreateGoto(nodeToLblMap[n]);
 	  WN_INSERT_BlockFirst(gotoblkWN, gotoWN);
@@ -903,8 +929,8 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       // ---------------------------------------------------
       // EndBranch: a dummy basic block
       // ---------------------------------------------------
-      MyDGNode* nextNode = GetSuccessor(curNode); // at most one outgoing edge
-      unsigned nextLbl = (nextNode) ? nodeToLblMap[nextNode] : 0;
+      OA::OA_ptr<MyDGNode> nextNode = GetSuccessor(curNode); // at most one outgoing edge
+      unsigned nextLbl = (!nextNode.ptrEqual(NULL)) ? nodeToLblMap[nextNode] : 0;
       WN* stmts = xlate_CFG_BasicBlock(wn_pu, curNode, ctxt, true, 
 				       curLbl, nextLbl);
       WN_INSERT_BlockLast(blkWN, stmts);
@@ -956,8 +982,8 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       bool isDoLoop = (XAIF_BBElemFilter::IsBBForLoop(bbElem));
       
       // 1. Gather children
-      MyDGNode* bodyNode = GetSuccessorAlongEdge(curNode, 1);
-      MyDGNode* fallthruNode = GetSuccessorAlongEdge(curNode, 0);
+      OA::OA_ptr<MyDGNode> bodyNode = GetSuccessorAlongEdge(curNode, 1);
+      OA::OA_ptr<MyDGNode> fallthruNode = GetSuccessorAlongEdge(curNode, 0);
       
       // 2. Translate condition expression (and update/init statements)
       DOMElement* cond = 
@@ -1024,8 +1050,8 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       // ---------------------------------------------------
       // The loop back-branch: loop back to continue branch!
       // ---------------------------------------------------
-      MyDGNode* nextNode = GetSuccessor(curNode); // at most one outgoing edge
-      unsigned nextLbl = (nextNode) ? nodeToLoopContLblMap[nextNode] : 0;
+      OA::OA_ptr<MyDGNode> nextNode = GetSuccessor(curNode); // at most one outgoing edge
+      unsigned nextLbl = (!nextNode.ptrEqual(NULL)) ? nodeToLoopContLblMap[nextNode] : 0;
       WN* stmts = xlate_CFG_BasicBlock(wn_pu, curNode, ctxt, true, 
 				       curLbl, nextLbl);
       WN_INSERT_BlockLast(blkWN, stmts);
@@ -1049,7 +1075,8 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
 // Optionally adds a label at the beginning of the block and a
 // 'fallthru-goto' at the end if non-zero labels are provided.
 static WN*
-xlate_CFG_BasicBlock(WN *wn_pu, MyDGNode* curBB, XlationContext& ctxt, 
+xlate_CFG_BasicBlock(WN *wn_pu, OA::OA_ptr<MyDGNode> curBB, 
+                     XlationContext& ctxt, 
 		     bool skipMarkeredGotoAndLabels, 
 		     unsigned newCurBBLbl, unsigned newNextBBLbl)
 {
@@ -1082,9 +1109,10 @@ xlate_CFG_BasicBlock(WN *wn_pu, MyDGNode* curBB, XlationContext& ctxt,
 
 // xlate_CFG_BranchMulti: abstract translation of multi-way branches
 static WN*
-xlate_CFG_BranchMulti(MyDGNode* curNode, WN* condWN, unsigned lastLbl,
-		      vector<MyDGEdge*>& outedges,
-		      map<MyDGNode*, unsigned>& nodeToLblMap)
+xlate_CFG_BranchMulti(OA::OA_ptr<MyDGNode> curNode, WN* condWN, 
+		      unsigned lastLbl,
+		      vector<OA::OA_ptr<MyDGEdge> >& outedges,
+		      map<OA::OA_ptr<MyDGNode>, unsigned>& nodeToLblMap)
 {
   // Case values are in ascending order; the default case (if any)
   // will be at the beginning and have a false condition attribute
@@ -1094,7 +1122,7 @@ xlate_CFG_BranchMulti(MyDGNode* curNode, WN* condWN, unsigned lastLbl,
   int defltIdx = -1;
   if (!GetHasConditionAttr(outedges[0]->GetElem())) {
     defltIdx = 0;
-    MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[0]->sink());
+    OA::OA_ptr<MyDGNode> n = outedges[0]->sink().convert<MyDGNode>();
     unsigned gotolbl = nodeToLblMap[n];
     defltWN = WN_CreateGoto(gotolbl);
   }
@@ -1102,9 +1130,9 @@ xlate_CFG_BranchMulti(MyDGNode* curNode, WN* condWN, unsigned lastLbl,
   // Create casegoto for each block
   WN* casegotoBlkWN = WN_CreateBlock();
   int numcases = outedges.size() - (defltIdx + 1);
-  for (int i = defltIdx + 1; i < outedges.size(); ++i) {
+  for (unsigned i = defltIdx + 1; i < outedges.size(); ++i) {
     DOMElement* elemEdge = outedges[i]->GetElem();
-    MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
+    OA::OA_ptr<MyDGNode> n = outedges[i]->sink().convert<MyDGNode>();
     
     INT64 caseval = GetCondAttr(elemEdge);
     WN* wn = WN_CreateCasegoto(caseval, nodeToLblMap[n]);
@@ -2133,7 +2161,7 @@ ConvertIntoGlobalST(ST* st)
   // Modify/Add 'st' to common block
   Set_ST_base(*st, *OpenADCommonBlockST);
   Set_ST_ofst(*st, OpenADCommonBlockOffset);
-
+  
   return st;
 }
 
@@ -2247,9 +2275,18 @@ ConvertToActiveType(ST* st)
     Set_ST_type(*st, newBaseTy);
   }
   else if (TY_kind(ty) == KIND_ARRAY) {
-    // just change the element type
-    Set_TY_etype(ty, newBaseTy);
-    // alignment, etc. should be ok
+    // Note: because types may be shared, we cannot simply change the
+    // element type.  For now we create a new type for each active
+    // symbol.
+    TY_IDX new_ar_ty = Copy_TY(ty);     // cf. Create_New_Array_Type
+    Set_TY_etype(new_ar_ty, newBaseTy); // alignment, etc. should be ok
+
+    // Now find the appropriate type for the symbol
+    TY_IDX new_ty = new_ar_ty;
+    if (TY_kind(ST_type(st)) == KIND_POINTER) {
+      new_ty = Make_Pointer_Type(new_ar_ty);
+    }
+    Set_ST_type(st, new_ty);
   } 
   else {
     FORTTK_DIE("Unexpected type kind: " << TY_kind(ty));
@@ -2309,7 +2346,7 @@ MY_Make_Array_Type (TY_IDX elem_ty, INT32 ndim, INT64 len)
 		  "Cannot make an array of " << TY_name(elem_ty));
     
     ARB_HANDLE arb,arb_first;
-    for (UINT i = 0; i < ndim; ++i) {
+    for (INT i = 0; i < ndim; ++i) {
        arb = New_ARB ();
        if (i==0) {
          arb_first = arb;
@@ -2331,6 +2368,34 @@ MY_Make_Array_Type (TY_IDX elem_ty, INT32 ndim, INT64 len)
     return ty_idx;
 
 } // Make_Array_Type
+
+
+// From: be/lno/pad.cxx (does Copy_TY() only do a shallow copy?)
+static TY_IDX 
+Create_New_Array_Type(TY_IDX old_array_ty)
+{
+   TY_IDX new_array_ty = Copy_TY(old_array_ty);
+   ARB_HANDLE old_arb_base = TY_arb(old_array_ty);
+   INT old_arb_idx=0;
+   BOOL first_time = TRUE;
+   ARB_HANDLE first_arb;
+   BOOL done = FALSE;
+   while (!done) {
+     ARB_HANDLE tmp = old_arb_base[old_arb_idx];
+     ARB_HANDLE arb = New_ARB ();
+     if (first_time) {
+       first_arb = arb;
+       first_time = FALSE;
+     }
+     ARB_copy(arb,tmp);
+     old_arb_idx++;
+     done = ARB_last_dimen(tmp);
+   };
+
+   Set_TY_arb (new_array_ty, first_arb);
+
+   return new_array_ty;
+} // Create_New_Array_Type
 
 
 static TY_IDX
@@ -2355,12 +2420,15 @@ XAIFTyToWHIRLTy(const char* type)
 // MyDGNode routines
 //****************************************************************************
 
-MyDGNode*
-GetSuccessor(MyDGNode* node, bool succIsOutEdge)
+OA::OA_ptr<MyDGNode>
+GetSuccessor(OA::OA_ptr<MyDGNode> node, bool succIsOutEdge)
 {
+  using namespace OA::DGraph;
+    
   int numSucc = (succIsOutEdge) ? node->num_outgoing() : node->num_incoming();
   if (numSucc == 0) {
-    return NULL;
+    OA::OA_ptr<MyDGNode> retval;  retval = NULL;
+    return retval;
   }
   else if (numSucc > 1) {
     DOMElement* elem = node->GetElem();
@@ -2369,35 +2437,40 @@ GetSuccessor(MyDGNode* node, bool succIsOutEdge)
   }
   
   // We know there is one successor
-  MyDGNode* succ = NULL;
+  OA::OA_ptr<MyDGNode> succ; succ = NULL;
   if (succIsOutEdge) {
-    DGraph::SinkNodesIterator it = DGraph::SinkNodesIterator(node);
-    succ = dynamic_cast<MyDGNode*>((DGraph::Node*)it);
+    OA::OA_ptr<Interface::SinkNodesIterator> it;
+    it = node->getSinkNodesIterator();
+    succ = it->current().convert<MyDGNode>();
   }
   else {
-    DGraph::SourceNodesIterator it = DGraph::SourceNodesIterator(node);
-    succ = dynamic_cast<MyDGNode*>((DGraph::Node*)it);
+    OA::OA_ptr<Interface::SourceNodesIterator> it;
+    it = node->getSourceNodesIterator();
+    succ = it->current().convert<MyDGNode>();
   }
   return succ;
 }
 
 
-MyDGNode*
-GetSuccessorAlongEdge(MyDGNode* node, unsigned int condition, 
+OA::OA_ptr<MyDGNode>
+GetSuccessorAlongEdge(OA::OA_ptr<MyDGNode> node, unsigned int condition, 
                       bool succIsOutEdge)
 {
-  MyDGNode* succ = NULL;
+  using namespace OA::DGraph;
+
+  OA::OA_ptr<MyDGNode> succ; succ = NULL;
   int numSucc = (succIsOutEdge) ? node->num_outgoing() : node->num_incoming();
   
   if (succIsOutEdge) {
-    DGraph::OutgoingEdgesIterator it = DGraph::OutgoingEdgesIterator(node);
-    for ( ; (bool)it; ++it) {
-      MyDGEdge* edge = dynamic_cast<MyDGEdge*>((DGraph::Edge*)it);
+    OA::OA_ptr<Interface::OutgoingEdgesIterator> it;
+    it = node->getOutgoingEdgesIterator();
+    for ( ; it->isValid(); ++(*it)) {
+      OA::OA_ptr<MyDGEdge> edge = it->current().convert<MyDGEdge>();
       DOMElement* e = edge->GetElem();
       
       unsigned int cond = GetCondAttr(e);
       if (condition == cond) {
-        succ = dynamic_cast<MyDGNode*>(edge->sink());
+        succ = edge->sink().convert<MyDGNode>();
         break;
       }
     }
@@ -2411,11 +2484,14 @@ GetSuccessorAlongEdge(MyDGNode* node, unsigned int condition,
 
 // CreateCFGraph: Given an XAIF control flow graph, create and
 // return a CFG where CFG nodes point to XAIF CVG vertices.
-static DGraph* 
+static OA::OA_ptr<OA::DGraph::Interface> 
 CreateCFGraph(const DOMElement* cfgElem)
 {
+  using namespace OA::DGraph;
+  
   MyDGNode::resetIds();
-  DGraph* g = new DGraph;
+  OA::OA_ptr<OA::DGraph::DGraphStandard> g; 
+  g = new OA::DGraph::DGraphStandard();
   VertexIdToMyDGNodeMap m;
   
   // -------------------------------------------------------
@@ -2433,12 +2509,13 @@ CreateCFGraph(const DOMElement* cfgElem)
       XercesStrX src = XercesStrX(srcX);
       XercesStrX targ = XercesStrX(targX);
 
-      MyDGNode* gn1 = m[std::string(src.c_str())];  // source
-      MyDGNode* gn2 = m[std::string(targ.c_str())]; // target
-      FORTTK_ASSERT(gn1 && gn2, "Invalid edge in CFG:\n" << *elem);
+      OA::OA_ptr<MyDGNode> gn1; gn1 = m[std::string(src.c_str())];  // source
+      OA::OA_ptr<MyDGNode> gn2; gn2 = m[std::string(targ.c_str())]; // target
+      FORTTK_ASSERT(!gn1.ptrEqual(NULL) && !gn2.ptrEqual(NULL), 
+		    "Invalid edge in CFG:\n" << *elem);
 
-      MyDGEdge* ge = new MyDGEdge(gn1, gn2, elem); // src, targ
-      g->add(ge);
+      OA::OA_ptr<MyDGEdge> ge; ge = new MyDGEdge(gn1, gn2, elem); // src, targ
+      g->addEdge(ge);
     } 
     else {
       // Add a vertex to the graph
@@ -2447,14 +2524,17 @@ CreateCFGraph(const DOMElement* cfgElem)
       FORTTK_ASSERT(strlen(vid.c_str()) > 0, 
 		    "Invalid vertex in CFG:\n" << *elem);
 
-      MyDGNode* gn = new MyDGNode(elem);
-      g->add(gn);
+      OA::OA_ptr<MyDGNode> gn; gn = new MyDGNode(elem);
+      g->addNode(gn);
       m[std::string(vid.c_str())] = gn;
       
       // Set the graph root if necessary
       const XMLCh* name = elem->getNodeName();
       if (XMLString::equals(name, XAIFStrings.elem_BBEntry_x())) {
-        g->set_root(gn);
+        g->setSource(gn);
+      }
+      else if (XMLString::equals(name, XAIFStrings.elem_BBExit_x())) {
+	g->setSink(gn);
       }
     } 
   }
@@ -2466,27 +2546,33 @@ CreateCFGraph(const DOMElement* cfgElem)
 // DumpDotGraph:
 
 static std::string
-DumpDotGraph_GetNodeName(MyDGNode* n);
+DumpDotGraph_GetNodeName(OA::OA_ptr<MyDGNode> n);
 
 static void
-DDumpDotGraph(DGraph* graph)
+DDumpDotGraph(OA::OA_ptr<OA::DGraph::Interface> graph)
 {
   DumpDotGraph(std::cerr, graph);
 }
 
 static void
-DumpDotGraph(std::ostream& os, DGraph* graph)
+DumpDotGraph(std::ostream& os, OA::OA_ptr<OA::DGraph::Interface> graph)
 {
+  using namespace OA::DGraph;
+    
   os << "digraph MyGraph {\n";
   os << "  graph [ ];\n"
      << "  node [ fontsize = \"10\" ];\n"
      << "  edge [ ];\n"
      << std::endl;
   
-  for (DGraph::EdgesIterator edgesIt(*graph); (bool)edgesIt; ++edgesIt) {
-    DGraph::Edge* e = (DGraph::Edge*)edgesIt;
-    MyDGNode* src = dynamic_cast<MyDGNode*>(e->source());
-    MyDGNode* snk = dynamic_cast<MyDGNode*>(e->sink());
+  OA::OA_ptr<Interface::EdgesIterator> edgesItPtr;
+  edgesItPtr = graph->getEdgesIterator();
+  for (; edgesItPtr->isValid(); ++(*edgesItPtr)) {
+    //OA::OA_ptr<DGraphStandard::Edge> e = 
+    //  edgesItPtr->current().convert<DGraphStandard::Edge>();
+    OA::OA_ptr<OA::DGraph::Interface::Edge> e = edgesItPtr->current();
+    OA::OA_ptr<MyDGNode> src = e->source().convert<MyDGNode>();
+    OA::OA_ptr<MyDGNode> snk = e->sink().convert<MyDGNode>();
     std::string srcNm = DumpDotGraph_GetNodeName(src);
     std::string snkNm = DumpDotGraph_GetNodeName(snk);
     os << "  \"" << srcNm << "\" -> \"" << snkNm << "\";\n";
@@ -2495,7 +2581,7 @@ DumpDotGraph(std::ostream& os, DGraph* graph)
 }
 
 static std::string
-DumpDotGraph_GetNodeName(MyDGNode* n) 
+DumpDotGraph_GetNodeName(OA::OA_ptr<MyDGNode> n) 
 {
   std::string name;
   
@@ -2526,30 +2612,38 @@ DumpDotGraph_GetNodeName(MyDGNode* n)
 #define TOPOSORT_BLACK 2 /* seen and all children have been visited */
 
 static void 
-TopoSortLocal(list<DGraph::Node*>& sorted, DGraph* g, DGraph::Node* node, 
-              map<DGraph::Node*, unsigned>& visited);
+TopoSortLocal(list<OA::OA_ptr<OA::DGraph::Interface::Node> >& sorted, 
+              OA::OA_ptr<OA::DGraph::Interface> g,
+              OA::OA_ptr<OA::DGraph::Interface::Node> node, 
+              map<OA::OA_ptr<OA::DGraph::Interface::Node>, unsigned>& visited);
 
-static list<DGraph::Node*>*
-TopologicalSort(DGraph* graph)
+static list<OA::OA_ptr<OA::DGraph::Interface::Node> >*
+TopologicalSort(OA::OA_ptr<OA::DGraph::Interface> graph)
 {
-  list<DGraph::Node*>* sorted = new list<DGraph::Node*>;
-
+  using namespace OA::DGraph;
+  
+  list<OA::OA_ptr<Interface::Node> >* sorted = new list<OA::OA_ptr<Interface::Node> >;
+  
   // A map to record where we are in the DFS search
   // [Could gather all nodes into a vector and then create a vector
   // based map to ensure memory locality]
-  map<DGraph::Node*, unsigned> visited;
-  for (DGraph::NodesIterator nodeIt(*graph); (bool)nodeIt; ++nodeIt) {
-    DGraph::Node* n = (DGraph::Node*)nodeIt;
+  map<OA::OA_ptr<Interface::Node>, unsigned> visited;
+  OA::OA_ptr<Interface::NodesIterator> nodeIt;
+  nodeIt = graph->getNodesIterator();
+  for (; nodeIt->isValid(); ++(*nodeIt)) {
+    OA::OA_ptr<Interface::Node> n = nodeIt->current();
+      //nodeIt->current().convert<DGraphStandard::Node>();
     visited[n] = TOPOSORT_WHITE;
   }
   
   // Perform a sort on the root node
-  DGraph::Node* root = dynamic_cast<DGraph::Node*>(graph->root());
+  OA::OA_ptr<Interface::Node> root 
+      = graph->getSource().convert<Interface::Node>();
   TopoSortLocal(*sorted, graph, root, visited);
   
   // Now make sure we find nodes that could not be reached from the root
-  for (DGraph::NodesIterator nodeIt(*graph); (bool)nodeIt; ++nodeIt) {
-    DGraph::Node* n = (DGraph::Node*)nodeIt;
+  for (nodeIt->reset(); nodeIt->isValid(); ++(*nodeIt)) {
+    OA::OA_ptr<Interface::Node> n = nodeIt->current();
     if (visited[n] == TOPOSORT_WHITE) {
       TopoSortLocal(*sorted, graph, n, visited);
     }
@@ -2559,10 +2653,14 @@ TopologicalSort(DGraph* graph)
 }
 
 static void 
-TopoSortLocal(list<DGraph::Node*>& sorted, DGraph* g, DGraph::Node* node, 
-              map<DGraph::Node*, unsigned>& visited)
+TopoSortLocal(list<OA::OA_ptr<OA::DGraph::Interface::Node> >& sorted, 
+              OA::OA_ptr<OA::DGraph::Interface> g,
+              OA::OA_ptr<OA::DGraph::Interface::Node> node, 
+              map<OA::OA_ptr<OA::DGraph::Interface::Node>, unsigned>& visited)
 {
-  if (!node) { return; }
+  using namespace OA::DGraph;
+
+  if (node.ptrEqual(NULL)) { return; }
   
   if (visited[node] == TOPOSORT_BLACK) { return; }
   
@@ -2576,8 +2674,10 @@ TopoSortLocal(list<DGraph::Node*>& sorted, DGraph* g, DGraph::Node* node,
   }
   
   // Visit each outgoing edge, like DFS
-  for (DGraph::SinkNodesIterator it(node); (bool)it; ++it) {
-    DGraph::Node* n = (DGraph::Node*)it;
+  OA::OA_ptr<Interface::SinkNodesIterator> it;
+  it = node->getSinkNodesIterator();
+  for (; it->isValid(); ++(*it)) {
+    OA::OA_ptr<Interface::Node> n = it->current();
     if (isLoop) {
       // If we are visiting this node again in a loop, only visit
       // WHITE children to avoid infinite loops.

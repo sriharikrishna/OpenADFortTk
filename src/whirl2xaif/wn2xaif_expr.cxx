@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.28 2004/07/30 17:51:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.29 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -221,7 +221,7 @@ static void
 WN2F_Expr_initialize(void)
 {
   /* Initialize the Conv_Op array (default value is NULL) */
-  for (INT i = 0; i < NUMBER_OF_CONV_OPS; i++) {
+  for (UINT i = 0; i < NUMBER_OF_CONV_OPS; i++) {
     Conv_Op[Conv_Op_Map[i].from][Conv_Op_Map[i].to] = 
       Conv_Op_Map[i].name;
   }
@@ -503,13 +503,15 @@ whirl2xaif::WN2F_parm(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    * expressions.  For now, just skip these nodes.
    */
   FORTTK_ASSERT(WN_operator(wn) == OPR_PARM, FORTTK_UNEXPECTED_INPUT);
-  if ( TY_is_logical(Ty_Table[WN_ty(wn)]) || 
-       XlationContext_is_logical_arg(ctxt)) { //fzhao Jan
+  if (TY_is_logical(Ty_Table[WN_ty(wn)]) || 
+      XlationContext_is_logical_arg(ctxt)) { //fzhao Jan
     set_XlationContext_has_logical_arg(ctxt);
     TranslateWN(xos, WN_kid0(wn), ctxt);
     reset_XlationContext_has_logical_arg(ctxt);
-  } else
+  } 
+  else {
     TranslateWN(xos, WN_kid0(wn), ctxt);
+  }
   return whirl2xaif::good;
 
 } /* WN2F_parm */

@@ -64,7 +64,7 @@ sub setup {
 
     $f1 = Ffile->new_from_heredoc(<<'F1');
         subroutine push_argument(x)
-C $OpenAD$  INLINE DECLS
+C $OpenAD  INLINE DECLS
 ! >>> just to make compile
           use OpenAD_dct
           use OpenAD_checkpoints
@@ -76,7 +76,7 @@ C $OpenAD$  INLINE DECLS
 
 ! to be inlined with whatever actual argument push is called with
 ! substituted for x >>>
-C   $OpenAD$ END DECLS
+C   $OpenAD END DECLS
           double_argument_checkpoints(dct(call_nr)%dble_argcp_base+dble_argcp_offset)=x
           dble_argcp_offset=dble_argcp_offset+1
           double_arguments_pointer=double_arguments_pointer+1
@@ -84,7 +84,7 @@ C   $OpenAD$ END DECLS
         end subroutine push_argument
 
         subroutine pop_argument(x)
-C   $OpenAD$ INLINE DECLS
+C   $OpenAD INLINE DECLS
 
           use OpenAD_dct
           use OpenAD_checkpoints
@@ -93,7 +93,7 @@ C   $OpenAD$ INLINE DECLS
           double precision x
           integer dble_argcp_offset, call_nr
 
-C   $OpenAD$ END DECLS
+C   $OpenAD END DECLS
           x=double_argument_checkpoints(dct(call_nr)%dble_argcp_base+dble_argcp_offset)
           dble_argcp_offset=dble_argcp_offset+1
         end subroutine pop_argument
@@ -101,13 +101,13 @@ F1
 
     $f2 = Ffile->new_from_heredoc(<<'F2');
         subroutine saxpy(a,x,y)
-C   $OpenAD$ INLINE DECLS
+C   $OpenAD INLINE DECLS
 
           double precision, intent(in) :: a
           type(active), intent(in) :: x
           type(active), intent(inout) :: y
 
-C   $OpenAD$ END DECLS
+C   $OpenAD END DECLS
           y%d=y%d+x%d*a
         end subroutine saxpy
 F2
@@ -122,9 +122,9 @@ F2
 
       OpenAD_Symbol_20%v = OpenAD_Symbol_0%v
       OpenAD_Symbol_21%v = OpenAD_Symbol_1%v
-C     $OpenAD$ INLINE push(subst)
+C     $OpenAD INLINE push(subst)
       CALL push_argument(OpenAD_Symbol_14)
-C     $OpenAD$ INLINE push(subst)
+C     $OpenAD INLINE push(subst)
       CALL push(OpenAD_Symbol_16)
         end subroutine saxpy
 F3

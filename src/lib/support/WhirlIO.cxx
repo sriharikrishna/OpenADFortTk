@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v 1.9 2005/01/12 20:00:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v 1.10 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -72,7 +72,7 @@
 
 #include "WhirlIO.h"
 #include "WhirlGlobalStateUtils.h"
-#include "Pro64IRInterface.h"
+#include "Open64IRInterface.hpp"
 
 #include "diagnostics.h"
 
@@ -311,9 +311,9 @@ PrepareIR(PU_Info* pu_forest)
 {
   Diag_Set_Phase("WHIRL IO: Prepare IR");
 
-  Pro64IRProcIterator procIt(pu_forest);
-  for ( ; procIt.IsValid(); ++procIt) { 
-    PU_Info* pu = (PU_Info*)procIt.Current();
+  Open64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.isValid(); ++procIt) { 
+    PU_Info* pu = (PU_Info*)procIt.current().hval();
     WN* wn_pu = PU_Info_tree_ptr(pu);
     
     Create_Slink_Symbol(); // FIXME: do we need?
@@ -355,9 +355,9 @@ DumpIR(PU_Info* pu_forest)
     Print_global_symtab(stdout);
   }
 
-  Pro64IRProcIterator procIt(pu_forest);
-  for ( ; procIt.IsValid(); ++procIt) { 
-    PU_Info* pu = (PU_Info*)procIt.Current();  
+  Open64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.isValid(); ++procIt) { 
+    PU_Info* pu = (PU_Info*)procIt.current().hval();  
     WN* wn_pu = PU_Info_tree_ptr(pu);
     
     //IR_put_func(wn_pu, NULL);

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v 1.9 2004/02/28 16:41:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v 1.10 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -33,14 +33,14 @@
 
 //************************ OpenAnalysis Include Files ***********************
 
-#include <OpenAnalysis/Utils/Exception.h>
+#include <OpenAnalysis/Utils/Exception.hpp>
 
 //*************************** User Include Files ****************************
 
 #include "Args.h"
 #include "tester.h"
 
-#include <lib/support/diagnostics.h>
+#include <lib/support/Exception.h>
 #include <lib/support/WhirlIO.h>
 
 //************************** Forward Declarations ***************************
@@ -66,7 +66,11 @@ main(int argc, char **argv)
     e.Report(cerr); // fatal error
     exit(1);
   }
-  catch (Exception& e /* OpenAnalysis -- should be in namespace */) {
+  catch (FortTk::BaseException& e) {
+    e.Report(cerr);
+    exit(1);
+  }
+  catch (OA::Exception& e) {
     e.report(cerr);
     exit(1);
   }

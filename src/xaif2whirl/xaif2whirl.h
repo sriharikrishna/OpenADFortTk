@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.19 2004/07/28 19:04:42 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.20 2005/03/19 22:54:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -35,7 +35,7 @@
 
 //************************ OpenAnalysis Include Files ***********************
 
-#include <OpenAnalysis/Utils/DGraph.h>
+#include <OpenAnalysis/CFG/CFGStandard.hpp> // for DGraphStandard, CFG::Edge
 
 //*************************** User Include Files ****************************
 
@@ -216,13 +216,13 @@ CreateBoolConst(unsigned int val);
 
 class MyDGNode;
 
-typedef std::map<std::string, MyDGNode*> VertexIdToMyDGNodeMap;
+typedef std::map<std::string, OA::OA_ptr<MyDGNode> > VertexIdToMyDGNodeMap;
 
 // ---------------------------------------------------------
 // MyDGNode, MyDGEdge: Used to create graph structures from XAIF
 // graphs (lists of nodes and edges)
 // ---------------------------------------------------------
-class MyDGNode : public DGraph::Node {
+class MyDGNode : public OA::DGraph::DGraphStandard::Node {
 public:
   MyDGNode(const DOMElement* e_) : e(e_) { Ctor(); }
   virtual ~MyDGNode() { }
@@ -242,10 +242,12 @@ private:
   unsigned int id; // 0 is reserved; first instance is 1
 };
 
-class MyDGEdge : public DGraph::Edge {
+class MyDGEdge : public OA::DGraph::DGraphStandard::Edge {
 public:
-  MyDGEdge(DGraph::Node* source_, DGraph::Node* sink_, const DOMElement* e_) 
-    : DGraph::Edge(source_, sink_), e(e_) { }
+  MyDGEdge(OA::OA_ptr<OA::DGraph::DGraphStandard::Node> source_, 
+          OA::OA_ptr<OA::DGraph::DGraphStandard::Node> sink_, 
+          const DOMElement* e_) 
+    : OA::DGraph::DGraphStandard::Edge(source_, sink_), e(e_) { }
   virtual ~MyDGEdge() { }
   
   DOMElement* GetElem() const { return const_cast<DOMElement*>(e); }
@@ -258,11 +260,11 @@ private:
 // GetSuccessor: Assuming node has 0 or 1 outgoing edges, return the
 // successor node.  In most graphs the successor will be along the
 // outgoing edge, and this parameter defaults to true.
-extern MyDGNode*
-GetSuccessor(MyDGNode* node, bool succIsOutEdge = true);
+extern OA::OA_ptr<MyDGNode>
+GetSuccessor(OA::OA_ptr<MyDGNode> node, bool succIsOutEdge = true);
 
-extern MyDGNode*
-GetSuccessorAlongEdge(MyDGNode* node, unsigned int condition, 
+extern OA::OA_ptr<MyDGNode>
+GetSuccessorAlongEdge(OA::OA_ptr<MyDGNode> node, unsigned int condition, 
 		      bool succIsOutEdge = true);
 
 //***************************************************************************
