@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.7 2004/03/19 16:55:09 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.8 2004/03/23 21:51:15 eraxxon Exp $
 # -*-makefile-*-
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -16,12 +16,23 @@ include $(WHIRL2XAIF)/test/Makeinclude.config
 #############################################################################
 
 .SUFFIXES: .f90
+
 F90_EXCEPTIONS =
+F90_EXCEPTIONS1 = \
+	arrays1.f90 arrays2.f90 arrays_dimensions1.f90 \
+	controlflow_loop1c.f90 controlflow_loop4.f90 controlflow_switch1.f90 \
+	  controlflow_loop2.f90 \
+	functions1.f90 functions2.f90 functions_nested2.f90 \
+	  functions_nested3.f90 intrinsics1.f90 \
+	pragma1.f90 scoping1.f90 \
+	types_derived1.f90 types_derived2.f90
 
 VPATH = .
 
 F90_MASTERS = $(shell ls *.f90)
 F90_MASTERS := $(filter-out $(F90_EXCEPTIONS), $(F90_MASTERS))
+F90_MASTERS1 = $(shell ls *.f90)
+F90_MASTERS1 := $(filter-out $(F90_EXCEPTIONS1), $(F90_MASTERS1))
 
 # Pipeline
 MFEF90  = $(WHIRL2XAIF_OPEN64)/crayf90/sgi/mfef90
@@ -43,33 +54,47 @@ all: tests
 
 #############################################################################
 
-tests : tests_pre tests_run tests_post
+tests : tests_pre tests_run tests_pipeline tests_post
 
 tests_pre : schema
 
 tests_run: 
-	@echo "*** EXCEPTIONS: $(F90_EXCEPTIONS) ***"
+	@echo "****** whirl2xaif TESTS ******"
+	@echo "*** exceptions: $(F90_EXCEPTIONS) ***"
 	@for f in $(F90_MASTERS) ; do \
 	  fbase=`echo $${f} | sed s@.f90@@` ; \
-	  echo $${f}... ; \
-	  $(MFEF90) $${f} ; \
-	  $(W2X) $${fbase}.B -o $${fbase}.xaif ; \
-	  $(NORM) $${fbase}.xaif ; \
+	  echo "  *** $${f}..." ; \
+	  $(MFEF90)   $${f} ; \
+	  $(W2X)      $${fbase}.B    -o $${fbase}.xaif ; \
+	  $(NORM)     $${fbase}.xaif ; \
 	done
 
-#pipeline :
-#	$(MFEF90)   $(prog).F
-#	$(W2X)      $(prog).B -o $(prog).xaif
-#	$(XB_BB) -i $(prog).xaif -o $(prog).xb.xaif
-#	$(X2W)      $(prog).B $(prog).xb.xaif -o $(prog).xb.x2w.B
-#	$(WHIRL2F)  $(prog).xb.x2w.B
-#	$(PP)       $(prog).xb.x2w.w2f.f
+tests_pipeline:
+	@echo "****** PIPELINE TESTS ******"
+	@echo "*** exceptions: $(F90_EXCEPTIONS1) ***"
+	@for f in $(F90_MASTERS1) ; do \
+	  fbase=`echo $${f} | sed s@.f90@@` ; \
+	  echo "  *** $${f}..." ; \
+	  $(MFEF90)   $${f} ; \
+	  $(W2X)      $${fbase}.B    -o $${fbase}.xaif ; \
+	  $(NORM)     $${fbase}.xaif ; \
+	  $(XB_BB) -i $${fbase}.xaif -o $${fbase}.xb.xaif ; \
+	  $(X2W)      $${fbase}.B $${fbase}.xb.xaif -o $${fbase}.xb.x2w.B ; \
+	  $(WHIRL2F)  $${fbase}.xb.x2w.B ; \
+	  $(NORM)     $${fbase}.xb.x2w.w2f.f ; \
+	  $(PP)       $${fbase}.xb.x2w.w2f.f ; \
+	done
 
 tests_post:
 
 tests_clean:
 	rm -f *.mod-whirl
 	rm -f *.B
+
+tests_pipeline_clean:
+	rm -f *.xb.xaif
+	rm -f *.w2f.f
+	rm -f *.w2f.pp.f
 
 schema : schema_clean
 	@if [ "$(WHIRL2XAIF_PLATFORM)" = "i686-Cygwin" ]; then \
@@ -81,11 +106,12 @@ schema : schema_clean
 schema_clean :
 	rm -r -f *.xsd
 
-.PHONY : tests tests_pre tests_run tests_post tests_clean schema schema_clean
+.PHONY : tests tests_pre tests_run  tests_post tests_clean schema schema_clean
+.PHONY : tests_pipeline tests_pipeline_clean
 
 #############################################################################
 
-clean : tests_clean schema_clean
+clean : tests_clean tests_pipeline_clean schema_clean
 
 veryclean : clean
 
