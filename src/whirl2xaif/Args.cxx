@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Args.cxx,v 1.1 2004/02/27 20:22:55 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Args.cxx,v 1.2 2004/02/28 16:41:09 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -123,7 +123,7 @@ Args::Parse(int argc, const char* const argv[])
     parser.Parse(optArgs, argc, argv);
     
     // -------------------------------------------------------
-    // Sift through results, checking for symantic errors
+    // Sift through results, checking for semantic errors
     // -------------------------------------------------------
     
     // Special options that should be checked first
@@ -155,7 +155,7 @@ Args::Parse(int argc, const char* const argv[])
     }
     whirlFileNm = parser.GetArg(0);
   } 
-  catch (CmdLineParser::Exception& e) {
+  catch (CmdLineParser::ParseError& e) {
     PrintError(std::cerr, e.GetMessage());
     exit(1);
   }
