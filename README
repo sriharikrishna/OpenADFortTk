@@ -1,4 +1,4 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.14 2003/12/29 22:13:04 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.15 2004/01/14 16:56:26 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
@@ -114,7 +114,7 @@ Please use the same compiler for Open64, OpenAnalysis and whirl2xaif.
    cd ${ANGEL_BASE}
    make
 
-   cd ${XAIFBOOSTER_BASE}
+   cd ${XAIFBOOSTER_BASE}/xaifBooster
    make test
 
 
