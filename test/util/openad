@@ -322,7 +322,7 @@ sub undefEnvVarErr
     }
     
     $desc = { %CmdDesc, }; 
-    $desc->{cmd} = "$PP ${base}.xb.x2w.w2f.f";
+    $desc->{cmd} = "$PP -f ${base}.xb.x2w.w2f.f";
     $desc->{desc} = "Postprocess Fortran: ${base}.xb.x2w.w2f.f -> ${base}.xb.x2w.w2f.pp.f";
     push @{$cmdDescVecRef}, $desc;
     
