@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.8 2003/10/01 16:32:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.9 2003/11/26 14:49:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -129,7 +129,7 @@ extern WN2F_STATUS
 xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
-WN2F_intrinsic_call(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 }; /* namespace whirl2xaif */
 
@@ -155,7 +155,7 @@ xlate_COMMENT(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 // FIXME: ordering?
 extern WN2F_STATUS
-WN2F_use_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt);  
+xlate_USE(xml::ostream& xos, WN *wn, XlationContext& ctxt);  
 
 extern WN2F_STATUS
 WN2F_implicit_bnd(xml::ostream& xos, WN *wn, XlationContext& ctxt); 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.5 2003/11/13 14:55:37 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.6 2003/11/26 14:49:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -283,7 +283,7 @@ xlate_SetDeriv(const DOMElement* elem, XlationContext& ctxt)
   WN* srcWN = TranslateVarRef(GetFirstChildElement(src), ctxt);
   ctxt.DeleteContext();
   
-  WN* callWN = CreateIntrinsicCall(MTYPE_V, "setderiv", 2);  
+  WN* callWN = CreateCallToIntrin(MTYPE_V, "setderiv", 2);  
   WN_actual(callWN, 0) = CreateParm(tgtWN, WN_PARM_BY_REFERENCE);
   WN_actual(callWN, 1) = CreateParm(srcWN, WN_PARM_BY_VALUE);
 
@@ -296,7 +296,7 @@ xlate_ZeroDeriv(const DOMElement* elem, XlationContext& ctxt)
 {
   WN* x = xlate_AssignmentLHS(elem, ctxt); // functionally equivalent
   
-  WN* callWN = CreateIntrinsicCall(MTYPE_V, "zero_deriv", 1);
+  WN* callWN = CreateCallToIntrin(MTYPE_V, "zero_deriv", 1);
   WN_actual(callWN, 0) = CreateParm(x, WN_PARM_BY_REFERENCE);
 
   return callWN;
@@ -342,7 +342,7 @@ xlate_Saxpy(const DOMElement* elem, XlationContext& ctxt, bool saxpy)
   // -------------------------------------------------------
   const char* fnm = (saxpy) ? "saxpy" : "sax";
   MTYPE rtype = MTYPE_V;
-  WN* callWN = CreateIntrinsicCall(rtype, fnm, 3);
+  WN* callWN = CreateCallToIntrin(rtype, fnm, 3);
   
   WN_actual(callWN, 0) = CreateParm(a_wn, WN_PARM_BY_VALUE);
   WN_actual(callWN, 1) = CreateParm(x_wn, WN_PARM_BY_VALUE);

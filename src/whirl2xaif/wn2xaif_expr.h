@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.h,v 1.6 2003/11/13 14:55:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.h,v 1.7 2003/11/26 14:49:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -104,7 +104,7 @@ xlate_INTCONST(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 //***************************************************************************
 
 extern WN2F_STATUS 
-   WN2F_intrinsic_op(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+   xlate_INTRINSIC_OP(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
    WN2F_tas(xml::ostream& xos, WN *wn, XlationContext& ctxt);

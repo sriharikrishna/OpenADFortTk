@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.7 2003/11/13 14:55:37 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.8 2003/11/26 14:49:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -129,10 +129,14 @@ GetIdList(const char* idstr, const char* tag);
 // FIXME: move to another file
 
 WN*
-CreateIntrinsicCall(TYPE_ID rtype, const char* fname, unsigned int argc);
+CreateCallToIntrin(TYPE_ID rtype, const char* fname, unsigned int argc);
 
 WN*
-CreateIntrinsicCall(TYPE_ID rtype, const char* fname, std::vector<WN*>& args);
+CreateCallToIntrin(TYPE_ID rtype, const char* fname, std::vector<WN*>& args);
+
+WN*
+CreateIntrinsicCall(OPERATOR opr, INTRINSIC intrn, 
+		    TYPE_ID rtype, TYPE_ID dtype, std::vector<WN*>& args);
 
 inline WN*
 CreateParm(WN *arg, UINT32 flag)

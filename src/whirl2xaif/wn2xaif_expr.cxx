@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.15 2003/11/13 14:55:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.16 2003/11/26 14:49:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -96,15 +96,9 @@ static WN2F_STATUS
 xlate_BinaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
 			  WN *wn0, WN *wn1, XlationContext& ctxt);
 
-#if 0 // REMOVE
 static WN2F_STATUS 
-xlate_OpToIntrinsic(xml::ostream& xos, OPCODE opcode, WN *wn0, WN *wn1, 
-		    XlationContext& ctxt);
-#endif
-
-static WN2F_STATUS 
-xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty, 
-	      BOOL call_by_value, XlationContext& ctxt);
+xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty, BOOL callByValue,
+	      XlationContext& ctxt);
 
 static WN2F_STATUS 
 DumpExprEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid, UINT pos);
@@ -242,9 +236,7 @@ static const CONV_OP Conv_Op_Map[] =
 
 
 static void
-WN2F_Convert(xml::ostream& xos,
-	     MTYPE        from_mtype,
-	     MTYPE        to_mtype)
+WN2F_Convert(xml::ostream& xos, MTYPE from_mtype, MTYPE to_mtype)
 {
    /* We emit a warning message for conversions not covered (TODO: put
     * this warning under a command-line option).  Converts the expression
@@ -267,233 +259,22 @@ WN2F_Convert(xml::ostream& xos,
 } /* WN2F_Convert */
 
 
-/*------------------------- Utility Functions -------------------------*/
-/*---------------------------------------------------------------------*/
-
-static WN2F_STATUS 
-WN2F_Intr_Funcall(xml::ostream& xos, 
-		  WN          *wn,
-		  const char  *func_name,
-		  INT          first_arg_idx,
-		  INT          last_arg_idx,
-		  BOOL         call_by_value,
-		  XlationContext& ctxt)
-{
-   /* An intrinsic operator expression to be emitted with function
-    * call syntax.  All arguments are passed by value or by reference,
-    * i.e. we never have some arguments passed by value and some by 
-    * reference, unless we have explicit INTR_OPC_ADRTMP or 
-    * INTR_OPC_VALTMP argument expressions. Note that we also
-    * handle substring arguments here. 
-    */
-   INT arg_idx, implicit_args, total_implicit_args;
-   TY_IDX opnd_type;
-
-   /* Determine the number of implicit arguments appended to the end
-    * of the argument list (i.e. string lengths).
-    */
-   if  (WN_intrinsic(wn)==INTRN_COUNT)
-         last_arg_idx--;
-
-   for (arg_idx = first_arg_idx, total_implicit_args = 0; 
-	arg_idx <= last_arg_idx - total_implicit_args; 
-	arg_idx++) {
-     opnd_type = WN_Tree_Type(WN_kid(wn, arg_idx));
-     if (TY_Is_Character_Reference(opnd_type) ||
-	 TY_Is_Chararray_Reference(opnd_type)) {
-       total_implicit_args++;
-     }
-   }
-   
-   /* Append the function-name */
-   if  (WN_intrinsic(wn)==INTRN_LENTRIM) {
-     xos << "LEN_TRIM";
-   } else {
-     if (WN_intrinsic(wn)==INTRN_F90INDEX)
-       xos << "INDEX";
-     else
-       Append_Token_String(xos, func_name);
-   }
-   
-   /* Append the argument list to the function reference, skipping
-    * implicit character-string-length arguments assumed to be the
-    * last ones in the list (see also ST2F_func_header()).
-    */
-   xos << "(";
-   set_XlationContext_no_parenthesis(ctxt);
-
-   switch (WN_intrinsic(wn)) {
-   case INTRN_F90INDEX:
-   case INTRN_SCAN:
-   case INTRN_VERIFY:
-     for (arg_idx = first_arg_idx;
-	  arg_idx < last_arg_idx ;
-	  arg_idx=arg_idx+2) {
-       opnd_type = WN_Tree_Type(WN_kid(wn, arg_idx));
-       
-       if (TY_Is_Character_Reference(opnd_type) ||
-	   TY_Is_Chararray_Reference(opnd_type)) {
-	 WN2F_String_Argument(xos,
-			      WN_kid(wn, arg_idx), /* string base */
-			      WN_kid(wn, last_arg_idx), /* string length */
-                              ctxt);
-       } else {
-	 xlate_Operand(xos, WN_kid(wn, arg_idx), opnd_type, 
-		       call_by_value, ctxt);
-       }
-       
-       if ((arg_idx) < WN_kid_count(wn) - 1)
-	 xos << ",";
-     }
-
-     set_XlationContext_has_logical_arg(ctxt);
- 
-     xlate_Operand(xos, WN_kid(wn, last_arg_idx), opnd_type,
-		   call_by_value, ctxt);
-
-     reset_XlationContext_has_logical_arg(ctxt);
-     
-     
-     break;
-
-   default:
-
-     for (arg_idx = first_arg_idx, implicit_args = 0; 
-	  arg_idx <= last_arg_idx - implicit_args; 
-	  arg_idx++) {
-       opnd_type = WN_Tree_Type(WN_kid(wn, arg_idx));
-       
-       if (TY_Is_Character_Reference(opnd_type) ||
-	   TY_Is_Chararray_Reference(opnd_type)) {
-	 implicit_args++;
-	 WN2F_String_Argument(xos,
-			      WN_kid(wn, arg_idx), /* string base */
-			      WN_kid(wn, 
-				     last_arg_idx - 
-				     (total_implicit_args - 
-				      implicit_args)), /* string length */
-			      ctxt);
-	 if ((arg_idx+implicit_args) < WN_kid_count(wn) - 1)
-	   xos << ",";
-       } else {
-	 
-	 if ((WN_intrinsic(wn)==INTRN_SUM||   
-	      INTRN_MAXVAL||
-	      INTRN_PRODUCT) && 
-	     (WN_opc_operator(WN_kid0(WN_kid(wn,arg_idx)))== OPR_INTCONST) &&
-	     (WN_const_val(WN_kid0(WN_kid(wn,arg_idx)))==0)) {
-	   
-	 } else {
-	   xlate_Operand(xos, WN_kid(wn, arg_idx), opnd_type,
-			 call_by_value, ctxt);
-	   
-	   // if ((arg_idx+implicit_args) < WN_kid_count(wn) - 1) 
-	   if ((arg_idx+implicit_args) < last_arg_idx) 
-	     if ((WN_intrinsic(wn)==INTRN_SUM ||
-		  INTRN_MAXVAL||
-		  INTRN_PRODUCT) &&
-		 (WN_opc_operator(WN_kid0(WN_kid(wn,arg_idx+1))) 
-		  == OPR_INTCONST) &&
-		 (WN_const_val(WN_kid0(WN_kid(wn,arg_idx+1)))==0)) {
-	       
-	     } else {
-	       xos << ",";
-	     }
-	 }
-       }
-     }
-     break;
-   }
-   xos << ")";
-   
-   /* TODO: See if we need to cast the resultant value */
-   
-   return EMPTY_WN2F_STATUS;
-} /* WN2F_Intr_Funcall */
-
-
-static WN2F_STATUS
-WN2F_Intr_Infix(xml::ostream& xos, 
-		const char  *op_name,
-		WN          *opnd0,   /* NULL for unary operation */
-		WN          *opnd1,
-		BOOL         call_by_value,
-		XlationContext& ctxt)
-{
-   /* An intrinsic operator expression to be emitted with infix operator
-    * syntax.  Note that we have already determined what the two arguments
-    * are, and any implicit argument have already been ignored.
-    */
-   const BOOL parenthesize = !XlationContext_no_parenthesis(ctxt);
-   const BOOL binary_op = (opnd0 != NULL);
-
-   /* Ensure that subexpressions are parenthesized */
-   reset_XlationContext_no_parenthesis(ctxt);
-   
-   if (parenthesize)
-     xos << std::endl << "{infix ";
-
-   if (binary_op)
-     xlate_Operand(xos, opnd0, WN_Tree_Type(opnd0), call_by_value, ctxt);
-   Append_Token_String(xos, op_name);
-   xlate_Operand(xos, opnd1, WN_Tree_Type(opnd1), call_by_value, ctxt);
-
-   if (parenthesize)
-     xos << std::endl << "infix}";
-
-   return EMPTY_WN2F_STATUS;
-} /* WN2F_Intr_Infix */
-
-
-static WN2F_STATUS
-WN2F_Binary_Substr_Op(xml::ostream& xos, 
-		      WN          *op_wn,   /* Top-level expression */
-		      const char  *op_name, /* The builtin operator */
-		      XlationContext& ctxt)
-{
-  /* Similar to xlate_BinaryOpToIntrinsic, but we expect the arguments to be
-   * string expressions.
-   */
-  const BOOL parenthesize = !XlationContext_no_parenthesis(ctxt);
-  
-  /* Ensure that subexpressions are parenthesized */
-  reset_XlationContext_no_parenthesis(ctxt);
-  
-  if (parenthesize)
-    xos << std::endl << "{bsubsr ";
-
-  WN2F_String_Argument(xos, WN_kid(op_wn, 0), /* string base */
-		       WN_kid(op_wn, 2), /* string length */ ctxt);
-  Append_Token_String(xos, op_name);
-  WN2F_String_Argument(xos, WN_kid(op_wn, 1), /* string base */
-		       WN_kid(op_wn, 3), /* string length */ ctxt);
-  if (parenthesize)
-    xos << std::endl << "bsubstr}";
-
-  return EMPTY_WN2F_STATUS;
-} /* WN2F_Binary_Substr_Op */
-
-
 /*------------------------- Exported Functions ------------------------*/
 /*---------------------------------------------------------------------*/
 
 void WN2F_Expr_initialize(void)
 {
-   /* Initialize the Conv_Op array (default value is NULL) */
-   INT  map;
-   for (map = 0; map < NUMBER_OF_CONV_OPS; map++) {
-     Conv_Op[Conv_Op_Map[map].from][Conv_Op_Map[map].to] = 
-       Conv_Op_Map[map].name;
-   }
-} /* WN2F_Expr_initialize */
-
+  /* Initialize the Conv_Op array (default value is NULL) */
+  for (INT map = 0; map < NUMBER_OF_CONV_OPS; map++) {
+    Conv_Op[Conv_Op_Map[map].from][Conv_Op_Map[map].to] = 
+      Conv_Op_Map[map].name;
+  }
+}
 
 void WN2F_Expr_finalize(void)
 {
-   /* Nothing to do for now */
+  /* Nothing to do for now */
 }
-
-
 
 //***************************************************************************
 // Type Conversions
@@ -698,20 +479,20 @@ WN2F_rsqrt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 WN2F_STATUS 
 WN2F_parm(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   /* TODO: handle opcode parms properly, i.e. take some advantage
-    * of the information provided in this packaging of argument 
-    * expressions.  For now, just skip these nodes.
-    */
-   ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_PARM, 
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_parm"));
-   if ( TY_is_logical(Ty_Table[WN_ty(wn)]) || 
-	XlationContext_is_logical_arg(ctxt)) { //fzhao Jan
-     set_XlationContext_has_logical_arg(ctxt);
-     TranslateWN(xos, WN_kid0(wn), ctxt);
-     reset_XlationContext_has_logical_arg(ctxt);
-   } else
-     TranslateWN(xos, WN_kid0(wn), ctxt);
-   return EMPTY_WN2F_STATUS;
+  /* TODO: handle opcode parms properly, i.e. take some advantage
+   * of the information provided in this packaging of argument 
+   * expressions.  For now, just skip these nodes.
+   */
+  ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_PARM, 
+		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_parm"));
+  if ( TY_is_logical(Ty_Table[WN_ty(wn)]) || 
+       XlationContext_is_logical_arg(ctxt)) { //fzhao Jan
+    set_XlationContext_has_logical_arg(ctxt);
+    TranslateWN(xos, WN_kid0(wn), ctxt);
+    reset_XlationContext_has_logical_arg(ctxt);
+  } else
+    TranslateWN(xos, WN_kid0(wn), ctxt);
+  return EMPTY_WN2F_STATUS;
 
 } /* WN2F_parm */
 
@@ -719,14 +500,14 @@ WN2F_parm(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 WN2F_STATUS 
 WN2F_alloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ALLOCA, 
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_alloca"));
-
-   xos << "OPR_ALLOCA(";
-   TranslateWN(xos,WN_kid0(wn),ctxt);
-   xos << ")";
-
-   return EMPTY_WN2F_STATUS;
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ALLOCA, 
+		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_alloca"));
+  
+  xos << "OPR_ALLOCA(";
+  TranslateWN(xos,WN_kid0(wn),ctxt);
+  xos << ")";
+  
+  return EMPTY_WN2F_STATUS;
 } /* WN2F_alloca */
 
 
@@ -734,22 +515,22 @@ WN2F_STATUS
 WN2F_dealloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   INT16 n,i;
-
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_DEALLOCA, 
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_dealloca"));
-
-   n = WN_kid_count(wn);
-
-   xos << std::endl << "CALL OPR_DEALLOCA(";
-   i = 0 ;
-   while (i < n) {
-     TranslateWN(xos,WN_kid(wn,i),ctxt);
-     if (++i < n)
-       xos << ",";
-   }
-   xos << ")";
-
-   return EMPTY_WN2F_STATUS;
+  
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_DEALLOCA, 
+		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_dealloca"));
+  
+  n = WN_kid_count(wn);
+  
+  xos << std::endl << "CALL OPR_DEALLOCA(";
+  i = 0 ;
+  while (i < n) {
+    TranslateWN(xos,WN_kid(wn,i),ctxt);
+    if (++i < n)
+      xos << ",";
+  }
+  xos << ")";
+   
+  return EMPTY_WN2F_STATUS;
 } /* WN2F_dealloca */
 
 
@@ -802,9 +583,9 @@ WN2F_complex(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   set_XlationContext_no_parenthesis(ctxt);
   
   xos << "("; /* getting real part */
-  (void)TranslateWN(xos, WN_kid0(wn), ctxt);
+  TranslateWN(xos, WN_kid0(wn), ctxt);
   xos << ","; /* getting imaginary part */
-  (void)TranslateWN(xos, WN_kid1(wn), ctxt);
+  TranslateWN(xos, WN_kid1(wn), ctxt);
   xos << ")";
   
   return EMPTY_WN2F_STATUS;
@@ -869,13 +650,10 @@ WN2F_select(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   xos << "MERGE(";
   TranslateWN(xos, WN_kid1(wn), ctxt);
-  xos << ",";
-  
+  xos << ",";  
   TranslateWN(xos, WN_kid2(wn), ctxt);
-  xos << ",";
-  
-  TranslateWN(xos, WN_kid0(wn), ctxt);
-  
+  xos << ",";  
+  TranslateWN(xos, WN_kid0(wn), ctxt);  
   xos << ")";
 #if 0
   ASSERT_DBG_WARN(FALSE, (DIAG_UNIMPLEMENTED, "WN2F_select"));
@@ -976,125 +754,141 @@ WN2F_nmsub(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 } /* WN2F_nmsub */
 
 
-// Intrinsics
+static WN2F_STATUS 
+WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
+		  INT begArgIdx, INT endArgIdx, BOOL callByValue, 
+		  XlationContext& ctxt);
+
 WN2F_STATUS 
-WN2F_intrinsic_op(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_INTRINSIC_OP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  /* An intrinsic operator expression.  Generate the call as is,
-   * regardless how the return value is returned, since we know
-   * the consumer of the value is the surrounding expression.  This
-   * call is not related to the call-info generated by PUinfo.
-   * Note that either all or none of the arguments are call-by-value.
-   */
-  INT   first_arg_idx, last_arg_idx;
-  BOOL  by_value;
+  // An intrinsic operator expression (function call). This call is
+  // not related to the call-info generated by PUinfo.  Note that
+  // either all or none of the arguments are call-by-value.
+  OPERATOR opr = WN_operator(wn);
+  ASSERT_DBG_FATAL(opr == OPR_INTRINSIC_OP, 
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_INTRINSIC_OP"));
   
-  ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_INTRINSIC_OP, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_intrinsic_op"));
+  INTRINSIC intrn = WN_intrinsic(wn);
+  BOOL by_value = INTRN_by_value(intrn);
+  INT begArgIdx = 0; // Assume we never return to first argument
+  INT endArgIdx = WN_kid_count(wn) - 1;
   
-  by_value = INTRN_by_value(WN_intrinsic(wn));
-  last_arg_idx = WN_kid_count(wn) - 1;
-  first_arg_idx = 0; /* Assume we never return to first argument */
+  const char* inm = INTRINSIC_basename(intrn);
+  IntrinsicXlationTable::XAIFInfo* info
+    = IntrinsicTable.FindXAIFInfo(opr, inm);
+  ASSERT_FATAL(info, (DIAG_UNIMPLEMENTED, WN_intrinsic_name(intrn)));
   
-  /* Switch on WN_intrinsic(wn) to handle builtin fortran opcodes.
-   */
-  switch (WN_intrinsic(wn)) {
-  case INTRN_I4EXPEXPR: 
-  case INTRN_I8EXPEXPR:
-  case INTRN_F4EXPEXPR:
-  case INTRN_F8EXPEXPR:
-  case INTRN_FQEXPEXPR:
-  case INTRN_C4EXPEXPR:
-  case INTRN_C8EXPEXPR:
-  case INTRN_CQEXPEXPR:
-  case INTRN_F4I4EXPEXPR:
-  case INTRN_F4I8EXPEXPR:
-  case INTRN_F8I4EXPEXPR:
-  case INTRN_F8I8EXPEXPR:
-  case INTRN_FQI4EXPEXPR:
-  case INTRN_FQI8EXPEXPR:
-  case INTRN_C4I4EXPEXPR:
-  case INTRN_C4I8EXPEXPR:
-  case INTRN_C8I4EXPEXPR:
-  case INTRN_C8I8EXPEXPR:
-  case INTRN_CQI4EXPEXPR:
-  case INTRN_CQI8EXPEXPR:
-    WN2F_Intr_Infix(xos, "**", WN_kid0(wn), WN_kid1(wn), by_value, ctxt);
-    break;
-    
-   case INTRN_CEQEXPR:
-     WN2F_Binary_Substr_Op(xos, wn, ".EQ.", ctxt);
-     break;
-  case INTRN_CNEEXPR:
-    WN2F_Binary_Substr_Op(xos, wn, ".NE.", ctxt);
-    break;
-  case INTRN_CGEEXPR:
-    WN2F_Binary_Substr_Op(xos, wn, ".GE.", ctxt);
-    break;
-  case INTRN_CGTEXPR:
-    WN2F_Binary_Substr_Op(xos, wn, ".GT.", ctxt);
-    break;
-   case INTRN_CLEEXPR:
-     WN2F_Binary_Substr_Op(xos, wn, ".LE.", ctxt);
-     break;
-  case INTRN_CLTEXPR:
-    WN2F_Binary_Substr_Op(xos, wn, ".LT.", ctxt);
-    break;
-    
-  case INTRN_U4I1ADRTMP: 
-  case INTRN_U4I2ADRTMP: 
-  case INTRN_U4I4ADRTMP:
-  case INTRN_U4I8ADRTMP: 
-  case INTRN_U4F4ADRTMP: 
-  case INTRN_U4F8ADRTMP: 
-  case INTRN_U4FQADRTMP:
-  case INTRN_U4C4ADRTMP: 
-  case INTRN_U4C8ADRTMP:
-  case INTRN_U4CQADRTMP:
-  case INTRN_U4VADRTMP :
-  case INTRN_U8I1ADRTMP:
-  case INTRN_U8I2ADRTMP:
-  case INTRN_U8I4ADRTMP:
-  case INTRN_U8I8ADRTMP: 
-  case INTRN_U8F4ADRTMP: 
-  case INTRN_U8F8ADRTMP: 
-  case INTRN_U8FQADRTMP:
-  case INTRN_U8C4ADRTMP: 
-  case INTRN_U8C8ADRTMP: 
-  case INTRN_U8CQADRTMP:
-  case INTRN_U8VADRTMP:
-    /* Implicit call by reference.  Emit the dereferenced parameter.
-     */
+  if ((strcmp(inm, "ADRTMP") == 0) || (strcmp(inm, "VALTMP") == 0)) {
+    // Special cases:
+    //   ADRTMP: Call-by-reference.  Emit the dereferenced parameter.
+    //   VALTMP: Call-by-value.  Assume 'ctxt' determines when it
+    //     is necessary to put a %val qualifier around the argument.
     TranslateWN(xos, WN_kid0(wn), ctxt);
-    break;
-    
-  case INTRN_I4VALTMP:
-  case INTRN_I8VALTMP: 
-  case INTRN_F4VALTMP: 
-  case INTRN_F8VALTMP: 
-  case INTRN_FQVALTMP:
-  case INTRN_C4VALTMP: 
-  case INTRN_C8VALTMP:
-  case INTRN_CQVALTMP:
-    /* Call-by-value.  Assume the ctxt determines when it is
-     * necessary to put a %val qualifier around the argument.
-     */
-    TranslateWN(xos, WN_kid0(wn), ctxt);
-    break;     
-    
-  default:
-    WN2F_Intr_Funcall(xos, wn, WN_intrinsic_name((INTRINSIC) WN_intrinsic(wn)),
-		      first_arg_idx, last_arg_idx, by_value, ctxt);
-    break;
-  } /*switch*/
-  
-  /* TODO: See if we need to cast the resultant value.
-   * TY * return_ty = 
-   *         WN_intrinsic_return_ty(WN_opcode(wn), WN_intrinsic(wn));
-   */
+  } else {
+    // General case
+    WN2F_Intr_Funcall(xos, wn, info->name, 
+		      begArgIdx, endArgIdx, by_value, ctxt);
+  }
   
   return EMPTY_WN2F_STATUS;
-} /* WN2F_intrinsic_op */
+} /* xlate_INTRINSIC_OP */
+
+
+static WN2F_STATUS 
+WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
+		  INT begArgIdx, INT endArgIdx, BOOL callByValue, 
+		  XlationContext& ctxt)
+{
+  /* An intrinsic operator expression to be emitted with function
+   * call syntax.  All arguments are passed by value or by reference,
+   * i.e. we never have some arguments passed by value and some by 
+   * reference, unless we have explicit INTR_OPC_ADRTMP or 
+   * INTR_OPC_VALTMP argument expressions. Note that we also
+   * handle substring arguments here. 
+   */
+  
+  /* Determine the number of implicit arguments appended to the end
+   * of the argument list (i.e. string lengths).
+   */
+  if (WN_intrinsic(wn) == INTRN_COUNT) {
+    endArgIdx--;
+  }
+  
+  INT argIdx = begArgIdx, total_implicit_args = 0;
+  TY_IDX opnd_type;
+  for ( ; argIdx <= endArgIdx - total_implicit_args; argIdx++) {
+    opnd_type = WN_Tree_Type(WN_kid(wn, argIdx));
+    if (TY_Is_Character_Reference(opnd_type) ||
+	TY_Is_Chararray_Reference(opnd_type)) {
+      total_implicit_args++;
+    }
+  }
+  
+  // Emit Intrinsic name
+  UINT targid = ctxt.GetNewVId();
+  xos << BegElem("xaif:Intrinsic") 
+      << Attr("vertex_id", targid) << Attr("name", intrnNm)
+      << Attr("type", "***") << EndElem;
+   
+  // Emit Intrinsic argument list, skipping implicit
+  // character-string-length arguments assumed to be the last ones in
+  // the list (see also ST2F_func_header()).
+  UINT srcid = 0;
+  UINT position = 0;
+  switch (WN_intrinsic(wn)) {
+  case INTRN_F90INDEX: // FIXME
+  case INTRN_SCAN:
+  case INTRN_VERIFY: {
+    for (argIdx = begArgIdx; argIdx < endArgIdx; argIdx = argIdx + 2) {
+      opnd_type = WN_Tree_Type(WN_kid(wn, argIdx));
+      
+      position++;
+      srcid = ctxt.PeekVId();
+      if (TY_Is_Character_Reference(opnd_type) ||
+	  TY_Is_Chararray_Reference(opnd_type)) {
+	WN2F_String_Argument(xos, WN_kid(wn, argIdx) /* string base */,
+			     WN_kid(wn, endArgIdx) /* string len */, ctxt);
+      } else {
+	xlate_Operand(xos, WN_kid(wn, argIdx), opnd_type, callByValue, ctxt);
+      }
+      DumpExprEdge(xos, ctxt.GetNewEId(), srcid, targid, position);
+    }
+    
+    set_XlationContext_has_logical_arg(ctxt);
+    position++;
+    srcid = ctxt.PeekVId();
+    xlate_Operand(xos, WN_kid(wn, endArgIdx), opnd_type, callByValue, ctxt);
+    reset_XlationContext_has_logical_arg(ctxt);
+    DumpExprEdge(xos, ctxt.GetNewEId(), srcid, targid, position);
+    break;
+  }
+  default: {
+    
+    INT implicit_args = 0;
+    for (argIdx = begArgIdx; argIdx <= endArgIdx - implicit_args; argIdx++) {
+      opnd_type = WN_Tree_Type(WN_kid(wn, argIdx));
+      
+      position++;
+      srcid = ctxt.PeekVId();
+      if (TY_Is_Character_Reference(opnd_type) ||
+	  TY_Is_Chararray_Reference(opnd_type)) {
+	implicit_args++;
+	INT strlIdx = (endArgIdx - (total_implicit_args - implicit_args));
+	WN2F_String_Argument(xos, WN_kid(wn, argIdx) /* string base */,
+			     WN_kid(wn, strlIdx) /* string len */, ctxt);
+      } else {
+	xlate_Operand(xos, WN_kid(wn, argIdx), opnd_type, callByValue, ctxt);
+      }
+      DumpExprEdge(xos, ctxt.GetNewEId(), srcid, targid, position);
+
+    }
+    break;
+  }
+  } /* switch */
+  
+  return EMPTY_WN2F_STATUS;
+} /* WN2F_Intr_Funcall */
 
 
 //***************************************************************************
@@ -1201,62 +995,10 @@ xlate_BinaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
 }
 
 
-#if 0 // FIXME REMOVE
-
-// xlate_OpToIntrinsic: Translate a WHIRL unary or binary operator to a
-// XAIF function call.  'wn1' should be NULL for a WHIRL unary operator. 
-//
-// FIXME: right now, this is essentially the same as
-// xlate_BinaryOpToIntrinsic.
-//
-// FIXME: Only string argument are passed by reference; all other
-// argument types are passed by value.
-static WN2F_STATUS
-xlate_OpToIntrinsic(xml::ostream& xos, OPCODE opcode, WN *wn0, WN *wn1, 
-		    XlationContext& ctxt)
-{
-  const BOOL is_binary_op = (wn1 != NULL);
-  
-  TY_IDX rty = Stab_Mtype_To_Ty(OPCODE_rtype(opcode));
-  TY_IDX dty = Stab_Mtype_To_Ty(OPCODE_desc(opcode));
-  
-  // If there is no descriptor type, assume the operands should be
-  // of the same type as the result.  The assumed type of the argument
-  // will be the dty.
-  if (TY_kind(dty) == KIND_VOID) { dty = rty; }
-
-  UINT targid, srcid0, srcid1;
-  
-  // Operation
-  targid = ctxt.GetNewVId();
-  xos << Comment("OpToIntrinsic (FIXME: FuncCall)");
-  xos << BegElem("xaif:Intrinsic") << Attr("vertex_id", targid)
-      << Attr("name", GET_OPC_FNAME(opcode)) << EndElem;
-  
-  // First operand, or only operand for unary operation
-  srcid0 = ctxt.PeekVId();
-  xlate_Operand(xos, wn0, dty, TRUE/*call-by-value*/, ctxt);
-  
-  // Second operand (only for binary op)
-  if (is_binary_op) {
-    srcid1 = ctxt.PeekVId();
-    xlate_Operand(xos, wn1, dty, TRUE/*call-by-value*/, ctxt);
-  }
-
-  // Edges
-  DumpExprEdge(xos, ctxt.GetNewEId(), srcid0, targid, 1);
-  if (is_binary_op) { DumpExprEdge(xos, ctxt.GetNewEId(), srcid1, targid, 2); }
-  
-  return EMPTY_WN2F_STATUS;
-}
-
-#endif
-
-
-// xlate_Operand: Translate a WHIRL operand (from an operator) to XAIF.  On success returns the non-zero 'vertex_id' used for the XAIF 
+// xlate_Operand: Translate a WHIRL operand (from an operator) to XAIF.
 static WN2F_STATUS
 xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty, 
-	      BOOL call_by_value, XlationContext& ctxt)
+	      BOOL callByValue, XlationContext& ctxt)
 {
   // Translate an operand to a function or built-in operator invocation,
   // based on whether the ctxt indicates that we have call-by-value
@@ -1264,13 +1006,12 @@ xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty,
   // argument we expect. FIXME
   
   // We do not handle substring expressions here, and assume any
-  // such expression will be dispatched to a specialty routine
-  // such as WN2F_Intr_Infix_SubstrExpr(). FIXME
+  // such expression will be dispatched to another. 
   ASSERT_DBG_WARN(!TY_Is_Character_Reference(assumed_ty) &&
 		  !TY_Is_Chararray_Reference(assumed_ty),
 		  (DIAG_W2F_UNEXPECTED_SUBSTRING_REF, "xlate_Operand()"));
   
-  if (!call_by_value) {
+  if (!callByValue) {
     WN2F_Offset_Memref(xos, 
 		       opnd,                   /* address expression */
 		       assumed_ty,             /* address type */

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.19 2003/11/13 16:09:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.20 2003/11/26 14:49:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -440,14 +440,14 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   /* Generates a function-call and ensures that the return value
    * is returned into the appropriate context, be it a variable
    * or a register.  Note that intrinsic calls are dispatched to
-   * this function from WN2F_intrinsic_call() when appropriate.
+   * this function from xlate_INTRINSIC_CALL() when appropriate.
    * Make sure the handling of instrinsic ops in wn2f_expr.c is
    * kept up to date with changes that occur here.
    */
   
   // We can't handle ICALLs yet
-  ASSERT_DBG_FATAL(WN_operator(wn) != OPR_ICALL, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "OPR_ICALL"));
+  OPERATOR opr = WN_operator(wn); 
+  ASSERT_DBG_FATAL(opr != OPR_ICALL, (DIAG_W2F_UNEXPECTED_OPC, "OPR_ICALL"));
 
   // -------------------------------------------------------
   // Gather info...
@@ -458,7 +458,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   BOOL return_to_param; // REMOVE
   INT first_arg_idx, last_arg_idx;
 
-  if (WN_operator(wn) == OPR_INTRINSIC_CALL) {
+  if (opr == OPR_INTRINSIC_CALL) {
     return_to_param = WN_intrinsic_return_to_param(return_ty);
     return_ty = WN_intrinsic_return_ty(WN_opcode(wn), 
 				       (INTRINSIC) WN_intrinsic(wn), wn);
@@ -469,7 +469,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     // Only two things vary for CALL, ICALL, and PICCALL nodes: the
     // method used to get the function type and the last_arg_idx.
     TY_IDX func_ty;
-    if (WN_operator(wn) == OPR_CALL) {
+    if (opr == OPR_CALL) {
       is_user_call = TRUE;
       func_ty = ST_pu_type(WN_st(wn));
       last_arg_idx = WN_kid_count(wn) - 1;
@@ -484,10 +484,10 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	set_XlationContext_has_no_arr_elmt(ctxt);
       }
 
-    } else if (WN_operator(wn) == OPR_ICALL) {
+    } else if (opr == OPR_ICALL) {
       func_ty = WN_ty(wn);
       last_arg_idx = WN_kid_count(wn) - 2;
-    } else { /* (WN_operator(wn) == OPR_PICCALL) */
+    } else { /* (opr == OPR_PICCALL) */
       is_user_call = TRUE;
       func_ty = ST_type(WN_st(wn));
       last_arg_idx = WN_kid_count(wn) - 2;
@@ -504,17 +504,20 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   int xlate_as = 0; // 0: subroutine; 1: function; 2: intrinsic 
   UINT targid = 0; // (FIXME)
 
-  if (WN_operator(wn) == OPR_INTRINSIC_CALL) {
-    /* FIXME: Note that all intrinsics that return a CHARACTER string
-     * will have been treated specially in WN2F_intrinsic_call(),
-     * so we need only consider returns through a first non-
-     * string parameter here.
-     */
-    // FIXME
-    xos << BegElem("xaif:Intrinsic***") << Attr("vertex_id", ctxt.GetNewVId())
-	<< Attr("name", WN_intrinsic_name((INTRINSIC)WN_intrinsic(wn)))
-	<< EndElem;
+  if (opr == OPR_INTRINSIC_CALL) {
+    // xlate_INTRINSIC_CALL() has already handled certain intrinsics (FIXME)
+    // ... only consider returns through a first non-string parameter here
+
+    const char* inm = INTRINSIC_basename(WN_intrinsic(wn));
+    IntrinsicXlationTable::XAIFInfo* info 
+      = IntrinsicTable.FindXAIFInfo(opr, inm);
+    ASSERT_FATAL(info, (DIAG_UNIMPLEMENTED, 0, "Missing intrinsic!"));
+
     xlate_as = 2; // intrinsic
+    targid = ctxt.GetNewVId();
+    xos << BegElem("xaif:Intrinsic") 
+	<< Attr("vertex_id", targid) << Attr("name", info->name)
+	<< Attr("type", "***") << EndElem;
 
   } else {
     // Could translate as an XAIF SubroutineCall, FunctionCall or Intrinsic
@@ -526,14 +529,14 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     ASSERT_FATAL(scopeid != 0, (DIAG_UNIMPLEMENTED, 0, "xlate_CALL"));
     
     IntrinsicXlationTable::XAIFInfo* info
-      = IntrinsicTable.FindXAIFInfo(WN_operator(wn), ST_name(st));
+      = IntrinsicTable.FindXAIFInfo(opr, ST_name(st));
     if (info) {
       // Intrinsic
       xlate_as = 2; // intrinsic
       targid = ctxt.GetNewVId();
       xos << BegElem("xaif:Intrinsic")
-	  << Attr("vertex_id", targid)
-	  << Attr("name", info->name) << Attr("type", "***") << EndElem;
+	  << Attr("vertex_id", targid) << Attr("name", info->name)
+	  << Attr("type", "***") << EndElem;
     } else if (return_ty != (TY_IDX)0 && TY_kind(return_ty) != KIND_VOID) {
       // FunctionCall
       xlate_as = 1; // function
@@ -645,7 +648,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
       // FIXME
-      if (WN_operator(wn) == OPR_INTRINSIC_CALL &&
+      if (opr == OPR_INTRINSIC_CALL &&
 	  INTRN_by_value(WN_intrinsic(wn))) {
 	/* Call-by value, but argument should be emitted without the
 	 * %val() qualifier. */
@@ -728,7 +731,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       }
       
       if ((arg_idx+implicit_args) == (last_arg_idx-1)) { 
-	if (WN_operator(wn) == OPR_CALL && is_allocate_stmt) {
+	if (opr == OPR_CALL && is_allocate_stmt) {
 	  if (WN_opc_operator(WN_kid0(WN_kid(wn, last_arg_idx))) == OPR_LDA) {
 	    // xos << ",";
 	    xos << "STAT=";
@@ -768,98 +771,70 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 WN2F_STATUS 
-whirl2xaif::WN2F_intrinsic_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
+				 XlationContext& ctxt)
 {
-  // May call xlate_CALL
-   WN   *arg_expr;
-   TY_IDX arg_ty;
-   INT   str_kid, length_kid, first_length_kid;
-   BOOL regular_call = FALSE; /* Specially treated intrinsic call? */
+  // Handles all intrinsics that return a CHARACTER string; passes
+  // others to xlate_CALL.
 
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_INTRINSIC_CALL, 
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_intrinsic_call"));
-
-   switch (WN_intrinsic(wn))
-   {
-   case INTRN_CONCATEXPR:
-
-      /* In the context of an IO statement, emit the concatenation
-       * but disregard the temporary result buffer.
-       */
-      
-      /* Determine the range of kids denoting the base of the string-
-       * arguments and the the length of these strings respectively.
-       */
-      str_kid = 1;
-      length_kid = first_length_kid = (WN_kid_count(wn) + 2)/2;
-
-      /* Emit the concatenation operations */
+  WN   *arg_expr;
+  TY_IDX arg_ty;
+  INT  str_kid, length_kid, first_length_kid;
+  BOOL regular_call = FALSE; /* Specially treated intrinsic call? */
+  
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_INTRINSIC_CALL, 
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_INTRINSIC_CALL"));
+  
+  switch (WN_intrinsic(wn)) {
+  case INTRN_CONCATEXPR:    
+    /* In the context of an IO statement, emit the concatenation
+     * but disregard the temporary result buffer. */
+    
+    /* Determine the range of kids denoting the base of the string-
+     * arguments and the the length of these strings respectively. */
+    str_kid = 1;
+    length_kid = first_length_kid = (WN_kid_count(wn) + 2)/2;
+    
+    /* Emit the concatenation operations */
+    WN2F_String_Argument(xos, 
+			 WN_kid(wn, str_kid),    /* base of string1 */
+			 WN_kid(wn, length_kid), /* length of string1 */
+			 ctxt);
+    while ((++str_kid) < first_length_kid) {
+      length_kid++;
+      xos << "//";
       WN2F_String_Argument(xos, 
-			   WN_kid(wn, str_kid),    /* base of string1 */
-			   WN_kid(wn, length_kid), /* length of string1 */
+			   WN_kid(wn, str_kid),    /* base of stringN */
+			   WN_kid(wn, length_kid), /* length of stringN */
 			   ctxt);
-      while ((++str_kid) < first_length_kid) {
-	 length_kid++;
-	 xos << "//";
-	 WN2F_String_Argument(xos, 
-			      WN_kid(wn, str_kid),    /* base of stringN */
-			      WN_kid(wn, length_kid), /* length of stringN */
-			      ctxt);
-      }
-      break;
-   case INTRN_CASSIGNSTMT:
-      xos << std::endl;
-      WN2F_String_Argument(xos,
-			   WN_kid(wn,0), /* base of destination */
-			   WN_kid(wn,2), /* length of base */
-			   ctxt);
-      xos << "=";
-      WN2F_String_Argument(xos, 
-			   WN_kid(wn,1), /* base of source */
-			   WN_kid(wn,3), /* length of source */
-			   ctxt);
-      break;
-
-   case INTRN_STOP:
-   case INTRN_STOP_F90:
-      // Since this could be either the F90 stop or the F77 stop
-      // output the STOP explicitly
-
-      xos << BegElem(XAIFStrings.elem_Marker()) 
-	  << Attr("statement_id", ctxt.GetNewVId())
-	  << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
-	  << " [stop]" << EndAttr << EndElem;
-
-#if 0 // FIXME
-      /* Get the string argument type, where the second argument is
-       * expected to be the string-length. */
-      arg_ty = WN_Tree_Type(WN_kid0(wn));
-      arg_expr = WN_Skip_Parm(WN_kid1(wn));
-      ASSERT_DBG_WARN(WN_operator(arg_expr) == OPR_INTCONST , 
-		      (DIAG_W2F_UNEXPECTED_OPC, 
-		       "for INTRN_STOP in WN2F_intrinsic_call"));
-
-      /* Only emit the string argument if it is of length > 0 */
-      if (WN_const_val(arg_expr) > 0LL)
-      {
-	 WN2F_Offset_Memref(xos, 
-			    WN_kid0(wn),        /* address expression */
-			    arg_ty,             /* address type */
-			    TY_pointed(arg_ty), /* object type */
-			    0,                  /* offset from address */
-			    ctxt);
-      }
-#endif
-      break;
-     
-   default:
-      regular_call = TRUE;
-      xlate_CALL(xos, wn, ctxt);
-      break;
-   }
-
-   return EMPTY_WN2F_STATUS;
-} /* WN2F_intrinsic_call */
+    }
+    break;
+  case INTRN_CASSIGNSTMT:
+    xos << std::endl;
+    // arg 2 and 3: base of destination; length of base, respectively
+    WN2F_String_Argument(xos, WN_kid(wn,0), WN_kid(wn,2), ctxt);
+    xos << "=";
+    // arg 2 and 3: base of source; length of source, respectively
+    WN2F_String_Argument(xos, WN_kid(wn,1), WN_kid(wn,3), ctxt);
+    break;
+    
+  case INTRN_STOP:
+  case INTRN_STOP_F90:
+    // Either the F90 or F77 stop
+    xos << BegElem(XAIFStrings.elem_Marker()) 
+	<< Attr("statement_id", ctxt.GetNewVId())
+	<< BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+	<< " [stop]" << EndAttr << EndElem;
+    break;
+    
+  default:
+    regular_call = TRUE;
+    xlate_CALL(xos, wn, ctxt);
+    break;
+  }
+  
+  return EMPTY_WN2F_STATUS;
+} /* xlate_INTRINSIC_CALL */
 
 
 //***************************************************************************
@@ -882,6 +857,7 @@ whirl2xaif::WN2F_eval(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
    return EMPTY_WN2F_STATUS;
 } /* WN2F_eval */
+
 
 WN2F_STATUS
 whirl2xaif::xlate_PRAGMA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
@@ -927,36 +903,20 @@ whirl2xaif::xlate_COMMENT(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 }
 
 
-
-
 WN2F_STATUS
-whirl2xaif::WN2F_use_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::xlate_USE(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_USE,
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_use_stmt"));
-
-  const char *st_name = W2CF_Symtab_Nameof_St(WN_st(wn));
-  xos << "===***>use" << st_name;
-
-#if 0
-  if (WN_rtype(wn) == 1)
-    xos << ",only:";
-  else 
-    xos << ",";
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_USE"));
   
-  for(int k=0; k< WN_kid_count(wn); k=k+2 ) {
-    st_name = W2CF_Symtab_Nameof_St(WN_st(WN_kid(wn,k)));
-    const char *st_name1 = W2CF_Symtab_Nameof_St(WN_st(WN_kid(wn,k+1)));
-    if (k!=0)
-      xos << ","; 
-    xos << st_name << "=>" << st_name1;
-  }
+  const char* nm = ST_name(WN_st(wn));
+  xos << BegElem(XAIFStrings.elem_Marker()) 
+      << Attr("statement_id", ctxt.GetNewVId())
+      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << " [use " << nm << "]" << EndAttr << EndElem;
   
-  // TranslateWN(xos, WN_kid0(wn), ctxt);
-# endif
-     
   return EMPTY_WN2F_STATUS;
-} //WN2F_use_stmt
+}
 
 
 WN2F_STATUS

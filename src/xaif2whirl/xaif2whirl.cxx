@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.14 2003/11/13 14:55:37 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.15 2003/11/26 14:49:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -947,9 +947,10 @@ xaif2whirl::GetIdList(const char* idstr, const char* tag)
 //****************************************************************************
 
 WN*
-CreateIntrinsicCall(TYPE_ID rtype, const char* fname, unsigned int argc)
+CreateCallToIntrin(TYPE_ID rtype, const char* fname, unsigned int argc)
 {
-  // Cf. WN* Gen_Call_Shell(...) in be/com/wn_instrument.cxx
+  // cf. WN* cwh_intrin_build(...)
+  // cf. WN* Gen_Call_Shell(...) in be/com/wn_instrument.cxx
   
   TY_IDX ty = Make_Function_Type(MTYPE_To_TY(rtype));
   ST* st = Gen_Intrinsic_Function(ty, fname); // create if non-existant
@@ -961,9 +962,9 @@ CreateIntrinsicCall(TYPE_ID rtype, const char* fname, unsigned int argc)
 }
 
 WN*
-CreateIntrinsicCall(TYPE_ID rtype, const char* fname, std::vector<WN*>& args)
+CreateCallToIntrin(TYPE_ID rtype, const char* fname, std::vector<WN*>& args)
 {
-  WN* callWN = CreateIntrinsicCall(rtype, fname, args.size());
+  WN* callWN = CreateCallToIntrin(rtype, fname, args.size());
   
   for (unsigned int i = 0; i < args.size(); ++i) {
     if (args[i]) { 
@@ -973,6 +974,22 @@ CreateIntrinsicCall(TYPE_ID rtype, const char* fname, std::vector<WN*>& args)
   }
   
   return callWN;
+}
+
+WN*
+CreateIntrinsicCall(OPERATOR opr, INTRINSIC intrn, 
+		    TYPE_ID rtype, TYPE_ID dtype, std::vector<WN*>& args)
+{
+  // Collect arguments into a temporary array for WN_Create_Intrinsic().
+  WN** kids = new WN*[args.size()];
+  for (unsigned int i = 0; i < args.size(); ++i) {
+    kids[i] = args[i];
+  }
+  
+  WN* wn = WN_Create_Intrinsic(opr, rtype, dtype, intrn, args.size(), kids);
+  
+  delete[] kids;
+  return wn;
 }
 
 //****************************************************************************

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.1 2003/11/13 14:54:26 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.2 2003/11/26 14:49:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -19,13 +19,15 @@
 
 //************************* System Include Files ****************************
 
-#include <algorithm>
+#include <stdlib.h>  // for bsearch() and qsort()
+#include <algorithm> 
 
 //************************** Open64 Include Files ***************************
 
 //*************************** User Include Files ****************************
 
 #include "IntrinsicXlationTable.h"
+#include "wn_attr.h" // for WN_intrinsic_name()
 #include "diagnostics.h"
 
 //*************************** Forward Declarations ***************************
@@ -34,6 +36,7 @@ using std::endl;
 using std::hex;
 using std::dec;
 
+
 //****************************************************************************
 
 //****************************************************************************
@@ -41,64 +44,115 @@ using std::dec;
 //****************************************************************************
 
 #define TABLE_SZ \
-   sizeof(IntrinsicXlationTable::table) / sizeof(IntrinsicXlationTable::Entry)
+  (sizeof(IntrinsicXlationTable::table) / sizeof(IntrinsicXlationTable::Entry))
 
 
 IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
 
   // -------------------------------------------------------
-  // WHIRL calls and intrinsics that correspond to XAIF Intrinsics
+  // WHIRL calls, expressions and intrinsics that correspond to XAIF
+  // Intrinsics
   // -------------------------------------------------------
 
   // Common mathematical functions
-  { { OPR_NEG, NULL, 1 },   { Intrinsic, "minus_scal", 1 } },
-  { { OPR_ADD, NULL, 2 },   { Intrinsic, "add_scal_scal", 2 } },
-  { { OPR_SUB, NULL, 2 },   { Intrinsic, "sub_scal_scal", 2 } },
-  { { OPR_MPY, NULL, 2 },   { Intrinsic, "mul_scal_scal", 2 } },
-  { { OPR_DIV, NULL, 2 },   { Intrinsic, "div_scal_scal", 2 } },
-  { { OPR_SQRT, NULL, 1 },  { Intrinsic, "sqrt_scal", 1 } },
+  { { WNExpr, OPR_NEG, NULL, 1 },
+                        { XAIFIntrin, "minus_scal", 1 } },
+  { { WNExpr, OPR_ADD, NULL, 2 },
+                        { XAIFIntrin, "add_scal_scal", 2 } },
+  { { WNExpr, OPR_SUB, NULL, 2 },
+                        { XAIFIntrin, "sub_scal_scal", 2 } },
+  { { WNExpr, OPR_MPY, NULL, 2 },
+                        { XAIFIntrin, "mul_scal_scal", 2 } },
+  { { WNExpr, OPR_DIV, NULL, 2 },
+                        { XAIFIntrin, "div_scal_scal", 2 } },
+  { { WNExpr, OPR_SQRT, NULL, 1 },
+                        { XAIFIntrin, "sqrt_scal", 1 } },
 
-  { { OPR_MOD, NULL, 2 },   { Intrinsic, "bogus_mod_scal_scal", 2 } },
-  { { OPR_REM, NULL, 2 },   { Intrinsic, "bogus_rem_scal_scal", 2 } },
+  { { WNExpr, OPR_MOD, NULL, 2 },
+                        { XAIFIntrin, "bogus_mod_scal_scal", 2 } },
+  { { WNExpr, OPR_REM, NULL, 2 },
+                        { XAIFIntrin, "bogus_rem_scal_scal", 2 } },
 
-  { { OPR_CALL, "SIN", 1 }, { Intrinsic, "sin_scal", 1 } },
-  { { OPR_CALL, "COS", 1 }, { Intrinsic, "cos_scal", 1 } },
-  { { OPR_CALL, "EXP", 1 }, { Intrinsic, "exp_scal", 1 } },
-  { { OPR_CALL, "LOG", 1 }, { Intrinsic, "ln_scal", 1 } },
+  { { WNCall, OPR_CALL, "SIN", 1 },
+                        { XAIFIntrin, "sin_scal", 1 } },
+  { { WNCall, OPR_CALL, "COS", 1 },
+                        { XAIFIntrin, "cos_scal", 1 } },
+  { { WNCall, OPR_CALL, "EXP", 1 },
+                        { XAIFIntrin, "exp_scal", 1 } },
+  { { WNCall, OPR_CALL, "LOG", 1 },
+                        { XAIFIntrin, "ln_scal", 1 } },
 
-  { { OPR_INTRINSIC_OP, "EXPEXPR", 1 }, { Intrinsic, "pow_scal_scal", 1 } },
-  // FIXME: INTRN_I4EXPEXPR (wintrinsic.h)
+  // Intrinsics: The WHIRL string is the INTRINSIC_basename()
+  // (cf. wintrinsic.h, wutil.cxx)
+  { { WNIntrinOp, OPR_INTRINSIC_OP, "EXPEXPR", 2 }, 
+                        { XAIFIntrin, "pow_scal_scal", 2 } },
+
+  { { WNIntrinOp, OPR_INTRINSIC_OP, "CEQEXPR", 2 }, 
+                        { XAIFIntrin, "bogus_string_eq_scal_scal", 2 } },
+  { { WNIntrinOp, OPR_INTRINSIC_OP, "CNEEXPR", 2 }, 
+                        { XAIFIntrin, "bogus_string_ne_scal_scal", 2 } },
+  { { WNIntrinOp, OPR_INTRINSIC_OP, "CGEEXPR", 2 }, 
+                        { XAIFIntrin, "bogus_string_ge_scal_scal", 2 } },
+  { { WNIntrinOp, OPR_INTRINSIC_OP, "CGTEXPR", 2 }, 
+                        { XAIFIntrin, "bogus_string_gt_scal_scal", 2 } },
+  { { WNIntrinOp, OPR_INTRINSIC_OP, "CLEEXPR", 2 }, 
+                        { XAIFIntrin, "bogus_string_le_scal_scal", 2 } },
+  { { WNIntrinOp, OPR_INTRINSIC_OP, "CLTEXPR", 2 }, 
+                        { XAIFIntrin, "bogus_string_lt_scal_scal", 2 } },
   
   // Rounding, conversion
-  { { OPR_ABS, NULL, 1 },   { Intrinsic, "bogus_abs_scal", 1 } },
-  { { OPR_RND, NULL, 1 },   { Intrinsic, "bogus_round_scal", 1 } },
-  { { OPR_TRUNC, NULL, 1 }, { Intrinsic, "bogus_trunc_scal", 1 } },
-  { { OPR_CEIL, NULL, 1 },  { Intrinsic, "bogus_ceil_scal", 1 } },
-  { { OPR_FLOOR, NULL, 1 }, { Intrinsic, "bogus_floor_scal", 1 } },
+  { { WNExpr, OPR_ABS, NULL, 1 },
+                        { XAIFIntrin, "bogus_abs_scal", 1 } },
+  { { WNExpr, OPR_RND, NULL, 1 },
+                        { XAIFIntrin, "bogus_round_scal", 1 } },
+  { { WNExpr, OPR_TRUNC, NULL, 1 },
+                        { XAIFIntrin, "bogus_trunc_scal", 1 } },
+  { { WNExpr, OPR_CEIL, NULL, 1 },
+                        { XAIFIntrin, "bogus_ceil_scal", 1 } },
+  { { WNExpr, OPR_FLOOR, NULL, 1 },
+                        { XAIFIntrin, "bogus_floor_scal", 1 } },
 
   // Logical operations
-  { { OPR_BNOT, NULL, 1 },  { Intrinsic, "bogus_not_scal", 1 } },
-  { { OPR_BAND, NULL, 2 },  { Intrinsic, "bogus_and_scal_scal", 2 } },
-  { { OPR_BIOR, NULL, 2 },  { Intrinsic, "bogus_or_scal_scal", 2 } },
-  { { OPR_BXOR, NULL, 2 },  { Intrinsic, "bogus_xor_scal_scal", 2 } },
-  { { OPR_EQ, NULL, 2 },    { Intrinsic, "bogus_eq_scal_scal", 2 } },
-  { { OPR_NE, NULL, 2 },    { Intrinsic, "bogus_neq_scal_scal", 2 } },
-  { { OPR_GT, NULL, 2 },    { Intrinsic, "bogus_gt_scal_scal", 2 } },
-  { { OPR_GE, NULL, 2 },    { Intrinsic, "bogus_gteq_scal_scal", 2 } },
-  { { OPR_LT, NULL, 2 },    { Intrinsic, "bogus_lt_scal_scal", 2 } },
-  { { OPR_LE, NULL, 2 },    { Intrinsic, "bogus_lteq_scal_scal", 2 } },
+  { { WNExpr, OPR_BNOT, NULL, 1 },
+                        { XAIFIntrin, "bogus_not_scal", 1 } },
+  { { WNExpr, OPR_BAND, NULL, 2 },
+                        { XAIFIntrin, "bogus_and_scal_scal", 2 } },
+  { { WNExpr, OPR_BIOR, NULL, 2 },
+                        { XAIFIntrin, "bogus_or_scal_scal", 2 } },
+  { { WNExpr, OPR_BXOR, NULL, 2 },
+                        { XAIFIntrin, "bogus_xor_scal_scal", 2 } },
+  { { WNExpr, OPR_EQ, NULL, 2 },
+                        { XAIFIntrin, "bogus_eq_scal_scal", 2 } },
+  { { WNExpr, OPR_NE, NULL, 2 },
+                        { XAIFIntrin, "bogus_neq_scal_scal", 2 } },
+  { { WNExpr, OPR_GT, NULL, 2 },
+                        { XAIFIntrin, "bogus_gt_scal_scal", 2 } },
+  { { WNExpr, OPR_GE, NULL, 2 },
+                        { XAIFIntrin, "bogus_gteq_scal_scal", 2 } },
+  { { WNExpr, OPR_LT, NULL, 2 },
+                        { XAIFIntrin, "bogus_lt_scal_scal", 2 } },
+  { { WNExpr, OPR_LE, NULL, 2 },
+                        { XAIFIntrin, "bogus_lteq_scal_scal", 2 } },
 
-  { { OPR_LAND, NULL, 2 },  { Intrinsic, "bogus_land_scal_scal", 2 } },
-  { { OPR_LIOR, NULL, 2 },  { Intrinsic, "bogus_lor_scal_scal", 2 } },
-  { { OPR_CAND, NULL, 2 },  { Intrinsic, "bogus_cand_scal_scal", 2 } },
-  { { OPR_CIOR, NULL, 2 },  { Intrinsic, "bogus_cor_scal_scal", 2 } },
+  { { WNExpr, OPR_LAND, NULL, 2 },
+                        { XAIFIntrin, "bogus_land_scal_scal", 2 } },
+  { { WNExpr, OPR_LIOR, NULL, 2 },
+                        { XAIFIntrin, "bogus_lor_scal_scal", 2 } },
+  { { WNExpr, OPR_CAND, NULL, 2 },
+                        { XAIFIntrin, "bogus_cand_scal_scal", 2 } },
+  { { WNExpr, OPR_CIOR, NULL, 2 },
+                        { XAIFIntrin, "bogus_cor_scal_scal", 2 } },
 
   // Misc.
-  { { OPR_SHL, NULL, 2 },   { Intrinsic, "bogus_shl_scal_scal", 2 } },
-  { { OPR_ASHR, NULL, 2 },  { Intrinsic, "bogus_ashr_scal_scal", 2 } },
+  { { WNExpr, OPR_SHL, NULL, 2 },
+                        { XAIFIntrin, "bogus_shl_scal_scal", 2 } },
+  { { WNExpr, OPR_ASHR, NULL, 2 },
+                        { XAIFIntrin, "bogus_ashr_scal_scal", 2 } },
 
-  { { OPR_MAX, NULL, 2 },   { Intrinsic, "bogus_max_scal_scal", 2 } },
-  { { OPR_MIN, NULL, 2 },   { Intrinsic, "bogus_min_scal_scal", 2 } }
+  { { WNExpr, OPR_MAX, NULL, 2 },
+                        { XAIFIntrin, "bogus_max_scal_scal", 2 } },
+  { { WNExpr, OPR_MIN, NULL, 2 },
+                        { XAIFIntrin, "bogus_min_scal_scal", 2 } }
   
 };
 
@@ -109,13 +163,26 @@ unsigned int IntrinsicXlationTable::tableSz = TABLE_SZ;
 //****************************************************************************
 
 const char* 
+IntrinsicXlationTable::WNOprClass2Str(WNOprClass oprcl)
+{
+  switch (oprcl) {
+    case WNCall:       return "WNCall";
+    case WNIntrinCall: return "WNIntrinCall";
+    case WNIntrinOp:   return "WNIntrinOp";
+    case WNExpr:       return "WNExpr";
+    default:           return "<invalid-WNOprClass>";
+  }
+  return NULL; // should never reach
+}
+
+const char* 
 IntrinsicXlationTable::XAIFOpr2Str(XAIFOpr opr)
 {
   switch (opr) {
-    case SubCall:   return "SubCall";
-    case FuncCall:  return "FuncCall";
-    case Intrinsic: return "Intrinsic";
-    default:   return "<invalid-XAIFOpr>";
+    case XAIFSubCall:  return "XAIFSubCall";
+    case XAIFFuncCall: return "XAIFFuncCall";
+    case XAIFIntrin:   return "XAIFIntrinsic";
+    default:           return "<invalid-XAIFOpr>";
   }
   return NULL; // should never reach
 }
@@ -124,6 +191,7 @@ void
 IntrinsicXlationTable::WHIRLInfo::Dump(std::ostream& os) const
 {
   os << "{ " 
+     << WNOprClass2Str(oprcl) << ", " 
      << OPERATOR_name(opr) << ", "
      << ((name) ? name : "<null>") 
      << numop 
@@ -160,13 +228,20 @@ operator()(const Entry* e1, const Entry* e2) const
 {
   if (tt == W2X) {
     
+    // 1. whirl_info.opr is the primary sorting key
     if (e1->whirl_info.opr == e2->whirl_info.opr) {
       
-      if (e1->whirl_info.name && e2->whirl_info.name) {
-	return (strcmp(e1->whirl_info.name, e2->whirl_info.name) < 0); 
-      } else if (!e1->whirl_info.name && !e2->whirl_info.name) {
-	return false; // equality
-      } else {
+      // both whirl_info.oprcl should be equal!
+      switch (e1->whirl_info.oprcl) {
+      case WNCall:
+      case WNIntrinCall:
+      case WNIntrinOp:
+	// 2. whirl_info.name is the secondary sorting key
+	return (strcmp(e1->whirl_info.name, e2->whirl_info.name) < 0);
+      case WNExpr:
+	// 2. There is no secondary sorting key
+	return false; // e1 and e2 are equal
+      default:
 	ASSERT_FATAL(false, (DIAG_A_STRING, "Invalid comparison"));
       }
 
@@ -176,15 +251,11 @@ operator()(const Entry* e1, const Entry* e2) const
     
   } else if (tt == X2W) {
     
+    // 1. xaif_info.opr is the primary sorting key
     if (e1->xaif_info.opr == e2->xaif_info.opr) {
       
-      if (e1->xaif_info.name && e2->xaif_info.name) {
-	return (strcmp(e1->xaif_info.name, e2->xaif_info.name) < 0);
-      } else if (!e1->xaif_info.name && !e2->xaif_info.name) {
-	return false; // equality
-      } else {
-	ASSERT_FATAL(false, (DIAG_A_STRING, "Invalid comparison"));
-      }
+      // 2. xaif_info.name is the secondary sorting key
+      return (strcmp(e1->xaif_info.name, e2->xaif_info.name) < 0);
       
     } else {
       return (e1->xaif_info.opr < e2->xaif_info.opr);
@@ -302,3 +373,90 @@ IntrinsicXlationTable::DDump() const
 
 //****************************************************************************
 
+bool
+LookupIntrinsicPrefix(const char* str);
+
+const char* 
+INTRINSIC_basename(INTRINSIC intrn)
+{
+  const char* opc_str = WN_intrinsic_name(intrn); // INTRINSIC_name(intrn);
+  const char* opc_str_base = opc_str;
+#define PREFIX_LN 2
+  
+  // Test for two-character prefixes (up to two)
+  char buf[PREFIX_LN+1];
+  for (int i = 0; i < 2; ++i) {
+    // If a prefix begins 'opc_str_base', shift pointer
+    strncpy(buf, opc_str_base, PREFIX_LN); buf[PREFIX_LN] = '\0';
+    bool pfix = LookupIntrinsicPrefix(buf);
+    if (pfix) { 
+      opc_str_base += PREFIX_LN; 
+    } else {
+      break; // no need to continue
+    }
+  }
+  
+  // Special case: test for one-character prefix
+  strncpy(buf, opc_str_base, 1); buf[1] = '\0';
+  bool pfix = LookupIntrinsicPrefix(buf);
+  if (pfix) {
+    // an exception
+    if ( !(strcmp(opc_str_base, "VALTMP") == 0) ) {
+      opc_str_base++;
+    }
+  }
+    
+  return opc_str_base;
+#undef PREFIX_LN
+}
+
+
+#define TABLE_ELEM_SZ sizeof(const char*)
+#define TABLE_SZ      (sizeof(prefixTable) / TABLE_ELEM_SZ)
+
+static const char* prefixTable[] = {
+  
+  "V",                    // void
+  "I1", "I2", "I4", "I8", // integer
+  "U1", "U2", "U4", "U8", // unsigned integer
+  "F4", "F8", "FQ",       // floating point
+  "C4", "C8", "CQ"        // comples
+  
+  // "C_" - C intrinsics
+  // "S_" - UPC intrinsics
+}; 
+
+static bool prefixTableSorted = false;
+static unsigned int prefixTableElemSz = TABLE_ELEM_SZ;
+static unsigned int prefixTableSz = TABLE_SZ;
+
+#undef TABLE_ELEM_SZ
+#undef TABLE_SZ
+
+
+extern "C" typedef int (*compare_fn_t)(const void *, const void *);
+
+extern "C" int prefixTableCmp(const char** e1, const char** e2)
+{
+  return strcmp(*e1, *e2);
+}
+
+// Return true if 'str' is a valid prefix for an intrinsic name; false
+// otherwise.
+bool
+LookupIntrinsicPrefix(const char* str)
+{
+  // Sort on demand
+  if (!prefixTableSorted) {
+    qsort(prefixTable, prefixTableSz, prefixTableElemSz, 
+	  (compare_fn_t)prefixTableCmp);
+    prefixTableSorted = true;
+  }
+  
+  // Search for entry
+  void* e = bsearch(&str, prefixTable, prefixTableSz, prefixTableElemSz,
+		    (compare_fn_t)prefixTableCmp);
+  return (e != NULL);
+}
+
+//****************************************************************************

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.h,v 1.1 2003/11/13 14:54:27 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.h,v 1.2 2003/11/26 14:49:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -33,6 +33,8 @@
 
 //*************************** Forward Declarations ***************************
 
+const char* INTRINSIC_basename(INTRINSIC opcode);
+
 //****************************************************************************
 
 //****************************************************************************
@@ -48,14 +50,16 @@
 // translation.  The starred (*) relationships are explicitly included
 // in the table.  
 // 
-//   WNEntry                        XAIFEntry
-//   -------                        _________
+//   WHIRL                          XAIF     
+//   -----                          ----     
 //   
 //                        /-------> SubCall (using WHIRL name)
 //                       /--------> FuncCall (using WHIRL name)
 //                      /
 // * OPR_CALL  <------------------> * Intrinsic, using XAIF name
-// 
+//
+// * OPR_INTRINSIC_CALL <---------> * Intrinsic, using XAIF name
+//
 // * OPR_INTRINSIC_OP <-----------> * Intrinsic, using XAIF name
 // 
 // * OPR_TRUNC <------------------> * Intrinsic, using XAIF name
@@ -69,18 +73,30 @@ public:
     X2W  // A table optimized for XIAF->WHIRL lookups
   };
 
+  // WNOprClass: Three completely different kinds of WHIRL operators
+  // are translated into an XAIF intrinsic and vice-versa.
+  enum WNOprClass {
+    WNCall,       // A WHIRL function or subroutine call
+    WNIntrinCall, // A WHIRL intrinsics call
+    WNIntrinOp,   // A WHIRL intrinsics operation
+    WNExpr        // A WHIRL expression
+  };
+
+  static const char* WNOprClass2Str(WNOprClass oprcl);
+
   // XAIFOpr is the analog of the WHIRL 'OPERATOR'.  It is not really
   // needed at this point.
   enum XAIFOpr {
-    SubCall,
-    FuncCall,
-    Intrinsic
+    XAIFSubCall,
+    XAIFFuncCall,
+    XAIFIntrin
   };
 
   static const char* XAIFOpr2Str(XAIFOpr opr);
 
   struct WHIRLInfo {
-    OPERATOR opr;       // the WN operator (call or intrinsic)
+    WNOprClass oprcl;   // class of the WN operator
+    OPERATOR opr;       // the WN operator
     const char* name;   // string qualifier for calls
     unsigned int numop; // number of operands to intrinsic
 
@@ -136,7 +152,8 @@ private:
       return operator()(dynamic_cast<const Entry*>(&e1), 
 			dynamic_cast<Entry*>(e2));
     }
-
+    
+    // required for binary_search(..), lower_bound(..) on GCC 3.3 (?!)
     bool operator()(const Entry& e1, const Entry& e2) {
       return operator()(dynamic_cast<const Entry*>(&e1), 
 			dynamic_cast<const Entry*>(&e2));

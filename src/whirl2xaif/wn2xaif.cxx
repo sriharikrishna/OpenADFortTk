@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.26 2003/11/13 14:55:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.27 2003/11/26 14:49:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -189,7 +189,7 @@ static const WN2F_OPR_HANDLER WN2F_Opr_Handler_List[] = {
   { OPR_STID, &xlate_STID },
   { OPR_PSTID, &WN2F_pstid },   
   { OPR_CALL, &xlate_CALL },
-  { OPR_INTRINSIC_CALL, &WN2F_intrinsic_call },
+  { OPR_INTRINSIC_CALL, &xlate_INTRINSIC_CALL },
   { OPR_ICALL, &xlate_CALL },
   { OPR_PICCALL, &xlate_CALL },
   { OPR_EVAL, &WN2F_eval },
@@ -209,7 +209,7 @@ static const WN2F_OPR_HANDLER WN2F_Opr_Handler_List[] = {
   { OPR_TRIPLET,&WN2F_triplet },
   { OPR_SRCTRIPLET,&WN2F_src_triplet },
   { OPR_WHERE,&WN2F_where },
-  { OPR_INTRINSIC_OP, &WN2F_intrinsic_op },
+  { OPR_INTRINSIC_OP, &xlate_INTRINSIC_OP },
   { OPR_TAS, &WN2F_tas },
   { OPR_SELECT, &WN2F_select },
   { OPR_CVT, &WN2F_cvt },
@@ -269,7 +269,7 @@ static const WN2F_OPR_HANDLER WN2F_Opr_Handler_List[] = {
   { OPR_BACKWARD_BARRIER, &xlate_ignore },
   { OPR_ALLOCA, &WN2F_alloca },
   { OPR_DEALLOCA, &WN2F_dealloca },
-  { OPR_USE, &WN2F_use_stmt },
+  { OPR_USE, &xlate_USE },
   { OPR_IMPLICIT_BND, &WN2F_implicit_bnd },  
   { OPR_NAMELIST, &WN2F_namelist_stmt },
   { OPR_INTERFACE, &WN2F_interface_blk },

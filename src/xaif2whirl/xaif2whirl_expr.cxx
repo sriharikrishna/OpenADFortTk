@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.5 2003/11/13 14:55:37 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.6 2003/11/26 14:49:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -136,13 +136,19 @@ static TYPE_ID
 GetRType(WN* wn);
 
 static TYPE_ID
+GetRTypeFromOpands(std::vector<WN*>& opands);
+
+static TYPE_ID
 GetRTypeFromOpands(TYPE_ID ty1, TYPE_ID ty2);
 
 static TYPE_ID
 GetMType(unsigned int cl, unsigned int bytesz);
 
 static OPCODE
-GetIntrinsicOpcode(OPERATOR opr, std::vector<WN*>& opands);
+GetWNExprOpcode(OPERATOR opr, std::vector<WN*>& opands);
+
+static INTRINSIC
+GetWNIntrinsic(const char* intrnNm, std::vector<WN*>& opands, TYPE_ID* dtype);
 
 //****************************************************************************
 
@@ -391,7 +397,7 @@ xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
   XercesStrX nm = XercesStrX(nmX);
 
-  IntrinsicXlationTable::XAIFOpr xopr = IntrinsicXlationTable::Intrinsic;
+  IntrinsicXlationTable::XAIFOpr xopr = IntrinsicXlationTable::XAIFIntrin;
   IntrinsicXlationTable::WHIRLInfo* info
     = IntrinsicTable.FindWHIRLInfo(xopr, nm.c_str());
   if (!info) {
@@ -419,12 +425,23 @@ xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 
   // 3. Translate into either WHIRL OPR_CALL or a WHIRL expression operator
   WN* wn = NULL;
-  if (info->opr == OPR_CALL) { 
+  switch (info->oprcl) {
+  case IntrinsicXlationTable::WNCall: {
     TYPE_ID rtype = MTYPE_F8; // FIXME
-    wn = CreateIntrinsicCall(rtype, info->name, opnd_wn);
-  } else {
+    wn = CreateCallToIntrin(rtype, info->name, opnd_wn);
+    break;
+  }
+  case IntrinsicXlationTable::WNIntrinCall:
+  case IntrinsicXlationTable::WNIntrinOp: {
+    TYPE_ID rtype = MTYPE_F8; // FIXME
+    TYPE_ID dtype = MTYPE_V;  // FIXME
+    INTRINSIC intrn = GetWNIntrinsic(info->name, opnd_wn, NULL);
+    wn = CreateIntrinsicCall(info->opr, intrn, rtype, dtype, opnd_wn);
+    break;
+  }
+  case IntrinsicXlationTable::WNExpr: {
     // Find the opcode for the expression
-    OPCODE opc = GetIntrinsicOpcode(info->opr, opnd_wn);
+    OPCODE opc = GetWNExprOpcode(info->opr, opnd_wn);
     
     // Create a WHIRL expression tree for the operator and operands
     switch (info->numop) {
@@ -437,7 +454,12 @@ xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
     default:
       ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
     } 
+    break;
   }
+  default:
+    ASSERT_FATAL(false, (DIAG_A_STRING, "Invalid comparison"));
+  }
+  
   return wn;
 }
 
@@ -777,7 +799,7 @@ static WN*
 CreateValueSelector(WN* wn)
 {
   TYPE_ID rty = GetRType(wn);
-  WN* callWN = CreateIntrinsicCall(rty, "__value__", 1);
+  WN* callWN = CreateCallToIntrin(rty, "__value__", 1);
   WN_actual(callWN, 0) = CreateParm(wn, WN_PARM_BY_VALUE);
   return callWN;
 }
@@ -789,7 +811,7 @@ static WN*
 CreateDerivSelector(WN* wn)
 {
   TYPE_ID rty = GetRType(wn);
-  WN* callWN = CreateIntrinsicCall(rty, "__deriv__", 1);
+  WN* callWN = CreateCallToIntrin(rty, "__deriv__", 1);
   WN_actual(callWN, 0) = CreateParm(wn, WN_PARM_BY_VALUE);
   return callWN;
 }
@@ -812,6 +834,31 @@ GetRType(WN* wn)
   assert(rty != MTYPE_UNKNOWN);
   
   return rty;
+}
+
+static TYPE_ID
+GetRTypeFromOpands(std::vector<WN*>& opands)
+{
+  int opands_num = opands.size();
+  ASSERT_FATAL(opands_num > 0, (DIAG_A_STRING, "Programming error."));
+  
+  // 1. Gather types for operands
+  std::vector<TY_IDX> opands_ty(opands_num); // FIXME
+  std::vector<TYPE_ID> opands_mty(opands_num);
+  for (int i = 0; i < opands_num; ++i) {
+    // FIXME: change WN_Tree_Type to accept the CALL node
+    //TY_IDX ty = WN_Tree_Type(opands[i]); // TYPE_ID 
+    // opands_ty[i] = ty;
+    opands_mty[i] = WN_rtype(opands[i]); // TY_mtype(ty); // FIXME
+  }
+
+  // 2. Find an appropriate mtype for operands
+  TYPE_ID mty = opands_mty[0];
+  for (int i = 1; i < opands_num; ++i) {
+    mty = GetRTypeFromOpands(mty, opands_mty[i]);
+  }
+  
+  return mty;
 }
 
 static TYPE_ID
@@ -879,34 +926,18 @@ GetMType(unsigned int cl, unsigned int bytesz)
 
 
 static OPCODE
-GetIntrinsicOpcode(OPERATOR opr, std::vector<WN*>& opands)
+GetWNExprOpcode(OPERATOR opr, std::vector<WN*>& opands)
 {
-  int opands_num = opands.size();
-  ASSERT_FATAL(opands_num > 0, (DIAG_A_STRING, "Programming error."));
-  
-  // 1. Gather types for operands
-  std::vector<TY_IDX> opands_ty(opands_num);
-  std::vector<TYPE_ID> opands_mty(opands_num);
-  for (int i = 0; i < opands_num; ++i) {
-    // FIXME: change WN_Tree_Type to accept the CALL node
-    //TY_IDX ty = WN_Tree_Type(opands[i]); // TYPE_ID 
-    // opands_ty[i] = ty;
-    opands_mty[i] = WN_rtype(opands[i]); // TY_mtype(ty); // FIXME
-  }
+  // 1. Find mtype suggested from operands
+  TYPE_ID mty = GetRTypeFromOpands(opands);
 
-  // 2. Find an appropriate mtype for operands
-  TYPE_ID mty = opands_mty[0];
-  for (int i = 1; i < opands_num; ++i) {
-    mty = GetRTypeFromOpands(mty, opands_mty[i]);
-  }
-
-  // 3. Find a dtype (operator dependent) FIXME
+  // 2. Find a dtype (operator dependent) FIXME
   TYPE_ID dty = MTYPE_V; // typical dtype for intrinsics
   if (opr == OPR_TRUNC) {
     dty = mty;
   } 
   
-  // 4. Find a rtype (operator dependent)
+  // 3. Find a rtype (operator dependent)
   // FIXME: we need a better way; do we need a cvt? FIXME
   // Is_Valid_Opcode, Is_Valid_Opcode_Parts
   TYPE_ID rty = mty;
@@ -920,6 +951,27 @@ GetIntrinsicOpcode(OPERATOR opr, std::vector<WN*>& opands)
   
   OPCODE opc = OPCODE_make_op(opr, rty, dty);
   return opc;
+}
+
+static INTRINSIC
+GetWNIntrinsic(const char* intrnNm, std::vector<WN*>& opands, TYPE_ID* dtype)
+{
+  // 1. Find dtype suggested from operands
+  TYPE_ID mty = GetRTypeFromOpands(opands);
+  
+  // FIXME 
+  INTRINSIC intrn = INTRINSIC_INVALID;
+  if (strcmp(intrnNm, "EXPEXPR") == 0) {
+    intrn = INTRN_F8EXPEXPR; // FIXME
+  }
+  
+  if (dtype) {
+    *dtype = MTYPE_F8; // FIXME
+  }
+
+  ASSERT_FATAL(intrn != INTRINSIC_INVALID, 
+	       (DIAG_A_STRING, "Unknown Intrinsic."));
+  return intrn;
 }
 
 //****************************************************************************
