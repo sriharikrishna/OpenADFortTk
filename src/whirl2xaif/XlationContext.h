@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.2 2003/05/14 19:29:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.3 2003/05/20 22:50:03 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -193,7 +193,6 @@ public:
 #define XlationContext_IS_LOGICAL_OPERATION    0x00000800
 #define XlationContext_NO_PARENTHESIS          0x00001000
 
-#define XlationContext_KEYWORD_IOCTRL          0x00002000
 #define XlationContext_IO_STMT                 0x00004000
 #define XlationContext_DEREF_IO_ITEM           0x00008000
 #define XlationContext_ORIGFMT_IOCTRL          0x00010000
@@ -286,15 +285,6 @@ public:
 #define reset_XlationContext_no_parenthesis(c)\
    ((c).flags = (c).flags & ~XlationContext_NO_PARENTHESIS)
 
-
-  // This flag indicates whether or not a Fortran IO control-list
-  // should be emitted in keyword form.
-#define XlationContext_keyword_ioctrl(c)\
-   ((c).flags & XlationContext_KEYWORD_IOCTRL)
-#define set_XlationContext_keyword_ioctrl(c)\
-   ((c).flags = (c).flags | XlationContext_KEYWORD_IOCTRL)
-#define reset_XlationContext_keyword_ioctrl(c)\
-   ((c).flags = (c).flags & ~XlationContext_KEYWORD_IOCTRL)
 
   // This flag indicates whether or not we are inside a Fortran IO statement.
 #define XlationContext_io_stmt(c)\

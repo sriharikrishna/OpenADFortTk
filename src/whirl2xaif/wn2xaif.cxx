@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.4 2003/05/16 13:21:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.5 2003/05/20 22:50:04 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -129,7 +129,7 @@ xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 //***************************************************************************
 
-/* WN2F_Handler[] maps an OPR (../common/com/opcode_gen_core.h) to
+/* XlateWN_HandlerTable[] maps an OPR (../common/com/opcode_gen_core.h) to
  * the handler-function that translates it to Fortran.  This table
  * will be dynamically initialized through WN2F_initialize().  This
  * dynamic initialization ensures that the initiated elements of the
@@ -139,7 +139,7 @@ xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt);
  * handled by xlate_unknown().
  */
 #define NUMBER_OF_OPERATORS (OPERATOR_LAST + 1)
-static XlateWNHandlerFunc WN2F_Handler[NUMBER_OF_OPERATORS];
+static XlateWNHandlerFunc XlateWN_HandlerTable[NUMBER_OF_OPERATORS];
 
 
 typedef struct WN2F_Opr_Handler
@@ -185,7 +185,7 @@ static const WN2F_OPR_HANDLER WN2F_Opr_Handler_List[] = {
   {OPR_PREFETCHX, &WN2F_prefetch},
   {OPR_PRAGMA, &WN2F_pragma},
   {OPR_XPRAGMA, &WN2F_pragma},
-  {OPR_IO, &WN2F_io},
+  {OPR_IO, &xlate_IO},
   {OPR_COMMENT, &xlate_COMMENT},
   {OPR_ILOAD, &xlate_ILOAD},
   {OPR_ILOADX, &xlate_ILOADX},
@@ -277,14 +277,14 @@ static const WN2F_OPR_HANDLER WN2F_Opr_Handler_List[] = {
 void 
 whirl2xaif::WN2F_initialize(void)
 {
-  /* Reset the WN2F_Handler array */
+  /* Reset the XlateWN_HandlerTable array */
   for (INT opr = 0; opr < NUMBER_OF_OPERATORS; opr++) {
-    WN2F_Handler[opr] = &xlate_unknown;
+    XlateWN_HandlerTable[opr] = &xlate_unknown;
   }
   
-  /* Initialize the WN2F_Handler array */
+  /* Initialize the XlateWN_HandlerTable array */
   for (INT map = 0; map < NUMBER_OF_OPR_HANDLERS; map++) {
-    WN2F_Handler[WN2F_Opr_Handler_List[map].opr] =
+    XlateWN_HandlerTable[WN2F_Opr_Handler_List[map].opr] =
       WN2F_Opr_Handler_List[map].handler;
   }
   
@@ -305,6 +305,8 @@ whirl2xaif::WN2F_finalize(void)
 WN2F_STATUS 
 whirl2xaif::TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {   
+  if (!wn) { return EMPTY_WN2F_STATUS; }
+
   const BOOL parenthesize = !XlationContext_no_parenthesis(ctxt);
 
   /* Determine whether we are in a context where we expect this
@@ -335,7 +337,7 @@ whirl2xaif::TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // Dispatch to the appropriate handler for this construct.
   OPERATOR opr = WN_opc_operator(wn);
   //xos << BegComment << "Translating " << OPERATOR_name(opr) << EndComment;
-  return WN2F_Handler[opr](xos, wn, ctxt);
+  return XlateWN_HandlerTable[opr](xos, wn, ctxt);
 }
 
 
@@ -404,8 +406,6 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   ctxt.DeleteContext();
   delete symtab;
-  
-  //FIXME WN2F_End_Routine_Strings(xos, 0 /*func_id*/);
   
   return EMPTY_WN2F_STATUS;
 }
@@ -625,7 +625,7 @@ AddToNonScalarSymTabOp::operator()(const WN* wn)
 #if 0 // FIXME
   fprintf(stderr, "----------\n");
   IR_set_dump_order(TRUE); /* dump parent before children*/
-  fdump_tree(stderr, (WN*)wn); // FIXME: append this to a symtab somewhere
+  fdump_tree(stderr, wn); // FIXME: append this to a symtab somewhere
 #endif
   
   NonScalarSym* sym = new NonScalarSym();
@@ -820,7 +820,8 @@ LOC_INFO::WN2F_Find_And_Mark_Nested_Address(WN * addr)
   /* fld, and belongs to the address ST, then return that   */
   /* ARRAY.                                                 */
 
-  switch (WN_operator(addr))
+  OPERATOR opr = WN_operator(addr);
+  switch (opr)
   {
   case OPR_ARRAY: 
   case OPR_ARRAYEXP: 
@@ -890,8 +891,7 @@ LOC_INFO::WN2F_Find_And_Mark_Nested_Address(WN * addr)
     break;
 
   default:
-    ASSERT_WARN((0), (DIAG_W2F_UNEXPECTED_OPC,"WN2F_Find_And_Mark_Nested_Address"));
-
+    ASSERT_WARN(0, (DIAG_W2F_CANNOT_HANDLE_OPC, OPERATOR_name(opr), opr));
     break;
   }
   return;
@@ -1037,8 +1037,10 @@ WN2F_Offset_Symref(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
   } else if (TY_Is_Array(base_ty)) {
 
     // 2. Array reference (non-scalar) 
+#if 0 // FIXME
     ASSERT_DBG_WARN(WN2F_Can_Assign_Types(TY_AR_etype(base_ty), ref_ty),
 		    (DIAG_W2F_INCOMPATIBLE_TYS, "WN2F_Offset_Symref"));
+#endif
 
 
     WN* wn = ctxt.GetWN();
@@ -1052,10 +1054,9 @@ WN2F_Offset_Symref(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
     // properties translate the exact reference.
     translate_var_ref(xos, base_st, ctxt);
 
-    if (TY_Is_Character_String(base_ty)) {
-      TY2F_Translate_ArrayElt(xos, base_ty, offset);
-    } else if (!XlationContext_has_no_arr_elmt(ctxt)) {
-      TY2F_Translate_ArrayElt(xos, base_ty, offset);
+    //if (TY_Is_Character_String(base_ty)) { } 
+    if (!XlationContext_has_no_arr_elmt(ctxt)) {
+      TY2F_Translate_ArrayElt(xos, base_ty, offset); // FIXME
       reset_XlationContext_has_no_arr_elmt(ctxt);
     }
     
@@ -1172,8 +1173,10 @@ WN2F_Offset_Memref(xml::ostream& xos,
     } else if (TY_Is_Array(base_ty)) { 
       
       // 2. Array reference (non-scalar) 
+#if 0 // FIXME
       ASSERT_DBG_WARN(WN2F_Can_Assign_Types(TY_AR_etype(base_ty), ref_ty),
 		      (DIAG_W2F_INCOMPATIBLE_TYS, "WN2F_Offset_Memref"));
+#endif
 	
       WN* wn = ctxt.GetWN();
       NonScalarSym* sym = ctxt.FindNonScalarSym(wn);
@@ -1271,32 +1274,6 @@ WN2F_Offset_Memref(xml::ostream& xos,
 //REMOVE
 static BOOL PU_Need_End_Contains = FALSE; // need CONTAINS/END for nested procs
 static BOOL PU_Dangling_Contains = FALSE; // have done CONTAINS, need END...
-
-static void 
-WN2F_End_Routine_Strings(xml::ostream& xos, INT32 func_id);
-
-#if 0 // REMOVE
-extern void
-WN2F_Emit_End_Stmt(xml::ostream& xos, BOOL start)
-{
-  /* For F90 host routine don't know about first/last internal procedures until
-   * they're processed, so the host didn't get an END.  Emit the enclosing 
-   * CONTAINS/END if required.
-   */ 
-  
-  if (PU_Need_End_Contains) {
-    if (start) {
-      if(PU_Dangling_Contains) {
-	PU_Dangling_Contains = FALSE;
-	xos << "CONTAINS" << std::endl;
-      }
-    } else {
-      PU_Need_End_Contains = FALSE;
-      xos << "END" << std::endl;
-    }
-  }
-}
-#endif
 
 static void
 WN2F_End_Routine_Strings(xml::ostream& xos, INT32 func_id)

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.3 2003/05/16 13:21:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.4 2003/05/20 22:50:04 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -109,8 +109,6 @@ using namespace xml; // for xml::ostream, etc
 extern WN_MAP  W2F_Frequency_Map;   /* Defined in w2f_driver.c */
 extern WN_MAP *W2F_Construct_Map;   /* Defined in w2f_driver.c */
 
-#define WN_pragma_nest(wn) WN_pragma_arg1(wn)
-
 //***************************************************************************
 
 /*----------------- Call and return site utilities --------------------*/
@@ -120,991 +118,6 @@ extern WN_MAP *W2F_Construct_Map;   /* Defined in w2f_driver.c */
  * initialized by means of "PUinfo.h" facilities.
  */
 static RETURNSITE *WN2F_Next_ReturnSite = NULL;
-static CALLSITE *WN2F_Prev_CallSite = NULL;
-
-
-static void
-WN2F_Load_Return_Reg(xml::ostream& xos,
-		     TY_IDX       return_ty,
-		     const char * var_name,
-		     STAB_OFFSET  var_offset,
-		     MTYPE        preg_mtype,
-		     PREG_IDX     preg_offset,
-		     XlationContext& ctxt)
-{
-#if 0//FIXME
-   /* Load a preg value from the given variable at the given offset
-    * from the base-address of the variable.
-    */
-   const TY_IDX preg_ty = Stab_Mtype_To_Ty(preg_mtype);
-   xml::ostream& tmp_tokens = New_Token_Buffer();
-   FLD_PATH_INFO *path ;
-
-   /* Cast the rhs to the type of the preg, and dereference the
-    * resultant address.
-    */
-   Append_Token_String(tmp_tokens, var_name);
-   Append_Token_Special(tmp_tokens, WN2F_F90_pu ? '%' : '.');
-   path = TY2F_Get_Fld_Path(return_ty,preg_ty,var_offset);
-   TY2F_Translate_Fld_Path(tmp_tokens,path,FALSE,FALSE,FALSE,ctxt);
-   (void)TY2F_Free_Fld_Path(path);
-
-   /* Assign the variable to the preg */
-   ST2F_Use_Preg(tokens, preg_ty, preg_offset);
-   xos << "=";
-   Append_And_Reclaim_Token_List(xos, &tmp_tokens);
-#endif 
-
-} /* WN2F_Load_Return_Reg */
-
-static void
-WN2F_Callsite_Directives(xml::ostream& xos, 
-			 WN          *call_wn,
-			 ST          *func_st)
-{
-  XlationContext ctxt; // FIXME
-  if (WN_Call_Inline(call_wn)) {
-    xos << "C*$* inline(";
-    TranslateSTUse(xos, func_st, ctxt);
-    xos << ')';
-  } else if (WN_Call_Dont_Inline(call_wn)) {
-    xos << "C*$* noinline(";
-    TranslateSTUse(xos, func_st, ctxt);
-    xos << ')';
-  }
-} /* WN2F_Callsite_Directives */
-
-
-static void
-WN2F_Function_Call_Lhs(xml::ostream& rhs_tokens,  /* The function call */
-		       TY_IDX       return_ty,   /* The function return type */
-		       XlationContext& ctxt)
-{
-#if 0//FIXME
-   /* PRECONDITION: return_ty != Void_Type and the function does not 
-    * return its value to an address given as an implicit argument.
-    *
-    * Prepend to the rhs_tokens the assignments necessary to store
-    * the function-call return value into a variable or registers.
-    * If the return-value is not used anywhere, then assign it to
-    * a (dummy) temporary variable.
-    */
-   xml::ostream& lhs_tokens = New_Token_Buffer();
-   BOOL         return_value_is_used = TRUE;
-   UINT         tmpvar_idx;
-
-   /* Information pertaining to the return registers used for this
-    * return type.
-    */
-   const RETURN_PREG return_info = PUinfo_Get_ReturnPreg(return_ty);
-   const MTYPE       preg_mtype = RETURN_PREG_mtype(&return_info, 0);
-   TY_IDX const      preg_ty  = Stab_Mtype_To_Ty(preg_mtype);
-   const PREG_IDX    preg_num = RETURN_PREG_offset(&return_info, 0);
-   const INT         num_pregs = RETURN_PREG_num_pregs(&return_info);
-      
-   /* Information pertaining to what location (other than return regs)
-    * the return value should eventually be stored into, as was 
-    * determined in the PUinfo.c analysis.
-    */
-   ST          *result_var   = (ST *)CALLSITE_return_var(WN2F_Prev_CallSite);
-   const WN    *result_store = CALLSITE_store1(WN2F_Prev_CallSite);
-   STAB_OFFSET  var_offset   = CALLSITE_var_offset(WN2F_Prev_CallSite);
-   BOOL         need_result_in_regs = CALLSITE_in_regs(WN2F_Prev_CallSite);
-
-   need_result_in_regs = FALSE;
-      
-   if (preg_mtype == MTYPE_V) {
-     /* Does this ever occur without a VCALL? */
-     return_value_is_used = FALSE;
-   } else if (result_var != NULL ) {
-      /* Should not have unexpected uses of return registers */
-      ASSERT_WARN(!need_result_in_regs,
-		  (DIAG_W2F_UNEXPEXTED_RETURNREG_USE, 
-		   "WN2F_Function_Call_Lhs"));
-	 
-      /* Assign the value directly to the variable/register, without
-       * referencing the return registers.
-       */
-      if (ST_class(result_var) == CLASS_PREG)
-	 ST2F_Use_Preg(lhs_tokens, ST_type(result_var), var_offset);
-
-      else if (TY_kind(ST_type(result_var)) == KIND_STRUCT)   /* avoid FLD selection of Offset_Symref */
-	 TranslateSTUse(lhs_tokens,result_var);
-
-      else
-	 WN2F_Offset_Symref(lhs_tokens,  
-			    result_var, /* base variable */
-			    Stab_Pointer_To(ST_type(result_var)), /* addr */
-			    return_ty,  /* type of rhs */
-			    var_offset, /* base offset */
-			    ctxt);
-   } else if (result_store != NULL) {
-      /* We have a store into an lvalue that is not a variable, so
-       * it must be an OPR_ISTORE node with the rhs being an LDID
-       * of the return register.  Do the exact same thing as would
-       * be done in translating the ISTORE, but substitute the rhs
-       * with the call expression.
-       */
-      ASSERT_DBG_FATAL(WN_operator(result_store) == OPR_ISTORE &&
-		       WN_operator(WN_kid0(result_store)) == OPR_LDID, 
-		       (DIAG_W2F_UNEXPECTED_OPC, "WN2F_Function_Call_Lhs()"));
-
-      /* Should not have unexpected uses of return registers */
-      ASSERT_WARN(!need_result_in_regs,
-		  (DIAG_W2F_UNEXPEXTED_RETURNREG_USE,
-		   "WN2F_Function_Call_Lhs"));
-
-      /* Should have matching types in the assignment we are about
-       * to generate.
-       */
-      ASSERT_WARN(WN2F_Can_Assign_Types(TY_pointed(WN_ty(result_store)),
-					return_ty),
-		  (DIAG_W2F_INCOMPATIBLE_TYS, "WN2F_Function_Call_Lhs"));
-
-      WN2F_Offset_Memref(lhs_tokens,
-			 WN_kid1(result_store),          /* lhs of ISTORE */
-			 WN_Tree_Type(WN_kid1(result_store)), /* base addr */
-			 TY_pointed(WN_ty(result_store)),/* object to store */
-			 WN_store_offset(result_store),  /* base offset */
-			 ctxt);
-   } 
-   else if (!need_result_in_regs)
-   {
-      /* The return registers are not referenced, so do not bother
-       * assigning the return value to the return registers.
-       */
-      return_value_is_used = FALSE;
-   }
-   else if (num_pregs == 1 && TY_Is_Preg_Type(return_ty))
-   {
-      /* There is a single return register holding the return value,
-       * so return the rhs into this register, after casting the rhs
-       * to the appropriate type.  Note that preg_mtype and preg_num
-       * holds the attributes of the single return register.
-       */
-      ASSERT_WARN(WN2F_Can_Assign_Types(preg_ty, return_ty),
-		  (DIAG_W2F_INCOMPATIBLE_TYS, "WN2F_Function_Call_Lhs"));
-      ST2F_Use_Preg(lhs_tokens, preg_ty, preg_num);
-   }
-   else /* Our most difficult case */
-   {
-     /* We need to store the call-result into a temporary variable,
-      * then save the temporary variable into the return registers.
-      */
-
-     const UINT  tmp_idx = Stab_Lock_Tmpvar(return_ty, 
-						ST2F_Declare_Tempvar);
-     const char *tmpvar_name = W2CF_Symtab_Nameof_Tempvar(tmp_idx);
-	 
-     /* The lhs is simply the tmpvar */
-     Append_Token_String(lhs_tokens, tmpvar_name);
-
-     /* rhs to the lhs */
-
-     rhs_tokens << std::endl;
-     WN2F_Load_Return_Reg(rhs_tokens,
-			  return_ty, /* Type of tmpvar_name */
-			  tmpvar_name,
-			  0,
-			  preg_mtype,
-			  preg_num,
-			  ctxt);
-
-     if (num_pregs > 1)
-     {
-	 /* Get the offset into the value from which the second preg
-	  * needs to be loaded.
-	     */
-	 STAB_OFFSET value_offset = TY_size(Stab_Mtype_To_Ty(preg_mtype));
-
-	 /* Load the second register */
-	 rhs_tokens << std::endl;
-	 const PREG_IDX preg_num2 = RETURN_PREG_offset(&return_info, 1);
-	 const MTYPE preg_mtype2  = RETURN_PREG_mtype(&return_info, 1);
-
-	 WN2F_Load_Return_Reg(rhs_tokens,
-			      return_ty,   /* Type of tmpvar_name */
-			      tmpvar_name, 
-			      value_offset, /* Offset in tmpvar_name */
-			      preg_mtype2, 
-			      preg_num2, 
-			      ctxt);
-     } /* if save call-value into both return pregs */
-
-     Stab_Unlock_Tmpvar(tmp_idx);
-
-   } /* if (various return cases) */ 
-
-   /* If the return value is not referenced, we need to create a (dummy)
-    * temporary variable to generate valid Fortran code.
-    */
-   if (!return_value_is_used)
-   {
-     tmpvar_idx = Stab_Lock_Tmpvar(return_ty, &ST2F_Declare_Tempvar);
-     Append_Token_String(lhs_tokens, W2CF_Symtab_Nameof_Tempvar(tmpvar_idx));
-     Stab_Unlock_Tmpvar(tmpvar_idx);
-   }
-       
-   //Prepend_Token_Special(rhs_tokens, '='); 
-   Append_Token_String(lhs_tokens, "{Assignment (reversed)}="); 
-   /*FIXMEprepend*/ Append_And_Reclaim_Token_List(rhs_tokens, &lhs_tokens);
-#endif
-   rhs_tokens << "{Assignment omitted (reversed)}\n";
-} /* WN2F_Function_Call_Lhs */
-
-
-/*----------------------- do_loop translation -------------------------*/
-/*---------------------------------------------------------------------*/
-
-/* The maximum number of (partial) operations available to manipulate
- * a do-loop termination-test expression.
- */
-#define MAX_TEST_OPERATIONS 16
-
-
-typedef struct Partial_Op
-{
-   OPERATOR  opr;          /* Operation "opnd0 opr opnd1" or "opr(opnd0)" */
-   INTRINSIC intr;         /* Operation "opnd0 opr opnd1" or "opr(opnd0)" */
-   WN       *opnd1;        /* Second operand (opnd1), if applicable */
-   BOOL      switch_opnds; /* Switch opnds for binary opr: "opnd1 opr opnd0" */
-} PARTIAL_OP;
-
-
-/* Data-structure representing operations (PARTIAL_OP) to be carried
- * out on both sides of a do-loop termination-test expression, such 
- * that the side referring to the index-variable is simplified to a
- * simple LDID of the index-variable, and the other side 
- * (DO_LOOP_BOUND.opnd0) is transformed to a suitable bound for a
- * Fortran DO loop.  The bound expression will be expressed as:
- *
- *   (op[n].opnd1 op[n].opr (....(op[0].opnd1 op[0].opr opnd0)))
- *
- * after which the original loop termination test has been transformed
- * into:
- *
- *      (idx_var comparison_opr bound)
- */
-typedef struct Do_Loop_Bound
-{
-   OPERATOR   comparison_opr; /* Resultant comparison operator */
-   WN        *opnd0;          /* Last operand in sequence of ops */
-   INT        const0;         /* Constant to be added to opnd0 */
-   UINT       num_ops;        /* Number of ops to be applied to opnd0 */
-   PARTIAL_OP *op;            /* Sequence of ops to be applied to opnd0 */
-} DO_LOOP_BOUND;
-
-
-/* Conceptually, we may have to reverse the loop-termination comparison
- * to account for a negative multiplicative operand when reducing one
- * side of the comparison to an LDID of the index-variable.
- */
-#define WN2F_Reverse_Bounds_Comparison(comparison_opr) \
-   (comparison_opr == OPR_GE? OPR_LE : \
-    comparison_opr == OPR_LE? OPR_GE : \
-    comparison_opr == OPR_GT? OPR_LT : \
-    OPR_GT)
-
-
-static INTRINSIC 
-WN2F_Get_Divfloor_Intr(MTYPE mtype)
-{
-   INTRINSIC intr;
-   switch (mtype)
-   {
-   case MTYPE_I4:
-      intr = INTRN_I4DIVFLOOR;
-      break;
-   case MTYPE_U4:
-      intr = INTRN_U4DIVFLOOR;
-      break;
-   case MTYPE_I8:
-      intr = INTRN_I8DIVFLOOR;
-      break;
-   case MTYPE_U8:
-      intr = INTRN_U8DIVFLOOR;
-      break;
-   default:
-      intr = INTRINSIC_NONE;
-      break;
-   }
-   return intr;
-} /* WN2F_Get_Divfloor_Intr */
-
-
-static INTRINSIC 
-WN2F_Get_Divceil_Intr(MTYPE mtype)
-{
-   INTRINSIC intr;
-   switch (mtype)
-   {
-   case MTYPE_I4:
-      intr = INTRN_I4DIVCEIL;
-      break;
-   case MTYPE_U4:
-      intr = INTRN_U4DIVCEIL;
-      break;
-   case MTYPE_I8:
-      intr = INTRN_I8DIVCEIL;
-      break;
-   case MTYPE_U8:
-      intr = INTRN_U8DIVCEIL;
-      break;
-   default:
-      intr = INTRINSIC_NONE;
-      break;
-   }
-   return intr;
-} /* WN2F_Get_Divceil_Intr */
-
-
-static WN *
-WN2F_Get_DoLoop_StepSize(WN *step, ST *idx_var, STAB_OFFSET idx_ofst)
-{
-   /* We require this to be an STID, but only warn about the cases
-    * when we do not have an ADD with one operand being an LDID
-    * of the idx_var.  Return the step-size, if the induction step
-    * matches our pattern: (STID idx (ADD (LDID idx) stepsize));
-    * otherwise return NULL.
-    */
-   WN *add;
-   WN *step_size = NULL;
-   
-   ASSERT_DBG_FATAL(WN_operator(step) == OPR_STID && 
-		    WN_st(step) == idx_var && WN_offset(step) == idx_ofst,
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN_Get_DoLoop_StepSize"));
-
-   if (WN_operator(WN_kid0(step)) == OPR_ADD)
-   {
-      add = WN_kid0(step);
-      if (WN_operator(WN_kid0(add)) == OPR_LDID &&
-	  WN_st(WN_kid0(add)) == idx_var)
-      {
-	 step_size = WN_kid1(add);
-      }
-      else if (WN_operator(WN_kid1(add)) == OPR_LDID &&
-	       WN_st(WN_kid1(add)) == idx_var)
-      {
-	 step_size = WN_kid0(add);
-      }
-      else
-	 ASSERT_DBG_WARN(FALSE,
-			 (DIAG_W2F_UNEXPECTED_OPC, "WN_Get_DoLoop_StepSize"));
-   }
-   else
-      ASSERT_DBG_WARN(FALSE,
-		      (DIAG_W2F_UNEXPECTED_OPC, "WN_Get_DoLoop_StepSize"));
-
-   return step_size;
-} /* WN2F_Get_DoLoop_StepSize */
-
-
-static UINT
-WN2F_LoopBound_VarRef(WN         *wn,          /* in parameter */
-		      ST         *st,          /* in parameter */
-		      STAB_OFFSET st_ofst,     /* in parameter */
-		      INT        *ldid_in_kid, /* out parameter */
-		      UINT        level)       /* in parameter */
-{
-   /* Returns the number of references to the given ST within
-    * the given WN.  Returns a large number (0xfffffff0) to indicate
-    * an unkown number of references.  If there is exactly one such
-    * reference, and it is an LDID, then we also return a valid path
-    * through the given wn subtree (as a child-number sequence) in
-    * "ldid_in_kid"; The end-of-path indicator is a child number of
-    * "-1".
-    *
-    * Note that we also restrict the form of the path to only handle
-    * a predetermined set of operations (NEG, ADD, SUB, MPY, DIV),
-    * and when other operations are encountered then the ldid_in_kid
-    * sequence will be prematurely terminated (-1).  Similarly,
-    * the path cannot be longer than (MAX_TEST_OPERATIONS - level), 
-    * where "level" is "0" (zero) for the outermost loop-bound
-    * comparison expression, and represents the depth of the path
-    * down to the level of the wn passed into this routine path.  When
-    * the depth-level exceeds the limit, the top element of the 
-    * ldid_in_kid sequence will become -1, and an unknown number of 
-    * references (0xfffffff0) will be assumed.
-    *
-    * Hence, the number of references returned is correct when smaller
-    * than 0xfffffff0.  The path is correct when it leads to an LDID
-    * of the given ST before containing a -1 value.  The last element
-    * on the ldid_in_kid path will always be set to -1.
-    */
-   UINT counter;
-   
-   if (level >= MAX_TEST_OPERATIONS) {
-      /* Path overflowed, so give up and assume unknown number of 
-       * references.  No element available in the ldid_in_kid sequence.
-       */
-      counter = 0xfffffff0;
-   } else {
-      *ldid_in_kid = -1; /* Reset this to the appropriate kid once known */
-
-      if (WN_operator(wn) == OPR_LDID && 
-	  WN_st(wn) == st && WN_offset(wn) == st_ofst) {
-	 /* Found an LDID reference to the given st.  Terminate
-	  * the ldid_in_kid sequence with a -1 value.
-	  */
-	 counter = 1;
-      } else 
-	switch (WN_operator(wn)) {
-	case OPR_NEG:
-	  counter = WN2F_LoopBound_VarRef(WN_kid0(wn), 
-					  st, 
-					  st_ofst, 
-					  ldid_in_kid+1, 
-					  level++);
-	  if (counter == 1)
-	    *ldid_in_kid = 0;  /* A single reference found in kid0 */
-	  break;
-	  
-	case OPR_ADD:
-	case OPR_SUB:
-	case OPR_MPY:
-	case OPR_DIV:
-	  counter = WN2F_LoopBound_VarRef(WN_kid0(wn),
-					  st, 
-					  st_ofst, 
-					  ldid_in_kid+1,
-					  level++);
-	  if (counter == 1) {
-	      counter += WN_num_var_refs(WN_kid1(wn), st, st_ofst);
-	      if (counter == 1)
-		*ldid_in_kid = 0;  /* A single reference found in kid0 */
-	  } else if (counter == 0) {
-	    counter = WN2F_LoopBound_VarRef(WN_kid1(wn), 
-					    st, 
-					    st_ofst, 
-					    ldid_in_kid+1, 
-					    level++);
-	    if (counter == 1)
-	      *ldid_in_kid = 1;  /* A single reference found in kid1 */
-	  } else { /* zero, more than one, or unknown number of references */
-	    counter += WN_num_var_refs(WN_kid1(wn), st, st_ofst);
-	  }
-	  break;
-	  
-	default:
-	  /* Encountered unexpected form of expression along this path */
-	  counter = WN_num_var_refs(wn, st, st_ofst);
-	  break;
-	} /*switch*/
-   }
-   
-   return counter;
-} /* WN2F_LoopBound_VarRef */
-
-
-static void
-WN2F_Get_Next_LoopBoundOp(PARTIAL_OP *op,       /* out */
-			  OPERATOR   *comp_opr, /* in/out */
-			  BOOL       *ok,       /* out */
-			  WN         *wn,       /* in */
-			  INT         idx_kid)  /* in */
-{
-   /* Given an expression (wn) occurring on the lhs of a comparison
-    * operator (comp_opr), determine and record the operation (op)
-    * which will undo the effect of the expression with respect to
-    * the subexpression representing the index-expression (idx_kid).
-    *
-    * The end-result should be that: op(wn) == WN_kid(wn, idx_kid).
-    */
-   ASSERT_DBG_WARN(*comp_opr == OPR_LE || *comp_opr == OPR_GE,
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN_Get_DoLoop_Bound"));
-
-   if (idx_kid < 0) {
-     /* Invalid path element */
-     *ok = FALSE;
-   } else {
-     *ok = TRUE; /* until proven otherwise */
-     switch (WN_operator(wn)) {
-      case OPR_NEG:
-	 /* -idx <= e0  -->  idx >= -e0 */
-	 /* -idx <  e0  -->  idx >  -e0 */
-	 op->intr = INTRINSIC_NONE;
-	 op->opr = OPR_NEG;
-	 op->opnd1 = NULL;
-	 op->switch_opnds = FALSE;
-	 *comp_opr = WN2F_Reverse_Bounds_Comparison(*comp_opr);
-	 break;
-
-      case OPR_ADD:
-	 /* idx+e1 <= e0  -->  idx <= e0-e1 */
-	 op->intr = INTRINSIC_NONE;
-	 op->opr = OPR_SUB;
-	 op->opnd1 = WN_kid(wn, (idx_kid == 0)? 1 : 0);
-	 op->switch_opnds = FALSE;
-	 break;
-
-      case OPR_SUB:
-	 op->intr = INTRINSIC_NONE;
-	 if (idx_kid == 0)
-	 {
-	    /* idx-e1 <= e0  -->  idx <= e0+e1 */
-	    op->opr = OPR_ADD;
-	    op->opnd1 = WN_kid1(wn);
-	    op->switch_opnds = FALSE;
-	 }
-	 else /* (idx_kid == 1) */
-	 {
-	    /* e1-idx <= e0  -->  idx >= e1-e0 */
-	    op->opr = OPR_SUB;
-	    op->opnd1 = WN_kid0(wn);
-	    op->switch_opnds = TRUE;
-	    *comp_opr = WN2F_Reverse_Bounds_Comparison(*comp_opr);
-	 }
-	 break;
-
-      case OPR_MPY:
-	 /* While a regular division may be used in real arithmetics,
-	  * we operate with integral numbers and we must round to
-	  * the closest number that still makes the inequality hold.
-	  *
-	  * Since the lhs will always be an integer, a "<=" operator
-	  * which holds for a real rhs will also hold for the rhs
-	  * rounded down (DIVFLOOR).  Similarly, for a ">=" operator
-	  * the inequality will always hold for a rhs rounded up (DIVCEIL).
-	  *
-	  * Hence we get:
-	  *
-	  *    idx*e1 <= e0  ---(e1>=0)--->  idx <= DIVFLOOR(e0, e1)
-	  *    idx*e1 <= e0  ---(e1< 0)--->  idx >= DIVCEIL(e0, e1)
-	  *    idx*e1 >= e0  ---(e1>=0)--->  idx >= DIVCEIL(e0, e1)
-	  *    idx*e1 >= e0  ---(e1< 0)--->  idx <= DIVFLOOR(e0, e1)
-	  */
-	 op->opnd1 = WN_kid(wn, (idx_kid == 0)? 1 : 0);
-	 op->switch_opnds = FALSE;
-	 if (WN_operator(op->opnd1) != OPR_INTCONST ||
-	     WN_const_val(op->opnd1) == 0)
-	 {
-	    *ok = FALSE;
-	 }
-	 else
-	 {
-	    /* Update the inequality operator to what it should be after
-	     * the transformation.
-	     */
-	    if (WN_const_val(op->opnd1) < 0)
-	       *comp_opr = WN2F_Reverse_Bounds_Comparison(*comp_opr);
-
-	    /* Get the operator kind
-	     */
-	    op->opr = OPR_INTRINSIC_OP;
-	    op->intr = INTRINSIC_NONE;
-	    if (*comp_opr == OPR_LE)
-	       op->intr = WN2F_Get_Divfloor_Intr(WN_opc_rtype(wn));
-	    else  /* (*comp_opr == OPR_GE) */
-	       op->intr = WN2F_Get_Divceil_Intr(WN_opc_rtype(wn));
-	 }
-	 break;
-
-      case OPR_DIV:
-	 if (idx_kid == 0)
-	 {
-	    /* idx/e1 <= e0  -->  idx <= e0*e1 WHERE e1 >= 0 */
-	    op->opr = OPR_MPY;
-	    op->opnd1 = WN_kid1(wn);
-	    op->switch_opnds = FALSE;
-	 }
-	 else /* (idx_kid == 1) */
-	 {
-	    /* e1/idx <= e0  -->  idx <= e1/e0 WHERE e1 >= 0 */
-	    op->opr = OPR_DIV;
-	    op->opnd1 = WN_kid0(wn);
-	    op->switch_opnds = TRUE;
-	 }
-	 if (WN_operator(op->opnd1) != OPR_INTCONST ||
-	     WN_const_val(op->opnd1) == 0)
-	 {
-	    *ok = FALSE;
-	 }
-	 else if (WN_const_val(op->opnd1) < 0)
-	 {
-	    /* idx/e1 <= e0  -->  idx >= e0*e1 WHERE e1 < 0 */
-	    *comp_opr = WN2F_Reverse_Bounds_Comparison(*comp_opr);
-	 }
-	 break;
-
-      default:
-	 *ok = FALSE;
-	 break;
-      }
-   } /* if (idx_kid >= 0) */
-} /* WN2F_Get_Next_LoopBoundOp */
-
-
-static DO_LOOP_BOUND *
-WN2F_Get_DoLoop_Bound(WN         *end_test, 
-		      ST         *idx_var,
-		      STAB_OFFSET idx_ofst, 
-		      WN         *step_size)
-{
-   /* We expect a non-NULL step_size expression and try to transform
-    * the loop-termination test (end_test) into a form with an LDID
-    * of the index (idx_var) on the lhs of the test, the rhs of
-    * correspondingly transformed by means of a DO_LOOP_BOUND.
-    *
-    * If the loop-termination test with the LDID as the lhs is
-    * of a form which permits the rhs (DO_LOOP_BOUND) to be used
-    * as a bound in a Fortran do-loop, then return a ptr to the
-    * DO_LOOP_BOUND; otherwise we return a NULL ptr.
-    */
-   static PARTIAL_OP    partial_op[MAX_TEST_OPERATIONS];
-
-   static DO_LOOP_BOUND bound = {(OPERATOR) 0,    /*comparison_opr: set every call*/
-                                 NULL, /*opnd0:          set every call*/
-				 0,    /*const0:         set every call*/
-				 0,    /*num_ops:        set every call*/ 
-				 partial_op}; /*op: set here, once only */
-
-   DO_LOOP_BOUND *boundp = NULL;
-   OPERATOR       comparison_opr = WN_operator(end_test);
-   INT            path_to_idx0[MAX_TEST_OPERATIONS];
-   INT            path_to_idx1[MAX_TEST_OPERATIONS];
-   INT           *path_to_idx; /* Pointer to path_to_idx0 or path_to_idx1 */
-   INT            path_level;  /* Index into path_to_idx sequence */
-   INT            idx_refs0;   /* Number of references to "idx_var" in kid0 */
-   INT            idx_refs1;   /* Number of references to "idx_var" in kid1 */
-   WN            *idx_expr;    /* Kid of "end_test" referring to "idx_var" */
-   BOOL           bound_ok;    /* Bounds calculation thus far is fine? */
-   
-   if (step_size == NULL)
-   {
-     /* We can only deal with well-formed step-sizes */
-   }
-   else if (comparison_opr == OPR_LE || 
-	    comparison_opr == OPR_GE ||
-	    comparison_opr == OPR_LT || 
-	    comparison_opr == OPR_GT)
-   {
-      /* We only handle LE, GE, LT, and GT loop termination tests.
-       * Find a path in end_test to an only LDID reference to the
-       * idx_var, and check to make sure this is the only reference
-       * to the idx_var in the end_test.
-       */
-      idx_refs0 = WN2F_LoopBound_VarRef(WN_kid0(end_test), 
-					idx_var, 
-					idx_ofst,
-					path_to_idx0,
-					1);
-      if (idx_refs0 <= 1)
-      {
-	 idx_refs1 = WN2F_LoopBound_VarRef(WN_kid1(end_test), 
-					   idx_var, 
-					   idx_ofst, 
-					   path_to_idx1,
-					   1);
-
-	 if ((idx_refs0 + idx_refs1) == 1)
-	 {
-	    /* Set bound.opnd0 to the base expression for loop bound
-	     * calculation, where idx_expr will be the other side of 
-	     * the "end_test" expression.  Convert the comparison_opr
-	     * such that "idx_expr opr bound.opnd0" is equivalent to
-	     * the original end_test.
-	     */
-	    if (idx_refs0 == 1)
-	    {
-	       /* Idx reference in the lhs of the end-test */
-	       bound.opnd0 = WN_kid1(end_test);
-	       idx_expr = WN_kid0(end_test);
-	       path_to_idx = path_to_idx0;
-	    }
-	    else /* (idx_refs1 == 1) */
-	    {
-	       /* Idx reference in the rhs of the end-test */
-	       bound.opnd0 = WN_kid0(end_test);
-	       idx_expr = WN_kid1(end_test);
-	       path_to_idx = path_to_idx1;
-	       comparison_opr = WN2F_Reverse_Bounds_Comparison(comparison_opr);
-	    }
-
-            /* The comparison_opr has been converted such that the
-             * bound expression can be viewed as having the idx on the
-             * lhs.  Next, convert a '<' or '>' operator, with respect
-             * to the idx_expr, into a '<=' or '>=' repectively.
-             */
-            if (comparison_opr == OPR_LT)
-            {
-               /* Convert "i<n" into "i<=(n-1)" */
-               bound.const0 = -1;         
-               comparison_opr = OPR_LE;
-            }
-            else if (comparison_opr == OPR_GT)
-            {
-               /* Convert "i>n" into "i>=(n+1)" */
-               bound.const0 = 1;         
-               comparison_opr = OPR_GE;
-            }
-            else
-               bound.const0 = 0;
-
-	    /* Traverse the idx_expr, collecting the sequence of operations
-	     * necessary to reduce it to an LDID of the the idx_var.
-	     */
-	    for (bound_ok = TRUE, path_level = 0; 
-		 bound_ok && path_to_idx[path_level] >= 0;
-		 path_level++)
-	    {
-	       WN2F_Get_Next_LoopBoundOp(&bound.op[path_level],
-					 &comparison_opr,
-					 &bound_ok,
-					 idx_expr, 
-					 path_to_idx[path_level]);
-	       idx_expr = WN_kid(idx_expr, path_to_idx[path_level]);
-	    }
-	    
-	    /* We can only generate a Fortran do-loop bound when the test
-	     * has been simplified to have an LDID of the index variable
-	     * as the lhs (idx_expr), and we have one of the following
-	     * two forms of loop (assuming the step-size is well-formed,
-	     * i.e. positive for the first case and negative for the second
-	     * case):
-	     *
-	     *    step_size >= 0:
-	     *    ---------------
-	     *        for (i=init; i<=bound; i+=step_size)
-	     *
-	     *    step_size <= 0:
-	     *    ---------------
-	     *        for (i=init; i>=bound; i+=step_size)
-	     */
-	    if (bound_ok &&
-		WN_operator(idx_expr) == OPR_LDID && 
-		WN_st(idx_expr) == idx_var            &&
-		WN_offset(idx_expr) == idx_ofst       &&
-		(WN_operator(step_size) != OPR_INTCONST ||
-		 (WN_const_val(step_size) <= 0 && comparison_opr == OPR_GE) ||
-		 (WN_const_val(step_size) >= 0 && comparison_opr == OPR_LE)))
-	    {
-	       /* All is well, so return the calculated bound! */
-	       boundp = &bound;
-	       bound.comparison_opr = comparison_opr;
-	       bound.num_ops = path_level;
-	    }
-	 } /* if exactly one ref to idx_var in lhs and rhs combined */
-      } /* if no more than one lhs ref to idx_var */
-   } /* if LE/GE/LT/GE loop termination test */
-   else
-      ASSERT_DBG_WARN(FALSE, (DIAG_W2F_UNEXPECTED_OPC, "WN_Get_DoLoop_Bound"));
-
-   return boundp;
-} /* WN2F_Get_DoLoop_Bound */
-
-
-static WN2F_STATUS
-WN2F_Translate_DoLoop_Bound(xml::ostream& tokens,
-			    DO_LOOP_BOUND *bound,
-			    XlationContext& ctxt)
-{
-#if 0//FIXME
-   /* Note: Michael Wolf has a similar routine */
-   xml::ostream& bound_expr = New_Token_Buffer();
-   xml::ostream& opnd1_expr;
-   UINT         op_idx;
-   BOOL         is_intrinsic;
-   char        *intrname;
-   char         opname;
-   
-   TranslateWN(bound_expr, bound->opnd0, ctxt);
-   if (bound->const0 != 0)
-   {
-     Append_Token_Special(bound_expr, '+');
-      if (bound->const0<0) {
-        Append_Token_Special(bound_expr,'(');
-        Append_Token_String(bound_expr, Num2Str(bound->const0, "%lld"));
-        Append_Token_Special(bound_expr,')');
-        }
-      else
-        Append_Token_String(bound_expr, Num2Str(bound->const0, "%lld"));
-   }
-   for (op_idx = 0; op_idx < bound->num_ops; op_idx++)
-   {
-      is_intrinsic = FALSE;
-
-      /* Get the operator */
-      switch (bound->op[op_idx].opr)
-      {
-      case OPR_NEG:
-	 opname = '-';
-	 break;
-      case OPR_ADD:
-	 opname = '+';
-	 break;
-      case OPR_SUB:
-	 opname = '-';
-	 break;
-      case OPR_MPY:
-	 opname = '*';
-	 break;
-      case OPR_DIV:
-	 opname = '/';
-	 break;
-      case OPR_INTRINSIC_OP:
-	 is_intrinsic = TRUE;
-	 switch (bound->op[op_idx].intr)
-	 {
-	 case INTRN_I4DIVFLOOR:
-	    intrname = "INTRN_I4DIVFLOOR";
-	    break;
-	 case INTRN_I8DIVFLOOR:
-	    intrname = "INTRN_I8DIVFLOOR";
-	    break;
-	 case INTRN_U4DIVFLOOR:
-	    intrname = "INTRN_U4DIVFLOOR";
-	    break;
-	 case INTRN_U8DIVFLOOR:
-	    intrname = "INTRN_U8DIVFLOOR";
-	    break;
-	 case INTRN_I4DIVCEIL:
-	    intrname = "INTRN_I4DIVCEIL";
-	    break;
-	 case INTRN_I8DIVCEIL:
-	    intrname = "INTRN_I8DIVCEIL";
-	    break;
-	 case INTRN_U4DIVCEIL:
-	    intrname = "INTRN_U4DIVCEIL";
-	    break;
-	 case INTRN_U8DIVCEIL:
-	    intrname = "INTRN_U8DIVCEIL";
-	    break;
-	 default:
-	    ASSERT_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_DOLOOP_BOUNDOP, 
-				 "WN2F_Translate_DoLoop_Bound",
-				 OPERATOR_name(bound->op[op_idx].opr)));
-	 }
-	 break;
-      default:
-	 ASSERT_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_DOLOOP_BOUNDOP, 
-			      "WN2F_Translate_DoLoop_Bound",
-			      OPERATOR_name(bound->op[op_idx].opr)));
-	 break;
-      }
-      
-      if (!is_intrinsic && bound->op[op_idx].opnd1 == NULL)
-      {
-	// FIXME: Parenthesize(bound_expr)
-	/*FIXMEprepend*/ Append_Token_Special(bound_expr, opname); /* Unary operation */
-      }
-      else /* Binary operation (all intrinsics we deal with are binary) */
-      {
-	 /* Translate the second operand */
-	 opnd1_expr = New_Token_Buffer();
-	 (void)TranslateWN(opnd1_expr, bound->op[op_idx].opnd1, ctxt);
-
-	 /* Apply the second operand to the first one */
-	 if (is_intrinsic)
-	 {
-	    if (bound->op[op_idx].switch_opnds)
-	    {
-	      //FIXMEprepend Prepend_Token_Special(bound_expr, ',');
-	      //Prepend_And_Reclaim_Token_List(bound_expr, &opnd1_expr);
-	      fprintf(stderr, "FIXME001");
-	    }
-	    else
-	    {
-	       Append_Token_Special(bound_expr, ',');
-	       Append_And_Reclaim_Token_List(bound_expr, &opnd1_expr);
-	    }
-	    Append_Token_Special(bound_expr, '[');
-	    Append_Token_String(bound_expr, intrname);
-	    Append_Token_Special(bound_expr, ']');
-	 }
-	 else
-	 {
-	   //FIXME Parenthesize(bound_expr);
-	   //FIXME Parenthesize(opnd1_expr);
-	    if (bound->op[op_idx].switch_opnds)
-	    {
-	      /*FIXMEprepend*/ Append_Token_Special(bound_expr, opname);
-	      //Prepend_And_Reclaim_Token_List(bound_expr, &opnd1_expr);
-	      fprintf(stderr, "FIXME002");
-	    }
-	    else
-	    {
-	       Append_Token_Special(bound_expr, opname);
-	       Append_And_Reclaim_Token_List(bound_expr, &opnd1_expr);
-	    }
-	 }
-      } /* if */
-   } /* for */
-
-   Append_And_Reclaim_Token_List(tokens, &bound_expr);
-#endif
-   return EMPTY_WN2F_STATUS;
-} /* WN2F_Translate_DoLoop_Bound */
-
-
-/*--------------------- block processing utilities --------------------*/
-/*---------------------------------------------------------------------*/
-
-
-// REMOVE
-static void
-WN2F_Enter_PU_Block(void)
-{
-   WN2F_Next_ReturnSite = PUinfo_Get_ReturnSites();
-   WN2F_Prev_CallSite = NULL;
-
-#if 0//FIXME
-   Data_Stmt_Tokens = New_Token_Buffer();
-#endif
-
-}
-
-// REMOVE
-// Emit declarations for a PU, ie: constants, extern/common/local 
-// variables. The declarations are built in a temporary buffer,
-// decl_tokens, then merged with the token buffer passed in.
-static void
-WN2F_Exit_PU_Block(xml::ostream& xos, xml::ostream& stmts)
-{
-  PU& pu = Get_Current_PU();
-
-  xos << std::endl << "**** Begin Declarations ****" << std::endl;
-
-  // Declare constants
-  //REMOVE WN2F_Append_Symtab_Consts(xos, CURRENT_SYMTAB);
-
-  // Declare variables and reset the "referenced" flag
-  SYMTAB_IDX symtab = PU_lexical_level(pu);// FIXME old way of accessing symtab
-
-  //REMOVE WN2F_Append_Symtab_Vars(xos, symtab);
-  Stab_Reset_Referenced_Flag(symtab); //FIXME
-
-  //REMOVE WN2F_Append_Symtab_Vars(xos, GLOBAL_SYMTAB);
-  Stab_Reset_Referenced_Flag(GLOBAL_SYMTAB); //FIXME
-
-  xos << std::endl << "**** End Declarations ****" << std::endl;
-  xos << std::endl;
-
-  /* Declare pseudo registers and other temporary variables after
-   * regular variables, since the declaration of these may create
-   * more temporary variables (e.g. to handle implied do-loops
-   * in initializers).
-   */
-  xos << "**** Temporary variables ****\n";//COMMENT
-  //FIXME xos << PUinfo_local_decls;
-
-  /* Emit DATA statements; i.e. initializers */
-  xos << "**** Initializers ****\n";//COMMENT
-  //FIXME xos << Data_Stmt_Tokens
-
-  if (PUinfo_pragmas) { /* FIXME */
-    xos << "**** top level pragmas ****"; //COMMENT
-    //FIXME xos << PUinfo_pragmas;
-  }
-
-  /* Append the statements to the tokens */
-  if (stmts) { /* FIXME */
-    xos << "**** statements ****"; //COMMENT
-    //FIXME xos << stmts;
-  }
-
-  WN2F_Next_ReturnSite = NULL;
-  WN2F_Prev_CallSite = NULL;
-} /* WN2F_Exit_PU_Block */
 
 /*-------- The initializers and handlers statement translation --------*/
 /*---------------------------------------------------------------------*/
@@ -1112,31 +125,12 @@ WN2F_Exit_PU_Block(xml::ostream& xos, xml::ostream& stmts)
 BOOL 
 WN2F_Skip_Stmt(WN *stmt)
 {
-  return ((W2F_No_Pragmas && 
-	   (WN_operator(stmt) == OPR_PRAGMA || 
-	    WN_operator(stmt) == OPR_XPRAGMA) &&
-	   WN_pragma(stmt) != WN_PRAGMA_PREAMBLE_END) || /* For purple */
-	  
-	  WN2F_Skip_Pragma_Stmt(stmt) ||
-	  
-	  (!W2F_Emit_Prefetch &&
-	   (WN_operator(stmt) == OPR_PREFETCH ||
-	    WN_operator(stmt) == OPR_PREFETCHX)) ||
-	  
-	  (WN2F_Next_ReturnSite != NULL &&
-	   (stmt == RETURNSITE_store1(WN2F_Next_ReturnSite) ||
-	    stmt == RETURNSITE_store2(WN2F_Next_ReturnSite))) ||
-	  
-	  (WN2F_Prev_CallSite != NULL &&
-	   (stmt == CALLSITE_store1(WN2F_Prev_CallSite) ||
-	    stmt == CALLSITE_store2(WN2F_Prev_CallSite)))
-	  );
-} /* WN2F_Skip_Stmt */
+  return FALSE; // REMOVE
+}
 
 
 // find and emit any COMMONS that are initialized.
 // used by WN2F_Append_Block_Data below.
-
 struct WN2F_emit_commons {
 public:
   WN2F_emit_commons(xml::ostream& xos_) : xos(xos_) { }
@@ -1216,7 +210,7 @@ WN2F_block(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_BLOCK, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_block"));
   
-  // FIXME: 
+  // FIXME: This is not currently called
   std::ostringstream xos_stmtstr;
   xml::ostream xos_stmt(xos_stmtstr.rdbuf());
 
@@ -1226,7 +220,7 @@ WN2F_block(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   }
   
   if (is_pu_block) {
-    WN2F_Enter_PU_Block();
+    //FIXME: WN2F_Enter_PU_Block();
     ctxt.ResetNewPU();
   }
   
@@ -1247,9 +241,9 @@ WN2F_block(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   if (induction_step != NULL)
     TranslateWN(xos_stmt, induction_step, ctxt);
   
-  if (is_pu_block)
-    WN2F_Exit_PU_Block(xos, xos_stmt);
-  else {
+  if (is_pu_block) {
+    //FIXME WN2F_Exit_PU_Block(xos, xos_stmt);
+  } else {
     xos << xos_stmtstr.str();
   }
   return EMPTY_WN2F_STATUS;
@@ -1392,6 +386,7 @@ WN2F_compgoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 WN2F_STATUS 
 WN2F_do_loop(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+#if 0 // REMOVE
    /* It is somewhat complicated to always translate this correctly
     * back to Fortran, dependent on the form of the test-for-termination
     * and the idx-variable-increment expressions.  When we deem it too
@@ -1442,7 +437,7 @@ WN2F_do_loop(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       //REMOVE reset_XlationContext_emit_stid(ctxt);
       xos << ',';
 
-      WN2F_Translate_DoLoop_Bound(xos, bound, ctxt);
+      TranslateWN(xos, bound, ctxt); // WN2F_Translate_DoLoop_Bound(...)
       xos << ',';
 
       TranslateWN(xos, step_size, ctxt);
@@ -1466,7 +461,7 @@ WN2F_do_loop(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       xos << std::endl;
       xos << std::endl << "END DO";
    }
-
+#endif
    return EMPTY_WN2F_STATUS;
 } /* WN2F_do_loop */
 
@@ -1495,7 +490,7 @@ WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
    /* Generate all the expression trees, separated by commas */
    for (kid = 4; kid < WN_kid_count(wn); kid++) {
-     emitted = WN2F_io_item(xos, WN_kid(wn, kid), ctxt);
+     emitted = xlate_IO_ITEM(xos, WN_kid(wn, kid), ctxt);
      if (emitted)
        xos << ",";
    }
@@ -1717,10 +712,13 @@ WN2F_return(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    /* Save off the return-value, unless there is no return-value or
     * it already resides where we expect it to be.
     */
-   if (!PUINFO_RETURN_TO_PARAM                &&
-       PUINFO_RETURN_TY != (TY_IDX) 0         &&
-       TY_kind(PUINFO_RETURN_TY) != KIND_VOID &&
-       RETURN_PREG_mtype(PUinfo_return_preg, 0) != MTYPE_V)
+#if 0 //REMOVE/FIXME
+   if ( REMOVE !PUINFO_RETURN_TO_PARAM                &&
+	PUINFO_RETURN_TY != (TY_IDX) 0         && 
+	TY_kind(PUINFO_RETURN_TY) != KIND_VOID &&
+	 RETURN_PREG_mtype(PUinfo_return_preg, 0) != MTYPE_V) 
+#endif
+   if (false)
    {
       /* Note that we make more assumptions here than in the case
        * of whirl2c.  In particular, we always assume assignment
@@ -1839,7 +837,7 @@ xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_LABEL"));
   
   const char *label = WHIRL2F_number_as_name(WN_label_number(wn));
-  xos << BegComment << "CONTINUE label:" << label << EndComment;
+  xos << BegComment << "CONTINUE label=" << label << EndComment;
   
   return EMPTY_WN2F_STATUS;
 }
@@ -1875,8 +873,7 @@ WN2F_intrinsic_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 			   WN_kid(wn, str_kid),    /* base of string1 */
 			   WN_kid(wn, length_kid), /* length of string1 */
 			   ctxt);
-      while ((++str_kid) < first_length_kid)
-      {
+      while ((++str_kid) < first_length_kid) {
 	 length_kid++;
 	 xos << "//";
 	 WN2F_String_Argument(xos, 
@@ -1901,8 +898,8 @@ WN2F_intrinsic_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    case INTRN_STOP:
    case INTRN_STOP_F90:
       xos << std::endl;
-      // Since this could be either the F90 stop or the F77 stop output the STOP
-      // explicitly
+      // Since this could be either the F90 stop or the F77 stop
+      // output the STOP explicitly
       xos << "STOP";
 
       /* Get the string argument type, where the second argument is
@@ -1933,19 +930,6 @@ WN2F_intrinsic_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       break;
    }
 
-   if (!regular_call && !XlationContext_io_stmt(ctxt))
-   {   
-      /* Update the call site information to denote this one */
-      if (WN2F_Prev_CallSite == NULL)
-	 WN2F_Prev_CallSite = PUinfo_Get_CallSites();
-      else
-	 WN2F_Prev_CallSite = CALLSITE_next(WN2F_Prev_CallSite);
-
-      ASSERT_DBG_FATAL(CALLSITE_call(WN2F_Prev_CallSite) == wn,
-		       (DIAG_W2F_UNEXPECTED_CALLSITE, 
-			"WN2F_intrinsic_call()"));
-   }
-
    return EMPTY_WN2F_STATUS;
 } /* WN2F_intrinsic_call */
 
@@ -1953,6 +937,9 @@ WN2F_intrinsic_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 WN2F_STATUS 
 xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  // XAIF distinguishes between a subroutine call (statement) and
+  // function call (expression.
+  
   /* Generates a function-call and ensures that the return value
    * is returned into the appropriate context, be it a variable
    * or a register.  Note that intrinsic calls are dispatched to
@@ -1960,32 +947,26 @@ xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    * Make sure the handling of instrinsic ops in wn2f_expr.c is
    * kept up to date with changes that occur here.
    */
-  INT    arg_idx, implicit_args;
-  INT    total_implicit_args;
-  TY_IDX arg_ty;
+  
+  // We can't handle ICALLs yet
+  ASSERT_DBG_FATAL(WN_operator(wn) != OPR_ICALL, 
+		   (DIAG_W2F_UNEXPECTED_OPC, "OPR_ICALL"));
 
-  BOOL has_stat = FALSE;
-  BOOL is_allocate_stmt = FALSE; 
-  OPCODE    tempopc;
-  WN* kidofparm;
-  TY_IDX kid_ty;
-  TY_IDX parm_ty;
-  BOOL first_nonemptyarg = FALSE;
-  TYPE_ID fmtry;
-
-  // Gather info: 
-  BOOL is_user_call = FALSE;
-  BOOL return_to_param;
+  // -------------------------------------------------------
+  // Gather info...
   TY_IDX return_ty = 0;
+  BOOL is_user_call = FALSE;
+  BOOL is_allocate_stmt = FALSE; 
+  BOOL return_to_param; // REMOVE
   INT first_arg_idx, last_arg_idx;
-
+  
   if (WN_operator(wn) == OPR_INTRINSIC_CALL) {
     return_to_param = WN_intrinsic_return_to_param(return_ty);
     return_ty = WN_intrinsic_return_ty(WN_opcode(wn), 
 				       (INTRINSIC) WN_intrinsic(wn), wn);
     first_arg_idx = (return_to_param? 1 : 0);   
     last_arg_idx = WN_kid_count(wn) - 1;
-
+    
   } else {
     // Only two things vary for CALL, ICALL, and PICCALL nodes: the
     // method used to get the function type and the last_arg_idx.
@@ -1994,6 +975,17 @@ xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       is_user_call = TRUE;
       func_ty = ST_pu_type(WN_st(wn));
       last_arg_idx = WN_kid_count(wn) - 1;
+      
+      if (strcmp(ST_name(WN_st(wn)),"_ALLOCATE") == 0) {
+	is_allocate_stmt = TRUE;
+      } else if (strcmp(ST_name(WN_st(wn)),"_DEALLOCATE") == 0) {
+	set_XlationContext_has_no_arr_elmt(ctxt);
+	is_allocate_stmt = TRUE;
+      } 
+      if (strcmp(ST_name(WN_st(wn)),"PRESENT") == 0) {
+	set_XlationContext_has_no_arr_elmt(ctxt);
+      }
+
     } else if (WN_operator(wn) == OPR_ICALL) {
       func_ty = WN_ty(wn);
       last_arg_idx = WN_kid_count(wn) - 2;
@@ -2008,125 +1000,66 @@ xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     first_arg_idx = ST2F_FIRST_PARAM_IDX(func_ty);
   }
 
-  // Emit any relevant call-site directives
-  if (WN_operator(wn) == OPR_CALL || WN_operator(wn) == OPR_PICCALL) {
-    WN2F_Callsite_Directives(xos, wn, WN_st(wn));
-  }
+  // -------------------------------------------------------
+  StabToScopeIdMap& map = ctxt.GetStabToScopeIdMap();
 
-  /* Only save off return-values for calls outside io-statements.
-   * I assume here that no call information inside io-statements
-   * have been recorded, assuming such calls are not walked when
-   * traversing the stetements of a PU in PUinfo.c.
-   */
-  //FIXME if (!XlationContext_io_stmt(ctxt)) {
-    
-    // Update the call site information to denote this one
-    if (WN2F_Prev_CallSite == NULL)
-      WN2F_Prev_CallSite = PUinfo_Get_CallSites();
-    else
-      WN2F_Prev_CallSite = CALLSITE_next(WN2F_Prev_CallSite);
-    
-    ASSERT_DBG_FATAL(CALLSITE_call(WN2F_Prev_CallSite) == wn,
-		     (DIAG_W2F_UNEXPECTED_CALLSITE, "xlate_CALL()"));
-    
-    // Next, save off the function return value to a (temporary)
-    // variable or a return-register, as is appropriate.
-    if (return_ty != (TY_IDX)0 && TY_kind(return_ty) != KIND_VOID) {
-#if 0 // FIXME
-      /* This is not a subroutine, so a CALL statement is not valid
-       * Fortran.  We must assign the resultant value to some location.
-       * We do that here!
-       */
-      ASSERT_DBG_WARN(return_to_param || first_arg_idx == 0,
-		      (DIAG_A_STRING, 
-		       "xlate_CALL expects first argument as kid0 "
-		       "when not returning through first argument"));
-      if (return_to_param) {
-	/* Return through a parameter:  Assign the call-value to
-	 * the dereferenced implicit argument expression (first_arg).
-	 */
-	WN2F_Offset_Memref(xos, WN_kid0(wn),  /* return addr expression */
-			   WN_Tree_Type(WN_kid0(wn)), /* addr type */
-			   return_ty,    /* object type */
-			   0,            /* offset from address */
-			   ctxt);
-	xos << "=";
-      } 
-#endif
-      xos << BegElem("xaif:FunctionCall");
-
-    } else {       
-      // No return value, i.e. a SUBROUTINE
-      xos << BegElem("xaif:SubroutineCallStatement");
-    }
-  //FIXME}
-
-
-  /* Tokenize the function-value expression and gather information
-   * about the function type and index range of arguments.
-   */
   if (WN_operator(wn) == OPR_INTRINSIC_CALL) {
-    /* Note that all intrinsics that return a CHARACTER string
+    /* FIXME: Note that all intrinsics that return a CHARACTER string
      * will have been treated specially in WN2F_intrinsic_call(),
      * so we need only consider returns through a first non-
      * string parameter here.
      */
-    xos << WN_intrinsic_name((INTRINSIC)WN_intrinsic(wn));
+    xos << BegElem("xaif:Intrinsic***") << Attr("vertex_id", ctxt.GetNewVId())
+	<< Attr("name", WN_intrinsic_name((INTRINSIC)WN_intrinsic(wn)))
+	<< EndElem;
   } else {
-    
-    if (WN_operator(wn) == OPR_CALL) {
+    // OPR_ICALL: TranslateWN(xos, WN_kid(wn, WN_kid_count(wn) - 1), ctxt);
+    ST* st = WN_st(wn);
+    ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
+    UINT scopeid = map.Find(sttab);
+    ASSERT_FATAL(scopeid != 0, (DIAG_UNIMPLEMENTED, 0, "xlate_CALL"));
 
-      TranslateSTUse(xos, WN_st(wn), ctxt);
+    xos << BegComment << "sym = " << W2CF_Symtab_Nameof_St(st) << EndComment;
 
-      if (strcmp(ST_name(WN_st(wn)),"_ALLOCATE") == 0) {
-	is_allocate_stmt = TRUE;
-      } else if (strcmp(ST_name(WN_st(wn)),"_DEALLOCATE") == 0) {
-	set_XlationContext_has_no_arr_elmt(ctxt);
-	is_allocate_stmt = TRUE;
-      } 
-      if (strcmp(ST_name(WN_st(wn)),"PRESENT") == 0) {
-	set_XlationContext_has_no_arr_elmt(ctxt);
-      }
-
-      if (strcmp(ST_name(WN_st(wn)),"ALLOCATED") == 0) {
-	// Get the array name,it shoud be CALL->PARM->ARRSECTION->LDA->st_name
-	// Is there any other possible?
-	xos << '(' << ST_name(WN_st(WN_kid0(WN_kid0(WN_kid0(wn))))) << ')';
-	return EMPTY_WN2F_STATUS;
-      }    
-
-    } else if (WN_operator(wn) == OPR_ICALL) {
-
-      TranslateWN(xos, WN_kid(wn, WN_kid_count(wn) - 1), ctxt);
-
-    } else { /* (WN_operator(wn) == OPR_PICCALL) */
-      ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PICCALL, 
-		       (DIAG_W2F_UNEXPECTED_OPC, "xlate_CALL"));
-      TranslateSTUse(xos, WN_st(wn), ctxt);
-    }   
+    if (return_ty != (TY_IDX)0 && TY_kind(return_ty) != KIND_VOID) {
+      // A function call
+      xos << BegElem("xaif:FunctionCall") 
+	  << Attr("vertex_id", ctxt.GetNewVId())
+	  << Attr("scope_id", scopeid)
+	  << Attr("symbol_id", (UINT)ST_index(st));
+    } else {
+      // A subroutine (FIXME)
+      xos << BegElem("xaif:SubroutineCall")
+	  << Attr("statement_id", ctxt.GetNewVId())
+	  << Attr("scope_id", scopeid)
+	  << Attr("symbol_id", (UINT)ST_index(st));
+    }
   }
-  
 
+  // -------------------------------------------------------  
   // Determine the number of implicit arguments appended to the end
   // of the argument list (i.e. string lengths).
-  for (arg_idx = first_arg_idx, total_implicit_args = 0; 
+
+  INT total_implicit_args = 0;
+  TY_IDX arg_ty, kid_ty, parm_ty;
+  TYPE_ID fmtry;
+  
+  for (INT arg_idx = first_arg_idx, total_implicit_args = 0; 
        arg_idx <= last_arg_idx - total_implicit_args; 
        arg_idx++) {
-    if (WN_kid(wn,arg_idx)==NULL) {
-      ;
-    } else {
-      tempopc = WN_opcode(WN_kid(wn,arg_idx));
-      kidofparm = WN_kid0(WN_kid(wn, arg_idx));
+    if (WN_kid(wn, arg_idx) != NULL) {
+      OPCODE tempopc = WN_opcode(WN_kid(wn, arg_idx));
+      WN* kidofparm = WN_kid0(WN_kid(wn, arg_idx));
       if (WN_operator(kidofparm) != OPR_CALL && 
 	  WN_operator(kidofparm) != OPR_INTRINSIC_CALL) {
-	arg_ty = WN_Tree_Type(WN_kid(wn, arg_idx));
-	
+
+	arg_ty = WN_Tree_Type(WN_kid(wn, arg_idx));	
 	parm_ty = WN_ty(WN_kid(wn,arg_idx));
 	
 	if (TY_Is_Pointer(arg_ty)) {
 	  fmtry = TY_mtype(TY_pointed(arg_ty));
 	} else {
-	  fmtry =  TY_mtype(arg_ty); 
+	  fmtry = TY_mtype(arg_ty); 
 	}
 	
 	if (fmtry == MTYPE_M) {
@@ -2136,9 +1069,10 @@ xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	
 	if ((TY_Is_Character_Reference(arg_ty) 
 	     || TY_Is_Chararray_Reference(arg_ty) 
-	     || (TY_mtype(TY_pointed(arg_ty))==MTYPE_M &&
-		 (TY_Is_Character_Reference(parm_ty) 
-		  || TY_Is_Chararray_Reference(parm_ty))))
+	     || ((TY_Is_Pointer(arg_ty)
+		  && TY_mtype(TY_pointed(arg_ty))==MTYPE_M)
+		 && (TY_Is_Character_Reference(parm_ty) 
+		     || TY_Is_Chararray_Reference(parm_ty))))
 	    && !is_allocate_stmt) {
 	  total_implicit_args++;
 	}
@@ -2167,31 +1101,37 @@ xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // ADRTMP or VALTMP OPR_INTRINSIC_OP nodes, as these should be
   // handled appropriately by TranslateWN().
   set_XlationContext_no_parenthesis(ctxt);
-    
-  for (arg_idx = first_arg_idx, implicit_args = 0; 
+  BOOL has_stat = FALSE;
+  BOOL first_nonemptyarg = FALSE;
+  INT implicit_args;
+  UINT position = 1;
+
+  for (INT arg_idx = first_arg_idx, implicit_args = 0; 
        arg_idx <= last_arg_idx - implicit_args; 
        arg_idx++) {
-    if (WN_kid(wn, arg_idx) == NULL)
-      ;
-    else {
-      kidofparm = WN_kid0(WN_kid(wn, arg_idx));
-      if (WN_operator(kidofparm) !=OPR_CALL)
+
+    if (WN_kid(wn, arg_idx) != NULL) {
+      WN* kidofparm = WN_kid0(WN_kid(wn, arg_idx));
+      if (WN_operator(kidofparm) != OPR_CALL)
 	arg_ty = WN_Tree_Type(WN_kid(wn, arg_idx));
       else
 	arg_ty = PU_prototype (Pu_Table[ST_pu(WN_st(kidofparm))]);
-      
+            
+      xos << BegElem("xaif:Argument") << Attr("position", position++);
+      ctxt.CreateContext();
+
+      // FIXME
       if (WN_operator(wn) == OPR_INTRINSIC_CALL &&
 	  INTRN_by_value(WN_intrinsic(wn))) {
-	/* Call-by value, but argument should be emitted without
-	 * the %val() qualifier.
-	 */
-	if (WN_kid(wn, arg_idx)!=NULL) {
-	  first_nonemptyarg = TRUE;
-	  TranslateWN(xos, WN_kid(wn, arg_idx), ctxt);
-	}
+	/* Call-by value, but argument should be emitted without the
+	 * %val() qualifier. */
+	first_nonemptyarg = TRUE;
+	TranslateWN(xos, WN_kid(wn, arg_idx), ctxt);
+
       } else if ((WN_operator(kidofparm) != OPR_CALL 
 		  && (TY_Is_Character_Reference(arg_ty)  
-		      || (TY_mtype(TY_pointed(arg_ty))==MTYPE_M 
+		      || ((TY_Is_Pointer(arg_ty)
+			   && TY_mtype(TY_pointed(arg_ty))==MTYPE_M)
 			  && (TY_Is_Character_Reference(parm_ty) 
 			      || TY_Is_Chararray_Reference(parm_ty)))) 
 		  || WN_operator(kidofparm)==OPR_CALL 
@@ -2202,8 +1142,8 @@ xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	 * follows the address - does this look like char fn result?
 	 * can't tell, but make good guess..
 	 */
-	INT len_idx ;
-	INT cur_idx = arg_idx ;
+	INT len_idx;
+	INT cur_idx = arg_idx;
 	
 	implicit_args++;
 	
@@ -2213,12 +1153,11 @@ xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	    && (WN_kid(wn,cur_idx+1) != NULL) 
 	    && (WN_Parm_By_Value(WN_kid(wn,cur_idx + 1))) 
 	    && ((return_ty != 0) && (TY_kind(return_ty) == KIND_VOID))) {
-	  len_idx = cur_idx + 1 ;
-	} else
-	  len_idx = last_arg_idx - (total_implicit_args - implicit_args); 
-	if (first_nonemptyarg && !has_stat)
-	  ; // xos << ","; 
-	else
+	  len_idx = cur_idx + 1;
+	} else {
+	  len_idx = last_arg_idx - (total_implicit_args - implicit_args);
+	}
+	if ( !(first_nonemptyarg && !has_stat) )
 	  has_stat = FALSE;
 	
 	first_nonemptyarg = TRUE;
@@ -2231,77 +1170,57 @@ xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		  INTR_is_valtmp(WN_intrinsic(WN_kid(wn, arg_idx))))) {
 	// Need to explicitly note this as a value parameter.
 	if (WN_operator(kidofparm) == OPR_INTRINSIC_CALL &&
-	    WN_intrinsic(kidofparm)==INTRN_CONCATEXPR)
+	    WN_intrinsic(kidofparm) == INTRN_CONCATEXPR)
 	  implicit_args++; 
 	  /*parser always generate an extra arg for concat operator*/
 	  
-	if (WN_kid(wn, arg_idx)!=NULL) {
-	  if (first_nonemptyarg && !has_stat)
-	    ; // xos << ","; 
-	  else
-	    has_stat=FALSE;
-	  first_nonemptyarg = TRUE;
-	  TranslateWN(xos, WN_kid(wn, arg_idx), ctxt);
-	}
-	//	 xos << ")";
-      }
-      else { /* TY_Is_Pointer(arg_ty) */
+	if ( !(first_nonemptyarg && !has_stat) )
+	  has_stat = FALSE;
+	first_nonemptyarg = TRUE;
+	TranslateWN(xos, WN_kid(wn, arg_idx), ctxt);
+
+      } else { /* TY_Is_Pointer(arg_ty) */
 	/* There is also an implicit string length when the argument
-	 * is an array of character strings.
-	 */
-	if (TY_Is_Chararray_Reference(arg_ty) &&
-	    !is_allocate_stmt)
+	 * is an array of character strings. */
+	if (TY_Is_Chararray_Reference(arg_ty) && !is_allocate_stmt)
 	  implicit_args++;
 	
 	/* Assume call-by-reference parameter passing */
-	if (WN_kid(wn, arg_idx)!=NULL){
-	  if (first_nonemptyarg && !has_stat)
-	    ; // xos << ","; 
-	  else
-	    has_stat = FALSE;
-	  
-	  first_nonemptyarg = TRUE;
-	  WN2F_Offset_Memref(xos, 
-			     WN_kid(wn, arg_idx), /* address expression */
-			     arg_ty,              /* address type */
-			     TY_pointed(arg_ty),  /* object type */
-			     0,                   /* offset from address */
-			     ctxt);
-	}
+	if ( !(first_nonemptyarg && !has_stat) )
+	  has_stat = FALSE;
+	
+	first_nonemptyarg = TRUE;
+	WN2F_Offset_Memref(xos, 
+			   WN_kid(wn, arg_idx), /* address expression */
+			   arg_ty,              /* address type */
+			   TY_pointed(arg_ty),  /* object type */
+			   0,                   /* offset from address */
+			   ctxt);
       }
-      // if ((arg_idx+implicit_args) < last_arg_idx)
-      //   xos << ",";
       
-      if ((arg_idx+implicit_args) < (last_arg_idx-1) && 
-	  WN_kid(wn, arg_idx)!=NULL)
-	;  // xos << ",";
-      else if ((arg_idx+implicit_args) == (last_arg_idx-1)) { 
-
-	if (WN_operator(wn) == OPR_CALL &&
-	    (strcmp(ST_name(WN_st(wn)),"_ALLOCATE") == 0  ||
-	     strcmp(ST_name(WN_st(wn)),"_DEALLOCATE") == 0)) {
-	  if ((WN_opc_operator(WN_kid0(WN_kid(wn, (last_arg_idx)))))
-	      == OPR_LDA) {
+      if ((arg_idx+implicit_args) == (last_arg_idx-1)) { 
+	if (WN_operator(wn) == OPR_CALL && is_allocate_stmt) {
+	  if (WN_opc_operator(WN_kid0(WN_kid(wn, last_arg_idx))) == OPR_LDA) {
 	    // xos << ",";
 	    xos << "STAT=";
 	    has_stat=TRUE;
 	  } else {
 	    arg_idx++;
 	  }
-	} else if (WN_kid(wn, arg_idx)!=NULL && WN_kid(wn,arg_idx+1)!=NULL) {
-	  ;
-	  // argument could be "optional" argument,so there could be NULL wn
-	  //   xos << ",";
 	}
       }
+
+      ctxt.DeleteContext();
+      xos << EndElem;
     }
   }
   
   reset_XlationContext_no_parenthesis(ctxt);
   reset_XlationContext_has_no_arr_elmt(ctxt);
   
-  
-  xos << EndElem;
+  if (WN_operator(wn) != OPR_INTRINSIC_CALL) {
+    xos << EndElem;
+  }
   
   return EMPTY_WN2F_STATUS;
 } /* xlate_CALL */

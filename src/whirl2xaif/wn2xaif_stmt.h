@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.3 2003/05/16 13:21:23 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.4 2003/05/20 22:50:04 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -50,8 +50,8 @@
 //
 //***************************************************************************
 
-#ifndef wn2f_stmt_INCLUDED
-#define wn2f_stmt_INCLUDED
+#ifndef wn2xaif_stmt_INCLUDED
+#define wn2xaif_stmt_INCLUDED
 /* ====================================================================
  * ====================================================================
  *
@@ -159,4 +159,4 @@ WN2F_ar_construct(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 extern WN2F_STATUS
 WN2F_noio_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-#endif /* wn2f_stmt_INCLUDED */
+#endif /* wn2xaif_stmt_INCLUDED */

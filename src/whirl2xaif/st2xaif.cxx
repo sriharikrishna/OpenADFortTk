@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.4 2003/05/16 13:21:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.5 2003/05/20 22:50:04 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -134,7 +134,7 @@ static void ST2F_Declare_Return_Type(xml::ostream& xos,TY_IDX return_ty,
 /*---------------------------------------------------------------------*/
 
 static void 
-ST2F_ignore(xml::ostream& xos, ST *st, XlationContext& ctxt);
+xlate_ST_ignore(xml::ostream& xos, ST *st, XlationContext& ctxt);
 
 static void 
 xlate_STDecl_error(xml::ostream& xos, ST *st, XlationContext& ctxt);
@@ -154,15 +154,15 @@ static void
 xlate_STDecl_TYPE(xml::ostream& xos, ST *st, XlationContext& ctxt);
 
 static void 
-ST2F_use_error(xml::ostream& xos, ST *st, XlationContext& ctxt);
+xlate_STUse_error(xml::ostream& xos, ST *st, XlationContext& ctxt);
 static void 
-ST2F_use_var(xml::ostream& xos, ST *st, XlationContext& ctxt);
+xlate_STUse_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt);
 static void 
-ST2F_use_func(xml::ostream& xos, ST *st, XlationContext& ctxt);
+xlate_STUse_FUNC(xml::ostream& xos, ST *st, XlationContext& ctxt);
 static void 
-ST2F_use_const(xml::ostream& xos, ST *st, XlationContext& ctxt);
+xlate_STUse_CONST(xml::ostream& xos, ST *st, XlationContext& ctxt);
 static void 
-ST2F_use_block(xml::ostream& xos, ST *st, XlationContext& ctxt);
+xlate_STUse_BLOCK(xml::ostream& xos, ST *st, XlationContext& ctxt);
 
 //***************************************************************************
 
@@ -328,9 +328,9 @@ WN2F_Append_Symtab_Vars(xml::ostream& xos, SYMTAB_IDX symtab)
 
 typedef void (*XlateSTHandlerFunc)(xml::ostream&, ST*, XlationContext&);
 
-static const XlateSTHandlerFunc TranslateSTDecl_HandlerTable[CLASS_COUNT] =
+static const XlateSTHandlerFunc XlateSTDecl_HandlerTable[CLASS_COUNT] =
 {
-  &ST2F_ignore,      /* CLASS_UNK    == 0x00 */
+  &xlate_ST_ignore,         /* CLASS_UNK    == 0x00 */
   &xlate_STDecl_VAR,    /* CLASS_VAR    == 0x01 */
   &xlate_STDecl_FUNC,   /* CLASS_FUNC   == 0x02 */
   &xlate_STDecl_CONST,  /* CLASS_CONST  == 0x03 */
@@ -341,15 +341,15 @@ static const XlateSTHandlerFunc TranslateSTDecl_HandlerTable[CLASS_COUNT] =
   &xlate_STDecl_TYPE,   /* CLASS_TYPE   == 0x08 */
 };
 
-static const XlateSTHandlerFunc TranslateSTUse_HandlerTable[CLASS_COUNT] =
+static const XlateSTHandlerFunc XlateSTUse_HandlerTable[CLASS_COUNT] =
 {
-  &ST2F_ignore,      /* CLASS_UNK   == 0x00 */
-  &ST2F_use_var,     /* CLASS_VAR   == 0x01 */
-  &ST2F_use_func,    /* CLASS_FUNC  == 0x02 */
-  &ST2F_use_const,   /* CLASS_CONST == 0x03 */
-  &ST2F_use_error,   /* CLASS_PREG  == 0x04 */
-  &ST2F_use_block,   /* CLASS_BLOCK == 0x05 */
-  &ST2F_use_error    /* CLASS_NAME  == 0x06 */
+  &xlate_ST_ignore,     /* CLASS_UNK   == 0x00 */
+  &xlate_STUse_VAR,     /* CLASS_VAR   == 0x01 */
+  &xlate_STUse_FUNC,    /* CLASS_FUNC  == 0x02 */
+  &xlate_STUse_CONST,   /* CLASS_CONST == 0x03 */
+  &xlate_STUse_error,   /* CLASS_PREG  == 0x04 */
+  &xlate_STUse_BLOCK,   /* CLASS_BLOCK == 0x05 */
+  &xlate_STUse_error    /* CLASS_NAME  == 0x06 */
 };
 
 //***************************************************************************
@@ -357,13 +357,13 @@ static const XlateSTHandlerFunc TranslateSTUse_HandlerTable[CLASS_COUNT] =
 void 
 whirl2xaif::TranslateSTDecl(xml::ostream& xos, ST* st, XlationContext& ctxt)
 { 
-  TranslateSTDecl_HandlerTable[ST_sym_class(st)](xos, st, ctxt);
+  XlateSTDecl_HandlerTable[ST_sym_class(st)](xos, st, ctxt);
 } 
 
 void 
 whirl2xaif::TranslateSTUse(xml::ostream& xos, ST* st, XlationContext& ctxt)
 { 
-  TranslateSTUse_HandlerTable[ST_sym_class(st)](xos, st, ctxt);
+  XlateSTUse_HandlerTable[ST_sym_class(st)](xos, st, ctxt);
 }
 
 
@@ -389,7 +389,7 @@ ST2F_Define_Preg(const char *name, TY_IDX ty)
 
 
 static void 
-ST2F_ignore(xml::ostream& xos, ST *st, XlationContext& ctxt)
+xlate_ST_ignore(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
 }
 
@@ -406,12 +406,13 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
   ASSERT_DBG_FATAL(ST_sym_class(st) == CLASS_VAR, 
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
 		    ST_sym_class(st), "xlate_STDecl_VAR"));
-  
+
+#if 0 // REMOVE  
   if (Current_scope > GLOBAL_SYMTAB) {
     ASSERT_DBG_FATAL(!PUINFO_RETURN_TO_PARAM || st != PUINFO_RETURN_PARAM, 
 		     (DIAG_W2F_DECLARE_RETURN_PARAM, "xlate_STDecl_VAR"));
-    // FIXME: we don't need this
   }
+#endif
 
   const char* st_name = W2CF_Symtab_Nameof_St(st);
   ST* base = ST_base(st);
@@ -577,9 +578,11 @@ xlate_STDecl_TYPE(xml::ostream& xos, ST *st, XlationContext& ctxt)
   const char  *st_name = W2CF_Symtab_Nameof_St(st);
   TY_IDX       ty_rt = ST_type(st);
 
+#if 0 // REMOVE
   if (Current_scope > GLOBAL_SYMTAB) 
     ASSERT_DBG_FATAL(!PUINFO_RETURN_TO_PARAM || st != PUINFO_RETURN_PARAM, 
 		     (DIAG_W2F_DECLARE_RETURN_PARAM, "xlate_STDecl_TYPE"));
+#endif 
  
 #if 0 // FIXME 
   xos << BegComment << "type id=" << (UINT)ST_index(st) << EndComment; 
@@ -587,22 +590,23 @@ xlate_STDecl_TYPE(xml::ostream& xos, ST *st, XlationContext& ctxt)
 #endif
 }
 
-/*---------------- hidden routines to handle ST uses ------------------*/
-/*---------------------------------------------------------------------*/
+//***************************************************************************
+// 
+//***************************************************************************
 
 static void 
-ST2F_use_error(xml::ostream& xos, ST *st, XlationContext& ctxt)
+xlate_STUse_error(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_SYMCLASS,
-			   ST_sym_class(st), "ST2F_use_error"));
+			   ST_sym_class(st), "xlate_STUse_error"));
 }
 
 static void 
-ST2F_use_var(xml::ostream& xos, ST *st, XlationContext& ctxt)
+xlate_STUse_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_VAR, 
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
-		    ST_sym_class(st), "ST2F_use_var"));
+		    ST_sym_class(st), "xlate_STUse_VAR"));
 
   StabToScopeIdMap& map = ctxt.GetStabToScopeIdMap();
 
@@ -613,8 +617,8 @@ ST2F_use_var(xml::ostream& xos, ST *st, XlationContext& ctxt)
    * which may change a function into a subroutine.
    */
   if ((return_ty != (TY_IDX) 0 && TY_kind(return_ty) == KIND_SCALAR 
-       && ST_is_return_var(st)) 
-      || (PUINFO_RETURN_TO_PARAM && st == PUINFO_RETURN_PARAM)) {
+       && ST_is_return_var(st))
+      /* REMOVE || (PUINFO_RETURN_TO_PARAM && st == PUINFO_RETURN_PARAM) */) {
     /* If we have a reference to the implicit return-variable, then
      * refer to the function return value.
      */
@@ -636,7 +640,7 @@ ST2F_use_var(xml::ostream& xos, ST *st, XlationContext& ctxt)
     // FIXME: abstract
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
     UINT scopeid = map.Find(sttab);
-    ASSERT_FATAL(scopeid != 0, (DIAG_UNIMPLEMENTED, 0, "ST2F_use_var"));
+    ASSERT_FATAL(scopeid != 0, (DIAG_UNIMPLEMENTED, 0, "xlate_STUse_VAR"));
 
     xos << BegComment << "sym = " << W2CF_Symtab_Nameof_St(st) << EndComment;
     xos << BegElem("xaif:SymbolReference") 
@@ -648,11 +652,11 @@ ST2F_use_var(xml::ostream& xos, ST *st, XlationContext& ctxt)
 
 
 static void 
-ST2F_use_func(xml::ostream& xos, ST *st, XlationContext& ctxt)
+xlate_STUse_FUNC(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_FUNC, 
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
-		    ST_sym_class(st), "ST2F_use_func"));
+		    ST_sym_class(st), "xlate_STUse_FUNC"));
   
   xos << BegElem("***use_func") << Attr("id", ctxt.GetNewVId())
       << Attr("_type", -1) << Attr("value", W2CF_Symtab_Nameof_St(st)) 
@@ -662,11 +666,11 @@ ST2F_use_func(xml::ostream& xos, ST *st, XlationContext& ctxt)
 }
 
 static void 
-ST2F_use_const(xml::ostream& xos, ST *st, XlationContext& ctxt)
+xlate_STUse_CONST(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_CONST,
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS,
-		    ST_sym_class(st), "ST2F_use_const"));
+		    ST_sym_class(st), "xlate_STUse_CONST"));
   
   // A CLASS_CONST symbol never has a name, so just emit the value.
   // FIXME
@@ -680,27 +684,30 @@ ST2F_use_const(xml::ostream& xos, ST *st, XlationContext& ctxt)
     val = TCON2F_translate(STC_val(st), TY_is_logical(ty));
   }
   
-  xos << BegElem("***use_const") << Attr("id", ctxt.GetNewVId()) 
-      << Attr("_type", -1) << Attr("value", val) << EndElem;
+  xos << BegElem("xaif:Constant") << Attr("vertex_id", ctxt.GetNewVId()) 
+      << Attr("type", "***") << Attr("value", val) << EndElem;
 }
 
 
 static void 
-ST2F_use_block(xml::ostream& xos, ST *st, XlationContext& ctxt)
+xlate_STUse_BLOCK(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
   /* with f90 at -O2, CLASS_BLOCK can appear on LDAs etc. in IO */
   /* put out something, so whirlbrowser doesn't fall over       */
   ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_BLOCK, 
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
-		    ST_sym_class(st), "ST2F_use_block"));
+		    ST_sym_class(st), "xlate_STUse_BLOCK"));
   
   xos << BegElem("***use_block") << Attr("id", ctxt.GetNewVId()) 
       << Attr("_type", -1) << Attr("value", ST_name(st)) << EndElem;
 } 
 
-/*------------------------ exported routines --------------------------*/
-/*---------------------------------------------------------------------*/
 
+//***************************************************************************
+// 
+//***************************************************************************
+
+/*------------------------ exported routines --------------------------*/
 
 void 
 ST2F_deref_translate(xml::ostream& xos, ST *st, XlationContext& ctxt)

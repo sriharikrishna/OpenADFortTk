@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.h,v 1.2 2003/05/14 19:29:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.h,v 1.3 2003/05/20 22:50:04 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -50,8 +50,8 @@
 //
 //***************************************************************************
 
-#ifndef wn2f_expr_INCLUDED
-#define wn2f_expr_INCLUDED
+#ifndef wn2xaif_expr_INCLUDED
+#define wn2xaif_expr_INCLUDED
 
 #include "wn2xaif.h"
 
@@ -60,27 +60,29 @@ extern void WN2F_Expr_finalize(void);
 
 namespace whirl2xaif { /* FIXME */
 
-using xml::ostream;
-
 //***************************************************************************
 // Expression Operators: Unary Operations
 //***************************************************************************
 
-extern WN2F_STATUS xlate_UnaryOp(ostream& xos, WN *wn, XlationContext& ctxt);
+extern WN2F_STATUS 
+xlate_UnaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 //***************************************************************************
 // Expression Operators: Binary Operations
 //***************************************************************************
 
-extern WN2F_STATUS xlate_BinaryOp(ostream& xos, WN *wn, XlationContext& ctxt);
+extern WN2F_STATUS 
+xlate_BinaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 //***************************************************************************
 // Leaf Operators (Other)
 //***************************************************************************
 
-extern WN2F_STATUS xlate_CONST(ostream& xos, WN *wn, XlationContext& ctxt);
+extern WN2F_STATUS 
+xlate_CONST(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-extern WN2F_STATUS xlate_INTCONST(ostream& xos, WN *wn, XlationContext& ctxt);
+extern WN2F_STATUS 
+xlate_INTCONST(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 
 }; /* namespace whirl2xaif */
@@ -162,5 +164,5 @@ WN2F_alloca(xml::ostream& xos, WN *wn, XlationContext& ctxt) ;
 extern WN2F_STATUS 
 WN2F_dealloca(xml::ostream& xos, WN *wn, XlationContext& ctxt) ;
 
-#endif /* wn2f_expr_INCLUDED */
+#endif /* wn2xaif_expr_INCLUDED */
 

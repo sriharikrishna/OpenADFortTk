@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.3 2003/05/16 13:21:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.4 2003/05/20 22:50:04 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -710,14 +710,14 @@ TY2F_Equivalence_List(xml::ostream& xos,
 static void
 TY2F_Translate_Structure(xml::ostream& xos, TY_IDX ty)
 {
+  FLD_ITER     fld_iter;
+  TY& ty_rt  = Ty_Table[ty];
+
   ASSERT_DBG_FATAL(TY_kind(ty_rt) == KIND_STRUCT, 
 		   (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
 		    TY_kind(ty_rt), "TY2F_Translate_Structure"));
   
   XlationContext ctxt;// FIXME
-  
-  FLD_ITER     fld_iter;
-  TY& ty_rt  = Ty_Table[ty];
 
   xos << std::endl;
   
@@ -888,11 +888,11 @@ TY2F_invalid(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt)
 static void
 TY2F_scalar(xml::ostream& xos, TY_IDX ty_idx, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(TY_kind(ty) == KIND_SCALAR, (DIAG_W2F_UNEXPECTED_TYPE_KIND,
-						TY_kind(ty), "TY2F_scalar"));
-  
   TY&   ty = Ty_Table[ty_idx];
   MTYPE mt = TY_mtype(ty);
+
+  ASSERT_DBG_FATAL(TY_kind(ty) == KIND_SCALAR, (DIAG_W2F_UNEXPECTED_TYPE_KIND,
+						TY_kind(ty), "TY2F_scalar"));
   
   const char* type_str;
   if (TY_is_character(ty)) {
@@ -1254,8 +1254,7 @@ TY2F_Translate_ArrayElt(xml::ostream& xos,
   XlationContext ctxt; // FIXME
 
   xos << BegElem("xaif:Property") << Attr("id", ctxt.GetNewVId())
-      << Attr("name", "arrayindex") << EndAttr;
-  xos << Comment("FIXME");
+      << Attr("name", "arrayindex***") << EndAttr;
 
   if (TY_Is_Character_String(arr_ty_idx)) { // FIXME
     // Character strings can only be indexed using the substring notation

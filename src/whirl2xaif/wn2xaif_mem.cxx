@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.3 2003/05/16 13:21:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.4 2003/05/20 22:50:04 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -708,7 +708,7 @@ whirl2xaif::xlate_LDID(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   TY_IDX ref_ty = WN_ty(wn);
 
   if (ST_class(WN_st(wn)) == CLASS_PREG) {
-    assert(false); // FIXME
+    ST2F_Use_Preg(xos, base_ty, WN_load_offset(wn)); // FIXME if WN_load_offset(wn) == -1
   } else {
 
     // FIXME: Stab_Pointer_To, et. al. create types!!!
@@ -861,8 +861,7 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   ctxt.CreateContext(XlationContext::LVALUE, wn);
   if (ST_class(base_st) == CLASS_PREG) { // FIXME
-    assert(false);
-    ST2F_Use_Preg(xos, ST_type(base_st), WN_store_offset(wn));
+    ST2F_Use_Preg(xos, base_ty, WN_store_offset(wn));
   } else {
     WN2F_Offset_Symref(xos, base_st, baseptr_ty, ref_ty,
 		       WN_store_offset(wn), ctxt);

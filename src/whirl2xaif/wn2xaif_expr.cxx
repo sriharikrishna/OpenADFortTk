@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.3 2003/05/16 13:21:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.4 2003/05/20 22:50:04 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -1598,7 +1598,7 @@ xlate_BinaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
   // Operation
   targid = ctxt.GetNewVId();
   xos << BegElem("xaif:Intrinsic") << Attr("vertex_id", targid)
-      << Attr("name", Opc_Fname[opcode]) << EndElem;
+      << Attr("name", Opc_Fname[opcode]) << Attr("type", "***") << EndElem;
   
   // First operand
   srcid0 = ctxt.PeekVId();

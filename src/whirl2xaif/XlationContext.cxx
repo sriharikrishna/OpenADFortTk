@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.2 2003/05/14 19:29:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.3 2003/05/20 22:50:03 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -152,7 +152,6 @@ XlationContext::Dump(std::ostream& o, const char* pre) const
   if (XlationContext_no_newline(*this))        o << " no_newline";
   if (XlationContext_has_logical_arg(*this))   o << " logical_arg";
   if (XlationContext_no_parenthesis(*this))    o << " no_paren";
-  if (XlationContext_keyword_ioctrl(*this))    o << " ioctrl";
   if (XlationContext_io_stmt(*this))           o << " in_io";
   if (XlationContext_deref_io_item(*this))     o << " deref_io";
   if (XlationContext_origfmt_ioctrl(*this))    o << " varfmt";

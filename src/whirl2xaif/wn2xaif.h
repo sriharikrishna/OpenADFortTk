@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.3 2003/05/16 13:21:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.4 2003/05/20 22:50:04 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -50,8 +50,8 @@
 //
 //***************************************************************************
 
-#ifndef wn2f_INCLUDED
-#define wn2f_INCLUDED
+#ifndef wn2xaif_INCLUDED
+#define wn2xaif_INCLUDED
 /* ====================================================================
  * ====================================================================
  *
@@ -235,4 +235,4 @@ WN2F_Offset_Symref(xml::ostream& xos,
 
 extern WN_OFFSET WN2F_Sum_Offsets(WN *addr);
 
-#endif /* wn2f_INCLUDED */
+#endif /* wn2xaif_INCLUDED */

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.4 2003/05/16 13:21:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.5 2003/05/20 22:50:04 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -300,15 +300,14 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
 static void
 TranslateWNPU(xml::ostream& xos, WN *wn_pu, XlationContext& ctxt)
 {
-  const BOOL         pu_is_pushed = (PUinfo_current_func == wn_pu);
-  const char * const caller_err_phase = Get_Error_Phase();
-  
+  const char* const caller_err_phase = Get_Error_Phase();
+  Diag_Set_Phase("WHIRL to XAIF: translate PU");
+  Start_Timer(T_W2F_CU);
+
   Is_True(WN_opcode(wn_pu) == OPC_FUNC_ENTRY, 
 	  ("Invalid opcode for TranslateWNPU()"));
-  
-  Start_Timer(T_W2F_CU);
-  Diag_Set_Phase("whirl to xaif translation");
 
+  const BOOL pu_is_pushed = (PUinfo_current_func == wn_pu);
   if (!pu_is_pushed) { W2F_Push_PU(wn_pu, WN_func_body(wn_pu)); }
   
   /* Set the flag for an F90 program unit */
@@ -383,20 +382,16 @@ W2F_Init_Options()
 void
 W2F_Init(void)
 {
-  const char * const caller_err_phase = Get_Error_Phase ();
+  const char * const caller_err_phase = Get_Error_Phase();
   
   /* Initialize the various whirl2c subcomponents, unless they
-   * are already initialized.
-   */
+   * are already initialized. */
   if (W2F_Initialized) {
     return; /* Already initialized */
   }
 
+  Diag_Set_Phase("WHIRL to XAIF: Init");
   W2F_Init_Options();  
-  Diag_Init();
-  Diag_Set_Phase("whirl to xaif translation");
-
-  Diag_Set_Max_Diags(100); /* Maximum 100 warnings by default */
   
   // Create a pool to hold the parent map for every PU, one at a time.
   MEM_POOL_Initialize(&W2F_Parent_Pool, "W2f_Parent_Pool", FALSE);
@@ -576,7 +571,6 @@ W2F_Fini(void)
   W2CF_Symtab_Terminate();
   Stab_finalize_flags();
   
-  Diag_Exit();
   
   /* Reset all global variables */  
   W2F_Initialized = FALSE;
