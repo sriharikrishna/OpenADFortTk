@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.h,v 1.5 2003/07/24 20:30:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.h,v 1.6 2003/08/01 16:00:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -58,7 +58,7 @@
  *
  * Description:
  *
- *    WN2F_pragma:
+ *    xlate_PRAGMA:
  *       Translates a pragma present in a body of statements.
  *
  * ====================================================================
@@ -69,8 +69,14 @@
 
 #include <lib/support/xmlostream.h>
 
+
+namespace whirl2xaif {
+
 extern WN2F_STATUS 
-WN2F_pragma(xml::ostream& xos, WN *wn, XlationContext& context);
+xlate_PRAGMA(xml::ostream& xos, WN *wn, XlationContext& context);
+
+}; /* namespace whirl2xaif */
+
 
 #endif /* wn2xaif_pragma_INCLUDED */
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.9 2003/07/24 20:30:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.10 2003/08/01 16:00:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -55,8 +55,7 @@
  *
  * Description:
  *
- *   Translate a pragma WN node to Fortran!  The corresponding header
- *   declaration for for WN2F_pragma() can be found in wn2f_pragma.h.
+ *   Translate a pragma WN node to Fortran! 
  *
  * ====================================================================
  * ====================================================================
@@ -86,6 +85,7 @@
 //************************** Forward Declarations ***************************
 
 using namespace whirl2xaif;
+using namespace xml; // for xml::ostream, etc
 
 //************************** Forward Declarations ***************************
 
@@ -133,6 +133,44 @@ typedef struct Local_Preg /* Used in Get_Implicit_Locals() */
 } LOCAL_PREG;
 
 //***************************************************************************
+
+
+WN2F_STATUS
+whirl2xaif::xlate_PRAGMA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+{
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PRAGMA ||
+		   WN_operator(wn) == OPR_XPRAGMA, 
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_PRAGMA"));
+
+  xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
+      << BegAttr("annotation") << WhirlIDAnnotationVal(ctxt.FindWNId(wn))
+      << " [pragma]" << EndAttr
+      << EndElem;
+
+#if 0  
+  WN *next = wn;
+  WN2F_process_pragma(xos, &next, ctxt);
+#endif
+  
+#if 0 //REMOVE 
+  WN *skip;
+  ASSERT_FATAL(Pragmas_To_Skip.end == 0,
+	       (DIAG_W2F_BUFFER_ERROR,
+		"Unexpected index for Pragmas_To_Skip in xlate_PRAGMA()"));
+  
+  /* For pragmas inlined in code, we need to keep track of the pragmas
+   * that have already been processed. */
+  for (skip = WN_next(wn); skip != next; skip = WN_next(skip)) {
+    ASSERT_FATAL(Pragmas_To_Skip.end < MAX_PRAGMAS_TO_SKIP,
+		 (DIAG_W2F_BUFFER_ERROR,
+		  "Too many pragmas in sequence in xlate_PRAGMA()"));
+    
+    Pragmas_To_Skip.array[Pragmas_To_Skip.end++] = skip;
+  }
+#endif
+  
+  return EMPTY_WN2F_STATUS;
+} /* xlate_PRAGMA */
 
 
 /* ======================= Prompf utilities ======================= */
@@ -449,7 +487,7 @@ Append_Implicit_Locals(xml::ostream& xos,
 
 
 static BOOL
-WN2F_pragma_list_nowait(WN *first_pragma)
+xlate_PRAGMA_list_nowait(WN *first_pragma)
 {
    WN  *wn;
    BOOL nowait = FALSE;
@@ -460,7 +498,7 @@ WN2F_pragma_list_nowait(WN *first_pragma)
          nowait = TRUE;
 
    return nowait;
-} /* WN2F_pragma_list_nowait */
+} /* xlate_PRAGMA_list_nowait */
 
 
 static void
@@ -537,12 +575,11 @@ Append_Arg_Numbers(xml::ostream& xos,
                    INT32        val2)
 {
    if (val1 != -1)
-      Append_Token_String(xos, WHIRL2F_number_as_name(val1));
+     xos << WHIRL2F_number_as_name(val1);
 
    if (val2 != -1)
    {
-      xos << ",";
-      Append_Token_String(xos, WHIRL2F_number_as_name(val2));
+     xos << "," << WHIRL2F_number_as_name(val2);
    }
 } /* Append_Arg_Numbers */
 
@@ -566,36 +603,24 @@ Append_Prefetch_Attributes(xml::ostream& xos,
    {
       if (PF_GET_STRIDE_2L(pflag) > 0)
       {
-         Append_Token_String(xos, 
-            StrCat("stride=",
-            StrCat(WHIRL2F_number_as_name(PF_GET_STRIDE_1L(pflag)),
-            StrCat(",",
-                        WHIRL2F_number_as_name(PF_GET_STRIDE_2L(pflag))))));
-         xos << ",";
-         xos << "level=1,2";
+	xos << "stride=" << WHIRL2F_number_as_name(PF_GET_STRIDE_1L(pflag))
+	    << "," << WHIRL2F_number_as_name(PF_GET_STRIDE_2L(pflag));
+	xos << ", level=1,2";
       }
       else
       {
-         Append_Token_String(xos, 
-            StrCat("stride=",
-                            WHIRL2F_number_as_name(PF_GET_STRIDE_1L(pflag))));
-         xos << ",";
-         xos << "level=1";
+	xos << "stride=" << WHIRL2F_number_as_name(PF_GET_STRIDE_1L(pflag));
+	xos << ", level=1";
       }
    }
    else if (PF_GET_STRIDE_2L(pflag) > 0)
    {
-      Append_Token_String(xos, 
-            StrCat("stride=,",
-                            WHIRL2F_number_as_name(PF_GET_STRIDE_2L(pflag))));
-         xos << ",";
-         xos << "level=,2";
+     xos << "stride=," << WHIRL2F_number_as_name(PF_GET_STRIDE_2L(pflag));
+     xos << ", level=,2";
    }
    else
    {
-      xos << "stride=";
-      xos << ",";
-      xos << "level=";
+      xos << "stride= , level=";
    }
 
    /* Emit a kind clause
@@ -610,9 +635,7 @@ Append_Prefetch_Attributes(xml::ostream& xos,
     */
    if (size > 0)
    {
-      xos << ",";
-      Append_Token_String(xos, 
-         StrCat("size=", WHIRL2F_number_as_name(size)));
+     xos << ", size=" << WHIRL2F_number_as_name(size);
    }
 } /* Append_Prefetch_Attributes */
 
@@ -673,8 +696,7 @@ Append_Distribution(xml::ostream& xos, WN **apragma, WN_PRAGMA_ID id)
          break;
 
       case DISTRIBUTE_CYCLIC_EXPR:
-         xos << "cyclic";
-         xos << "(";
+         xos << "cyclic (";
          TranslateWN(xos, WN_kid0(distr[dim].cyclic_expr), context);
          xos << ")";
          break;
@@ -1114,8 +1136,7 @@ Append_Pragma_Clauses(xml::ostream& xos,
 	 break;
 
       case WN_PRAGMA_CHUNKSIZE:
-	 xos << "chunk";
-	 xos << "=";
+	 xos << "chunk =";
 	 Append_Clause_Expressions(xos, WN_PRAGMA_CHUNKSIZE, &clause);
 	 break;
 
@@ -1151,8 +1172,7 @@ Append_Pragma_Clauses(xml::ostream& xos,
 	 /* Can be both a clause and a pragma */
 	 if (WN2F_is_omp(clause))
 	 {
-	    xos << "schedule";
-	    xos << "(";
+	    xos << "schedule (";
 	    Append_MP_Schedtype(xos, clause);
 	    if (WN_next(clause) != NULL &&
 		WN_pragma(WN_next(clause)) == WN_PRAGMA_CHUNKSIZE)
@@ -1166,8 +1186,7 @@ Append_Pragma_Clauses(xml::ostream& xos,
 	 }
 	 else
 	 {
-	    xos << "mp_schedtype";
-	    xos << "=";
+	    xos << "mp_schedtype =";
 	    Append_MP_Schedtype(xos, clause);
 	 }
 	 break;
@@ -1285,100 +1304,79 @@ WN2F_process_pragma(xml::ostream& xos, WN **next, XlationContext& ctxt)
    switch (WN_pragma(apragma))
    {
    case WN_PRAGMA_INLINE_DEPTH:
-      xos << "C*$*";
-      xos << "INLINE_DEPTH";
-      xos << "=";
+      xos << "C*$* INLINE_DEPTH=";
       EMIT_ARG_NUMBERS1(xos, WN_pragma_arg1(apragma));
       break;
 
    case WN_PRAGMA_AGGRESSIVE_INNER_LOOP_FISSION:
-      xos << "C*$*";
-      xos << "AGGRESSIVE INNER LOOP FISSION";
+      xos << "C*$* AGGRESSIVE INNER LOOP FISSION";
       break;
 
    case WN_PRAGMA_FISSION:
-      xos << "C*$*";
-      xos << "FISSION";
+      xos << "C*$* FISSION";
       PARENTHESIZE_ARG_NUMBERS1(xos, WN_pragma_arg1(apragma));
       break;
 
    case WN_PRAGMA_FISSIONABLE:
-      xos << "C*$*";
-      xos << "FISSIONABLE";
+      xos << "C*$* FISSIONABLE";
       break;
 
    case WN_PRAGMA_FUSE:
-      xos << "C*$*";
-      xos << "FUSE";
-      PARENTHESIZE_ARG_NUMBERS2(xos, 
-                                WN_pragma_arg1(apragma),
-                                WN_pragma_arg2(apragma));
+      xos << "C*$* FUSE";
+      PARENTHESIZE_ARG_NUMBERS2(xos, WN_pragma_arg1(apragma),
+				WN_pragma_arg2(apragma));
       break;
 
    case WN_PRAGMA_FUSEABLE:
-      xos << "C*$*";
-      xos << "FUSABLE";
+      xos << "C*$* FUSABLE";
       break;
 
    case WN_PRAGMA_NO_FISSION:
-      xos << "C*$*";
-      xos << "NO FISSION";
+      xos << "C*$* NO FISSION";
       break;
 
    case WN_PRAGMA_NO_FUSION:
-      xos << "C*$*";
-      xos << "NO FUSION";
+      xos << "C*$* NO FUSION";
       break; 
 
    case WN_PRAGMA_INTERCHANGE:
-      xos << "C*$*";
-      xos << "INTERCHANGE";
-      Append_Clause_Symbols(xos, (WN_PRAGMA_ID)WN_pragma(apragma),
-                            &apragma);
+      xos << "C*$* INTERCHANGE";
+      Append_Clause_Symbols(xos, (WN_PRAGMA_ID)WN_pragma(apragma), &apragma);
       break;
 
    case WN_PRAGMA_NO_INTERCHANGE:
-      xos << "C*$*";
-      xos << "NO INTERCHANGE";
+      xos << "C*$* NO INTERCHANGE";
       break;
 
    case WN_PRAGMA_BLOCKING_SIZE:
-      xos << "C*$*";
-      xos << "BLOCKING SIZE";
-      PARENTHESIZE_ARG_NUMBERS2(xos, 
-                                WN_pragma_arg1(apragma),
+      xos << "C*$* BLOCKING SIZE";
+      PARENTHESIZE_ARG_NUMBERS2(xos, WN_pragma_arg1(apragma),
                                 WN_pragma_arg2(apragma));
       break;
 
    case WN_PRAGMA_NO_BLOCKING:
-      xos << "C*$*";
-      xos << "NO BLOCKING";
+      xos << "C*$* NO BLOCKING";
       break;
 
    case WN_PRAGMA_UNROLL:
-      xos << "C*$*";
-      xos << "UNROLL";
+      xos << "C*$* UNROLL";
       PARENTHESIZE_ARG_NUMBERS2(xos, WN_pragma_arg1(apragma), 
                                 WN_pragma_arg2(apragma));
       break;
 
    case WN_PRAGMA_BLOCKABLE:
-      xos << "C*$*";
-      xos << "BLOCKABLE";
-      Append_Clause_Symbols(xos, (WN_PRAGMA_ID)WN_pragma(apragma),
-                            &apragma);
+      xos << "C*$* BLOCKABLE";
+      Append_Clause_Symbols(xos, (WN_PRAGMA_ID)WN_pragma(apragma), &apragma);
       break;
 
    case WN_PRAGMA_PREFETCH:
-      xos << "C*$*";
-      xos << "PREFETCH";
+      xos << "C*$* PREFETCH";
       PARENTHESIZE_ARG_NUMBERS2(xos, WN_pragma_arg1(apragma),
                                 WN_pragma_arg2(apragma));
       break;
 
    case WN_PRAGMA_PREFETCH_MANUAL:
-      xos << "C*$*";
-      xos << "PREFETCH_MANUAL";
+      xos << "C*$* PREFETCH_MANUAL";
       PARENTHESIZE_ARG_NUMBERS1(xos, WN_pragma_arg1(apragma));
       break;
 
@@ -1386,24 +1384,18 @@ WN2F_process_pragma(xml::ostream& xos, WN **next, XlationContext& ctxt)
       if (WN_next(apragma) != NULL && 
           WN_operator(WN_next(apragma)) == OPR_PREFETCH)
       {
-         xos << "C*$*";
-         xos << "PREFETCH_REF";
+         xos << "C*$* PREFETCH_REF";
          Append_Prefetch_Attributes(xos, WN_next(apragma),
-                                    WN_pragma_arg2(apragma));
+				    WN_pragma_arg2(apragma));
       }
       break;
 
    case WN_PRAGMA_PREFETCH_REF_DISABLE:
-      xos << "C*$*";
-      xos << "PREFETCH_REF_DISABLE";
-      xos << "=";
+      xos << "C*$* PREFETCH_REF_DISABLE =";
       Append_A_Clause_Symbol(xos, apragma, 0/*ofst*/);
-      if (WN_pragma_arg2(apragma) > 0)
-      {
-         xos << ",";
-         xos << "size";
-         xos << "=";
-         EMIT_ARG_NUMBERS1(xos, WN_pragma_arg2(apragma));
+      if (WN_pragma_arg2(apragma) > 0) {
+	xos << ", size =";
+	EMIT_ARG_NUMBERS1(xos, WN_pragma_arg2(apragma));
       }         
       break;
       
@@ -1412,8 +1404,7 @@ WN2F_process_pragma(xml::ostream& xos, WN **next, XlationContext& ctxt)
       break;
       
    case WN_PRAGMA_REDISTRIBUTE:
-      xos << "C$";
-      xos << "REDISTRIBUTE";
+      xos << "C$ REDISTRIBUTE";
       Append_A_Clause_Symbol(xos, apragma, 0/*ofst*/);
       Append_Distribution(xos, &apragma, WN_PRAGMA_REDISTRIBUTE);
       Append_Pragma_Clauses(xos, &apragma, ctxt);
@@ -1424,22 +1415,19 @@ WN2F_process_pragma(xml::ostream& xos, WN **next, XlationContext& ctxt)
       break;
       
    case WN_PRAGMA_DYNAMIC:
-      xos << "C$";
-      xos << "DYNAMIC";
+      xos << "C$ DYNAMIC";
       Append_A_Clause_Symbol(xos, apragma, 0/*ofst*/);
       break;
 
    case WN_PRAGMA_IVDEP:
-      xos << "CDIR$";
-      xos << "IVDEP";
+      xos << "CDIR$ IVDEP";
       break;
 
    case WN_PRAGMA_DOACROSS:
       /* Ignore deeper nests.
        */
       if (WN_pragma_nest(apragma) <= 0 && 
-	  !Ignore_Synchronized_Construct(apragma, ctxt))
-      {
+	  !Ignore_Synchronized_Construct(apragma, ctxt)) {
 	 surrounding_region = W2CF_Get_Parent(W2CF_Get_Parent(apragma));
 	 first_clause = WN_next(apragma);
 
@@ -1456,73 +1444,63 @@ WN2F_process_pragma(xml::ostream& xos, WN **next, XlationContext& ctxt)
 				WN_PRAGMA_DOACROSS, 
 				WN_region_body(surrounding_region),
 				first_clause);
-      }
-      else
-      {
-	 apragma = WN_next(apragma);
-         Skip_Pragma_Clauses(&apragma, ctxt);
+      } else {
+	apragma = WN_next(apragma);
+	Skip_Pragma_Clauses(&apragma, ctxt);
       }
       break;
-
+      
    case WN_PRAGMA_MPSCHEDTYPE:
-      /* Can be both a clause and a pragma.
-       */
+      /* Can be both a clause and a pragma. */
       xos << "C$";
-      if (WN2F_is_omp(apragma))
-      {
-	 xos << "SCHEDULE";
-	 xos << "(";
-	 Append_MP_Schedtype(xos, apragma);
-	 if (WN_next(apragma) != NULL &&
-	     WN_pragma(WN_next(apragma)) == WN_PRAGMA_CHUNKSIZE)
-	 {
-	    apragma = WN_next(apragma);
-	    xos << ",";
-	    WN2F_Append_Value_Reference(xos, WN_kid0(apragma));
-	 }
-	 xos << ")";
-	 apragma = WN_next(apragma);
-      }
-      else
-      {
-	 xos << "MP_SCHEDTYPE";
-	 xos << "=";
-	 Append_MP_Schedtype(xos, apragma);
+      if (WN2F_is_omp(apragma)) {
+	xos << "SCHEDULE (";
+	Append_MP_Schedtype(xos, apragma);
+	if (WN_next(apragma) != NULL &&
+	    WN_pragma(WN_next(apragma)) == WN_PRAGMA_CHUNKSIZE) {
+	  apragma = WN_next(apragma);
+	  xos << ",";
+	  WN2F_Append_Value_Reference(xos, WN_kid0(apragma));
+	}
+	xos << ")";
+	apragma = WN_next(apragma);
+      } else {
+	xos << "MP_SCHEDTYPE =";
+	Append_MP_Schedtype(xos, apragma);
       }
       break;
 
    case WN_PRAGMA_BARRIER:
 #if 0 // REMOVE
-      if (W2F_Prompf_Emission)
-	 WN2F_Start_Prompf_Construct(xos, apragma);
+     if (W2F_Prompf_Emission)
+       WN2F_Start_Prompf_Construct(xos, apragma);
 #endif // REMOVE
-      WN2F_OMP_or_PAR_Directive_Newline(xos,apragma);
-      //xos << "C$";
-      //WN2F_Append_Pragma_Preamble(xos,apragma) ;
-      xos << "BARRIER";
+     WN2F_OMP_or_PAR_Directive_Newline(xos,apragma);
+     //xos << "C$";
+     //WN2F_Append_Pragma_Preamble(xos,apragma) ;
+     xos << "BARRIER";
 #if 0 // REMOVE
-      if (W2F_Prompf_Emission)
-	 WN2F_End_Prompf_Construct(xos, apragma);
+     if (W2F_Prompf_Emission)
+       WN2F_End_Prompf_Construct(xos, apragma);
 #endif // REMOVE
-      break;
-
+     break;
+     
    case WN_PRAGMA_COPYIN:
-      xos << "C$";
-      if (WN2F_is_omp(apragma))
-        WN2F_OMP_or_PAR_Directive_Newline(xos,apragma);
-      //WN2F_Append_Pragma_Preamble(xos,apragma) ;
-      xos << "COPYIN";
-      if (WN_operator(apragma) == OPR_XPRAGMA)
-         Append_Clause_Expressions(xos,
-				   (WN_PRAGMA_ID)WN_pragma(apragma),
-                                   &apragma);
-      else {
-         /* A common symbol */
-         xos << "/";
-	 TranslateSTUse(xos, WN_st(apragma), ctxt);
-         xos << "/";
-      }
-      break;
+     xos << "C$";
+     if (WN2F_is_omp(apragma))
+       WN2F_OMP_or_PAR_Directive_Newline(xos,apragma);
+     //WN2F_Append_Pragma_Preamble(xos,apragma) ;
+     xos << "COPYIN";
+     if (WN_operator(apragma) == OPR_XPRAGMA)
+       Append_Clause_Expressions(xos, (WN_PRAGMA_ID)WN_pragma(apragma),
+				 &apragma);
+     else {
+       /* A common symbol */
+       xos << "/";
+       TranslateSTUse(xos, WN_st(apragma), ctxt);
+       xos << "/";
+     }
+     break;
 
    case WN_PRAGMA_CRITICAL_SECTION_BEGIN:
 #if 0 // REMOVE
@@ -1566,8 +1544,7 @@ WN2F_process_pragma(xml::ostream& xos, WN **next, XlationContext& ctxt)
       //WN2F_Append_Pragma_Preamble(xos,apragma) ;
       xos << "ORDERED";
       if (WN_operator(apragma) == OPR_XPRAGMA)
-	 Append_Clause_Expressions(xos,
-				   (WN_PRAGMA_ID)WN_pragma(apragma),
+	 Append_Clause_Expressions(xos, (WN_PRAGMA_ID)WN_pragma(apragma),
                                    &apragma);
       break;
 
@@ -1592,8 +1569,7 @@ WN2F_process_pragma(xml::ostream& xos, WN **next, XlationContext& ctxt)
       //WN2F_Append_Pragma_Preamble(xos,apragma) ;
       xos << "ATOMIC";
       if (WN_operator(apragma) == OPR_XPRAGMA)
-	 Append_Clause_Expressions(xos,
-				   (WN_PRAGMA_ID)WN_pragma(apragma),
+	 Append_Clause_Expressions(xos, (WN_PRAGMA_ID)WN_pragma(apragma),
                                    &apragma);
 #if 0 // REMOVE
       if (W2F_Prompf_Emission)
@@ -1615,8 +1591,7 @@ WN2F_process_pragma(xml::ostream& xos, WN **next, XlationContext& ctxt)
 	 xos << "PARALLEL";
 	 apragma = first_clause;
 	 Append_Pragma_Clauses(xos, &apragma, ctxt);
-	 Append_Implicit_Locals(xos, 
-				WN_PRAGMA_PARALLEL_BEGIN, 
+	 Append_Implicit_Locals(xos, WN_PRAGMA_PARALLEL_BEGIN, 
 				WN_region_body(surrounding_region),
 				first_clause);
       }
@@ -1779,51 +1754,43 @@ WN2F_process_pragma(xml::ostream& xos, WN **next, XlationContext& ctxt)
       /* Should only appear for C, but if we ever see it, we also emit
        * it for Fortran.
        */
-      xos << "C$";
-      xos << "NUMTHREADS";
+      xos << "C$ NUMTHREADS";
       Append_Clause_Expressions(xos,
 				(WN_PRAGMA_ID)WN_pragma(apragma),
                                 &apragma);
       break;
 
    case WN_PRAGMA_PAGE_PLACE:
-      xos << "C$";
-      xos << "PAGE_PLACE";
+      xos << "C$ PAGE_PLACE";
       Append_Clause_Expressions(xos,
 				(WN_PRAGMA_ID)WN_pragma(apragma),
                                 &apragma);
       break;
 
    case WN_PRAGMA_NORECURRENCE:
-      xos << "CDIR$";
-      xos << "NO RECURRENCE";
+      xos << "CDIR$ NO RECURRENCE";
       break;
 
    case WN_PRAGMA_NEXT_SCALAR:
-      xos << "CDIR$";
-      xos << "NEXT SCALAR";
+      xos << "CDIR$ NEXT SCALAR";
       break;
 
    case WN_PRAGMA_KAP_CONCURRENTIZE:
-      xos << "C*$*";
-      xos << "CONCURRENTIZE";
+      xos << "C*$* CONCURRENTIZE";
       break;
 
    case WN_PRAGMA_KAP_NOCONCURRENTIZE:
-      xos << "C*$*";
-      xos << "NO CONCURRENTIZE";
+      xos << "C*$* NO CONCURRENTIZE";
       break;
 
    case WN_PRAGMA_KAP_ASSERT_PERMUTATION:
-      xos << "C*$*";
-      xos << "ASSERT PERMUTATION";
+      xos << "C*$* ASSERT PERMUTATION";
       Append_A_Clause_Symbol(xos, apragma, 0/*ofst*/);
       break;
 
    case WN_PRAGMA_CRI_CNCALL:
    case WN_PRAGMA_KAP_ASSERT_CONCURRENT_CALL:
-      xos << "C*$*";
-      xos << "ASSERT CONCURRENT CALL";
+      xos << "C*$* ASSERT CONCURRENT CALL";
       break;
 
    case WN_PRAGMA_KAP_ASSERT_DO:
@@ -1861,42 +1828,6 @@ WN2F_process_pragma(xml::ostream& xos, WN **next, XlationContext& ctxt)
       *next = apragma;
 
 } /* WN2F_process_pragma */
-
-
-/* ====================== Exported Functions ====================== */
-/* ================================================================ */
-
-WN2F_STATUS
-WN2F_pragma(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-  WN *skip;
-  WN *next = wn;
-  
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PRAGMA ||
-		   WN_operator(wn) == OPR_XPRAGMA, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_pragma"));
-  
-  WN2F_process_pragma(xos, &next, ctxt);
-
-#if 0 //REMOVE 
-  ASSERT_FATAL(Pragmas_To_Skip.end == 0,
-	       (DIAG_W2F_BUFFER_ERROR,
-		"Unexpected index for Pragmas_To_Skip in WN2F_pragma()"));
-  
-  /* For pragmas inlined in code, we need to keep track of the pragmas
-   * that have already been processed. */
-  for (skip = WN_next(wn); skip != next; skip = WN_next(skip)) {
-    ASSERT_FATAL(Pragmas_To_Skip.end < MAX_PRAGMAS_TO_SKIP,
-		 (DIAG_W2F_BUFFER_ERROR,
-		  "Too many pragmas in sequence in WN2F_pragma()"));
-    
-    Pragmas_To_Skip.array[Pragmas_To_Skip.end++] = skip;
-  }
-#endif
-  
-  return EMPTY_WN2F_STATUS;
-} /* WN2F_pragma */
-
 
 
 BOOL

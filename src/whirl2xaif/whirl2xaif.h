@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.h,v 1.3 2003/07/24 20:30:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.h,v 1.4 2003/08/01 16:00:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -72,8 +72,8 @@
 /* ====================================================================
  * ====================================================================
  *
- * $Revision: 1.3 $
- * $Date: 2003/07/24 20:30:04 $
+ * $Revision: 1.4 $
+ * $Date: 2003/08/01 16:00:45 $
  * $Author: eraxxon $
  * $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.h,v $
  *
@@ -240,7 +240,7 @@ extern "C" {
 namespace whirl2xaif {
 
 extern void 
-TranslateIR(std::ostream& os, PU_Info *pu_tree);
+TranslateIR(std::ostream& os, PU_Info *pu_forest);
 
 }; /* namespace whirl2xaif */
 

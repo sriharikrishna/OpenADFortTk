@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.h,v 1.2 2003/07/24 14:36:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.h,v 1.3 2003/08/01 16:00:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -66,10 +66,10 @@
  *  structure is never freed up until the use of this package is
  *  terminated or a forced free operation is invoked.
  *
- *  W2CF_Push_Symtab: Pushes a new symbol table onto the stack and
+ *  W2CF_Symtab_Push: Pushes a new symbol table onto the stack and
  *     makes it the current symbol-table new symbol entries.
  *
- *  W2CF_Pop_Symtab: Pops the last symbol table entered onto the stack
+ *  W2CF_Symtab_Pop: Pops the last symbol table entered onto the stack
  *     off the stack, putting all related symbol-table objects onto
  *     free-lists.
  *

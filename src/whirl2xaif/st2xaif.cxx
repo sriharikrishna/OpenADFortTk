@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.12 2003/07/24 20:30:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.13 2003/08/01 16:00:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -130,8 +130,7 @@ static BOOL ST2F_Is_Dummy_Procedure(ST *st) ;
 static void ST2F_Declare_Return_Type(xml::ostream& xos,TY_IDX return_ty, 
 				     XlationContext& ctxt);
 
-/*------- Handlers for references to and declarations of symbols ------*/
-/*---------------------------------------------------------------------*/
+// Symbol declarations and uses
 
 static void 
 xlate_ST_ignore(xml::ostream& xos, ST *st, XlationContext& ctxt);

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.10 2003/07/24 20:30:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.11 2003/08/01 16:00:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -52,7 +52,7 @@
 
 //************************** System Include Files ***************************
 
-#include <limits.h> /* for 'PATH_MAX' */
+#include <string>
 
 //************************** Open64 Include Files ***************************
 
@@ -83,19 +83,20 @@ real_main(INT argc, char **argv);
 
 static void 
 OpenFile(std::ofstream& fs, const char* filename);
+
 static void 
 CloseFile(std::ofstream& fs);
+
 static void 
-Process_Command_Line (INT, char **);
+ProcessCommandLine(int, char **);
 
 //************************** Forward Declarations ***************************
 
-// Options (FIXME)
-// Src_File_Name, Irb_File_Name, Obj_File_Name
-const char* ProgramName = NULL; // FIXME: change to std::string
-char WHIRL_filename[PATH_MAX+1] = "";
-char XAIF_filename[PATH_MAX+1] = "";
+std::string ProgramName;
+std::string WHIRL_filename;
+std::string XAIF_filename;
 
+// Options (FIXME)
 bool opt_dumpIR = false;
 bool opt_testPersistentIDs = false;      // FIXME
 const char* PersistentIDsToPrint = NULL; // write persistent ids if 
@@ -104,7 +105,7 @@ bool opt_testTypes = false;
 //***************************************************************************
 
 INT
-main(INT argc, char **argv)
+main(int argc, char **argv)
 {
   try {
     return real_main(argc, argv);
@@ -128,7 +129,7 @@ static INT
 real_main(INT argc, char **argv)
 {
   // -------------------------------------------------------
-  // 1. Initialize Open64 
+  // 1. Open64 Initialization
   // -------------------------------------------------------
   Handle_Signals();
   MEM_Initialize();
@@ -143,42 +144,44 @@ real_main(INT argc, char **argv)
   }
 #endif
   
-  Diag_Init(); // non-Open64
-  Diag_Set_Max_Diags(100); /* Maximum 100 warnings by default */
-  Diag_Set_Phase("WHIRL to XAIF: driver");
-  
-  // -------------------------------------------------------
-  // 2. Get options
-  // -------------------------------------------------------
-  Preconfigure(); // REMOVE config.cxx
-  Process_Command_Line(argc, argv);
-  Configure(); // --need for WN_lower-- config.cxx
-  Configure_Source(NULL); //REMOVE config.cxx //Most config variables set here
-  
+  Preconfigure();         // from config.cxx...
+  Configure();            // needed for WN_lower!
+  Configure_Source(NULL); // Most config variables set here
+
   Init_Operator_To_Opcode_Table(); // FIXME
+    
+  // -------------------------------------------------------
+  // 2. Local initialization (options, etc.)
+  // -------------------------------------------------------
+  Diag_Init();
+  Diag_Set_Max_Diags(100); // Maximum 100 warnings by default
+  Diag_Set_Phase("WHIRL to XAIF: driver");
+
+  ProcessCommandLine(argc, argv);
   
   std::ofstream ofs;
-  OpenFile(ofs, XAIF_filename); // FIXME: errors
+  OpenFile(ofs, XAIF_filename.c_str()); // FIXME: errors
   
   // -------------------------------------------------------
-  // 3. Read WHIRL IR and translate
+  // 3. Read WHIRL IR
   // -------------------------------------------------------
-  PU_Info* pu_forest = NULL;
-  pu_forest = ReadIR(Src_File_Name);
+  PU_Info* pu_forest = ReadIR(WHIRL_filename.c_str());
+  PrepareIR(pu_forest); // FIXME (should this be part of translation?)
+
+  // -------------------------------------------------------
+  // 4. Translate WHIRL into XAIF
+  // -------------------------------------------------------  
   
-  // if verbose and if translating to file...
   cerr << ProgramName << " translates " << WHIRL_filename << " into "
-       << XAIF_filename << " based on source " << Src_File_Name << std::endl;
-  
-  PrepareIR(pu_forest); // FIXME (should this be part of translate?)
-  
+       << XAIF_filename << std::endl;
+
   if (opt_dumpIR) { DumpIR(pu_forest); }
   ofs << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n";
   whirl2xaif::TranslateIR(ofs, pu_forest);
 
   // FIXME: Temporary test
   if (opt_testTypes) { 
-    std::string file = Src_File_Name;
+    std::string file = WHIRL_filename;
     file += ".tytst.B";
     WriteIR(file.c_str(), pu_forest); 
   }
@@ -187,7 +190,7 @@ real_main(INT argc, char **argv)
   if (!opt_testTypes) { FreeIR(pu_forest); }
   
   // -------------------------------------------------------
-  // 4. 
+  // 5. Finalization
   // -------------------------------------------------------
   CloseFile(ofs);
 
@@ -197,45 +200,48 @@ real_main(INT argc, char **argv)
     Terminate(Had_Internal_Error() ? RC_INTERNAL_ERROR : 
 	      RC_NORECOVER_USER_ERROR);
   }
-  Cleanup_Files(TRUE, FALSE); // Open64
 
-  Diag_Exit(); // non-Open64
+  Diag_Exit();
+  Cleanup_Files(TRUE, FALSE); // Open64
 
   return RC_OKAY;
 }
 
 
 //***************************************************************************
-// from be/be/driver_util.c
+// from be/be/driver_util.c (FIXME: convert to getopts)
 //***************************************************************************
 
 /* Default file	extensions: */
 #define IRB_FILE_EXTENSION ".B"	    /* WHIRL file */
 
-/*
- * Process_Command_Line
- *
- * Process the command line arguments.	Evaluate all flags and set up
- * global options. 
- */
+// ProcessCommandLine: Process the command line arguments. Evaluate
+// all flags and set up global options.
+//
+// Note: Src_File_Name, Irb_File_Name, Obj_File_Name are globals
 static void
-Process_Command_Line (INT argc, char **argv)
+ProcessCommandLine(int argc, char **argv)
 {
-  INT Src_Count = 0;
-  ProgramName = Last_Pathname_Component (argv[0]);
+  ProgramName = Last_Pathname_Component(argv[0]);
 
   /* Check the command line flags: */
   BOOL dashdash_flag = FALSE;
   char* opt;
   
   for (INT16 i = 1; i < argc; i++) {
+    // -------------------------------------------------------
+    // A '--' signifies no more options
+    // -------------------------------------------------------
     if (argv[i] != NULL && (strcmp(argv[i], "--") == 0)) {
       dashdash_flag = TRUE;
       continue;
     }
     
     if ( !dashdash_flag && argv[i] != NULL && *(argv[i]) == '-' ) {
-      opt = argv[i]+1;	    /* Pointer to next flag character */
+      // -------------------------------------------------------
+      // An option (beginning with '-')
+      // -------------------------------------------------------
+      opt = argv[i]+1; // points to option name, skipping '-'
       
       if (strcmp(opt, "d") == 0) { 
 	opt_dumpIR = true;
@@ -258,28 +264,28 @@ Process_Command_Line (INT argc, char **argv)
       }
       
     } else if (argv[i] != NULL) {
+      // -------------------------------------------------------
+      // A non-option or immediately after a '--'
+      // -------------------------------------------------------
       dashdash_flag = FALSE;
-      Src_Count++;
       Src_File_Name = argv[i];
     } 
   }
 
-  if (Src_Count == 0) {
-    ErrMsg ( EC_No_Sources );
-    exit (RC_USER_ERROR); // FIXME: return error
+  if (Src_File_Name == NULL) {
+    ErrMsg(EC_No_Sources);
+    exit(RC_USER_ERROR); // FIXME: return error
   }
-
-  // Irb_File_Name
-  Irb_File_Name = New_Extension(Src_File_Name, IRB_FILE_EXTENSION);
-
+  
+  // WHIRL file name
+  WHIRL_filename = New_Extension(Src_File_Name, IRB_FILE_EXTENSION);
+  Irb_File_Name = (char*)WHIRL_filename.c_str(); // make Open64 happy
+    
   // We want the output files to be created in the current directory,
   // so strip off any directory path, and substitute the suffix 
   // appropriately.
-  char* fname = New_Extension(Last_Pathname_Component(Src_File_Name), ".xaif");
-
-  strncpy(WHIRL_filename, Irb_File_Name, PATH_MAX);
-  strncpy(XAIF_filename, fname, PATH_MAX);
-  Irb_File_Name = WHIRL_filename; // FIXME: make Open64 happy
+  XAIF_filename = New_Extension(Last_Pathname_Component(Src_File_Name), 
+				".xaif");
 }
 
 

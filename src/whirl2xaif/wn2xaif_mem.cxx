@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.10 2003/07/24 20:30:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.11 2003/08/01 16:00:46 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -484,9 +484,10 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TY_IDX base_ty = ST_type(base_st);
   TY_IDX baseptr_ty = Stab_Pointer_To(base_ty);
   TY_IDX ref_ty = WN_ty(wn);
-
+  
   // Assignment
-  xos << BegElem("xaif:Assignment") << Attr("statement_id", ctxt.GetNewVId());
+  xos << BegElem("xaif:Assignment") << Attr("statement_id", ctxt.GetNewVId())
+      << WhirlIDAnnotation(ctxt.FindWNId(wn));
   
   // LHS of assignment
   xos << BegElem("xaif:AssignmentLHS") << EndAttrs;
@@ -532,7 +533,8 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   assert(baseptr_ty == WN_Tree_Type(baseptr)); // FIXME
   
   // Assignment
-  xos << BegElem("xaif:Assignment") << Attr("statement_id", ctxt.GetNewVId());
+  xos << BegElem("xaif:Assignment") << Attr("statement_id", ctxt.GetNewVId())
+      << WhirlIDAnnotation(ctxt.FindWNId(wn));
   
   // LHS of assignment (dereference address)
   xos << BegElem("xaif:AssignmentLHS") << EndAttrs;

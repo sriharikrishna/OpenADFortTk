@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.cxx,v 1.3 2003/07/24 14:36:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.cxx,v 1.4 2003/08/01 16:00:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -85,7 +85,7 @@
  */
 
 #include <ctype.h>
-#include <string.h>
+#include <string.h> // ANSI: cstring
 
 #include "whirl2f_common.h"
 #include "w2cf_symtab.h"

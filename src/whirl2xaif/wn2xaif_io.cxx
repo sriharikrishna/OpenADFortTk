@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.7 2003/07/24 20:30:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.8 2003/08/01 16:00:46 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -331,7 +331,7 @@ xlate_IOControlList(xml::ostream& xos, WN *ios,
 {
   // Emit an IO control list (IOU, IOF, and IOC)
   for (INT ios_kid = from_kid; ios_kid <= to_kid; ios_kid++) {
-    xos << BegElem("Argument") << Attr("position", ios_kid+1); //FIXME
+    xos << BegElem("xaif:Argument") << Attr("position", ios_kid+1); //FIXME
     ctxt.CreateContext();
     xlate_IO_ITEM(xos, WN_kid(ios, ios_kid), ctxt);
     ctxt.DeleteContext();
@@ -345,7 +345,7 @@ xlate_IOList(xml::ostream& xos, WN *ios, INT from_kid, XlationContext& ctxt)
   /* Emit an IOL list, starting at the given kid index and
    * continuing to the last kid. */
   for (INT ios_kid = from_kid; ios_kid < WN_kid_count(ios); ios_kid++) {
-    xos << BegElem("Argument") << Attr("position", ios_kid+1); // FIXME
+    xos << BegElem("xaif:Argument") << Attr("position", ios_kid+1); // FIXME
     ctxt.CreateContext();
     xlate_IO_ITEM(xos, WN_kid(ios, ios_kid), ctxt);
     ctxt.DeleteContext();
@@ -1172,7 +1172,8 @@ WN2F_ios_write(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    */
   xos << BegElem("xaif:SubroutineCall") 
       << Attr("statement_id", ctxt.GetNewVId())
-      << Attr("symbol_id", "WRITE****");
+      << Attr("symbol_id", "WRITE****")
+      << WhirlIDAnnotation(ctxt.FindWNId(wn));
   
   set_XlationContext_issue_ioc_asterisk(ctxt);
   
@@ -1223,7 +1224,8 @@ WN2F_ios_cr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   xos << BegElem("xaif:SubroutineCall") 
       << Attr("statement_id", ctxt.GetNewVId())
-      << Attr("symbol_id", io_op);
+      << Attr("symbol_id", io_op)
+      << WhirlIDAnnotation(ctxt.FindWNId(wn));
   
   /* count items in control list */
   INT iol_kid;

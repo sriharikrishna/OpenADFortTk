@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.12 2003/07/24 20:30:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.13 2003/08/01 16:00:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -125,7 +125,8 @@ static BOOL Check_PU_Pushed(const char *caller_name);
 
 
 static void 
-TranslateScopeHierarchy(xml::ostream& xos, PU_Info* pu_tree, XlationContext& ctxt);
+TranslateScopeHierarchy(xml::ostream& xos, PU_Info* pu_forest, 
+			XlationContext& ctxt);
 
 static void
 TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId, 
@@ -147,9 +148,11 @@ DumpTranslationHeaderComment(xml::ostream& xos);
 //***************************************************************************
 
 void
-whirl2xaif::TranslateIR(std::ostream& os, PU_Info *pu_tree)
+whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
 {
-  if (!pu_tree) { return; }
+  Diag_Set_Phase("WHIRL to XAIF: translate IR");
+
+  if (!pu_forest) { return; }
   
   Pro64IRInterface irInterface;
   xml::ostream xos(os.rdbuf());
@@ -159,8 +162,8 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info *pu_tree)
   DumpTranslationHeaderComment(xos); // FIXME
 
   // 1. Create CallGraph
-  Pro64IRProcIterator irProcIter(pu_tree);
-  ST* st = ST_ptr(PU_Info_proc_sym(pu_tree));
+  Pro64IRProcIterator irProcIter(pu_forest);
+  ST* st = ST_ptr(PU_Info_proc_sym(pu_forest));
   CallGraph cgraph(irInterface, &irProcIter, (SymHandle)st);
   //cgraph->dump(cerr);
   
@@ -171,7 +174,7 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info *pu_tree)
       << Attr("program_name", "FIXME")
       << Attr("toplevel_routine_name", "head"); // FIXME
   
-  TranslateScopeHierarchy(xos, pu_tree, ctxt);
+  TranslateScopeHierarchy(xos, pu_forest, ctxt);
 
   // 2. Dump CallGraph vertices
   for (CallGraph::NodesIterator nodeIt(cgraph); (bool)nodeIt; ++nodeIt) {
@@ -200,7 +203,7 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info *pu_tree)
 //***************************************************************************
 
 static void
-TranslateScopeHierarchy(xml::ostream& xos, PU_Info* pu_tree, 
+TranslateScopeHierarchy(xml::ostream& xos, PU_Info* pu_forest, 
 			XlationContext& ctxt)
 {
   // For now we implicitly create the ScopeHierarchy/ScopeGraph using
@@ -222,7 +225,7 @@ TranslateScopeHierarchy(xml::ostream& xos, PU_Info* pu_tree,
   xos << EndElem << std::endl;
 
   // Translate each PU, descending into children first
-  for (PU_Info *pu = pu_tree; pu != NULL; pu = PU_Info_next(pu)) {
+  for (PU_Info *pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
     TranslateScopeHierarchyPU(xos, pu, gid, nextId, ctxt);
   }
   
@@ -265,9 +268,9 @@ static void
 TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
 	    XlationContext& ctxt)
 {
-
+  
   xos << Comment(whirl2xaif_divider_comment);
-
+  
   if (pu && PU_is_mainpu(PU_Info_pu(pu))) {
     xos << Comment("*** This is the PROGRAM routine ***");
   }
@@ -285,8 +288,14 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
       || ((Language == LANG_F90) && (CURRENT_SYMTAB == GLOBAL_SYMTAB + 2)
 	  && (!Is_Set_PU_Info_flags(pu, PU_IS_COMPILER_GENERATED)));
 #endif
-    
-    xos << Attr("subroutine_name", W2CF_Symtab_Nameof_St(st)) << EndAttrs;
+
+    StabToScopeIdMap& map = ctxt.GetStabToScopeIdMap();
+    ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
+    UINT scopeid = map.Find(sttab);
+
+    xos << Attr("subroutine_name", ST_name(st)) // W2CF_Symtab_Nameof_St(st)
+	<< Attr("scope_id", scopeid)
+	<< Attr("symbol_id", (UINT)ST_index(st)) << EndAttrs;
     TranslateWNPU(xos, wn_pu, ctxt);
     xos << EndElem;
     

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.7 2003/07/24 20:30:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.8 2003/08/01 16:00:46 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -108,8 +108,9 @@
 //*************************** User Include Files ****************************
 
 #include "whirl2f_common.h"
-#include <lib/support/xmlostream.h>
 #include "XlationContext.h"
+#include <lib/support/xmlostream.h>
+#include <lib/support/WhirlIDMaps.h>
 
 //************************** Forward Declarations ***************************
 
@@ -160,6 +161,59 @@ extern WN2F_STATUS
 xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 }; /* namespace whirl2xaif */
+
+
+//***************************************************************************
+// Some helpful utility xml::ostream operators
+//***************************************************************************
+
+// ---------------------------------------------------------
+// WhirlIDAnnotation, WhirlIDAnnotationVal
+// ---------------------------------------------------------
+struct WhirlIDAnnotationInfo_ {
+  WNId wnid;
+  bool completeAttr;
+};
+
+inline ostream&
+operator<<(std::ostream& os, const WhirlIDAnnotationInfo_& x) 
+{
+  xml::ostream& xos = dynamic_cast<xml::ostream&>(os); // FIXME
+
+  if (x.completeAttr) {
+    xos << xml::BegAttr(XAIFStrings.attr_annot());
+  }
+
+  xos << XAIFStrings.tag_IRIds() << x.wnid;
+
+  if (x.completeAttr) {
+    xos << xml::EndAttr;
+  }
+
+  return xos;
+}
+
+// Given a WHIRL node 'wn', outputs a complete annotation attribute with a
+// whirl id list. 
+inline WhirlIDAnnotationInfo_ 
+WhirlIDAnnotation(WNId wnid_)
+{
+  WhirlIDAnnotationInfo_ x;
+  x.wnid = wnid_;
+  x.completeAttr = true;
+  return x;
+}
+
+// Given a WHIRL node 'wn', outputs an annotation value with a whirl
+// id list. 
+inline WhirlIDAnnotationInfo_ 
+WhirlIDAnnotationVal(WNId wnid_)
+{
+  WhirlIDAnnotationInfo_ x;
+  x.wnid = wnid_;
+  x.completeAttr = false;
+  return x;
+}
 
 
 //***************************************************************************

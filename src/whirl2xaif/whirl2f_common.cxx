@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/whirl2f_common.cxx,v 1.2 2003/07/24 14:36:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/whirl2f_common.cxx,v 1.3 2003/08/01 16:00:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -50,6 +50,12 @@
 //
 //***************************************************************************
 
+
+#include <ctype.h>
+#include "whirl2f_common.h"
+#include "PUinfo.h"
+
+
 /* ====================================================================
  * ====================================================================
  *
@@ -61,9 +67,6 @@
  * ====================================================================
  */
 
-#include <ctype.h>
-#include "whirl2f_common.h"
-#include "PUinfo.h"
 
 /*----------- Functions and state for identifier naming -----------*/
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.7 2003/07/24 20:30:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.8 2003/08/01 16:00:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -66,6 +66,8 @@
 
 #include "SymTab.h"
 
+#include "lib/support/WhirlIDMaps.h"
+
 //************************** Forward Declarations ***************************
 
 //***************************************************************************
@@ -93,6 +95,7 @@
 class XlationContext
 {
 public: 
+  
   // Ctxt: represents the current context
   class Ctxt {
   public: 
@@ -103,15 +106,22 @@ public:
     BOOL AreFlags(mUINT32 f) const { return (flags & f); }
     void SetFlags(mUINT32 f)       { flags = flags | f; }
     void ResetFlags(mUINT32 f)     { flags = flags & ~f; }
-    
-    // Non Scalar Symbol table for context (does not assume ownership)
+
+    // FIXME: move according to notes below
+    // Non Scalar Symbol table for context (this class does not assume
+    // ownership of symbol tables)
     NonScalarSymTab* GetSymTab() const { return symtab; }
     void SetSymTab(NonScalarSymTab* x) { symtab = x; }
 
-    // WHIRL node for context (does not assume ownership)
+    WNToWNIdMap* GetWNMap() const { return wnmap; }
+    void SetWNMap(WNToWNIdMap* x) { wnmap = x; }
+    
+    
+    // WHIRL node for context (this class does not assume ownership of WN*)
     WN*  GetWN() const { return wn; }
     void SetWN(WN* x) { wn = x; }
 
+    // Ids for vertices and edges within the translated graphs.
     // Ids are unique within the context; id > 0.  
     UINT GetNewVId() { return ++nextVId; }
     UINT GetVId() const { return nextVId; } // return current id; 0 for invalid
@@ -119,19 +129,24 @@ public:
     
     UINT GetNewEId() { return ++nextEId; }
     UINT GetEId() const { return nextEId; } // return current id; 0 for invalid
-    UINT PeekEId() const { return nextEId + 1; } // return a peek of next id    
+    UINT PeekEId() const { return nextEId + 1; } // return a peek of next id
+
     virtual void Dump(std::ostream& o = std::cerr) const;
     virtual void DDump() const;
     
   private:
     mUINT32 flags;
-    NonScalarSymTab* symtab; // FIXME
     WN*     wn;
 
     UINT nextVId; // next unique vertex id for this context
     UINT nextEId; // next unique edge id for this context
+    
+    // FIXME: Move into a specialized derived class such as CtxtX (extended)
+    NonScalarSymTab* symtab;
+    WNToWNIdMap* wnmap; 
   };
-
+  
+  
 public:
   XlationContext();
   virtual ~XlationContext();
@@ -139,7 +154,8 @@ public:
   // Create a new child context and make it the current context
   XlationContext& CreateContext();
   XlationContext& CreateContext(mUINT32 flags_);
-  XlationContext& CreateContext(mUINT32 flags_, NonScalarSymTab* symtab_);
+  XlationContext& CreateContext(mUINT32 flags_, 
+				NonScalarSymTab* symtab_, WNToWNIdMap* wnmap_);
   XlationContext& CreateContext(mUINT32 flags_, WN* wn_);
 
   // Delete the current context and make its parent the current
@@ -153,8 +169,9 @@ public:
   // FIXME  
   StabToScopeIdMap& GetStabToScopeIdMap() { return stabToScopeIdMap; }
 
-  // GetNewId: Returns a new id (id > 0), guaranteed to be unique
-  // within the context
+  // GetNewId: Ids for vertices and edges within the translated
+  // graphs.  Returns a new id (id > 0), guaranteed to be unique
+  // within the context.
   UINT GetNewVId() { return CurContext().GetNewVId(); }
   UINT GetVId() const { return CurContext().GetVId(); } // FIXME
   UINT PeekVId() const { return CurContext().PeekVId(); }
@@ -163,10 +180,12 @@ public:
   UINT GetEId() const { return CurContext().GetEId(); } // FIXME
   UINT PeekEId() const { return CurContext().PeekEId(); }
 
+  // FIXME (see above)
   // Searches for symbol tables and queries them for 'wn'.  The symbol
   // table search begins at the current context and continues to
   // parents.
   NonScalarSym* FindNonScalarSym(WN* wn);
+  WNId FindWNId(WN* wn);
 
   WN* GetWN() { return CurContext().GetWN(); }
 
@@ -343,7 +362,8 @@ private:
   XlationContext(const XlationContext& x) { }
   XlationContext& operator=(const XlationContext& x) { return *this; }
   
-  XlationContext& Ctor(mUINT32 flags_, NonScalarSymTab* symtab_, WN* wn_);
+  XlationContext& Ctor(mUINT32 flags_, WN* wn_,
+		       NonScalarSymTab* symtab_, WNToWNIdMap* wnmap_);
   
   // Use a list instead a stack so that we can easily examine
   // contents.  The top of the stack will be the *front* of the

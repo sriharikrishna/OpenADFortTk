@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.11 2003/07/24 20:30:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.12 2003/08/01 16:00:46 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -325,7 +325,8 @@ xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_GOTO"));
   
   xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << "goto " << WN_label_number(wn) << EndAttr
+      << BegAttr("annotation") << WhirlIDAnnotationVal(ctxt.FindWNId(wn))
+      << " [goto " << WN_label_number(wn) << "]" << EndAttr
       << EndElem;
   
   return EMPTY_WN2F_STATUS;
@@ -340,7 +341,9 @@ WN2F_agoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_agoto"));
 
   xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
-      << Attr("annotation", "***FIXME: agoto") << EndElem;
+      << BegAttr("annotation") << WhirlIDAnnotationVal(ctxt.FindWNId(wn))
+      << " [***FIXME: agoto]" << EndAttr
+      << EndElem;
 
   xos << std::endl << "GO TO";
   TranslateWN(xos, WN_kid0(wn), ctxt); // FIXME
@@ -368,7 +371,9 @@ xlate_RETURN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_RETURN"));
   
   xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
-      << Attr("annotation", "return") << EndElem;
+      << BegAttr("annotation") << WhirlIDAnnotationVal(ctxt.FindWNId(wn))
+      << " [return]" << EndAttr
+      << EndElem;
   
   return EMPTY_WN2F_STATUS;
 }
@@ -391,7 +396,8 @@ xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_LABEL"));
   
   xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << "label " << WN_label_number(wn) << EndAttr
+      << BegAttr("annotation") << WhirlIDAnnotationVal(ctxt.FindWNId(wn))
+      << " [label " << WN_label_number(wn) << "]" << EndAttr
       << EndElem;
   
   return EMPTY_WN2F_STATUS;
@@ -587,7 +593,8 @@ xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       xos << BegElem("xaif:SubroutineCall")
 	  << Attr("statement_id", ctxt.GetNewVId())
 	  << Attr("scope_id", scopeid)
-	  << Attr("symbol_id", (UINT)ST_index(st));
+	  << Attr("symbol_id", (UINT)ST_index(st))
+	  << WhirlIDAnnotation(ctxt.FindWNId(wn));
     }
   }
 

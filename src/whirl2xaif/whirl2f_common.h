@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/whirl2f_common.h,v 1.4 2003/07/24 20:30:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/whirl2f_common.h,v 1.5 2003/08/01 16:00:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -52,9 +52,16 @@
 
 #ifndef whirl2f_common_INCLUDED
 
+//************************** System Include Files ***************************
+
+//************************** Open64 Include Files ***************************
+
+//*************************** User Include Files ****************************
+
 #include "stab_attr.h"
 #include "wn_attr.h"
 #include "w2cf_symtab.h"
+#include <lib/support/XAIFStrings.h>
 #include <lib/support/diagnostics.h>
 
 //***************************************************************************
@@ -72,6 +79,8 @@ extern BOOL W2F_Emit_Linedirs;   /* Emit preprocessing line-directives */
 
 #define whirl2xaif_divider_comment \
   "********************************************************************"
+
+//***************************************************************************
 
 /* Ensure that we never refer to Cur_PU_Name, since this will not be
  * initialized, but instead use the PUinfo facilities.
@@ -165,6 +174,8 @@ extern const char * WHIRL2F_make_valid_name(const char *name, BOOL allow_dot);
 
 /* This variable is TRUE for Fortran 90 program units */
 extern BOOL WN2F_F90_pu;
+
+
 
 
 #endif /* whirl2f_common_INCLUDED */

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.13 2003/07/24 20:30:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.14 2003/08/01 16:00:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -75,6 +75,9 @@
 //************************** System Include Files ***************************
 
 #include <alloca.h>
+#include <stdlib.h> // ANSI: cstdlib // for strtol
+
+#include <string>   // STL
 
 //************************** Open64 Include Files ***************************
 
@@ -108,7 +111,7 @@ using namespace xml; // for xml::ostream, etc
 extern bool opt_testPersistentIDs;
 extern const char* PersistentIDsToPrint;
 extern bool opt_testTypes;
-void PERSISTENT_ID_TESTER(WN* wn);
+void PERSISTENT_ID_TESTER(WN* wn, WNIdToWNMap* id2wnmap, WNToWNIdMap* wn2idmap);
 void CONVERT_TYPES_TESTER(SYMTAB_IDX symtab_lvl);
 
 //************************** Forward Declarations ***************************
@@ -133,6 +136,9 @@ xlate_LoopInitialization(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 static WN2F_STATUS 
 xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+static std::string
+GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt);
 
 //***************************************************************************
 
@@ -189,8 +195,8 @@ static const WN2F_OPR_HANDLER WN2F_Opr_Handler_List[] = {
   {OPR_EVAL, &WN2F_eval},
   {OPR_PREFETCH, &xlate_PREFETCH},
   {OPR_PREFETCHX, &xlate_PREFETCH},
-  {OPR_PRAGMA, &WN2F_pragma},
-  {OPR_XPRAGMA, &WN2F_pragma},
+  {OPR_PRAGMA, &xlate_PRAGMA},
+  {OPR_XPRAGMA, &xlate_PRAGMA},
   {OPR_IO, &xlate_IO},
   {OPR_COMMENT, &xlate_COMMENT},
   {OPR_ILOAD, &xlate_ILOAD},
@@ -340,35 +346,53 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    */
   ASSERT_DBG_FATAL(WN_opcode(wn) == OPC_FUNC_ENTRY, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_FUNC_ENTRY"));
-    
-  // Translate the function header
-  xlate_EntryPoint(xos, wn, ctxt); 
-
-  NonScalarSymTab* symtab = new NonScalarSymTab(); // FIXME
-  ctxt.CreateContext(XlationContext::NOFLAG, symtab);
 
   WN* fbody = WN_func_body(wn);
-  Pro64IRInterface irInterface;
-  Pro64IRStmtIterator irStmtIter(fbody);
-  CFG cfg(irInterface, &irStmtIter, (SymHandle)WN_st(wn), true);
     
+  // -------------------------------------------------------
+  // Translate the function header
+  // -------------------------------------------------------
+  xlate_EntryPoint(xos, wn, ctxt); 
+
+  // -------------------------------------------------------
+  // Collect auxillary data
+  // -------------------------------------------------------
+  NonScalarSymTab* symtab = new NonScalarSymTab(); // FIXME
   AddToNonScalarSymTabOp op(symtab);
   ForAllNonScalarRefs(fbody, op); //FIXME
 
-  // FIXME: temporary testing
-  if (opt_testPersistentIDs) { PERSISTENT_ID_TESTER(wn); }
-  if (opt_testTypes) { CONVERT_TYPES_TESTER(CURRENT_SYMTAB); }
+  pair<WNIdToWNMap*, WNToWNIdMap*> wnmaps = CreateWhirlIDMaps(wn);
   
+  ctxt.CreateContext(XlationContext::NOFLAG, symtab, wnmaps.second);
+
+  // -------------------------------------------------------
+  // FIXME: junk and temporary testing
+  // -------------------------------------------------------
+
   // Emit symbol table for this function
   //FIXME: xlate_SymbolTables(xos, CURRENT_SYMTAB, symtab, ctxt);
+
+  if (opt_testPersistentIDs) { 
+    PERSISTENT_ID_TESTER(wn, wnmaps.first, wnmaps.second); }
+  if (opt_testTypes) { CONVERT_TYPES_TESTER(CURRENT_SYMTAB); }
+  
+  // -------------------------------------------------------
+  // Create and Ouptut CFG representation
+  // -------------------------------------------------------
+  Pro64IRInterface irInterface;
+  Pro64IRStmtIterator irStmtIter(fbody);
+  CFG cfg(irInterface, &irStmtIter, (SymHandle)WN_st(wn), true);
     
   // Dump CFG vertices (basic blocks)
   for (CFG::NodesIterator nodeIt(cfg); (bool)nodeIt; ++nodeIt) {
     CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
     // n->longdump(cfg, std::cerr); std::cerr << endl;
     
+    std::string ids = GetIDsForStmtsInBB(n, ctxt);
     const char* vtype = GetCFGVertexType(&cfg, n);
-    xos << BegElem(vtype) << Attr("vertex_id", n->getID());
+
+    xos << BegElem(vtype) << Attr("vertex_id", n->getID())
+	<< Attr("annotation", ids);
     ctxt.CreateContext();
     for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
       WN* wstmt = (WN *)((StmtHandle)stmtIt);
@@ -388,9 +412,14 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	<< Attr("source", n1->getID()) 
 	<< Attr("target", n2->getID()) << EndElem; // FIXME: DumpGraphEdge
   }
-  
+
+  // -------------------------------------------------------
+  // Cleanup
+  // -------------------------------------------------------
   ctxt.DeleteContext();
   delete symtab;
+  delete wnmaps.first;
+  delete wnmaps.second;
   
   return EMPTY_WN2F_STATUS;
 }
@@ -596,6 +625,31 @@ xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << EndElem;
   
   return EMPTY_WN2F_STATUS;
+}
+
+// xlate_BBStmt: A CFG vertex is either an Entry, Exit or is
+// classified by virtue of its last statement (If, ForLoop, PreLoop,
+// PostLoop).  These should be mutually exclusive classifications.
+static std::string
+GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt)
+{
+  std::string idstr = XAIFStrings.tag_IRIds();
+  bool emptystr = true;
+  
+  for (CFG::NodeStatementsIterator stmtIt(node); (bool)stmtIt; ++stmtIt) {
+    WN* wstmt = (WN *)((StmtHandle)stmtIt);
+    WNId id = ctxt.FindWNId(wstmt);
+    const char* str = Num2Str(id, "%lld");
+    //std::cout << id << " --> " << str << " // ";
+    
+    if (!emptystr) {
+      idstr += ":";
+    }
+    idstr += str;
+    emptystr = false;
+  }
+ 
+  return idstr;
 }
 
 //***************************************************************************
@@ -1329,51 +1383,55 @@ WN2F_End_Routine_Strings(xml::ostream& xos, INT32 func_id)
 /////////////////////////////////////////////////////////////////////////////
 // FIXME: REMOVE: Temporary tests
 
-#include <set>
+void PERSISTENT_ID_TESTER_INIT(WNIdSet& x, const char* idstr);
 
-typedef std::set<unsigned long> IdSet;
-
-void PERSISTENT_ID_TESTER_INIT(IdSet& x, const char* idstr);
-
-void PERSISTENT_ID_TESTER(WN* wn)
+void PERSISTENT_ID_TESTER(WN* wn, WNIdToWNMap* id2wnmap, WNToWNIdMap* wn2idmap)
 {  
-  static unsigned long id = 0; // 0 reserved as NULL
-  static IdSet IdsToFind;
+  static bool initialized;
+  static WNIdSet IdsToFind;
 
   // Initialize if necessary
-  if (id == 0) {
+  if (!initialized) {
     PERSISTENT_ID_TESTER_INIT(IdsToFind, PersistentIDsToPrint);
+    IR_set_dump_order(TRUE); /* dump parent before children*/
+    initialized = true;
   }
 
-  // Iterate over the whirl tree finding or assigning persistent ids
-  WN_TREE_CONTAINER<PRE_ORDER> wtree(wn);
-  WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
+  if (IdsToFind.size() > 0) {
+    // -----------------------------------------------------
+    // Find WN* from persistant IDs mode: 
+    // -----------------------------------------------------
+    WNIdSet::iterator it;
+    for (it = IdsToFind.begin(); it != IdsToFind.end(); ++it) {
+      WNId curId = *it;
+      WN* curWN = id2wnmap->Find(curId);
 
-  for (it = wtree.begin(); it != wtree.end(); ++it) {
-    WN* curWN = it.Wn();
-    unsigned long curId = ++id;
-    bool dumpNode = false;
-
-    if (IdsToFind.size() > 0) {
-      if (IdsToFind.find(curId) != IdsToFind.end()) {
-	dumpNode = true; // We have found a matching node
-      }
-    } else {
-      if (IsNonScalarRef(curWN)) {
-	dumpNode = true;
-      }
-    }
-    
-    if (dumpNode) {
       fprintf(stderr, "\n-----[%lu]-----\n", curId);
-      IR_set_dump_order(TRUE); /* dump parent before children*/
       fdump_tree(stderr, curWN);
     }
+    
+  } else {
+    // -----------------------------------------------------
+    // Find IDs from WN* mode:
+    // -----------------------------------------------------
+    WN_TREE_CONTAINER<PRE_ORDER> wtree(wn);
+    WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
+    
+    for (it = wtree.begin(); it != wtree.end(); ++it) {
+      WN* curWN = it.Wn();
+      
+      if (IsNonScalarRef(curWN)) {
+	WNId curId = wn2idmap->Find(curWN);
+
+	fprintf(stderr, "\n-----[%lu]-----\n", curId);
+	fdump_tree(stderr, curWN);
+      }
+    }
   }
-  
+
 }
 
-void PERSISTENT_ID_TESTER_INIT(IdSet& x, const char* idstr)
+void PERSISTENT_ID_TESTER_INIT(WNIdSet& x, const char* idstr)
 {
   if (!idstr) { return; }
   
