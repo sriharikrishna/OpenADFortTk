@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v 1.7 2004/02/27 00:36:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v 1.8 2004/02/27 20:21:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -31,6 +31,10 @@
 #include "tracing.h"        // trace routines
 #include "ir_reader.h"      // fdump_tree
 
+//************************ OpenAnalysis Include Files ***********************
+
+#include <OpenAnalysis/Utils/Exception.h>
+
 //*************************** User Include Files ****************************
 
 #include "Args.h"
@@ -38,8 +42,6 @@
 
 #include <lib/support/diagnostics.h>
 #include <lib/support/WhirlIO.h>
-
-#include <OpenAnalysis/Utils/Exception.h>
 
 //************************** Forward Declarations ***************************
 
@@ -164,7 +166,7 @@ real_main(int argc, char* argv[])
   // We want the output files to be created in the current directory,
   // so strip off any directory path, and substitute the suffix 
   // appropriately.
-  // new_file = New_Extension(Last_Pathname_Component(Src_File_Name), ".xaif");
+  // new_file = New_Extension(Last_Pathname_Component(whirlfn), ".xaif");
   
   // Src_File_Name, Irb_File_Name, Obj_File_Name are from Open64 "glob.h"
   // Src_File_Name = Irb_File_Name = (char*)WHIRL_filename.c_str();
