@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v 1.2 2003/12/02 20:30:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v 1.3 2004/02/10 15:23:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -64,6 +64,9 @@ std::string ProgramName;
 std::string WHIRL_filename;
 
 // Options
+bool opt_ir = false;
+bool opt_oa = false;
+bool opt_whirl2f = false;
 bool opt_dumpIR = false;
 
 //***************************************************************************
@@ -132,9 +135,14 @@ real_main(INT argc, char **argv)
     DumpIR(pu_forest); 
   }
   
-  // whirltester::TestIR(std::cout, pu_forest);
-  whirltester::TestIR_OA(std::cout, pu_forest);
-
+  if (opt_ir) {
+    whirltester::TestIR(std::cout, pu_forest);
+  } else if (opt_oa) {
+    whirltester::TestIR_OA(std::cout, pu_forest);
+  } else if (opt_whirl2f) {
+    whirltester::TestIR_whirl2f(std::cout, pu_forest);
+  }
+  
   FreeIR(pu_forest); // N.B. cannot use with WriteIR
 
   // -------------------------------------------------------
@@ -189,18 +197,24 @@ ProcessCommandLine(int argc, char **argv)
       // An option (beginning with '-')
       // -------------------------------------------------------
       opt = argv[i]+1; // points to option name, skipping '-'
+
+      if (strcmp(opt, "ir") == 0) { 
+	opt_ir = true;
+	continue;
+      }
+      if (strcmp(opt, "oa") == 0) { 
+	opt_oa = true;
+	continue;
+      }
+      if (strcmp(opt, "w2f") == 0) { 
+	opt_whirl2f = true;
+	continue;
+      }
       
       if (strcmp(opt, "d") == 0) { 
 	opt_dumpIR = true;
 	continue;
       }
-
-#if 0 // example of option that takes an argument
-      if (strcmp(opt, "I") == 0) { 
-	PersistentIDsToPrint = argv[++i]; // FIXME: should test array bounds
-	continue;
-      }
-#endif
       
     } else if (argv[i] != NULL) {
       // -------------------------------------------------------
