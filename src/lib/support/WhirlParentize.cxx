@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlParentize.cxx,v 1.2 2004/02/19 22:02:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlParentize.cxx,v 1.3 2004/04/14 21:25:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -64,13 +64,6 @@
 
 //***************************************************************************
 
-// FIXME: FindParentWNBlock was written before I learned about the
-// parent map.  I should rewrite the former to use the latter.
-
-
-// FindParentWNBlock: Given two WHIRL nodes, a subtree 'wn_tree' and an
-// some descendent 'wn', return the BLOCK WN that contains 'wn', or
-// NULL.
 WN* 
 FindParentWNBlock(const WN* wn_tree, const WN* wn)
 {
@@ -173,6 +166,18 @@ WhirlParentMap::Clear()
 {
   WN_MAP_Delete(parentMap);
   parentMap = WN_MAP_UNDEFINED;
+}
+
+WN* 
+WhirlParentMap::FindBlock(const WN* wn)
+{
+  WN* curWN = const_cast<WN*>(wn);
+  while ( (curWN = Find(curWN)) ) {
+    if (WN_operator(curWN) == OPR_BLOCK) {
+      return curWN;
+    }
+  }
+  return NULL;
 }
 
 // Parentize: Given a tree, initialize its parent pointers, overriding

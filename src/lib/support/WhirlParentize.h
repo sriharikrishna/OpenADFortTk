@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlParentize.h,v 1.3 2004/02/20 18:58:24 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlParentize.h,v 1.4 2004/04/14 21:25:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -68,6 +68,13 @@
 
 //***************************************************************************
 
+// FindParentWNBlock: Given two WHIRL nodes, a subtree 'wn_tree' and an
+// some descendent 'wn', return the BLOCK WN that contains 'wn', or
+// NULL.  
+// 
+// Warning: This routine does not require creation of a
+// 'WhirlParentMap'.  Use sparingly and carefully or order statistics
+// will bite you!
 extern WN* 
 FindParentWNBlock(const WN* wn_tree, const WN* wn);
 
@@ -90,6 +97,10 @@ public:
   // Find: Given a WN*, return its parent.  N.B. Does not check that
   // the map exists.
   WN* Find(const WN* wn) { return (WN *)WN_MAP_Get(parentMap, wn); }
+  
+  // Find: Given a WN*, find the first enclosing block or NULL.
+  // N.B. Does not check that the map exists.
+  WN* FindBlock(const WN* wn);
   
   // Insert: Given a WN* and its parent, insert in the map. Overwrites
   // any existing value.
