@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.h,v 1.2 2004/02/28 16:41:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.h,v 1.3 2004/03/29 23:40:52 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -58,6 +58,7 @@ public:
   const std::string& GetCmd() const { return parser.GetCmd(); }
   
   // Parsed Data: optional arguments
+  bool algBBPatching;         // default: false
   bool changeActiveTyInWHIRL; // default: false
   int debug;                  // default: 0 (off)
   

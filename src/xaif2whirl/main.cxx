@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.12 2004/02/28 16:41:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.13 2004/03/29 23:40:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -89,6 +89,7 @@ XercesFini();
 //*************************** Forward Declarations ***************************
 
 // Options (FIXME)
+bool opt_algBBPatching = false;
 bool opt_typeChangeInWHIRL = false;
 
 //****************************************************************************
@@ -154,7 +155,9 @@ real_main(int argc, char **argv)
   XAIFStrings.XMLInitialize();
 
   Args args(argc, argv);
+  opt_algBBPatching = args.algBBPatching; // FIXME
   opt_typeChangeInWHIRL = args.changeActiveTyInWHIRL; // FIXME
+
 
   // -------------------------------------------------------
   // 3. Read WHIRL IR as basis for translation

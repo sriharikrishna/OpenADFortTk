@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.cxx,v 1.3 2004/03/03 21:44:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.cxx,v 1.4 2004/03/29 23:40:52 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -44,6 +44,7 @@ static const char* usage_details =
 "extension of <xaif-file> with 'x2w.B'.\n"
 "\n"
 "Options:\n"
+"      --bb-patching   TEMPORARY: use basic-block patch algorithm\n"
 "      --types         change 'active' type within WHIRL\n"
 "\n"
 "  -o, --output <file> send output to <file> instead of default file\n"
@@ -56,6 +57,7 @@ static const char* usage_details =
 
 CmdLineParser::OptArgDesc Args::optArgs[] = {
   // Options
+  {  0 , "bb-patching", CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "types",    CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 'o', "output",   CLP::ARG_REQ , CLP::DUPOPT_ERR,  NULL },
   { 'V', "version",  CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
@@ -84,6 +86,7 @@ Args::Args(int argc, const char* const argv[])
 void
 Args::Ctor()
 {
+  algBBPatching = false;
   changeActiveTyInWHIRL = false;
   debug = 0;      // default: 0 (off)
 }
@@ -153,6 +156,9 @@ Args::Parse(int argc, const char* const argv[])
     }
     
     // Check for other options
+    if (parser.IsOpt("bb-patching")) { 
+      algBBPatching = true;
+    }
     if (parser.IsOpt("types")) { 
       changeActiveTyInWHIRL = true;
     }
