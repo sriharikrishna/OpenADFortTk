@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.cxx,v 1.6 2004/02/17 18:53:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.cxx,v 1.7 2004/02/17 20:44:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -89,8 +89,6 @@
 
 #include "w2cf_symtab.h"
 #include "stab_attr.h"
-
-#define W2FC_Valid_Name(x,b) WHIRL2F_make_valid_name(x,b)
 
 /*------------ Typedefs for the symtab datastructure ------------------*
  *---------------------------------------------------------------------*/
@@ -304,7 +302,7 @@ W2CF_Get_Basename(const char *original_name, char *basename, INT32 *sym_id)
     */
 #define MAX_NUMERIC_SUFFIX_SIZE 8 /* fits into a UINT32 */
 
-   const char *valid_name = W2FC_Valid_Name(original_name, TRUE);
+   const char *valid_name = original_name;
    INT32       name_size, suffix_size;
    UINT32      numeric_suffix = 0;
    UINT32      suffix_exponent;
@@ -867,7 +865,7 @@ W2CF_Symtab_Nameof_St(const ST *st)
     */
    
    if (ST_sym_class(st) != CLASS_CONST) 
-     valid_name = W2FC_Valid_Name(ST_name(st), !ST_is_temp_var(st));
+     valid_name = ST_name(st); // !ST_is_temp_var(st);
 
    if (valid_name == NULL || valid_name[0] == '\0') {
      valid_name = W2CF_Anonymous_St;
@@ -940,7 +938,7 @@ W2CF_Symtab_Nameof_Ty(TY_IDX ty)
     * suffix (symid).  Create a name-buffer large enough to hold the
     * name appended to the suffix (hence the "+32").
     */
-   valid_name = W2FC_Valid_Name(TY_name(ty),FALSE);
+   valid_name = TY_name(ty);
    if (valid_name == NULL || valid_name[0] == '\0')
    {
       valid_name = W2CF_Anonymous_Ty;
@@ -986,7 +984,7 @@ W2CF_Symtab_Nameof_Fld(FLD_HANDLE fld)
     * suffix (symid).  Create a name-buffer large enough to hold the
     * name appended to the suffix (hence the "+32").
     */
-   valid_name = W2FC_Valid_Name(FLD_name(fld),FALSE);
+   valid_name = FLD_name(fld);
    if (valid_name == NULL || valid_name[0] == '\0')
    {
       valid_name = W2CF_Anonymous_Fld;
@@ -1101,7 +1099,7 @@ W2CF_Symtab_Nameof_Preg(const TY_IDX preg_ty, PREG_NUM preg_num)
      sprintf(buffer, "reg%d", preg_num);
      valid_name = buffer;
    }
-   valid_name = W2FC_Valid_Name(valid_name,FALSE);
+   //valid_name = WHIRL2F_make_valid_name(valid_name,FALSE); REMOVE
    if (valid_name == NULL || valid_name[0] == '\0')
    {
       symname = Get_Name_Buf_Slot(strlen(W2CF_Anonymous_Preg) + 32);
@@ -1140,7 +1138,7 @@ W2CF_Symtab_Unique_Name(const char *name)
     * suffix (symid).  Create a name-buffer large enough to hold the
     * name appended to the suffix (hence the "+32").
     */
-   valid_name = W2FC_Valid_Name(name, TRUE);
+   //valid_name = WHIRL2F_make_valid_name(name, TRUE);
    if (valid_name == NULL || valid_name[0] == '\0')
       valid_name = W2CF_Anonymous_St;
    unique_name = Get_Name_Buf_Slot(strlen(valid_name) + 32);

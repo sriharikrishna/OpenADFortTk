@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.i,v 1.8 2004/02/17 18:53:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.i,v 1.9 2004/02/17 20:44:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -68,17 +68,6 @@
 
 typedef mUINT32 WN2F_STATUS;
 #define EMPTY_WN2F_STATUS (WN2F_STATUS)0
-
-//***************************************************************************
-
-#define whirl2xaif_divider_comment \
-  "********************************************************************"
-
-//***************************************************************************
-
-// Ensure that we never refer to Cur_PU_Name (glob.h).  Use PU_Info
-// facilities instead.
-#define Cur_PU_Name You_should_not_use("Cur_PU_Name")
 
 //***************************************************************************
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.19 2004/02/17 18:53:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.20 2004/02/17 20:44:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -759,7 +759,7 @@ xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     xlate_ArrayIndices(xos, wn, ctxt);
     // FIXME
   } else {
-    TY_IDX array_ty = W2F_TY_pointed(ptr_ty, "base of OPC_ARRAY");
+    TY_IDX array_ty = TY_pointed(ptr_ty); // base of OPR_ARRAY
     
     if (WN_operator(kid) == OPR_LDID 
 	&& ST_sclass(WN_st(kid)) == SCLASS_FORMAL 
@@ -847,7 +847,7 @@ WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
      WN2F_Arrsection_Slots(xos,wn,ctxt,TRUE);
    }
    else {
-     array_ty = W2F_TY_pointed(ptr_ty, "base of OPC_ARRAY");
+     array_ty = TY_pointed(ptr_ty); // base of OPR_ARRAY
     
      if (WN_operator(kid) == OPR_LDID       &&
 

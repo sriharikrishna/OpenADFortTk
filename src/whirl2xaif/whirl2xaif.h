@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.h,v 1.5 2004/02/17 18:53:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.h,v 1.6 2004/02/17 20:44:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -37,11 +37,15 @@
 //***************************************************************************
 
 namespace whirl2xaif {
-
+  
   extern void 
   TranslateIR(std::ostream& os, PU_Info *pu_forest);
-
+  
 }; /* namespace whirl2xaif */
+
+
+#define whirl2xaif_divider_comment \
+  "********************************************************************"
 
 //***************************************************************************
 

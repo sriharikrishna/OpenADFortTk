@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.15 2004/02/17 18:53:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.16 2004/02/17 20:44:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -567,7 +567,7 @@ TY2F_Fld_Name(FLD_HANDLE fld,
    if (common_or_equivalence && !alt_return_name)
      fld_name = W2CF_Symtab_Nameof_Fld(fld);
    else {
-     fld_name = WHIRL2F_make_valid_name(FLD_name(fld),FALSE);
+     fld_name = FLD_name(fld);
      if (fld_name == NULL || *fld_name == '\0')
        fld_name = W2CF_Symtab_Nameof_Fld(fld);
    }

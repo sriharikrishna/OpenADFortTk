@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/Makefile,v 1.11 2004/01/25 02:41:47 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/Makefile,v 1.12 2004/02/17 20:44:51 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -41,15 +41,13 @@ OBJS = \
 	wn2xaif_mem.o \
 	wn2xaif_io.o \
 	wn2xaif_pragma.o \
-	\
-	init2f.o \
 	st2xaif.o \
 	ty2xaif.o \
-	whirl2f_common.o \
 	\
-	PUinfo.o \
+	XlationContext.o \
 	\
-	XlationContext.o
+	init2f.o \
+	PUinfo.o 
 
 ####################
 
