@@ -1,4 +1,4 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.7 2003/10/29 16:13:24 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.8 2003/11/13 16:11:26 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
@@ -32,10 +32,11 @@ whirl2xaif
   cvs co whirl2xaif
 
 xaifbooster, angel, boost
-  [Argonne cvs]
+  [respectively: Argonne bitkeeper /home/derivs/share/xaifBooster, 
+   www.sourceforge.net, www.boost.org]
 
-xaif_1.0
-  [Argonne cvs]
+xaif-1.0
+  [bitkeeper: xaif.bkbits.net/xaif-1.0]
 
 =============================================================================
 
@@ -43,20 +44,17 @@ xaif_1.0
 --------------------
 
 Compiler: 
-  - for i686-Linux, I would suggest using GCC 3.0.4 or greater.
+  - for i686-Linux, Open64 has problems with GCC 3.1 and 3.2.  Suggest 
+    3.3 or greater.
   - for sparc-SunOS, Sun 5.3 is recommended
 
 Please use the same compiler for Open64, OpenAnalysis and whirl2xaif.
 
-Commands below are written for csh-variants.  For sh-variants replace
-  setenv VARIABLE "value"
-with
-  export VARIABLE="value"
 
-
-1. Prepare env using whirl2xaif/Sourceme-ACTS-csh.
+1. Prepare env using whirl2xaif/Sourceme-ACTS-csh/sh.
    
-   Open and make sure paths are correct. 
+   Open and make sure paths in first section are correct.  Then source
+   the file.
 
    source whirl2xaif/Sourceme-ACTS-csh
 
@@ -64,17 +62,16 @@ with
 2. Build Open64's mfef90 (Open64 front end) and whirl2f (Open64 backend).
    Ensure the correct compiler is in your path.
 
-   E.g., for i686-Linux:
-     cd ${WHIRL2XAIF_OPEN64}/targ_ia32_ia64_linux/crayf90/sgi
-     make MAKE="make"
+   cd ${OPEN64TARG}/crayf90/sgi
+   make
 
-     cd ${WHIRL2XAIF_OPEN64}/targ_ia32_ia64_linux/whirl2f 
-     make MAKE="make"
+   cd ${OPEN64TARG}/whirl2f 
+   make
 
-   To build ir_b2a on i686-Linux:
+   To build ir_b2a:
 
-     cd ${WHIRL2XAIF_OPEN64}/targ_ia32_ia64_linux/ir_tools
-     make MAKE="make"
+     cd ${OPEN64TARG}/ir_tools
+     make
    
 
 3. Build OA.
@@ -124,7 +121,7 @@ The whole pipeline:
   mfef90 file.f90 --> file.B
   whirl2xaif file.B --> file.xaif
   
-  xboost -i file.xaif -o file.boost.xaif
+  xboost_bb -i file.xaif -o file.boost.xaif
 
     Note: Add following line to top of output file:
     <?xml version="1.0" encoding="UTF-8"?>
