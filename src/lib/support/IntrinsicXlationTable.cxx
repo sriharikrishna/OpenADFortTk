@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.22 2005/01/18 19:45:11 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.23 2005/01/19 04:08:14 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -110,6 +110,15 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
                         { XAIFIntrin, "arccos_scal", "0_ACOS", 1 } },
   { { WNCall, OPR_CALL, "ATAN", 1 },
                         { XAIFIntrin, "arctan_scal", "0_ATAN", 1 } },
+
+  { { WNCall, OPR_CALL, "SINH", 1 },
+                        { XAIFIntrin, "sinh_scal", "0_SINH", 1 } },
+  { { WNCall, OPR_CALL, "DSINH", 1 },
+                        { XAIFIntrin, "sinh_scal", "1_DSINH", 1 } },
+  { { WNCall, OPR_CALL, "COSH", 1 },
+                        { XAIFIntrin, "cosh_scal", "0_COSH", 1 } },
+  { { WNCall, OPR_CALL, "DCOSH", 1 },
+                        { XAIFIntrin, "cosh_scal", "1_DCOSH", 1 } },
   
   // hyperbolic fns
 
