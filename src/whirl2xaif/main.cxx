@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.12 2003/09/02 15:02:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.13 2004/01/25 02:42:40 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -66,6 +66,10 @@
 #include "file_util.h"	    // New_Extension, Last_Pathname_Component
 #include "tracing.h"        // trace routines
 
+//************************ OpenAnalysis Include Files ***********************
+
+#include <OpenAnalysis/Utils/Exception.h>
+
 //*************************** User Include Files ****************************
 
 #include "whirl2f_common.h"
@@ -73,8 +77,6 @@
 
 #include <lib/support/xmlostream.h>
 #include <lib/support/WhirlIO.h>
-
-#include <OpenAnalysis/Utils/Exception.h>
 
 //************************** Forward Declarations ***************************
 
@@ -98,7 +100,8 @@ std::string XAIF_filename;
 
 // Options (FIXME)
 bool opt_dumpIR = false;
-bool opt_testTypes = false;
+bool opt_inlineTest = false;
+void InlineTest(PU_Info* pu_forest);
 
 //***************************************************************************
 
@@ -170,6 +173,10 @@ real_main(INT argc, char **argv)
   // 4. Translate WHIRL into XAIF
   // -------------------------------------------------------  
   
+  if (opt_inlineTest) { // FIXME:
+    InlineTest(pu_forest); 
+  }
+  
   cerr << ProgramName << " translates " << WHIRL_filename << " into "
        << XAIF_filename << std::endl;
 
@@ -178,14 +185,14 @@ real_main(INT argc, char **argv)
   whirl2xaif::TranslateIR(ofs, pu_forest);
 
   // FIXME: Temporary test
-  if (opt_testTypes) { 
+  if (opt_inlineTest) { 
     std::string file = WHIRL_filename;
-    file += ".tytst.B";
+    file += ".inline.B";
     WriteIR(file.c_str(), pu_forest); 
   }
-
+  
   // FIXME: why does Writing the IR does some freeing (Arg!)
-  if (!opt_testTypes) { FreeIR(pu_forest); }
+  if (!opt_inlineTest) { FreeIR(pu_forest); }
   
   // -------------------------------------------------------
   // 5. Finalization
@@ -253,8 +260,8 @@ ProcessCommandLine(int argc, char **argv)
       }
 #endif
       
-      if (strcmp(opt, "t") == 0) { 
-	opt_testTypes = true;
+      if (strcmp(opt, "i") == 0) { 
+	opt_inlineTest = true;
 	continue;
       }
       
