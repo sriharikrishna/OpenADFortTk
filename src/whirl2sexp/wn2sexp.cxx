@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.8 2005/01/12 20:01:13 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.9 2005/01/17 15:23:18 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -173,7 +173,14 @@ operator<<(std::ostream& os, const GenSexpSymNmInfo_& x)
   const char* nm = NULL;
   if (st) {
     if (ST_class(st) == CLASS_CONST) {
-      nm = Targ_Print(NULL, STC_val(st));
+      TCON& tcon = STC_val(st);
+      if (TCON_ty(tcon) == MTYPE_STR) {
+	STR_IDX idx = TCON_str_idx(tcon);
+	nm = Index_to_char_array(idx);
+      }
+      else {
+	nm = Targ_Print(NULL, tcon);
+      }
     }
     else {
       nm = ST_name(st);
@@ -181,12 +188,7 @@ operator<<(std::ostream& os, const GenSexpSymNmInfo_& x)
   }
   
   using namespace sexp::IOFlags;
-  if (nm && nm[0] == '"') {
-    sos << Quote << Atom(nm);
-  }
-  else {
-    sos << Atom(A_DQUOTE, nm);    
-  }
+  sos << Atom(A_DQUOTE, nm);
   
   return sos;
 }
@@ -480,8 +482,8 @@ whirl2sexp::xlate_xCALL(sexp::ostream& sos, WN* wn)
   } 
   else {
     INTRINSIC intrn = WN_intrinsic(wn);
-    const char* nm = INTRINSIC_name(intrn); // FIXME: use name
-    sos << BegList << Atom("intrn") << Atom(nm) << Atom(intrn) << EndList;
+    const char* nm = INTRINSIC_name(intrn);
+    sos << Atom(nm);
   }
   if (opr != OPR_VFCALL) {
     sos << GenBeginFlgList(flg) << EndList;
@@ -510,9 +512,7 @@ whirl2sexp::xlate_IO(sexp::ostream& sos, WN* wn)
   using namespace sexp::IOFlags;
   sos << BegList << GenSexpWNOpr(wn); // WN_OPR
   sos << BegList                      // WN_ATTRS
-    // FIXME: use only ios name
-      << BegList << Atom("ios") << Atom(A_DQUOTE, nm) << Atom(ios) << EndList
-      << GenBeginFlgList(flg) << EndList
+      << Atom(nm) << GenBeginFlgList(flg) << EndList
       << EndList << EndLine;
   TranslateWNChildren(sos, wn);       // KIDs
   sos << EndList;
@@ -533,9 +533,7 @@ whirl2sexp::xlate_IO_ITEM(sexp::ostream& sos, WN* wn)
   using namespace sexp::IOFlags;
   sos << BegList << GenSexpWNOpr(wn); // WN_OPR
   sos << BegList                      // WN_ATTRS
-    // FIXME: use name
-      << BegList << Atom("ioi") << Atom(A_DQUOTE, nm) << Atom(ioi) << EndList
-      << GenSexpTyUse(ty_idx)
+      << Atom(nm) << GenSexpTyUse(ty_idx)
       << EndList;
   if (WN_kid_count(wn) > 0) {
     sos << EndLine;

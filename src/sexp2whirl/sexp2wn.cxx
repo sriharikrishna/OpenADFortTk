@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.4 2005/01/12 20:01:01 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.5 2005/01/17 15:23:18 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -558,9 +558,9 @@ sexp2whirl::xlate_xCALL(sexp_t* sx)
     WN_set_ty(wn, ty_idx);
   } 
   else {
-    sexp_t* intrn_lst_sx = get_elem0(attrs_sx); 
-    sexp_t* intrn_sx = get_elem2(intrn_lst_sx); 
-    INTRINSIC intrn = (INTRINSIC)get_value_i32(intrn_sx);
+    sexp_t* intrn_sx = get_elem0(attrs_sx);
+    const char* intrn_nm = get_value(intrn_sx);
+    INTRINSIC intrn = Name_To_INTRINSIC(intrn_nm);
     WN_intrinsic(wn) = intrn;
   }
   if (opr != OPR_VFCALL) {
@@ -584,10 +584,10 @@ sexp2whirl::xlate_IO(sexp_t* sx)
   FORTTK_ASSERT(OPCODE_operator(opc) == OPR_IO, FORTTK_UNEXPECTED_INPUT);
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
-  sexp_t* ios_lst_sx = get_elem0(attrs_sx); 
-  sexp_t* ios_sx = get_elem2(ios_lst_sx); 
-  IOSTATEMENT ios = (IOSTATEMENT)get_value_i32(ios_sx);
-  
+  sexp_t* ios_sx = get_elem0(attrs_sx); 
+  const char* ios_nm = get_value(ios_sx);
+  IOSTATEMENT ios = Name_To_IOSTATEMENT(ios_nm);
+
   sexp_t* flags_sx = get_elem1(attrs_sx);
   sexp_t* flg_sx = GetBeginFlgList(flags_sx);
   UINT32 flg = get_value_ui32(flg_sx); // FIXME: flag parsing
@@ -597,7 +597,8 @@ sexp2whirl::xlate_IO(sexp_t* sx)
   for (INT i = 0; i < kids.size(); ++i) {
     WN_kid(wn,i) = kids[i];
   }
-  
+  WN_io_flag(wn) = flg;
+
   return wn;
 }
 
@@ -612,10 +613,10 @@ sexp2whirl::xlate_IO_ITEM(sexp_t* sx)
   FORTTK_ASSERT(OPCODE_operator(opc) == OPR_IO_ITEM, FORTTK_UNEXPECTED_INPUT);
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
-  sexp_t* ioi_lst_sx = get_elem0(attrs_sx); 
-  sexp_t* ioi_sx = get_elem2(ioi_lst_sx); 
-  IOITEM ioi = (IOITEM)get_value_i32(ioi_sx);
-
+  sexp_t* ioi_sx = get_elem0(attrs_sx); 
+  const char* ioi_nm = get_value(ioi_sx);
+  IOITEM ioi = Name_To_IOITEM(ioi_nm);
+  
   sexp_t* ty_idx_sx = get_elem1(attrs_sx);
   TY_IDX ty_idx = GetWhirlTyUse(ty_idx_sx);
   
@@ -1020,7 +1021,10 @@ sexp2whirl::xlate_UnaryOp(sexp_t* sx)
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   WN* kidWN = TranslateWN(get_wnast_kid0(sx)); // KID 0
   
-  WN* wn = WN_Unary(OPCODE_operator(opc), OPCODE_rtype(opc), kidWN);
+  // Use WN_Create() instead of distinguishing between WN_Unary() and
+  // WN_Trunc(), etc.
+  WN* wn = WN_Create(opc, 1);
+  WN_kid0(wn) = kidWN;
   return wn;
 }
 
@@ -1102,9 +1106,12 @@ sexp2whirl::xlate_TernaryOp(sexp_t* sx)
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   std::vector<WN*> kids = TranslateWNChildren(sx); // KIDs
   FORTTK_ASSERT(kids.size() == 3, FORTTK_UNEXPECTED_INPUT);
-  
-  WN* wn = WN_Ternary(OPCODE_operator(opc), OPCODE_rtype(opc), 
-		      kids[0], kids[1], kids[2]);
+
+  WN* wn = WN_Create(opc, 3);
+  WN_kid0(wn) = kids[0];
+  WN_kid1(wn) = kids[1];
+  WN_kid2(wn) = kids[2];
+
   return wn;
 }
 
