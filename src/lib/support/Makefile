@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.5 2003/08/25 13:58:01 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.6 2003/09/17 19:43:09 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -44,6 +44,7 @@ OBJS = \
 	xmlostream.o \
 	XAIFStrings.o \
 	\
+	XlationCtxt.o \
 	diagnostics.o
 
 
