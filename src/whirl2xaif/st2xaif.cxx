@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.36 2004/06/11 19:46:01 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.37 2004/06/16 14:27:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -306,7 +306,7 @@ whirl2xaif::xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
   xos << BegElem("xaif:SymbolTable") << EndAttrs;
   
   xlate_SYMTAB(xos, symtab_lvl, ctxt);
-  //xlate_ScalarizedRefTab(xos, nonscalarsymtab, ctxt);
+  xlate_ScalarizedRefTab(xos, nonscalarsymtab, ctxt);
   
   xos << EndElem;
 }
@@ -369,15 +369,19 @@ whirl2xaif::xlate_ScalarizedRefTab(xml::ostream& xos,
        it != symtab->RefPoolEnd(); ++it) {
     ScalarizedRef* sym = (*it);
     
-    // FIXME: need access to the WN [located within the symbol name]
-    // add to symbol
+    // FIXME: need access to the WN to get type and determine activity
+    WN* wn = sym->GetWN();
+    TY_IDX ty = WN_Tree_Type(wn);
+    const char* ty_str = TranslateTYToSymType(ty);
+    if (!ty_str) { ty_str = "***"; }
     
-    xos << BegElem("xaif:Symbol") 
-      	<< BegAttr("symbol_id") << sym->GetName()
-	<< WhirlIdAnnotVal(ctxt.FindWNId(sym->GetWN())) << EndAttr
-	<< Attr("kind", "variable") << Attr("type", "opaque")
-	<< Attr("shape", "scalar") << Attr("active", "true") 
-	<< EndElem;
+    int active = (strcmp(ty_str, "real") == 0 // FIXME: see xlate_STDecl_VAR
+		  || strcmp(ty_str, "complex") == 0) ? 1 : 0; 
+    
+    xos << BegElem("xaif:Symbol") << Attr("symbol_id", sym->GetName()) 
+	<< Attr("kind", "variable") << Attr("type", ty_str) 
+	<< Attr("shape", "scalar") << WhirlIdAnnot(ctxt.FindWNId(wn))
+	<< Attr("active", active) << EndElem;
   }
 }
 
@@ -480,8 +484,8 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
     const char* shape_str = TranslateTYToSymShape(ty);
     if (!shape_str) { shape_str = "***"; }
     
-    int active = (strcmp(ty_str, "real") == 0 // FIXME: more elegant
-		  || strcmp(ty_str, "complex") == 0) ? 1 : 0;
+    int active = (strcmp(ty_str, "real") == 0 // FIXME: xlate_ScalarizedRefTab
+		  || strcmp(ty_str, "complex") == 0) ? 1 : 0; 
     
     SymId st_id = (SymId)ST_index(st);
     xos << BegElem("xaif:Symbol") << AttrSymId(st)
