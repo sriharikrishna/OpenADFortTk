@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.1 2004/02/02 21:11:16 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.2 2004/02/11 14:41:31 eraxxon Exp $
 # -*-makefile-*-
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -25,6 +25,7 @@ F90_MASTERS := $(filter-out $(F90_EXCEPTIONS), $(F90_MASTERS))
 
 MFEF90 = $(WHIRL2XAIF_OPEN64)/crayf90/sgi/mfef90
 W2X = whirl2xaif
+NORM = $(WHIRL2XAIF)/test/util/normalize
 
 #############################################################################
 # Building Rules for bloop tests:
@@ -35,11 +36,13 @@ all: tests
 tests : run_tests post_tests
 
 run_tests: 
-	echo "*** EXCEPTIONS: $(F90_EXCEPTIONS) ***" ; \
+	echo "*** EXCEPTIONS: $(F90_EXCEPTIONS) ***"
 	for f in $(F90_MASTERS) ; do \
 	  f_B=`echo $${f} | sed s@.f90@.B@` ; \
+	  f_xaif=`echo $${f} | sed s@.f90@.xaif@` ; \
 	  $(MFEF90) $${f} ; \
 	  $(W2X) $${f_B} ; \
+	  $(NORM) $${f_xaif} ; \
 	done
 
 post_tests:
