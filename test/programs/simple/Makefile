@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.5 2004/03/13 16:31:16 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.6 2004/03/13 16:32:07 eraxxon Exp $
 # -*-makefile-*-
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -73,7 +73,7 @@ tests_clean:
 	rm -f *.B
 
 schema : schema_clean
-	@if [ "$(WHIRL2XAIF_PLATFORM)" == "i686-Cygwin" ]; then \
+	@if [ "$(WHIRL2XAIF_PLATFORM)" = "i686-Cygwin" ]; then \
 	  ln $(XAIFSCHEMAROOT)/schema/xaif*.xsd . ; \
 	else \
 	  ln -s $(XAIFSCHEMAROOT)/schema/xaif*.xsd . ; \
