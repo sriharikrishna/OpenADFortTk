@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.25 2004/04/28 15:24:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.26 2004/04/29 21:29:09 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -302,6 +302,13 @@ WhirlIdAnnot(const T& val_)
 {
   return AttrAnnot(XAIFStrings.tag_WHIRLId(), val_);
 }
+
+inline AttrAnnotInfo_<const char*>
+IntrinsicKeyAnnot(const char*& val_)
+{
+  return AttrAnnot(XAIFStrings.tag_IntrinsicKey(), val_);
+}
+
 
 // *AttrAnnotVal: Given a tag and a value, generate only the
 // annotiation attribute value with the appropriate tag
