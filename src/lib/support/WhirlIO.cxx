@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v 1.6 2004/02/11 18:05:23 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v 1.7 2004/02/23 18:17:48 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -54,25 +54,19 @@
 
 #include <include/Open64BasicTypes.h>
 
-#include "phase.h"         // PHASE_CG
-#include "be_util.h"       // Reset_Current_PU_Count(), etc
-#include "stab.h"	   // ir_bread.h
-#include "stblock.h"       // Create_Slink_Symbol()
-
 #include "ir_bread.h"	   // Read_Global_Info()
 #include "ir_bwrite.h"	   // Write_Global_Info(), etc.
 #include "ir_reader.h"     // fdump_tree
+#include "tracing.h"       // trace routines
 
-#include "opt_alias_interface.h"  // ALIAS_MANAGER stuff
-#include "region_util.h"	  // Regions_Around_Inner_Loops
-#include "region_main.h"          // REGION_* driver specific routines
-#include "dwarf_DST.h"	    	  // for Orig_PU_Name
-#include "fb_whirl.h"		  // for FEEDBACK
-#include "wn_lower.h" // FIXME
-#include "iter.h"		  // PU iterator for loops
+#include "be_util.h"       // Advance_/Reset_Current_PU_Count(), etc
 
-#include "mem_ctr.h"
-#include "tracing.h"              //  the trace routines
+//#include "region_util.h"   // REGION ids and region-id (RID) map
+//#include "region_main.h"   // REGION_* routines
+//#include "options_stack.h" // Options_Stack (cf. be/driver.cxx)
+
+#include "wn_lower.h"      // WHIRL lowerer
+#include "stblock.h"       // Create_Slink_Symbol()
 
 //*************************** User Include Files ****************************
 
@@ -83,9 +77,6 @@
 #include "diagnostics.h"
 
 //************************** Forward Declarations ***************************
-
-// REMOVE
-OPTIONS_STACK *Options_Stack; // for PU and region level pragmas
 
 //***************************************************************************
 
@@ -112,10 +103,6 @@ ReadIR(const char* irfilename)
   // -------------------------------------------------------
   // 1. Read pu tree info and global symbol table
   // -------------------------------------------------------
-  
-  // Push initial file level options (FIXME)
-  Options_Stack = CXX_NEW(OPTIONS_STACK(&MEM_src_nz_pool), &MEM_src_nz_pool);
-  Options_Stack->Push_Current_Options();
   
   // Open file, read PU info and setup symbol tables
   Open_Input_Info((char*)irfilename); // FIXME: change caller to accept const
@@ -146,15 +133,13 @@ ReadPU(PU_Info* pu)
   // sets CURRENT_SYMTAB and Scope_tab[]).
   Read_Local_Info(MEM_pu_nz_pool_ptr, pu);
   WN *wn_pu = PU_Info_tree_ptr(pu); // made possible by Read_Local_Info()
-
-  /* FIXME: Always create region pool because there are many places where
-   * they can be introduced. Needed for PUs with no regions also */
-  /* NOTE: part of what REGION_initialize does can be moved
-   * to when the .B file is read in.   */
-  REGION_Initialize(wn_pu, PU_has_region(Get_Current_PU()));
-
+  
+  // Create region mempool and id map. (Used in lowering?)
+  // Open64 Note: This should be part of the .B file reader
+  //REGION_Initialize(wn_pu, PU_has_region(Get_Current_PU()));
+  
   Advance_Current_PU_Count();
-
+  
   // Now recursively process the child PU's.
   for (PU_Info* child = PU_Info_child(pu); child != NULL;
        child = PU_Info_next(child)) {
@@ -342,7 +327,7 @@ PrepareIR(PU_Info* pu_forest)
     if (WHIRL_Return_Val_On || WHIRL_Mldid_Mstid_On) {
       Is_True(WHIRL_Return_Val_On && WHIRL_Mldid_Mstid_On, ("FIXME"));
       wn_pu = WN_Lower(wn_pu, LOWER_RETURN_VAL | LOWER_MLDID_MSTID, NULL,
-		       "RETURN_VAL & MLDID/MSTID lowering");
+                       "RETURN_VAL & MLDID/MSTID lowering");
       // what about: LOWER_MP for nested PUs
     }
     Verify_SYMTAB(CURRENT_SYMTAB);
