@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/Makefile,v 1.8 2004/05/11 17:48:33 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/Makefile,v 1.9 2005/03/22 20:30:25 utke Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -62,8 +62,7 @@ endif
 
 # lgen: basename
 
-LIBS = $(LIBRARY) $(OPENADFORTTK_OBJ_PATH)/$(LIB_SUPPORT) \
-	$(OPEN64TARG)/whirl2f/be.$(DSOext)
+LIBS = $(LIBRARY) $(OPENADFORTTK_OBJ_PATH)/$(LIB_SUPPORT) 
 
 #	$(OPENADFORTTK_OBJ_PATH)/$(LIB_WHIRLREADER) \
 #	$(OPENADFORTTK_OBJ_PATH)/$(LIB_COMUTIL) 
@@ -74,16 +73,18 @@ LIBS = $(LIBRARY) $(OPENADFORTTK_OBJ_PATH)/$(LIB_SUPPORT) \
 
 all: $(LIBRARY) $(EXE)
 
-$(EXE): $(LIBS)
+$(EXE): $(LIBS) $(BE_LIB_PATH)/libbe.$(DSOext)
 ifdef PURE
 	$(PURIFY) \
-	  $(CXX) $(PURE_LDFLAGS) -o $(EXE) $(CXXFLAGS) $(LIBS) $(LDFLAGS)
+	  $(CXX) $(PURE_LDFLAGS) -o $(EXE) $(CXXFLAGS) $(LIBS) -L$(BE_LIB_PATH) -lbe $(LDFLAGS)
 	@echo "*** Purified $(EXE) is up to date. ***"
 else
-	$(CXX) -o $(EXE) $(CXXFLAGS) $(LIBS) $(LDFLAGS) 
+	$(CXX) -o $(EXE) $(CXXFLAGS) $(LIBS) -L$(BE_LIB_PATH) -lbe $(LDFLAGS) 
 	@echo "*** $(EXE) is up to date. ***"
 endif
 
+$(BE_LIB_PATH)/libbe.$(DSOext): $(BE_LIB_PATH)/be.$(DSOext)
+	cp $< $@
 
 $(LIBRARY): $(OBJS)
 	$(AR) $(ARFLAGS) $(LIBRARY) $(OBJS)
