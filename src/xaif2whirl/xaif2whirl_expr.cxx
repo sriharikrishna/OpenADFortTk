@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.2 2003/09/18 19:18:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.3 2003/10/01 16:32:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -49,6 +49,7 @@
 #include <lib/support/SymTab.h> // for XAIFSymToWhirlSymMap
 #include <lib/support/WhirlIDMaps.h>
 #include <lib/support/wn_attr.h> // for WN_Tree_Type
+#include <lib/support/stab_attr.h> // for Stab_Pointer_To
 #include <lib/support/XAIFStrings.h>
 #include <lib/support/diagnostics.h>
 
@@ -94,6 +95,9 @@ static WN*
 xlate_Expression(DGraph* g, MyDGNode* n, XlationContext& ctxt);
 
 static WN*
+xlate_VarRef(const DOMElement* elem, XlationContext& ctxt);
+
+static WN*
 xlate_VarRef(DGraph* g, MyDGNode* n, XlationContext& ctxt);
 
 static WN*
@@ -123,6 +127,9 @@ CreateExpressionGraph(const DOMElement* elem, bool varRef = false);
 
 static WN*
 CreateValueSelector(WN* wn);
+
+static WN*
+CreateDerivSelector(WN* wn);
 
 
 UINT
@@ -164,10 +171,7 @@ xlate_Expression(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   if (XMLString::equals(nameX, XAIFStrings.elem_VarRef_x())) {
 
     // VariableReference
-    elem = GetFirstChildElement(elem); // skip the xaif:VariableReference node
-    ctxt.CreateContext(XlationContext::NOFLAG);
-    wn = TranslateVarRef(elem, ctxt);
-    ctxt.DeleteContext();
+    wn = xlate_VarRef(elem, ctxt);
 
   } else if (XMLString::equals(nameX, XAIFStrings.elem_Constant_x())) {
     
@@ -196,13 +200,32 @@ xlate_Expression(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   return wn;
 }
 
+static WN*
+xlate_VarRef(const DOMElement* elem, XlationContext& ctxt)
+{
+  if (!elem) { 
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+  }
+
+  bool deriv = GetDerivAttr(elem);
+  uint32_t flg = (deriv) ? XlationContext::ACTIVE_D : XlationContext::ACTIVE_V;
+
+  // skip the xaif:VariableReference node
+  DOMElement* varref = GetFirstChildElement(elem); 
+  
+  ctxt.CreateContext(flg);
+  WN* wn = TranslateVarRef(varref, ctxt);
+  ctxt.DeleteContext();
+  
+  return wn;
+}
 
 // TranslateVarRef: Given the first node in a variable reference
 // graph, create a variable reference.
 //
 // If the LVALUE flag of 'ctxt' is set an address expression (lvalue)
-// is returned; otherwise a rvalue is returned.  If the VARREF flag of
-// 'ctxt' is already set, no value-selector is created.
+// is returned; otherwise a rvalue is returned.  If this is the
+// outermost part of an active varref, creates a value/deriv selector.
 WN*
 xaif2whirl::TranslateVarRef(const DOMElement* elem, XlationContext& ctxt)
 {
@@ -218,9 +241,14 @@ xaif2whirl::TranslateVarRef(const DOMElement* elem, XlationContext& ctxt)
   ctxt.DeleteContext();
   delete g;
   
-  // If we are not already within another VarRef, select the value portion
+  // If we are not already within another VarRef and we are within an
+  // active reference, select the appropriate portion (value, deriv)
   if (!ctxt.IsVarRef()) {
-    wn = CreateValueSelector(wn);
+    if (ctxt.IsActive_V()) {
+      wn = CreateValueSelector(wn);
+    } else if (ctxt.IsActive_D()) {
+      wn = CreateDerivSelector(wn);
+    }
   }  
   
   return wn;
@@ -280,22 +308,42 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
 
   } else if (strcmp(type.c_str(), "integer") == 0) {
 
-    // FIXME: some expressions want constants to be floats
-    UINT val = strtol(value.c_str(), (char **)NULL, 10);    
+    unsigned int val = strtol(value.c_str(), (char **)NULL, 10);
+
     TCON tcon = Host_To_Targ_Float(MTYPE_F8, (double)val);
-    wn = Make_Const(tcon);
-    //wn = WN_CreateIntconst(OPC_I8INTCONST, (INT64)val); 
+    wn = Make_Const(tcon); // requires float or complex
+    //wn = WN_Type_Conversion(wn, MTYPE_I8);
+
+    //wn = WN_CreateIntconst(OPC_I8INTCONST, (INT64)val); FIXME
 
   } else if (strcmp(type.c_str(), "bool") == 0) {
-    assert(false); // FIXME
+    
+    unsigned int val = (strcmp(value.c_str(), "false") == 0) ? 0 : 1;
+    wn = WN_CreateIntconst(OPC_I4INTCONST, (INT64)val); // OPC_BINTCONST
+    
   } else if (strcmp(type.c_str(), "char") == 0) {
+    // an intconst: cwh_stmt.cxx:349
     assert(false); // FIXME
   } else if (strcmp(type.c_str(), "string") == 0) {
 
-    UINT32 len = strlen(value.c_str());
-    TCON tcon = Host_To_Targ_String(MTYPE_STR, (char*)value.c_str(), len);
-    wn = Make_Const(tcon);
+    // U4U1ILOAD 0 T<43,.character.,1> T<175,anon_ptr.,8>
+    //   U8LDA 0 <1,596,(1_bytes)_"S"> T<127,anon_ptr.,8>
 
+    // cf. fei_pattern_con
+    TY_IDX ty = Be_Type_Tbl(MTYPE_STRING);
+    TY_IDX ty_ptr = Stab_Pointer_To(ty);
+    UINT32 len = strlen(value.c_str());
+    TCON tcon = Host_To_Targ_String(MTYPE_STRING, (char*)value.c_str(), len);
+    ST* st = Gen_String_Sym(&tcon, ty, FALSE);
+
+    WN* lda = WN_CreateLda(OPR_LDA, Pointer_Mtype, MTYPE_V, 0, ty_ptr, st, 0);
+    wn = WN_CreateIload(OPR_ILOAD, MTYPE_U4, MTYPE_U1, 0, ty, ty_ptr, lda, 0);
+    
+#if 0
+    ST* csym = New_Const_Sym(Enter_tcon(tcon), Be_Type_Tbl(TCON_ty(tcon)));
+    wn = WN_CreateConst(opc, csym);
+   // wn = Make_Const(tcon); FIXME only handles floats
+#endif
   }
 
   return wn;
@@ -387,14 +435,49 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
 
   WN* wn = NULL;
   ST* st = GetST(elem, ctxt);
-    
-  // FIXME: types
-  if (ctxt.IsLValue()) {
-    wn = WN_CreateLda(OPR_LDA, Pointer_Mtype, MTYPE_V, 0, 
-		      TY_pointer(ST_type(st)), st, 0);
+  TY_IDX ty = ST_type(st);
+  TYPE_ID rty, dty;
+
+  // -------------------------------------------------------
+  // 
+  // -------------------------------------------------------
+  bool create_lda = false;
+  
+  // Note: Order matters in these tests
+  if (ctxt.IsArray()) {
+    // Do not load the address of symbol that is already a pointer
+    if (TY_kind(ty) != KIND_POINTER) {
+      create_lda = true;
+    }
+  } else if (ctxt.IsLValue()) {
+    create_lda = true;
+  } 
+
+  // -------------------------------------------------------
+  // (FIXME)
+  // -------------------------------------------------------
+  if (create_lda) {
+    // OPR_LDA
+    TY_IDX ty_ptr = Stab_Pointer_To(ty);
+    rty = TY_mtype(ty_ptr); // Pointer_Mtype
+    wn = WN_CreateLda(OPR_LDA, rty, MTYPE_V, 0, ty_ptr, st, 0);
   } else {
-    wn = WN_CreateLdid(OPC_F8F8LDID, 0, st, MTYPE_To_TY(MTYPE_F8));
-  }
+
+    // OPR_LDID
+    rty = dty = TY_mtype(ty);
+    if (TY_kind(ty) == KIND_ARRAY) { // FIXME more special cases?
+      rty = dty = TY_mtype(TY_etype(ty));
+    }
+    
+    // FIXME: take care of small integer types
+    if (MTYPE_byte_size(dty) < 4) {
+      if (MTYPE_is_unsigned(dty)) { rty = MTYPE_U8; }
+      else if (MTYPE_is_signed(dty)) { rty = MTYPE_I8; }
+    }
+
+    wn = WN_CreateLdid(OPR_LDID, rty, dty, 0, st, ty, 0);
+
+  } 
   return wn;
 }
 
@@ -440,7 +523,7 @@ xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   ASSERT_FATAL(XMLString::equals(nmX, XAIFStrings.elem_SymRef_x()),
 	       (DIAG_A_STRING, "Programming error."));
   
-  ctxt.CreateContext(XlationContext::LVALUE);
+  ctxt.CreateContext(XlationContext::ARRAY);
   WN* arraySym = xlate_VarRef(g, n1, ctxt);
   ctxt.DeleteContext();
   
@@ -464,15 +547,19 @@ xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   // kids 1 to n give size of each dimension.  We use a bogus value,
   // since we only need to support translation back to source code.
   for (int i = 1; i <= rank; ++i) {
-    WN_kid(array, i) = NULL;
+    WN_kid(array, i) = WN_CreateIntconst(OPC_I4INTCONST, 0);
   }
   
-  // kids n + 1 to 2n give index expressions for each dimension
-  for (int i = rank + 1, j = 0; i <= 2*rank; ++i, ++j) {
+  // kids n + 1 to 2n give index expressions for each dimension.  
+  // N.B. Reverse the order of index expressions since we are
+  // translating Fortran.  FIXME: should we change whirl2xaif and this
+  // to not reverse the indices?
+  for (int i = 2*rank, j = 0; i >= (rank + 1); --i, ++j) {
     WN_kid(array, i) = indices[j];
   }
-  
-  return array;
+
+  WN* wn = array;
+  return wn;
 }
 
 
@@ -638,6 +725,16 @@ static WN*
 CreateValueSelector(WN* wn)
 {
   WN* callWN = CreateIntrinsicCall(MTYPE_F8, "__value__", 1);
+  WN_actual(callWN, 0) = CreateParm(wn, WN_PARM_BY_VALUE);
+  return callWN;
+}
+
+// CreateDerivSelector: Select the deriv portion of 'wn', by wrapping
+// a dummy intrinsic call around it
+static WN*
+CreateDerivSelector(WN* wn)
+{
+  WN* callWN = CreateIntrinsicCall(MTYPE_F8, "__deriv__", 1);
   WN_actual(callWN, 0) = CreateParm(wn, WN_PARM_BY_VALUE);
   return callWN;
 }

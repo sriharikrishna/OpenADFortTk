@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.4 2003/09/18 19:18:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.5 2003/10/01 16:32:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -58,8 +58,18 @@ GetST(const DOMElement* elem, XlationContext& ctxt);
 
 namespace xaif2whirl {
 
-// GetPositionAttr: Returns the value of the position attribute, if
-// available.  A valid position value is non-zero.
+// Return the value of the respective attribute.  The default values
+// are given below if the attribute is not present.
+
+// Default: true.
+bool
+GetActiveAttr(const DOMElement* elem);
+
+// Default: false.
+bool
+GetDerivAttr(const DOMElement* elem);
+
+// Default: 0. A valid position value is non-zero.
 unsigned int
 GetPositionAttr(const DOMElement* elem);
 

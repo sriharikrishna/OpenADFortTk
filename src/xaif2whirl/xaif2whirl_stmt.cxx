@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.2 2003/09/18 19:18:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.3 2003/10/01 16:32:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -116,11 +116,16 @@ xaif2whirl::TranslateStmt(const DOMElement* stmt, XlationContext& ctxt)
 static WN* 
 xlate_Assignment(const DOMElement* elem, XlationContext& ctxt)
 {
+  bool active = GetActiveAttr(elem);
+  uint32_t flg = (active) ? XlationContext::ACTIVE : XlationContext::NOFLAG;
+
   DOMElement* lhs_elem = GetChildElement(elem, XAIFStrings.elem_AssignLHS_x());
   DOMElement* rhs_elem = GetChildElement(elem, XAIFStrings.elem_AssignRHS_x());
-  
+
+  ctxt.CreateContext(flg);
   WN* lhs = xlate_AssignmentLHS(lhs_elem, ctxt);
   WN* rhs = xlate_AssignmentRHS(rhs_elem, ctxt);
+  ctxt.DeleteContext();
   
   // We always use ISTORE (instead of e.g. STID) for generality.  This
   // will not be an issue because the intension is for this WHIRL to
@@ -136,8 +141,12 @@ static WN*
 xlate_AssignmentLHS(const DOMElement* elem, XlationContext& ctxt)
 {
   // VariableReferenceType
+  bool deriv = GetDerivAttr(elem);
+  uint32_t flg = (deriv) ? XlationContext::ACTIVE_D : XlationContext::ACTIVE_V;
+  
   DOMElement* varref = GetFirstChildElement(elem);
-  ctxt.CreateContext(XlationContext::LVALUE);
+  
+  ctxt.CreateContext(flg | XlationContext::LVALUE);
   WN* wn = TranslateVarRef(varref, ctxt);
   ctxt.DeleteContext();
   return wn;
@@ -158,6 +167,10 @@ xlate_AssignmentRHS(const DOMElement* elem, XlationContext& ctxt)
 static WN* 
 xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
 {
+  bool active = GetActiveAttr(elem);
+  uint32_t flg = (active) ? XlationContext::ACTIVE : XlationContext::NOFLAG;
+  ctxt.CreateContext(flg);
+  
   // -------------------------------------------------------
   // 1. Gather the arguments, sorted by "position" attribute and
   // translate them into a WHIRL expression tree.
@@ -166,7 +179,8 @@ xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
   std::vector<WN*> args_wn(numArgs, NULL);
   for (DOMElement* arg = GetFirstChildElement(elem); (arg); 
        arg = GetNextSiblingElement(arg) ) {
-    
+
+    // VariableReferenceType
     const XMLCh* nmX = arg->getNodeName();
     ASSERT_FATAL(XMLString::equals(nmX, XAIFStrings.elem_Argument_x()), 
 		 (DIAG_A_STRING, "Programming error."));
@@ -174,10 +188,14 @@ xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
     unsigned int pos = GetPositionAttr(arg); // 1-based
     ASSERT_FATAL(1 <= pos /* && pos <= numArgs */, 
 		 (DIAG_A_STRING, "Error."));
-    // FIXME: remove second test to accomodate missing constant arguments
+    // FIXME: removed second test to accomodate missing constant arguments
     
+    bool drv = GetDerivAttr(arg);
+    uint32_t flg = (drv) ? XlationContext::ACTIVE_D : XlationContext::ACTIVE_V;
+
     DOMElement* argExpr = GetFirstChildElement(arg);
-    ctxt.CreateContext(XlationContext::NOFLAG);
+    
+    ctxt.CreateContext(flg);
     WN* argExprWN = TranslateVarRef(argExpr, ctxt);
     ctxt.DeleteContext();
     args_wn[pos - 1] = argExprWN;
@@ -199,6 +217,7 @@ xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
     }
   }
   
+  ctxt.DeleteContext();
   return callWN;
 }
 
@@ -207,6 +226,7 @@ xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
 static WN* 
 xlate_DerivativePropagator(const DOMElement* elem, XlationContext& ctxt)
 {
+  ctxt.CreateContext(XlationContext::ACTIVE);
   WN* blckWN = WN_CreateBlock();
   
   // Accumulate derivative propagator statements and add to block
@@ -237,7 +257,8 @@ xlate_DerivativePropagator(const DOMElement* elem, XlationContext& ctxt)
     WN_Delete(blckWN);
     blckWN = NULL;
   }
-  
+
+  ctxt.DeleteContext();
   return blckWN;
 }
 
@@ -247,23 +268,38 @@ xlate_DerivativePropagator(const DOMElement* elem, XlationContext& ctxt)
 static WN* 
 xlate_Saxpy(const DOMElement* elem, XlationContext& ctxt, bool saxpy)
 {
+  // -------------------------------------------------------
   // 1. Create WHIRL expressions for sax(py) parameters
+  // -------------------------------------------------------
   // FIXME: could be a list. We ensure there is no list for now.
   ASSERT_FATAL(GetChildElementCount(elem) == 2, 
 	       (DIAG_A_STRING, "Programming error."));
-
+  
   DOMElement* AX = GetChildElement(elem, XAIFStrings.elem_AX_x());
   DOMElement* A = GetChildElement(AX, XAIFStrings.elem_A_x());
   DOMElement* X = GetChildElement(AX, XAIFStrings.elem_X_x());
   DOMElement* Y = GetChildElement(elem, XAIFStrings.elem_Y_x());
-
-  ctxt.CreateContext(XlationContext::NOFLAG);
+  
+  // A
   WN* a_wn = TranslateExpression(GetFirstChildElement(A), ctxt);
+  
+  // X
+  bool deriv = GetDerivAttr(X);
+  uint32_t flg = (deriv) ? XlationContext::ACTIVE_D : XlationContext::ACTIVE_V;
+  ctxt.CreateContext(flg);
   WN* x_wn = TranslateVarRef(GetFirstChildElement(X), ctxt);
+  ctxt.DeleteContext();
+  
+  // Y
+  deriv = GetDerivAttr(Y);
+  flg = (deriv) ? XlationContext::ACTIVE_D : XlationContext::ACTIVE_V;
+  ctxt.CreateContext(flg);
   WN* y_wn = TranslateVarRef(GetFirstChildElement(Y), ctxt);
   ctxt.DeleteContext();
-
+  
+  // -------------------------------------------------------
   // 2. Create a WHIRL call with the above expressions as paramaters
+  // -------------------------------------------------------
   const char* fnm = (saxpy) ? "saxpy_a_a" : "sax_a_a";
   MTYPE rtype = MTYPE_V;
   WN* callWN = CreateIntrinsicCall(rtype, fnm, 3);

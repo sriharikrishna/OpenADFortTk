@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.11 2003/09/18 19:18:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.12 2003/10/01 16:32:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -779,6 +779,22 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
 
 //****************************************************************************
 
+static bool
+GetBoolAttr(const DOMElement* elem, XMLCh* attr, bool default_val);
+
+
+bool
+xaif2whirl::GetActiveAttr(const DOMElement* elem)
+{
+  return GetBoolAttr(elem, XAIFStrings.attr_active_x(), true /* default */);
+}
+
+bool
+xaif2whirl::GetDerivAttr(const DOMElement* elem)
+{
+  return GetBoolAttr(elem, XAIFStrings.attr_deriv_x(), false /* default */);
+}
+
 unsigned int
 xaif2whirl::GetPositionAttr(const DOMElement* elem)
 {
@@ -788,6 +804,25 @@ xaif2whirl::GetPositionAttr(const DOMElement* elem)
   unsigned int pos = strtol(posAttr.c_str(), (char **)NULL, 10);
   return pos;
 }
+
+
+static bool
+GetBoolAttr(const DOMElement* elem, XMLCh* attr, bool default_val)
+{
+  const XMLCh* aX = elem->getAttribute(attr);
+  XercesStrX a = XercesStrX(aX);
+  
+  bool a_bool = default_val;
+  if (strlen(a.c_str()) > 0) { // if attribute exists
+    if (a.c_str()[0] == '0' || (strcmp(a.c_str(), "false") == 0)) {
+      a_bool = false;
+    } else {
+      a_bool = true;
+    }
+  }
+  return a_bool;
+}
+
 
 
 SymTabId
