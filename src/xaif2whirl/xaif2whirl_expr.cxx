@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.9 2004/01/29 23:16:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.10 2004/02/25 16:23:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -969,9 +969,9 @@ GetWNExprOpcode(OPERATOR opr, std::vector<WN*>& opands)
   // 1. Find mtype suggested from operands
   TYPE_ID mty = GetRTypeFromOpands(opands);
 
-  // 2. Find a dtype (operator dependent) FIXME
+  // 2. Find a dtype (operator dependent) FIXME/FIXME
   TYPE_ID dty = MTYPE_V; // typical dtype for intrinsics
-  if (opr == OPR_TRUNC) {
+  if (opr == OPR_TRUNC || opr == OPR_LT || opr == OPR_GT) {
     dty = mty;
   } 
   
