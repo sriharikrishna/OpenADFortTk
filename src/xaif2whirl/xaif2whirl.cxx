@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.17 2004/01/25 02:43:56 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.18 2004/01/29 15:54:17 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -53,8 +53,6 @@
 #include <lib/support/diagnostics.h>
 
 //*************************** Forward Declarations ***************************
-
-//#define FIXME_CHANGE_TYPES_IN_WHIRL
 
 using std::cerr;
 using std::endl;
@@ -131,6 +129,8 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm);
 static TY_IDX MY_Make_Array_Type1 (TYPE_ID elem_ty, INT32 ndim, INT64 len);
 static TY_IDX MY_Make_Array_Type (TY_IDX elem_ty, INT32 ndim, INT64 len);
 
+// FIXME
+extern bool opt_typeChangeInWHIRL;
 TY_IDX ActiveTypeTyIdx; // FIXME: just for temporary testing
 static void 
 DeclareActiveModule();
@@ -173,7 +173,9 @@ TranslateCallGraph(PU_Info* pu_forest, const DOMDocument* doc,
 		   XlationContext& ctxt)
 {
   // FIXME: test: add active module type
-  DeclareActiveModule();
+  if (opt_typeChangeInWHIRL) {
+    DeclareActiveModule();
+  }
   
   // FIXME: Do something about the ScopeHeirarchy
   XAIFSymToSymbolMap* symmap = TranslateScopeHierarchy(doc, ctxt);
@@ -711,17 +713,17 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
   if (symId == 0) {
     // Create the symbol
     st = CreateST(elem, level, symNm.c_str());
-#ifndef FIXME_CHANGE_TYPES_IN_WHIRL
-    active = true; // FIXME: for now we force all temps to be active
-#endif
+    if (!opt_typeChangeInWHIRL) {
+      active = true; // FIXME: for now we force all temps to be active
+    }
   } else {
     // Find the symbol and change type if necessary
     st = &(Scope_tab[level].st_tab->Entry(symId));
-#ifdef FIXME_CHANGE_TYPES_IN_WHIRL
-    if (active && ST_class(st) == CLASS_VAR) {
-      Set_ST_type(*st, ActiveTypeTyIdx);
+    if (opt_typeChangeInWHIRL) { // FIXME
+      if (active && ST_class(st) == CLASS_VAR) {
+	Set_ST_type(*st, ActiveTypeTyIdx);
+      }
     }
-#endif
   }
   
   // 3. Create our own symbol structure and add to the map
@@ -757,11 +759,11 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
   assert( strcmp(type.c_str(), "real" ) == 0 );     // real variables
   basicTy = MTYPE_To_TY(MTYPE_F8); // FIXME: assume only reals
 
-#ifdef FIXME_CHANGE_TYPE_IN_WHIRL
-  if (active) {
-    basicTy = ActiveTypeTyIdx;
-  } 
-#endif
+  if (opt_typeChangeInWHIRL) {
+    if (active) {
+      basicTy = ActiveTypeTyIdx;
+    } 
+  }
 
   // 2. Modify basic type according to the (non-scalar) shapes
   TY_IDX ty;

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.6 2004/01/25 02:43:41 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.7 2004/01/29 15:54:17 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -98,6 +98,9 @@ std::string ProgramName;
 std::string WHIRL_filename;
 std::string XAIF_filename;
 std::string WHIRL_out_filename;
+
+// Options (FIXME)
+bool opt_typeChangeInWHIRL = false;
 
 //****************************************************************************
 
@@ -395,6 +398,11 @@ ProcessCommandLine(int argc, char **argv)
       // -------------------------------------------------------
       opt = argv[i]+1; // points to option name, skipping '-'
       
+      if (strcmp(opt, "t") == 0) { 
+	opt_typeChangeInWHIRL = true; // FIXME
+	continue;
+      }
+
     } else if (argv[i] != NULL) {
       // -------------------------------------------------------
       // A non-option or immediately after a '--'
