@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.22 2004/02/17 22:40:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.23 2004/02/19 22:02:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -300,6 +300,8 @@ TCON2F_translate(TCON tvalue, BOOL is_logical)
 
 
 //***************************************************************************
+
+// usage: xlate_SymbolTables(xos, CURRENT_SYMTAB, symtab, ctxt);
 
 void 
 whirl2xaif::xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.17 2004/02/18 18:41:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.18 2004/02/19 22:02:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -105,6 +105,27 @@ namespace whirl2xaif {
 extern void WN2F_Address_Of(xml::ostream& xos);
 extern WN_OFFSET WN2F_Sum_Offsets(WN *addr);
 
+
+//***************************************************************************
+// 
+//***************************************************************************
+
+class DGraph;
+class DGraph::Node;
+class DGraph::Edge;
+
+typedef std::vector<DGraph::Node*> DGraphNodeVec;
+typedef std::vector<DGraph::Edge*> DGraphEdgeVec;
+
+// SortDGraphNodes: Sorts DGraph nodes.  User must deallocate returned
+// object.
+extern DGraphNodeVec*
+SortDGraphNodes(DGraph* g);
+
+// SortDGraphEdges: Sorts DGraph edges.  User must deallocate returned
+// object.
+extern DGraphEdgeVec*
+SortDGraphEdges(DGraph* g);
 
 //***************************************************************************
 // 

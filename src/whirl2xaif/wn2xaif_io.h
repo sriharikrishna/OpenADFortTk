@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.h,v 1.5 2004/02/18 18:41:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.h,v 1.6 2004/02/19 22:02:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -67,9 +67,6 @@
 //************************** Forward Declarations ***************************
 
 //***************************************************************************
-
-extern void WN2F_Io_initialize(void);
-extern void WN2F_Io_finalize(void);
 
 namespace whirl2xaif {
 

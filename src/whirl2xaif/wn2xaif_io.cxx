@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.15 2004/02/17 22:40:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.16 2004/02/19 22:02:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -181,8 +181,10 @@ static UINT32       Origfmt_Ioctrl_Label;
 
 typedef void (*XlateWNHandlerFunc)(xml::ostream&, WN *, XlationContext&);
 static XlateWNHandlerFunc XlateWNio_HandlerTable[IOSTATEMENT_LAST+1];
+static bool HandlerTableInitialized = false;
 
-void WN2F_Io_initialize(void)
+static void 
+WN2F_Io_initialize(void)
 {
   XlateWNio_HandlerTable[IOS_BACKSPACE] = &WN2F_ios_backspace;
   XlateWNio_HandlerTable[IOS_CLOSE] = &WN2F_ios_close;
@@ -218,10 +220,6 @@ void WN2F_Io_initialize(void)
   
 } /* WN2F_Io_initialize */
 
-void WN2F_Io_finalize(void)
-{
-   /* Do nothing for now! */
-} /* WN2F_Io_finalize */
 
 static BOOL
 Is_Cray_IO(IOSTATEMENT ios)
@@ -235,11 +233,19 @@ Is_Cray_IO(IOSTATEMENT ios)
   return res ;
 }
 
+//***************************************************************************
+
 whirl2xaif::status 
 whirl2xaif::xlate_IO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_IO, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_IO"));
+  
+  // Initialize table on demand for now
+  if (!HandlerTableInitialized) { // FIXME
+    WN2F_Io_initialize();
+    HandlerTableInitialized = true;
+  }
   
   // FIXME Should we use the string given by an IOC_VARFMT_ORIGFMT for a
   // IOF_LABEL?

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.31 2004/02/18 18:41:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.32 2004/02/19 22:02:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -75,10 +75,9 @@
 
 #include "whirl2xaif.h"
 #include "whirl2xaif.i"
-#include "PUinfo.h"
-#include "st2xaif.h"
 #include "wn2xaif.h"
-#include "wn2xaif_stmt.h"
+#include "st2xaif.h"
+#include "PUinfo.h"
 
 #include <lib/support/Pro64IRInterface.h>
 #include <lib/support/WhirlParentize.h>
@@ -90,21 +89,16 @@ using namespace xml; // for xml::ostream, etc
 
 //***************************************************************************
 
-static MEM_POOL W2F_Parent_Pool; // FIXME/REMOVE
-
 BOOL WN2F_F90_pu = FALSE; /* Global variable indicating F90 or F77: REMOVE */
 
-void W2F_Init(void);
-void W2F_Fini(void);
-void W2F_Push_PU(WN *pu, WN *body_part_of_interest);
-void W2F_Pop_PU(void);
-
-void W2F_Translate_Wn(FILE *outfile, WN *wn);
-void W2F_Translate_Wn_Str(char *strbuf, UINT bufsize, WN *wn);
+static void W2F_Init(void);
+static void W2F_Fini(void);
+static void W2F_Push_PU(WN *pu, WN *body_part_of_interest);
+static void W2F_Pop_PU(void);
+static BOOL Check_PU_Pushed(const char *caller_name);
 
 static void W2F_Enter_Global_Symbols(void);
 static void W2F_Undo_Whirl_Side_Effects(void);
-static BOOL Check_PU_Pushed(const char *caller_name);
 
 //***************************************************************************
 
@@ -184,24 +178,29 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   ctxt.DeleteContext();
   
   // 4. Dump CallGraph vertices
-  for (CallGraph::NodesIterator nodeIt(cgraph); (bool)nodeIt; ++nodeIt) {
+  DGraphNodeVec* nodes = SortDGraphNodes(&cgraph);
+  for (DGraphNodeVec::iterator nodeIt = nodes->begin();
+       nodeIt != nodes->end(); ++nodeIt) {
     ctxt.CreateContext();
-    CallGraph::Node* n = dynamic_cast<CallGraph::Node*>((DGraph::Node*)nodeIt);
-    TranslatePU(xos, n, n->getID(), ctxt);
+    CallGraph::Node* n = dynamic_cast<CallGraph::Node*>(*nodeIt);
+    TranslatePU(xos, n, n->getId(), ctxt);
     ctxt.DeleteContext();
   }
+  delete nodes;
   
   // 5. Dump CallGraph edges
-  for (CallGraph::EdgesIterator edgesIt(cgraph); (bool)edgesIt; ++edgesIt) {
-    CallGraph::Edge* e = 
-      dynamic_cast<CallGraph::Edge*>((DGraph::Edge*)edgesIt);
+  DGraphEdgeVec* edges = SortDGraphEdges(&cgraph);
+  for (DGraphEdgeVec::iterator edgeIt = edges->begin(); 
+       edgeIt != edges->end(); ++edgeIt) {
+    CallGraph::Edge* e = dynamic_cast<CallGraph::Edge*>(*edgeIt);
     CallGraph::Node* n1 = dynamic_cast<CallGraph::Node*>(e->source());
     CallGraph::Node* n2 = dynamic_cast<CallGraph::Node*>(e->sink());
     
     xos << BegElem("xaif:CallGraphEdge") << Attr("edge_id", ctxt.GetNewEId())
-	<< Attr("source", n1->getID())
-	<< Attr("target", n2->getID()) << EndElem; // FIXME: DumpGraphEdge
+	<< Attr("source", n1->getId())
+	<< Attr("target", n2->getId()) << EndElem; // FIXME: DumpGraphEdge
   }
+  delete edges;
   
   // 6. Done!
   xos << EndElem; /* xaif:CallGraph */
@@ -277,7 +276,7 @@ TranslatePU(xml::ostream& xos, CallGraph::Node* n, UINT32 vertexId,
   // FIXME: A more general test will be needed
   ASSERT_FATAL(n->GetDef(), (DIAG_UNIMPLEMENTED, "Should be defined."));
 
-  TranslatePU(xos, (PU_Info*)n->GetDef(), n->getID(), ctxt);
+  TranslatePU(xos, (PU_Info*)n->GetDef(), n->getId(), ctxt);
     
   xos << std::endl;
   xos.flush();
@@ -408,142 +407,51 @@ DumpTranslationHeaderComment(xml::ostream& xos)
       << Comment(whirl2xaif_divider_comment) << std::endl;
 }
 
+
 //***************************************************************************
 // 
 //***************************************************************************
 
-#include "wn2xaif_expr.h" // REMOVE: for WN2F_Expr_initialize
-#include "wn2xaif_io.h"   // REMOVE: for WN2F_Io_initialize
-
-void
+static void
 W2F_Init(void)
 {
-  const char * const caller_err_phase = Get_Error_Phase();
-
-  Diag_Set_Phase("WHIRL to XAIF: Init");
-  
-  // Create a pool to hold the parent map for every PU, one at a time.
-  MEM_POOL_Initialize(&W2F_Parent_Pool, "W2f_Parent_Pool", FALSE);
-  MEM_POOL_Push(&W2F_Parent_Pool);   
-  
   W2CF_Symtab_Push(); /* Push global (i.e. first ) symbol table */
-  W2F_Enter_Global_Symbols();
-  
-  // Initiate the various W2F modules. (REMOVE/FIXME)
-  WN2F_Expr_initialize();
-  WN2F_Io_initialize();
-  
-  Diag_Set_Phase(caller_err_phase);
+  W2F_Enter_Global_Symbols(); // REMOVE
 }
 
-
-void
+static void
 W2F_Fini(void)
 {
-  // Finalize W2F modules (REMOVE/FIXME)
-  WN2F_Expr_finalize();
-  WN2F_Io_finalize();
-  Stab_Free_Tmpvars();
-
   W2CF_Symtab_Terminate();
-  
-  MEM_POOL_Pop(&W2F_Parent_Pool);
-  MEM_POOL_Delete(&W2F_Parent_Pool);
-} /* W2F_Fini */
-
-
-void 
-W2F_Push_PU(WN *pu, WN *body_part_of_interest)
-{
-  Is_True(WN_opcode(pu) == OPC_FUNC_ENTRY, 
-	  ("Invalid opcode for W2F_Push_PU()"));
-  
-  Stab_initialize();
-  
-  // Set up the parent mapping
-  MEM_POOL_Push(&W2F_Parent_Pool);
-  W2CF_Parent_Map = WN_MAP_Create(&W2F_Parent_Pool);
-  W2CF_Parentize(pu);
-    
-  // Get the current PU name and ST.
-  PUinfo_init_pu(pu, body_part_of_interest);
 }
 
+static void 
+W2F_Push_PU(WN *pu, WN *body_part_of_interest)
+{
+  Stab_initialize();
+  PUinfo_init_pu(pu, body_part_of_interest); // Get current PU name and ST
+}
 
-void 
+static void 
 W2F_Pop_PU(void)
 {
   PUinfo_exit_pu();
   Stab_finalize();
-  
-  WN_MAP_Delete(W2CF_Parent_Map);
-  W2CF_Parent_Map = WN_MAP_UNDEFINED;
-  MEM_POOL_Pop(&W2F_Parent_Pool);
+}
+
+static BOOL
+Check_PU_Pushed(const char *caller_name)
+{
+  if (PUinfo_current_func == NULL)
+    fprintf(stderr, "NOTE: Ignored call to %s()!\n", caller_name);
+  return (PUinfo_current_func != NULL);
 }
 
 
-void 
-W2F_Translate_Wn(FILE *outfile, WN *wn)
-{
-#if 0//REMOVE
-   xml::ostream&       tokens;
-   XlationContext       context;
-   const char * const caller_err_phase = Get_Error_Phase ();
-
-   if (!Check_PU_Pushed("W2F_Translate_Wn"))
-      return;
-
-   Start_Timer(T_W2F_CU);
-   Diag_Set_Phase("whirl 2 xaif translation");
-
-   tokens = New_Token_Buffer();
-   (void)TranslateWN(tokens, wn, context);
-   Write_And_Reclaim_Tokens(outfile, W2F_File[W2F_LOC_FILE], &tokens);
-   W2F_Undo_Whirl_Side_Effects();
-
-   Stop_Timer (T_W2F_CU);
-   Diag_Set_Phase(caller_err_phase);
-#endif
-} /* W2F_Translate_Wn */
-
-
-void 
-W2F_Translate_Wn_Str(char *strbuf, UINT bufsize, WN *wn)
-{
-#if 0//REMOVE
-   xml::ostream&       tokens;
-   XlationContext       context;
-   const char * const caller_err_phase = Get_Error_Phase ();
-
-   if (!Check_PU_Pushed("W2F_Translate_Wn_Str"))
-      return;
-
-   Start_Timer (T_W2F_CU);
-   Diag_Set_Phase("whirl 2 xaif translation");
-
-   tokens = New_Token_Buffer();
-   (void)TranslateWN(tokens, wn, context);
-   Str_Write_And_Reclaim_Tokens(strbuf, bufsize, &tokens);
-   W2F_Undo_Whirl_Side_Effects();
-
-   Stop_Timer (T_W2F_CU);
-   Diag_Set_Phase(caller_err_phase);
-#endif
-} /* W2F_Translate_Wn_Str */
-
-
-/* ====================================================================
- *                   Undo side-effects to the incoming WHIRL
- *                   ---------------------------------------
- *
- * W2F_Undo_Whirl_Side_Effects: This subroutine must be called after
- * every translation phase which may possibly create side-effects
- * in the incoming WHIRL tree.  The translation should thus become
- * side-effect free as far as concerns the incoming WHIRL tree.
- *
- * ==================================================================== 
- */
-
+// W2F_Undo_Whirl_Side_Effects: This subroutine must be called after
+// every translation phase which may possibly create side-effects
+// in the incoming WHIRL tree.  The translation should thus become
+// side-effect free as far as concerns the incoming WHIRL tree.
 static void
 W2F_Undo_Whirl_Side_Effects(void)
 {
@@ -638,19 +546,6 @@ W2F_Enter_Global_Symbols(void)
 #endif
 }
 
-/* =================================================================
- * Routines for checking correct calling order of exported routines
- * =================================================================
- */
-
-static BOOL
-Check_PU_Pushed(const char *caller_name)
-{
-  if (PUinfo_current_func == NULL)
-    fprintf(stderr, "NOTE: Ignored call to %s(); call W2F_Push_PU() first!\n",
-	    caller_name);
-  return (PUinfo_current_func != NULL);
-}
 
 //***************************************************************************
 

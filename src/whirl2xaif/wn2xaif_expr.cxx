@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.19 2004/02/18 18:41:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.20 2004/02/19 22:02:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -100,6 +100,7 @@ DumpExprEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid, UINT pos);
  * is no way we can do it.
  */
 static const char *Conv_Op[MTYPE_LAST+1][MTYPE_LAST+1];
+static bool Conv_OpInitialized = false;
 
 typedef struct Conv_Op
 {
@@ -220,6 +221,15 @@ static const CONV_OP Conv_Op_Map[] =
    /*{MTYPE_FQ, MTYPE_FQ, ""}*/
 }; /* Conv_Op_Map */
 
+static void 
+WN2F_Expr_initialize(void)
+{
+  /* Initialize the Conv_Op array (default value is NULL) */
+  for (INT i = 0; i < NUMBER_OF_CONV_OPS; i++) {
+    Conv_Op[Conv_Op_Map[i].from][Conv_Op_Map[i].to] = 
+      Conv_Op_Map[i].name;
+  }
+}
 
 static void
 WN2F_Convert(xml::ostream& xos, MTYPE from_mtype, MTYPE to_mtype)
@@ -245,32 +255,25 @@ WN2F_Convert(xml::ostream& xos, MTYPE from_mtype, MTYPE to_mtype)
 } /* WN2F_Convert */
 
 
-/*------------------------- Exported Functions ------------------------*/
-/*---------------------------------------------------------------------*/
-
-void WN2F_Expr_initialize(void)
-{
-  /* Initialize the Conv_Op array (default value is NULL) */
-  for (INT i = 0; i < NUMBER_OF_CONV_OPS; i++) {
-    Conv_Op[Conv_Op_Map[i].from][Conv_Op_Map[i].to] = 
-      Conv_Op_Map[i].name;
-  }
-}
-
-void WN2F_Expr_finalize(void)
-{
-  /* Nothing to do for now */
-}
-
 //***************************************************************************
 // Type Conversion
 //***************************************************************************
+
+static void 
+InitConvOpMap() // FIXME
+{
+  if (!Conv_OpInitialized) {
+    WN2F_Expr_initialize();
+    Conv_OpInitialized = true;
+  }
+}
 
 whirl2xaif::status 
 whirl2xaif::WN2F_cvt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
    ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_CVT, 
 		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_cvt"));
+   InitConvOpMap();
 
    TranslateWN(xos, WN_kid0(wn), ctxt);
 
@@ -289,6 +292,7 @@ whirl2xaif::WN2F_cvtl(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_CVTL, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_cvtl"));
+  InitConvOpMap();
   
   dtype = WN_Tree_Type(WN_kid0(wn));
   rtype = WN_Tree_Type(wn);

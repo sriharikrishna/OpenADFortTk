@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.35 2004/02/18 18:41:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.36 2004/02/19 22:02:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -95,18 +95,6 @@ IntrinsicXlationTable whirl2xaif::IntrinsicTable(IntrinsicXlationTable::W2X);
 
 //************************** Forward Declarations ***************************
 
-typedef std::vector<CFG::Node*> CFGNodeVec;
-
-class CFGNodeSorter {
-public:
-  // return true if n1 < n2; false otherwise
-  bool operator()(const CFG::Node* n1, const CFG::Node* n2) const {
-    return (n1->getID() < n2->getID());
-  }
-};
-
-//************************** Forward Declarations ***************************
-
 static void
 xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
@@ -134,10 +122,6 @@ GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt);
 
 static void
 MassageOACFGIntoXAIFCFG(CFG* cfg);
-
-static CFGNodeVec*
-SortCFGNodes(CFG* cfg);
-
 
 //***************************************************************************
 // 
@@ -218,9 +202,10 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // 3. OpenAnalysis CFG
   Pro64IRInterface irInterface;
   Pro64IRStmtIterator irStmtIter(fbody);
+  CFG::resetIds();
   CFG cfg(irInterface, &irStmtIter, (SymHandle)WN_st(wn), true);
   
-  // 4. OpenAnalysis Uwe numbers
+  // 4. OpenAnalysis UJ numbers
   set<SymHandle>* params = GetParamSymHandleSet(wn);
   UJNumbers vnmap(cfg, *params);
   delete params;
@@ -239,19 +224,17 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ctxt.CreateContext(XlationContext::NOFLAG, symtab, wnmaps.first);
   ctxt.CurContext().SetValNum(&vnmap);
   
-  // FIXME: xlate_SymbolTables(xos, CURRENT_SYMTAB, symtab, ctxt);
-
   // Dump CFG vertices (basic blocks) in sorted order ('normalized')
   // Note: It might seem that instead of sorting, we could simply use
   // DGraph::DFSIterator.  However, procedures can have unreachable
   // code that will not be found with a DFS.  A simple example of this
   // is that WHIRL often has two OPR_RETURNs at the end of a
   // procedure.
-  CFGNodeVec* cfgNodes = SortCFGNodes(&cfg);
-  CFGNodeVec::iterator nodeIt = cfgNodes->begin();
-  for ( ; nodeIt != cfgNodes->end(); ++nodeIt) {
+  DGraphNodeVec* nodes = SortDGraphNodes(&cfg);
+  for (DGraphNodeVec::iterator nodeIt = nodes->begin(); 
+       nodeIt != nodes->end(); ++nodeIt) {
     
-    CFG::Node* n = (*nodeIt);
+    CFG::Node* n = dynamic_cast<CFG::Node*>(*nodeIt);
     // n->longdump(&cfg, std::cerr); std::cerr << endl;
     
     const char* vtype = GetCFGVertexType(&cfg, n);    
@@ -259,7 +242,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     std::string ids = GetIDsForStmtsInBB(n, ctxt);
     
     // 1. BB element begin tag
-    xos << BegElem(vtype) << Attr("vertex_id", n->getID());
+    xos << BegElem(vtype) << Attr("vertex_id", n->getId());
     if (strcmp(vtype, "xaif:BasicBlock") == 0) { // FIXME: more elegant?
       xos << Attr("scope_id", scopeId);
     }
@@ -276,18 +259,21 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     // 3. BB element end tag
     xos << EndElem << std::endl;
   }
-  delete cfgNodes;
+  delete nodes;
   
   // Dump CFG edges
-  for (CFG::EdgesIterator edgeIt(cfg); (bool)edgeIt; ++edgeIt) {
-    CFG::Edge* e = dynamic_cast<CFG::Edge*>((DGraph::Edge*)edgeIt);
+  DGraphEdgeVec* edges = SortDGraphEdges(&cfg);
+  for (DGraphEdgeVec::iterator edgeIt = edges->begin(); 
+       edgeIt != edges->end(); ++edgeIt) {
+    CFG::Edge* e = dynamic_cast<CFG::Edge*>(*edgeIt);
     CFG::Node* n1 = dynamic_cast<CFG::Node*>(e->source());
     CFG::Node* n2 = dynamic_cast<CFG::Node*>(e->sink());
     
     xos << BegElem("xaif:ControlFlowEdge") << Attr("edge_id", ctxt.GetNewEId())
-	<< Attr("source", n1->getID()) 
-	<< Attr("target", n2->getID()) << EndElem; // FIXME: DumpGraphEdge
+	<< Attr("source", n1->getId()) 
+	<< Attr("target", n2->getId()) << EndElem; // FIXME: DumpGraphEdge
   }
+  delete edges;
   
   // -------------------------------------------------------
   // Cleanup
@@ -866,6 +852,44 @@ WN2F_Address_Of(xml::ostream& xos)
 
 
 //***************************************************************************
+// 
+//***************************************************************************
+
+DGraphNodeVec*
+SortDGraphNodes(DGraph* g)
+{
+  DGraphNodeVec* vec = new DGraphNodeVec(g->num_nodes());
+
+  DGraph::NodesIterator it(*g);
+  for (int i = 0; (bool)it; ++it, ++i) {
+    (*vec)[i] = (DGraph::Node*)it;
+  }
+  
+  // Sort by id (ascending)
+  std::sort(vec->begin(), vec->end(), BaseGraph::lt_Node());
+  
+  return vec;
+}
+
+
+DGraphEdgeVec*
+SortDGraphEdges(DGraph* g)
+{
+  DGraphEdgeVec* vec = new DGraphEdgeVec(g->num_edges());
+
+  DGraph::EdgesIterator it(*g);
+  for (int i = 0; (bool)it; ++it, ++i) {
+    (*vec)[i] = (DGraph::Edge*)it;
+  }
+  
+  // Sort by id (ascending)
+  std::sort(vec->begin(), vec->end(), DGraph::lt_Edge()); 
+  
+  return vec;
+}
+
+
+//***************************************************************************
 //
 //***************************************************************************
 
@@ -1255,25 +1279,6 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
     }
   }
   
-}
-
-
-// SortCFGNodes: Sorts CFG nodes.  User must deallocate returned object.
-static CFGNodeVec*
-SortCFGNodes(CFG* cfg)
-{
-  CFGNodeVec* vec = new CFGNodeVec(cfg->num_nodes());
-
-  CFG::NodesIterator nodeIt(*cfg);
-  for (int i = 0; (bool)nodeIt; ++nodeIt, ++i) {
-    CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
-    (*vec)[i] = n;
-  }
-  
-  // Sort by id (ascending)
-  std::sort(vec->begin(), vec->end(), CFGNodeSorter());
-  
-  return vec;
 }
 
 
