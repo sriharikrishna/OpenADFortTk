@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.7 2004/02/17 18:53:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.8 2004/02/23 18:23:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -155,7 +155,17 @@
  * ====================================================================
  */
 
+//************************** System Include Files ***************************
+
+//************************** Open64 Include Files ***************************
+
 #include <include/Open64BasicTypes.h>
+
+//*************************** User Include Files ****************************
+
+//************************** Forward Declarations ***************************
+
+//***************************************************************************
 
 /* several craylib/dope items represent a no-op by a zero inconst...*/
 #define IS_IO_NULL_OPR(wn) ((WN_operator(wn) == OPR_INTCONST) && (WN_const_val(wn) == 0))
@@ -173,9 +183,9 @@
    ((WN_IOITEM(item) >= IOL_ARRAY && WN_IOITEM(item) <= IOL_VAR) || \
     (WN_IOITEM(item) == IOL_DOPE))
 
+//***************************************************************************
 
 // FIXME: WE DON'T WANT THIS JUNK
-
 #define WN_agoto_addr(wn) WN_kid0(wn)
 
 #define WN_condbr_cond(wn) WN_kid0(wn)
@@ -188,6 +198,7 @@
 #define WN_switch_num_cases(wn) WN_num_entries(wn)
 #define WN_switch_has_default_case(wn) (WN_kid_count(wn) == 3)
 
+// FIXME/REMOVE
 #define WN_opc_rtype(wn) WN_rtype(wn)
 #define WN_opc_operator(wn) WN_operator(wn)
 #define WN_opc_dtype(wn) WN_desc(wn)
@@ -233,19 +244,23 @@
 #define WN_Skip_Parm(arg) \
    ((arg)!=NULL && WN_opc_operator(arg) == OPR_PARM? WN_kid0(arg) : arg)
 
-extern TY_IDX Get_Field_Type(TY_IDX base, int field_id);
+extern TY_IDX 
+Get_Field_Type(TY_IDX base, int field_id);
 
-extern const char * WN_intrinsic_name(INTRINSIC intr_opc);
-extern TY_IDX WN_intrinsic_return_ty(OPCODE    wn_opc,
-                                     INTRINSIC intr_opc,
-                                     const WN *call);
-extern BOOL WN_intrinsic_return_to_param(TY_IDX return_ty);
+extern const char * 
+WN_intrinsic_name(INTRINSIC intr_opc);
 
-extern WN *WN_Get_PtrAdd_Intconst(WN    *wn0, 
-				  WN    *wn1, 
-				  TY_IDX pointed_ty);
+extern TY_IDX 
+WN_intrinsic_return_ty(OPCODE wn_opc, INTRINSIC intr_opc, const WN *call);
 
-extern TY_IDX WN_Tree_Type(const WN *wn);
+extern BOOL 
+WN_intrinsic_return_to_param(TY_IDX return_ty);
+
+extern WN *
+WN_Get_PtrAdd_Intconst(WN* wn0, WN* wn1, TY_IDX pointed_ty);
+
+extern TY_IDX 
+WN_Tree_Type(const WN *wn);
 
 
 #endif /* wn_attr_INCLUDED */

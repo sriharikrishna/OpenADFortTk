@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.cxx,v 1.8 2004/02/20 21:11:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.cxx,v 1.9 2004/02/23 18:23:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -62,12 +62,68 @@
  * ====================================================================
  */
 
+//************************** System Include Files ***************************
+
+//************************** Open64 Include Files ***************************
+
 #include <include/Open64BasicTypes.h>
+
+//*************************** User Include Files ****************************
 
 #include "stab_attr.h"
 
-/*------------------- Referenced ST Information ------------------
- *----------------------------------------------------------------*/
+//************************** Forward Declarations ***************************
+
+static BOOL
+Stab_Compare_Types(TY_IDX t1, TY_IDX t2, BOOL check_quals, 
+		   BOOL check_pointed_quals, BOOL check_scalars,
+		   BOOL ptrs_as_scalars, BOOL assign_t2_to_t1);
+
+#define TYPE_ALLOC_N(type, count)\
+   TYPE_MEM_POOL_ALLOC_N(type, Malloc_Mem_Pool, count)
+
+#define TYPE_REALLOC_N(type, old_ptr, old_count, new_count)\
+   TYPE_MEM_POOL_REALLOC_N(type, Malloc_Mem_Pool, old_ptr,\
+			   old_count, new_count)
+
+#define FREE(ptr) MEM_POOL_FREE(Malloc_Mem_Pool, ptr)
+
+//***************************************************************************
+
+// REMOVE/FIXME
+
+/*-------------------- Global SYMTAB table sizes --------------------
+ *
+ * We record the size of certain tables in the global symtab at whirl2c
+ * initialization.  This information is then used later on in whirl2c
+ * finialization to reset the tables back to their original size and
+ * thus undo any additions made to these tables during whirl2c.
+ *
+ *--------------------------------------------------------------------*/
+
+extern void Stab_initialize(void);
+extern void Stab_finalize(void);
+
+void
+Stab_initialize(void)
+{
+   /* Record the original size of the Ty_Table, Fld_Table, Arb_Table,
+      and Tylist_Table - per PU */
+
+} /* Stab_Initialize */
+
+void
+Stab_finalize(void)
+{
+   /* Should ideally reset the Ty_Table, Fld_Table, Arb_Table, 
+    * Tylist_Table and strtab (?) back to their original size at the 
+    * start of whirl2c.  This is should also include resetting any 
+    * references to such deleted symtab entries (e.g. TY_pointed).
+    * For now we do not do so.
+    */
+
+} /* Stab_finalize */
+
 
 void
 Stab_Reset_Referenced_Flag(SYMTAB_IDX symtab)
@@ -88,17 +144,35 @@ Stab_Reset_Referenced_Flag(SYMTAB_IDX symtab)
 } /* Stab_Reset_Referenced_Flag */
 
 
-/*----------------------- Type Information -----------------------*
- *----------------------------------------------------------------*/
+//***************************************************************************
+// Type Information
+//***************************************************************************
+
+BOOL
+Stab_Identical_Types(TY_IDX t1, TY_IDX t2, BOOL check_quals, 
+		     BOOL check_scalars, BOOL ptrs_as_scalars)
+{
+   /* Compare the two types on an equal basis. */
+   return Stab_Compare_Types(t1, t2, check_quals, FALSE,
+			     check_scalars, ptrs_as_scalars, FALSE);
+}
+
+
+BOOL
+Stab_Assignment_Compatible_Types(TY_IDX t1, TY_IDX t2, BOOL check_quals, 
+				 BOOL check_scalars, BOOL ptrs_as_scalars)
+{
+   /* Compare the two types for assignment compatibility, assuming
+    * a value of type t2 will be assigned to a location of type t1. */
+   return Stab_Compare_Types(t1, t2, check_quals, FALSE, 
+			     check_scalars, ptrs_as_scalars, TRUE);
+}
+
 
 static BOOL
-Stab_Compare_Types(TY_IDX t1,
-		   TY_IDX t2,
-		   BOOL   check_quals, 
-		   BOOL   check_pointed_quals,
-		   BOOL   check_scalars,
-		   BOOL   ptrs_as_scalars,
-		   BOOL   assign_t2_to_t1)
+Stab_Compare_Types(TY_IDX t1, TY_IDX t2, BOOL check_quals, 
+		   BOOL check_pointed_quals, BOOL check_scalars,
+		   BOOL ptrs_as_scalars, BOOL assign_t2_to_t1)
 {
    /* Two types compare if they have the same qualifiers, compatible
     * kinds, compatible MTYPEs, and identical substructure.  ENUM
@@ -228,35 +302,21 @@ Stab_Compare_Types(TY_IDX t1,
 } /* Stab_Compare_Types */
 
 
-BOOL
-Stab_Identical_Types(TY_IDX t1,
-		     TY_IDX t2,
-		     BOOL   check_quals, 
-		     BOOL   check_scalars,
-		     BOOL   ptrs_as_scalars)
-{
-   /* Compare the two types on an equal basis.
-    */
-   return 
-      Stab_Compare_Types(
-	 t1, t2, check_quals, FALSE, check_scalars, ptrs_as_scalars, FALSE);
-} /* Stab_Identical_Types */
+//***************************************************************************
 
-
-BOOL
-Stab_Assignment_Compatible_Types(TY_IDX t1,
-				 TY_IDX t2,
-				 BOOL   check_quals, 
-				 BOOL   check_scalars,
-				 BOOL   ptrs_as_scalars)
+BOOL 
+Stab_Is_Element_Type_Of_Array(TY_IDX atype, TY_IDX etype)
 {
-   /* Compare the two types for assignment compatibility, assuming
-    * a value of type t2 will be assigned to a location of type t1.
-    */
-   return 
-      Stab_Compare_Types(
-	 t1, t2, check_quals, FALSE, check_scalars, ptrs_as_scalars, TRUE);
-} /* Stab_Stab_Assignment_Compatible_Types */
+   if (Stab_Assignment_Compatible_Types(etype, TY_AR_etype(atype), 
+					FALSE, /*check_quals*/
+					TRUE,  /*check_scalars*/
+					FALSE)) /*ptrs_as_scalars*/
+      return TRUE;
+   else if (TY_Is_Array(TY_AR_etype(atype)))
+      return Stab_Is_Element_Type_Of_Array(TY_AR_etype(atype), etype);
+   else
+      return FALSE;
+} /* Stab_Is_Element_Type_Of_Array */
 
 
 BOOL
@@ -304,21 +364,6 @@ Stab_Is_Assumed_Sized_Array(TY_IDX ty)
    }
    return assumed_size;
 } /* Stab_Is_Assumed_Sized_Array */
-
-
-BOOL 
-Stab_Is_Element_Type_Of_Array(TY_IDX atype, TY_IDX etype)
-{
-   if (Stab_Assignment_Compatible_Types(etype, TY_AR_etype(atype), 
-					FALSE, /*check_quals*/
-					TRUE,  /*check_scalars*/
-					FALSE)) /*ptrs_as_scalars*/
-      return TRUE;
-   else if (TY_Is_Array(TY_AR_etype(atype)))
-      return Stab_Is_Element_Type_Of_Array(TY_AR_etype(atype), etype);
-   else
-      return FALSE;
-} /* Stab_Is_Element_Type_Of_Array */
 
 
 BOOL 
@@ -404,6 +449,9 @@ Stab_Get_Mload_Ty(TY_IDX base, STAB_OFFSET offset, STAB_OFFSET size)
 } /* Stab_Get_Mload_Ty */
 
 
+//***************************************************************************
+// Type creation
+//***************************************************************************
 
 extern TY_IDX
 Stab_Array_Of(TY_IDX etype, mINT64 num_elts)
@@ -438,39 +486,10 @@ Stab_Array_Of(TY_IDX etype, mINT64 num_elts)
   return ty_idx;
 }   
 
-/*-------------------- Global SYMTAB table sizes --------------------
- *
- * We record the size of certain tables in the global symtab at whirl2c
- * initialization.  This information is then used later on in whirl2c
- * finialization to reset the tables back to their original size and
- * thus undo any additions made to these tables during whirl2c.
- *
- *--------------------------------------------------------------------*/
 
-extern void Stab_initialize(void);
-extern void Stab_finalize(void);
-
-void
-Stab_initialize(void)
-{
-   /* Record the original size of the Ty_Table, Fld_Table, Arb_Table,
-      and Tylist_Table - per PU */
-
-} /* Stab_Initialize */
-
-void
-Stab_finalize(void)
-{
-   /* Should ideally reset the Ty_Table, Fld_Table, Arb_Table, 
-    * Tylist_Table and strtab (?) back to their original size at the 
-    * start of whirl2c.  This is should also include resetting any 
-    * references to such deleted symtab entries (e.g. TY_pointed).
-    * For now we do not do so.
-    */
-
-} /* Stab_finalize */
-
-
+//***************************************************************************
+// Identifier naming utilities
+//***************************************************************************
 
 /*---------------------- Name manipulation -----------------------
  *
@@ -785,3 +804,5 @@ Stab_Unlock_Tmpvar(UINT idx)
    
    TmpVar[idx].locked = FALSE;
 } /* Stab_Unlock_Tmpvar */
+
+

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.6 2004/02/20 21:11:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.7 2004/02/23 18:23:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -229,135 +229,155 @@
  * ====================================================================
  */
 
+//************************** System Include Files ***************************
+
+//************************** Open64 Include Files ***************************
+
 #include <include/Open64BasicTypes.h>
 
-/* Some general utility routines for memory allocation.  Include
- * "mempool.h" when using these!
- */
-#define TYPE_ALLOC_N(type, count)\
-   TYPE_MEM_POOL_ALLOC_N(type, Malloc_Mem_Pool, count)
+//*************************** User Include Files ****************************
 
-#define TYPE_REALLOC_N(type, old_ptr, old_count, new_count)\
-   TYPE_MEM_POOL_REALLOC_N(type, Malloc_Mem_Pool, old_ptr,\
-			   old_count, new_count)
-
-#define FREE(ptr) MEM_POOL_FREE(Malloc_Mem_Pool, ptr)
-
-
-                     /*------ Type Information ------*/
-                     /*------------------------------*/
-
-extern BOOL Stab_Identical_Types(TY_IDX t1, 
-				 TY_IDX t2, 
-				 BOOL   check_quals, 
-				 BOOL   check_scalars,
-				 BOOL   ptrs_as_scalars);
-
-extern BOOL Stab_Assignment_Compatible_Types(TY_IDX t1, 
-					     TY_IDX t2, 
-					     BOOL   check_quals, 
-					     BOOL   check_scalars,
-					     BOOL   ptrs_as_scalars);
-
-extern BOOL Stab_Is_Element_Type_Of_Array(TY_IDX atype, TY_IDX etype);
-
-extern BOOL Stab_Array_Has_Dynamic_Bounds(TY_IDX ty);
-extern BOOL Stab_Is_Assumed_Sized_Array(TY_IDX ty);
-extern BOOL Stab_Is_Equivalenced_Struct(TY_IDX ty);
-
-extern TY_IDX Stab_Get_Mload_Ty(TY_IDX base,
-                                STAB_OFFSET offset,
-                                STAB_OFFSET size);
-
-inline TY_IDX Stab_Mtype_To_Ty(TYPE_ID mtype) { return Be_Type_Tbl(mtype); }
+//************************** Forward Declarations ***************************
 
 //***************************************************************************
-// Data
+
+// Referenced Information (REMOVE/FIXME)
+extern void 
+Stab_Reset_Referenced_Flag(SYMTAB_IDX symtab);
+
+//***************************************************************************
+// Type Information
 //***************************************************************************
 
-inline BOOL TY_Is_Scalar(TY_IDX ty)
-{
-  return (TY_kind(ty) == KIND_SCALAR);
+extern BOOL 
+Stab_Identical_Types(TY_IDX t1, TY_IDX t2, 
+		     BOOL check_quals, 
+		     BOOL check_scalars,
+		     BOOL ptrs_as_scalars);
+
+extern BOOL 
+Stab_Assignment_Compatible_Types(TY_IDX t1, TY_IDX t2, 
+				 BOOL check_quals, 
+				 BOOL check_scalars,
+				 BOOL ptrs_as_scalars);
+
+extern BOOL 
+Stab_Is_Element_Type_Of_Array(TY_IDX atype, TY_IDX etype);
+
+extern BOOL 
+Stab_Array_Has_Dynamic_Bounds(TY_IDX ty);
+extern BOOL 
+Stab_Is_Assumed_Sized_Array(TY_IDX ty);
+extern BOOL 
+Stab_Is_Equivalenced_Struct(TY_IDX ty);
+
+extern TY_IDX 
+Stab_Get_Mload_Ty(TY_IDX base, STAB_OFFSET offset, STAB_OFFSET size);
+
+inline TY_IDX 
+Stab_Mtype_To_Ty(TYPE_ID mtype) 
+{ 
+  return Be_Type_Tbl(mtype); 
 }
 
-inline BOOL TY_IsNonScalar(TY_IDX ty) // cv Is_composite_Type symtab.h
+inline BOOL 
+TY_Is_Scalar(TY_IDX ty) 
+{ 
+  return (TY_kind(ty) == KIND_SCALAR); 
+}
+
+inline BOOL 
+TY_IsNonScalar(TY_IDX ty) // cv Is_composite_Type symtab.h
 {
   return (TY_kind(ty) == KIND_ARRAY || TY_kind(ty) == KIND_STRUCT
 	  || TY_kind(ty) == KIND_POINTER); // FIXME
 }
 
-inline BOOL TY_Is_Array(TY_IDX ty)
-{
-  return (TY_kind(ty) == KIND_ARRAY);
+inline BOOL 
+TY_Is_Array(TY_IDX ty) 
+{ 
+  return (TY_kind(ty) == KIND_ARRAY); 
 }
 
-inline BOOL TY_IsRecord(TY_IDX ty) // FIXME
+inline BOOL 
+TY_IsRecord(TY_IDX ty) // FIXME
 {
-  return (TY_kind(ty) == KIND_STRUCT);
+  return (TY_kind(ty) == KIND_STRUCT); // note TY_is_union(ty)
 }
 
-// REMOVE
-inline BOOL TY_Is_Structured(TY_IDX ty)
-{
-  return TY_kind(ty) == KIND_STRUCT;
+
+inline BOOL 
+TY_Is_Structured(TY_IDX ty) // REMOVE
+{ 
+  return TY_kind(ty) == KIND_STRUCT; 
 }
 
-inline BOOL TY_Is_Struct(TY_IDX ty) // REMOVE
-{
+inline BOOL  // REMOVE
+TY_Is_Struct(TY_IDX ty) 
+{ 
   return (TY_kind(ty) == KIND_STRUCT && !TY_is_union(ty));
 }
 
-inline BOOL TY_Is_Union(TY_IDX ty) // REMOVE
+inline BOOL 
+TY_Is_Union(TY_IDX ty) // REMOVE
 {
   return (TY_kind(ty) == KIND_STRUCT && TY_is_union(ty));
 }
 
-inline BOOL TY_Is_Pointer(TY_IDX ty)
+inline BOOL 
+TY_Is_Pointer(TY_IDX ty)
 {
   return ((TY_kind(ty) == KIND_POINTER && !TY_is_f90_pointer(ty)));
 }
 
 
-inline BOOL TY_Is_String(TY_IDX ty)
+inline BOOL 
+TY_Is_String(TY_IDX ty)
 {
    return TY_mtype(ty) == MTYPE_STRING;
-} /* TY_Is_String */
+}
 
-inline BOOL TY_Is_Integral(TY_IDX ty)
+inline BOOL 
+TY_Is_Integral(TY_IDX ty)
 {
   return (MTYPE_type_class(TY_mtype(ty)) & MTYPE_CLASS_INTEGER) != 0;
 }
 
-inline BOOL TY_Is_Quad(TY_IDX ty)
+inline BOOL 
+TY_Is_Quad(TY_IDX ty)
 {
   return TY_kind(ty) == KIND_SCALAR && TY_mtype(ty) == MTYPE_FQ;
 }
 
-inline BOOL TY_Is_Complex(TY_IDX ty)
+inline BOOL 
+TY_Is_Complex(TY_IDX ty)
 {
   return TY_kind(ty) == KIND_SCALAR && (TY_mtype(ty) == MTYPE_C4 ||
 					TY_mtype(ty) == MTYPE_C8 ||
 					TY_mtype(ty) == MTYPE_CQ);
 }
 
-//***************************************************************************
 
-inline BOOL TY_Is_Function(TY_IDX ty)
+inline BOOL 
+TY_Is_Function(TY_IDX ty)
 {
   return TY_kind(ty) == KIND_FUNCTION;
 }
 
-inline BOOL TY_Is_Array_Or_Function(TY_IDX ty)
+inline BOOL 
+TY_Is_Array_Or_Function(TY_IDX ty)
 {
   return ty != 0 && (TY_Is_Function(ty) || TY_Is_Array(ty));
 }
 
-inline BOOL TY_Is_Pointer_Or_Scalar(TY_IDX ty)
+inline BOOL 
+TY_Is_Pointer_Or_Scalar(TY_IDX ty)
 {
   return (TY_Is_Scalar(ty) || (TY_Is_Pointer(ty)&&!TY_is_f90_pointer(ty)));
 }
 
-inline BOOL TY_Is_Character_Reference(TY_IDX ty)
+inline BOOL 
+TY_Is_Character_Reference(TY_IDX ty)
 {
   return TY_Is_Pointer(ty)
     && (TY_is_character(TY_pointed(ty)) 
@@ -367,7 +387,8 @@ inline BOOL TY_Is_Character_Reference(TY_IDX ty)
 /* The front-end is not always reliable in where it sets the is_character
  * flag, so we look for it both on the array and on the element type.
  */
-inline BOOL TY_Is_Character_String(TY_IDX ty)
+inline BOOL 
+TY_Is_Character_String(TY_IDX ty)
 {
   return TY_is_character(ty) ||
     TY_mtype(ty) == MTYPE_STR ||
@@ -377,17 +398,20 @@ inline BOOL TY_Is_Character_String(TY_IDX ty)
      TY_is_character(TY_AR_etype(ty)));
 }
 
-inline BOOL TY_Is_Chararray(TY_IDX ty)
+inline BOOL 
+TY_Is_Chararray(TY_IDX ty)
 {
   return TY_Is_Array(ty) && TY_Is_Character_String(TY_AR_etype(ty));
 }
 
-inline BOOL TY_Is_Chararray_Reference(TY_IDX ty)
+inline BOOL 
+TY_Is_Chararray_Reference(TY_IDX ty)
 {
   return TY_Is_Pointer(ty) && TY_Is_Chararray(TY_pointed(ty));
 }
 
-inline BOOL TY_Is_Array_Of_Chars(TY_IDX ty)
+inline BOOL 
+TY_Is_Array_Of_Chars(TY_IDX ty)
 {
   return TY_Is_Array(ty) &&
     TY_AR_ndims(ty) == 1 &&
@@ -397,23 +421,24 @@ inline BOOL TY_Is_Array_Of_Chars(TY_IDX ty)
 
 
 /* fortran FEs now generate U1 arrays for chars */
-
-inline BOOL TY_Is_Array_Of_UChars(TY_IDX ty)
+inline BOOL 
+TY_Is_Array_Of_UChars(TY_IDX ty)
 {
    return TY_Is_Array(ty) &&
           TY_AR_ndims(ty) == 1 &&
           TY_mtype(TY_AR_etype(ty)) == MTYPE_U1 ;
 }
 
-inline BOOL TY_Is_Preg_Type(TY_IDX ty)
+inline BOOL 
+TY_Is_Preg_Type(TY_IDX ty)
 {
   /* Return True if ty is a valid type for pseudo registers;
      return False otherwise. */
   return TY_Is_Pointer_Or_Scalar(ty);
 }
 
-inline BOOL FLD_Is_Bitfield(FLD_HANDLE fld, FLD_HANDLE next_fld,
-			    INT64 max_size) 
+inline BOOL 
+FLD_Is_Bitfield(FLD_HANDLE fld, FLD_HANDLE next_fld, INT64 max_size) 
 {
   /* fld must not be a member of a union! */
   return !FLD_equivalence(fld) &&
@@ -423,24 +448,28 @@ inline BOOL FLD_Is_Bitfield(FLD_HANDLE fld, FLD_HANDLE next_fld,
       FLD_ofst(next_fld) - FLD_ofst(fld) < TY_size(FLD_type(fld))));
 }
 
-                  /*------ Symbol table Information ------*/
-                  /*--------------------------------------*/
+//***************************************************************************
+// Symbol table Information
+//***************************************************************************
 
-inline BOOL Stab_Is_Valid_Base(const ST *st)
+inline BOOL 
+Stab_Is_Valid_Base(const ST *st)
 {
   return (ST_base(st) != NULL &&
 	  ST_base(st) != (st) &&
 	  ST_sym_class(ST_base(st)) != CLASS_BLOCK /* cg generated */ );
 }
 
-inline BOOL Stab_Is_Common_Block(const ST *st)
+inline BOOL 
+Stab_Is_Common_Block(const ST *st)
 {
   return ((ST_sclass(st) == SCLASS_COMMON ||
 	   ST_sclass(st) == SCLASS_DGLOBAL) &&
 	  TY_Is_Structured(ST_type(st)));
 }
 
-inline BOOL Stab_Is_Equivalence_Block(const ST *st)
+inline BOOL 
+Stab_Is_Equivalence_Block(const ST *st)
 {
   return (ST_sym_class(st) == CLASS_VAR                 &&
 	  TY_Is_Structured(ST_type(st))                 &&
@@ -449,21 +478,24 @@ inline BOOL Stab_Is_Equivalence_Block(const ST *st)
 	  FLD_equivalence(TY_fld(Ty_Table[ST_type(st)])));
 }
 
-inline BOOL Stab_Is_Based_At_Common_Or_Equivalence(const ST *st)
+inline BOOL 
+Stab_Is_Based_At_Common_Or_Equivalence(const ST *st)
 {
   return (Stab_Is_Valid_Base(st) &&
 	  (Stab_Is_Common_Block(ST_base(st)) ||
 	   Stab_Is_Equivalence_Block(ST_base(st))));
 }
 
-inline BOOL Stab_No_Linkage(const ST *st)
+inline BOOL 
+Stab_No_Linkage(const ST *st)
 {
   return (ST_sclass(st) == SCLASS_AUTO   ||
 	  ST_sclass(st) == SCLASS_FORMAL ||
 	  ST_sclass(st) == SCLASS_FORMAL_REF);
 }
 
-inline BOOL Stab_External_Linkage(const ST *st)
+inline BOOL 
+Stab_External_Linkage(const ST *st)
 {
   return (!Stab_No_Linkage(st)                   &&
 	  ST_sclass(st) != SCLASS_PSTATIC        &&
@@ -474,19 +506,22 @@ inline BOOL Stab_External_Linkage(const ST *st)
 	  ST_sclass(st) != SCLASS_DISTR_ARRAY);
 }
 
-inline BOOL Stab_External_Def_Linkage(const ST *st)
+inline BOOL 
+Stab_External_Def_Linkage(const ST *st)
 {
   return (Stab_External_Linkage(st) && ST_sclass(st) != SCLASS_EXTERN);
 }
 
-inline BOOL Stab_Identical_Quals(TY_IDX t1, TY_IDX t2)
+inline BOOL 
+Stab_Identical_Quals(TY_IDX t1, TY_IDX t2)
 {
   return (TY_is_volatile(t1) == TY_is_volatile(t2) &&
 	  TY_is_restrict(t1) == TY_is_restrict(t2) &&
 	  TY_is_const(t1) == TY_is_const(t2));
 }
 
-inline BOOL Stab_Assign_Compatible_Pointer_Quals(TY_IDX t1, TY_IDX t2)
+inline BOOL 
+Stab_Assign_Compatible_Pointer_Quals(TY_IDX t1, TY_IDX t2)
 {
   return ((TY_is_volatile(t2)? TY_is_volatile(t1) : TRUE) &&
 	  (TY_is_restrict(t2)? TY_is_restrict(t1) : TRUE) &&
@@ -501,7 +536,8 @@ inline BOOL Stab_Assign_Compatible_Pointer_Quals(TY_IDX t1, TY_IDX t2)
  * macro should only be used on the subprogram definition side!  This
  * only applies to Fortran code.
  */
-inline BOOL STAB_PARAM_HAS_IMPLICIT_LENGTH(const ST *st)
+inline BOOL 
+STAB_PARAM_HAS_IMPLICIT_LENGTH(const ST *st)
 {
   return ((ST_sclass(st) == SCLASS_FORMAL_REF &&
 	   TY_Is_Character_String(ST_type(st))) ||
@@ -514,77 +550,99 @@ inline BOOL STAB_PARAM_HAS_IMPLICIT_LENGTH(const ST *st)
  * as a pointer (as opposed to an SCLASS_FORMAL_REF).  This only applies
  * to Fortran code.
 */
-inline BOOL STAB_IS_POINTER_REF_PARAM(const ST *st)
+inline BOOL 
+STAB_IS_POINTER_REF_PARAM(const ST *st)
 {
-  return (TY_Is_Pointer(ST_type(st))   &&
-	  ST_sclass(st)==SCLASS_FORMAL &&
-	  !ST_is_value_parm(st));
+  return (TY_Is_Pointer(ST_type(st)) && ST_sclass(st)==SCLASS_FORMAL
+	  && !ST_is_value_parm(st));
 }
 
-                  /*------- Referenced Information -------*/
-                  /*--------------------------------------*/
+//***************************************************************************
+// Function type attributes
+//***************************************************************************
 
-extern void Stab_Reset_Referenced_Flag(SYMTAB_IDX symtab);
-   
-
-               /*------ Function type attributes ------*/
-               /*--------------------------------------*/
-
-inline BOOL Func_Return_Character(TY_IDX func_ty)
+inline BOOL 
+Func_Return_Character(TY_IDX func_ty)
 {
   return TY_is_character(Ty_Table[TY_ret_type(func_ty)]);
 }
 
-inline TY_IDX Func_Return_Type(TY_IDX func_ty)
+inline TY_IDX 
+Func_Return_Type(TY_IDX func_ty)
 {
   return TY_ret_type(func_ty);
 } 
 
-inline BOOL Func_Return_To_Param(TY_IDX func_ty)
+inline BOOL 
+Func_Return_To_Param(TY_IDX func_ty)
 {
-   return TY_return_to_param(Ty_Table[func_ty]);
+  return TY_return_to_param(Ty_Table[func_ty]);
 }
 
-               /*------ Obtaining pointer/array types ------*/
-               /*-------------------------------------------*/
+
+//***************************************************************************
+// Type creation
+//***************************************************************************
 
 inline TY_IDX
-Stab_Pointer_To(TY_IDX pointee)          { return Make_Pointer_Type(pointee); }
+Stab_Pointer_To(TY_IDX pointee) { return Make_Pointer_Type(pointee); }
+
+extern TY_IDX 
+Stab_Array_Of(TY_IDX etype, mINT64 num_elts);
 
 
-extern TY_IDX Stab_Array_Of(TY_IDX etype, mINT64 num_elts) ;
+//***************************************************************************
+// Identifier naming utilities
+//***************************************************************************
 
-                 /*------ Name manipulation ------*/
-                 /*-------------------------------*/
+extern void 
+Stab_Free_Namebufs(void);
 
-extern void Stab_Free_Namebufs(void);
-extern char *Get_Name_Buf_Slot(UINT size);
-extern const char *Num2Str(INT64 number, const char *fmt);
-extern const char *Ptr_as_String(const void *ptr);
-extern const char *StrCat(const char *name1, const char *name2);
+extern char *
+Get_Name_Buf_Slot(UINT size);
 
-inline const char *StrCat(const char *s1, const char *s2, const char *s3)
+extern const char *
+Num2Str(INT64 number, const char *fmt);
+
+extern const char *
+Ptr_as_String(const void *ptr);
+
+extern const char *
+StrCat(const char *name1, const char *name2);
+
+inline const char *
+StrCat(const char *s1, const char *s2, const char *s3)
 {
   return StrCat(s1, StrCat(s2, s3));
 }
 
-extern UINT64 Get_Hash_Value_For_Name(const char *name);
+extern UINT64 
+Get_Hash_Value_For_Name(const char *name);
 
-inline UINT32 Name_Hash_Idx(UINT64 hash_value, INT32 tbl_size)
+inline UINT32 
+Name_Hash_Idx(UINT64 hash_value, INT32 tbl_size)
 {
    return (UINT32)(hash_value % tbl_size);
-} /* Name_Hash_Idx */
+}
 
-extern STAB_OFFSET Stab_Full_Split_Offset(const ST *split_out_st);
+extern STAB_OFFSET 
+Stab_Full_Split_Offset(const ST *split_out_st);
 
 
-             /*---- temporary variable information -----*/
-             /*-----------------------------------------*/
+// Temporary variable information
+extern void 
+Stab_Free_Tmpvars(void);
 
-extern void Stab_Free_Tmpvars(void);
-extern void Stab_Unlock_All_Tmpvars(void);
-extern UINT Stab_Lock_Tmpvar(TY_IDX ty, void (*declare_tmpvar)(TY_IDX, UINT));
-extern void Stab_Unlock_Tmpvar(UINT idx);
+extern void 
+Stab_Unlock_All_Tmpvars(void);
+
+extern UINT 
+Stab_Lock_Tmpvar(TY_IDX ty, void (*declare_tmpvar)(TY_IDX, UINT));
+
+extern void 
+Stab_Unlock_Tmpvar(UINT idx);
+
+//***************************************************************************
 
 #endif /* stab_attr_INCLUDED */
 

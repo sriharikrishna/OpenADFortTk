@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.7 2004/02/17 18:53:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.8 2004/02/23 18:23:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -61,12 +61,20 @@
  * ====================================================================
  * ====================================================================
  */
+//************************** System Include Files ***************************
+
+//************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
+
+//*************************** User Include Files ****************************
 
 #include "wn_attr.h"
 #include "stab_attr.h"
 
+//************************** Forward Declarations ***************************
+
+//***************************************************************************
 
 /* INTRN_c_name() is only implemented when defined(BUILD_WHIRL2C), while
  * we must use INTRN_specific_name() when defined(BUILD_WHIRL2F).  To 
@@ -130,8 +138,8 @@ TY_IDX Get_Field_Type(TY_IDX base, int field_id) {
 
 
 static TY_IDX
-WN_get_tld_type(const WN* wn) {
-
+WN_get_tld_type(const WN* wn) 
+{
   //wn must be TLD_ADDR(...)
   WN* kid = WN_kid0(WN_kid0(wn));
   TY_IDX result_ty = WN_Tree_Type(kid);
@@ -275,9 +283,7 @@ WN_intrinsic_return_to_param(TY_IDX return_ty)
 
 
 WN *
-WN_Get_PtrAdd_Intconst(WN    *wn0, 
-		       WN    *wn1, 
-		       TY_IDX pointed_ty)
+WN_Get_PtrAdd_Intconst(WN* wn0, WN* wn1, TY_IDX pointed_ty)
 {
    /* We make an attempt at retaining pointer types for ptr
     * additions, where we expect the ptr expression to be of
