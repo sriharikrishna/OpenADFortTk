@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.8 2004/06/02 19:56:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.9 2004/06/09 20:42:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -33,6 +33,7 @@
 
 //*************************** User Include Files ****************************
 
+#include "BaseMap.h"
 #include "diagnostics.h"
 
 //************************** Forward Declarations ***************************
@@ -66,82 +67,39 @@ public:
 
 
 //***************************************************************************
-// Creation of maps
+// ST_TAB <-> SymTabId maps (global/interprocedural)
 //***************************************************************************
 
-class SymTabIdToSymTabMap;
-class SymTabToSymTabIdMap;
-
-class PUIdToPUMap;
-class PUToPUIdMap;
-
-class WNIdToWNMap;
-class WNToWNIdMap;
-
-// CreateSymTabIdMaps: Create persistent ID <-> ST_TAB* maps.
-// STTABIds are guaranteed to be unique within the PU forest
-// 'pu_forest'. (The global symbol table is included.)  The user is
-// responsible for freeing the returned maps.
-pair<SymTabToSymTabIdMap*, SymTabIdToSymTabMap*>
-CreateSymTabIdMaps(PU_Info* pu_forest);
-
-// CreatePUIdMaps: Create persistent ID <-> PU_Info* maps.  PUIds are
-// guaranteed to be unique within the PU forest 'pu_forest'.  The user
-// is responsible for freeing the returned maps. 
-pair<PUToPUIdMap*, PUIdToPUMap*>
-CreatePUIdMaps(PU_Info* pu_forest);
-
-// CreateWhirlIDMaps: Create persistent ID <-> WN* maps.  WNIds are
-// guaranteed to be unique within the WHIRL tree at 'wn' (usually a
-// PU).  The user is responsible for freeing the returned maps.
-pair<WNToWNIdMap*, WNIdToWNMap*>
-CreateWhirlIdMaps(WN* wn);
-
-
-//***************************************************************************
-// ST_TAB <-> SymTabId maps
-//***************************************************************************
-
-namespace SymTabMaps_hidden {
-  typedef std::map<ST_TAB*, SymTabId> SymTabToSymTabIdBaseMap;
-  typedef std::map<SymTabId, pair<ST_TAB*, PU_Info*> > SymTabIdToSymTabBaseMap;
-}; /* namespace SymTabMaps_hidden */
-
-
-class SymTabToSymTabIdMap : public SymTabMaps_hidden::SymTabToSymTabIdBaseMap {
+class SymTabToSymTabIdMap 
+  : public FortTk::BaseMap<ST_TAB*, SymTabId>
+{
 public:
-  
   SymTabToSymTabIdMap() { }
-  ~SymTabToSymTabIdMap() { }
-
-  SymTabId
-  Find(ST_TAB* wn) const
-  {
-    const_iterator it = this->find(wn);
-    SymTabId result = (it == this->end()) ? 0 : (*it).second;
-    return result;
-  }
-
-  void
-  Insert(ST_TAB* stab, SymTabId id)
-  {
-    this->insert(make_pair(stab, id)); // do not add duplicates!
-  }
+  SymTabToSymTabIdMap(PU_Info* pu_forest) { Create(pu_forest); }
+  virtual ~SymTabToSymTabIdMap() { }
   
+  void Create(PU_Info* pu_forest);
 };
+
 
 // SymTabIdToSymTabMap: In WHIRL, all ST_TAB* are associated with a
 // specific PU_Info*, except the global ST_TAB*.  Because of the way
-// the symbol table is implemented, it is ually not easy to access the
+// the symbol table is implemented, it is usually not easy to access the
 // symbol table with the ST_TAB*: one needs the corresponding
 // PU_Info*.  Consequently, we map a SymTabId to a pair.  When
 // entering the global the global ST_TAB* in the map, PU_Info* should
 // be NULL.
-class SymTabIdToSymTabMap : public SymTabMaps_hidden::SymTabIdToSymTabBaseMap {
+class SymTabIdToSymTabMap 
+  : public std::map<SymTabId, pair<ST_TAB*, PU_Info*> > {
+
+protected:
+  typedef std::map<SymTabId, pair<ST_TAB*, PU_Info*> > BaseMap;
+  
 public:
   SymTabIdToSymTabMap() { }
-  ~SymTabIdToSymTabMap() { }
-
+  SymTabIdToSymTabMap(PU_Info* pu_forest) { Create(pu_forest); }
+  virtual ~SymTabIdToSymTabMap() { }
+  
   pair<ST_TAB*, PU_Info*>
   Find(SymTabId id) const
   {
@@ -160,12 +118,13 @@ public:
   {
     this->insert(make_pair(id, make_pair(stab, pu))); // do not add duplicates!
   }
-  
+
+  void Create(PU_Info* pu_forest);
 };
 
 
 //***************************************************************************
-// ST <-> SymId maps
+// ST <-> SymId maps (intra-procedural)
 //***************************************************************************
 
 // Note: Instead of creating ST* <-> to SymId maps, we currently use a
@@ -176,64 +135,30 @@ public:
 
 
 //***************************************************************************
-// PU <-> PUId maps
+// PU <-> PUId maps (global/interprocedural)
 //***************************************************************************
 
-namespace PUMaps_hidden {
-  typedef std::map<PU_Info*, PUId> PUToPUIdBaseMap;
-  typedef std::map<PUId, PU_Info*> PUIdToPUBaseMap;
-}; /* namespace PUMaps_hidden */
-
-
-class PUToPUIdMap : public PUMaps_hidden::PUToPUIdBaseMap {
-public:
-  
+class PUToPUIdMap 
+  : public FortTk::BaseMap<PU_Info*, PUId>
+{
+public:  
   PUToPUIdMap() { }
-  ~PUToPUIdMap() { }
+  PUToPUIdMap(PU_Info* pu_forest) { Create(pu_forest); }
+  virtual ~PUToPUIdMap() { }
 
-  PUId
-  Find(PU_Info* pu, bool mustFind = false) const
-  {
-    const_iterator it = this->find(pu);
-    PUId result = (it == this->end()) ? 0 : (*it).second;
-    
-    if (mustFind && result == 0) {
-      ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Could not find entry!"));
-    }
-    return result;
-  }
-
-  void
-  Insert(PU_Info* pu, PUId id)
-  {
-    this->insert(make_pair(pu, id)); // do not add duplicates!
-  }
-  
+  void Create(PU_Info* pu_forest);
 };
 
-class PUIdToPUMap : public PUMaps_hidden::PUIdToPUBaseMap {
+
+class PUIdToPUMap
+  : public FortTk::BaseMap<PUId, PU_Info*>
+{
 public:
   PUIdToPUMap() { }
-  ~PUIdToPUMap() { }
-
-  PU_Info*
-  Find(PUId id, bool mustFind = false) const
-  {
-    const_iterator it = this->find(id);
-    PU_Info* result = (it == this->end()) ? NULL : (*it).second;
-    
-    if (mustFind && result == NULL) {
-      ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Could not find entry!"));
-    }
-    return result;
-  }
-
-  void
-  Insert(PUId id, PU_Info* pu)
-  {
-    this->insert(make_pair(id, pu)); // do not add duplicates!
-  }
+  PUIdToPUMap(PU_Info* pu_forest) { Create(pu_forest); }
+  virtual ~PUIdToPUMap() { }
   
+  void Create(PU_Info* pu_forest);
 };
 
 
@@ -241,62 +166,70 @@ public:
 // WNId <-> WN map
 //***************************************************************************
 
-namespace WhirlMaps_hidden {
-  typedef std::map<WN*, WNId> WNToWNIdBaseMap;
-  typedef std::map<WNId, WN*> WNIdToWNBaseMap;
-}; /* namespace WhirlMaps_hidden */
-
-
-class WNToWNIdMap : public WhirlMaps_hidden::WNToWNIdBaseMap {
-public:
-  
+class WNToWNIdMap 
+  : public FortTk::BaseMap<WN*, WNId>
+{
+public:  
   WNToWNIdMap() { }
-  ~WNToWNIdMap() { }
+  WNToWNIdMap(WN* wn) { Create(wn); }
+  virtual ~WNToWNIdMap() { }
 
-  WNId
-  Find(WN* wn, bool mustFind = false) const
-  {
-    const_iterator it = this->find(wn);
-    WNId result = (it == this->end()) ? 0 : (*it).second;
-    
-    if (mustFind && result == 0) {
-      ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Could not find entry!"));
-    }
-    return result;
-  }
-
-  void
-  Insert(WN* wn, WNId id)
-  {
-    this->insert(make_pair(wn, id)); // do not add duplicates!
-  }
-  
+  void Create(WN* wn);
 };
 
-class WNIdToWNMap : public WhirlMaps_hidden::WNIdToWNBaseMap {
+class WNIdToWNMap 
+  : public FortTk::BaseMap<WNId, WN*>
+{
 public:
   WNIdToWNMap() { }
-  ~WNIdToWNMap() { }
-
-  WN*
-  Find(WNId id, bool mustFind = false) const
-  {
-    const_iterator it = this->find(id);
-    WN* result = (it == this->end()) ? NULL : (*it).second;
-    
-    if (mustFind && result == NULL) {
-      ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Could not find entry!"));
-    }
-    return result;
-  }
-
-  void
-  Insert(WNId id, WN* wn)
-  {
-    this->insert(make_pair(id, wn)); // do not add duplicates!
-  }
+  WNIdToWNMap(WN* wn) { Create(wn); }
+  virtual ~WNIdToWNMap() { }
   
+  void Create(WN* wn);
 };
+
+
+// ---------------------------------------------------------
+// 
+// ---------------------------------------------------------
+
+class WNToWNIdTabMap 
+  : public FortTk::BaseMap<PU_Info*, WNToWNIdMap*> {
+  
+public:
+  WNToWNIdTabMap();
+  WNToWNIdTabMap(PU_Info* pu_forest);
+  virtual ~WNToWNIdTabMap();
+  
+  void Create(PU_Info* pu_forest);  
+};
+
+
+//***************************************************************************
+// Optional routines for map creation
+//***************************************************************************
+
+// CreateSymTabIdMaps: Given a PU forest, initialize the non-NULL
+// persistent ID <-> ST_TAB* maps.  STTABIds are guaranteed to be
+// unique within the PU forest 'pu_forest'. (The global symbol table
+// is included.)
+void
+CreateSymTabIdMaps(PU_Info* pu_forest, 
+		   SymTabToSymTabIdMap* x, SymTabIdToSymTabMap* y);
+
+// CreatePUIdMaps: Given a PU forest, initialize the non-NULL
+// persistent ID <-> PU_Info* maps.  PUIds are guaranteed to be unique
+// within the PU forest 'pu_forest'.
+void
+CreatePUIdMaps(PU_Info* pu_forest, PUToPUIdMap* x, PUIdToPUMap* y);
+
+// CreateWhirlIDMaps: Given a WN*, initialize the non-NULL persistent
+// ID <-> WN* maps.  WNIds are guaranteed to be unique within the
+// WHIRL tree rooted at 'wn'. (Note that 'wn' is usually the result of
+// PU_Info_tree_ptr(PU_Info*).)
+void
+CreateWhirlIdMaps(WN* wn, WNToWNIdMap* x, WNIdToWNMap* y);
+
 
 //***************************************************************************
 
