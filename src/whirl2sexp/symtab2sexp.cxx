@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.2 2004/08/06 17:29:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.3 2004/08/09 14:34:53 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -30,7 +30,6 @@
 using namespace whirl2sexp;
 using namespace sexp; // for sexp::ostream, etc
 
-//***************************************************************************
 
 //***************************************************************************
 // Translate symbol tables
@@ -40,6 +39,20 @@ void
 whirl2sexp::TranslateGlobalSymbolTables(sexp::ostream& sos)
 {
   // There are GLOBAL_SYMTAB_TABLES [13] number of global tables. 
+  //   FILE_INFO     (File_info)
+  //   SYMBOL_TABLE  (St_Table)
+  //   PU_TAB        (Pu_Table)
+  //   TYPE_TABLE    (Ty_Table)
+  // -   FLD_TAB     (Fld_Table)
+  // -   TYLIST_TAB  (Tylist_Table)
+  // -   ARB_TAB     (Arb_Table)
+  //   BLK_TAB       (Blk_Table)
+  //   TCON_TAB      (Tcon_Table)
+  //   INITO_TABLE   (Inito_Table)
+  // - INITV_TAB     (Initv_Table)
+  //   ST_ATTR_TABLE (St_Attr_Table)
+  // ? STR_TABLE     (Str_Table) (strtab.cxx)
+  // ?   TCON_STR_TAB
   
   sos << BegList << Atom("gobal_symtab") << EndLine;
 
@@ -54,6 +67,15 @@ whirl2sexp::TranslateGlobalSymbolTables(sexp::ostream& sos)
 
   xlate_TY_TAB(sos);
   sos << EndLine;
+
+  xlate_FLD_TAB(sos);
+  sos << EndLine;
+
+  xlate_TYLIST_TAB(sos);
+  sos << EndLine;
+
+  xlate_ARB_TAB(sos);
+  sos << EndLine;
   
   xlate_BLK_TAB(sos);
   sos << EndLine;
@@ -65,62 +87,45 @@ whirl2sexp::TranslateGlobalSymbolTables(sexp::ostream& sos)
   sos << EndLine;
   
   xlate_ST_ATTR_TAB(sos, GLOBAL_SYMTAB);
+  sos << EndLine;
+  
+  xlate_STR_TAB(sos);
+
+  // Dump_DST (stdout); (cf. ir_a2b.cxx)
   
   sos << EndList;
 }
 
 
 void 
-whirl2sexp::TranslateLocalSymbolTables(sexp::ostream& sos, 
-				       SYMTAB_IDX symtab_lvl)
+whirl2sexp::TranslateLocalSymbolTables(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
 {
   // There are LOCAL_SYMTAB_TABLES [5] number of global tables. 
+  //   ST
+  //   INITO
+  //   ST_ATTR
+  //   PREG_TABLE  (Preg_Table)
+  //   LABEL_TABLE (Label_Table)
 
-  xlate_ST_TAB(sos, symtab_lvl);
-}
-
-
-// Dump_DST (stdout);
-
-#if 0
-// Global
-//   FILE_INFO	File_info;
-//   SYMBOL_TABLE  St_Table;
-//   PU_TAB	Pu_Table;
-//   TYPE_TABLE	Ty_Table;
-// ?   FLD_TAB	Fld_Table
-// ?   TYLIST_TAB Tylist_Table
-// ?   ARB_TAB	Arb_Table
-//   BLK_TAB	Blk_Table;
-//   TCON_TAB	Tcon_Table;
-// ?   TCON_STR_TAB ??
-//   INITO_TABLE   Inito_Table;
-// ? INITV_TAB	   Initv_Table;
-//   ST_ATTR_TABLE St_Attr_Table;
-// ? STR_TAB
-// Local
-//   ST, INITO, ST_ATTR
-//   PREG_TABLE	 Preg_Table;
-//   LABEL_TABLE Label_Table;
-
-// Print all local symbol tables corresponding to a PU
-void
-Print_local_symtab (FILE *f, const SCOPE& scope)
-{
-  // Print the function name
-  fprintf (f, "\n%sSYMTAB for %s: level %d, st %d, label %d, preg %d,"
-	   " inito %d, st_attr %d\n%s\n", DBar, ST_name (scope.st),
-	   PU_lexical_level (scope.st), scope.st_tab->Size () - 1,
-	   scope.label_tab->Size () - 1, scope.preg_tab->Size () - 1,
-	   scope.inito_tab->Size () - 1, scope.st_attr_tab->Size () - 1, DBar);
+  sos << BegList << Atom("symtab") << EndLine;
   
-  For_all_entries (*scope.st_tab, print_op<ST> (f), 1);
-  For_all_entries (*scope.label_tab, print_op<LABEL> (f), 1);
-  For_all_entries (*scope.preg_tab, print_op<PREG> (f), 1);
-  For_all_entries (*scope.inito_tab, print_op<INITO> (f), 1);
-  For_all_entries (*scope.st_attr_tab, print_op<ST_ATTR> (f), 1);
+  xlate_ST_TAB(sos, stab_lvl);
+  sos << EndLine;
+
+  xlate_INITO_TAB(sos, stab_lvl);
+  sos << EndLine;
+  
+  xlate_ST_ATTR_TAB(sos, stab_lvl);
+  sos << EndLine;
+  
+  xlate_PREG_TAB(sos, stab_lvl);
+  sos << EndLine;
+
+  xlate_LABEL_TAB(sos, stab_lvl);
+  sos << EndLine;
+  
+  sos << EndList;
 }
-#endif
 
 
 //***************************************************************************
@@ -174,6 +179,30 @@ whirl2sexp::xlate_TY_TAB(sexp::ostream& sos)
 }
 
 void 
+whirl2sexp::xlate_FLD_TAB(sexp::ostream& sos)
+{
+  sos << BegList << Atom("fld_tab") << EndLine;
+  For_all(Fld_Table, xlate_SYMTAB_entry_op<FLD>(sos));
+  sos << EndList;
+}
+
+void 
+whirl2sexp::xlate_TYLIST_TAB(sexp::ostream& sos)
+{
+  sos << BegList << Atom("tylist_tab") << EndLine;
+  For_all(Tylist_Table, xlate_SYMTAB_entry_op<TYLIST>(sos));
+  sos << EndList;
+}
+
+void 
+whirl2sexp::xlate_ARB_TAB(sexp::ostream& sos)
+{
+  sos << BegList << Atom("arb_tab") << EndLine;
+  For_all(Arb_Table, xlate_SYMTAB_entry_op<ARB>(sos));
+  sos << EndList;
+}
+
+void 
 whirl2sexp::xlate_BLK_TAB(sexp::ostream& sos)
 {
   sos << BegList << Atom("blk_tab") << EndLine;
@@ -198,6 +227,14 @@ whirl2sexp::xlate_INITO_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
 }
 
 void 
+whirl2sexp::xlate_INITV_TAB(sexp::ostream& sos)
+{
+  sos << BegList << Atom("initv_tab") << EndLine;
+  For_all(Initv_Table, xlate_SYMTAB_entry_op<INITV>(sos));
+  sos << EndList;
+}
+
+void 
 whirl2sexp::xlate_ST_ATTR_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
 {
   sos << BegList << Atom("st_attr_tab") << EndLine;
@@ -205,14 +242,41 @@ whirl2sexp::xlate_ST_ATTR_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
   sos << EndList;
 }
 
-
-#if 0
 void 
-whirl2sexp::xlate_PREGTAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
+whirl2sexp::xlate_STR_TAB(sexp::ostream& sos)
 {
-  For_all(Preg_Table, stab_lvl, xlate_PREG_TAB(sos, stab_lvl));
+  sos << BegList << Atom("str_tab") << EndLine; 
+
+  // see osprey1.0/common/com/strtab.h
+  // const char* str = Index_To_Str(STR_IDX idx);
+  // extern UINT32 STR_Table_Size ();
+  
+  sos << EndList;
 }
-#endif
+
+
+
+void 
+whirl2sexp::xlate_PREG_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
+{
+  sos << BegList << Atom("preg_tab") << EndLine;
+  // osprey1.0/common/com/symtab_utils.h defines this without 'stab_lvl' arg!
+  //For_all(Preg_Table, stab_lvl, xlate_SYMTAB_entry_op<PREG>(sos));
+  For_all_entries(*Scope_tab[stab_lvl].preg_tab, 
+		  xlate_SYMTAB_entry_op<PREG>(sos), 1);
+  sos << EndList;
+}
+
+void 
+whirl2sexp::xlate_LABEL_TAB(sexp::ostream& sos, SYMTAB_IDX stab_lvl)
+{
+  sos << BegList << Atom("label_tab") << EndLine;
+  // osprey1.0/common/com/symtab_utils.h defines this without 'stab_lvl' arg!
+  //For_all(Label_Table, stab_lvl, xlate_SYMTAB_entry_op<LABEL>(sos));
+  For_all_entries(*Scope_tab[stab_lvl].label_tab, 
+		  xlate_SYMTAB_entry_op<LABEL>(sos), 1);
+  sos << EndList;
+}
 
 
 //***************************************************************************
@@ -229,7 +293,7 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ST* st)
   // sym_class
   ST_CLASS stclass = ST_class(st);
   const char* stclass_nm = Class_Name(stclass);
-  sos << BegList << Atom(stclass_nm) << Atom(stclass) << EndList;
+  sos << Atom(stclass_nm);
   
   // name_idx/tcon
   STR_IDX nmidx = ST_name_idx(st); // or TCON_IDX  
@@ -242,8 +306,7 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ST* st)
   const char* stsclass_nm = Sclass_Name(stsclass);
   const char* stexport_nm = Export_Name(stexport);
   sos << BegList << Atom("xclass") 
-      << Atom(A_DQUOTE, stsclass_nm) << Atom(stsclass)
-      << Atom(A_DQUOTE, stexport_nm) << Atom(stexport) << EndList;
+      << Atom(stsclass_nm) << Atom(stexport_nm) << EndList;
   
   // type/pu/blk
   if (stclass == CLASS_FUNC) {
@@ -280,7 +343,6 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, PU* pu)
 {
   sos << BegList << Atom(idx);
 
-  // FIXME
   TY_IDX ty_idx = PU_prototype(*pu);
   UINT lvl = (UINT)PU_lexical_level(*pu);
   UINT gp = (UINT)PU_gp_group(*pu);
@@ -296,42 +358,79 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, PU* pu)
 
 
 void
-whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TY* ty)
+whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TY* typ)
 {
   using namespace sexp::IOFlags;
+
+  TY& ty = *typ;
   
   sos << BegList << Atom(idx);
   
   // kind
-  TY_KIND knd = TY_kind(*ty);
+  TY_KIND knd = TY_kind(ty);
   const char* kndnm = Kind_Name(knd);
-  sos << BegList << Atom(kndnm) << Atom(knd) << EndList;
+  sos << Atom(kndnm);
   
   // name_idx
-  STR_IDX nmidx = TY_name_idx(*ty);
-  const char* nm = TY_name(*ty);
+  STR_IDX nmidx = TY_name_idx(ty);
+  const char* nm = TY_name(ty);
   sos << BegList << Atom(A_DQUOTE, nm) << Atom(nmidx) << EndList;
   
   // mtype, size
-  TYPE_ID mty = TY_mtype(*ty);
-  UINT64 sz   = TY_size(*ty);
-  const char* mtynm = MTYPE_name(mty);
-  sos << BegList << Atom(mtynm) << Atom(mty) << Atom(sz) << EndList;
-
+  TYPE_ID mty = TY_mtype(ty);
+  UINT64 sz   = TY_size(ty);
+  const char* mtynm = Mtype_Name(mty);
+  sos << Atom(mtynm) << Atom(sz);
+  
   // flags
-  UINT16 flg = TY_flags(*ty);
+  UINT16 flg = TY_flags(ty);
+  sos << GenBeginFlgList(flg) << EndList;
   
-  // fld/tylist/arb, etype/pointed/pu_flags
-
-  // FIXME: 
-  //FLD_HANDLE fld = TY_fld(ty); 
-  //TYLIST_IDX tyl = TY_tylist(ty);
-  //ARB_HANDLE arb = TY_arb(ty);
-
-  //TY_IDX ty_idx = TY_etype(ty);
-  //TY_IDX ty_idx = TY_pointed(ty);
-  //PU_IDX pu_flg = ty->Pu_flags();
+  // arb/fld/tylist:         ARRAY, STRUCT, FUNCTION  (respectively)
+  // etype/pointed/pu_flags: ARRAY, POINTER, FUNCTION (respectively)
+  if (knd == KIND_ARRAY) {
+    ARB_HANDLE arb = TY_arb(ty); // FIXME more info
+    TY_IDX ety = TY_etype(ty);
+    sos << Atom(arb.Idx()) << GenSexpTy(ety);
+  }
+  else if (knd == KIND_STRUCT) {
+    FLD_HANDLE fld = TY_fld(ty); // FIXME more info
+    sos << Atom(fld.Idx()) << Atom(0);
+  }
+  else if (knd == KIND_POINTER) {
+    TY_IDX basety = TY_pointed(ty);
+    sos << Atom(0) << GenSexpTy(basety);
+  } 
+  else if (knd == KIND_FUNCTION) {
+    TYLIST_IDX tyl = TY_tylist(ty);
+    PU_IDX flg = ty.Pu_flags();
+    sos << Atom(tyl) << GenBeginFlgList(flg) << EndList;
+  }
   
+  sos << EndList;
+}
+
+
+void
+whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, FLD* fld)
+{
+  sos << BegList << Atom(idx);
+  sos << EndList;
+}
+
+
+void
+whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TYLIST* tyl)
+{
+  sos << BegList << Atom(idx);
+  sos << EndList;
+}
+
+
+void
+whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ARB* arb)
+{
+  sos << BegList << Atom(idx);
   sos << EndList;
 }
 
@@ -341,11 +440,10 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, BLK* blk)
 {
   sos << BegList << Atom(idx);
 
-#if 0  
-  sos << Atom(blk->size) << Atom(blk->align)
-      << GenBeginFlgList(blk->flags) << EndList
-      << Atom(blk->section_idx) << Atom(blk->scninfo_idx);
-#endif  
+  sos << Atom(blk->Size()) << Atom(blk->Align())
+      << GenBeginFlgList(blk->Flags()) << EndList
+      << Atom(blk->Section_idx()) << Atom(blk->Scninfo_idx());
+
   sos << EndList;
 }
 
@@ -353,7 +451,24 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, BLK* blk)
 void
 whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TCON* tcon)
 {
+  // see osprey1.0/common/com/targ_const.h
+  using namespace sexp::IOFlags;
+
   sos << BegList << Atom(idx);
+  
+  whirl2sexp::uint128_t qd; // 16 byte value, a tcon has two of these
+  
+  TYPE_ID mty = TCON_ty(*tcon);
+  UINT32 flg = tcon->flags;
+  const char* mtynm = Mtype_Name(mty);
+  sos << Atom(mtynm) << GenBeginFlgList(flg) << EndList;
+  
+  qd = tcon->vals.qval;      // uses operator=
+  sos << Atom(A_HEX, qd.hi) << Atom(A_HEX, qd.lo);
+  
+  qd = tcon->cmplxval.qival; // uses operator=
+  sos << Atom(A_HEX, qd.hi) << Atom(A_HEX, qd.lo);
+  
   sos << EndList;
 }
 
@@ -361,6 +476,7 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TCON* tcon)
 void
 whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, INITO* inito)
 {
+  // see osprey1.0/common/com/irbdata_defs.h
   sos << BegList << Atom(idx);
   
   // st_idx, val
@@ -371,11 +487,47 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, INITO* inito)
 
 
 void
-whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ST_ATTR* sta)
+whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, INITV* initv)
 {
   sos << BegList << Atom(idx);
   sos << EndList;
 }
+
+
+void
+whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ST_ATTR* sta)
+{
+  sos << BegList << Atom(idx);
+  
+  // st_idx, kind
+  ST_IDX st_idx = ST_ATTR_st_idx(*sta);
+  ST_ATTR_KIND knd = ST_ATTR_kind(*sta);
+  sos << GenSexpSym(st_idx) << Atom(knd);  // FIXME: need a name for knd?
+  
+  // reg_id/section_name
+  PREG_NUM val = ST_ATTR_reg_id(*sta);
+  sos << Atom(val);
+  
+  sos << EndList;
+}
+
+
+
+void
+whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, PREG* preg)
+{
+  sos << BegList << Atom(idx);
+  sos << EndList;
+}
+
+
+void
+whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, LABEL* lbl)
+{
+  sos << BegList << Atom(idx);
+  sos << EndList;
+}
+
 
 //***************************************************************************
 

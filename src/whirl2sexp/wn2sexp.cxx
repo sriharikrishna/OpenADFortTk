@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.2 2004/08/06 17:29:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.3 2004/08/09 14:34:53 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -126,10 +126,10 @@ operator<<(std::ostream& os, const GenSexpWNOprInfo_& x)
   OPERATOR opr = OPCODE_operator(opc);
   TYPE_ID rty = OPCODE_rtype(opc);
   TYPE_ID dty = OPCODE_desc(opc);
-
+  
   const char* oprNm = OPERATOR_name(opr) + 4; // skip "OPR_" 
-  const char* rtyNm = MTYPE_name(rty);
-  const char* dtyNm = MTYPE_name(dty);
+  const char* rtyNm = Mtype_Name(rty);
+  const char* dtyNm = Mtype_Name(dty);
   
   sos << Atom(oprNm) << Atom(rtyNm) << Atom(dtyNm);
   

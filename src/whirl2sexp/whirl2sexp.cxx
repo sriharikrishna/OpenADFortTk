@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.cxx,v 1.2 2004/08/06 17:29:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.cxx,v 1.3 2004/08/09 14:34:53 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -124,11 +124,11 @@ GenHeader(sexp::ostream& sos)
 {
   using namespace sexp;
   sos << Comment("WHIRL_IR   ::= (GBL_SYMTAB PU_FOREST)")
-      << Comment("GBL_SYMTAB ::= ...")
+      << Comment("GBL_SYMTAB ::= (...)")
       << Comment("PU_FOREST  ::= (PU_TREE*)")
-      << Comment("PU_TREE    ::= (PU_SYMTAB PU PU_TREE*) | NULL")
+      << Comment("PU_TREE    ::= (PU PU_TREE*) | NULL")
       << Comment("PU_SYMTAB  ::= ...")
-      << Comment("PU         ::= (WHIRL_AST)")
+      << Comment("PU         ::= (PU_SYMTAB WHIRL_AST)")
       << Comment("WHIRL_AST  ::= (WN_OPR WN_ATTRS WHIRL_AST*) | NULL")
       << Comment("WN_ATTRS   ::= ((attr1 ...) (attr2 ...) (attr3 ...) ...)");
 }
@@ -137,16 +137,20 @@ GenHeader(sexp::ostream& sos)
 void
 xlate_IR(sexp::ostream& sos, PU_Info* pu_forest, int flags)
 {
+  sos << sexp::BegList << sexp::Atom("whirl") << sexp::EndLine;
+
   whirl2sexp::TranslateGlobalSymbolTables(sos);
-  sos << sexp::EndLine;
   
   if (!pu_forest) { return; }
+  sos << sexp::EndLine; // end the line now that we know something comes next
   
   // Translate each PU-tree
   for (PU_Info* pu_tree = pu_forest; 
        pu_tree != NULL; pu_tree = PU_Info_next(pu_tree)) {
     xlate_PUTree(sos, pu_tree, flags);
   }
+  
+  sos << sexp::EndList << sexp::EndLine;
 }
 
 
@@ -170,22 +174,23 @@ void
 xlate_PU(sexp::ostream& sos, PU_Info* pu, int flags)
 {  
   if (!pu) { return; }
-
+  
   PU_SetGlobalState(pu);
   
-  // FIXME: PU information
-
-  PU& real_pu = PU_Info_pu(pu); 
-  bool isProgram = PU_is_mainpu(real_pu);
-
-  ST* st = ST_ptr(PU_Info_proc_sym(pu));
-  WN *wn_pu = PU_Info_tree_ptr(pu);
-  ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-
-  // xlate_SymbolTables(xos, CURRENT_SYMTAB, tab);
-
-  xlate_WN(sos, wn_pu, flags);
+  //PU& real_pu = PU_Info_pu(pu); 
+  //bool isProgram = PU_is_mainpu(real_pu);
+  
+  ST_IDX st_idx = PU_Info_proc_sym(pu);
+  WN* wn_pu = PU_Info_tree_ptr(pu);
+  const SCOPE& scope = Scope_tab[CURRENT_SYMTAB];
+  
+  sos << sexp::BegList << sexp::Atom("pu") << GenSexpSymRef(st_idx)
+      << sexp::EndLine;
+  whirl2sexp::TranslateLocalSymbolTables(sos, CURRENT_SYMTAB);
   sos << sexp::EndLine;
+  
+  xlate_WN(sos, wn_pu, flags);
+  sos << sexp::EndList << sexp::EndLine;
   
   sos.flush();
 }
