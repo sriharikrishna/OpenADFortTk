@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexputil.h,v 1.1 2004/12/20 15:17:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexputil.h,v 1.2 2004/12/23 16:27:21 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -19,6 +19,8 @@
 #define sexputil_h
 
 //************************** System Include Files ***************************
+
+#include <inttypes.h>
 
 //*************************** Sexp Include Files ****************************
 
@@ -53,18 +55,71 @@ is_list(sexp_t* sx)
 // Atom/value operations
 // ---------------------------------------------------------
 
+inline bool  
+is_atom_basic(sexp_t* sx) 
+{ 
+  return (sx->aty == SEXP_BASIC); 
+}
+
+
 inline char* 
 get_value(sexp_t* sx) 
 { 
   return sx->val; 
 }
 
-inline bool  
-is_atom_basic(sexp_t* sx) 
-{ 
-  return (sx->aty == SEXP_BASIC); 
+inline long
+get_value_l(sexp_t* sx, long default_val = 0)
+{
+  long val = default_val;
+  if (sx->val) {
+    val = strtol(sx->val, (char **)NULL, 0); // select correct base
+  } 
+  return val;
 }
-  
+
+inline unsigned long
+get_value_ul(sexp_t* sx, unsigned long default_val = 0)
+{  
+  unsigned long val = default_val;
+  if (sx->val) {
+    val = strtoul(sx->val, (char **)NULL, 0); // select correct base
+  } 
+  return val;
+}
+
+inline int32_t
+get_value_i32(sexp_t* sx, int32_t default_val = 0)
+{
+  return (int32_t)get_value_l(sx, default_val);
+}
+
+inline uint32_t
+get_value_ui32(sexp_t* sx, uint32_t default_val = 0)
+{
+  return (uint32_t)get_value_ul(sx, default_val);
+}
+
+inline int64_t
+get_value_i64(sexp_t* sx, int64_t default_val = 0)
+{
+  int64_t val = default_val;
+  if (sx->val) {
+    val = (int64_t)strtoll(sx->val, (char **)NULL, 0); // select correct base
+  } 
+  return val;
+}
+
+inline uint64_t
+get_value_ui64(sexp_t* sx, uint64_t default_val = 0)
+{  
+  uint64_t val = default_val;
+  if (sx->val) {
+    val = (uint64_t)strtoull(sx->val, (char **)NULL, 0); // select correct base
+  } 
+  return val;
+}
+
 
 // ---------------------------------------------------------
 // List operations
