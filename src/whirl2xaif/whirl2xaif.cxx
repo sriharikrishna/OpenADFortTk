@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.24 2004/01/26 15:48:18 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.25 2004/01/29 23:16:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -266,7 +266,7 @@ static void
 TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId, 
 			  XlationContext& ctxt)
 {
-  RestoreOpen64PUGlobalVars(pu); 
+  PU_RestoreGlobalState(pu);
   
   // Translate current symbol table
   SymTabId scopeId = ctxt.FindSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
@@ -286,8 +286,6 @@ TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId,
        child = PU_Info_next(child)) {
     TranslateScopeHierarchyPU(xos, child, scopeId, ctxt);
   }
-  
-  SaveOpen64PUGlobalVars(pu);
 }
 
 //***************************************************************************
@@ -310,6 +308,8 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
 	    XlationContext& ctxt)
 {
   if (!pu) { return; }
+
+  PU_RestoreGlobalState(pu);
   
   xos << Comment(whirl2xaif_divider_comment);
   
@@ -318,7 +318,6 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
   }
   xos << BegElem("xaif:ControlFlowGraph") << Attr("vertex_id", vertexId);
   
-  RestoreOpen64PUGlobalVars(pu);
   ST* st = ST_ptr(PU_Info_proc_sym(pu));
   WN *wn_pu = PU_Info_tree_ptr(pu);
   //IR_set_dump_order(TRUE /*pre*/); fdump_tree(stderr, wn_pu);
@@ -339,8 +338,6 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
       << PUIdAnnot(puId) << EndAttrs;
   TranslateWNPU(xos, wn_pu, ctxt);
   xos << EndElem; // xaif:ControlFlowGraph
-  
-  SaveOpen64PUGlobalVars(pu);
 }
 
 static void
@@ -860,7 +857,7 @@ InlineTest(PU_Info* pu_forest)
   //   IPO_INLINE::Clone_Callee(...)
   
   // Global tables should point to callee
-  RestoreOpen64PUGlobalVars(calleePU);
+  PU_RestoreGlobalState(calleePU);
 
   WN* calleeWN = PU_Info_tree_ptr(calleePU);
 
@@ -896,8 +893,7 @@ InlineTest(PU_Info* pu_forest)
   WN* inlinedBodyWn = cloner.Clone_Tree(WN_func_body(calleeWN));
   
   // Global tables should point to caller
-  SaveOpen64PUGlobalVars(calleePU);
-  RestoreOpen64PUGlobalVars(callerPU);
+  PU_RestoreGlobalState(callerPU);
 
   // -------------------------------------------------------
   // 2. Remove RETURN
@@ -941,7 +937,6 @@ InlineTest(PU_Info* pu_forest)
   dump_tree(callerWN);
 #endif
   
-  SaveOpen64PUGlobalVars(callerPU);
 }
 
 static WN* 

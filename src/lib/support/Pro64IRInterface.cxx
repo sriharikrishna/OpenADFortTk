@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.14 2004/01/25 02:38:59 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.15 2004/01/29 23:16:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -10,28 +10,22 @@
 //   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v $
 //
 // Purpose:
-//   [The purpose of this file]
+//   A Pro64-specific derivation of OpenAnalysis' IRInterface.
+//
+//   First draft by Jason Eckhardt
+//   Revised and extended by Nathan Tallent
 //
 // Description:
 //   [The set of functions, macros, etc. defined in the file]
 //
 //***************************************************************************
 
-//-----------------------------------------------------------------------------
-//
-// A Pro64-specific derivation of the IR interface.
-//
-// See Interface/IRInterface.h for more documentation on these functions.
-//
-// FIXME: a work in progress, untested, etc.
-//
-// First draft by Jason Eckhardt
-// 
-//-----------------------------------------------------------------------------
-
 //************************* System Include Files ****************************
 
 //************************** Open64 Include Files ***************************
+
+#include <include/Open64BasicTypes.h>
+#include "ir_reader.h" // for dump_wn()
 
 //************************ OpenAnalysis Include Files ***********************
 
@@ -39,6 +33,7 @@
 
 //*************************** User Include Files ****************************
 
+#include <lib/support/WhirlGlobalStateUtils.h>
 #include <lib/support/diagnostics.h>
 
 #include "Pro64IRInterface.h"
@@ -49,43 +44,6 @@ ExprTree::Node*
 BuildExprTreeForWN(ExprTree* tree, WN* wn);
 
 //****************************************************************************
-
-//-----------------------------------------------------------------------------
-
-// cf. wn_mp.cxx 1278 ; dra_clone.cxx:974
-// PU_Info_symtab_ptr(pu)
-
-// (PU_lexical_level (&St_Table[PU_Info_proc_sym (pu)]))
-// Scope_tab[CURRENT_SYMTAB].st = WN_get_proc_sym(pu);
-
-// Callgraph: ipa_cg.cxx (1053)
-
-void 
-RestoreOpen64PUGlobalVars(PU_Info *pu)
-{
-  ST_IDX st = PU_Info_proc_sym(pu);
-  DBGMSG(2, "** Restoring Open64 global vars for '%s' **", ST_name(st));
-  
-  // The PU is in memory (change some global pointers around)
-  assert(PU_Info_state(pu, WT_TREE) == Subsect_InMem);
-  Current_Map_Tab = PU_Info_maptab(pu);
-  Current_pu = &PU_Info_pu(pu);
-  CURRENT_SYMTAB = PU_lexical_level(*Current_pu);
-  
-  Restore_Local_Symtab(pu); // FIXME:SYMTAB
-  // FIXME: can we make this restore itself and all its parents?
-}
-
-void
-SaveOpen64PUGlobalVars(PU_Info *pu)
-{
-  ST_IDX st = PU_Info_proc_sym(pu);
-  DBGMSG(2, "** Saving Open64 global vars for '%s' **", ST_name(st));
-  
-  Set_PU_Info_symtab_ptr(pu, NULL);   // FIXME:SYMTAB
-  Save_Local_Symtab(CURRENT_SYMTAB, pu);
-  // Can we make this save itself and all its parents
-}
 
 //-----------------------------------------------------------------------------
 //
@@ -100,26 +58,16 @@ Pro64IRProcIterator::Pro64IRProcIterator(PU_Info* pu_forest)
     }
   }
 
-  pulist_iter = pulist.end(); // initialize to end state (important!)
   Reset();
 }
 
 Pro64IRProcIterator::~Pro64IRProcIterator()
 {
-  // This destructor may be called without having finished a full
-  // iteration (cf. resetting in the middle of an iteration).  We must
-  // save symtab globals for the last pu.
-  // Note: memory leaks may cause big problems because this cleanup
-  // will not be performed.
-  cleanup_previous_pu();
 }
 
 void
 Pro64IRProcIterator::operator++()
 {
-  // Symtab globals for the soon-to-be previous PU must be saved.
-  cleanup_previous_pu();
-
   // Advance current PU
   ++pulist_iter;
   prepare_current_pu();
@@ -128,10 +76,6 @@ Pro64IRProcIterator::operator++()
 void
 Pro64IRProcIterator::Reset()
 {
-  // If the iterator is being reset in the middle of an iteration, we
-  // must save symtab globals for the last pu.
-  cleanup_previous_pu();
-
   // Reset
   pulist_iter = pulist.begin();
   prepare_current_pu();
@@ -142,16 +86,7 @@ Pro64IRProcIterator::prepare_current_pu()
 {
   if (IsValid()) {
     PU_Info *pu = (*pulist_iter);
-    RestoreOpen64PUGlobalVars(pu);
-  }
-}
-
-void 
-Pro64IRProcIterator::cleanup_previous_pu()
-{
-  if (IsValid()) {
-    PU_Info *pu = (*pulist_iter);
-    SaveOpen64PUGlobalVars(pu);
+    PU_RestoreGlobalState(pu);
   }
 }
 

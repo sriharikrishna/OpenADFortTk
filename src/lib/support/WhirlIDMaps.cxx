@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.cxx,v 1.3 2003/09/02 15:02:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.cxx,v 1.4 2004/01/29 23:16:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -28,8 +28,8 @@
 
 //***************************************************************************
 
-// CreateSymTabIdMaps: Created id's based on Pro64IRProcIterator.
-// N.B. this must use symtab saving/restoring.
+// CreateSymTabIdMaps: Create id's based on Pro64IRProcIterator.
+// N.B. this must restore global symtab state for each pu
 pair<SymTabToSymTabIdMap*, SymTabIdToSymTabMap*>
 CreateSymTabIdMaps(PU_Info* pu_forest)
 {
@@ -58,13 +58,7 @@ CreateSymTabIdMaps(PU_Info* pu_forest)
 
 //***************************************************************************
 
-static void
-CreatePUIdMaps_PU(PU_Info* pu, PUToPUIdMap* puToPUIdMap, 
-		  PUIdToPUMap* puIdToPUMap, UINT& nextId);
-
-// CreatePUIdMaps: Create id's based on DFS.  We manually iterate over
-// the PU forest (as opposed to using 'Pro64IRProcIterator') so that
-// there are no save/restore symtab side effects.
+// CreatePUIdMaps: Create id's based on Pro64IRProcIterator. 
 pair<PUToPUIdMap*, PUIdToPUMap*>
 CreatePUIdMaps(PU_Info* pu_forest)
 {
@@ -73,27 +67,17 @@ CreatePUIdMaps(PU_Info* pu_forest)
   PUToPUIdMap* puToPUIdMap = new PUToPUIdMap();
   PUIdToPUMap* puIdToPUMap = new PUIdToPUMap();
   
-  // Translate each PU, descending into children first
-  for (PU_Info *pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
-    CreatePUIdMaps_PU(pu, puToPUIdMap, puIdToPUMap, nextId);
+  // Enter all PUs
+  Pro64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.IsValid(); ++procIt) { 
+    PU_Info* pu = (PU_Info*)procIt.Current();    
+    
+    ++nextId; // create new id
+    puToPUIdMap->Insert(pu, nextId);
+    puIdToPUMap->Insert(nextId, pu);
   }
   
   return make_pair(puToPUIdMap, puIdToPUMap);
-}
-
-static void
-CreatePUIdMaps_PU(PU_Info* pu, PUToPUIdMap* puToPUIdMap, 
-		  PUIdToPUMap* puIdToPUMap, UINT& nextId)
-{
-  UINT32 id = ++nextId; // create new id
-  puToPUIdMap->Insert(pu, id);
-  puIdToPUMap->Insert(id, pu);
-  
-  // Recursively translate all children
-  for (PU_Info *child = PU_Info_child(pu); child != NULL;
-       child = PU_Info_next(child)) {
-    CreatePUIdMaps_PU(pu, puToPUIdMap, puIdToPUMap, nextId);
-  }
 }
 
 //***************************************************************************

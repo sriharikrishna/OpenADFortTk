@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.11 2004/01/13 03:47:00 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.12 2004/01/29 23:16:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -10,22 +10,15 @@
 //   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v $
 //
 // Purpose:
-//   [The purpose of this file]
+//   A Pro64-specific derivation of OpenAnalysis' IRInterface.
+//
+//   First draft by Jason Eckhardt
+//   Revised and extended by Nathan Tallent
 //
 // Description:
 //   [The set of functions, macros, etc. defined in the file]
 //
 //***************************************************************************
-
-//-----------------------------------------------------------------------------
-//
-// A Pro64-specific derivation of the IR interface.
-//
-// FIXME: Just started, work in progress.
-//
-// First draft by Jason Eckhardt
-//
-//-----------------------------------------------------------------------------
 
 #ifndef Pro64IRInterface_h
 #define Pro64IRInterface_h
@@ -39,14 +32,10 @@
 //************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
-#include "ir_reader.h" // For dump_wn(). //FIXME
 
-//*************************** User Include Files ****************************
+//************************ OpenAnalysis Include Files ***********************
 
-#include <OpenAnalysis/Utils/DGraph.h>
-#include <OpenAnalysis/Interface/IRInterface.h>
-
-// IRInterface types: Use OA_IRHANDLETYPE_VOIDPTR
+// IRInterface types: Use OA_IRHANDLETYPE_UL
 //   ProcHandle  - PU_Info*
 //   StmtHandle  - WN*
 //   ExprHandle  - WN*
@@ -55,23 +44,19 @@
 //   SymHandle   - ST*
 //   ConstHandle - 
 
-//*************************** Forward Declarations ***************************
+#include <OpenAnalysis/Interface/IRInterface.h>
+
+//*************************** User Include Files ****************************
+
+#include <lib/support/WhirlGlobalStateUtils.h>
+
+//************************** Forward Declarations ***************************
 
 //***************************************************************************
 
-// When using multiple PUs at a time, this should be called to
-// prepare the global symbol table pointers the current PU.
-void 
-RestoreOpen64PUGlobalVars(PU_Info *pu);
-
-// When using multiple PUs at a time, this should be called to save
-// the global symbol table pointer for later use.
-void
-SaveOpen64PUGlobalVars(PU_Info *pu);
-
-//-----------------------------------------------------------------------------
+//***************************************************************************
 //
-//-----------------------------------------------------------------------------
+//***************************************************************************
 
 // Iterates in PU_Info* pu_forest in DFS order
 class Pro64IRProcIterator : public IRProcIterator {
@@ -87,7 +72,6 @@ public:
 
 private:
   void prepare_current_pu();
-  void cleanup_previous_pu();
 
   std::list<PU_Info*> pulist; // list of PUs (functions)
   std::list<PU_Info*>::iterator pulist_iter;
@@ -163,9 +147,10 @@ private:
   std::list<WN*>::iterator wnlist_iter;
 };
 
-//-----------------------------------------------------------------------------
+
+//***************************************************************************
 //
-//-----------------------------------------------------------------------------
+//***************************************************************************
 
 class Pro64IRInterface : public IRInterface {
 public:

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v 1.2 2003/08/01 15:55:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v 1.3 2004/01/29 23:16:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -77,9 +77,10 @@
 //*************************** User Include Files ****************************
 
 #include "WhirlIO.h"
-#include "diagnostics.h"
+#include "WhirlGlobalStateUtils.h"
+#include "Pro64IRInterface.h"
 
-#include "Pro64IRInterface.h" // FIXME for RestoreOpen64PUGlobalVars()
+#include "diagnostics.h"
 
 //************************** Forward Declarations ***************************
 
@@ -111,40 +112,24 @@ ReadIR(const char* irfilename)
   MEM_POOL_Push(MEM_pu_pool_ptr);
 
   // -------------------------------------------------------
-  // 1. Read pu tree info and global symbol table (FIXME: always do this?)
+  // 1. Read pu tree info and global symbol table
   // -------------------------------------------------------
   
-  // Push initial file level options
+  // Push initial file level options (FIXME)
   Options_Stack = CXX_NEW(OPTIONS_STACK(&MEM_src_nz_pool), &MEM_src_nz_pool);
   Options_Stack->Push_Current_Options();
   
+  // Open file, read PU info and setup symbol tables
   Open_Input_Info((char*)irfilename); // FIXME: change caller to accept const
-  
   Initialize_Symbol_Tables(FALSE);
   New_Scope(GLOBAL_SYMTAB, Malloc_Mem_Pool, FALSE);
-  PU_Info *pu_forest = Read_Global_Info(NULL); // FIXME 
+  PU_Info *pu_forest = Read_Global_Info(NULL);
   Initialize_Special_Global_Symbols();
-
-#if 0 // FIXME
-  // initialize the BE symtab. Note that w2cf relies on the BE_ST 
-  // during Phase_Init and Phase_Fini (do we still need this? REMOVE)
-  BE_symtab_initialize_be_scopes();
-  BE_symtab_alloc_scope_level(GLOBAL_SYMTAB);
-  for (SYMTAB_IDX scopelvl = 0; scopelvl <= GLOBAL_SYMTAB; ++scopelvl) {
-    // No need to deal with levels that don't have st_tab's. Currently
-    // this should be only zero.
-    if (Scope_tab[scopelvl].st_tab != NULL) {
-      Scope_tab[scopelvl].st_tab->Register(*Be_scope_tab[scopelvl].be_st_tab);
-    } else {
-      Is_True(scopelvl == 0, ("Nonexistent st_tab for level %d", scopelvl));
-    }
-  }
-#endif
   
   // -------------------------------------------------------
-  // 2. Read PUs and local symbol tables (FIXME: may not need to do this)
+  // 2. Read PUs and local symbol tables
   // -------------------------------------------------------
-  for (PU_Info *pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
+  for (PU_Info* pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
     ReadPU(pu);
   }
 
@@ -155,39 +140,30 @@ ReadIR(const char* irfilename)
 
 
 void
-ReadPU(PU_Info *pu)
+ReadPU(PU_Info* pu)
 {
   Current_PU_Info = pu;
   
   // Read program unit (Reads the PUs (WHIRL trees), symbol tables;
   // sets CURRENT_SYMTAB and Scope_tab[]).
   Read_Local_Info(MEM_pu_nz_pool_ptr, pu);
-  
-#if 0 // FIXME: Be_scope_tab needs to be changed when another PU is read
-  BE_symtab_alloc_scope_level(CURRENT_SYMTAB);
-  Scope_tab[CURRENT_SYMTAB].st_tab->
-    Register(*Be_scope_tab[CURRENT_SYMTAB].be_st_tab);
-#endif
-
   WN *wn_pu = PU_Info_tree_ptr(pu); // made possible by Read_Local_Info()
   
-  //REMOVE Set_Current_PU_For_Trace(ST_name(PU_Info_proc_sym(pu)), Current_PU_Count());
-
-  /* Always create region pool because there are many places where
+  /* FIXME: Always create region pool because there are many places where
    * they can be introduced. Needed for PUs with no regions also */
   /* NOTE: part of what REGION_initialize does can be moved
-   * to when the .B file is read in.  (FIXME) */
+   * to when the .B file is read in.   */
   REGION_Initialize(wn_pu, PU_has_region(Get_Current_PU()));
 
   Advance_Current_PU_Count();
 
   // Now recursively process the child PU's.
-  for (PU_Info *child = PU_Info_child(pu); child != NULL;
+  for (PU_Info* child = PU_Info_child(pu); child != NULL;
        child = PU_Info_next(child)) {
     ReadPU(child);
   }
 
-  SaveOpen64PUGlobalVars(pu);
+  WhirlGlobalStateUtils_hidden::PU_SaveGlobalState(pu);
 }
 
 
@@ -224,45 +200,26 @@ WriteIR(const char* irfilename, PU_Info* pu_forest)
 
   // It would be possible to use the standard iterator here, but in
   // order to highlight the special handling in WritePU, we do not.
-  for (PU_Info *pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
+  for (PU_Info* pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
     WritePU(pu);
   }
 
   // -------------------------------------------------------
   // 2. Write Global info
   // -------------------------------------------------------
-  
-  // FIXME
-  // In 'WritePU()' we had to change the pu state type from
-  // 'Subsect_Written' to 'Subsect_InMem' to support save/restore.
-  // However, 'Write_Global_Info()' wants the state to be
-  // 'Subsect_Written', so we quickly change the state and then revert
-  // it.  Note that we do not need to use save/restore.
-  SetPUInfoStateIR(pu_forest, Subsect_Written);
-  Write_Global_Info(pu_forest);
-  //SetPUInfoStateIR(pu_forest, Subsect_InMem);
-  
+  Write_Global_Info(pu_forest); // expects PU state to be Subsect_Written
   Close_Output_Info();
 }
 
 static void
 WritePU(PU_Info* pu)
 {
-  RestoreOpen64PUGlobalVars(pu);
+  PU_RestoreGlobalState(pu);
   
-  // 'Write_PU_Info()' will set the PU state to be 'Subsect_Written'.
-  // However, when the state is not 'Subsect_InMem', the save/restore
-  // routines, which are needed for the current _and_ future iterations
-  // over the PU forest, choke.  Unfortunately these states are
-  // mutually exclusive, even though they are not necessarily
-  // distinct.  To get around the problem we reset the state here.
-  Write_PU_Info(pu);
-  SetPUInfoState(pu, Subsect_InMem);
-  
-  SaveOpen64PUGlobalVars(pu);
+  Write_PU_Info(pu); // sets PU state to Subsect_Written
   
   // Recur
-  for (PU_Info *child = PU_Info_child(pu); child != NULL;
+  for (PU_Info* child = PU_Info_child(pu); child != NULL;
        child = PU_Info_next(child)) {
     WritePU(child);
   }
@@ -274,7 +231,7 @@ WritePU(PU_Info* pu)
 static void
 SetPUInfoStateIR(PU_Info* pu_forest, Subsect_State state) 
 {
-  for (PU_Info *pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
+  for (PU_Info* pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
     SetPUInfoStatePU(pu, state);
   }
 }
@@ -288,7 +245,7 @@ SetPUInfoStatePU(PU_Info* pu, Subsect_State state)
   SetPUInfoState(pu, state);
   
   // Recur
-  for (PU_Info *child = PU_Info_child(pu); child != NULL;
+  for (PU_Info* child = PU_Info_child(pu); child != NULL;
        child = PU_Info_next(child)) {
     SetPUInfoStatePU(child, state);
   }
@@ -306,7 +263,6 @@ SetPUInfoState(PU_Info* pu, Subsect_State state)
 }
 
 
-
 //***************************************************************************
 // FreeIR
 //***************************************************************************
@@ -317,45 +273,28 @@ FreePU(PU_Info* pu);
 
 // FreeIR: Given a PU forest, frees all memory consumed by it.
 void
-FreeIR(PU_Info *pu_forest)
+FreeIR(PU_Info* pu_forest)
 {
   Diag_Set_Phase("WHIRL IO: Free IR");
   
   // -------------------------------------------------------
-  // 1. Free PUs and local symbol tables (FIXME: may not need to do this)
+  // 1. Free PUs and local symbol tables
   // -------------------------------------------------------
-  for (PU_Info *pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
+  for (PU_Info* pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
     FreePU(pu);
   }
   
   // -------------------------------------------------------
-  // 2. Free pu tree info and global symbol tables (FIXME: always do this?)
+  // 2. Free pu tree info and global symbol tables
   // -------------------------------------------------------
-  CURRENT_SYMTAB = GLOBAL_SYMTAB; // FIXME
-  Verify_SYMTAB(CURRENT_SYMTAB); /* Verifies global SYmtab */
-
-#if 0 // FIXME  
-  // free the BE symtabs. w2cf requires BE_ST in Phase_Fini */
-  for (SYMTAB_IDX scopelvl = GLOBAL_SYMTAB; scopelvl >= 0; --scopelvl) {
-    // No need to deal with levels that don't have st_tab's. Currently
-    // this should be only zero.
-    if (Scope_tab[scopelvl].st_tab != NULL) {
-      Scope_tab[scopelvl].st_tab->
-	Un_register(*Be_scope_tab[scopelvl].be_st_tab);
-      Be_scope_tab[scopelvl].be_st_tab->Clear();
-    } else {
-      Is_True(scopelvl == 0, ("Nonexistent st_tab for level %d", scopelvl));
-    }
-  }
-  BE_symtab_free_be_scopes();
-#endif
-
-  // mem cleanup
+  Verify_SYMTAB(GLOBAL_SYMTAB);
+  
   MEM_POOL_Pop(MEM_pu_nz_pool_ptr);
   MEM_POOL_Pop(MEM_pu_pool_ptr);
-
+  
   MEM_POOL_Pop( &MEM_src_pool );
   MEM_POOL_Pop( &MEM_src_nz_pool );
+  
 #ifdef Is_True_On
   if (Get_Trace (TKIND_ALLOC, TP_MISC)) {
     fprintf (TFile, "\n%s\tMemory allocation information after be\n", DBar);
@@ -368,16 +307,9 @@ FreeIR(PU_Info *pu_forest)
 static void
 FreePU(PU_Info* pu)
 {
-  RestoreOpen64PUGlobalVars(pu);
-
-  //REGION_Finalize();
+  PU_RestoreGlobalState(pu);
   
-#if 0 // FIXME
-  SYMTAB_IDX scopelvl = PU_lexical_level(PU_Info_pu(pu));
-  Scope_tab[scopelvl].st_tab->Un_register(*Be_scope_tab[scopelvl].be_st_tab);
-  Be_scope_tab[scopelvl].be_st_tab->Clear();
-#endif
-
+  //REGION_Finalize();
   Free_Local_Info(pu); // deletes all maps
   
   // Now recursively process the child PU's.
@@ -447,7 +379,7 @@ DumpIR(PU_Info* pu_forest)
     WN* wn_pu = PU_Info_tree_ptr(pu);
     
     //IR_put_func(wn_pu, NULL);
-    fdump_tree(stderr, wn_pu); // FIXME
+    fdump_tree(stderr, wn_pu);
     
     if (dumpST) {
       Print_local_symtab(stdout, Scope_tab[CURRENT_SYMTAB]);
@@ -455,4 +387,61 @@ DumpIR(PU_Info* pu_forest)
   }
 }
 
+
+//***************************************************************************
+
+#if 0
+
+// This is some code for initializing the global sections of the
+// backend symtab.  It came from ReadIR(const char*).  If we ever want
+// to use it, we should create a separate routine for initializing the
+// BE symtab.
+
+  // initialize the BE symtab. Note that w2cf relies on the BE_ST 
+  // during Phase_Init and Phase_Fini (do we still need this? REMOVE)
+  BE_symtab_initialize_be_scopes();
+  BE_symtab_alloc_scope_level(GLOBAL_SYMTAB);
+  for (SYMTAB_IDX scopelvl = 0; scopelvl <= GLOBAL_SYMTAB; ++scopelvl) {
+    // No need to deal with levels that don't have st_tab's. Currently
+    // this should be only zero.
+    if (Scope_tab[scopelvl].st_tab != NULL) {
+      Scope_tab[scopelvl].st_tab->Register(*Be_scope_tab[scopelvl].be_st_tab);
+    } else {
+      Is_True(scopelvl == 0, ("Nonexistent st_tab for level %d", scopelvl));
+    }
+  }
+
+// This is for initializing local sections of the backend symtab; from
+// ReadPU(PU_Info*)
+  
+  BE_symtab_alloc_scope_level(CURRENT_SYMTAB);
+  Scope_tab[CURRENT_SYMTAB].st_tab->
+    Register(*Be_scope_tab[CURRENT_SYMTAB].be_st_tab);
+
+// Would we every want to use this 
+  Set_Current_PU_For_Trace(ST_name(PU_Info_proc_sym(pu)), Current_PU_Count());
+
+// This is for freeing the backend symtab
+// From FreeIR(PU_Info*)
+
+  // free the BE symtabs. w2cf requires BE_ST in Phase_Fini */
+  for (SYMTAB_IDX scopelvl = GLOBAL_SYMTAB; scopelvl >= 0; --scopelvl) {
+    // No need to deal with levels that don't have st_tab's. Currently
+    // this should be only zero.
+    if (Scope_tab[scopelvl].st_tab != NULL) {
+      Scope_tab[scopelvl].st_tab->
+	Un_register(*Be_scope_tab[scopelvl].be_st_tab);
+      Be_scope_tab[scopelvl].be_st_tab->Clear();
+    } else {
+      Is_True(scopelvl == 0, ("Nonexistent st_tab for level %d", scopelvl));
+    }
+  }
+  BE_symtab_free_be_scopes();
+
+// Freeing local backend symtab, from FreePU(PU_Info*)
+  SYMTAB_IDX scopelvl = PU_lexical_level(PU_Info_pu(pu));
+  Scope_tab[scopelvl].st_tab->Un_register(*Be_scope_tab[scopelvl].be_st_tab);
+  Be_scope_tab[scopelvl].be_st_tab->Clear();
+
+#endif
 

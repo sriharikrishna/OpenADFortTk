@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.8 2004/01/29 15:54:17 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.9 2004/01/29 23:16:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -37,6 +37,10 @@
 
 #include <include/Open64BasicTypes.h>
 
+//************************ OpenAnalysis Include Files ***********************
+
+#include <OpenAnalysis/Utils/DGraph.h>
+
 //*************************** User Include Files ****************************
 
 #include "xaif2whirl.h"
@@ -46,14 +50,12 @@
 #include "XercesStrX.h"
 
 #include <lib/support/Pro64IRInterface.h>
-#include <lib/support/SymTab.h> // for XAIFSymToWhirlSymMap
+#include <lib/support/SymTab.h>    // for XAIFSymToWhirlSymMap
 #include <lib/support/WhirlIDMaps.h>
-#include <lib/support/wn_attr.h> // for WN_Tree_Type
+#include <lib/support/wn_attr.h>   // for WN_Tree_Type
 #include <lib/support/stab_attr.h> // for Stab_Pointer_To
 #include <lib/support/XAIFStrings.h>
 #include <lib/support/diagnostics.h>
-
-#include <OpenAnalysis/Utils/DGraph.h>
 
 //*************************** Forward Declarations ***************************
 

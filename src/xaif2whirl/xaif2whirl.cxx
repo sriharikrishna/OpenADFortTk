@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.18 2004/01/29 15:54:17 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.19 2004/01/29 23:16:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -239,18 +239,16 @@ TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
   cout << XercesStrX(cfgElem->getNodeName()) << ": " << ST_name(st) << endl;
   
   // If we found the PU, translate
-  RestoreOpen64PUGlobalVars(pu);
-
+  PU_RestoreGlobalState(pu);
+  
   WN *wn_pu = PU_Info_tree_ptr(pu);
   TranslateCFG(wn_pu, cfgElem, ctxt);
-
+  
 #if 0
   IR_set_dump_order(TRUE); /* dump parent before children*/
   fprintf(stderr, "\n----------------------------------------------------\n");
   fdump_tree(stderr, wn_pu);
 #endif
-
-  SaveOpen64PUGlobalVars(pu);
 }
 
 
@@ -697,8 +695,8 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
   // 1. Initialize
   SYMTAB_IDX level = GLOBAL_SYMTAB; // Default: assume a global symbol
   if (pu) {
-    // This is a PU-scoped symbol.  Restore local symbol tables
-    RestoreOpen64PUGlobalVars(pu);
+    // This is a PU-scoped symbol.  Restore global state for PU.
+    PU_RestoreGlobalState(pu);
     level = CURRENT_SYMTAB; // PU_lexical_level
   }
   
@@ -729,11 +727,6 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
   // 3. Create our own symbol structure and add to the map
   Symbol* sym = new Symbol(st, active);
   symMap->Insert(scopeId, symNm.c_str(), sym);
-  
-  // 4. Finalize
-  if (pu) {
-    SaveOpen64PUGlobalVars(pu);
-  }
 } 
 
 // CreateST: Creates and returns a WHIRL ST* at level 'level' with

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.h,v 1.1 2003/07/24 20:26:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.h,v 1.2 2004/01/29 23:16:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -53,7 +53,6 @@
 
 //************************** System Include Files ***************************
 
-
 //************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
@@ -61,6 +60,8 @@
 #include "options_stack.h"	    /* for Options_Stack */ // REMOVE
 
 //*************************** User Include Files ****************************
+
+#include "WhirlGlobalStateUtils.h"
 
 //************************** Forward Declarations ***************************
 
@@ -83,5 +84,7 @@ PrepareIR(PU_Info *pu_forest);
 
 void 
 DumpIR(PU_Info *pu_forest);
+
+//***************************************************************************
 
 #endif /* WhirlIO_h_INCLUDED */
