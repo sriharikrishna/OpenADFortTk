@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.9 2004/02/27 20:21:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.10 2004/03/12 18:22:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -53,10 +53,17 @@ namespace xaif2whirl {
   void
   TranslateIR(PU_Info* pu_forest, const DOMDocument* doc);
   
+  // FIXME: relocate...
   Symbol*
   GetSymbol(const DOMElement* elem, XlationContext& ctxt);
   
 }; /* namespace xaif2whirl */
+
+Symbol*
+GetOrCreateSymbol(const char* sname, XlationContext& ctxt);
+
+Symbol*
+GetOrCreateBogusTmpSymbol(XlationContext& ctxt);
 
 //****************************************************************************
 

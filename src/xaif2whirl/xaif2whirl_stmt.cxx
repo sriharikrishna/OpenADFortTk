@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.6 2003/11/26 14:49:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.7 2004/03/12 18:22:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -71,6 +71,9 @@ xlate_AssignmentRHS(const DOMElement* elem, XlationContext& ctxt);
 static WN* 
 xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt);
 
+static WN* 
+xlate_InlinableSubroutineCall(const DOMElement* elem, XlationContext& ctxt);
+
 
 static WN* 
 xlate_DerivativePropagator(const DOMElement* elem, XlationContext& ctxt);
@@ -103,6 +106,9 @@ CreateAssignment(WN* lhs, WN* rhs);
 static WN*
 CreateZeroConst(TYPE_ID ty);
 
+static WN*
+CreateOpenADInline(const char* fname, std::vector<WN*>& args);
+
 //****************************************************************************
 
 WN* 
@@ -115,6 +121,8 @@ xaif2whirl::TranslateStmt(const DOMElement* stmt, XlationContext& ctxt)
     wn = xlate_Assignment(stmt, ctxt);
   } else if (XMLString::equals(name, XAIFStrings.elem_SubCall_x())) {
     wn = xlate_SubroutineCall(stmt, ctxt);
+  } else if (XMLString::equals(name, XAIFStrings.elem_InlinableSubCall_x())) {
+    wn = xlate_InlinableSubroutineCall(stmt, ctxt);
   } else if (XMLString::equals(name, XAIFStrings.elem_Marker_x())) {
     // nothing
   } else if (XMLString::equals(name, XAIFStrings.elem_DerivProp_x())) {
@@ -142,6 +150,7 @@ xlate_Assignment(const DOMElement* elem, XlationContext& ctxt)
   return wn;
 }
 
+
 static WN*
 xlate_AssignmentLHS(const DOMElement* elem, XlationContext& ctxt)
 {
@@ -156,6 +165,7 @@ xlate_AssignmentLHS(const DOMElement* elem, XlationContext& ctxt)
   ctxt.DeleteContext();
   return wn;
 }
+
 
 static WN*
 xlate_AssignmentRHS(const DOMElement* elem, XlationContext& ctxt)
@@ -218,6 +228,72 @@ xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
   }
   
   return callWN;
+}
+
+
+static WN* 
+xlate_InlinableSubroutineCall(const DOMElement* elem, XlationContext& ctxt)
+{
+  // FIXME: abstract with above code
+  
+  // -------------------------------------------------------
+  // 1. Gather the arguments, sorted by "position" attribute and
+  // translate them into a WHIRL expression tree.
+  // -------------------------------------------------------
+  unsigned int numArgs = GetChildElementCount(elem);
+  std::vector<WN*> args_wn(numArgs);
+  for (DOMElement* arg = GetFirstChildElement(elem); (arg); 
+       arg = GetNextSiblingElement(arg) ) {
+    
+    // VariableReferenceType
+    const XMLCh* nmX = arg->getNodeName();
+    ASSERT_FATAL(XMLString::equals(nmX, XAIFStrings.elem_ArgumentSubst_x()), 
+		 (DIAG_A_STRING, "Programming error."));
+    
+    unsigned int pos = GetPositionAttr(arg); // 1-based
+    ASSERT_FATAL(1 <= pos, (DIAG_A_STRING, "Error."));
+    if (pos > args_wn.size()) { args_wn.resize(pos); } // must resize
+    
+    // Note: We do *not* check the deriv flag; any active variable
+    // references should be passed as is.
+    uint32_t flg = XlationContext::ACTIVE_D;
+    
+    DOMElement* argExpr = GetFirstChildElement(arg);
+    
+    ctxt.CreateContext(flg);
+    WN* argExprWN = TranslateVarRef(argExpr, ctxt);
+    ctxt.DeleteContext();
+    args_wn[pos - 1] = argExprWN;
+  }
+    
+  // -------------------------------------------------------
+  // 2. Create block containing OpenAD pragma and call
+  // -------------------------------------------------------
+  const XMLCh* subnameX = elem->getAttribute(XAIFStrings.attr_subname_x());
+  XercesStrX subname = XercesStrX(subnameX);
+  
+  // Create OpenAD pragma (locate before creating placeholder nodes!)
+  WN* comWN = CreateOpenADInline(subname.c_str(), args_wn);
+
+  // Create placeholder nodes for arguments not found above
+  for (unsigned int i = 0; i < args_wn.size(); ++i) {
+    if (!args_wn[i]) { 
+      Symbol* sym = GetOrCreateBogusTmpSymbol(ctxt);
+      ST* st = sym->GetST();
+      TYPE_ID rty = ST_mtype(st), dty = ST_mtype(st);
+      args_wn[i] = WN_CreateLdid(OPR_LDID, rty, dty, 0, st, ST_type(st), 0);
+    }
+  }
+
+  // Create call (with placeholder nodes)
+  TYPE_ID rtype = MTYPE_V; // void type for subroutine call
+  WN* callWN = CreateCallToIntrin(rtype, subname.c_str(), args_wn);
+  
+  WN* blkWN = WN_CreateBlock();
+  WN_INSERT_BlockFirst(blkWN, comWN);
+  WN_INSERT_BlockLast(blkWN, callWN);
+  
+  return blkWN;
 }
 
 
@@ -290,6 +366,7 @@ xlate_SetDeriv(const DOMElement* elem, XlationContext& ctxt)
   return callWN;
 }
 
+
 // xlate_ZeroDeriv: 
 static WN* 
 xlate_ZeroDeriv(const DOMElement* elem, XlationContext& ctxt)
@@ -301,6 +378,7 @@ xlate_ZeroDeriv(const DOMElement* elem, XlationContext& ctxt)
 
   return callWN;
 }
+
 
 // xlate_Saxpy: handles calls to both
 //   saxpy(a,x,y): Y=A1*X1+A2*X2+...+Y
@@ -351,6 +429,7 @@ xlate_Saxpy(const DOMElement* elem, XlationContext& ctxt, bool saxpy)
   return callWN;
 }
 
+
 //****************************************************************************
 
 WN*
@@ -362,12 +441,14 @@ xaif2whirl::PatchWNStmt(WN* wn, XlationContext& ctxt)
   }
 }
 
+
 static void
 PatchWN_IO(WN* wn, XlationContext& ctxt)
 {  
   // FIXME: only handle cray read/write for now
   PatchWN_IO_cray(wn, ctxt);
 }
+
 
 static void
 PatchWN_IO_cray(WN* wn, XlationContext& ctxt)
@@ -386,6 +467,7 @@ PatchWN_IO_cray(WN* wn, XlationContext& ctxt)
     }
   }
 }
+
 
 static void
 PatchWN_IO_ITEM_list(WN* wn, XlationContext& ctxt)
@@ -421,6 +503,7 @@ PatchWN_IO_ITEM_list(WN* wn, XlationContext& ctxt)
   }
 }
 
+
 //****************************************************************************
 
 static WN*
@@ -442,3 +525,27 @@ CreateZeroConst(TYPE_ID ty)
 {
   return Make_Const(Targ_Conv(ty, Host_To_Targ(MTYPE_I4, 0)));
 }
+
+
+static WN*
+CreateOpenADInline(const char* fname, std::vector<WN*>& args)
+{
+  static char buf[10];
+  
+  // $OpenAD$ INLINE subname(argpos1, argpos2..)
+  std::string com = "$OpenAD$ INLINE ";
+  com.reserve(128);
+  com += fname;
+  com += "(";
+  
+  for (unsigned int i = 0; i < args.size(); ++i) {
+    const char* argdesc = (args[i]) ? "subst" : "nosubst";
+    com += argdesc;
+    if (i < (args.size() - 1)) { com += ","; }
+  }
+  com += ")";
+  
+  WN* comWN = WN_CreateComment((char*)com.c_str());
+  return comWN;
+}
+

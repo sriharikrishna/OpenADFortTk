@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.13 2004/03/03 16:31:26 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.14 2004/03/12 18:22:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -92,12 +92,16 @@ public:
     // Statements
     ELEM_Assign,
     ELEM_SubCall,
+    ELEM_InlinableSubCall,
     ELEM_Marker,
 
     ELEM_AssignLHS,
     ELEM_AssignRHS,
 
     ELEM_Argument,
+    ELEM_ArgumentSubst,
+
+    ATTR_subname,
 
     // Expressions
     ELEM_VarRef,
@@ -259,6 +263,8 @@ public:
   XMLCh*      elem_Assign_x() const { return x_strTbl[ELEM_Assign]; }
   const char* elem_SubCall() const { return c_strTbl[ELEM_SubCall]; }
   XMLCh*      elem_SubCall_x() const { return x_strTbl[ELEM_SubCall]; }
+  const char* elem_InlinableSubCall() const { return c_strTbl[ELEM_InlinableSubCall]; }
+  XMLCh*      elem_InlinableSubCall_x() const { return x_strTbl[ELEM_InlinableSubCall]; }
   const char* elem_Marker() const { return c_strTbl[ELEM_Marker]; }
   XMLCh*      elem_Marker_x() const { return x_strTbl[ELEM_Marker]; }
 
@@ -269,6 +275,12 @@ public:
 
   const char* elem_Argument() const { return c_strTbl[ELEM_Argument]; }
   XMLCh*      elem_Argument_x() const { return x_strTbl[ELEM_Argument]; }
+  const char* elem_ArgumentSubst() const { return c_strTbl[ELEM_ArgumentSubst]; }
+  XMLCh*      elem_ArgumentSubst_x() const { return x_strTbl[ELEM_ArgumentSubst]; }
+
+  const char* attr_subname() const { return c_strTbl[ATTR_subname]; }
+  XMLCh*      attr_subname_x() const { return x_strTbl[ATTR_subname]; }
+  
 
   // Expressions
   const char* elem_VarRef() const { return c_strTbl[ELEM_VarRef]; }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.25 2004/03/03 16:31:26 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.26 2004/03/12 18:22:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -659,6 +659,39 @@ xaif2whirl::GetSymbol(const DOMElement* elem, XlationContext& ctxt)
   return ctxt.FindSym(scopeId.c_str(), symId.c_str());
 }
 
+Symbol*
+GetOrCreateSymbol(const char* sname, XlationContext& ctxt)
+{
+  // FIXME: make more general
+  bool active = false;
+  
+  // FIXME: need to associate current PU with a scope id...
+  const char* scopeId = "1"; // assume global for now
+  
+  XAIFSymToSymbolMap* symMap = ctxt.GetXAIFSymToSymbolMap();
+  Symbol* sym = symMap->Find(scopeId, sname);
+  if (!sym) {
+    // FIXME: use CreateST...
+    TY_IDX ty = MTYPE_To_TY(MTYPE_F8);
+    SYMTAB_IDX level = GLOBAL_SYMTAB; // FIXME: coordinate with scopeId
+    ST* st = New_ST(level);
+    ST_Init(st, Save_Str(sname), CLASS_VAR, SCLASS_AUTO, EXPORT_LOCAL, ty);
+    
+    sym = new Symbol(st, active);
+    symMap->Insert(scopeId, sname, sym);
+  }
+  return sym;
+}
+
+
+Symbol*
+GetOrCreateBogusTmpSymbol(XlationContext& ctxt)
+{
+  static const char* sname = "OpenAD_bogus";
+  return GetOrCreateSymbol(sname, ctxt);
+}
+
+
 static void
 xlate_Scope(const DOMElement* elem, XAIFSymToSymbolMap* symMap, 
 	    XlationContext& ctxt)
@@ -677,6 +710,7 @@ xlate_Scope(const DOMElement* elem, XAIFSymToSymbolMap* symMap,
   xlate_SymbolTable(symtabElem, scopeId.c_str(), stab.second, symMap);
 }  
 
+
 static void
 xlate_SymbolTable(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
 		  XAIFSymToSymbolMap* symMap)
@@ -692,6 +726,7 @@ xlate_SymbolTable(const DOMElement* elem, const char* scopeId, PU_Info* pu,
   }
   it->release();
 }
+
 
 // xlate_Symbol: Note that symbols can only be in a global or PU
 // scope; IOW, there are no block scopes.
@@ -735,6 +770,7 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
   Symbol* sym = new Symbol(st, active);
   symMap->Insert(scopeId, symNm.c_str(), sym);
 } 
+
 
 // CreateST: Creates and returns a WHIRL ST* at level 'level' with
 // name 'nm' using 'elem' to gather ST shape and storage class info.
@@ -790,6 +826,7 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
   
   return st;
 }
+
 
 //****************************************************************************
 
@@ -917,6 +954,7 @@ xaif2whirl::GetId(const char* idstr, const char* tag)
   return id;
 }
 
+
 template <class T>
 IdList<T>*
 xaif2whirl::GetIdList(const char* idstr, const char* tag)
@@ -952,6 +990,7 @@ xaif2whirl::GetIdList(const char* idstr, const char* tag)
   return idlist;
 }
 
+
 //****************************************************************************
 
 WN*
@@ -969,6 +1008,7 @@ CreateCallToIntrin(TYPE_ID rtype, const char* fname, unsigned int argc)
   return callWN;
 }
 
+
 WN*
 CreateCallToIntrin(TYPE_ID rtype, const char* fname, std::vector<WN*>& args)
 {
@@ -983,6 +1023,7 @@ CreateCallToIntrin(TYPE_ID rtype, const char* fname, std::vector<WN*>& args)
   
   return callWN;
 }
+
 
 WN*
 CreateIntrinsicCall(OPERATOR opr, INTRINSIC intrn, 
@@ -999,6 +1040,7 @@ CreateIntrinsicCall(OPERATOR opr, INTRINSIC intrn,
   delete[] kids;
   return wn;
 }
+
 
 //****************************************************************************
 
