@@ -21,20 +21,26 @@ use ADtemplate;
 
 use PPsetup;
 use File::Basename;
+use Getopt::Long;
+
+my($forward) = 0;
+my($result) = GetOptions("forward" => \$forward);
 
 my($infile) = $ARGV[0];
 my($name,$dir,$ext) = fileparse($infile,'\.[Ff]');
 my($outfile) = $dir . $name . ".pp" . $ext;
+my($inl,$template);
 
-my($inl) = ADinline->new(Ffile->new('ad_inline.f'));
-my($template) = ADtemplate->new(Ffile->new('ad_template.f'));
+unless ($forward){
+    $inl = ADinline->new(Ffile->new('ad_inline.f'));
+    $template = ADtemplate->new(Ffile->new('ad_template.f'));
+}
 
-my($ffi) = Ffile->new($infile)->rewrite_sem(\&xaifpp)
-           ->rewrite($inl->inline());
-
-my($ffit) = fconcat( map {$template->instantiate($_)}
+my($ffi) = Ffile->new($infile)->rewrite_sem(\&xaifpp);
+unless ($forward){
+    $ffi = $ffi->rewrite($inl->inline());
+    $ffi = fconcat( map {$template->instantiate($_)}
 		     FTUnit->new($ffi)->units() );
+}
 
-$ffit->write($outfile);
-
-
+$ffi->write($outfile);
