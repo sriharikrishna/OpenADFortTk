@@ -70,10 +70,10 @@
   <!-- ******************************************************************** -->
   <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="d_head__20" annotation="{PU_Id#1}">
     <xaif:ArgumentList>
-      <xaif:ArgumentSymbolReference position="1" scope_id="2" symbol_id="X_1"/>
-      <xaif:ArgumentSymbolReference position="2" scope_id="2" symbol_id="D_X_2"/>
-      <xaif:ArgumentSymbolReference position="3" scope_id="2" symbol_id="Y_3"/>
-      <xaif:ArgumentSymbolReference position="4" scope_id="2" symbol_id="D_Y_4"/>
+      <xaif:ArgumentSymbolReference position="1" scope_id="2" symbol_id="X_1" intent="in" annotation="{WHIRL_Id#2}"/>
+      <xaif:ArgumentSymbolReference position="2" scope_id="2" symbol_id="D_X_2" intent="in" annotation="{WHIRL_Id#3}"/>
+      <xaif:ArgumentSymbolReference position="3" scope_id="2" symbol_id="Y_3" intent="inout" annotation="{WHIRL_Id#4}"/>
+      <xaif:ArgumentSymbolReference position="4" scope_id="2" symbol_id="D_Y_4" intent="inout" annotation="{WHIRL_Id#5}"/>
     </xaif:ArgumentList>
 
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>

@@ -68,8 +68,8 @@
   <!-- ******************************************************************** -->
   <xaif:ControlFlowGraph vertex_id="1" scope_id="1" symbol_id="compute__20" annotation="{PU_Id#1}">
     <xaif:ArgumentList>
-      <xaif:ArgumentSymbolReference position="1" scope_id="2" symbol_id="X_1"/>
-      <xaif:ArgumentSymbolReference position="2" scope_id="2" symbol_id="Y_2"/>
+      <xaif:ArgumentSymbolReference position="1" scope_id="2" symbol_id="X_1" intent="inout" annotation="{WHIRL_Id#2}"/>
+      <xaif:ArgumentSymbolReference position="2" scope_id="2" symbol_id="Y_2" intent="inout" annotation="{WHIRL_Id#3}"/>
     </xaif:ArgumentList>
 
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
@@ -136,8 +136,8 @@
   <!-- ******************************************************************** -->
   <xaif:ControlFlowGraph vertex_id="2" scope_id="1" symbol_id="myloop__25" annotation="{PU_Id#2}">
     <xaif:ArgumentList>
-      <xaif:ArgumentSymbolReference position="1" scope_id="3" symbol_id="X_1"/>
-      <xaif:ArgumentSymbolReference position="2" scope_id="3" symbol_id="Y_2"/>
+      <xaif:ArgumentSymbolReference position="1" scope_id="3" symbol_id="X_1" intent="inout" annotation="{WHIRL_Id#27}"/>
+      <xaif:ArgumentSymbolReference position="2" scope_id="3" symbol_id="Y_2" intent="inout" annotation="{WHIRL_Id#28}"/>
     </xaif:ArgumentList>
 
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
