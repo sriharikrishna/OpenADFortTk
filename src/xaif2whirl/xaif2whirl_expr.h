@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.h,v 1.3 2004/03/29 23:41:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.h,v 1.4 2004/05/04 23:51:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -44,21 +44,24 @@ XERCES_CPP_NAMESPACE_USE
 
 namespace xaif2whirl {
 
-// Note: These functions should only be called when 'ctxt' is properly
-// initialized!
-
-WN*
-TranslateExpression(const DOMElement* elem, XlationContext& ctxt);
-
-WN*
-TranslateVarRef(const DOMElement* elem, XlationContext& ctxt);
-
-ST*
-TranslateVarRefSimple(const DOMElement* elem, XlationContext& ctxt);
-
-WN*
-PatchWNExpr(WN* parent, INT kidno, XlationContext& ctxt);
- 
+  // Note: These functions should only be called when 'ctxt' is properly
+  // initialized!
+  
+  WN*
+  TranslateExpression(const DOMElement* elem, XlationContext& ctxt);
+  
+  WN*
+  TranslateExpressionSimple(const DOMElement* elem, XlationContext& ctxt);
+  
+  WN*
+  TranslateVarRef(const DOMElement* elem, XlationContext& ctxt);
+  
+  ST*
+  TranslateVarRefSimple(const DOMElement* elem, XlationContext& ctxt);
+  
+  WN*
+  PatchWNExpr(WN* parent, INT kidno, XlationContext& ctxt);
+  
 }; /* namespace xaif2whirl */
 
 //***************************************************************************
