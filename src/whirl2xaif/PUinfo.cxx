@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.cxx,v 1.6 2003/07/24 20:30:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.cxx,v 1.7 2004/01/25 02:41:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -74,17 +74,25 @@
  * ====================================================================
  */
 
+//************************* System Include Files ****************************
+
 #include <string.h>
 
+//************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
 #include "targ_sim.h"
 
+//*************************** User Include Files ****************************
 
 #include "PUinfo.h"
 #include "whirl2f_common.h"
-#include "w2cf_parentize.h" /* For W2CF_Parent_Map */
 
+#include <lib/support/WhirlParentize.h>
+
+//*************************** Forward Declarations ***************************
+
+//****************************************************************************
 
 #define IS_RETURN_PREG(wn) \
         (ST_class(WN_st(wn)) == CLASS_PREG \
