@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.cxx,v 1.4 2004/03/02 20:25:54 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.cxx,v 1.5 2004/03/03 16:30:49 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -23,7 +23,7 @@
 
 #include <stdlib.h> // <cstdlib> // for strtol
 #include <string.h> // <cstring>
-#include <errno.h > // <cerrno>
+#include <errno.h>  // <cerrno>
 
 //************************** Open64 Include Files ***************************
 
