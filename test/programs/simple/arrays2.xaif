@@ -266,7 +266,7 @@
     </xaif:BasicBlock>
 
     <xaif:BasicBlock vertex_id="5" scope_id="2" annotation="{WHIRL_Id#88}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#88} [label 1]"/>
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#88}{StmtLabel#1}"/>
     </xaif:BasicBlock>
 
     <xaif:EndLoop vertex_id="14" annotation="{WHIRL_Id#}"/>
@@ -375,7 +375,7 @@
     </xaif:BasicBlock>
 
     <xaif:BasicBlock vertex_id="10" scope_id="2" annotation="{WHIRL_Id#158}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#158} [label 3]"/>
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#158}{StmtLabel#3}"/>
     </xaif:BasicBlock>
 
     <xaif:EndLoop vertex_id="15" annotation="{WHIRL_Id#}"/>

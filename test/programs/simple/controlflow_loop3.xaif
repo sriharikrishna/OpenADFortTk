@@ -130,7 +130,7 @@
     </xaif:BasicBlock>
 
     <xaif:BasicBlock vertex_id="3" scope_id="3" annotation="{WHIRL_Id#33}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#33} [label 1]"/>
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#33}{StmtLabel#1}"/>
     </xaif:BasicBlock>
 
     <xaif:Branch vertex_id="12" annotation="{WHIRL_Id#34}">
@@ -187,7 +187,7 @@
     <xaif:EndBranch vertex_id="7" annotation="{WHIRL_Id#}"/>
 
     <xaif:BasicBlock vertex_id="13" scope_id="3" annotation="{WHIRL_Id#89}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#89} [goto 1]"/>
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#89}{StmtGoto#1}"/>
     </xaif:BasicBlock>
 
     <xaif:BasicBlock vertex_id="8" scope_id="3" annotation="{WHIRL_Id#}"/>

@@ -146,7 +146,7 @@
     </xaif:BasicBlock>
 
     <xaif:BasicBlock vertex_id="3" scope_id="4" annotation="{WHIRL_Id#32:33}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#32} [label 4]"/>
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#32}{StmtLabel#4}"/>
       <xaif:Assignment statement_id="2">
         <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="t__1_4"/>
@@ -211,7 +211,7 @@
     </xaif:Branch>
 
     <xaif:BasicBlock vertex_id="6" scope_id="4" annotation="{WHIRL_Id#129:130}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#129} [label 2]"/>
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#129}{StmtLabel#2}"/>
       <xaif:Marker statement_id="2" annotation="{WHIRL_Id#130} [return]"/>
     </xaif:BasicBlock>
 
