@@ -7,6 +7,7 @@ use FTscan;
 use FTpat;
 
 use Unreadhack;
+use File::Basename;
 
 %tr = (
        iadrh0 => '(20,*)',
@@ -14,15 +15,13 @@ use Unreadhack;
        );
 
 sub doit {
-    $fn = $_[0];
-    $bak = $fn . '.urh';
-    rename $fn,$bak;
-    local(*F);
+    my($fn) = $_[0];
+    my($name,$dir,$ext) = fileparse($fn,'\.[Ff]');
+    my($ofn) = $dir . $name . ".urh" . $ext;
 
     print STDERR  "unreadhack $fn ...\n";
-    Ffile->new($bak)->rewrite_sem(\&unreadhack,%tr)
-         ->write($fn);
-    
+    Ffile->new($fn)->rewrite_sem(\&unreadhack,%tr)
+         ->write($ofn);
 }
 
 map {doit($_)} @ARGV;

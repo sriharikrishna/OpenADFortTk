@@ -9,17 +9,17 @@ use FTpat;
 use Readhack;
 use InsertAftImplNone;
 
-sub doit {
-    $fn = $_[0];
-    $bak = $fn . '.rh';
-    rename $fn,$bak;
-    local(*F);
+use File::Basename;
 
-    print STDERR  "readhack $fn ...\n";
-    Ffile->new($bak)->rewrite_sem(\&readhack)
+sub doit {
+    my($fn) = $_[0];
+    my($name,$dir,$ext) = fileparse($fn,'\.[Ff]');
+    my($ofn) = $dir . $name . ".prh" . $ext;
+
+    print STDERR  "readhack $fn -> $ofn ...\n";
+    Ffile->new($fn)->rewrite_sem(\&readhack)
          ->rewrite_sem(dcls_ins('read_data_file'),readhackdecls())
-         ->write($fn);
-    
+         ->write($ofn);
 }
 
 map {doit($_)} @ARGV;
