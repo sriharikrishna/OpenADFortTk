@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexputil.cxx,v 1.1 2005/02/01 21:52:24 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexputil.cxx,v 1.2 2005/02/01 23:49:43 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -21,7 +21,8 @@
 
 //*************************** User Include Files ****************************
 
-#include "sexputil.h"
+// Note: we do not want this lib to depend upon sexp yet
+//#include "sexputil.h"
 
 //************************** Forward Declarations ***************************
 
