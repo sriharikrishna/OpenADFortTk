@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.11 2004/04/09 16:04:34 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.12 2004/04/12 13:59:48 eraxxon Exp $
 # -*-makefile-*-
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -37,11 +37,7 @@ F90_MASTERS1 := $(filter-out $(F90_EXCEPTIONS1), $(F90_MASTERS1))
 # Pipeline
 MFEF90  = $(WHIRL2XAIF_OPEN64)/crayf90/sgi/mfef90
 WHIRL2F = $(WHIRL2XAIF_OPEN64)/whirl2f/whirl2f
-XB_BB   = $(XAIFBOOSTERROOT)/xaifBooster/algorithms/BasicBlockPreaccumulation/test/t -c $(XAIFSCHEMAROOT)/schema/examples/inlinable_intrinsics.xaif
 W2X     = $(WHIRL2XAIF)/obj/$(WHIRL2XAIF_PLATFORM)/obj/whirl2xaif
-X2W     = $(WHIRL2XAIF)/obj/$(WHIRL2XAIF_PLATFORM)/obj/xaif2whirl
-PP      = perl $(WHIRL2XAIF)/postprocess/pp.pl
-
 NORM    = $(WHIRL2XAIF)/test/util/normalize
 
 OPENAD  = $(WHIRL2XAIF)/test/util/openad
@@ -76,7 +72,7 @@ tests_pipeline:
 	@echo "*** exceptions: $(F90_EXCEPTIONS1) ***"
 	@for f in $(F90_MASTERS1) ; do \
 	  printf "  " ; \
-	  $(OPENAD) -v $${f} ; \
+	  $(OPENAD) -v --bb $${f} ; \
 	done
 
 tests_post:
