@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.11 2003/09/05 21:41:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.12 2003/09/16 14:30:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -226,8 +226,10 @@ public:
   
   enum Flags {
     NOFLAG           = 0x00000000,
+    ASSIGN           = 0x00000001, // within xaif:Assignment; inherited
+    VARREF           = 0x00000002, // within xaif:VariableReference; inherited
     DEREF_ADDR       = 0x00000004,
-    VARREF           = 0x00000008  // within xaif:VariableReference; inherited
+
 #define XlationContext_NO_NEWLINE              0x00000100
 #define XlationContext_HAS_LOGICAL_ARG         0x00000200
 #define XlationContext_IS_LOGICAL_ARG          0x00000400
@@ -255,6 +257,12 @@ public:
   BOOL IsDerefAddr() const { return (flags & DEREF_ADDR); }
   void SetDerefAddr()      { flags = flags | DEREF_ADDR; }
   void ResetDerefAddr()    { flags = flags & ~DEREF_ADDR; } // Clear
+
+
+  // Within a xaif:Assignment (inherited)
+  BOOL IsAssign() const { return CurContext().AreFlags(ASSIGN); }
+  void SetAssign()      { CurContext().SetFlags(ASSIGN); }
+  void ResetAssign()    { CurContext().ResetFlags(ASSIGN); }
   
   // Within a xaif:VariableReference (inherited)
   BOOL IsVarRef() const { return CurContext().AreFlags(VARREF); }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.7 2003/09/05 21:41:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.8 2003/09/16 14:30:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -88,6 +88,8 @@ public:
     ELEM_AssignLHS,
     ELEM_AssignRHS,
 
+    ELEM_Argument,
+
     // Expressions
     ELEM_VarRef,
     ELEM_Constant,
@@ -95,13 +97,20 @@ public:
     ELEM_FuncCall,
     ELEM_BoolOp,
 
-    ELEM_SymRef,
-    
     ELEM_ExprEdge,
 
     ATTR_name,
     ATTR_value,
-
+    ATTR_position,
+    
+    // Variable Reference Expressions
+    ELEM_SymRef,
+    ELEM_ArrayElemRef,
+    
+    ELEM_Index,
+    
+    ELEM_VarRefEdge,
+    
     // DerivativePropagator
     ELEM_DerivProp,  // block
 
@@ -214,6 +223,8 @@ public:
   XMLCh*      elem_AssignLHS_x() const { return x_strTbl[ELEM_AssignLHS]; }
   XMLCh*      elem_AssignRHS_x() const { return x_strTbl[ELEM_AssignRHS]; }
 
+  XMLCh*      elem_Argument_x() const { return x_strTbl[ELEM_Argument]; }
+
   // Expressions
   XMLCh*      elem_VarRef_x() const { return x_strTbl[ELEM_VarRef]; }
   XMLCh*      elem_Constant_x() const { return x_strTbl[ELEM_Constant]; }
@@ -221,13 +232,21 @@ public:
   XMLCh*      elem_FuncCall_x() const { return x_strTbl[ELEM_FuncCall]; }
   XMLCh*      elem_BoolOp_x() const { return x_strTbl[ELEM_BoolOp]; }
   
-  XMLCh*      elem_SymRef_x() const { return x_strTbl[ELEM_SymRef]; }
-  
   XMLCh*      elem_ExprEdge_x() const { return x_strTbl[ELEM_ExprEdge]; }
 
   XMLCh*      attr_name_x() const { return x_strTbl[ATTR_name]; }
   XMLCh*      attr_value_x() const { return x_strTbl[ATTR_value]; }
+  XMLCh*      attr_position_x() const { return x_strTbl[ATTR_position]; }
 
+  // Variable Reference Expressions
+  XMLCh*      elem_SymRef_x() const { return x_strTbl[ELEM_SymRef]; }
+  XMLCh*      elem_ArrayElemRef_x() const { return x_strTbl[ELEM_ArrayElemRef]; }
+
+  XMLCh*      elem_Index_x() const { return x_strTbl[ELEM_Index]; }
+
+  XMLCh*      elem_VarRefEdge_x() const { return x_strTbl[ELEM_VarRefEdge]; }
+
+  
   // DerivativePropagator
   XMLCh*      elem_DerivProp_x() const { return x_strTbl[ELEM_DerivProp]; }
   

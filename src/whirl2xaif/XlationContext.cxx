@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.9 2003/09/02 15:02:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.10 2003/09/16 14:30:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -129,6 +129,7 @@ XlationContext::Ctor(mUINT32 flags_, WN* wn_,
 
   // Set inherited flags from enclosing context
   Ctxt& curCtxt = CurContext();
+  if (enclCtxt->AreFlags(ASSIGN)) { curCtxt.SetFlags(ASSIGN); }
   if (enclCtxt->AreFlags(VARREF)) { curCtxt.SetFlags(VARREF); }
   
   return (*this);

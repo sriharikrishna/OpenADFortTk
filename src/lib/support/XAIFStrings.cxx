@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.7 2003/09/05 21:41:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.8 2003/09/16 14:30:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -88,7 +88,9 @@ const char* XAIFStringRepository::c_strTbl[] = {
   
   "xaif:AssignmentLHS",
   "xaif:AssignmentRHS",
-
+  
+  "xaif:Argument",
+  
   // Expressions
   "xaif:VariableReference",
   "xaif:Constant",
@@ -96,13 +98,20 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "xaif:FunctionCall",
   "xaif:BooleanOperation",
 
-  "xaif:SymbolReference",
-
   "xaif:ExpressionEdge",
 
   "name",
   "value",
+  "position",
   
+  // Variable Reference Expressions
+  "xaif:SymbolReference",
+  "xaif:ArrayElementReference",
+  
+  "xaif:Index",
+  
+  "xaif:VariableReferenceEdge",
+
   // DerivativeAccumulator
   "xaif:DerivativePropagator", // block
 

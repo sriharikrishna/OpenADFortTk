@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.19 2003/09/05 21:41:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.20 2003/09/16 14:30:58 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -385,7 +385,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // Dump CFG vertices (basic blocks)
   for (CFG::NodesIterator nodeIt(cfg); (bool)nodeIt; ++nodeIt) {
     CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
-    // n->longdump(cfg, std::cerr); std::cerr << endl;
+    // n->longdump(&cfg, std::cerr); std::cerr << endl;
     
     std::string ids = GetIDsForStmtsInBB(n, ctxt);
     const char* vtype = GetCFGVertexType(&cfg, n);
@@ -501,6 +501,7 @@ xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 }
 
 // xlate_BBStmt: 
+// FIXME: we know that loop and if BBs should only have one node in them.
 static WN2F_STATUS 
 xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
@@ -512,12 +513,10 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     
     // In OA, loop nodes represent the *condition* (not the body)
   case OPR_DO_LOOP:
-    // FIXME: For the time being, we translate like a while loop b/c
-    // the loop init and update are spit out as BBs.
     xos << Comment(opr_str);
-    //xlate_LoopInitialization(xos, WN_start(wn), ctxt);
+    xlate_LoopInitialization(xos, WN_start(wn), ctxt);
     xlate_CFCondition(xos, WN_end(wn), ctxt);
-    //xlate_LoopUpdate(xos, WN_step(wn), ctxt);
+    xlate_LoopUpdate(xos, WN_step(wn), ctxt);
     break;
   case OPR_DO_WHILE:
   case OPR_WHILE_DO:
@@ -544,9 +543,10 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return EMPTY_WN2F_STATUS;
 }
 
-// xlate_BBStmt: A CFG vertex is either an Entry, Exit or is
-// classified by virtue of its last statement (If, ForLoop, PreLoop,
-// PostLoop).  These should be mutually exclusive classifications.
+// GetCFGVertexType: A CFG vertex is either an Entry, Exit,
+// BasicBlock, or special structured control flow (If, ForLoop,
+// PreLoop, PostLoop).  These should be mutually exclusive
+// classifications.
 static const char*
 GetCFGVertexType(CFG* cfg, CFG::Node* n)
 {
@@ -559,9 +559,9 @@ GetCFGVertexType(CFG* cfg, CFG::Node* n)
   } else if (n == exit) { 
     return "xaif:Exit";
   }
-  
-  // FIXME: At the moment, it seems we have to iterate over all
-  // statements since there is no way to access the last statement.
+
+  // FIXME: we do not need to iterate over all statements since
+  // control flow statements contructs will be in thier own xaif:BB.
   CFG::NodeStatementsIterator stmtIt(n);
   for (bool inLoop = true; ((bool)stmtIt && inLoop); ++stmtIt) {
     WN* wstmt = (WN *)((StmtHandle)stmtIt);
@@ -570,10 +570,7 @@ GetCFGVertexType(CFG* cfg, CFG::Node* n)
     OPERATOR opr = WN_operator(wstmt);
     switch (opr) {
     case OPR_DO_LOOP: 
-      // FIXME: For the time being, we translate like a while loop b/c
-      // the loop init and update are spit out as BBs.
-      return "xaif:PreLoop";
-      // return "xaif:ForLoop";
+      return "xaif:ForLoop";
     case OPR_DO_WHILE: 
       return "xaif:PostLoop";
     case OPR_WHILE_DO:
@@ -605,7 +602,7 @@ static WN2F_STATUS
 xlate_LoopInitialization(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   xos << BegElem("xaif:Initialization");
-  ctxt.CreateContext();
+  ctxt.CreateContext(XlationContext::ASSIGN); // implicit for this element
   TranslateWN(xos, wn, ctxt);
   ctxt.DeleteContext();
   xos << EndElem;
@@ -616,8 +613,8 @@ xlate_LoopInitialization(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 static WN2F_STATUS 
 xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  xos << BegElem("xaif:Update");
-  ctxt.CreateContext();
+  xos << BegElem("xaif:Update"); 
+  ctxt.CreateContext(XlationContext::ASSIGN); // implicit for this element
   TranslateWN(xos, wn, ctxt);
   ctxt.DeleteContext();
   xos << EndElem;
@@ -625,9 +622,7 @@ xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return EMPTY_WN2F_STATUS;
 }
 
-// xlate_BBStmt: A CFG vertex is either an Entry, Exit or is
-// classified by virtue of its last statement (If, ForLoop, PreLoop,
-// PostLoop).  These should be mutually exclusive classifications.
+// GetIDsForStmtsInBB:
 static std::string
 GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt)
 {
@@ -1410,7 +1405,35 @@ WN2F_End_Routine_Strings(xml::ostream& xos, INT32 func_id)
 //     </xaif:Condition>
 //   </xaif:If>
 // 
-
+// 2. OpenAnalysis places the initialization and update nodes of
+// OPR_DO_LOOPs in the appropriate BB: they are virtually (but not
+// really) spliced out of the OPR_DO_LOOPs.  For example an
+// OPR_DO_LOOP node with initialization, condition, update, and a
+// block of statements may become:
+//
+//                   ....
+//                   DO_LOOP initialization
+//                              |
+//                              v
+//                      DO_LOOP condition <--------------|
+//                      _______/\________                |
+//                     /                 \               |
+//                    |            DO_LOOP statements    |
+//                    |            DO_LOOP update     ---| 
+//                    v
+//                  .....
+//
+// Because XAIF can preserve and exploit high level control strucures
+// such as OPR_DO_LOOP, we want to *remove* the initialization and
+// update statement so they can be placed in the special xaif:ForLoop
+// construct.  xaif2whirl also depends on this transformation.
+//
+// [When xaif2whirl deletes the translation interval for the first BB
+// above (for subsequent replacement), it actually deletes the whole
+// OPR_DO_LOOP node!  Testing for special conditions doesn't help much
+// because when WHIRL is created from the new XAIF, we do not know how to
+// replace the deleted loop initialization node.]
+//
 static void
 MassageOACFGIntoXAIFCFG(CFG* cfg)
 {
@@ -1420,16 +1443,13 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
   // 1. Find BBs with conditionals and split them
   // -------------------------------------------------------
   
-  int print = 0; // FIXME
-
   // Iterate over BB nodes.  For each node with more than one
   // statement, examine the statements.  If a conditional is found at
   // the end of the BB, split it.  (The CFG iterator should handle the
   // creation of new nodes in the middle of iteration.)
   for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
     CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
-
-    if (print) { n->longdump(cfg); }
+    // n->longdump(cfg, std::cerr);
     
     if (n->size() > 1) {
       for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
@@ -1445,6 +1465,44 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
       }
     }
   }
+
+  // -------------------------------------------------------
+  // 2. Recover OPR_DO_LOOPs
+  // -------------------------------------------------------
+  for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
+    CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
+
+    // Use CFG nodes representing the OPR_DO_LOOP condition to find
+    // initialization and update information.  With this info, remove
+    // the initialization and update statements from whatever BB they
+    // may be in.  New basic blocks are not created.
+
+    // FIXME: use a better classification method 
+    if (strcmp(GetCFGVertexType(cfg, n), "xaif:ForLoop") == 0) {
+      assert(n->size() == 1);
+      CFG::NodeStatementsIterator stmtIt(n); 
+      WN* loopWN = (WN *)((StmtHandle)stmtIt);
+
+      WN* initWN = WN_start(loopWN);
+      WN* updateWN = WN_step(loopWN);
+      
+      // FIXME: this is a terrible way of doing this, but the point is
+      // to test correctness for now.
+      for (CFG::NodesIterator nodeIt1(*cfg); (bool)nodeIt1; ++nodeIt1) {
+	CFG::Node* n1 = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt1);
+
+	for (CFG::NodeStatementsIterator stmtIt1(n1); (bool)stmtIt1;
+	     ++stmtIt1) {
+	  WN* wn = (WN *)((StmtHandle)stmtIt1);
+	  if ((wn == initWN) || (wn == updateWN)) {
+	    n1->erase((StmtHandle)wn);
+	    break;
+	  }
+	}
+      }
+    }
+  }
+  
 }
 
 //***************************************************************************

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.5 2003/09/05 21:41:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.6 2003/09/16 14:30:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -199,7 +199,7 @@ public:
   ~PUToPUIdMap() { }
 
   PUId
-  Find(PU_Info* pu) 
+  Find(PU_Info* pu, bool mustFind = false) 
   {
     using namespace PUMaps_hidden;
 
@@ -210,6 +210,10 @@ public:
       result = (*it).second;
     }
     
+    if (mustFind && result == 0) {
+      assert(false && "Could not find entry!");
+    }
+
     return result;
   }
 
@@ -227,7 +231,7 @@ public:
   ~PUIdToPUMap() { }
 
   PU_Info*
-  Find(PUId id) 
+  Find(PUId id, bool mustFind = false) 
   {
     using namespace PUMaps_hidden;
 
@@ -238,6 +242,10 @@ public:
       result = (*it).second;
     }
     
+    if (mustFind && result == NULL) {
+      assert(false && "Could not find entry!");
+    }
+
     return result;
   }
 
@@ -267,7 +275,7 @@ public:
   ~WNToWNIdMap() { }
 
   WNId
-  Find(WN* wn) 
+  Find(WN* wn, bool mustFind = false)
   {
     using namespace WhirlMaps_hidden;
 
@@ -276,6 +284,10 @@ public:
     WNToWNIdBaseMap::iterator it = this->find(wn);
     if (it != this->end()) {
       result = (*it).second;
+    }
+    
+    if (mustFind && result == 0) {
+      assert(false && "Could not find entry!");
     }
     
     return result;
@@ -295,7 +307,7 @@ public:
   ~WNIdToWNMap() { }
 
   WN*
-  Find(WNId id) 
+  Find(WNId id, bool mustFind = false) 
   {
     using namespace WhirlMaps_hidden;
 
@@ -304,6 +316,10 @@ public:
     WNIdToWNBaseMap::iterator it = this->find(id);
     if (it != this->end()) {
       result = (*it).second;
+    }
+    
+    if (mustFind && result == NULL) {
+      assert(false && "Could not find entry!");
     }
     
     return result;

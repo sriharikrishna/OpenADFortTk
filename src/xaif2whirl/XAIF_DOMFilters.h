@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.6 2003/09/05 21:41:54 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.7 2003/09/16 14:30:58 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -138,17 +138,21 @@ public:
   // -----------------------------------------------------------------------
   //  Constructors and Destructor
   // -----------------------------------------------------------------------
-  XAIF_BBElemFilter() { }
+  // if 'onlyBasicBlock' is true, only xaif:BasicBlocks are in the iteration
+  XAIF_BBElemFilter(bool onlyBasicBlock_ = false)
+    : onlyBasicBlock(onlyBasicBlock_) { }
   ~XAIF_BBElemFilter() { }
   
   // -----------------------------------------------------------------------
   //  Implementation of the filter interface
   // -----------------------------------------------------------------------
   short acceptNode(const DOMNode *node) const;
-
+  
+  static bool IsAnyBB(const DOMNode *node);
   static bool IsBB(const DOMNode *node);
-
+  
 private:
+  bool onlyBasicBlock;
 };
 
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.13 2003/09/05 21:41:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.14 2003/09/16 14:30:58 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -485,7 +485,10 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TY_IDX ref_ty = WN_ty(wn);
   
   // Assignment
-  xos << BegElem("xaif:Assignment") << Attr("statement_id", ctxt.GetNewVId());
+  if (!ctxt.IsAssign()) {
+    xos << BegElem("xaif:Assignment")
+	<< Attr("statement_id", ctxt.GetNewVId());
+  }
   
   // LHS of assignment
   xos << BegElem("xaif:AssignmentLHS") << EndAttrs;
@@ -507,7 +510,9 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ctxt.DeleteContext();
   xos << EndElem;
 
-  xos << EndElem /* xaif:Assignment */;
+  if (!ctxt.IsAssign()) {
+    xos << EndElem /* xaif:Assignment */;
+  }
   
   return EMPTY_WN2F_STATUS;
 }
@@ -531,7 +536,10 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   assert(baseptr_ty == WN_Tree_Type(baseptr)); // FIXME
   
   // Assignment
-  xos << BegElem("xaif:Assignment") << Attr("statement_id", ctxt.GetNewVId());
+  if (!ctxt.IsAssign()) {
+    xos << BegElem("xaif:Assignment") 
+	<< Attr("statement_id", ctxt.GetNewVId());
+  }
   
   // LHS of assignment (dereference address)
   xos << BegElem("xaif:AssignmentLHS") << EndAttrs;
@@ -554,7 +562,9 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   ctxt.DeleteContext();
   xos << EndElem;
 
-  xos << EndElem /* xaif:Assignment */;
+  if (!ctxt.IsAssign()) {
+    xos << EndElem /* xaif:Assignment */;
+  }
   
   return EMPTY_WN2F_STATUS;
 }

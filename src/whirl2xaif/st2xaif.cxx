@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.16 2003/09/05 21:41:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.17 2003/09/16 14:30:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -248,15 +248,15 @@ TCON2F_translate(TCON tvalue, BOOL is_logical, TY_IDX object_ty)
       break;
       
     case MTYPE_U8:
-      sstr << Targ_Print("%1llu", tvalue);
+      sstr << Targ_Print("%1llu", tvalue); // TCON_I8
       break;
       
     case MTYPE_F4:
-      sstr << Targ_Print("%.10e", tvalue);
+      sstr << Targ_Print("%.10e", tvalue); // TCON_R4
       break;
       
     case MTYPE_F8:
-      sstr << Targ_Print("%.20e", tvalue);
+      sstr << Targ_Print("%.20e", tvalue); // TCON_R8
       break;
       
     case MTYPE_FQ:

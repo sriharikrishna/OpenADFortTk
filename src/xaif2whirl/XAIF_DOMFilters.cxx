@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.6 2003/09/05 21:41:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.7 2003/09/16 14:30:58 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -294,15 +294,21 @@ XAIF_CFGElemFilter::acceptNode(const DOMNode *node) const
 short
 XAIF_BBElemFilter::acceptNode(const DOMNode *node) const
 {
-  if ( (node->getNodeType() == DOMNode::ELEMENT_NODE) && IsBB(node) ) {
-    return FILTER_ACCEPT;
+  if (onlyBasicBlock) {
+    if ( (node->getNodeType() == DOMNode::ELEMENT_NODE) && IsBB(node) ) {
+      return FILTER_ACCEPT;
+    }
+  } else {
+    if ( (node->getNodeType() == DOMNode::ELEMENT_NODE) && IsAnyBB(node) ) {
+      return FILTER_ACCEPT;
+    }
   }
   return FILTER_SKIP;
 }
 
 
 bool 
-XAIF_BBElemFilter::IsBB(const DOMNode *node)
+XAIF_BBElemFilter::IsAnyBB(const DOMNode *node)
 {
   const XMLCh* name = node->getNodeName();
   return (XMLString::equals(name, XAIFStrings.elem_BB_x())
@@ -312,6 +318,13 @@ XAIF_BBElemFilter::IsBB(const DOMNode *node)
 	  || XMLString::equals(name, XAIFStrings.elem_BBForLoop_x()) 
 	  || XMLString::equals(name, XAIFStrings.elem_BBPreLoop_x())
 	  || XMLString::equals(name, XAIFStrings.elem_BBPostLoop_x()));
+}
+
+bool 
+XAIF_BBElemFilter::IsBB(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_BB_x()));
 }
 
 //****************************************************************************

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.1 2003/09/05 21:45:50 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.2 2003/09/16 14:30:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -120,14 +120,15 @@ TestForEachWN(std::ostream& os, WN* wn)
 static void
 RecursiveFnWN(std::ostream& os, WN* wn)
 {
-  OPERATOR opr = WN_operator(wn);
   if (wn == NULL) {
     // Base case
 
-#if 0
-  } else if ( /* some test */ ) {
-#endif
+  } 
+  
+  OPERATOR opr = WN_operator(wn);
 
+  if ( /* some test */ false ) {
+    // Base case
   } else if (!OPERATOR_is_leaf(opr)) {
     
     // General recursive case
