@@ -4,7 +4,7 @@
 <!-- XAIF file translated from WHIRL at XXX -->
 <!-- ******************************************************************** -->
 
-<xaif:CallGraph xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xaif="http://www.mcs.anl.gov/XAIF" xsi:schemaLocation="http://www.mcs.anl.gov/XAIF xaif.xsd" program_name="***myprog***" prefix="ADF90_">
+<xaif:CallGraph xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xaif="http://www.mcs.anl.gov/XAIF" xsi:schemaLocation="http://www.mcs.anl.gov/XAIF xaif.xsd" program_name="***myprog***" prefix="OpenAD_">
   <xaif:ScopeHierarchy>
     <xaif:Scope vertex_id="1" annotation="{SymTab_Id#1}">
       <xaif:SymbolTable>
@@ -119,7 +119,7 @@ factorial        </xaif:AssignmentLHS>
     <xaif:BasicBlock vertex_id="9" scope_id="3" annotation="{WHIRL_Id#29:30:35:36}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#29} [pragma]"/>
       <xaif:Assignment statement_id="2">
-        <xaif:AssignmentLHS du_ud="1">
+        <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="N_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>

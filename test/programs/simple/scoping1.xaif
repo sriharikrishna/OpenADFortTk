@@ -4,7 +4,7 @@
 <!-- XAIF file translated from WHIRL at XXX -->
 <!-- ******************************************************************** -->
 
-<xaif:CallGraph xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xaif="http://www.mcs.anl.gov/XAIF" xsi:schemaLocation="http://www.mcs.anl.gov/XAIF xaif.xsd" program_name="***myprog***" prefix="ADF90_">
+<xaif:CallGraph xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xaif="http://www.mcs.anl.gov/XAIF" xsi:schemaLocation="http://www.mcs.anl.gov/XAIF xaif.xsd" program_name="***myprog***" prefix="OpenAD_">
   <xaif:ScopeHierarchy>
     <xaif:Scope vertex_id="1" annotation="{SymTab_Id#1}">
       <xaif:SymbolTable>
@@ -206,12 +206,12 @@
 
     <xaif:BasicBlock vertex_id="13" scope_id="4" annotation="{WHIRL_Id#125}">
       <xaif:Assignment statement_id="1">
-        <xaif:AssignmentLHS du_ud="10">
+        <xaif:AssignmentLHS du_ud="7">
           <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="t__1_4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="2" du_ud="9">
+          <xaif:VariableReference vertex_id="2" du_ud="6">
             <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="X_1"/>
           </xaif:VariableReference>
           <xaif:Constant vertex_id="3" type="real" value="0.00000000000000000000e+00"/>
@@ -227,7 +227,7 @@
       <!-- OPR_TRUEBR label=2 -->
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_lt_scal_scal" type="***"/>
-        <xaif:VariableReference vertex_id="2" du_ud="7">
+        <xaif:VariableReference vertex_id="2" du_ud="5">
           <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="Y_2"/>
         </xaif:VariableReference>
         <xaif:Constant vertex_id="3" type="real" value="0.00000000000000000000e+00"/>
