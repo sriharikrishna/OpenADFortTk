@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v 1.1 2003/07/24 20:26:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v 1.2 2003/08/01 15:55:15 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -101,7 +101,7 @@ ReadPU(PU_Info* pu);
 PU_Info*
 ReadIR(const char* irfilename)
 {
-  Diag_Set_Phase("WHIRL to XAIF: Load IR");
+  Diag_Set_Phase("WHIRL IO: Load IR");
 
   MEM_POOL_Push(&MEM_src_pool);
   MEM_POOL_Push(&MEM_src_nz_pool);
@@ -214,6 +214,8 @@ SetPUInfoState(PU_Info* pu, Subsect_State state);
 void 
 WriteIR(const char* irfilename, PU_Info* pu_forest)
 {
+  Diag_Set_Phase("WHIRL IO: Write IR");
+
   Open_Output_Info((char*)irfilename); // FIXME change to accept const
 
   // -------------------------------------------------------
@@ -317,7 +319,7 @@ FreePU(PU_Info* pu);
 void
 FreeIR(PU_Info *pu_forest)
 {
-  Diag_Set_Phase("WHIRL to XAIF: Free IR");
+  Diag_Set_Phase("WHIRL IO: Free IR");
   
   // -------------------------------------------------------
   // 1. Free PUs and local symbol tables (FIXME: may not need to do this)
@@ -393,7 +395,7 @@ FreePU(PU_Info* pu)
 void 
 PrepareIR(PU_Info* pu_forest)
 {
-  Diag_Set_Phase("WHIRL to XAIF: Prepare IR");
+  Diag_Set_Phase("WHIRL IO: Prepare IR");
 
   Pro64IRProcIterator procIt(pu_forest);
   for ( ; procIt.IsValid(); ++procIt) { 
