@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.19 2004/02/20 19:30:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.20 2004/02/23 18:25:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -266,7 +266,8 @@ New_Fld_Path_Info(FLD_HANDLE fld)
       /* Allocate a new chunk of path infos, and put all except the
        * first one on the free-list.
        */
-      fld_info = TYPE_ALLOC_N(FLD_PATH_INFO, FLD_INFO_ALLOC_CHUNK);
+      fld_info = TYPE_MEM_POOL_ALLOC_N(FLD_PATH_INFO, Malloc_Mem_Pool, 
+				       FLD_INFO_ALLOC_CHUNK);
       fld_info[FLD_INFO_ALLOC_CHUNK-1].next = Free_Fld_Path_Info;
       for (info_idx = FLD_INFO_ALLOC_CHUNK-2; info_idx > 0; info_idx--)
 	 fld_info[info_idx].next = &fld_info[info_idx+1];

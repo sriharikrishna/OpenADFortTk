@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.39 2004/02/20 21:11:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.40 2004/02/23 18:25:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -84,12 +84,33 @@
 #include "st2xaif.h"
 #include "ty2xaif.h"
 
+#include <lib/support/SymTab.h>
+
 //************************** Forward Declarations ***************************
 
 using namespace whirl2xaif;
 using namespace xml; // for xml::ostream, etc
 
 IntrinsicXlationTable whirl2xaif::IntrinsicTable(IntrinsicXlationTable::W2X);
+
+//************************** Forward Declarations ***************************
+
+// AddToNonScalarSymTabOp: Given a NonScalarSymTab, add references to it
+class AddToNonScalarSymTabOp : public ForAllNonScalarRefsOp {
+public:
+  AddToNonScalarSymTabOp(NonScalarSymTab* symtab_);
+  ~AddToNonScalarSymTabOp() { }
+  
+  NonScalarSymTab* GetSymTab() { return symtab; }
+
+  // Given a non-scalar reference 'wn', create a dummy variable and
+  // add to the map.  
+  int operator()(const WN* wn);
+
+private:
+  NonScalarSymTab* symtab;
+};
+
 
 //************************** Forward Declarations ***************************
 
@@ -895,28 +916,6 @@ DumpGraphEdge(xml::ostream& xos, const char* nm,
 //
 //***************************************************************************
 
-AddToNonScalarSymTabOp::AddToNonScalarSymTabOp(NonScalarSymTab* symtab_)
-{ 
-  symtab = symtab_;
-  assert(symtab != NULL);
-}
-
-// Given a non-scalar reference 'wn', create a dummy variable and
-// add to the map.  
-int 
-AddToNonScalarSymTabOp::operator()(const WN* wn) 
-{
-  // Base case
-#if 0 // FIXME
-  fprintf(stderr, "----------\n");
-  fdump_tree(stderr, wn); // FIXME: append this to a symtab somewhere
-#endif
-  
-  NonScalarSym* sym = new NonScalarSym();
-  bool ret = symtab->Insert(wn, sym);
-  return (ret) ? 0 : 1;
-}
-
 //FIXME: op should not be const because we call op(), which is non const.
 void 
 ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
@@ -953,6 +952,29 @@ ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
     }
     
   }
+}
+
+
+AddToNonScalarSymTabOp::AddToNonScalarSymTabOp(NonScalarSymTab* symtab_)
+{ 
+  symtab = symtab_;
+  assert(symtab != NULL);
+}
+
+// Given a non-scalar reference 'wn', create a dummy variable and
+// add to the map.  
+int 
+AddToNonScalarSymTabOp::operator()(const WN* wn) 
+{
+  // Base case
+#if 0 // FIXME
+  fprintf(stderr, "----------\n");
+  fdump_tree(stderr, wn); // FIXME: append this to a symtab somewhere
+#endif
+  
+  NonScalarSym* sym = new NonScalarSym();
+  bool ret = symtab->Insert(wn, sym);
+  return (ret) ? 0 : 1;
 }
 
 
