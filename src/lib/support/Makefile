@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.10 2004/02/20 18:57:07 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.11 2004/02/27 00:35:53 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -32,18 +32,18 @@ VPATH = $(SRCS)
 # objects are placed wherever the compilation is done
 
 OBJS = \
+	IntrinsicXlationTable.o \
 	Pro64IRInterface.o \
-	WhirlIO.o \
+	SymTab.o \
 	WhirlGlobalStateUtils.o \
 	WhirlIDMaps.o \
+	WhirlIO.o \
 	WhirlParentize.o \
-	IntrinsicXlationTable.o \
-	\
-	wn_attr.o \
 	stab_attr.o \
-	SymTab.o \
+	wn_attr.o \
 	\
 	xmlostream.o \
+	CmdLineParser.o \
 	XAIFStrings.o \
 	\
 	XlationCtxt.o \
