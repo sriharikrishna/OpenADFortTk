@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.25 2004/06/01 22:22:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.26 2004/06/02 17:06:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -676,7 +676,7 @@ xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   ctxt.DeleteContext();
   
   ST* st = WN_st(arraySym);
-  TY_IDX ty = ST_type(st); // array type
+  TY_IDX ty = ST_type(st);
   if (TY_kind(ty) == KIND_POINTER) { 
     ty = TY_pointed(ty); 
   }
@@ -684,18 +684,18 @@ xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 	       (DIAG_A_STRING, "Programming error."));
   
   // -------------------------------------------------------
-  // 3. Create Whirl ARRAY node (cf. wn_fio.cxx:7056)
+  // 3. Create Whirl ARRAY node (cf. wn_fio.cxx:1.3:7055)
   // -------------------------------------------------------
   UINT nkids = (rank * 2) + 1; // 2n + 1 where (where n == rank)
-  WN* array = WN_Create(OPC_U8ARRAY, nkids);
+  WN* arrWN = WN_Create(OPR_ARRAY, MTYPE_U8, MTYPE_V, nkids);
   
   // kid 0 is the array's base address
-  WN_kid0(array) = arraySym;
+  WN_kid0(arrWN) = arraySym;
   
   // kids 1 to n give size of each dimension.  We use a bogus value,
   // since we only need to support translation back to source code.
   for (int i = 1; i <= rank; ++i) {
-    WN_kid(array, i) = WN_CreateIntconst(OPC_I4INTCONST, 0);
+    WN_kid(arrWN, i) = WN_CreateIntconst(OPC_I4INTCONST, 0);
   }
   
   // kids n + 1 to 2n give index expressions for each dimension.  
@@ -703,10 +703,17 @@ xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   // translating Fortran.  FIXME: should we change whirl2xaif and this
   // to not reverse the indices?
   for (int i = 2*rank, j = 0; i >= (rank + 1); --i, ++j) {
-    WN_kid(array, i) = indices[j];
+    WN_kid(arrWN, i) = indices[j];
   }
-
-  WN* wn = array;
+  
+  // -------------------------------------------------------
+  // 4. Wrap the ARRAY in an ILOAD
+  // -------------------------------------------------------
+  TY_IDX ety = TY_etype(ty);
+  TYPE_ID emty = TY_mtype(ety);
+  TY_IDX eptrty = Stab_Pointer_To(ety);
+  WN* wn = WN_CreateIload(OPR_ILOAD, emty, emty, 0, ety, eptrty, arrWN, 0);
+  
   return wn;
 }
 
