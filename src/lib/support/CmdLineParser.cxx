@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.cxx,v 1.3 2004/02/28 16:40:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.cxx,v 1.4 2004/03/02 20:25:54 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -8,6 +8,8 @@
 //
 // File:
 //   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.cxx,v $
+//
+//   Nathan Tallent
 //
 // Purpose:
 //    [The purpose of this file]
@@ -21,6 +23,7 @@
 
 #include <stdlib.h> // <cstdlib> // for strtol
 #include <string.h> // <cstring>
+#include <errno.h > // <cerrno>
 
 //************************** Open64 Include Files ***************************
 
@@ -69,7 +72,7 @@ IsArg(const char* str) { return (!IsSwitch(str) && !IsDashDash(str)); }
 //****************************************************************************
 
 CmdLineParser::OptArgDesc CmdLineParser::OptArgDesc_NULL = 
-  { 0, NULL, CmdLineParser::ARG_NULL, CmdLineParser::DUPOPT_NULL, NULL };
+  CmdLineParser_OptArgDesc_NULL_MACRO;
 
 
 CmdLineParser::CmdLineParser() 
@@ -109,7 +112,7 @@ CmdLineParser::Parse(const OptArgDesc* optArgDescs,
   
   bool endOfOpts = false;  // are we at end of optional args?
   
-  for (unsigned int i = 1; i < argc; ++i) {
+  for (int i = 1; i < argc; ++i) {
     const char* str = argv[i];
     
     // -------------------------------------------------------
@@ -153,7 +156,7 @@ CmdLineParser::Parse(const OptArgDesc* optArgDescs,
 	}
       } else if (d->kind == ARG_REQ || d->kind == ARG_OPT) {
 	if (swdesc.arg.empty()) {
-	  unsigned int nexti = i + 1;
+	  int nexti = i + 1;
 	  if (nexti < argc && argv[nexti] && IsArg(argv[nexti])) {
 	    swdesc.arg = argv[nexti];
 	    i = nexti; // increment iteration
@@ -556,7 +559,7 @@ CmdLineParser::AddOption(const OptArgDesc& odesc,
   if (it == switchToArgMap.end()) {
     // Insert in map
     string* theArg = (arg.empty()) ? NULL : new string(arg);
-    switchToArgMap.insert(make_pair(sw, theArg));
+    switchToArgMap.insert(SwitchToArgMap::value_type(sw, theArg));
   } else {
     // Handle duplicates
     string* theArg = (*it).second;

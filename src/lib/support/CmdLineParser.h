@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.h,v 1.3 2004/02/28 16:40:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.h,v 1.4 2004/03/02 20:25:54 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -8,6 +8,8 @@
 //
 // File:
 //   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.h,v $
+//
+//   Nathan Tallent
 //
 // Purpose:
 //    [The purpose of this file]
@@ -131,15 +133,20 @@ public:
     bool operator!=(const OptArgDesc& x) const { return !(*this == x); }
     
     // Data
-    const char swShort; // 0 if n/a
+    char swShort;       // 0 if n/a
     const char* swLong; // NULL if n/a
     OptKind kind;
     DupOptKind dupKind;
     const char* dupArgSep; // separator for 'DUPARG_CONCAT'
   };
 
-  static OptArgDesc OptArgDesc_NULL; // The NULL terminator
-
+  // The NULL terminator (two versions).  The use of the first version
+  // is preferable, but some older compilers won't support it.
+  static OptArgDesc OptArgDesc_NULL;
+# define CmdLineParser_OptArgDesc_NULL_MACRO \
+    { 0, NULL, CmdLineParser::ARG_NULL, CmdLineParser::DUPOPT_NULL, NULL }
+  
+  
   // ---------------------------------------------------------
   // Exception thrown when errors are encountered
   // ---------------------------------------------------------
