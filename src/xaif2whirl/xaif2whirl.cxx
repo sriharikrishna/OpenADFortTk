@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.45 2004/05/07 20:05:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.46 2004/05/10 13:57:25 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -373,34 +373,39 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   pair<WNToWNIdMap*, WNIdToWNMap*> wnmaps = CreateWhirlIdMaps(wn_pu);
   ctxt.SetWNToIdMap(wnmaps.first);
   ctxt.SetIdToWNMap(wnmaps.second);
-
+  
   // -------------------------------------------------------
-  // 2. Reverse mode: change any arguments that are active to
-  // pass-by-reference
+  // 2. Update passing style for arguments (especially used in reverse
+  // mode to change active arguments to pass-by-reference)
   // -------------------------------------------------------
-#if 0
-  if (opt_mode == MODE_REVERSE) {
-    DOMElement* arglst = 
-      GetChildElement(cfgElem, XAIFStrings.elem_ArgList()_x());
-    DOMElement* arg = (arglst) ? 
-      GetChildElement(arglst, XAIFStrings.elem_ArgSymRef()_x()) : NULL;
-    for ( ; arg; arg = GetNextSiblingElement(arg)) {
-      // find corresponding WN
-      WNId id = GetWNId(stmt);
-      WN* parmWN = ctxt.FindWN(id, true /* mustFind */);
-
-      Symbol* sym = GetSymbol(elem, ctxt); // is active ???
-      bool active = GetActiveAttr(arg);    // ???
-
-      const XMLCh* intentX = elem->getAttribute(XAIFStrings.attr_intent_x());
-      XercesStrX intent = XercesStrX(intentX);
-
-      if (active) {
-	WN_Set_Parm_By_Reference(parmWN);
-      }
+  DOMElement* arglst = GetChildElement(cfgElem, XAIFStrings.elem_ArgList_x());
+  DOMElement* arg = (arglst) ? 
+    GetChildElement(arglst, XAIFStrings.elem_ArgSymRef_x()) : NULL;
+  for ( ; arg; arg = GetNextSiblingElement(arg)) {
+    // find corresponding WN and symbol
+    WNId id = GetWNId(arg);
+    WN* parmWN = ctxt.FindWN(id, true /* mustFind */);
+    Symbol* sym = GetSymbol(arg, ctxt);
+    ST* parmST = sym->GetST();
+    
+    //bool active = GetActiveAttr(arg); 
+    const XMLCh* intentX = arg->getAttribute(XAIFStrings.attr_intent_x());
+    XercesStrX intent = XercesStrX(intentX);
+    
+    if (strcmp(intent.c_str(), "in") == 0) {
+      WN_Set_Parm_In(parmWN);
+      Set_ST_is_intent_in_argument(parmST);
+    } else if (strcmp(intent.c_str(), "out") == 0) {
+      WN_Set_Parm_Out(parmWN);
+      Set_ST_is_intent_out_argument(parmST);		
+    } else if (strcmp(intent.c_str(), "inout") == 0) {
+      WN_Set_Parm_By_Reference(parmWN); // unnecessary for 'whirl2f'
+      Clear_ST_is_intent_in_argument(parmST);
+      Clear_ST_is_intent_out_argument(parmST);
+    } else {
+      ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Bad intent!"));
     }
   }
-#endif
   
   // -------------------------------------------------------
   // 3. Translate each XAIF CFG into WHIRL
