@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.8 2003/06/02 13:43:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.9 2003/07/09 19:43:16 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -164,7 +164,12 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info *pu_tree)
   CallGraph cgraph(irInterface, &irProcIter, (SymHandle)st);
   //cgraph->dump(cerr);
   
-  xos << BegElem("xaif:CallGraph");
+  xos << BegElem("xaif:CallGraph")
+      << Attr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+      << Attr("xmlns:xaif", "http://www.mcs.anl.gov/XAIF")
+      << Attr("xsi:schemaLocation", "http://www.mcs.anl.gov/XAIF xaif.xsd")
+      << Attr("program_name", "FIXME")
+      << Attr("toplevel_routine_name", "head"); // FIXME
   
   TranslateScopeHierarchy(xos, pu_tree, ctxt);
 

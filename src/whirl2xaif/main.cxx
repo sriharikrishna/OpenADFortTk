@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.5 2003/06/02 13:43:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.6 2003/07/09 19:43:16 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -205,6 +205,7 @@ real_main(INT argc, char **argv)
   PrepareIR(pu_forest); // FIXME (should this be part of translate?)
   
   if (opt_dumpIR) { DumpIR(pu_forest); }
+  ofs << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n";
   whirl2xaif::TranslateIR(ofs, pu_forest);
   
   FreeIR(pu_forest);
