@@ -59,6 +59,24 @@
       </xaif:Assignment>
     </xaif:BasicBlock>
 
+    <xaif:Branch vertex_id="10" annotation="{WHIRL_Id#18}">
+      <xaif:Condition>
+        <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
+        <xaif:VariableReference vertex_id="2" du_ud="0">
+          <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="Y_2"/>
+          <xaif:ArrayElementReference vertex_id="2">
+            <xaif:Index>
+              <xaif:Constant vertex_id="1" type="integer" value="1"/>
+            </xaif:Index>
+          </xaif:ArrayElementReference>
+          <xaif:VariableReferenceEdge edge_id="1" source="1" target="2"/>
+        </xaif:VariableReference>
+        <xaif:Constant vertex_id="3" type="real" value="0.00000000000000000000e+00"/>
+        <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
+        <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
+      </xaif:Condition>
+    </xaif:Branch>
+
     <xaif:BasicBlock vertex_id="3" scope_id="2" annotation="{WHIRL_Id#}"/>
 
     <xaif:ForLoop vertex_id="4" annotation="{WHIRL_Id#27}">
@@ -132,6 +150,16 @@
       </xaif:Assignment>
     </xaif:BasicBlock>
 
+    <xaif:EndLoop vertex_id="11" annotation="{WHIRL_Id#}"/>
+
+    <xaif:EndBranch vertex_id="8" annotation="{WHIRL_Id#}"/>
+
+    <xaif:BasicBlock vertex_id="12" scope_id="2" annotation="{WHIRL_Id#72}">
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#72} [return]"/>
+    </xaif:BasicBlock>
+
+    <xaif:Exit vertex_id="9" annotation="{WHIRL_Id#}"/>
+
     <xaif:BasicBlock vertex_id="7" scope_id="2" annotation="{WHIRL_Id#56}">
       <xaif:Assignment statement_id="1">
         <xaif:AssignmentLHS du_ud="0">
@@ -167,34 +195,6 @@
           <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-    </xaif:BasicBlock>
-
-    <xaif:EndBranch vertex_id="8" annotation="{WHIRL_Id#}"/>
-
-    <xaif:Exit vertex_id="9" annotation="{WHIRL_Id#}"/>
-
-    <xaif:Branch vertex_id="10" annotation="{WHIRL_Id#18}">
-      <xaif:Condition>
-        <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
-        <xaif:VariableReference vertex_id="2" du_ud="0">
-          <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="Y_2"/>
-          <xaif:ArrayElementReference vertex_id="2">
-            <xaif:Index>
-              <xaif:Constant vertex_id="1" type="integer" value="1"/>
-            </xaif:Index>
-          </xaif:ArrayElementReference>
-          <xaif:VariableReferenceEdge edge_id="1" source="1" target="2"/>
-        </xaif:VariableReference>
-        <xaif:Constant vertex_id="3" type="real" value="0.00000000000000000000e+00"/>
-        <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
-        <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
-      </xaif:Condition>
-    </xaif:Branch>
-
-    <xaif:EndLoop vertex_id="11" annotation="{WHIRL_Id#}"/>
-
-    <xaif:BasicBlock vertex_id="12" scope_id="2" annotation="{WHIRL_Id#72}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#72} [return]"/>
     </xaif:BasicBlock>
 
     <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>

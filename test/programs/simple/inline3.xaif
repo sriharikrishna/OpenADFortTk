@@ -201,15 +201,10 @@
       <xaif:Marker statement_id="27" annotation="{WHIRL_Id#138} [return]"/>
     </xaif:BasicBlock>
 
-    <xaif:BasicBlock vertex_id="3" scope_id="3" annotation="{WHIRL_Id#139}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#139} [return]"/>
-    </xaif:BasicBlock>
-
     <xaif:Exit vertex_id="4" annotation="{WHIRL_Id#}"/>
 
     <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
     <xaif:ControlFlowEdge edge_id="2" source="2" target="4"/>
-    <xaif:ControlFlowEdge edge_id="3" source="3" target="4"/>
   </xaif:ControlFlowGraph>
 
   <xaif:CallGraphEdge edge_id="1" source="3" target="1"/>

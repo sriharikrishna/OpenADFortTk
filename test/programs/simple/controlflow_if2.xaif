@@ -65,6 +65,18 @@
       </xaif:Assignment>
     </xaif:BasicBlock>
 
+    <xaif:Branch vertex_id="7" annotation="{WHIRL_Id#14}">
+      <xaif:Condition>
+        <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
+        <xaif:VariableReference vertex_id="2" du_ud="3">
+          <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="C_3"/>
+        </xaif:VariableReference>
+        <xaif:Constant vertex_id="3" type="real" value="0.0000000000e+00"/>
+        <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
+        <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
+      </xaif:Condition>
+    </xaif:Branch>
+
     <xaif:BasicBlock vertex_id="3" scope_id="2" annotation="{WHIRL_Id#19:23:27:31}">
       <xaif:Assignment statement_id="1">
         <xaif:AssignmentLHS du_ud="7">
@@ -126,6 +138,14 @@
       </xaif:Assignment>
     </xaif:BasicBlock>
 
+    <xaif:EndBranch vertex_id="5" annotation="{WHIRL_Id#}"/>
+
+    <xaif:BasicBlock vertex_id="8" scope_id="2" annotation="{WHIRL_Id#42}">
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#42} [return]"/>
+    </xaif:BasicBlock>
+
+    <xaif:Exit vertex_id="6" annotation="{WHIRL_Id#}"/>
+
     <xaif:BasicBlock vertex_id="4" scope_id="2" annotation="{WHIRL_Id#34:36:40}">
       <xaif:Assignment statement_id="1">
         <xaif:AssignmentLHS du_ud="14">
@@ -163,26 +183,6 @@
           </xaif:VariableReference>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-    </xaif:BasicBlock>
-
-    <xaif:EndBranch vertex_id="5" annotation="{WHIRL_Id#}"/>
-
-    <xaif:Exit vertex_id="6" annotation="{WHIRL_Id#}"/>
-
-    <xaif:Branch vertex_id="7" annotation="{WHIRL_Id#14}">
-      <xaif:Condition>
-        <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
-        <xaif:VariableReference vertex_id="2" du_ud="3">
-          <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="C_3"/>
-        </xaif:VariableReference>
-        <xaif:Constant vertex_id="3" type="real" value="0.0000000000e+00"/>
-        <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
-        <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
-      </xaif:Condition>
-    </xaif:Branch>
-
-    <xaif:BasicBlock vertex_id="8" scope_id="2" annotation="{WHIRL_Id#42}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#42} [return]"/>
     </xaif:BasicBlock>
 
     <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>

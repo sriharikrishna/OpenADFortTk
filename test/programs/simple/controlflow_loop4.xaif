@@ -240,60 +240,6 @@ doloop_var          <xaif:Constant vertex_id="2" type="integer" value="1"/>
       </xaif:Assignment>
     </xaif:BasicBlock>
 
-    <xaif:BasicBlock vertex_id="6" scope_id="3" annotation="{WHIRL_Id#82:83}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#82} [label 5]"/>
-      <xaif:Assignment statement_id="2">
-        <xaif:AssignmentLHS du_ud="24">
-          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="I_2"/>
-        </xaif:AssignmentLHS>
-        <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="2" du_ud="22">
-            <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="I_2"/>
-          </xaif:VariableReference>
-doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
-          <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
-        </xaif:AssignmentRHS>
-      </xaif:Assignment>
-    </xaif:BasicBlock>
-
-    <xaif:EndBranch vertex_id="7" annotation="{WHIRL_Id#}"/>
-
-    <xaif:BasicBlock vertex_id="8" scope_id="3" annotation="{WHIRL_Id#88:89:90:91:116:117}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#88} [label 2]"/>
-      <xaif:Marker statement_id="2" annotation="{WHIRL_Id#89} [comment]"/>
-      <xaif:Marker statement_id="3" annotation="{WHIRL_Id#90} [pragma]"/>
-      <xaif:Marker statement_id="4" annotation="{WHIRL_Id#91} [WRITE***]"/>
-      <xaif:Marker statement_id="5" annotation="{WHIRL_Id#116} [pragma]"/>
-      <xaif:Marker statement_id="6" annotation="{WHIRL_Id#117} [goto 1]"/>
-    </xaif:BasicBlock>
-
-    <xaif:EndBranch vertex_id="9" annotation="{WHIRL_Id#}"/>
-
-    <xaif:BasicBlock vertex_id="11" scope_id="3" annotation="{WHIRL_Id#87}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#87} [goto 3]"/>
-    </xaif:BasicBlock>
-
-    <xaif:BasicBlock vertex_id="12" scope_id="3" annotation="{WHIRL_Id#137:138:139}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#137} [label 1]"/>
-      <xaif:SubroutineCall statement_id="2" scope_id="1" symbol_id="_END_23"/>
-      <xaif:Marker statement_id="3" annotation="{WHIRL_Id#139} [return]"/>
-    </xaif:BasicBlock>
-
-    <xaif:BasicBlock vertex_id="13" scope_id="3" annotation="{WHIRL_Id#118:119:120:121:136}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#118} [label 6]"/>
-      <xaif:Marker statement_id="2" annotation="{WHIRL_Id#119} [comment]"/>
-      <xaif:Marker statement_id="3" annotation="{WHIRL_Id#120} [pragma]"/>
-      <xaif:Marker statement_id="4" annotation="{WHIRL_Id#121} [WRITE***]"/>
-      <xaif:Marker statement_id="5" annotation="{WHIRL_Id#136} [pragma]"/>
-    </xaif:BasicBlock>
-
-    <xaif:BasicBlock vertex_id="14" scope_id="3" annotation="{WHIRL_Id#140}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#140} [return]"/>
-    </xaif:BasicBlock>
-
-    <xaif:Exit vertex_id="15" annotation="{WHIRL_Id#}"/>
-
     <xaif:Branch vertex_id="16" annotation="{WHIRL_Id#63}">
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_land_scal_scal" type="***"/>
@@ -315,6 +261,35 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
         <xaif:ExpressionEdge edge_id="6" source="5" target="1" position="2"/>
       </xaif:Condition>
     </xaif:Branch>
+
+    <xaif:BasicBlock vertex_id="6" scope_id="3" annotation="{WHIRL_Id#82:83}">
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#82} [label 5]"/>
+      <xaif:Assignment statement_id="2">
+        <xaif:AssignmentLHS du_ud="24">
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="I_2"/>
+        </xaif:AssignmentLHS>
+        <xaif:AssignmentRHS>
+          <xaif:Intrinsic vertex_id="1" name="add_scal_scal" type="***"/>
+          <xaif:VariableReference vertex_id="2" du_ud="22">
+            <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="I_2"/>
+          </xaif:VariableReference>
+doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
+          <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
+        </xaif:AssignmentRHS>
+      </xaif:Assignment>
+    </xaif:BasicBlock>
+
+    <xaif:EndLoop vertex_id="18" annotation="{WHIRL_Id#}"/>
+
+    <xaif:EndBranch vertex_id="7" annotation="{WHIRL_Id#}"/>
+
+    <xaif:BasicBlock vertex_id="19" scope_id="3" annotation="{WHIRL_Id#71}">
+      <xaif:SubroutineCall statement_id="1" scope_id="1" symbol_id="compute__20">
+        <xaif:Argument position="1">
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_7"/>
+        </xaif:Argument>
+      </xaif:SubroutineCall>
+    </xaif:BasicBlock>
 
     <xaif:Branch vertex_id="17" annotation="{WHIRL_Id#74}">
       <xaif:Condition>
@@ -338,14 +313,27 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
       </xaif:Condition>
     </xaif:Branch>
 
-    <xaif:EndLoop vertex_id="18" annotation="{WHIRL_Id#}"/>
+    <xaif:BasicBlock vertex_id="8" scope_id="3" annotation="{WHIRL_Id#88:89:90:91:116:117}">
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#88} [label 2]"/>
+      <xaif:Marker statement_id="2" annotation="{WHIRL_Id#89} [comment]"/>
+      <xaif:Marker statement_id="3" annotation="{WHIRL_Id#90} [pragma]"/>
+      <xaif:Marker statement_id="4" annotation="{WHIRL_Id#91} [WRITE***]"/>
+      <xaif:Marker statement_id="5" annotation="{WHIRL_Id#116} [pragma]"/>
+      <xaif:Marker statement_id="6" annotation="{WHIRL_Id#117} [goto 1]"/>
+    </xaif:BasicBlock>
 
-    <xaif:BasicBlock vertex_id="19" scope_id="3" annotation="{WHIRL_Id#71}">
-      <xaif:SubroutineCall statement_id="1" scope_id="1" symbol_id="compute__20">
-        <xaif:Argument position="1">
-          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_7"/>
-        </xaif:Argument>
-      </xaif:SubroutineCall>
+    <xaif:BasicBlock vertex_id="12" scope_id="3" annotation="{WHIRL_Id#137:138:139}">
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#137} [label 1]"/>
+      <xaif:SubroutineCall statement_id="2" scope_id="1" symbol_id="_END_23"/>
+      <xaif:Marker statement_id="3" annotation="{WHIRL_Id#139} [return]"/>
+    </xaif:BasicBlock>
+
+    <xaif:Exit vertex_id="15" annotation="{WHIRL_Id#}"/>
+
+    <xaif:EndBranch vertex_id="9" annotation="{WHIRL_Id#}"/>
+
+    <xaif:BasicBlock vertex_id="11" scope_id="3" annotation="{WHIRL_Id#87}">
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#87} [goto 3]"/>
     </xaif:BasicBlock>
 
     <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
@@ -360,14 +348,12 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
     <xaif:ControlFlowEdge edge_id="10" source="9" target="6"/>
     <xaif:ControlFlowEdge edge_id="11" source="11" target="3"/>
     <xaif:ControlFlowEdge edge_id="12" source="12" target="15"/>
-    <xaif:ControlFlowEdge edge_id="13" source="13" target="12"/>
-    <xaif:ControlFlowEdge edge_id="14" source="14" target="15"/>
-    <xaif:ControlFlowEdge edge_id="15" source="16" target="6" has_condition_value="true"/>
-    <xaif:ControlFlowEdge edge_id="16" source="16" target="7"/>
-    <xaif:ControlFlowEdge edge_id="17" source="17" target="8" has_condition_value="true"/>
-    <xaif:ControlFlowEdge edge_id="18" source="17" target="9"/>
-    <xaif:ControlFlowEdge edge_id="19" source="18" target="4"/>
-    <xaif:ControlFlowEdge edge_id="20" source="19" target="17"/>
+    <xaif:ControlFlowEdge edge_id="13" source="16" target="6" has_condition_value="true"/>
+    <xaif:ControlFlowEdge edge_id="14" source="16" target="7"/>
+    <xaif:ControlFlowEdge edge_id="15" source="17" target="8" has_condition_value="true"/>
+    <xaif:ControlFlowEdge edge_id="16" source="17" target="9"/>
+    <xaif:ControlFlowEdge edge_id="17" source="18" target="4"/>
+    <xaif:ControlFlowEdge edge_id="18" source="19" target="17"/>
   </xaif:ControlFlowGraph>
 
   <xaif:CallGraphEdge edge_id="1" source="2" target="1"/>
