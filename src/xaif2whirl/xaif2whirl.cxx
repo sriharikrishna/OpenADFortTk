@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.23 2004/02/25 16:23:29 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.24 2004/02/27 20:21:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -237,11 +237,13 @@ TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
   PUId puid = GetPUId(cfgElem);
   PU_Info* pu = ctxt.FindPU(puid);
   if (!pu) { return; }
-  
+
+#if 0  
   Symbol* sym = GetSymbol(cfgElem, ctxt);
   ST* st = sym->GetST();
   cout << XercesStrX(cfgElem->getNodeName()) << ": " << ST_name(st) << endl;
-  
+#endif  
+
   // If we found the PU, translate
   PU_SetGlobalState(pu);
   
