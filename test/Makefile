@@ -1,0 +1,82 @@
+# -*-Mode: makefile;-*-
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/Attic/Makefile,v 1.1 2004/01/25 02:34:21 eraxxon Exp $
+
+## * BeginCopyright *********************************************************
+## *********************************************************** EndCopyright *
+
+#############################################################################
+# $Source: /Volumes/cvsrep/developer/OpenADFortTk/test/Attic/Makefile,v $
+#############################################################################
+
+#############################################################################
+# Site/machine/architecture dependent configuration 
+#############################################################################
+
+include $(WHIRL2XAIF)/test/Makeinclude.config
+
+#############################################################################
+# Site/machine/architecture independent configuration 
+#############################################################################
+
+all: build_tests run_tests
+
+run   : run_tests
+check : run_tests
+
+.PHONY: all
+
+#############################################################################
+
+#-----------------------------------------------------------------
+#  Build and Run Tests
+#-----------------------------------------------------------------
+
+TESTDIRS = lib/support
+
+build_tests: 
+	src=$(WHIRL2XAIF)/test ; \
+	for dir in $(TESTDIRS) ; do \
+	  obj=$(WHIRL2XAIF_OBJ_PATH)/test/$$dir ; \
+	  mkdir -p $$obj ; \
+	  cd $$obj ; \
+	  $(MAKE) -f $$src/$$dir/Makefile SRCS=$$src/$$dir ; \
+	done
+
+# FIXME: It may be better to place test running in the respective
+# directory (where it is built).
+run_tests: 
+	src=$(WHIRL2XAIF)/test ; \
+	for dir in $(TESTDIRS) ; do \
+	  testdir=$(WHIRL2XAIF_OBJ_PATH)/test/$$dir ; \
+	  for test in `ls $$testdir/*.test` ; do \
+	    $$test ; \
+	  done \
+	done
+
+.PHONY: build_tests run_tests
+
+#-----------------------------------------------------------------
+#  Clean build files
+#-----------------------------------------------------------------
+
+clean: veryclean
+
+veryclean:
+	testdir=$(WHIRL2XAIF_OBJ_PATH)/test ; \
+	if [ -n "$(WHIRL2XAIF_OBJ_PATH)" \
+	     -a "$(WHIRL2XAIF_OBJ_PATH)" != "/" ] ; then \
+	  /bin/rm -f -r $${testdir}; \
+	fi
+
+.PHONY: clean veryclean
+
+
+#-----------------------------------------------------------------
+#  Vars
+#-----------------------------------------------------------------
+
+vars: 
+	@echo CXX=$(CXX)
+	@echo CC=$(CC)
+
+.PHONY: vars
