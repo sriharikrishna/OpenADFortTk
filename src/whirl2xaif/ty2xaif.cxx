@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.13 2003/10/10 17:26:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.14 2003/12/11 20:58:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1538,6 +1538,11 @@ TranslateTYToSymShape(TY_IDX ty_idx)
       case 2:  str = "matrix"; break;
       case 3:  str = "three_tensor"; break;
       case 4:  str = "four_tensor"; break;
+      case 5:  str = "five_tensor"; break;
+      case 6:  str = "six_tensor"; break;
+      case 7:  str = "seven_tensor"; break;
+      default: 
+	ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
       }
     }
 
