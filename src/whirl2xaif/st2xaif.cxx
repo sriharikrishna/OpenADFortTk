@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.24 2004/02/20 18:57:41 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.25 2004/02/20 19:30:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -108,9 +108,8 @@
 
 #include "whirl2xaif.i"
 #include "wn2xaif.h"
-#include "ty2xaif.h"
 #include "st2xaif.h"
-#include "init2f.h"
+#include "ty2xaif.h"
 
 #include <lib/support/SymTab.h>
 

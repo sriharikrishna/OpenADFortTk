@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.37 2004/02/20 18:57:41 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.38 2004/02/20 19:30:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -74,10 +74,9 @@
 
 //*************************** User Include Files ****************************
 
+#include "whirl2xaif.i"
 #include "wn2xaif.i"
 #include "wn2xaif.h"
-
-#include "whirl2xaif.i"
 #include "wn2xaif_stmt.h"
 #include "wn2xaif_expr.h"
 #include "wn2xaif_mem.h"
@@ -328,24 +327,17 @@ whirl2xaif::xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 /* just used to maintain the state of the recursions when */
 /* marking FLDs in nested addresses                       */
 class LOC_INFO {
-
 private:
   FLD_PATH_INFO * _flds_left;   /* points to tail of fld_path */
   STAB_OFFSET _off;             /* offset of last FLD used in fld_path */
   BOOL   _base_is_array;        /* was ST of address an array? */
-
+  
 public:
   WN * _nested_addr;
-
+  
   LOC_INFO(FLD_PATH_INFO * path)
-  {
-    _flds_left = path;
-    
-    _off  = 0;
-    _nested_addr = NULL;
-    _base_is_array = FALSE ;
-  }
-
+    : _flds_left(path), _off(0), _base_is_array(FALSE), _nested_addr(NULL) { }
+  
   void WN2F_Find_And_Mark_Nested_Address(WN * addr);
 };
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.26 2004/02/20 18:57:42 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.27 2004/02/20 19:30:46 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -64,13 +64,12 @@
 //*************************** User Include Files ****************************
 
 #include "whirl2xaif.i"
-#include "wn2xaif_stmt.h"
 #include "wn2xaif.h"
-#include "st2xaif.h"
-#include "ty2xaif.h"
+#include "wn2xaif_stmt.h"
 #include "wn2xaif_mem.h"
 #include "wn2xaif_io.h"
-#include "init2f.h"
+#include "st2xaif.h"
+#include "ty2xaif.h"
 
 //************************** Forward Declarations ***************************
 
