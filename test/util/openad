@@ -102,6 +102,7 @@ sub undefEnvVarErr
 ## Subroutines
 #############################################################################
 
+# RunOpenADPipeline:
 {
   my $configured = undef;
   my ($MFEF90, $WHIRL2F) = (undef, undef);
@@ -112,7 +113,42 @@ sub undefEnvVarErr
   my $XAIFBOOSTERROOT = undef;
   my $XAIFSCHEMAROOT = undef;
   
-  sub ConfigPipelineUtils 
+  my $f_RE = undef;
+  my $f90_RE = undef;
+
+  sub RunOpenADPipeline 
+  {
+    my($fortranfile) = @_;
+    
+    # Intentionally use this instead of a BEGIN block in case we want to
+    # play with options.
+    if (!defined($configured)) {
+      ConfigRunOpenADPipeline();
+    }
+    
+    # Find base name of file. Support following extensions: .f90, .f 
+    my $base = $fortranfile;
+    my $num = ($base =~ s/(?:$f90_RE)|(?:$f_RE)//); 
+    if ($num == 0) {
+      print STDOUT "Unknown file type: ${fortranfile}\n";
+      exit(-1);
+    }
+    
+    if ($opt_verbose >= 1) {
+      print STDOUT "OpenAD: ${fortranfile} --> ${base}.xb.x2w.w2f.pp.f\n";
+    }
+    
+    RunCmd("$MFEF90   ${fortranfile}");
+    RunCmd("$W2X      ${base}.B -o ${base}.xaif");
+    RunCmd("$NORM     ${base}.xaif");
+    RunCmd("$XB_BB -i ${base}.xaif -o ${base}.xb.xaif");
+    RunCmd("$X2W --st ${base}.B ${base}.xb.xaif -o ${base}.xb.x2w.B");
+    RunCmd("$WHIRL2F  ${base}.xb.x2w.B");
+    RunCmd("$NORM     ${base}.xb.x2w.w2f.f");
+    RunCmd("$PP       ${base}.xb.x2w.w2f.f");
+  }
+
+  sub ConfigRunOpenADPipeline 
   {
     $WHIRL2XAIF = $ENV{WHIRL2XAIF};
     if (!defined($WHIRL2XAIF)) { undefEnvVarErr('WHIRL2XAIF'); }
@@ -146,6 +182,9 @@ sub undefEnvVarErr
     
     $XB_BB = "${XB_alg}/BasicBlockPreaccumulation/test/t -c ${ii_xaif}";
     
+    $f_RE = '.f$';
+    $f90_RE = '.f90$';
+
     ConfigSchema();
 
     $configured = 1;
@@ -169,33 +208,6 @@ sub undefEnvVarErr
 	symlink($path, "./$file") or die "Error: could not link $path"
       }
     }
-  }
-
-  sub RunOpenADPipeline 
-  {
-    my($fortranfile) = @_;
-    
-    # Intentionally use this instead of a BEGIN block in case we want to
-    # play with options.
-    if (!defined($configured)) {
-      ConfigPipelineUtils();
-    }
-    
-    my $base = $fortranfile;
-    my $num = ($base =~ s/.f90//); # test to make sure subst ocurred
-    
-    if ($opt_verbose >= 1) {
-      print STDOUT "OpenAD: ${fortranfile} --> ${base}.xb.x2w.w2f.pp.f\n";
-    }
-    
-    RunCmd("$MFEF90   ${base}.f90");
-    RunCmd("$W2X      ${base}.B -o ${base}.xaif");
-    RunCmd("$NORM     ${base}.xaif");
-    RunCmd("$XB_BB -i ${base}.xaif -o ${base}.xb.xaif");
-    RunCmd("$X2W --st ${base}.B ${base}.xb.xaif -o ${base}.xb.x2w.B");
-    RunCmd("$WHIRL2F  ${base}.xb.x2w.B");
-    RunCmd("$NORM     ${base}.xb.x2w.w2f.f");
-    RunCmd("$PP       ${base}.xb.x2w.w2f.f");
   }
 
   sub RunCmd
