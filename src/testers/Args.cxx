@@ -1,0 +1,186 @@
+// -*-Mode: C++;-*-
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/Args.cxx,v 1.1 2004/02/27 00:34:17 eraxxon Exp $
+// * BeginRiceCopyright *****************************************************
+// ******************************************************* EndRiceCopyright *
+
+//***************************************************************************
+//
+// File:
+//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/Args.cxx,v $
+//
+// Purpose:
+//    [The purpose of this file]
+//
+// Description:
+//    [The set of functions, macros, etc. defined in the file]
+//
+//***************************************************************************
+
+//************************* System Include Files ****************************
+
+//*************************** User Include Files ****************************
+
+#include "Args.h"
+
+//*************************** Forward Declarations **************************
+
+using std::cerr;
+using std::endl;
+using std::string;
+
+
+//***************************************************************************
+
+static const char* version_info = "version .289";
+
+static const char* usage_summary =
+"[mode] [general options] <whirl-B-file>\n";
+
+static const char* usage_details =
+"Modes:\n"
+"      --ir            run a test routine on IR\n"
+"      --oa-ujnum      test OA UJ numbering\n"
+"      --whirl2f       test whirl2f\n"
+"\n"
+"General Options:\n"
+"  -d, --dump          dump the WHIRL IR\n"
+"  -V, --version       print version information\n"
+"  -h, --help          print this help\n"
+"      --debug [lvl]   debug mode at level `lvl'\n";
+
+CmdLineParser::OptArgDesc Args::optArgs[] = {
+  // Modes
+  {  0 , "ir",         CmdLineParser::ARG_NONE },
+  {  0 , "oa-ujnum",   CmdLineParser::ARG_NONE },
+  {  0 , "whirl2f",    CmdLineParser::ARG_NONE },
+  
+  // Standard options
+  { 'd', "dump",       CmdLineParser::ARG_NONE },
+  { 'V', "version",    CmdLineParser::ARG_NONE },
+  { 'h', "help",       CmdLineParser::ARG_NONE },
+  {  0 , "debug",      CmdLineParser::ARG_OPT },
+  CmdLineParser::OptArgDesc_NULL
+};
+
+
+//***************************************************************************
+// Args
+//***************************************************************************
+
+Args::Args()
+{
+  Ctor();
+}
+
+Args::Args(int argc, const char* const argv[])
+{
+  Ctor();
+  Parse(argc, argv);
+}
+
+void
+Args::Ctor()
+{
+  runMode = 0;    // default: 0 (invalid)
+  dumpIR = false; // default: false
+  debug = 0;      // default: 0 (off)
+}
+
+Args::~Args()
+{
+}
+
+
+void 
+Args::PrintVersion(std::ostream& os) const
+{
+  os << GetCmd() << ": " << version_info << endl;
+}
+
+
+void 
+Args::PrintUsage(std::ostream& os) const
+{
+  os << "Usage: " << GetCmd() << " " << usage_summary << endl
+     << usage_details << endl;
+} 
+
+
+void 
+Args::PrintError(std::ostream& os, const char* msg) const
+{
+  os << GetCmd() << ": " << msg << endl
+     << "Try `" << GetCmd() << " --help' for more information." << endl;
+}
+
+void 
+Args::PrintError(std::ostream& os, const std::string& msg) const
+{
+  PrintError(os, msg.c_str());
+}
+
+
+void
+Args::Parse(int argc, const char* const argv[])
+{
+  try {
+    // -------------------------------------------------------
+    // Parse the command line
+    // -------------------------------------------------------
+    parser.Parse(optArgs, argc, argv);
+    
+    // -------------------------------------------------------
+    // Sift through results, checking for symantic errors
+    // -------------------------------------------------------
+
+    // Special options that should be checked first
+    if (parser.IsOpt("debug")) { 
+      debug = 1; 
+      if (parser.IsOptArg("debug")) {
+	const string& arg = parser.GetOptArg("debug");
+	debug = (int)CmdLineParser::ToLong(arg);
+      }
+    }
+    if (parser.IsOpt("help")) { 
+      PrintUsage(std::cerr); 
+      exit(1);
+    }
+    if (parser.IsOpt("version")) { 
+      PrintVersion(std::cerr);
+      exit(1);
+    }
+    
+    // Check for mode
+    if (parser.IsOpt("ir")) { runMode = 1; }
+    if (parser.IsOpt("oa-ujnum")) { runMode = 2; }
+    if (parser.IsOpt("whirl2f")) { runMode = 3; }
+    
+    // Check for other options
+    if (parser.IsOpt("dump")) { dumpIR = true; }
+    
+    // Check for required arguments
+    if (parser.GetNumArgs() != 1) {
+      PrintError(std::cerr, "Missing a required argument!");
+      exit(1);
+    }
+    whirlFileNm = parser.GetArg(0);
+  } 
+  catch (CmdLineParser::Exception& e) {
+    PrintError(std::cerr, e.GetMessage());
+    exit(1);
+  }
+}
+
+
+void 
+Args::Dump(std::ostream& os) const
+{
+  parser.Dump(os);
+}
+
+void 
+Args::DDump() const
+{
+  Dump(std::cerr);
+}
+
