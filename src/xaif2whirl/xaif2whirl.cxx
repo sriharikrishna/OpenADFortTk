@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.49 2004/06/09 20:43:54 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.50 2004/06/16 14:28:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -1554,24 +1554,30 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
     level = CURRENT_SYMTAB; // PU_lexical_level
   }
   
-  SymId symId = GetSymId(elem);
+  // For symbols not introduced by xaifBooster, *one* of the following applies
+  SymId symId = GetSymId(elem); // non-zero for a normal symbol
+  WNId wnId = GetWNId(elem);    // non-zero for a scalarized symbol
+  
+  bool normalSym = (wnId == 0); // represents some non-scalarized symbol
   bool active = GetActiveAttr(elem);
-
+  
   const XMLCh* symNmX = elem->getAttribute(XAIFStrings.attr_symId_x());
   XercesStrX symNm = XercesStrX(symNmX);
-
+  
   // 2. Find or Create WHIRL symbol
   ST* st = NULL;
-  if (symId == 0) {
-    // Create the symbol
-    st = CreateST(elem, level, symNm.c_str());
-  } else {
-    // Find the symbol and change type if necessary
-    st = &(Scope_tab[level].st_tab->Entry(symId));
-    if (active && ST_class(st) == CLASS_VAR) {
-      ConvertToActiveType(st);
+  if (normalSym) {
+    if (symId == 0) {
+      // Create the symbol
+      st = CreateST(elem, level, symNm.c_str());
+    } else {
+      // Find the symbol and change type if necessary
+      st = &(Scope_tab[level].st_tab->Entry(symId));
+      if (active && ST_class(st) == CLASS_VAR) {
+	ConvertToActiveType(st);
+      }
     }
-  }
+  } 
   
   // 3. Create our own symbol structure and add to the map
   Symbol* sym = new Symbol(st, active);
