@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.h,v 1.3 2003/12/02 13:32:24 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.h,v 1.4 2004/02/26 14:24:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -13,7 +13,7 @@
 //    [The purpose of this file]
 //
 // Description:
-//    See, in particular, the comments associated with 'DCPIProfile'.
+//    [The set of functions, macros, etc. defined in the file]
 //
 //***************************************************************************
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.43 2004/02/24 20:45:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.44 2004/02/26 14:24:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -74,7 +74,6 @@
 
 //*************************** User Include Files ****************************
 
-#include "whirl2xaif.i"
 #include "wn2xaif.i"
 #include "wn2xaif.h"
 #include "wn2xaif_stmt.h"
@@ -147,6 +146,7 @@ AddStructuredCFEndTags(WN* wn);
 
 static void
 MassageOACFGIntoXAIFCFG(CFG* cfg);
+
 
 //***************************************************************************
 // 
@@ -308,6 +308,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return whirl2xaif::good;
 }
 
+
 // xlate_ALTENTRY:
 whirl2xaif::status
 whirl2xaif::xlate_ALTENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
@@ -322,12 +323,14 @@ whirl2xaif::xlate_ALTENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return whirl2xaif::good;
 }
 
+
 // xlate_ignore:
 whirl2xaif::status
 whirl2xaif::xlate_ignore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   return whirl2xaif::good;
 }
+
 
 // xlate_unknown:
 whirl2xaif::status
@@ -968,6 +971,7 @@ AddToNonScalarSymTabOp::AddToNonScalarSymTabOp(NonScalarSymTab* symtab_)
   assert(symtab != NULL);
 }
 
+
 // Given a non-scalar reference 'wn', create a dummy variable and
 // add to the map.  
 int 
@@ -1168,6 +1172,7 @@ xlate_CFCondition(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << EndElem;
 }
 
+
 // xlate_LoopInitialization: 
 static void 
 xlate_LoopInitialization(xml::ostream& xos, WN *wn, XlationContext& ctxt)
@@ -1189,6 +1194,7 @@ xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ctxt.DeleteContext();
   xos << EndElem;
 }
+
 
 // GetIDsForStmtsInBB: Returns a colon separated list for ids of
 // statements within the basic block.  In the event that a statement
@@ -1243,6 +1249,7 @@ AddStructuredCFEndTags(WN* wn)
       //    do (...)
       //      ...
       // -->  EndLoop
+      //    enddo
       WN* blkWN = NULL;
       if (opr == OPR_DO_LOOP) { 
 	blkWN = WN_do_body(curWN); 
@@ -1253,7 +1260,9 @@ AddStructuredCFEndTags(WN* wn)
       WN_INSERT_BlockLast(blkWN, newWN);
     }
     else if (vty == XAIFStrings.elem_BBIf()) {
-      //     if (...) {  } else {  }
+      //     if (...) { ... }
+      //     else { ... }
+      //     endif
       // --> EndBranch
       WN* blkWN = FindParentWNBlock(wn, curWN);
       WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndBranch());

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/xmlostream.h,v 1.5 2003/09/02 15:02:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/xmlostream.h,v 1.6 2004/02/26 14:24:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -55,13 +55,11 @@ class ostream : public std::ostream {
     Exception (const char* msg_) { msg = msg_; }
     virtual ~Exception () { }
 
-    virtual const std::string& Message() const { return msg; }
+    virtual const std::string& GetMessage() const { return msg; }
     virtual void Report(std::ostream& os) const { 
-      os << "Exception: xml::ostream: " << msg << std::endl; 
+      os << "xml::ostream::Exception: " << msg << std::endl; 
     }    
-    virtual void Report() const { 
-      std::cerr << "Exception: xml::ostream: " << msg << std::endl; 
-    }
+    virtual void Report() const { Report(std::cerr); }
 
   private: 
     std::string msg;

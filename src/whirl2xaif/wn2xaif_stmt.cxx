@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.30 2004/02/23 22:33:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.31 2004/02/26 14:24:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -61,7 +61,6 @@
 
 //*************************** User Include Files ****************************
 
-#include "whirl2xaif.i"
 #include "wn2xaif.h"
 #include "wn2xaif_stmt.h"
 #include "wn2xaif_mem.h"
@@ -882,6 +881,7 @@ whirl2xaif::xlate_COMMENT(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ASSERT_DBG_FATAL(WN_opcode(wn) == OPC_COMMENT,
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_COMMENT"));
   
+  // Note: Index_To_Str(WN_GetComment(wn)) returns comment text
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", ctxt.GetNewVId())
       << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))

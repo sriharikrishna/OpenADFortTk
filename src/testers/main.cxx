@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v 1.5 2004/02/18 18:41:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v 1.6 2004/02/26 14:24:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -28,13 +28,9 @@
 #include <include/Open64BasicTypes.h>
 
 #include "cmplrs/rcodes.h"  // return codes
-#include "config_opt.h"     // Instrumentation_Enabled
-#include "config_list.h"    // List_Enabled, etc.
-#include "err_host.tab"	    // load all the error messages
-#include "ir_reader.h"      // fdump_tree
-
-#include "file_util.h"	    // New_Extension, Last_Pathname_Component
 #include "tracing.h"        // trace routines
+#include "file_util.h"	    // New_Extension, Last_Pathname_Component
+#include "ir_reader.h"      // fdump_tree
 
 //*************************** User Include Files ****************************
 
@@ -155,7 +151,7 @@ real_main(int argc, char **argv)
   INT local_ecount, local_wcount;
   if ( Get_Error_Count ( &local_ecount, &local_wcount ) ) {
     Terminate(Had_Internal_Error() ? RC_INTERNAL_ERROR : 
-	      RC_NORECOVER_USER_ERROR);
+              RC_NORECOVER_USER_ERROR);
   }
 
   Diag_Exit();
@@ -169,8 +165,8 @@ real_main(int argc, char **argv)
 // from be/be/driver_util.c (FIXME: convert to getopts)
 //***************************************************************************
 
-/* Default file	extensions: */
-#define IRB_FILE_EXTENSION ".B"	    /* WHIRL file */
+/* Default file extensions: */
+#define IRB_FILE_EXTENSION ".B" /* WHIRL file */
 
 // ProcessCommandLine: Process the command line arguments. Evaluate
 // all flags and set up global options.
@@ -201,21 +197,21 @@ ProcessCommandLine(int argc, char **argv)
       opt = argv[i]+1; // points to option name, skipping '-'
 
       if (strcmp(opt, "ir") == 0) { 
-	opt_ir = true;
-	continue;
+        opt_ir = true;
+        continue;
       }
       if (strcmp(opt, "oa") == 0) { 
-	opt_oa = true;
-	continue;
+        opt_oa = true;
+        continue;
       }
       if (strcmp(opt, "w2f") == 0) { 
-	opt_whirl2f = true;
-	continue;
+        opt_whirl2f = true;
+        continue;
       }
       
       if (strcmp(opt, "d") == 0) { 
-	opt_dumpIR = true;
-	continue;
+        opt_dumpIR = true;
+        continue;
       }
       
     } else if (argv[i] != NULL) {

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.35 2004/02/24 20:44:50 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.36 2004/02/26 14:24:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -53,19 +53,11 @@
 //************************** System Include Files ***************************
 
 #include <time.h>
-#include <errno.h>          /* For sys_errlist */
 #include <fstream>
 
 //************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
-
-#include <sys/elf_whirl.h>  /* for WHIRL_REVISION */
-#include "config_flist.h"   /* For FLIST command line parameters */
-#include "file_util.h"      /* For Last_Pathname_Component */
-#include "flags.h"          /* for OPTION_GROUP */
-#include "timing.h"         /* Start/Stop Timer */
-#include "clone.h"          /* IPO_CLONE */
 
 //************************ OpenAnalysis Include Files ***********************
 
@@ -74,7 +66,6 @@
 //*************************** User Include Files ****************************
 
 #include "whirl2xaif.h"
-#include "whirl2xaif.i"
 #include "wn2xaif.h"
 #include "st2xaif.h"
 
@@ -87,7 +78,7 @@ using namespace xml; // for xml::ostream, etc
 
 //***************************************************************************
 
-BOOL WN2F_F90_pu = FALSE; /* Global variable indicating F90 or F77: REMOVE */
+BOOL WN2F_F90_pu = FALSE; /* Global variable: F90 or F77: FIXME/REMOVE */
 
 //***************************************************************************
 
@@ -382,6 +373,7 @@ DumpTranslationHeaderComment(xml::ostream& xos)
 // 
 //***************************************************************************
 
+#include "clone.h"          /* Open64: IPO_CLONE */
 #include <lib/support/WhirlParentize.h>
 #include <vector>
 using std::vector;

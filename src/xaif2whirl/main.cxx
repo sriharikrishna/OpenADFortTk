@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.9 2004/02/18 18:41:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.10 2004/02/26 14:24:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -45,13 +45,9 @@
 #include <include/Open64BasicTypes.h>
 
 #include "cmplrs/rcodes.h"  // return codes
-#include "config_opt.h"     // Instrumentation_Enabled
-#include "config_list.h"    // List_Enabled, etc.
-#include "err_host.tab"	    // load all the error messages
-#include "ir_reader.h"      // fdump_tree
-
-#include "file_util.h"	    // New_Extension, Last_Pathname_Component
 #include "tracing.h"        // trace routines
+#include "file_util.h"      // New_Extension, Last_Pathname_Component
+#include "ir_reader.h"      // fdump_tree
 
 //************************ OpenAnalysis Include Files ***********************
 
@@ -192,7 +188,7 @@ real_main(int argc, char **argv)
   INT local_ecount, local_wcount;
   if ( Get_Error_Count ( &local_ecount, &local_wcount ) ) {
     Terminate(Had_Internal_Error() ? RC_INTERNAL_ERROR : 
-	      RC_NORECOVER_USER_ERROR);
+              RC_NORECOVER_USER_ERROR);
   }
 
   Diag_Exit();
@@ -251,7 +247,7 @@ ReadXAIF_DOM(const char* xaiffilenm)
   
   catch (const XMLException& e) {
     cerr << "An error occurred during parsing\n   Message: "
-	 << XercesStrX(e.getMessage()) << endl;
+         << XercesStrX(e.getMessage()) << endl;
     errorsOccured = true;
   }
   catch (const DOMException& e) {
@@ -259,7 +255,7 @@ ReadXAIF_DOM(const char* xaiffilenm)
     XMLCh errText[maxChars + 1];
     
     cerr << "\nDOM Error during parsing: '" << xaiffilenm << "'\n"
-	 << "DOMException code is:  " << e.code << endl;
+         << "DOMException code is:  " << e.code << endl;
     
     if (DOMImplementation::loadDOMExceptionMsg(e.code, errText, maxChars))
       cerr << "Message is: " << XercesStrX(errText) << endl;
@@ -327,7 +323,7 @@ ReadXIAF_SAX(const char* xaiffilenm)
   }
   catch (const XMLException& toCatch) {
     cerr << "Error: XAIF processing error:\n"
-	 << "\t" << XercesStrX(toCatch.getMessage()) << endl;
+         << "\t" << XercesStrX(toCatch.getMessage()) << endl;
     // FIXME: do we have to call terminate here?
   }
 
@@ -348,7 +344,7 @@ XercesInit()
   }
   catch (const XMLException& toCatch) {
     cerr << "Error: unable to initialize XAIF processor!:\n"
-	 << "\t" << XercesStrX(toCatch.getMessage()) << endl;
+         << "\t" << XercesStrX(toCatch.getMessage()) << endl;
     return 1;
   }
 
@@ -368,8 +364,8 @@ XercesFini()
 // from be/be/driver_util.c (FIXME: convert to getopts)
 //***************************************************************************
 
-/* Default file	extensions: */
-#define IRB_FILE_EXTENSION ".B"	    /* WHIRL file */
+/* Default file extensions: */
+#define IRB_FILE_EXTENSION ".B" /* WHIRL file */
 
 // ProcessCommandLine: Process the command line arguments. Evaluate
 // all flags and set up global options.
@@ -401,8 +397,8 @@ ProcessCommandLine(int argc, char **argv)
       opt = argv[i]+1; // points to option name, skipping '-'
       
       if (strcmp(opt, "t") == 0) { 
-	opt_typeChangeInWHIRL = true; // FIXME
-	continue;
+        opt_typeChangeInWHIRL = true; // FIXME
+        continue;
       }
 
     } else if (argv[i] != NULL) {
@@ -411,9 +407,9 @@ ProcessCommandLine(int argc, char **argv)
       // -------------------------------------------------------
       dashdash_flag = FALSE;
       if (i+1 < argc) { 
-	WHIRL_filename = argv[i];
-	XAIF_filename = argv[++i];
-	break;
+        WHIRL_filename = argv[i];
+        XAIF_filename = argv[++i];
+        break;
       }
     } 
   }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v 1.7 2004/02/23 18:17:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v 1.8 2004/02/26 14:24:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -54,7 +54,7 @@
 
 #include <include/Open64BasicTypes.h>
 
-#include "ir_bread.h"	   // Read_Global_Info()
+#include "ir_bread.h"	   // Read_Global_Info(), etc.
 #include "ir_bwrite.h"	   // Write_Global_Info(), etc.
 #include "ir_reader.h"     // fdump_tree
 #include "tracing.h"       // trace routines
@@ -87,6 +87,7 @@
 static void 
 ReadPU(PU_Info* pu);
 
+
 // ReadIR:
 PU_Info*
 ReadIR(const char* irfilename)
@@ -95,7 +96,7 @@ ReadIR(const char* irfilename)
 
   MEM_POOL_Push(&MEM_src_pool);
   MEM_POOL_Push(&MEM_src_nz_pool);
-  Set_Error_Source (Src_File_Name);
+  Set_Error_Source(Src_File_Name);
 
   MEM_POOL_Push(MEM_pu_nz_pool_ptr);
   MEM_POOL_Push(MEM_pu_pool_ptr);
@@ -105,7 +106,7 @@ ReadIR(const char* irfilename)
   // -------------------------------------------------------
   
   // Open file, read PU info and setup symbol tables
-  Open_Input_Info((char*)irfilename); // FIXME: change caller to accept const
+  Open_Input_Info(irfilename);
   Initialize_Symbol_Tables(FALSE);
   New_Scope(GLOBAL_SYMTAB, Malloc_Mem_Pool, FALSE);
   PU_Info *pu_forest = Read_Global_Info(NULL);
@@ -114,6 +115,7 @@ ReadIR(const char* irfilename)
   // -------------------------------------------------------
   // 2. Read PUs and local symbol tables
   // -------------------------------------------------------
+  // Perform our own iteration to ensure correctness and safety
   for (PU_Info* pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
     ReadPU(pu);
   }
@@ -133,10 +135,6 @@ ReadPU(PU_Info* pu)
   // sets CURRENT_SYMTAB and Scope_tab[]).
   Read_Local_Info(MEM_pu_nz_pool_ptr, pu);
   WN *wn_pu = PU_Info_tree_ptr(pu); // made possible by Read_Local_Info()
-  
-  // Create region mempool and id map. (Used in lowering?)
-  // Open64 Note: This should be part of the .B file reader
-  //REGION_Initialize(wn_pu, PU_has_region(Get_Current_PU()));
   
   Advance_Current_PU_Count();
   
@@ -166,20 +164,19 @@ SetPUInfoStatePU(PU_Info* pu, Subsect_State state);
 static void
 SetPUInfoState(PU_Info* pu, Subsect_State state);
 
+
 // WriteIR
 void 
 WriteIR(const char* irfilename, PU_Info* pu_forest)
 {
   Diag_Set_Phase("WHIRL IO: Write IR");
 
-  Open_Output_Info((char*)irfilename); // FIXME change to accept const
+  Open_Output_Info(irfilename);
 
   // -------------------------------------------------------
   // 1. Write PUs and local symbol tables
   // -------------------------------------------------------
-
-  // It would be possible to use the standard iterator here, but in
-  // order to highlight the special handling in WritePU, we do not.
+  // Perform our own iteration to ensure correctness and safety
   for (PU_Info* pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
     WritePU(pu);
   }
@@ -190,6 +187,7 @@ WriteIR(const char* irfilename, PU_Info* pu_forest)
   Write_Global_Info(pu_forest); // expects PU state to be Subsect_Written
   Close_Output_Info();
 }
+
 
 static void
 WritePU(PU_Info* pu)
@@ -205,6 +203,7 @@ WritePU(PU_Info* pu)
   }
 }
 
+
 // SetPUInfoStateIR: For each PU in IR 'pu_forest', sets each
 // subsection to have the state 'state' if the subsection is present
 // (i.e. not Subsect_Missing).
@@ -215,6 +214,7 @@ SetPUInfoStateIR(PU_Info* pu_forest, Subsect_State state)
     SetPUInfoStatePU(pu, state);
   }
 }
+
 
 // SetPUInfoStatePU: Sets the state for the PU tree: the current PU
 // and all children.
@@ -230,6 +230,7 @@ SetPUInfoStatePU(PU_Info* pu, Subsect_State state)
     SetPUInfoStatePU(child, state);
   }
 }
+
 
 // SetPUInfoState: Set the state for the current PU
 static void
@@ -260,6 +261,7 @@ FreeIR(PU_Info* pu_forest)
   // -------------------------------------------------------
   // 1. Free PUs and local symbol tables
   // -------------------------------------------------------
+  // Perform our own iteration to ensure correctness and safety
   for (PU_Info* pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
     FreePU(pu);
   }
@@ -272,12 +274,12 @@ FreeIR(PU_Info* pu_forest)
   MEM_POOL_Pop(MEM_pu_nz_pool_ptr);
   MEM_POOL_Pop(MEM_pu_pool_ptr);
   
-  MEM_POOL_Pop( &MEM_src_pool );
-  MEM_POOL_Pop( &MEM_src_nz_pool );
+  MEM_POOL_Pop(&MEM_src_pool);
+  MEM_POOL_Pop(&MEM_src_nz_pool);
   
 #ifdef Is_True_On
   if (Get_Trace (TKIND_ALLOC, TP_MISC)) {
-    fprintf (TFile, "\n%s\tMemory allocation information after be\n", DBar);
+    fprintf (TFile, "\n%s\tMemory allocation info\n", DBar);
     MEM_Trace();
   }
 #endif
@@ -289,7 +291,6 @@ FreePU(PU_Info* pu)
 {
   PU_SetGlobalState(pu);
   
-  //REGION_Finalize();
   Free_Local_Info(pu); // deletes all maps
   
   // Now recursively process the child PU's.
@@ -373,5 +374,15 @@ DumpIR(PU_Info* pu_forest)
 #if 0
   // from ReadPU()
   Set_Current_PU_For_Trace(ST_name(PU_Info_proc_sym(pu)), Current_PU_Count());
+
+
+  // Note: REGION stuff will not be useful when reading the whole IR,
+  // because the map is only for one PU.  May need this process PU for
+  // lowering.
+  // --> from ReadPU(), before Advance_Current_PU_Count()
+  // Create region mempool and id map. (Used in lowering?)
+  REGION_Initialize(wn_pu, PU_has_region(Get_Current_PU()));
+  // --> from FreePU(), before Free_Local_Info()
+  REGION_Finalize();
 #endif
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.16 2004/02/18 18:41:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.17 2004/02/26 14:24:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -59,13 +59,9 @@
 #include <include/Open64BasicTypes.h>
 
 #include "cmplrs/rcodes.h"  // return codes
-#include "config_opt.h"     // Instrumentation_Enabled
-#include "config_list.h"    // List_Enabled, etc.
-#include "err_host.tab"	    // load all the error messages
-#include "ir_reader.h"      // fdump_tree
-
-#include "file_util.h"	    // New_Extension, Last_Pathname_Component
 #include "tracing.h"        // trace routines
+#include "file_util.h"      // New_Extension, Last_Pathname_Component
+#include "ir_reader.h"      // fdump_tree
 
 //************************ OpenAnalysis Include Files ***********************
 
@@ -73,7 +69,6 @@
 
 //*************************** User Include Files ****************************
 
-#include "whirl2xaif.i"
 #include "whirl2xaif.h"
 
 #include <lib/support/xmlostream.h>
@@ -205,7 +200,7 @@ real_main(int argc, char **argv)
   INT local_ecount, local_wcount;
   if ( Get_Error_Count ( &local_ecount, &local_wcount ) ) {
     Terminate(Had_Internal_Error() ? RC_INTERNAL_ERROR : 
-	      RC_NORECOVER_USER_ERROR);
+              RC_NORECOVER_USER_ERROR);
   }
 
   Diag_Exit();
@@ -219,8 +214,8 @@ real_main(int argc, char **argv)
 // from be/be/driver_util.c (FIXME: convert to getopts)
 //***************************************************************************
 
-/* Default file	extensions: */
-#define IRB_FILE_EXTENSION ".B"	    /* WHIRL file */
+/* Default file extensions: */
+#define IRB_FILE_EXTENSION ".B" /* WHIRL file */
 
 // ProcessCommandLine: Process the command line arguments. Evaluate
 // all flags and set up global options.
@@ -251,20 +246,20 @@ ProcessCommandLine(int argc, char **argv)
       opt = argv[i]+1; // points to option name, skipping '-'
       
       if (strcmp(opt, "d") == 0) { 
-	opt_dumpIR = true;
-	continue;
+        opt_dumpIR = true;
+        continue;
       }
 
 #if 0 // example of option that takes an argument
       if (strcmp(opt, "I") == 0) { 
-	PersistentIDsToPrint = argv[++i]; // FIXME: should test array bounds
-	continue;
+        PersistentIDsToPrint = argv[++i]; // FIXME: should test array bounds
+        continue;
       }
 #endif
       
       if (strcmp(opt, "i") == 0) { 
-	opt_inlineTest = true;
-	continue;
+        opt_inlineTest = true;
+        continue;
       }
       
     } else if (argv[i] != NULL) {
@@ -289,7 +284,7 @@ ProcessCommandLine(int argc, char **argv)
   // so strip off any directory path, and substitute the suffix 
   // appropriately.
   XAIF_filename = New_Extension(Last_Pathname_Component(Src_File_Name), 
-				".xaif");
+                                ".xaif");
 }
 
 
