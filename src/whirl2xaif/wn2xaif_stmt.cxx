@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.38 2004/06/28 18:52:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.39 2004/07/30 17:51:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -105,9 +105,10 @@ whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // FIXME: cleanup AGOTO, RETURN, RETURN_VAL, PRAGMA, COMMENT, USE
   //  INTRN_CASSIGNSTMT, INTRN_STOP, INTRN_STOP_F90, IO
   
+  WNId stmtid = ctxt.FindWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
-      << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << Attr("statement_id", stmtid)
+      << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [passive: " << OPERATOR_name(opr) << "]" << EndAttr
       << EndElem;
   
@@ -123,11 +124,9 @@ whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_BLOCK(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_BLOCK, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_BLOCK"));
-
-  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_BLOCK, FORTTK_UNEXPECTED_INPUT); 
   
+  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
   return whirl2xaif::good;
 }
 
@@ -135,36 +134,19 @@ whirl2xaif::xlate_BLOCK(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::WN2F_region(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  Is_True(WN_operator(wn) == OPR_REGION, 
-	  ("Invalid operator for WN2F_region()"));  
-  Is_True(WN_operator(WN_region_body(wn)) == OPR_BLOCK, 
-	  ("Expected OPR_BLOCK as body of OPR_REGION in WN2F_region()"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_REGION, FORTTK_UNEXPECTED_INPUT); 
 
-  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
-
-#if 0 // FIXME REMOVE: See whirl2f for full version 
-  // WN_region_pragmas(wn)
-  set_XlationContext_explicit_region(ctxt);
-  
-  for (WN* stmt = WN_first(WN_region_body(wn)); stmt != NULL;
-       stmt = WN_next(stmt)) {
-    if (!WN2F_Skip_Stmt(stmt))
-      TranslateWN(xos, stmt, ctxt);
-  }
-#endif
-  
+  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
   return whirl2xaif::good;
-} /* WN2F_region */
+}
 
 
 whirl2xaif::status 
 whirl2xaif::xlate_DO_LOOP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_DO_LOOP,
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_DO_LOOP"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_DO_LOOP, FORTTK_UNEXPECTED_INPUT); 
   
-  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
-  
+  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
   return whirl2xaif::good;
 }
 
@@ -172,11 +154,9 @@ whirl2xaif::xlate_DO_LOOP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_DO_WHILE(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_DO_WHILE,
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_DO_WHILE"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_DO_WHILE, FORTTK_UNEXPECTED_INPUT); 
 
-  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
-  
+  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
   return whirl2xaif::good;
 }
 
@@ -184,11 +164,9 @@ whirl2xaif::xlate_DO_WHILE(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_WHILE_DO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_WHILE_DO,
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_WHILE_DO"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_WHILE_DO, FORTTK_UNEXPECTED_INPUT); 
   
-  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
-  
+  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
   return whirl2xaif::good;
 }
 
@@ -196,11 +174,9 @@ whirl2xaif::xlate_WHILE_DO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_IF(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_IF,
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_IF"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_IF, FORTTK_UNEXPECTED_INPUT); 
   
-  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
-  
+  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
   return whirl2xaif::good;
 }
 
@@ -213,8 +189,7 @@ whirl2xaif::status
 whirl2xaif::WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // REMOVE
-  ASSERT_DBG_FATAL(XlationContext_io_stmt(ctxt),
-		   (DIAG_W2F_UNEXPECTED_CONTEXT, "WN2F_implied_do"));
+  FORTTK_ASSERT(XlationContext_io_stmt(ctxt), FORTTK_UNEXPECTED_INPUT); 
   
   /* This is a fortran implied do_loop, which can only occur as an
    * an OPR_IO_ITEM.  We should always be able to regenerate
@@ -280,14 +255,13 @@ whirl2xaif::WN2F_noio_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt
 whirl2xaif::status 
 whirl2xaif::xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_GOTO || 
-		   WN_operator(wn) == OPR_REGION_EXIT,
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_GOTO"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_GOTO ||
+		WN_operator(wn) == OPR_REGION_EXIT, FORTTK_UNEXPECTED_INPUT); 
   
+  WNId stmtid = ctxt.FindWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
-      << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") 
-      << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << Attr("statement_id", stmtid)
+      << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << StmtGotoAnnotVal(WN_label_number(wn)) << EndAttr
       << EndElem;
   
@@ -298,11 +272,9 @@ whirl2xaif::xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status
 whirl2xaif::xlate_SWITCH(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_SWITCH,
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_SWITCH"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_SWITCH, FORTTK_UNEXPECTED_INPUT); 
 
-  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
-  
+  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
   return whirl2xaif::good;
 }
 
@@ -329,12 +301,9 @@ whirl2xaif::status
 whirl2xaif::WN2F_compgoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // REMOVE
+  FORTTK_ASSERT(WN_operator(wn) == OPR_COMPGOTO, FORTTK_UNEXPECTED_INPUT); 
+
   WN         *goto_stmt;
-  
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_COMPGOTO, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_compgoto"));
-  ASSERT_DBG_FATAL(WN_operator(WN_compgoto_table(wn)) == OPR_BLOCK,
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN_compgoto_table"));
   
   /* Calculate the computed goto for the given cases */
   if (WN_compgoto_num_cases(wn) > 0) {
@@ -343,8 +312,6 @@ whirl2xaif::WN2F_compgoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     for (INT32 goto_entry = 0;
 	 goto_entry < WN_compgoto_num_cases(wn); 
 	 goto_entry++) {
-      ASSERT_DBG_FATAL(WN_operator(goto_stmt) == OPR_GOTO,
-		       (DIAG_W2F_UNEXPECTED_OPC, "COMPGOTO entry"));
       xos << WN_label_number(goto_stmt);
       if (goto_entry+1 < WN_compgoto_num_cases(wn))
 	xos << ',';
@@ -371,12 +338,12 @@ whirl2xaif::status
 whirl2xaif::WN2F_agoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // REMOVE
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_AGOTO,
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_agoto"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_AGOTO, FORTTK_UNEXPECTED_INPUT); 
 
+  WNId stmtid = ctxt.FindWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker())
-      << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << Attr("statement_id", stmtid)
+      << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [***FIXME: agoto]" << EndAttr
       << EndElem;
 
@@ -390,12 +357,11 @@ whirl2xaif::WN2F_agoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_condBR(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_TRUEBR || 
-		   WN_operator(wn) == OPR_FALSEBR,
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_condBR"));
+  OPERATOR opr = WN_operator(wn);
+  FORTTK_ASSERT(opr == OPR_TRUEBR || opr == OPR_FALSEBR,
+		FORTTK_UNEXPECTED_INPUT);
   
-  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
-  
+  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
   return whirl2xaif::good;
 }
 
@@ -403,12 +369,12 @@ whirl2xaif::xlate_condBR(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_RETURN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_RETURN,
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_RETURN"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_RETURN, FORTTK_UNEXPECTED_INPUT); 
   
+  WNId stmtid = ctxt.FindWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
-      << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << Attr("statement_id", stmtid)
+      << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [return]" << EndAttr
       << EndElem;
   
@@ -419,12 +385,12 @@ whirl2xaif::xlate_RETURN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_RETURN_VAL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_RETURN_VAL,
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_RETURN_VAL"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_RETURN_VAL, FORTTK_UNEXPECTED_INPUT); 
   
+  WNId stmtid = ctxt.FindWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
-      << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << Attr("statement_id", stmtid)
+      << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [return_val]" << EndAttr
       << EndElem;
   
@@ -435,13 +401,12 @@ whirl2xaif::xlate_RETURN_VAL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_LABEL, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_LABEL"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_LABEL, FORTTK_UNEXPECTED_INPUT); 
   
+  WNId stmtid = ctxt.FindWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker())
-      << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") 
-      << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << Attr("statement_id", stmtid)
+      << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << StmtLabelAnnotVal(WN_label_number(wn)) << EndAttr
       << EndElem;
   
@@ -471,9 +436,9 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    */
   
   // We can't handle ICALLs yet
-  OPERATOR opr = WN_operator(wn); 
-  ASSERT_DBG_FATAL(opr != OPR_ICALL, (DIAG_W2F_UNEXPECTED_OPC, "OPR_ICALL"));
-
+  OPERATOR opr = WN_operator(wn);
+  FORTTK_ASSERT(opr != OPR_ICALL, FORTTK_UNEXPECTED_INPUT); 
+  
   // -------------------------------------------------------
   // Gather info...
   // -------------------------------------------------------
@@ -511,7 +476,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     const char* inm = INTRINSIC_basename(WN_intrinsic(wn));
     IntrinsicXlationTable::XAIFInfo* info 
       = IntrinsicTable.FindXAIFInfo(opr, inm);
-    ASSERT_FATAL(info, (DIAG_UNIMPLEMENTED, 0, "Missing intrinsic!"));
+    FORTTK_ASSERT(info, "Unknown intrinsic '" << inm << "'");
 
     xlate_as = 2; // intrinsic
     targid = ctxt.GetNewVId();
@@ -526,7 +491,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     ST* st = WN_st(wn);
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
     SymTabId scopeid = ctxt.FindSymTabId(sttab);
-    ASSERT_FATAL(scopeid != 0, (DIAG_UNIMPLEMENTED, 0, "xlate_CALL"));
+    
     const char* funcNm = ST_name(st);
 
     IntrinsicXlationTable::XAIFInfo* info
@@ -550,7 +515,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       // SubroutineCall
       xlate_as = 0; // subroutine
       xos << BegElem("xaif:SubroutineCall")
-	  << Attr("statement_id", ctxt.GetNewVId())
+	  << Attr("statement_id", ctxt.FindWNId(wn))
 	  << Attr("scope_id", scopeid) << AttrSymId(st);
     }
   }
@@ -773,15 +738,17 @@ whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
 				 XlationContext& ctxt)
 {
   // Handles all intrinsics that are translated into XAIF statements
-  
+
+  FORTTK_ASSERT(WN_operator(wn) == OPR_INTRINSIC_CALL, 
+		FORTTK_UNEXPECTED_INPUT); 
+
   WN   *arg_expr;
   TY_IDX arg_ty;
   INT  str_kid, length_kid, first_length_kid;
   BOOL regular_call = FALSE; /* Specially treated intrinsic call? */
   
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_INTRINSIC_CALL, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_INTRINSIC_CALL"));
-  
+  WNId wnid = ctxt.FindWNId(wn);
+
   switch (WN_intrinsic(wn)) {
   case INTRN_CONCATEXPR:    
     /* In the context of an IO statement, emit the concatenation
@@ -813,8 +780,8 @@ whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
     //WN2F_String_Argument(xos, WN_kid(wn,0), WN_kid(wn,2), ctxt);
     //WN2F_String_Argument(xos, WN_kid(wn,1), WN_kid(wn,3), ctxt);
     xos << BegElem(XAIFStrings.elem_Marker()) 
-	<< Attr("statement_id", ctxt.GetNewVId())
-	<< BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+	<< Attr("statement_id", wnid)
+	<< BegAttr("annotation") << WhirlIdAnnotVal(wnid)
 	<< " [cassignstmt]" << EndAttr << EndElem;
     break;
     
@@ -822,8 +789,8 @@ whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
   case INTRN_STOP_F90:
     // Either the F90 or F77 stop
     xos << BegElem(XAIFStrings.elem_Marker()) 
-	<< Attr("statement_id", ctxt.GetNewVId())
-	<< BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+	<< Attr("statement_id", wnid)
+	<< BegAttr("annotation") << WhirlIdAnnotVal(wnid)
 	<< " [stop]" << EndAttr << EndElem;
     break;
     
@@ -844,35 +811,33 @@ whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
 whirl2xaif::status
 whirl2xaif::WN2F_eval(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   /* This generates code that will not recompile.  Short of
-    * some kind of surrounding statement there is no way to do 
-    * this in Fortran-77.
-    */
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_EVAL, 
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_eval"));
-
-   xos << "CALL _EVAL(";
-   TranslateWN(xos, WN_kid0(wn), ctxt);
-   xos << ')';
-
-   return whirl2xaif::good;
+  /* This generates code that will not recompile.  Short of
+   * some kind of surrounding statement there is no way to do 
+   * this in Fortran-77.
+   */
+  FORTTK_ASSERT(WN_operator(wn) == OPR_EVAL, FORTTK_UNEXPECTED_INPUT); 
+  
+  xos << "CALL _EVAL(";
+  TranslateWN(xos, WN_kid0(wn), ctxt);
+  xos << ')';
+  
+  return whirl2xaif::good;
 } /* WN2F_eval */
 
 
 whirl2xaif::status
 whirl2xaif::xlate_PRAGMA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PRAGMA ||
-		   WN_operator(wn) == OPR_XPRAGMA, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_PRAGMA"));
-
+  FORTTK_ASSERT(WN_operator(wn) == OPR_PRAGMA ||
+		WN_operator(wn) == OPR_XPRAGMA, FORTTK_UNEXPECTED_INPUT); 
+  
   // switch (WN_pragma(apragma))
-
+  WNId stmtid = ctxt.FindWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
-      << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << Attr("statement_id", stmtid)
+      << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [pragma]" << EndAttr << EndElem;
-
+  
   return whirl2xaif::good;
 }
 
@@ -880,9 +845,8 @@ whirl2xaif::xlate_PRAGMA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_PREFETCH(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PREFETCH ||
-		   WN_operator(wn) == OPR_PREFETCHX, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_PREFETCH"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_PREFETCH ||
+		WN_operator(wn) == OPR_PREFETCHX, FORTTK_UNEXPECTED_INPUT); 
   
   return whirl2xaif::good;
 }
@@ -891,13 +855,13 @@ whirl2xaif::xlate_PREFETCH(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_COMMENT(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_opcode(wn) == OPC_COMMENT,
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_COMMENT"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_COMMENT, FORTTK_UNEXPECTED_INPUT); 
   
   // Note: Index_To_Str(WN_GetComment(wn)) returns comment text
+  WNId stmtid = ctxt.FindWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
-      << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << Attr("statement_id", stmtid)
+      << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [comment]" << EndAttr << EndElem;
   
   return whirl2xaif::good;
@@ -906,11 +870,9 @@ whirl2xaif::xlate_COMMENT(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::WN2F_dealloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  FORTTK_ASSERT(WN_operator(wn) == OPR_DEALLOCA, FORTTK_UNEXPECTED_INPUT); 
+
   INT16 n,i;
-  
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_DEALLOCA, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_dealloca"));
-  
   n = WN_kid_count(wn);
   
   xos << std::endl << "CALL OPR_DEALLOCA(";
@@ -929,13 +891,13 @@ whirl2xaif::WN2F_dealloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status
 whirl2xaif::xlate_USE(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_USE,
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_USE"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_USE, FORTTK_UNEXPECTED_INPUT); 
   
+  WNId stmtid = ctxt.FindWNId(wn);
   const char* nm = ST_name(WN_st(wn));
   xos << BegElem(XAIFStrings.elem_Marker()) 
-      << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << Attr("statement_id", stmtid)
+      << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [use " << nm << "]" << EndAttr << EndElem;
   
   return whirl2xaif::good;
@@ -945,9 +907,9 @@ whirl2xaif::xlate_USE(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status
 whirl2xaif::WN2F_namelist_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  FORTTK_ASSERT(WN_operator(wn) == OPR_NAMELIST, FORTTK_UNEXPECTED_INPUT); 
+  
   const char *st_name =  ST_name(WN_st(wn));
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_NAMELIST,
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_namelist_stmt"));
   if (ST_is_external(WN_st(wn))) {
     ;
   } else {
@@ -979,14 +941,12 @@ whirl2xaif::WN2F_implicit_bnd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status
 whirl2xaif::WN2F_nullify_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  FORTTK_ASSERT(WN_operator(wn) == OPR_NULLIFY, FORTTK_UNEXPECTED_INPUT); 
+
   int k ;  
   const char *st_name;
-  
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_NULLIFY,
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_nullify_stmt"));
 
   xos << "NULLIFY (";
-  
   for(k=0;k< WN_kid_count(wn);k++ ) {
     st_name = ST_name(WN_st(WN_kid(wn,k)));
     Set_BE_ST_w2fc_referenced(WN_st(WN_kid(wn,k)));
@@ -1004,6 +964,8 @@ whirl2xaif::WN2F_nullify_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status
 whirl2xaif::WN2F_interface_blk(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  FORTTK_ASSERT(WN_operator(wn) == OPR_INTERFACE, FORTTK_UNEXPECTED_INPUT); 
+
   int           k ;
   ST            **param_st;
   ST            *st = WN_st(wn);
@@ -1013,11 +975,7 @@ whirl2xaif::WN2F_interface_blk(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TY_IDX        return_ty;
   INT           implicit = 0 ;
   
-    
   const char *intface_name = ST_name(st);
-  
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_INTERFACE,
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_interface_blk"));
   if (ST_is_external(WN_st(wn))) {
     ;
   } else {

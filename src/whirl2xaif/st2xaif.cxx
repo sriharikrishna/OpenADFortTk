@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.38 2004/06/17 13:33:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.39 2004/07/30 17:51:44 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -172,9 +172,8 @@ TCON2F_hollerith(TCON tvalue)
   char       *str;
   INT32       strlen;
   
-  ASSERT_DBG_WARN(TCON_ty(tvalue) == MTYPE_STR,
-		  (DIAG_W2F_UNEXPECTED_BTYPE, 
-		   MTYPE_name(TCON_ty(tvalue)), "TCON2F_hollerith"));
+  FORTTK_ASSERT_WARN(TCON_ty(tvalue) == MTYPE_STR,
+		     "Unexpected type " << MTYPE_name(TCON_ty(tvalue)));
   
   strlen = Targ_String_Length(tvalue);
   strbase = Targ_String_Address(tvalue);
@@ -267,10 +266,7 @@ TCON2F_translate(TCON tvalue, BOOL is_logical, TY_IDX object_ty)
       
     default:
       /* Only expression nodes should be handled here */
-      ASSERT_DBG_WARN(FALSE, (DIAG_W2F_UNEXPECTED_BTYPE, 
-			      MTYPE_name(TCON_ty(tvalue)),
-			      "TCON2F_translate"));
-      sstr << "<TCON>";
+      FORTTK_DIE("Unexpected type " << MTYPE_name(TCON_ty(tvalue)));
       break;
     }
   }
@@ -437,16 +433,13 @@ xlate_ST_ignore(xml::ostream& xos, ST *st, XlationContext& ctxt)
 static void 
 xlate_STDecl_error(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_SYMCLASS,
-			   ST_sym_class(st), "xlate_STDecl_error"));
+  FORTTK_DIE("Unknown ST_CLASS " << ST_class(st));
 }
 
 static void 
 xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {  
-  ASSERT_DBG_FATAL(ST_sym_class(st) == CLASS_VAR, 
-		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
-		    ST_sym_class(st), "xlate_STDecl_VAR"));
+  FORTTK_ASSERT(ST_class(st) == CLASS_VAR, FORTTK_UNEXPECTED_INPUT);
 
   const char* st_name = ST_name(st);
   ST* base = ST_base(st);
@@ -458,8 +451,7 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
   } else if (ST_sclass(st) == SCLASS_FORMAL && !ST_is_value_parm(st)) {
     // A procedure parameter (we expect a pointer TY to counteract the
     // Fortran call-by-reference semantics)
-    ASSERT_DBG_FATAL(TY_Is_Pointer(ty), (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-					 TY_kind(ty), "xlate_STDecl_VAR"));
+    FORTTK_ASSERT(TY_Is_Pointer(ty), "Unexpected type " << TY_kind(ty));
     
     TY_IDX base_ty = TY_pointed(ty);
     if (TY_Is_Pointer(base_ty) && TY_ptr_as_array(Ty_Table[base_ty])) {
@@ -523,9 +515,7 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
     /* ie, regular f77 dummy argument, expect pointer TY     */
     /* To counteract the Fortran call-by-reference semantics */
     // a parameter
-    ASSERT_DBG_FATAL(TY_Is_Pointer(ty), 
-		     (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-		      TY_kind(ty), "xlate_STDecl_VAR"));
+    FORTTK_ASSERT(TY_Is_Pointer(ty), "Unexpected type " << TY_kind(ty));
     if (TY_kind(TY_pointed(ty)) == KIND_FUNCTION) {
       xos << "EXTERNAL ";
     } else {
@@ -595,9 +585,7 @@ xlate_STDecl_FUNC(xml::ostream& xos, ST* st, XlationContext& ctxt)
 {
   // This only makes sense for "external" functions in Fortran,
   // while we should not do anything for other functions.
-  ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_FUNC,
-		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
-		    ST_sym_class(st), "xlate_STDecl_FUNC"));
+  FORTTK_ASSERT(ST_class(st) == CLASS_FUNC, FORTTK_UNEXPECTED_INPUT);
 
   SymId st_id = (SymId)ST_index(st);
   xos << BegElem("xaif:Symbol") << AttrSymId(st)
@@ -648,9 +636,7 @@ xlate_STDecl_NAME(xml::ostream& xos, ST *st, XlationContext& ctxt)
 static void 
 xlate_STDecl_TYPE(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_TYPE, 
-		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
-		    ST_sym_class(st), "xlate_STDecl_TYPE"));
+  FORTTK_ASSERT(ST_class(st) == CLASS_TYPE, FORTTK_UNEXPECTED_INPUT);
 
   const char  *st_name = ST_name(st);
   TY_IDX       ty_rt = ST_type(st);
@@ -668,17 +654,14 @@ xlate_STDecl_TYPE(xml::ostream& xos, ST *st, XlationContext& ctxt)
 static void 
 xlate_STUse_error(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_SYMCLASS,
-			   ST_sym_class(st), "xlate_STUse_error"));
+  FORTTK_DIE("Unknown ST_CLASS " << ST_class(st));
 }
 
 static void 
 xlate_STUse_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_VAR, 
-		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
-		    ST_sym_class(st), "xlate_STUse_VAR"));
-  
+  FORTTK_ASSERT(ST_class(st) == CLASS_VAR, FORTTK_UNEXPECTED_INPUT);
+
   // Note: for functions, check that st is a return var using
   //   ST_is_return_var(st)) (cf. whirl2f)
 
@@ -711,9 +694,7 @@ xlate_STUse_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
 static void 
 xlate_STUse_CONST(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_CONST,
-		   (DIAG_W2F_UNEXPECTED_SYMCLASS,
-		    ST_sym_class(st), "xlate_STUse_CONST"));
+  FORTTK_ASSERT(ST_class(st) == CLASS_CONST, FORTTK_UNEXPECTED_INPUT);
   
   // A CLASS_CONST symbol never has a name, so just emit the value.
   TY_IDX ty_idx = ST_type(st);
@@ -739,9 +720,7 @@ xlate_STUse_BLOCK(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
   /* with f90 at -O2, CLASS_BLOCK can appear on LDAs etc. in IO */
   /* put out something, so whirlbrowser doesn't fall over       */
-  ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_BLOCK, 
-		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
-		    ST_sym_class(st), "xlate_STUse_BLOCK"));
+  FORTTK_ASSERT(ST_class(st) == CLASS_BLOCK, FORTTK_UNEXPECTED_INPUT);
   
   xos << BegElem("***use_block") << Attr("id", ctxt.GetNewVId()) 
       << Attr("_type", -1) << Attr("value", ST_name(st)) << EndElem;
@@ -757,11 +736,10 @@ xlate_STUse_BLOCK(xml::ostream& xos, ST *st, XlationContext& ctxt)
 void 
 ST2F_deref_translate(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_VAR && 
-		   TY_Is_Pointer(ST_type(st)) &&
-		   !Stab_Is_Based_At_Common_Or_Equivalence(st), 
-		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
-		    ST_sym_class(st), "ST2F_deref_translate"));
+  FORTTK_ASSERT(ST_sym_class(st)==CLASS_VAR && 
+		TY_Is_Pointer(ST_type(st)) &&
+		!Stab_Is_Based_At_Common_Or_Equivalence(st), 
+		FORTTK_UNEXPECTED_INPUT << ST_class(st));
   
   /* reference to the pointer value; cf. W2CF_Symtab_Nameof_St_Pointee */
   xos << "{deref***} " << "deref_" << ST_name(st);

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.23 2004/06/17 13:33:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.24 2004/07/30 17:51:44 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -349,14 +349,12 @@ Select_Best_Fld_Path(FLD_PATH_INFO *path1,
     * uttmost importance.  The best path is returned, while the other
     * on is freed up.
     */
+   FORTTK_ASSERT(path1 && path2, FORTTK_UNEXPECTED_INPUT);
+   
    FLD_PATH_INFO *best_path;
    mUINT64        offs1, offs2;
    FLD_PATH_INFO *p1, *p2;
    TY_IDX         t1,  t2;
-   
-   ASSERT_DBG_FATAL(path1 != NULL && path2 != NULL,
-		    (DIAG_W2F_UNEXPEXTED_NULL_PTR, 
-		     "path1 or path2", "Select_Best_Fld_Path"));
    
    /* Find the last field on each path */
    offs1 = FLD_ofst(path1->fld) + path1->arr_ofst;
@@ -366,9 +364,8 @@ Select_Best_Fld_Path(FLD_PATH_INFO *path1,
    for (p2 = path2; p2->next != NULL; p2 = p2->next)
       offs2 += FLD_ofst(p2->next->fld) + p2->next->arr_ofst;
 
-   ASSERT_DBG_FATAL(offs1 == desired_offset && offs2 == desired_offset,
-		    (DIAG_W2F_UNEXPEXTED_OFFSET,
-		     offs1, "Select_Best_Fld_Path"));
+   FORTTK_ASSERT(offs1 == desired_offset && offs2 == desired_offset,
+		 "Unexpected offset");
 
    /* Get the element type (either the field type or the type of an
     * array element.
@@ -669,13 +666,11 @@ TY2F_Equivalence_List(xml::ostream& xos,
 static void
 TY2F_Translate_Structure(xml::ostream& xos, TY_IDX ty)
 {
+  FORTTK_ASSERT(TY_kind(ty) == KIND_STRUCT, "Unexpected type " << TY_kind(ty));
+
   FLD_ITER     fld_iter;
   TY& ty_rt  = Ty_Table[ty];
 
-  ASSERT_DBG_FATAL(TY_kind(ty_rt) == KIND_STRUCT, 
-		   (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-		    TY_kind(ty_rt), "TY2F_Translate_Structure"));
-  
   XlationContext ctxt;// FIXME
 
   xos << std::endl;
@@ -826,20 +821,17 @@ TY2F_List_Common_Flds(xml::ostream& xos, FLD_HANDLE fldlist)
 static void
 TY2F_invalid(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-			   TY_kind(Ty_Table[ty]), "TY2F_invalid"));
-  xos << "<TY2F_invalid>";
+  FORTTK_DIE(FORTTK_UNEXPECTED_INPUT << TY_kind(Ty_Table[ty]));
 }
 
 static void
 TY2F_scalar(xml::ostream& xos, TY_IDX ty_idx, XlationContext& ctxt)
 {
+  FORTTK_ASSERT(TY_kind(ty_idx) == KIND_SCALAR, FORTTK_UNEXPECTED_INPUT);
+  
   TY&   ty = Ty_Table[ty_idx];
   MTYPE mt = TY_mtype(ty);
 
-  ASSERT_DBG_FATAL(TY_kind(ty) == KIND_SCALAR, (DIAG_W2F_UNEXPECTED_TYPE_KIND,
-						TY_kind(ty), "TY2F_scalar"));
-  
   const char* type_str;
   if (TY_is_character(ty)) {
     type_str = "CHARACTER";
@@ -876,8 +868,7 @@ TY2F_scalar(xml::ostream& xos, TY_IDX ty_idx, XlationContext& ctxt)
       break;
       
     default:
-      ASSERT_DBG_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_BTYPE, MTYPE_name(mt), 
-			       "TY2F_scalar"));
+      FORTTK_DIE("Unexpected type " << MTYPE_name(mt));
     }
   }
   
@@ -894,8 +885,8 @@ TY2F_scalar(xml::ostream& xos, TY_IDX ty_idx, XlationContext& ctxt)
     if (mt == MTYPE_M) {
       size_str = ".mblock.";
     } else {
-      ASSERT_DBG_FATAL(TY_is_character(ty), (DIAG_W2F_UNEXPECTED_TYPE_SIZE,
-					     TY_size(ty),"TY2F_scalar"));
+      FORTTK_ASSERT(TY_is_character(ty), 
+		    "Unexpected type size " << TY_size(ty));
       size_str = "*";
     }
   }
@@ -914,8 +905,7 @@ TY2F_array(xml::ostream& xos, TY_IDX ty_idx, XlationContext& ctxt)
 {
   TY& ty = Ty_Table[ty_idx];
 
-  ASSERT_DBG_FATAL(TY_kind(ty) == KIND_ARRAY, (DIAG_W2F_UNEXPECTED_TYPE_KIND,
-					       TY_kind(ty), "TY2F_array"));
+  FORTTK_ASSERT(TY_kind(ty) == KIND_ARRAY, FORTTK_UNEXPECTED_INPUT);
 
   xos << BegElem("xaif:Property") << Attr("id", ctxt.GetNewVId()) 
       << Attr("name", "whirlkind") << Attr("value", "array") << EndElem;
@@ -1011,9 +1001,8 @@ static void
 TY2F_array_for_pointer(xml::ostream& xos, TY_IDX ty_idx, XlationContext& ctxt)
 {
   TY& ty = Ty_Table[ty_idx] ;
-  
-  ASSERT_DBG_FATAL(TY_kind(ty) == KIND_ARRAY, (DIAG_W2F_UNEXPECTED_TYPE_KIND,
-					       TY_kind(ty), "TY2F_array"));
+
+  FORTTK_ASSERT(TY_kind(ty) == KIND_ARRAY, FORTTK_UNEXPECTED_INPUT);
   
   if (TY_is_character(ty)) {
     /* A character string...
@@ -1092,11 +1081,8 @@ TY2F_struct(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt)
    * the STRUCTURE to have been declared through a call to
    * TY2F_Translate_Structure().
    */
-  TY & ty_rt = Ty_Table[ty];
-
-  ASSERT_DBG_FATAL(TY_kind(ty_rt) == KIND_STRUCT, 
-		   (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-		    TY_kind(ty_rt), "TY2F_struct"));
+  TY& ty_rt = Ty_Table[ty];
+  FORTTK_ASSERT(TY_kind(ty_rt) == KIND_STRUCT, FORTTK_UNEXPECTED_INPUT);
   
   xos << "(" << TY_name(ty) << ")" << "TYPE";
   
@@ -1118,10 +1104,7 @@ TY2F_2_struct(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt)
    * TY2F_Translate_Structure().
    */
   TY & ty_rt = Ty_Table[ty];
-
-  ASSERT_DBG_FATAL(TY_kind(ty_rt) == KIND_STRUCT, 
-		   (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-		    TY_kind(ty_rt), "TY2F_struct"));
+  FORTTK_ASSERT(TY_kind(ty_rt) == KIND_STRUCT, FORTTK_UNEXPECTED_INPUT);
 
 #if 0 // see Open64 stab_attr.cxx; if needed simulate thru XlationContext
   if (!TY_is_translated_to_c(ty)) {
@@ -1162,10 +1145,7 @@ static void
 TY2F_void(xml::ostream& xos, TY_IDX ty_idx, XlationContext& ctxt)
 {
   TY& ty = Ty_Table[ty_idx];
-
-  ASSERT_DBG_FATAL(TY_kind(ty) == KIND_VOID, (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-					      TY_kind(ty), "TY2F_void"));
-
+  FORTTK_ASSERT(TY_kind(ty) == KIND_VOID, FORTTK_UNEXPECTED_INPUT);
   xos << std::endl << "! <Void Type>";
 }
 
@@ -1178,9 +1158,8 @@ TY2F_Translate_ArrayElt(xml::ostream& xos,
 			TY_IDX       arr_ty_idx,
 			STAB_OFFSET  arr_ofst)
 {  
-  ASSERT_FATAL(TY_Is_Array(arr_ty_idx), 
-	       (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-		TY_kind(arr_ty_idx), "TY2F_Translate_ArrayElt"));
+  FORTTK_ASSERT(TY_Is_Array(arr_ty_idx), 
+		FORTTK_UNEXPECTED_INPUT << TY_kind(arr_ty_idx));
  
   STAB_OFFSET  idx;
   ARB_HANDLE   arb;
@@ -1235,9 +1214,8 @@ TY2F_Translate_Common(xml::ostream& xos, const char *name, TY_IDX ty_idx)
   TY& ty = Ty_Table[ty_idx];
   BOOL is_equiv = FALSE;
   
-  ASSERT_DBG_FATAL(TY_kind(ty) == KIND_STRUCT, 
-		   (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-		    TY_kind(ty), "TY2F_Translate_Common"));
+  FORTTK_ASSERT(TY_kind(ty) == KIND_STRUCT, 
+		FORTTK_UNEXPECTED_INPUT << TY_kind(ty));
 
   // Emit specification statements for every element of the common
   // block, including equivalences.
@@ -1273,9 +1251,8 @@ TY2F_Translate_Equivalence(xml::ostream& xos, TY_IDX ty_idx, BOOL alt_return)
   FLD_HANDLE first_fld;
   BOOL is_equiv;
    
-   ASSERT_DBG_FATAL(TY_kind(ty) == KIND_STRUCT, 
-		    (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-		     TY_kind(ty), "TY2F_Translate_Equivalence"));
+  FORTTK_ASSERT(TY_kind(ty) == KIND_STRUCT, 
+		FORTTK_UNEXPECTED_INPUT << TY_kind(ty));
 
    if (alt_return) {
      first_fld = FLD_next(TY_flist(ty)); /* skip func_entry return var */
@@ -1319,10 +1296,9 @@ TY2F_Get_Fld_Path(const TY_IDX struct_ty, const TY_IDX object_ty,
   FLD_PATH_INFO* fld_path2 = NULL;
   TY& s_ty = Ty_Table[struct_ty];
   FLD_ITER fld_iter;
-  
-  ASSERT_DBG_FATAL(TY_kind(s_ty) == KIND_STRUCT,
-		   (DIAG_W2F_UNEXPECTED_TYPE_KIND, TY_kind(s_ty),
-		    "TY2F_Get_Fld_Path"));
+
+  FORTTK_ASSERT(TY_kind(s_ty) == KIND_STRUCT, 
+		FORTTK_UNEXPECTED_INPUT << TY_kind(s_ty));
   
   /* Get the best matching field path into fld_path2 */
   fld_iter = Make_fld_iter(TY_flist(s_ty));
@@ -1506,7 +1482,8 @@ TranslateTYToSymShape(TY_IDX ty_idx)
   
   if (TY_kind(ty) == KIND_SCALAR) {
     str = "scalar";
-  } else if (TY_kind(ty) == KIND_ARRAY) {
+  } 
+  else if (TY_kind(ty) == KIND_ARRAY) {
     
     ARB_HANDLE arb_base = TY_arb(ty);
     INT32 dim = ARB_dimension(arb_base);
@@ -1514,7 +1491,8 @@ TranslateTYToSymShape(TY_IDX ty_idx)
 
     if (TY_is_character(ty)) { 
       str = "scalar"; 
-    } else {
+    } 
+    else {
       switch (dim) {
       case 1:  str = "vector"; break;
       case 2:  str = "matrix"; break;
@@ -1524,7 +1502,7 @@ TranslateTYToSymShape(TY_IDX ty_idx)
       case 6:  str = "six_tensor"; break;
       case 7:  str = "seven_tensor"; break;
       default: 
-	ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
+	FORTTK_DIE("Invalid array dimension: " << dim);
       }
     }
 

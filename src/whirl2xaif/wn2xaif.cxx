@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.72 2004/07/28 19:04:25 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.73 2004/07/30 17:51:44 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -241,8 +241,7 @@ whirl2xaif::TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status
 whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_FUNC_ENTRY, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_FUNC_ENTRY"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_FUNC_ENTRY, FORTTK_UNEXPECTED_INPUT); 
   
   WN* fbody = WN_func_body(wn);
 
@@ -366,8 +365,7 @@ whirl2xaif::status
 whirl2xaif::xlate_ALTENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // Similar to a FUNC_ENTRY, but without the function body.
-  ASSERT_DBG_FATAL(WN_opcode(wn) == OPC_ALTENTRY,
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_ALTENTRY"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_ALTENTRY, FORTTK_UNEXPECTED_INPUT); 
   
   // Translate the function entry point (FIXME)
   xlate_EntryPoint(xos, wn, ctxt);
@@ -390,8 +388,8 @@ whirl2xaif::xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // Warn about opcodes we cannot translate, but keep translating.
   OPERATOR opr = WN_operator(wn);
-  ASSERT_WARN(FALSE, (DIAG_W2F_CANNOT_HANDLE_OPC, OPERATOR_name(opr), opr));
   
+  FORTTK_DEVMSG(0, FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
   xos << BegComment << "*** Unknown WHIRL operator: " << OPERATOR_name(opr)
       << " ***" << EndComment;
   
@@ -564,7 +562,6 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos,
   
   // FIXME: for now, make sure this is only used for data refs 
   if (ST_class(base_st) == CLASS_FUNC) {
-    //assert(false && "symref FIXME");
     std::cerr << "xlate_SymRef: translating function ref\n";
   } 
   else if (ST_class(base_st) == CLASS_BLOCK) { // FIXME
@@ -606,7 +603,7 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos,
   }
   else {
     // 5. 
-    //ASSERT_FATAL(false, (DIAG_A_STRING, "Unknown ref type."));
+    //FORTTK_DIE("Unknown ref type.");
     translate_var_ref(xos, base_st, ctxt);
 
 #if 0 // FIXME:REMOVE
@@ -725,7 +722,7 @@ whirl2xaif::xlate_MemRef(xml::ostream& xos,
   
   // FIXME: for now, make sure this is only used for data refs 
   if (TY_kind(base_ty) == KIND_FUNCTION) {
-    assert(false && "memref FIXME");
+    FORTTK_DIE(FORTTK_UNIMPLEMENTED << "memref FIXME");
   }
 
 
@@ -781,8 +778,8 @@ whirl2xaif::xlate_MemRef(xml::ostream& xos,
       
       // 4. A common-block or equivalence-block, both of which we
       // handle only in xlate_SymRef().
-      ASSERT_WARN(WN2F_Can_Assign_Types(ST_type(WN_st(addr)), base_ty) ,
-		  (DIAG_W2F_INCOMPATIBLE_TYS, "xlate_SymRef"));
+      FORTTK_ASSERT_WARN(WN2F_Can_Assign_Types(ST_type(WN_st(addr)), base_ty),
+			 "Incompatible types");
       
       if (WN_operator(addr) == OPR_LDA)
 	ctxt.ResetDerefAddr();
@@ -809,8 +806,7 @@ whirl2xaif::xlate_MemRef(xml::ostream& xos,
 	offset = tmp;
       
       FLD_PATH_INFO* fld_path = TY2F_Get_Fld_Path(base_ty, ref_ty, offset);
-      ASSERT_DBG_WARN(fld_path != NULL, (DIAG_W2F_NONEXISTENT_FLD_PATH, 
-					 "xlate_MemRef"));
+      FORTTK_ASSERT_WARN(fld_path != NULL, "Non-existent FLD path");
       
       /* May have ARRAY(ADD(ARRAY(LDA),CONST)) or some such. */
       /* The deepest ARRAY (with the address) is handled     */
@@ -931,7 +927,7 @@ LOC_INFO::WN2F_Find_And_Mark_Nested_Address(WN * addr)
     break;
 
   default:
-    ASSERT_WARN(0, (DIAG_W2F_CANNOT_HANDLE_OPC, OPERATOR_name(opr), opr));
+    FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
     break;
   }
   return;
@@ -1080,8 +1076,8 @@ static void
 xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   OPERATOR opr = WN_operator(wn);
-  ASSERT_DBG_FATAL(opr == OPR_ALTENTRY || opr == OPR_FUNC_ENTRY,
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_EntryPoint"));
+  FORTTK_ASSERT(opr == OPR_ALTENTRY || opr == OPR_FUNC_ENTRY,
+		FORTTK_UNEXPECTED_INPUT);
   
   ST* func_st = &St_Table[WN_entry_name(wn)];
   TY_IDX func_ty = ST_pu_type(func_st);
@@ -1198,10 +1194,11 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     WN* condWN = NULL;
     if (opr == OPR_IF || opr == OPR_TRUEBR || opr == OPR_FALSEBR) {
       condWN = WN_if_test(wn);
-    } else if (opr == OPR_SWITCH || opr == OPR_COMPGOTO) {
+    } 
+    else if (opr == OPR_SWITCH || opr == OPR_COMPGOTO) {
       condWN = WN_switch_test(wn);
     }
-    ASSERT_FATAL(condWN, (DIAG_UNIMPLEMENTED, "Programming Error."));
+    FORTTK_ASSERT(condWN, FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
     xlate_CFCondition(xos, condWN, ctxt);
   } 
   else if (vty == XAIFStrings.elem_BBEndBranch() ||
@@ -1212,7 +1209,8 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   else {
     if (IsActiveStmt(wn, ctxt)) {
       TranslateWN(xos, wn, ctxt);
-    } else {
+    } 
+    else {
       xlate_PassiveStmt(xos, wn, ctxt);
     }
   }
@@ -1773,9 +1771,10 @@ GetCFGEdgeCondVal(const CFG::Edge* edge)
     else if (opr == OPR_GOTO) { // from an OPR_COMPGOTO
       // to find condVal, must find parent COMPGOTO and then find the
       // index of this GOTO in the jumptable.
-      ASSERT_FATAL(false, (DIAG_UNIMPLEMENTED, "Unimplemented."));
-    } else {
-      ASSERT_FATAL(false, (DIAG_UNIMPLEMENTED, "Programming Error."));
+      FORTTK_DIE(FORTTK_UNIMPLEMENTED << "Conditions for COMPGOTO");
+    } 
+    else {
+      FORTTK_DIE(FORTTK_UNIMPLEMENTED << "Unknown multiway branch");
     }
   }
   return pair<bool, INT64>(hasCondVal, condVal);

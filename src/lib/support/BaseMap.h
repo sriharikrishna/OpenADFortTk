@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/BaseMap.h,v 1.2 2004/06/30 23:45:00 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/BaseMap.h,v 1.3 2004/07/30 17:50:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -53,7 +53,7 @@ public:
     ToTy y = (it == end()) ? 0 /*NULL*/ : (*it).second;
     
     if (mustFind && y == 0 /*NULL*/) {
-      ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Could not find entry!"));
+      FORTTK_DIE("BaseMap: Could not find entry for key '" << x << "'");
     }
     
     return y;

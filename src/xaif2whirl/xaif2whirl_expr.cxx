@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.33 2004/07/28 20:01:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.34 2004/07/30 17:52:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -157,9 +157,7 @@ GetWNIntrinsic(const char* intrnNm, vector<WN*>& opands, TYPE_ID* dtype);
 WN*
 xaif2whirl::TranslateExpression(const DOMElement* elem, XlationContext& ctxt)
 {
-  if (!elem) {
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
-  }
+  FORTTK_ASSERT(elem, FORTTK_UNEXPECTED_INPUT);
   
   // Slurp expression into a graph (DAG) and translate it
   DGraph* g = CreateExpressionGraph(elem);
@@ -217,9 +215,9 @@ xlate_Expression(DGraph* g, MyDGNode* n, XlationContext& ctxt)
     wn = xlate_BooleanOperation(g, n, ctxt);
   } 
   else {
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Unknown Expression element"));
+    FORTTK_DIE("Unknown XAIF expression:\n" << *elem);
   }
-
+  
   return wn;
 }
 
@@ -227,9 +225,7 @@ xlate_Expression(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 static WN*
 xlate_VarRef(const DOMElement* elem, XlationContext& ctxt)
 {
-  if (!elem) { 
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
-  }
+  FORTTK_ASSERT(elem, FORTTK_UNEXPECTED_INPUT);
   
   // VariableReferenceType
   bool deriv = GetDerivAttr(elem);
@@ -255,9 +251,7 @@ xlate_VarRef(const DOMElement* elem, XlationContext& ctxt)
 WN*
 xaif2whirl::TranslateVarRef(const DOMElement* elem, XlationContext& ctxt)
 {
-  if (!elem) {
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
-  }
+  FORTTK_ASSERT(elem, FORTTK_UNEXPECTED_INPUT);
   
   // Slurp expression into a graph (DAG) and translate it
   ctxt.CreateContext(XlationContext::VARREF);
@@ -288,15 +282,13 @@ xaif2whirl::TranslateVarRef(const DOMElement* elem, XlationContext& ctxt)
 pair<ST*, WN_OFFSET>
 xaif2whirl::TranslateVarRefSimple(const DOMElement* elem, XlationContext& ctxt)
 {
-  if (!elem) {
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
-  }
+  FORTTK_ASSERT(elem, FORTTK_UNEXPECTED_INPUT);
   
   // This must be a plain XAIF symbol reference (a one-vertex graph)
   const XMLCh* nameX = elem->getNodeName();
   if ( !(XMLString::equals(nameX, XAIFStrings.elem_SymRef_x()) &&
 	 GetNextSiblingElement(elem) == NULL) ) {
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "XAIF error..."));
+    FORTTK_DIE("Expected a simple var ref but found:\n" << *elem);
   }
   
   ctxt.CreateContext(XlationContext::NOFLAG);
@@ -310,13 +302,11 @@ xaif2whirl::TranslateVarRefSimple(const DOMElement* elem, XlationContext& ctxt)
 static WN*
 xlate_VarRef(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 {
-  if (!g || !n) { 
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
-  }
+  FORTTK_ASSERT(g && n, FORTTK_UNEXPECTED_INPUT);
   
   // Recursively translate the DAG (tree) rooted at this node
   DOMElement* elem = n->GetElem();
-  ASSERT_FATAL(elem, (DIAG_A_STRING, "Programming error."));
+  FORTTK_ASSERT(elem, "Internal error: var-ref graph contains null DOM elem.");
   
   WN* wn = NULL;  
   const XMLCh* nameX = elem->getNodeName();
@@ -329,7 +319,7 @@ xlate_VarRef(DGraph* g, MyDGNode* n, XlationContext& ctxt)
     wn = xlate_ArrayElementReference(g, n, ctxt);
   } 
   else {
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Unknown Variable Reference element"));
+    FORTTK_DIE("Unknown XAIF variable reference:\n" << *elem);
   }
   
   return wn;
@@ -339,9 +329,7 @@ xlate_VarRef(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 static WN*
 xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
 {
-  if (!elem) { 
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
-  }
+  FORTTK_ASSERT(elem, FORTTK_UNEXPECTED_INPUT);
 
   const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
   const XMLCh* valX = elem->getAttribute(XAIFStrings.attr_value_x());
@@ -385,7 +373,7 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
   else if (strcmp(type.c_str(), "char") == 0) {
     // Character constant. Cf. cwh_stmt.cxx:349
     // wn = WN_CreateIntconst(OPC_I4INTCONST, (INT64)val);
-    assert(false); // FIXME
+    FORTTK_DIE(FORTTK_UNIMPLEMENTED << "creation of character constant");
   } 
   else if (strcmp(type.c_str(), "string") == 0) {
     // String constant. A string constant reference to "S" looks like:
@@ -410,9 +398,7 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
 static WN*
 xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 {
-  if (!g || !n) {
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
-  }
+  FORTTK_ASSERT(g && n, FORTTK_UNEXPECTED_INPUT);
   
   DOMElement* elem = n->GetElem();
   const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
@@ -430,14 +416,12 @@ xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 static WN*
 xlate_FunctionCall(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 {
-  if (!g || !n) { 
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
-  }
+  FORTTK_ASSERT(g && n, FORTTK_UNEXPECTED_INPUT);
   
   DOMElement* elem = n->GetElem();
   
   // FIXME: children are expr; find num of args (use Intrinsic function above)
-  assert(false && "implement"); 
+  FORTTK_DIE(FORTTK_UNIMPLEMENTED << "xaif:FunctionCall");
   return NULL;
 }
 
@@ -445,9 +429,7 @@ xlate_FunctionCall(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 static WN*
 xlate_BooleanOperation(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 {
-  if (!g || !n) { 
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
-  }
+  FORTTK_ASSERT(g && n, FORTTK_UNEXPECTED_INPUT);
 
   DOMElement* elem = n->GetElem();
   const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
@@ -470,13 +452,12 @@ xlate_ExprOpUsingIntrinsicTable(IntrinsicXlationTable::XAIFOpr xopr,
 {
   IntrinsicXlationTable::WHIRLInfo* info = 
     IntrinsicTable.FindWHIRLInfo(xopr, xoprNm, xIntrinKey);
-  if (!info) {
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Bad Intrinsic."));
-  }
+  FORTTK_ASSERT(info, "Unknown intrinsic '" 
+		<< xoprNm  << "-" << xIntrinKey << "'");
   
   // 1. Gather the operands, sorted by the "position" attribute
-  ASSERT_FATAL(n->num_incoming() == info->numop, 
-	       (DIAG_A_STRING, "Programming error."));
+  FORTTK_ASSERT(n->num_incoming() == info->numop, 
+		"Internal error: inconsistent number of intrinsic arguments");
   vector<MyDGEdge*> opnd_edge(info->numop, NULL);
   DGraph::IncomingEdgesIterator it = DGraph::IncomingEdgesIterator(n);
   for (int i = 0; (bool)it; ++it, ++i) {
@@ -549,12 +530,13 @@ xlate_ExprOpUsingIntrinsicTable(IntrinsicXlationTable::XAIFOpr xopr,
     case 3: // ternary
       wn = WN_CreateExp3(opc, opnd_wn[0], opnd_wn[1], opnd_wn[2]); break;
     default:
-      ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+      FORTTK_DIE("Incorrect number of operands for WHIRL expr: " 
+		 << info->numop);
     } 
     break;
   }
   default:
-    ASSERT_FATAL(false, (DIAG_A_STRING, "Invalid operator class"));
+    FORTTK_DIE("Invalid WNOprClass class: " << info->oprcl);
   }
   
   return wn;
@@ -567,9 +549,7 @@ xlate_ExprOpUsingIntrinsicTable(IntrinsicXlationTable::XAIFOpr xopr,
 static WN*
 xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
 {
-  if (!elem) { 
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
-  }
+  FORTTK_ASSERT(elem, FORTTK_UNEXPECTED_INPUT);
   
   // -------------------------------------------------------
   // 0. Setup; Possibly redirect processing
@@ -716,7 +696,7 @@ xlate_SymbolReferenceCollapsedPath(const DOMElement* elem, WN* pathVorlageWN,
     wn = WN_COPY_Tree(pathVorlageWN);
     break;
   } // switch
-  ASSERT_FATAL(wn, (DIAG_A_STRING, "Unimplemented."));
+  FORTTK_ASSERT(wn, FORTTK_UNIMPLEMENTED << "Unable to recreate collapsed scalarized path.");
     
   //if (!create_lda) {
   //}
@@ -728,9 +708,7 @@ xlate_SymbolReferenceCollapsedPath(const DOMElement* elem, WN* pathVorlageWN,
 static WN*
 xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 {
-  if (!g || !n) { 
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
-  }
+  FORTTK_ASSERT(g && n, FORTTK_UNEXPECTED_INPUT);
 
   DOMElement* elem = n->GetElem();
   
@@ -744,8 +722,9 @@ xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   for (int i = 0; dim; dim = GetNextSiblingElement(dim), ++i) {
     
     const XMLCh* nmX = dim->getNodeName();
-    ASSERT_FATAL(XMLString::equals(nmX, XAIFStrings.elem_Index_x()), 
-		 (DIAG_A_STRING, "Programming error."));
+    FORTTK_ASSERT(XMLString::equals(nmX, XAIFStrings.elem_Index_x()), 
+		  "Expected " << XAIFStrings.elem_Index() << "; found:\n"
+		  << *dim);
     
     DOMElement* indexExpr = GetFirstChildElement(dim);
 
@@ -762,8 +741,9 @@ xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   // -------------------------------------------------------
   MyDGNode* n1 = GetSuccessor(n, false /* succIsOutEdge */);
   const XMLCh* nmX = n1->GetElem()->getNodeName();
-  ASSERT_FATAL(XMLString::equals(nmX, XAIFStrings.elem_SymRef_x()),
-	       (DIAG_A_STRING, "Programming error."));
+  FORTTK_ASSERT(XMLString::equals(nmX, XAIFStrings.elem_SymRef_x()),
+		"Expected " << XAIFStrings.elem_SymRef() << "; found:\n"
+		<< *(n1->GetElem()));
   
   ctxt.CreateContext(XlationContext::ARRAY);
   WN* arraySym = xlate_VarRef(g, n1, ctxt);
@@ -774,8 +754,8 @@ xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   if (TY_kind(ty) == KIND_POINTER) { 
     ty = TY_pointed(ty); 
   }
-  ASSERT_FATAL(TY_AR_ndims(ty) == rank,
-	       (DIAG_A_STRING, "Programming error."));
+  FORTTK_ASSERT(TY_AR_ndims(ty) == rank,
+		"Internal error: mismatched array dimensions");
   
   // -------------------------------------------------------
   // 3. Create Whirl ARRAY node (cf. wn_fio.cxx:1.3:7055)
@@ -870,19 +850,20 @@ CreateExpressionGraph(const DOMElement* elem, bool varRef)
       const XMLCh* targX = e->getAttribute(XAIFStrings.attr_target_x());
       XercesStrX src = XercesStrX(srcX);
       XercesStrX targ = XercesStrX(targX);
-
+      
       MyDGNode* gn1 = m[std::string(src.c_str())];  // source
       MyDGNode* gn2 = m[std::string(targ.c_str())]; // target
-      ASSERT_FATAL(gn1 && gn2, (DIAG_A_STRING, "Programming error."));
+      FORTTK_ASSERT(gn1 && gn2, "Invalid edge in expression graph:\n" << *e);
       
       MyDGEdge* ge = new MyDGEdge(gn1, gn2, e); // src, targ
       g->add(ge);
-      
-    } else {
+    } 
+    else {
       // Add a vertex to the graph
       const XMLCh* vidX = e->getAttribute(XAIFStrings.attr_Vid_x());
       XercesStrX vid = XercesStrX(vidX);
-      ASSERT_FATAL(strlen(vid.c_str()) > 0, (DIAG_A_STRING, "Error."));
+      FORTTK_ASSERT(strlen(vid.c_str()) > 0, 
+		    "Invalid vertex in expression graph:\n" << *e);
       
       MyDGNode* gn = new MyDGNode(e);
       g->add(gn);
@@ -908,7 +889,7 @@ CreateExpressionGraph(const DOMElement* elem, bool varRef)
     }
   }
   
-  ASSERT_FATAL(root, (DIAG_A_STRING, "Programming error."));
+  FORTTK_ASSERT(root, "Unable to find root of expression graph:\n" << *elem);
   g->set_root(root);
   
   return g;
@@ -1004,7 +985,8 @@ GetRType(WN* wn)
   } else {
     rty = TY_mtype(ty_idx);
   }
-  assert(rty != MTYPE_UNKNOWN); // FIXME: pointer types
+  // FIXME: pointer types
+  FORTTK_ASSERT(rty != MTYPE_UNKNOWN, "Error finding rtype of WN expr"); 
   
   return rty;
 }
@@ -1014,7 +996,7 @@ static TYPE_ID
 GetRTypeFromOpands(vector<WN*>& opands)
 {
   int opands_num = opands.size();
-  ASSERT_FATAL(opands_num > 0, (DIAG_A_STRING, "Programming error."));
+  FORTTK_ASSERT(opands_num > 0, FORTTK_UNEXPECTED_INPUT);
   
   // 1. Gather types for operands
   vector<TY_IDX> opands_ty(opands_num);
@@ -1159,8 +1141,8 @@ GetWNIntrinsic(const char* intrnNm, vector<WN*>& opands, TYPE_ID* dtype)
     if (dtype) { *dtype = MTYPE_F4; }
   }
   
-  ASSERT_FATAL(intrn != INTRINSIC_INVALID, 
-	       (DIAG_A_STRING, "Unknown Intrinsic."));
+  FORTTK_ASSERT(intrn != INTRINSIC_INVALID, 
+		"Unknown intrinsic '" << intrnNm << "'");
   return intrn;
 }
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.47 2004/07/28 01:28:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.48 2004/07/30 17:51:44 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -63,20 +63,20 @@
 
 #include <OpenAnalysis/CallGraph/CallGraph.h>
 
+#include <lib/support/Pro64IRInterface.h>
+
 //*************************** User Include Files ****************************
 
 #include "whirl2xaif.h"
 #include "wn2xaif.h"
 #include "st2xaif.h"
 
-#include <lib/support/Pro64IRInterface.h>
-
 //************************** Forward Declarations ***************************
 
 using namespace whirl2xaif;
 using namespace xml; // for xml::ostream, etc
 
-IntrinsicXlationTable whirl2xaif::IntrinsicTable(IntrinsicXlationTable::W2X);
+IntrinsicXlationTable   whirl2xaif::IntrinsicTable(IntrinsicXlationTable::W2X);
 
 ScalarizedRefTabMap_W2X whirl2xaif::ScalarizedRefTableMap;
 WNToWNIdTabMap          whirl2xaif::WNToWNIdTableMap;
@@ -275,9 +275,10 @@ TranslatePU(xml::ostream& xos, CallGraph::Node* n, UINT32 vertexId,
 	    XlationContext& ctxt)
 {
   // FIXME: A more general test will be needed
-  ASSERT_FATAL(n->GetDef(), (DIAG_UNIMPLEMENTED, "Should be defined."));
-
-  TranslatePU(xos, (PU_Info*)n->GetDef(), n->getId(), ctxt);
+  PU_Info* pu = (PU_Info*)n->GetDef();
+  FORTTK_ASSERT(pu, FORTTK_UNEXPECTED_INPUT << "PU is NULL");
+  
+  TranslatePU(xos, pu, n->getId(), ctxt);
     
   xos << std::endl;
   xos.flush();
@@ -370,7 +371,7 @@ MassageOACallGraphIntoXAIFCallGraph(CallGraph* cg)
   for (CallGraph::NodesIterator it(*cg); (bool)it; ++it) {
     CallGraph::Node* n = dynamic_cast<CallGraph::Node*>((DGraph::Node*)it);
     if (!n->GetDef()) {
-      IFDBG(2) {
+      FORTTK_DIAGIF_DEV(2) {
 	IRInterface& ir = cg->GetIRInterface();
 	const char* nm = ir.GetSymNameFromSymHandle(n->GetSym());
 	std::cout << "* Removing '" << nm << "' from CallGraph\n";

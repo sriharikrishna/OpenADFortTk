@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.15 2004/04/13 16:39:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.16 2004/07/30 17:52:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -40,9 +40,22 @@ XERCES_CPP_NAMESPACE_USE
 
 // Dumps only this node
 void 
-XercesDumpNode(const DOMNode* n);
+XercesPrintNode(std::ostream& os, const DOMNode* n);
 
 // Dumps the tree rooted at 'n'
+void
+XercesPrintTree(std::ostream& os, const DOMNode* n);
+
+
+std::ostream& 
+operator<<(std::ostream& os, const DOMElement& elem);
+
+
+// Shortcut for XercesPrintNode
+void 
+XercesDumpNode(const DOMNode* n);
+
+// Shortcut for XercesPrintTree
 void 
 XercesDumpTree(const DOMNode* n);
 
@@ -51,6 +64,7 @@ XercesDumpNode(void* n); // For *^#% debuggers
 
 void 
 XercesDumpTree(void* n); // For *^#% debuggers
+
 
 
 // Useful for either finding one element or iterating over all the

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.19 2004/06/30 20:10:26 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.20 2004/07/30 17:50:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -316,7 +316,8 @@ operator()(const Entry* e1, const Entry* e2) const
 	// 2. There is no secondary sorting key
 	return false; // e1 and e2 are equal
       default:
-	ASSERT_FATAL(false, (DIAG_A_STRING, "Invalid comparison"));
+	FORTTK_DIE("Internal IntrinsicXlationTable error: Unknown WNOprClass: "
+		   << cl);
       }
     } 
     else {
@@ -346,8 +347,10 @@ operator()(const Entry* e1, const Entry* e2) const
     else {
       return (e1->xaif_info.opr < e2->xaif_info.opr);
     }
-  } else {
-    ASSERT_FATAL(false, (DIAG_A_STRING, "Error!"));
+  } 
+  else {
+    FORTTK_DIE("Internal IntrinsicXlationTable error: Unknown TableType: " 
+	       << tt);
   }
 }
 
@@ -367,11 +370,14 @@ public:
     if (tt == IntrinsicXlationTable::W2X) {
       x->whirl_info.Dump(os); os << " ";
       x->xaif_info.Dump(os);  os << "\n";
-    } else if (tt == IntrinsicXlationTable::X2W) {
+    } 
+    else if (tt == IntrinsicXlationTable::X2W) {
       x->xaif_info.Dump(os);  os << " ";
       x->whirl_info.Dump(os); os << "\n";
-    } else {
-      ASSERT_FATAL(false, (DIAG_A_STRING, "Error!"));
+    } 
+    else {
+      FORTTK_DIE("Internal IntrinsicXlationTable error: Unknown TableType: " 
+		 << tt);
     }
   }
 

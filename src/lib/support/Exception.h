@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Exception.h,v 1.1 2004/02/27 00:33:37 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Exception.h,v 1.2 2004/07/30 17:50:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -17,12 +17,13 @@
 //
 //***************************************************************************
 
-#ifndef OpenAD_WHIRL_Exception_H 
-#define OpenAD_WHIRL_Exception_H
+#ifndef FortTk_Exception_H 
+#define FortTk_Exception_H
 
 //************************* System Include Files ****************************
 
 #include <iostream>
+#include <sstream>
 #include <string>
 
 //*************************** User Include Files ****************************
@@ -31,11 +32,13 @@
 
 //****************************************************************************
 
+// Note: Use the inteface in "Diagnostics.h"
+
 //****************************************************************************
 // Exception
 //****************************************************************************
 
-namespace OpenAD_WHIRL {
+namespace FortTk {
 
   class BaseException {
   public:
@@ -47,25 +50,45 @@ namespace OpenAD_WHIRL {
     virtual void Report() const = 0;
   };
 
+  // A generic FortTk exception with file/line information
   class Exception : public BaseException {
   public:
-    Exception(const char* m) : msg(m) { }
-    Exception(std::string m) : msg(m) { }
+    Exception(const char* m,
+	      const char* filenm = NULL, unsigned int lineno = 0);
+    Exception(std::string m,
+	      const char* filenm = NULL, unsigned int lineno = 0);
     virtual ~Exception();
     
     virtual const std::string& GetMessage() const { return msg; }
     virtual void Report(std::ostream& os) const { 
-      os << "OpenAD_WHIRL::Exception: " << msg << std::endl;
+      os << "OpenADFortTk::Exception: " << msg << std::endl;
     }
     virtual void Report() const { Report(std::cerr); }
-    
+
   private:
+    void Ctor(std::string& m, 
+	      const char* filenm = NULL, unsigned int lineno = 0);
+    
     std::string msg;
   };
 
-} /* namespace OpenAD_WHIRL */
+  // A fatal FortTk exception that generally should be unrecoverable
+  class FatalException : public Exception {
+  public:
+    FatalException(const char* m,
+		   const char* filenm = NULL, unsigned int lineno = 0);
+    FatalException(std::string m,
+		   const char* filenm = NULL, unsigned int lineno = 0);
+    virtual ~FatalException();
+    
+    virtual void Report(std::ostream& os) const { 
+      os << "OpenADFortTk::FatalException: " << GetMessage() << std::endl;
+    }
+
+  };
+  
+} /* namespace FortTk */
 
 //****************************************************************************
 
-#endif
-
+#endif // FortTk_Exception_H

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.15 2004/06/02 02:01:28 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.16 2004/07/30 17:51:44 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -175,7 +175,7 @@ XlationContext::FindParentBlockWN(WN* wn)
 SymTabId
 XlationContext::FindSymTabId(ST_TAB* stab)
 {
-  if (stab2idMap) { return (stab2idMap->Find(stab)); }
+  if (stab2idMap) { return (stab2idMap->Find(stab, true /*mustfind*/)); }
   return 0;
 }
 

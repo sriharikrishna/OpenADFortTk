@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.27 2004/04/14 21:26:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.28 2004/07/30 17:51:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -236,10 +236,9 @@ WN2F_Convert(xml::ostream& xos, MTYPE from_mtype, MTYPE to_mtype)
     */
   xos << "("; // FIXMEprepend
   if (Conv_Op[from_mtype][to_mtype] == NULL) {
-    ASSERT_WARN(Conv_Op[from_mtype][to_mtype] != NULL,
-		(DIAG_W2F_UNEXPECTED_CVT, 
-		 MTYPE_name(from_mtype), MTYPE_name(to_mtype), 
-		 "WN2F_Convert"));
+    FORTTK_ASSERT_WARN(Conv_Op[from_mtype][to_mtype] != NULL,
+      "unexpected conversion from " << MTYPE_name(from_mtype) << "to" 
+      << MTYPE_name(to_mtype));
     xos << "WN2F_Convert"; // FIXMEprepend
   } else {
     /* Note all these are intrinsics in the mongoose compiler and
@@ -267,27 +266,25 @@ InitConvOpMap() // FIXME
 whirl2xaif::status 
 whirl2xaif::WN2F_cvt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_CVT, 
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_cvt"));
-   InitConvOpMap();
+  FORTTK_ASSERT(WN_operator(wn) == OPR_CVT, FORTTK_UNEXPECTED_INPUT); 
 
-   TranslateWN(xos, WN_kid0(wn), ctxt);
+  InitConvOpMap();
+  TranslateWN(xos, WN_kid0(wn), ctxt);
 
 /*  Maybe we shouldn't or needn't  explicitly output these kinds of 
     convert in .w2f.f file----fzhao
 */
 //   WN2F_Convert(xos, WN_desc(wn), WN_rtype(wn));
 
-   return whirl2xaif::good;
+  return whirl2xaif::good;
 }
 
 whirl2xaif::status 
 whirl2xaif::WN2F_cvtl(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  FORTTK_ASSERT(WN_operator(wn) == OPR_CVTL, FORTTK_UNEXPECTED_INPUT); 
+
   TY_IDX  rtype, dtype;
-  
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_CVTL, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_cvtl"));
   InitConvOpMap();
   
   dtype = WN_Tree_Type(WN_kid0(wn));
@@ -306,8 +303,7 @@ whirl2xaif::WN2F_cvtl(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::WN2F_tas(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_TAS, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_tas"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_TAS, FORTTK_UNEXPECTED_INPUT); 
   
   // Just ignore TAS operators for now.  TODO: make sure this
   // is always ok.
@@ -324,8 +320,7 @@ whirl2xaif::WN2F_tas(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_INTCONST(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_INTCONST, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_INTCONST"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_INTCONST, FORTTK_UNEXPECTED_INPUT); 
   
   // FIXME: use xlate_CONST
   TCON tval = Host_To_Targ(WN_rtype(wn), WN_const_val(wn));
@@ -344,8 +339,7 @@ whirl2xaif::xlate_INTCONST(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_CONST(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_CONST, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_CONST"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_CONST, FORTTK_UNEXPECTED_INPUT); 
 
   TY_IDX ty_idx = ST_type(WN_st(wn));
   
@@ -369,16 +363,17 @@ whirl2xaif::xlate_CONST(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status
 whirl2xaif::xlate_UnaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  OPERATOR opr = WN_operator(wn);
   OPCODE opc = WN_opcode(wn);
-  ASSERT_DBG_FATAL(WN_kid_count(wn) == 1, 
-		   (DIAG_W2F_UNEXPECTED_NUM_KIDS, 
-		    WN_kid_count(wn), 1, OPCODE_name(opc)));
-
-  if (IntrinsicTable.FindXAIFInfo(WN_operator(wn), NULL)) {
+  FORTTK_ASSERT(WN_kid_count(wn) == 1, 
+		FORTTK_UNEXPECTED_INPUT << OPERATOR_name(opr));
+  
+  if (IntrinsicTable.FindXAIFInfo(opr, NULL)) {
     xlate_UnaryOpUsingIntrinsicTable(xos, opc, WN_Tree_Type(wn), 
 				     WN_kid0(wn), ctxt);
-  } else {
-    ASSERT_DBG_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_OPC, "xlate_UnaryOp"));
+  } 
+  else {
+    FORTTK_DIE("Unknown intrinsic '" << OPERATOR_name(opr) << "'");
   }
   
   return whirl2xaif::good;
@@ -388,91 +383,79 @@ whirl2xaif::xlate_UnaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::WN2F_rsqrt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
-   
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_RSQRT, 
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_rsqrt"));
-
-   xos << "(1.0/SQRT(";
-   xlate_Operand(xos, WN_kid(wn,0), result_ty,
-		 !TY_Is_Character_Reference(result_ty), ctxt);
-   xos << "))";
-
-   return whirl2xaif::good;
+  FORTTK_ASSERT(WN_operator(wn) == OPR_RSQRT, FORTTK_UNEXPECTED_INPUT);
+  
+  TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
+  
+  xos << "(1.0/SQRT(";
+  xlate_Operand(xos, WN_kid(wn,0), result_ty,
+		!TY_Is_Character_Reference(result_ty), ctxt);
+  xos << "))";
+  
+  return whirl2xaif::good;
 } /* WN2F_rsqrt */
 
 
 whirl2xaif::status 
 whirl2xaif::WN2F_realpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_REALPART, 
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_realpart"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_REALPART, FORTTK_UNEXPECTED_INPUT);
    
-   switch (WN_rtype(wn))
-   {
-   case MTYPE_F4:
-      xos << "REAL";
-      break;
-   case MTYPE_F8:
-      xos << "DBLE";
-      break;
-   case MTYPE_FQ:
-      xos << "QREAL";
- 
-      break;
-   default:
-      ASSERT_DBG_FATAL(FALSE, 
-		       (DIAG_W2F_UNEXPECTED_BTYPE,
-			MTYPE_name(WN_rtype(wn)),
-			"WN2F_realpart"));
-      xos << "WN2F_realpart";
-      break;
-   }
-   xos << "(";
-   TranslateWN(xos, WN_kid0(wn), ctxt);
-   xos << ")";
-   
-   return whirl2xaif::good;
+  switch (WN_rtype(wn)) {
+  case MTYPE_F4:
+    xos << "REAL";
+    break;
+  case MTYPE_F8:
+    xos << "DBLE";
+    break;
+  case MTYPE_FQ:
+    xos << "QREAL";
+    
+    break;
+  default:
+    FORTTK_DIE("Unexpected type: " << MTYPE_name(WN_rtype(wn)));
+    break;
+  }
+  xos << "(";
+  TranslateWN(xos, WN_kid0(wn), ctxt);
+  xos << ")";
+  
+  return whirl2xaif::good;
 } /* WN2F_realpart */
 
 
 whirl2xaif::status 
 whirl2xaif::WN2F_imagpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_IMAGPART, 
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_imagpart"));
-   
-   switch (WN_rtype(wn))
-   {
-   case MTYPE_F4:
-      xos << "AIMAG";
-      break;
-   case MTYPE_F8:
-      xos << "DIMAG";
-      break;
-   case MTYPE_FQ:
-      xos << "QIMAG";
-      break;
-   default:
-      ASSERT_DBG_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_BTYPE, 
-			       MTYPE_name(WN_rtype(wn)), "WN2F_imagpart"));
-      xos << "WN2F_imagpart";
-      break;
-   }
-   xos << "(imagpart";
-   TranslateWN(xos, WN_kid0(wn), ctxt);
-   xos << "imagpart)";
-   
-   return whirl2xaif::good;
+  FORTTK_ASSERT(WN_operator(wn) == OPR_IMAGPART, FORTTK_UNEXPECTED_INPUT);
+  
+  switch (WN_rtype(wn)) {
+  case MTYPE_F4:
+    xos << "AIMAG";
+    break;
+  case MTYPE_F8:
+    xos << "DIMAG";
+    break;
+  case MTYPE_FQ:
+    xos << "QIMAG";
+    break;
+  default:
+    FORTTK_DIE("Unexpected type: " << MTYPE_name(WN_rtype(wn)));
+    break;
+  }
+  xos << "(imagpart";
+  TranslateWN(xos, WN_kid0(wn), ctxt);
+  xos << "imagpart)";
+  
+  return whirl2xaif::good;
 } /* WN2F_imagpart */
 
 
 whirl2xaif::status 
 whirl2xaif::xlate_PAREN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PAREN, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_PAREN"));
-  
+  FORTTK_ASSERT(WN_operator(wn) == OPR_PAREN, FORTTK_UNEXPECTED_INPUT);
+
   return TranslateWN(xos, WN_kid0(wn), ctxt);
 }
 
@@ -480,8 +463,7 @@ whirl2xaif::xlate_PAREN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_RECIP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_RECIP, 
-		    (DIAG_W2F_UNEXPECTED_OPC, "xlate_RECIP"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_RECIP, FORTTK_UNEXPECTED_INPUT);
 
    const TY_IDX result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
    
@@ -492,12 +474,15 @@ whirl2xaif::xlate_RECIP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    TCON tcon;
    if (MTYPE_is_integral(rty)) {
      tcon = Host_To_Targ(rty, 1);
-   } else if (MTYPE_is_float(rty)) {
+   } 
+   else if (MTYPE_is_float(rty)) {
      tcon = Host_To_Targ_Float(rty, 1.0);
-   } else if (MTYPE_is_complex(rty)) { 
+   } 
+   else if (MTYPE_is_complex(rty)) { 
      tcon = Host_To_Targ_Complex(rty, 1, 0);
-   } else {
-     ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
+   } 
+   else {
+     FORTTK_DIE("Cannot take reciprical of this TCON");
    }
    WN* wn_one = Make_Const(tcon);
    
@@ -517,8 +502,7 @@ whirl2xaif::WN2F_parm(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    * of the information provided in this packaging of argument 
    * expressions.  For now, just skip these nodes.
    */
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PARM, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_parm"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_PARM, FORTTK_UNEXPECTED_INPUT);
   if ( TY_is_logical(Ty_Table[WN_ty(wn)]) || 
        XlationContext_is_logical_arg(ctxt)) { //fzhao Jan
     set_XlationContext_has_logical_arg(ctxt);
@@ -534,8 +518,7 @@ whirl2xaif::WN2F_parm(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::WN2F_alloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ALLOCA, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_alloca"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_ALLOCA, FORTTK_UNEXPECTED_INPUT);
   
   xos << "OPR_ALLOCA(";
   TranslateWN(xos,WN_kid0(wn),ctxt);
@@ -552,16 +535,17 @@ whirl2xaif::WN2F_alloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status
 whirl2xaif::xlate_BinaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  OPERATOR opr = WN_operator(wn);
   OPCODE opc = WN_opcode(wn);
-  ASSERT_DBG_FATAL(WN_kid_count(wn) == 2, 
-		   (DIAG_W2F_UNEXPECTED_NUM_KIDS, 
-		    WN_kid_count(wn), 2, OPCODE_name(opc)));
+  FORTTK_ASSERT(WN_kid_count(wn) == 2, 
+		FORTTK_UNEXPECTED_INPUT << OPERATOR_name(opr));
   
-  if (IntrinsicTable.FindXAIFInfo(WN_operator(wn), NULL)) {
+  if (IntrinsicTable.FindXAIFInfo(opr, NULL)) {
     xlate_BinaryOpUsingIntrinsicTable(xos, opc, WN_Tree_Type(wn), 
 				      WN_kid0(wn), WN_kid1(wn), ctxt);
-  } else {
-    ASSERT_DBG_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_OPC, "xlate_BinaryOp"));
+  } 
+  else {
+    FORTTK_DIE("Unknown intrinsic '" << OPERATOR_name(opr) << "'");
   }
   
   reset_XlationContext_is_logical_operation(ctxt);
@@ -573,8 +557,7 @@ whirl2xaif::xlate_BinaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::WN2F_complex(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_COMPLEX, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_complex"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_COMPLEX, FORTTK_UNEXPECTED_INPUT);
   
   switch (WN_rtype(wn)) {
   case MTYPE_C4:
@@ -587,9 +570,7 @@ whirl2xaif::WN2F_complex(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     xos << "QCMPLX";
     break;
   default:
-    ASSERT_DBG_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_BTYPE,
-			     MTYPE_name(WN_rtype(wn)), "WN2F_complex"));
-    xos << "WN2F_complex";
+    FORTTK_DIE("Unexpected type: " << MTYPE_name(WN_rtype(wn)));
     break;
   }
   
@@ -606,10 +587,9 @@ whirl2xaif::WN2F_complex(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::WN2F_bnor(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  FORTTK_ASSERT(WN_operator(wn) == OPR_BNOR, FORTTK_UNEXPECTED_INPUT);
+
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
-  
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_BNOR, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_bnor"));
   
   xos << "NOT(IOR(";
   xlate_Operand(xos, WN_kid(wn,0), result_ty,
@@ -626,10 +606,9 @@ whirl2xaif::WN2F_bnor(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::WN2F_lshr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_LSHR, FORTTK_UNEXPECTED_INPUT);
   
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_LSHR, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_lshr"));
+  TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
   
   xos << "ISHIFT(";
   xlate_Operand(xos, WN_kid(wn,0), result_ty,
@@ -652,6 +631,7 @@ whirl2xaif::WN2F_select(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   /* SELECT is almost the same as the F90 MERGE intrinsic, 
      so I will output it that way for now */
+  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
   
   xos << "MERGE(";
   TranslateWN(xos, WN_kid1(wn), ctxt);
@@ -660,10 +640,7 @@ whirl2xaif::WN2F_select(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << ",";  
   TranslateWN(xos, WN_kid0(wn), ctxt);  
   xos << ")";
-#if 0
-  ASSERT_DBG_WARN(FALSE, (DIAG_UNIMPLEMENTED, "WN2F_select"));
-#endif
-  
+
   return whirl2xaif::good;
 } /* WN2F_select */
 
@@ -671,10 +648,9 @@ whirl2xaif::WN2F_select(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::WN2F_madd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  FORTTK_ASSERT(WN_operator(wn) == OPR_MADD, FORTTK_UNEXPECTED_INPUT);
+
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
-  
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_MADD, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_madd"));
   
   xos << "(";
   xlate_Operand(xos, WN_kid(wn,1), result_ty,
@@ -694,10 +670,9 @@ whirl2xaif::WN2F_madd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::WN2F_msub(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  FORTTK_ASSERT(WN_operator(wn) == OPR_MSUB, FORTTK_UNEXPECTED_INPUT);
+
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
-  
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_MSUB, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_msub"));
   
   xos << "(";
   xlate_Operand(xos, WN_kid(wn,1), result_ty,
@@ -717,10 +692,9 @@ whirl2xaif::WN2F_msub(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::WN2F_nmadd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  FORTTK_ASSERT(WN_operator(wn) == OPR_NMADD, FORTTK_UNEXPECTED_INPUT);
+
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
-  
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_NMADD, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_nmadd"));
   
   xos << "-(";
   xlate_Operand(xos, WN_kid(wn,1), result_ty,
@@ -740,10 +714,9 @@ whirl2xaif::WN2F_nmadd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::WN2F_nmsub(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_NMSUB, FORTTK_UNEXPECTED_INPUT);
   
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_NMSUB, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_nmsub"));
+  TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
   
   xos << "-(";
   xlate_Operand(xos, WN_kid(wn,1), result_ty,
@@ -776,8 +749,7 @@ whirl2xaif::xlate_INTRINSIC_OP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // not related to the call-info generated by PUinfo.  Note that
   // either all or none of the arguments are call-by-value.
   OPERATOR opr = WN_operator(wn);
-  ASSERT_DBG_FATAL(opr == OPR_INTRINSIC_OP, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_INTRINSIC_OP"));
+  FORTTK_ASSERT(opr == OPR_INTRINSIC_OP, FORTTK_UNEXPECTED_INPUT);
   
   INTRINSIC intrn = WN_intrinsic(wn);
   BOOL by_value = INTRN_by_value(intrn);
@@ -787,7 +759,7 @@ whirl2xaif::xlate_INTRINSIC_OP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   const char* inm = INTRINSIC_basename(intrn);
   IntrinsicXlationTable::XAIFInfo* info
     = IntrinsicTable.FindXAIFInfo(opr, inm);
-  ASSERT_FATAL(info, (DIAG_UNIMPLEMENTED, WN_intrinsic_name(intrn)));
+  FORTTK_ASSERT(info, "Unknown intrinsic '" << inm << "'");
   
   if ((strcmp(inm, "ADRTMP") == 0) || (strcmp(inm, "VALTMP") == 0)) {
     // Special cases:
@@ -932,9 +904,11 @@ xlate_BinaryOpUsingIntrinsicTable(xml::ostream& xos, OPCODE opcode,
     wn0_ty = wn1_ty = Stab_Mtype_To_Ty(OPCODE_desc(opcode));
   }
   
+  OPERATOR opr = OPCODE_operator(opcode);
   IntrinsicXlationTable::XAIFInfo* info // FIXME (perhaps pass?)
-    = IntrinsicTable.FindXAIFInfo(OPCODE_operator(opcode), NULL);
-  ASSERT_FATAL(info, (DIAG_A_STRING, "intrinsic lookup failed!"));
+    = IntrinsicTable.FindXAIFInfo(opr, NULL);
+  FORTTK_ASSERT(info, "Unknown intrinsic '" << OPERATOR_name(opr) << "'");
+  
   UINT targid, srcid0, srcid1;
   
   // Get XAIF operator type
@@ -951,7 +925,7 @@ xlate_BinaryOpUsingIntrinsicTable(xml::ostream& xos, OPCODE opcode,
     break;
   }
   default:
-    ASSERT_FATAL(false, (DIAG_A_STRING, "Invalid operator"));
+    FORTTK_DIE("Unknown XAIFOpr");
   }
   
   // Operation
@@ -995,18 +969,18 @@ xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty,
   
   // We do not handle substring expressions here, and assume any
   // such expression will be dispatched to another. 
-  ASSERT_DBG_WARN(!TY_Is_Character_Reference(assumed_ty) &&
-		  !TY_Is_Chararray_Reference(assumed_ty),
-		  (DIAG_W2F_UNEXPECTED_SUBSTRING_REF, "xlate_Operand()"));
+  FORTTK_ASSERT(!TY_Is_Character_Reference(assumed_ty) &&
+		!TY_Is_Chararray_Reference(assumed_ty),
+		FORTTK_UNEXPECTED_INPUT << "substring reference");
   
   if (!callByValue) {
-    xlate_MemRef(xos, 
-		       opnd,                   /* address expression */
-		       assumed_ty,             /* address type */
-		       TY_pointed(assumed_ty), /* object type */
-		       0,                      /* offset from address */
-		       ctxt);
-  } else {
+    xlate_MemRef(xos, opnd,              /* address expression */
+		 assumed_ty,             /* address type */
+		 TY_pointed(assumed_ty), /* object type */
+		 0,                      /* offset from address */
+		 ctxt);
+  } 
+  else {
     TranslateWN(xos, opnd, ctxt);
   }
   

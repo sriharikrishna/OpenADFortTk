@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.9 2004/06/16 14:27:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.10 2004/07/30 17:50:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -265,8 +265,9 @@ IsRefSimpleArrayElem(const WN* wn)
     TY_IDX refobj_ty = WN_GetRefObjType(wn);
 #if 0
     if (/* array element access */) {
-    ASSERT_DBG_WARN(WN2F_Can_Assign_Types(TY_AR_etype(baseobj_ty), refobj_ty),
-		    (DIAG_W2F_INCOMPATIBLE_TYS, "xlate_SymRef"));
+    FORTTK_ASSERT_WARN(WN2F_Can_Assign_Types(TY_AR_etype(baseobj_ty), 
+					     refobj_ty),
+		       "Incompatible types");
     }
 #endif
     return (TY_Is_Array(baseobj_ty) && !IsRefScalar(baseobj_ty, refobj_ty));
@@ -419,7 +420,7 @@ AddToScalarizedRefTabOp::
 AddToScalarizedRefTabOp(ScalarizedRefTab_W2X* tab_, PU_Info* curpu_)
   : tab(tab_), curpu(curpu_)
 { 
-  ASSERT_FATAL(tab, (DIAG_A_STRING, "Programming Error."));
+  FORTTK_ASSERT(tab_, FORTTK_UNEXPECTED_INPUT);
   ir = Pro64IRInterface();
 }
 

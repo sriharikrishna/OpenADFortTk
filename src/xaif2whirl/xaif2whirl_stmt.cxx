@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.18 2004/07/29 18:52:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.19 2004/07/30 17:52:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -140,7 +140,7 @@ xaif2whirl::TranslateStmt(const DOMElement* stmt, XlationContext& ctxt)
     wn = xlate_DerivativePropagator(stmt, ctxt);
   } 
   else {
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+    FORTTK_DIE("Unknown XAIF statement:\n" << *stmt);
   }
   
   return wn;
@@ -238,11 +238,13 @@ xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
 
     // VariableReferenceType
     const XMLCh* nmX = arg->getNodeName();
-    ASSERT_FATAL(XMLString::equals(nmX, XAIFStrings.elem_Argument_x()), 
-		 (DIAG_A_STRING, "Programming error."));
+    FORTTK_ASSERT(XMLString::equals(nmX, XAIFStrings.elem_Argument_x()), 
+		  "Expected " << XAIFStrings.elem_Argument() << "; found:\n"
+		  << *arg);
     
     unsigned int pos = GetPositionAttr(arg); // 1-based
-    ASSERT_FATAL(1 <= pos && pos <= numArgs, (DIAG_A_STRING, "Error."));
+    FORTTK_ASSERT(1 <= pos && pos <= numArgs, 
+		  "Unexpected position attribute:\n" << *arg);
     
     // Note: We do *not* check the deriv flag; any active variable
     // references should be passed as is.
@@ -312,11 +314,12 @@ xlate_InlinableSubroutineCall(const DOMElement* elem, XlationContext& ctxt)
     
     // VariableReferenceType
     const XMLCh* nmX = arg->getNodeName();
-    ASSERT_FATAL(XMLString::equals(nmX, XAIFStrings.elem_ArgumentSubst_x()), 
-		 (DIAG_A_STRING, "Programming error."));
+    FORTTK_ASSERT(XMLString::equals(nmX, XAIFStrings.elem_ArgumentSubst_x()), 
+		  "Expected " << XAIFStrings.elem_ArgumentSubst() 
+		  << "; found\n" << *arg);
     
     unsigned int pos = GetPositionAttr(arg); // 1-based
-    ASSERT_FATAL(1 <= pos, (DIAG_A_STRING, "Error."));
+    FORTTK_ASSERT(1 <= pos, "Unexpected position attribute:\n" << *arg);
     if (pos > args_wn.size()) { args_wn.resize(pos); } // must resize
     
     // Note: We do *not* check the deriv flag; any active variable
@@ -375,14 +378,18 @@ xlate_DerivativePropagator(const DOMElement* elem, XlationContext& ctxt)
     WN* wn = NULL;
     if (XAIF_DerivPropStmt::IsSetDeriv(stmt)) {
       wn = xlate_SetDeriv(stmt, ctxt);
-    } else if (XAIF_DerivPropStmt::IsZeroDeriv(stmt) ) {
+    } 
+    else if (XAIF_DerivPropStmt::IsZeroDeriv(stmt) ) {
       wn = xlate_ZeroDeriv(stmt, ctxt);
-    } else if (XAIF_DerivPropStmt::IsSax(stmt)) {
+    } 
+    else if (XAIF_DerivPropStmt::IsSax(stmt)) {
       wn = xlate_Saxpy(stmt, ctxt, false);
-    } else if (XAIF_DerivPropStmt::IsSaxpy(stmt) ) {
+    } 
+    else if (XAIF_DerivPropStmt::IsSaxpy(stmt) ) {
       wn = xlate_Saxpy(stmt, ctxt, true);
-    } else {
-      ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+    } 
+    else {
+      FORTTK_DIE("Unknown XAIF derivative propagator statement:\n" << *stmt);
     }
     
     WN_INSERT_BlockLast(blckWN, wn);
@@ -450,8 +457,8 @@ xlate_Saxpy(const DOMElement* elem, XlationContext& ctxt, bool saxpy)
   // 1. Create WHIRL expressions for sax(py) parameters
   // -------------------------------------------------------
   // FIXME: could be a list. We ensure there is no list for now.
-  ASSERT_FATAL(GetChildElementCount(elem) == 2, 
-	       (DIAG_A_STRING, "Programming error."));
+  FORTTK_ASSERT(GetChildElementCount(elem) == 2, 
+		FORTTK_UNIMPLEMENTED << "Cannot handle saxpy list");
   
   DOMElement* AX = GetChildElement(elem, XAIFStrings.elem_AX_x());
   DOMElement* A = GetChildElement(AX, XAIFStrings.elem_A_x());
@@ -526,12 +533,11 @@ static void
 PatchWN_IO_cray(WN* wn, XlationContext& ctxt)
 {
   IOSTATEMENT iostmt = WN_io_statement(wn);
-  ASSERT_WARN(iostmt == IOS_CR_FWF || iostmt == IOS_CR_FWU 
-	      || iostmt == IOS_CR_FRF || iostmt == IOS_CR_FRU
-	      || iostmt == IOS_CR_OPEN || iostmt == IOS_CR_CLOSE
-	      || iostmt == IOS_INQUIRE || iostmt == IOS_CR_INQUIRE,
-	      (DIAG_W2F_UNEXPECTED_IOS, IOSTATEMENT_name(iostmt), 
-	       "PatchWN_IO_cray: unknown IO"));
+  FORTTK_ASSERT_WARN(iostmt == IOS_CR_FWF || iostmt == IOS_CR_FWU 
+		     || iostmt == IOS_CR_FRF || iostmt == IOS_CR_FRU
+		     || iostmt == IOS_CR_OPEN || iostmt == IOS_CR_CLOSE
+		     || iostmt == IOS_INQUIRE || iostmt == IOS_CR_INQUIRE,
+		     FORTTK_UNEXPECTED_INPUT << IOSTATEMENT_name(iostmt));
   
   // Iterate over IO_ITEMs and translate IOLs (io lists)
   for (INT kidno = 0; kidno < WN_kid_count(wn); ++kidno) {
@@ -574,8 +580,7 @@ PatchWN_IO_ITEM_list(WN* wn, XlationContext& ctxt)
     break;
   
   default:
-    ASSERT_DBG_WARN(FALSE, (DIAG_W2F_UNEXPECTED_IOL,
-			    IOITEM_name(kind), "xlate_IO_ITEM_list"));
+    FORTTK_DIE(FORTTK_UNEXPECTED_OPR << IOITEM_name(kind));
     break;
   }
 }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.10 2004/06/09 21:59:31 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.11 2004/07/30 17:50:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -101,13 +101,17 @@ public:
   virtual ~SymTabIdToSymTabMap() { }
   
   pair<ST_TAB*, PU_Info*>
-  Find(SymTabId id) const
+  Find(SymTabId id, bool mustFind = false) const
   {
     pair<ST_TAB*, PU_Info*> result(NULL, NULL);
     
     const_iterator it = this->find(id);
     if (it != this->end()) {
       result = (*it).second;
+    } 
+    else if (mustFind) {
+      FORTTK_DIE("SymTabIdToSymTabMap: Could not find entry for key '" 
+		 << id << "'");
     }
     
     return result;

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.18 2004/05/07 20:04:58 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.19 2004/07/30 17:52:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -60,7 +60,7 @@
 #include "XAIF_SAXHandler.h"
 #include "XAIF_DOMErrorHandler.h"
 
-#include <lib/support/diagnostics.h>
+#include <lib/support/Exception.h>
 #include <lib/support/WhirlIO.h>
 #include <lib/support/XAIFStrings.h>
 
@@ -159,7 +159,7 @@ real_main(int argc, char **argv)
   Args args(argc, argv);
   opt_mode = args.mode; // FIXME
   opt_algorithm = args.algorithm; // FIXME
-  DBG_LVL_PUB = args.debug;
+  FortTk_SetDiagnosticFilterLevel(args.debug);
   
   // -------------------------------------------------------
   // 3. Read WHIRL IR as basis for translation

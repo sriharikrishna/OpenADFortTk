@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.57 2004/07/28 19:04:42 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.58 2004/07/30 17:52:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -304,7 +304,8 @@ TranslateScopeHierarchy(const DOMDocument* doc, XlationContext& ctxt)
   // Get the ScopeHierarchy element
   DOMElement* scopeHier = GetChildElement(doc->getDocumentElement(), 
 					  XAIFStrings.elem_ScopeHierarchy_x());
-  ASSERT_FATAL(scopeHier, (DIAG_A_STRING, "ScopeHierarchy!"));
+  FORTTK_ASSERT(scopeHier, "Could not find " 
+		<< XAIFStrings.elem_ScopeHierarchy());
   
   // For each Scope in the ScopeHierarchy, examine each symbol
   XAIF_ScopeElemFilter filt;
@@ -440,15 +441,18 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
     if (strcmp(intent.c_str(), "in") == 0) {
       WN_Set_Parm_In(parmWN);
       Set_ST_is_intent_in_argument(parmST);
-    } else if (strcmp(intent.c_str(), "out") == 0) {
+    } 
+    else if (strcmp(intent.c_str(), "out") == 0) {
       WN_Set_Parm_Out(parmWN);
       Set_ST_is_intent_out_argument(parmST);		
-    } else if (strcmp(intent.c_str(), "inout") == 0) {
+    } 
+    else if (strcmp(intent.c_str(), "inout") == 0) {
       WN_Set_Parm_By_Reference(parmWN); // unnecessary for 'whirl2f'
       Clear_ST_is_intent_in_argument(parmST);
       Clear_ST_is_intent_out_argument(parmST);
-    } else {
-      ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Bad intent!"));
+    } 
+    else {
+      FORTTK_DIE("Unknown intent to argument:\n" << *arg);
     }
   }
   
@@ -762,7 +766,7 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       continueIteration = false;
     }
     else {
-      ASSERT_FATAL(blkWN, (DIAG_A_STRING, "Programming error."));
+      FORTTK_DIE("Unknown XAIF basic block:\n" << *bbElem);
     }
   }
   
@@ -1027,7 +1031,7 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
       WN_INSERT_BlockLast(blkWN, stmts);
     }
     else {
-      ASSERT_FATAL(blkWN, (DIAG_A_STRING, "Programming error."));
+      FORTTK_DIE("Unknown XAIF basic block:\n" << *bbElem);
     }
   }
 
@@ -1129,7 +1133,7 @@ TranslateBasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt,
   IdList<WNId>* idlist = GetWNIdList(bbElem); // FIXME
   WN* origblkWN = FindWNBlock(bbElem, idlist, ctxt);
   if (idlist->size() > 0) { 
-    ASSERT_FATAL(origblkWN, (DIAG_A_STRING, "Programming error."));
+    FORTTK_ASSERT(origblkWN, "Could not find WHIRL block for:\n" << *bbElem);
   }
 
   // -------------------------------------------------------
@@ -1195,7 +1199,7 @@ xlate_BasicBlock_OLD(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
   IdList<WNId>* idlist = GetWNIdList(bbElem);
   WN* blkWN = FindWNBlock(bbElem, idlist, ctxt);
   if (idlist->size() > 0) { 
-    ASSERT_FATAL(blkWN, (DIAG_A_STRING, "Programming error."));
+    FORTTK_ASSERT(blkWN, "Could not find WHIRL block for:\n" << *bbElem);
   }
   
   // -------------------------------------------------------
@@ -1272,7 +1276,7 @@ xlate_BBCond_OLD(WN* wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
 
   DOMElement* cond = GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
   if (cond) {
-    ASSERT_FATAL(idlist->size() == 1, (DIAG_A_STRING, "Error."));
+    FORTTK_ASSERT(idlist->size() == 1, "Invalid id list:\n" << *cond);
   }
 
   WN* wn = ctxt.FindWN(idlist->front(), true /* mustFind */);
@@ -1297,7 +1301,7 @@ xlate_BBCond_OLD(WN* wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
     break; // integer expression
     
   default: 
-    ASSERT_FATAL(false, (DIAG_W2F_CANNOT_HANDLE_OPC, OPERATOR_name(opr), opr));
+    FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
   }
   
   // -------------------------------------------------------
@@ -1454,7 +1458,7 @@ FindIntervalBoundary(const DOMElement* elem, IdList<WNId>* bbIdList,
         // We used 'adj' (instead of 'elem') to find 'wn'.  Correct
         // the interval boundary by moving in the opposite direction.
         WN* prevWN = WN_prev(wn); // never NULL b/c of insertion above!
-        ASSERT_FATAL(prevWN, (DIAG_A_STRING, "Programming error."));
+        FORTTK_ASSERT(prevWN, "Internal error");
 
         wn = prevWN;
       }
@@ -1464,7 +1468,7 @@ FindIntervalBoundary(const DOMElement* elem, IdList<WNId>* bbIdList,
     }
   } 
   else {
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+    FORTTK_DIE("Internal error.");
   }
   
   return wn;
@@ -1547,9 +1551,10 @@ xaif2whirl::GetSymbol(const DOMElement* elem, XlationContext& ctxt)
 
   XercesStrX scopeId = XercesStrX(scopeIdX);
   XercesStrX symId = XercesStrX(symIdX);
-
-  ASSERT_FATAL(strcmp(scopeId.c_str(), "") != 0, (DIAG_A_STRING, "Error."));
-  ASSERT_FATAL(strcmp(symId.c_str(), "") != 0, (DIAG_A_STRING, "Error."));
+  
+  FORTTK_ASSERT(strcmp(scopeId.c_str(), "") != 0 && 
+		strcmp(symId.c_str(), "") != 0,
+		"Invalid id attribute:\n" << *elem);
   
   return ctxt.FindSym(scopeId.c_str(), symId.c_str());
 }
@@ -1597,7 +1602,6 @@ xlate_Scope(const DOMElement* elem, XAIFSymToSymbolMap* symMap,
   // Find the corresponding WHIRL symbol table (ST_TAB)
   SymTabId symtabId = GetSymTabId(elem);
   pair<ST_TAB*, PU_Info*> stab = ctxt.FindSymTab(symtabId);
-  ASSERT_FATAL(stab.first, (DIAG_A_STRING, "Programming error."));
   
   // Find the scope id
   const XMLCh* scopeIdX = elem->getAttribute(XAIFStrings.attr_Vid_x());
@@ -1867,8 +1871,8 @@ xaif2whirl::GetId(const char* idstr, const char* tag)
   id = strtol(start, &endptr, 10);
 
   unsigned int len = strlen(XAIFStrings.tag_End());
-  ASSERT_FATAL(endptr && strncmp(endptr, XAIFStrings.tag_End(), len) == 0,
-               (DIAG_A_STRING, "Programming error."));
+  FORTTK_ASSERT(endptr && strncmp(endptr, XAIFStrings.tag_End(), len) == 0,
+		"Could not find '" << tag << "' within " << idstr);
   return id;
 }
 
@@ -1894,14 +1898,16 @@ xaif2whirl::GetIdList(const char* idstr, const char* tag)
     char* endptr = NULL;
     T id = strtol(tok, &endptr, 10);
     if (endptr != tok) { 
-      ASSERT_FATAL(id != 0, (DIAG_A_STRING, "Programming error."));
+      FORTTK_ASSERT(id != 0, "Found invalid " << tag << " id " << id 
+		    << " within " << idstr);
       idlist->push_back(id); // we found some digits to convert
     }
 
     tok = strtok((char*)NULL, ":");
     if (endptr && strcmp(endptr, XAIFStrings.tag_End()) == 0) {
       // we should be done with iteration now
-      ASSERT_FATAL(tok == NULL, (DIAG_A_STRING, "Programming error."));
+      FORTTK_ASSERT(tok == NULL, "Could not find end of " << tag 
+		    << " within " << idstr);
     }
   }
 
@@ -2030,7 +2036,9 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
   
   bool active = GetActiveAttr(elem);
   
-  assert( strcmp(kind.c_str(), "variable" ) == 0 ); // FIXME: assume only
+  // FIXME: assume only
+  FORTTK_ASSERT(strcmp(kind.c_str(), "variable") == 0,
+		FORTTK_UNIMPLEMENTED << "Cannot create non-variable symbols");
     
   // 1. Find basic type according to 'type' and 'active'
   TY_IDX basicTy = XAIFTyToWHIRLTy(type.c_str());
@@ -2048,9 +2056,10 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
     INT64 len = 1000; // FIXME: this is fixed size!!
     if (strcmp(shape.c_str(), "vector") == 0) {
       ndim = 1;
-    } else {
+    } 
+    else {
       // FIXME: add tensors
-      ASSERT_FATAL(false, (DIAG_A_STRING, "Programming error."));
+      FORTTK_DIE(FORTTK_UNIMPLEMENTED << "Cannot translate > 2-dimensional variables");
     }
     ty = MY_Make_Array_Type(basicTy, ndim, len);
   }
@@ -2198,7 +2207,7 @@ DeclareActiveTypes()
     retWN = WN_CreateExp2(OPC_U8ADD, wn, offsetWN);
   } 
   else {
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+    FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
   }
   return retWN;
 #endif  
@@ -2240,7 +2249,7 @@ ConvertToActiveType(ST* st)
     // alignment, etc. should be ok
   } 
   else {
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "ConvertToActiveType!"));
+    FORTTK_DIE("Unexpected type kind: " << TY_kind(ty));
   }
   
   // -------------------------------------------------------
@@ -2293,8 +2302,8 @@ MY_Make_Array_Type (TY_IDX elem_ty, INT32 ndim, INT64 len)
 {
     INT64 elem_sz = TY_size (elem_ty);
     UINT elem_align = TY_align(elem_ty);
-    FmtAssert(elem_sz > 0 && elem_align > 0,
-              ("Cannot make an array of %s", TY_name (elem_ty)));
+    FORTTK_ASSERT(elem_sz > 0 && elem_align > 0,
+		  "Cannot make an array of " << TY_name(elem_ty));
     
     ARB_HANDLE arb,arb_first;
     for (UINT i = 0; i < ndim; ++i) {
@@ -2332,8 +2341,8 @@ XAIFTyToWHIRLTy(const char* type)
     ty = MTYPE_To_TY(DefaultMTypeInt);
   } 
   else {
-    // don't know about anything else yet
-    ASSERT_FATAL(false, (DIAG_A_STRING, "Programming error."));
+    // FIXME: don't know about anything else yet
+    FORTTK_DIE(FORTTK_UNIMPLEMENTED << "Unknown XAIF type: " << type);
   }
   return ty;
 }
@@ -2346,13 +2355,18 @@ XAIFTyToWHIRLTy(const char* type)
 MyDGNode*
 GetSuccessor(MyDGNode* node, bool succIsOutEdge)
 {
-  MyDGNode* succ = NULL;
   int numSucc = (succIsOutEdge) ? node->num_outgoing() : node->num_incoming();
-  ASSERT_FATAL(numSucc <= 1, (DIAG_A_STRING, "Programming error."));
-  if ( !(numSucc == 1) ) {
-    return succ;
+  if (numSucc == 0) {
+    return NULL;
+  }
+  else if (numSucc > 1) {
+    DOMElement* elem = node->GetElem();
+    FORTTK_DIE("Cannot find unique successor to graph node; found " << numSucc
+	       << ":\n" << *elem);
   }
   
+  // We know there is one successor
+  MyDGNode* succ = NULL;
   if (succIsOutEdge) {
     DGraph::SinkNodesIterator it = DGraph::SinkNodesIterator(node);
     succ = dynamic_cast<MyDGNode*>((DGraph::Node*)it);
@@ -2386,7 +2400,7 @@ GetSuccessorAlongEdge(MyDGNode* node, unsigned int condition,
     }
   }
   else {
-    ASSERT_FATAL(false, (DIAG_A_STRING, "Transform into a template."));
+    FORTTK_DIE(FORTTK_UNIMPLEMENTED << "Transform into a template.");
   }
   return succ;
 }
@@ -2418,7 +2432,7 @@ CreateCFGraph(const DOMElement* cfgElem)
 
       MyDGNode* gn1 = m[std::string(src.c_str())];  // source
       MyDGNode* gn2 = m[std::string(targ.c_str())]; // target
-      ASSERT_FATAL(gn1 && gn2, (DIAG_A_STRING, "Programming error."));
+      FORTTK_ASSERT(gn1 && gn2, "Invalid edge in CFG:\n" << *elem);
 
       MyDGEdge* ge = new MyDGEdge(gn1, gn2, elem); // src, targ
       g->add(ge);
@@ -2427,8 +2441,9 @@ CreateCFGraph(const DOMElement* cfgElem)
       // Add a vertex to the graph
       const XMLCh* vidX = elem->getAttribute(XAIFStrings.attr_Vid_x());
       XercesStrX vid = XercesStrX(vidX);
-      ASSERT_FATAL(strlen(vid.c_str()) > 0, (DIAG_A_STRING, "Error."));
-      
+      FORTTK_ASSERT(strlen(vid.c_str()) > 0, 
+		    "Invalid vertex in CFG:\n" << *elem);
+
       MyDGNode* gn = new MyDGNode(elem);
       g->add(gn);
       m[std::string(vid.c_str())] = gn;

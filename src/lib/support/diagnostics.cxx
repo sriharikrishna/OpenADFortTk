@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.cxx,v 1.6 2004/03/04 16:58:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.cxx,v 1.7 2004/07/30 17:50:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -82,7 +82,7 @@
 
 //***************************************************************************
 
-int DBG_LVL_PUB = 0;
+int FORTTK_DBG_LVL_PUB = 0;
 
 static char        Diag_Phase_Name[80] = "";
 static FILE       *Diag_File = NULL;
@@ -93,6 +93,33 @@ static int         Diag_Line_Location = 0;
 
 static const char *Diag_Msg[DIAG_LAST+1];
 
+
+void 
+FortTk_SetDiagnosticFilterLevel(int lvl)
+{
+  FORTTK_DBG_LVL_PUB = lvl;
+}
+
+int
+FortTk_GetDiagnosticFilterLevel()
+{
+  return FORTTK_DBG_LVL_PUB;
+}
+
+void 
+FortTk_TheMostVisitedBreakpointInHistory(const char* filenm, 
+					 unsigned int lineno)
+{
+  char a = (filenm) ? filenm[0] : 0;
+}
+
+
+const char* FORTTK_UNIMPLEMENTED = 
+  "Unimplemented feature: ";
+const char* FORTTK_UNEXPECTED_INPUT = 
+  "Unexpected input: ";
+const char* FORTTK_UNEXPECTED_OPR = 
+  "Unexpected operator: ";
 
 void
 Diag_Init(void)

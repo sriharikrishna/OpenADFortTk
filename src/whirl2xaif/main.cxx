@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.21 2004/04/20 13:18:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.22 2004/07/30 17:51:44 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -75,6 +75,7 @@ using std::cout;
 #include "whirl2xaif.h"
 
 #include <lib/support/xmlostream.h>
+#include <lib/support/Exception.h>
 #include <lib/support/WhirlIO.h>
 
 //************************** Forward Declarations ***************************
@@ -157,7 +158,7 @@ real_main(int argc, char **argv)
   
   Args args(argc, argv);
   std::ostream* os = InitOutputStream(args);
-  DBG_LVL_PUB = args.debug;
+  FortTk_SetDiagnosticFilterLevel(args.debug);
   
   // -------------------------------------------------------
   // 3. Read WHIRL IR

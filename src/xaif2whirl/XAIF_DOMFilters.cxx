@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.16 2004/04/13 16:39:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.17 2004/07/30 17:52:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -49,25 +49,47 @@ using std::endl;
 //****************************************************************************
 
 static void 
-XercesDumpNode(const DOMNode* n, int iter);
+XercesPrintNode(std::ostream& os, const DOMNode* n, int iter);
 
 static void 
-XercesDumpTree(const DOMNode* n, int ilevel);
+XercesPrintTree(std::ostream& os, const DOMNode* n, int ilevel);
+
+
+void 
+XercesPrintNode(std::ostream& os, const DOMNode* n)
+{
+  // Iteration count starts at 0
+  XercesPrintNode(os, n, 0);
+}
+
+
+void 
+XercesPrintTree(std::ostream& os, const DOMNode* n)
+{
+  // Indentation level starts at 0
+  XercesPrintTree(os, n, 0);
+}
+
+
+std::ostream& 
+operator<<(std::ostream& os, const DOMElement& elem)
+{ 
+  XercesPrintNode(os, &elem);
+  return os;
+}
 
 
 void 
 XercesDumpNode(const DOMNode* n)
 {
-  // Iteration count starts at 0
-  XercesDumpNode(n, 0);
+  XercesPrintNode(std::cout, n);
 }
 
 
 void 
 XercesDumpTree(const DOMNode* n)
 {
-  // Indentation level starts at 0
-  XercesDumpTree(n, 0);
+  XercesPrintTree(std::cout, n);
 }
 
 
@@ -86,23 +108,23 @@ XercesDumpTree(void* n) // For *(#% debuggers
 
 
 static void 
-XercesDumpNode(const DOMNode* n, int iter)
+XercesPrintNode(std::ostream& os, const DOMNode* n, int iter)
 {
   if (!n) { return; }
 
   // Depending on iteration, start or continue the line
   const char* prefix = (iter == 0) ? "<" : " ";
-  std::cout << prefix;
+  os << prefix;
 
   // Depending on node type, print different things
   if (n->getNodeType() == DOMNode::ATTRIBUTE_NODE) {
     const DOMAttr* attr = dynamic_cast<const DOMAttr*>(n);
     const XMLCh* nm = attr->getName();
     const XMLCh* val = attr->getValue();
-    std::cout << XercesStrX(nm) << "='" << XercesStrX(val) << "'";
+    os << XercesStrX(nm) << "='" << XercesStrX(val) << "'";
   } else {
     const XMLCh* nm = n->getNodeName();
-    std::cout << XercesStrX(nm);
+    os << XercesStrX(nm);
   }
 
   // Recur on certain nodes
@@ -110,25 +132,25 @@ XercesDumpNode(const DOMNode* n, int iter)
   if (attrs) {
     for (XMLSize_t i = 0; i < attrs->getLength(); ++i) {
       DOMNode* attr = attrs->item(i);
-      XercesDumpNode(attr, iter + 1);
+      XercesPrintNode(os, attr, iter + 1);
     }
   }
 
   // End the line, if necessary
   if (iter == 0) { 
-    std::cout << ">" << endl;
+    os << ">" << endl;
   }
 }
 
 
 static void 
-XercesDumpTree(const DOMNode* n, int ilevel)
+XercesPrintTree(std::ostream& os, const DOMNode* n, int ilevel)
 {
   if (!n) { return; }
 
   // Dump the current node with indentation
-  for (int i = ilevel; i > 0; --i) { std::cout << "  "; }
-  XercesDumpNode(n);
+  for (int i = ilevel; i > 0; --i) { os << "  "; }
+  XercesPrintNode(os, n);
 
   // Dump all children at the next indentation level
   DOMNodeList* children = n->getChildNodes();
@@ -136,7 +158,7 @@ XercesDumpTree(const DOMNode* n, int ilevel)
     for (XMLSize_t i = 0; i < children->getLength(); ++i) {
       DOMNode* child = children->item(i);
       if (child->getNodeType() == DOMNode::ELEMENT_NODE) { 
-	XercesDumpTree(child, ilevel + 1);
+	XercesPrintTree(os, child, ilevel + 1);
       }
     }
   }

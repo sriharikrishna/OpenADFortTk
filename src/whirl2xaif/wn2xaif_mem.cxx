@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.31 2004/07/28 19:04:25 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.32 2004/07/30 17:51:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -303,10 +303,8 @@ WN2F_Is_Address_Preg(WN * ad ,TY_IDX ptr_ty)
 whirl2xaif::status 
 whirl2xaif::xlate_LDA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_LDA, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_LDA"));
-  ASSERT_DBG_FATAL(ST_class(WN_st(wn)) != CLASS_PREG, 
-		   (DIAG_W2F_CANNOT_LDA_PREG));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_LDA, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(ST_class(WN_st(wn)) != CLASS_PREG, "Cannot LDA a PREG");
   
   // Base and referenced (some offset, possibly 0, from base) objects
   ST* base_st = WN_st(wn); // symbol for base object
@@ -332,8 +330,7 @@ whirl2xaif::xlate_LDA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_LDID(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_LDID, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_LDID"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_LDID, FORTTK_UNEXPECTED_INPUT);
 
   // Base and referenced (some offset, possibly 0, from base) objects
   TY_IDX base_ty = WN_GetBaseObjType(wn);
@@ -406,8 +403,7 @@ whirl2xaif::status
 whirl2xaif::xlate_ILOAD(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // Note that we handle this just like we do the lhs of an ISTORE.
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ILOAD, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_ILOAD"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_ILOAD, FORTTK_UNEXPECTED_INPUT);
 
   // Base and referenced (some offset, possibly 0, from base) objects
   WN* baseptr = WN_kid0(wn); // address expression as WN
@@ -430,7 +426,7 @@ whirl2xaif::xlate_ILOAD(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_ILOADX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_WARN(FALSE, (DIAG_UNIMPLEMENTED, "xlate_ILOADX"));
+  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
   xos << OPCODE_name(WN_opcode(wn));
   return whirl2xaif::good;
 }
@@ -441,8 +437,8 @@ whirl2xaif::WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // This should only appear the as the rhs of an ISTORE.  Treat
   // it just like an ILOAD.
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_MLOAD, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_mload"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_MLOAD, FORTTK_UNEXPECTED_INPUT);
+
   // FIXME:
     
   /* Get the type of the base from which we are loading */
@@ -468,8 +464,7 @@ whirl2xaif::WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_STID, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_STID"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_STID, FORTTK_UNEXPECTED_INPUT);
 
   // LHS base and referenced (some offset, possibly 0, from base) objects
   ST* base_st = WN_st(wn); // symbol for base object
@@ -480,7 +475,7 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // Assignment
   if (!ctxt.IsAssign()) {
     xos << BegElem(XAIFStrings.elem_Assign())
-	<< Attr("statement_id", ctxt.GetNewVId());
+	<< Attr("statement_id", ctxt.FindWNId(wn));
   }
   
   // LHS of assignment
@@ -521,8 +516,7 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ISTORE, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_ISTORE"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_ISTORE, FORTTK_UNEXPECTED_INPUT);
 
   // LHS base and referenced (some offset, possibly 0, from base) objects
   WN* baseptr = WN_kid1(wn); // address expression as WN
@@ -533,7 +527,7 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   // Assignment
   if (!ctxt.IsAssign()) {
     xos << BegElem(XAIFStrings.elem_Assign()) 
-	<< Attr("statement_id", ctxt.GetNewVId());
+	<< Attr("statement_id", ctxt.FindWNId(wn));
   }
   
   // LHS of assignment (dereference address)
@@ -569,7 +563,7 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 whirl2xaif::status 
 whirl2xaif::xlate_ISTOREX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_WARN(FALSE, (DIAG_UNIMPLEMENTED, "xlate_ISTOREX"));
+  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
   xos << std::endl << OPCODE_name(WN_opcode(wn));
   return whirl2xaif::good;
 }
@@ -585,11 +579,10 @@ whirl2xaif::WN2F_mstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    * and we cannot easily get around this like we do in C (i.e.
    * with cast expressions. (FIXME)
    */
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_MSTORE, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_mstore"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_MSTORE, FORTTK_UNEXPECTED_INPUT);
 #if 0
-  ASSERT_DBG_WARN(WN_operator(WN_kid0(wn)) == OPR_MLOAD,
-		  (DIAG_W2F_UNEXPECTED_OPC, "rhs of WN2F_mstore"));
+  FORTTK_ASSERT_WARN(WN_operator(WN_kid0(wn)) == OPR_MLOAD,
+		     FORTTK_UNEXPECTED_OPR << "rhs of WN2F_mstore");
   
   //TODO: scalar expression allowed, but array/structure assignment assumed
   // with constant ie: should put out doloop?... call OFFSET_Memref?
@@ -602,10 +595,11 @@ whirl2xaif::WN2F_mstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   /* Get the lhs of the assignment (dereference address) */
   xos << std::endl; 
-  xlate_MemRef(xos, WN_kid1(wn), /* base-symbol */
-		     base_ty, /* base-type */ 
-		     TY_pointed(WN_ty(wn)), /* object-type */
-		     WN_store_offset(wn),   /* object-ofst */ ctxt);
+  xlate_MemRef(xos, WN_kid1(wn),      /* base-symbol */
+	       base_ty,               /* base-type */ 
+	       TY_pointed(WN_ty(wn)), /* object-type */
+	       WN_store_offset(wn),   /* object-ofst */ 
+	       ctxt);
   
    // Assign the rhs to the lhs.
   xos << "mstore=" << std::endl;
@@ -620,76 +614,74 @@ whirl2xaif::WN2F_mstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 whirl2xaif::status
 whirl2xaif::WN2F_pstid(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PSTID,
-                    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_pstid"));
-
-   /* Get the lhs of the assignment */
-   xos << std::endl;
-   if (ST_class(WN_st(wn)) == CLASS_PREG) {
-     xlate_PregRef(xos, WN_st(wn), ST_type(WN_st(wn)), WN_store_offset(wn), 
-		   ctxt);
-   } 
-   else {
-     xlate_SymRef(xos,
-		  WN_st(wn),                        /* base-symbol */
-		  Stab_Pointer_To(ST_type(WN_st(wn))),/* base-type */
-		  WN_ty(wn),                        /* object-type */
-		  WN_store_offset(wn),              /* object-ofst */
+  FORTTK_ASSERT(WN_operator(wn) == OPR_PSTID, FORTTK_UNEXPECTED_INPUT);
+  
+  /* Get the lhs of the assignment */
+  xos << std::endl;
+  if (ST_class(WN_st(wn)) == CLASS_PREG) {
+    xlate_PregRef(xos, WN_st(wn), ST_type(WN_st(wn)), WN_store_offset(wn), 
 		  ctxt);
-   }
-   
-   // Assign the rhs to the lhs.
-   xos << "pstid=>";
-
-   /* The rhs */
-   if (TY_is_logical(Ty_Table[WN_ty(wn)])) {
-     set_XlationContext_has_logical_arg(ctxt);
-     TranslateWN(xos, WN_kid0(wn), ctxt);
-     reset_XlationContext_has_logical_arg(ctxt);
-   } else
-     TranslateWN(xos, WN_kid0(wn), ctxt);
-
-   return whirl2xaif::good;
+  } 
+  else {
+    xlate_SymRef(xos, WN_st(wn),                      /* base-symbol */
+		 Stab_Pointer_To(ST_type(WN_st(wn))), /* base-type */
+		 WN_ty(wn),                           /* object-type */
+		 WN_store_offset(wn),                 /* object-ofst */
+		 ctxt);
+  }
+  
+  // Assign the rhs to the lhs.
+  xos << "pstid=>";
+  
+  /* The rhs */
+  if (TY_is_logical(Ty_Table[WN_ty(wn)])) {
+    set_XlationContext_has_logical_arg(ctxt);
+    TranslateWN(xos, WN_kid0(wn), ctxt);
+    reset_XlationContext_has_logical_arg(ctxt);
+  } else
+    TranslateWN(xos, WN_kid0(wn), ctxt);
+  
+  return whirl2xaif::good;
 } /* WN2F_pstid */
 
 
 whirl2xaif::status
 whirl2xaif::WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   TY_IDX        base_ty;
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PSTORE,
-                    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_pstore"));
-
-   /* Get the base address into which we are storing a value */
-   base_ty = WN_Tree_Type(WN_kid1(wn));
-   if (!TY_Is_Pointer(base_ty))
-      base_ty = WN_ty(wn);
-
-   /* Get the lhs of the assignment (dereference address) */
-   xos << std::endl;
-   set_XlationContext_has_no_arr_elmt(ctxt);
-   
-   xlate_MemRef(xos,
-		      WN_kid1(wn),           /* base-symbol */
-		      base_ty,               /* base-type */
-		      TY_pointed(WN_ty(wn)), /* object-type */
-		      WN_store_offset(wn),   /* object-ofst */
-		      ctxt);
-   reset_XlationContext_has_no_arr_elmt(ctxt);
-
-   // Assign the rhs to the lhs.
-   xos << "pstore=>";
-
-   /* The rhs */
-   if (TY_is_logical(Ty_Table[TY_pointed(WN_ty(wn))])) {
-     set_XlationContext_has_logical_arg(ctxt);
-     TranslateWN(xos, WN_kid0(wn), ctxt);
-     reset_XlationContext_has_logical_arg(ctxt);
-   } else {
-     TranslateWN(xos, WN_kid0(wn), ctxt);
-   }
-   
-   return whirl2xaif::good;
+  TY_IDX        base_ty;
+  FORTTK_ASSERT(WN_operator(wn) == OPR_PSTORE, FORTTK_UNEXPECTED_INPUT);
+  
+  /* Get the base address into which we are storing a value */
+  base_ty = WN_Tree_Type(WN_kid1(wn));
+  if (!TY_Is_Pointer(base_ty))
+    base_ty = WN_ty(wn);
+  
+  /* Get the lhs of the assignment (dereference address) */
+  xos << std::endl;
+  set_XlationContext_has_no_arr_elmt(ctxt);
+  
+  xlate_MemRef(xos,
+	       WN_kid1(wn),           /* base-symbol */
+	       base_ty,               /* base-type */
+	       TY_pointed(WN_ty(wn)), /* object-type */
+	       WN_store_offset(wn),   /* object-ofst */
+	       ctxt);
+  reset_XlationContext_has_no_arr_elmt(ctxt);
+  
+  // Assign the rhs to the lhs.
+  xos << "pstore=>";
+  
+  /* The rhs */
+  if (TY_is_logical(Ty_Table[TY_pointed(WN_ty(wn))])) {
+    set_XlationContext_has_logical_arg(ctxt);
+    TranslateWN(xos, WN_kid0(wn), ctxt);
+    reset_XlationContext_has_logical_arg(ctxt);
+  } 
+  else {
+    TranslateWN(xos, WN_kid0(wn), ctxt);
+  }
+  
+  return whirl2xaif::good;
 } /* WN2F_pstore */
 
 //***************************************************************************
@@ -702,20 +694,16 @@ whirl2xaif::xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   /* Note that array indices have been normalized to assume the
    * array is based at index zero.  Since a base at index 1 is
    * the default for Fortran, we denormalize to base 1 here. */
+  FORTTK_ASSERT(WN_operator(wn) == OPR_ARRAY, FORTTK_UNEXPECTED_INPUT);
+
   BOOL deref = ctxt.IsDerefAddr();
-  
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ARRAY, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_ARRAY"));
   
   // Only allow taking the address of an array element for F90!
 #if 0
-  ASSERT_DBG_WARN(deref, (DIAG_UNIMPLEMENTED, 
-			  "taking the address of an array element"));
+  FORTK_ASSERT_WARN(deref, "taking the address of an array element");
 #endif
 
   bool newContext = false; // FIXME: abstract (symref, memref)
-  // Change alias to du_ud MWF
-  // ----------------------------
   if (!ctxt.IsVarRef()) {
     xos << BegElem(XAIFStrings.elem_VarRef())
 	<< Attr("vertex_id", ctxt.GetNewVId())
@@ -985,25 +973,18 @@ whirl2xaif::WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     * array is based at index zero.  Since a base at index 1 is
     * the default for Fortran, we denormalize to base 1 here.
     */
+   FORTTK_ASSERT(WN_operator(wn) == OPR_ARRSECTION, FORTTK_UNEXPECTED_INPUT);
+
    BOOL  deref = ctxt.IsDerefAddr();
    WN    * kid;
    TY_IDX ptr_ty;
    TY_IDX array_ty;
 
-
-   // FIXME: this was ARRAY not ARRSECTION
-   //ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ARRAY,
-   //                 (DIAG_W2F_UNEXPECTED_OPC, "xlate_ARRAY"));
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ARRSECTION,
-                    (DIAG_W2F_UNEXPECTED_OPC, "xlate_ARRSECTION"));
-
-
    /* Only allow taking the address of an array element for F90!
     *
     */
 #if 0
-   ASSERT_DBG_WARN(deref, (DIAG_UNIMPLEMENTED,
-			   "taking the address of an array element"));
+   FORTTK_ASSERT_WARN(deref, "taking the address of an array element");
 #endif
 
    /* Get the array or, for ptr-as-array types, the element type */
@@ -1215,7 +1196,8 @@ xlate_ArrayIndices(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 }
 
 void
-WN2F_array_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,XlationContext& ctxt)
+WN2F_array_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,
+		  XlationContext& ctxt)
 {
   // FIXME: referenced in ty2xaif.cxx
 
@@ -1223,19 +1205,19 @@ WN2F_array_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,XlationContext& ctx
     array_ty = TY_pointed(array_ty); //Sept
   
   // (TY_Is_Array(array_ty) && TY_AR_ndims(array_ty) >= WN_num_dim(wn)) 
-  ASSERT_DBG_WARN((TY_AR_ndims(array_ty) == WN_num_dim(wn)),
-		  (DIAG_UNIMPLEMENTED, "array dimension mismatch"));
-  ASSERT_DBG_WARN((TY_size(TY_AR_etype(array_ty)) == WN_element_size(wn)) 
-		  || WN_element_size(wn) < 0 
-		  || TY_size(TY_AR_etype(array_ty)) == 0,
-		  (DIAG_UNIMPLEMENTED, 
-		   "access/declaration mismatch in array element size"));
+  FORTTK_ASSERT_WARN((TY_AR_ndims(array_ty) == WN_num_dim(wn)),
+		     "array dimension mismatch");
+  FORTTK_ASSERT_WARN((TY_size(TY_AR_etype(array_ty)) == WN_element_size(wn)) 
+		     || WN_element_size(wn) < 0 
+		     || TY_size(TY_AR_etype(array_ty)) == 0,
+		     "access/declaration mismatch in array element size");
   
   xlate_ArrayIndices(xos, wn, ctxt);
 }
 
 void
-WN2F_arrsection_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,XlationContext& ctxt)
+WN2F_arrsection_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,
+		       XlationContext& ctxt)
 {
   /* This prints the array subscript expression. It was part of
    * xlate_ARRAY, but was split so it could be used for bounds
@@ -1248,19 +1230,17 @@ WN2F_arrsection_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,XlationContext
     /* Cannot currently handle differing element sizes at place of
      * array declaration versus place of array access (TODO?). */
     
-    ASSERT_DBG_WARN((TY_size(TY_AR_etype(array_ty)) == WN_element_size(wn)) ||
-		    WN_element_size(wn) < 0 ||
-		    TY_size(TY_AR_etype(array_ty)) == 0,
-		    (DIAG_UNIMPLEMENTED,
-		     "access/declaration mismatch in array element size"));
+    FORTTK_ASSERT_WARN((TY_size(TY_AR_etype(array_ty)) == WN_element_size(wn))
+		       || WN_element_size(wn) < 0 
+		       || TY_size(TY_AR_etype(array_ty)) == 0,
+		       "access/declaration mismatch in array element size");
     
     WN2F_Arrsection_Slots(xos,wn,ctxt,TRUE);
     
   } else { /* Normalize array access to assume a single dimension */
-    Is_True(FALSE, (""));
-    ASSERT_DBG_WARN(!TY_Is_Array(array_ty) || TY_AR_ndims(array_ty) == 1,
-		    (DIAG_UNIMPLEMENTED,
-		     "access/declaration mismatch in array dimensions"));
+    FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+    FORTTK_ASSERT_WARN(!TY_Is_Array(array_ty) || TY_AR_ndims(array_ty) == 1,
+		       "access/declaration mismatch in array dimensions");
     //FIXME: WN2F_Normalize_Idx_To_Onedim(xos, wn, ctxt);
   }
   
@@ -1374,10 +1354,9 @@ WN2F_String_Argument(xml::ostream& xos, WN* base_parm, WN* length,
       /* with optimization, may not have useful address TY 
        * when TreeType will return array of U1 from SubstringInfo */
       
-      ASSERT_DBG_WARN(TY_Is_Character_String(str_ty) 
-		      || TY_Is_Array_Of_UChars(str_ty),
-		      (DIAG_W2F_EXPECTED_PTR_TO_CHARACTER,
-		       "WN2F_String_Argument"));
+      FORTTK_ASSERT(TY_Is_Character_String(str_ty) 
+		    || TY_Is_Array_Of_UChars(str_ty),
+		    "Unexpected conversion from pointer to character string");
 
       /* Get the string base and substring notation for the argument.  */
       ctxt.SetDerefAddr();

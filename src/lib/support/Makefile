@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.13 2004/06/01 22:21:26 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.14 2004/07/30 17:50:30 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -23,7 +23,7 @@ endif
 # Site/machine/architecture independent configuration 
 #############################################################################
 
-.SUFFIXES: .cxx .h .d .cpp
+.SUFFIXES: .cxx .cpp .h .hpp .d
 
 LIBRARY = $(OPENADFORTTK_OBJ_PATH)/$(LIB_SUPPORT)
 
@@ -47,8 +47,9 @@ OBJS = \
 	CmdLineParser.o \
 	XAIFStrings.o \
 	\
+	Exception.o \
 	XlationCtxt.o \
-	diagnostics.o
+	diagnostics.o 
 
 
 ####################
@@ -79,10 +80,13 @@ clean:
 %.o : %.cxx
 	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $< -o $@
 
+%.o : %.cpp
+	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $< -o $@
+
 %.o : %.c
 	$(CC) -c $(CFLAGS) $(IFLAGS) $< -o $@
 
-%.cpp : %.cxx
+%.cxx.pp : %.cxx
 	$(CXX) -E $(CXXFLAGS) $(IFLAGS) $< > $@
 
 %.d: %.cxx

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.12 2004/07/01 18:32:13 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.13 2004/07/30 17:50:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -377,7 +377,7 @@ WN_Tree_Type(const WN* wn)
       break;
       
     default:
-      ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
+      FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
     } /* switch */
   }
    
@@ -388,8 +388,8 @@ WN_Tree_Type(const WN* wn)
 TY_IDX 
 Get_Field_Type(TY_IDX base, int field_id) 
 {
-  ASSERT_FATAL(TY_Is_Structured(base), 
-	       (DIAG_A_STRING, "GET_FIELD_TYPE: non struct type"));
+  FORTTK_ASSERT(TY_Is_Structured(base), 
+		FORTTK_UNEXPECTED_INPUT << "non structured type");
   
   UINT cur_fld_id = 0;
   FLD_HANDLE fh = FLD_get_to_field(base, field_id, cur_fld_id);
@@ -435,7 +435,7 @@ WN_GetRefObjType(const WN* wn)
     
     default: 
       // NOTE: MLOAD, MSTORE are not supported
-      ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
+      FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
       break;
   }
   return ty;
@@ -486,14 +486,14 @@ WN_GetBaseObjType(const WN* wn)
       WN* baseptr = WN_kid1(wn); // address expression as WN
       TY_IDX baseptr_ty = WN_ty(wn); // == WN_Tree_Type(baseptr)
       ty = TY_pointed(baseptr_ty); 
-      ASSERT_DBG_FATAL((baseptr_ty == WN_Tree_Type(baseptr)),
-		       (DIAG_A_STRING, "Programming Error."));
+      FORTTK_ASSERT((baseptr_ty == WN_Tree_Type(baseptr)),
+		    "Internal error: base pointer types are inconsistent");
       break;
     }
     
     default: 
       // NOTE: MLOAD, MSTORE are not supported
-      ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
+      FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
       break;
   }
   return ty;
@@ -515,7 +515,7 @@ WN_Call_Type(const WN* wn)
     return ST_type(WN_st(wn));
   case OPR_INTRINSIC_CALL:
   default:
-    ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
+    FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
     return 0;
   }
 }
@@ -594,8 +594,8 @@ WN_intrinsic_return_ty(const WN* call)
   TY_IDX ret_ty = 0;
   
   OPERATOR opr = WN_operator(call);
-  ASSERT_FATAL(opr == OPR_INTRINSIC_CALL || opr == OPR_INTRINSIC_OP,
-	       (DIAG_A_STRING, "Programming Error!"));
+  FORTTK_ASSERT(opr == OPR_INTRINSIC_CALL || opr == OPR_INTRINSIC_OP,
+		FORTTK_UNEXPECTED_INPUT << OPERATOR_name(opr));
   
   INTRINSIC intr_opc = (INTRINSIC)WN_intrinsic(call);
   switch (INTRN_return_kind(intr_opc)) {
@@ -663,7 +663,7 @@ WN_intrinsic_return_ty(const WN* call)
     ret_ty = Stab_Mtype_To_Ty(MTYPE_M);
     break;
   default:
-    ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
+    FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
     ret_ty = Stab_Mtype_To_Ty(MTYPE_V);
     break;
   }

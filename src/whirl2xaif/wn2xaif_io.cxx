@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.23 2004/07/15 18:29:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.24 2004/07/30 17:51:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -236,11 +236,10 @@ Is_Cray_IO(IOSTATEMENT ios)
 whirl2xaif::status 
 whirl2xaif::xlate_IO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_IO, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_IO"));
+  FORTTK_ASSERT(WN_operator(wn) == OPR_IO, FORTTK_UNEXPECTED_INPUT);
 
-  static UINT32 unique_label = 99999U; 
-
+  static UINT32 unique_label = 99999U;
+  
   // Initialize table on demand for now
   if (!HandlerTableInitialized) { // FIXME
     WN2F_Io_initialize();
@@ -265,8 +264,8 @@ whirl2xaif::xlate_IO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   //set_XlationContext_no_newline(ctxt);
   
   const IOSTATEMENT ios = WN_IOSTMT(wn);
-  ASSERT_FATAL(XlateWNio_HandlerTable[ios] != NULL,
-	       (DIAG_W2F_UNEXPECTED_OPC, get_iostatement_name(ios)));
+  FORTTK_ASSERT(XlateWNio_HandlerTable[ios] != NULL,
+		FORTTK_UNEXPECTED_OPR << get_iostatement_name(ios));
   
   if (Is_Cray_IO(ios)) 
     set_XlationContext_cray_io(ctxt);
@@ -301,11 +300,10 @@ whirl2xaif::xlate_IO_ITEM(xml::ostream& xos, WN* item, XlationContext& ctxt)
     emitted = xlate_IO_ITEM_control(xos, item, ctxt);
   else if (IS_IO_ITEM_IOL(item))
     emitted = xlate_IO_ITEM_list(xos, item, ctxt);
-  else
-    ASSERT_DBG_WARN(FALSE, (DIAG_W2F_UNEXPECTED_IOL, 
-			    (IOITEM_name(WN_IOITEM(item)) != NULL? 
-			     IOITEM_name(WN_IOITEM(item)):"unknown_name"), 
-			    "xlate_IO_ITEM"));
+  else 
+    FORTTK_DIE(FORTTK_UNEXPECTED_OPR 
+	       << (IOITEM_name(WN_IOITEM(item)) != NULL ? 
+		   IOITEM_name(WN_IOITEM(item)) : "unknown_name")); 
   
   return emitted;
 } /* xlate_IO_ITEM */
@@ -372,8 +370,7 @@ xlate_IO_ITEM_unit(xml::ostream& xos, WN *item, XlationContext& ctxt)
     break;
     
   default:
-    ASSERT_DBG_WARN(FALSE, (DIAG_W2F_UNEXPECTED_IOU,
-			    IOITEM_name(WN_IOITEM(item)), "xlate_IO_ITEM_unit"));
+    FORTTK_DIE(FORTTK_UNEXPECTED_OPR << IOITEM_name(WN_IOITEM(item)));
     xos << BegComment << "unit=" << IOITEM_name(WN_IOITEM(item)) 
 	<< EndComment;
     break;
@@ -402,9 +399,8 @@ xlate_IO_ITEM_format(xml::ostream& xos, WN* item, XlationContext& ctxt)
       * into IOF_CHAR_EXPR items.  Should we for any reason start regenerating
       * these, this is the place where it should occur.
       */
-     ASSERT_DBG_WARN(FALSE, 
-		     (DIAG_W2F_UNEXPECTED_IOF, IOITEM_name(WN_IOITEM(item)),
-		      "xlate_IO_ITEM_format"));
+     FORTTK_ASSERT_WARN(FALSE, 
+			FORTTK_UNEXPECTED_OPR << IOITEM_name(WN_IOITEM(item)));
      xos << BegComment << "fmt=" << IOITEM_name(WN_IOITEM(item)) << EndComment;
 #if 0
      TranslateWN(xos, WN_kid0(item), ctxt);
@@ -460,9 +456,7 @@ xlate_IO_ITEM_format(xml::ostream& xos, WN* item, XlationContext& ctxt)
 	break;
       }
    default:
-      ASSERT_DBG_WARN(FALSE, 
-		      (DIAG_W2F_UNEXPECTED_IOF, IOITEM_name(WN_IOITEM(item)),
-		       "xlate_IO_ITEM_format"));
+     FORTTK_DIE(FORTTK_UNEXPECTED_OPR << IOITEM_name(WN_IOITEM(item)));
       xos << BegComment << "fmt=" << IOITEM_name(WN_IOITEM(item)) 
 	  << EndComment;
       break;
@@ -481,8 +475,7 @@ xlate_IO_ITEM_control(xml::ostream& xos, WN* item, XlationContext& ctxt)
   switch (item_kind) {
   case IOC_KEY:
     /* TODO: associate this with IOC_KEY */
-    ASSERT_WARN(FALSE, (DIAG_UNIMPLEMENTED, 
-			StrCat("IOC", IOITEM_name(item_kind))));
+    FORTTK_DEVMSG(0, FORTTK_UNIMPLEMENTED << "IOC" << IOITEM_name(item_kind));
     xos << BegComment << "ctr=" << IOITEM_name(item_kind) << "=<???>"
 	<< EndComment;
     break;
@@ -492,8 +485,7 @@ xlate_IO_ITEM_control(xml::ostream& xos, WN* item, XlationContext& ctxt)
   case IOC_KEY_CHARACTER:
   case IOC_KEY_INTEGER: 
   case IOC_NML: /* TODO: remove from IOC enumeration! It is redundant */
-    ASSERT_WARN(FALSE, (DIAG_UNIMPLEMENTED, 
-			StrCat("IOC", IOITEM_name(item_kind))));
+    FORTTK_DEVMSG(0, FORTTK_UNIMPLEMENTED << "IOC" << IOITEM_name(item_kind));
     xos << BegComment << "ctr=" << IOITEM_name(item_kind) << EndComment;
     break;
     
@@ -501,9 +493,8 @@ xlate_IO_ITEM_control(xml::ostream& xos, WN* item, XlationContext& ctxt)
   case IOC_NAMED:
   case IOC_OPENED:
     /* LOGICAL argument */
-    ASSERT_FATAL(WN_kid_count(item) >= 1,
-		 (DIAG_W2F_UNEXPECTED_NUM_KIDS, 
-		  WN_kid_count(item), 1, "xlate_IO_ITEM_control"));
+    FORTTK_ASSERT(WN_kid_count(item) >= 1,
+		  "Unexpected kid count " << WN_kid_count(item));
     xos << IOITEM_name(item_kind) << "***=";
     set_XlationContext_has_logical_arg(ctxt);
     if (TY_kind(WN_Tree_Type(WN_kid0(item))) != KIND_SCALAR)
@@ -528,10 +519,9 @@ xlate_IO_ITEM_control(xml::ostream& xos, WN* item, XlationContext& ctxt)
      * LDA of a string-constant (ST of class CONST).  Note that
      * a string-constant always is '\0' terminated.
      */
-    ASSERT_DBG_WARN((WN_operator(WN_kid0(item)) == OPR_LDA &&
-		     ST_class(WN_st(WN_kid0(item))) == CLASS_CONST),
-		    (DIAG_W2F_UNEXPECTED_IOC,
-		     IOITEM_name(WN_IOITEM(item)), "xlate_IO_ITEM_control"));
+    FORTTK_ASSERT_WARN((WN_operator(WN_kid0(item)) == OPR_LDA &&
+			ST_class(WN_st(WN_kid0(item))) == CLASS_CONST),
+		       FORTTK_UNEXPECTED_OPR << IOITEM_name(WN_IOITEM(item)));
     //reset_XlationContext_no_newline(ctxt);
     xos << "FORMAT " << Num2Str(Origfmt_Ioctrl_Label, "%lld")
 	<< Targ_String_Address(STC_val(WN_st(WN_kid0(item))));
@@ -541,8 +531,8 @@ xlate_IO_ITEM_control(xml::ostream& xos, WN* item, XlationContext& ctxt)
   case IOC_EOR:
   case IOC_END:
     xos << IOITEM_name(item_kind);
-    ASSERT_DBG_WARN((WN_operator(WN_kid0(item)) == OPR_GOTO),
-		    (DIAG_W2F_UNEXPECTED_OPC,WN_operator(item),"ERR/END/EOR="));
+    FORTTK_ASSERT_WARN((WN_operator(WN_kid0(item)) == OPR_GOTO),
+		       FORTTK_UNEXPECTED_OPR << WN_operator(item));
     xos << WN_label_number(WN_kid0(item));
     break;
     
@@ -647,9 +637,7 @@ xlate_IO_ITEM_list(xml::ostream& xos, WN *item, XlationContext& ctxt)
   break;
   
   default:
-    ASSERT_DBG_WARN(FALSE, 
-		    (DIAG_W2F_UNEXPECTED_IOL,
-		     IOITEM_name(WN_IOITEM(item)), "xlate_IO_ITEM_list"));
+    FORTTK_DIE(FORTTK_UNEXPECTED_OPR << IOITEM_name(WN_IOITEM(item)));
     xos << IOITEM_name(WN_IOITEM(item));
     break;
   } /* switch */
@@ -669,10 +657,9 @@ WN2F_ios_backspace(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    * use the explicit UNIT keyword, unless there is exactly one kid an
    * it is an IOU.
    */
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_BACKSPACE 
-	      || WN_IOSTMT(wn) == IOS_CR_BACKSPACE, 
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_backspace"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_BACKSPACE 
+		|| WN_IOSTMT(wn) == IOS_CR_BACKSPACE, 
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
   
   xos << "BACKSPACE";
   if (WN_kid_count(wn) == 1 && IS_IO_ITEM_IOU(WN_kid0(wn)))
@@ -691,13 +678,13 @@ WN2F_ios_close(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    /* The kids should be an IOU, followed a sequence of IOCs.  Always
     * use the explicit UNIT keyword.
     */
-   ASSERT_WARN(WN_IOSTMT(wn) == IOS_CLOSE || WN_IOSTMT(wn) == IOS_CR_CLOSE, 
-	       (DIAG_W2F_UNEXPECTED_IOS, 
-		IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_close"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_CLOSE||WN_IOSTMT(wn) == IOS_CR_CLOSE,
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
 
+   WNId stmtid = ctxt.FindWNId(wn);
    xos << BegElem(XAIFStrings.elem_Marker())
-       << Attr("statement_id", ctxt.GetNewVId())
-       << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+       << Attr("statement_id", stmtid)
+       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
        << " [CLOSE***]" << EndAttr
        << EndElem;
 
@@ -716,15 +703,13 @@ WN2F_ios_definefile(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    /* The kids should be an IOU, followed a sequence of IOCs.  Always
     * use the explicit UNIT keyword.
     */
-   ASSERT_FATAL(WN_io_statement(wn) == IOS_DEFINEFILE   &&
+  FORTTK_ASSERT(WN_io_statement(wn) == IOS_DEFINEFILE   &&
 		WN_kid_count(wn) == 5                   &&
 		WN_io_item(WN_kid(wn, 1)) == IOC_MAXREC &&
 		WN_io_item(WN_kid(wn, 2)) == IOC_RECL   &&
 		WN_io_item(WN_kid(wn, 3)) == IOC_U      &&
 		WN_io_item(WN_kid(wn, 4)) == IOC_ASSOCIATEVARIABLE,
-		(DIAG_W2F_UNEXPECTED_IOS, 
-		 IOSTATEMENT_name(WN_IOSTMT(wn)), 
-		 "WN2F_ios_definefile"));
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
 
    xos << "DEFINE FILE";
 
@@ -760,9 +745,8 @@ WN2F_ios_delete(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   /* The kids should be an IOU, followed a sequence of IOCs.  Always
    * use the explicit UNIT keyword.
    */
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_DELETE, 
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_delete"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_DELETE, 
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
   
   xos << "DELETE";
   xlate_IOControlList(xos, wn,
@@ -777,9 +761,9 @@ WN2F_ios_endfile(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     * use the explicit UNIT keyword, unless there is exactly one kid an
     * it is an IOU.
     */
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_ENDFILE || WN_IOSTMT(wn) == IOS_CR_ENDFILE, 
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_endfile"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_ENDFILE 
+		|| WN_IOSTMT(wn) == IOS_CR_ENDFILE, 
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
   
   xos << "ENDFILE";
   if (WN_kid_count(wn) == 1 && IS_IO_ITEM_IOU(WN_kid0(wn)))
@@ -797,9 +781,8 @@ WN2F_ios_find(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   /* The kids should be an IOU, followed a sequence of IOCs.  Always
    * use the explicit UNIT keyword.
    */
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_FIND, 
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_find"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_FIND, 
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
   
   xos << "FIND";
   xlate_IOControlList(xos, wn,
@@ -813,9 +796,9 @@ WN2F_ios_inquire(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   /* The kids should be an optional IOU, followed a sequence of IOCs.
    * Always use the explicit UNIT keyword when the IOU is present.
    */
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_INQUIRE || WN_IOSTMT(wn) == IOS_CR_INQUIRE,
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_inquire"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_INQUIRE || 
+		WN_IOSTMT(wn) == IOS_CR_INQUIRE,
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
   
   xos << BegElem(XAIFStrings.elem_Marker())
       << Attr("statement_id", ctxt.GetNewVId())
@@ -837,9 +820,8 @@ WN2F_ios_inquire(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 static void 
 WN2F_ios_namelist(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_NAMELIST, 
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_namelist"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_NAMELIST, 
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
   
   xos << "NAMELIST/";
   xlate_IO_ITEM(xos, WN_kid1(wn), ctxt);
@@ -857,10 +839,15 @@ WN2F_ios_open(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   /* The kids should be an IOU, followed a sequence of IOCs.  Always
    * use the explicit UNIT keyword.
    */
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_OPEN || WN_IOSTMT(wn) == IOS_CR_OPEN, 
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_open"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_OPEN || WN_IOSTMT(wn) == IOS_CR_OPEN,
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
   
+  WNId stmtid = ctxt.FindWNId(wn);
+  xos << BegElem(XAIFStrings.elem_Marker())
+      << Attr("statement_id", stmtid)
+      << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
+      << " [OPEN***]" << EndAttr
+      << EndElem;
 
 #if 0 // FIXME
   xlate_IOControlList(xos, wn,
@@ -877,9 +864,8 @@ WN2F_ios_rewind(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    * use the explicit UNIT keyword, unless there is exactly one kid
    * and it is an IOU.
    */
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_REWIND || WN_IOSTMT(wn) == IOS_CR_REWIND, 
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_rewind"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_REWIND || WN_IOSTMT(wn) == IOS_CR_REWIND, 
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
   
   xos << "REWIND";
   if (WN_kid_count(wn) == 1 && IS_IO_ITEM_IOU(WN_kid0(wn)))
@@ -897,9 +883,8 @@ WN2F_ios_unlock(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    * use the explicit UNIT keyword, unless there is exactly one kid an
    * it is an IOU.
    */
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_UNLOCK, 
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_unlock"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_UNLOCK, 
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
   
   xos << "UNLOCK";
   if (WN_kid_count(wn) == 1 && IS_IO_ITEM_IOU(WN_kid0(wn)))
@@ -916,9 +901,8 @@ WN2F_ios_accept(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   /* The kids should be an IOF, followed a sequence of IOLs.
    */
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_ACCEPT, 
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_accept"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_ACCEPT, 
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
   
   xos << "ACCEPT";
   xlate_IO_ITEM(xos, WN_kid0(wn), ctxt);
@@ -939,9 +923,8 @@ WN2F_ios_decode(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    */
   INT  iol_kid;
   
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_DECODE, 
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_decode"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_DECODE, 
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
   
   /* This is needed for the translation of the number of characters and
     * the buffer we decode characters from.
@@ -951,10 +934,9 @@ WN2F_ios_decode(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << "DECODE(";
   
   /* Translate the number of characters */
-  ASSERT_WARN(WN_IOITEM(WN_kid0(wn)) == IOU_INTERNAL &&
-	      WN_kid_count(WN_kid0(wn)) >= 2,
-	      (DIAG_W2F_UNEXPECTED_IOU, 
-	       IOITEM_name(WN_IOITEM(WN_kid0(wn))), "WN2F_ios_decode"));
+  FORTTK_ASSERT_WARN(WN_IOITEM(WN_kid0(wn)) == IOU_INTERNAL &&
+		     WN_kid_count(WN_kid0(wn)) >= 2,
+    FORTTK_UNEXPECTED_OPR << IOITEM_name(WN_IOITEM(WN_kid0(wn))));
   TranslateWN(xos, WN_kid1(WN_kid0(wn)), ctxt);
   
   /* Translate the format */
@@ -997,9 +979,8 @@ WN2F_ios_encode(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    */
   INT  iol_kid;
   
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_ENCODE, 
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_ENcode"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_ENCODE, 
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
   
   /* This is needed for the translation of the number of characters and
    * the buffer we encode characters from.
@@ -1009,10 +990,9 @@ WN2F_ios_encode(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << "ENCODE(";
   
   /* Translate the number of characters */
-  ASSERT_WARN(WN_IOITEM(WN_kid0(wn)) == IOU_INTERNAL &&
-	      WN_kid_count(WN_kid0(wn)) >= 2,
-	      (DIAG_W2F_UNEXPECTED_IOU, 
-	       IOITEM_name(WN_IOITEM(WN_kid0(wn))), "WN2F_ios_encode"));
+  FORTTK_ASSERT_WARN(WN_IOITEM(WN_kid0(wn)) == IOU_INTERNAL &&
+		     WN_kid_count(WN_kid0(wn)) >= 2,
+    FORTTK_UNEXPECTED_OPR << IOITEM_name(WN_IOITEM(WN_kid0(wn))));
   TranslateWN(xos, WN_kid1(WN_kid0(wn)), ctxt);
   
   /* Translate the format */
@@ -1051,9 +1031,8 @@ WN2F_ios_print(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   /* The kids should be an IOF, followed a sequence of IOLs.
    */
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_PRINT, 
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_print"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_PRINT, 
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
   
   xos << "PRINT";
   
@@ -1134,9 +1113,8 @@ WN2F_ios_rewrite(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    */
   INT  iol_kid;
   
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_REWRITE, 
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_rewrite"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_REWRITE, 
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
   
   xos << "REWRITE";
   //set_XlationContext_issue_ioc_asterisk(ctxt);
@@ -1165,9 +1143,8 @@ WN2F_ios_type(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   /* The kids should be an IOF, followed a sequence of IOLs.
    */
-  ASSERT_WARN(WN_IOSTMT(wn) == IOS_TYPE, 
-	      (DIAG_W2F_UNEXPECTED_IOS, 
-	       IOSTATEMENT_name(WN_IOSTMT(wn)), "WN2F_ios_type"));
+  FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_TYPE, 
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(WN_IOSTMT(wn)));
   
   xos << "TYPE";
   xlate_IO_ITEM(xos, WN_kid0(wn), ctxt);
@@ -1184,9 +1161,10 @@ WN2F_ios_write(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    * sequence of IOCs and a sequence of IOLs.  Use keywords only
    * when the IOC list is non-empty.
    */
+  WNId stmtid = ctxt.FindWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker())
-      << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << Attr("statement_id", stmtid)
+      << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [WRITE***]" << EndAttr;
   
 #if 0 // FIXME: comment out for now
@@ -1221,10 +1199,9 @@ WN2F_ios_cr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // Craylibs IO - write/read The kids should be an IOS, with kids of IO_ITEMS
   IOSTATEMENT iostmt = WN_io_statement(wn);
-  ASSERT_WARN(iostmt == IOS_CR_FWF || iostmt == IOS_CR_FWU 
-	      || iostmt == IOS_CR_FRF || iostmt == IOS_CR_FRU,
-	      (DIAG_W2F_UNEXPECTED_IOS, IOSTATEMENT_name(iostmt), 
-	       "WN2F_ios_cr"));
+  FORTTK_ASSERT(iostmt == IOS_CR_FWF || iostmt == IOS_CR_FWU 
+		|| iostmt == IOS_CR_FRF || iostmt == IOS_CR_FRU,
+		FORTTK_UNEXPECTED_OPR << IOSTATEMENT_name(iostmt));
   
   //set_XlationContext_issue_ioc_asterisk(ctxt);
   
@@ -1237,9 +1214,10 @@ WN2F_ios_cr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     io_op = "READ***" ;
   }
 
+  WNId stmtid = ctxt.FindWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker())
-      << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << Attr("statement_id", stmtid)
+      << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [" << io_op << "]" << EndAttr;
 
 #if 0 // FIXME: comment out for now
