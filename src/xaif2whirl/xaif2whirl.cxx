@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.46 2004/05/10 13:57:25 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.47 2004/05/28 15:17:46 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -2372,17 +2372,18 @@ DumpDotGraph_GetNodeName(MyDGNode* n)
   
   // MyDGNode portion
   const char* nodeIdStr = Num2Str(n->getId(), "%u");
-  name += "Node(";
   name += nodeIdStr;
-  name += ")";
 
   // XAIF portion
   DOMElement* elem = n->GetElem();
+  const XMLCh* xaifNameX = elem->getNodeName();
+  XercesStrX   xaifName = XercesStrX(xaifNameX);
   const XMLCh* vidX = elem->getAttribute(XAIFStrings.attr_Vid_x());
-  XercesStrX vid = XercesStrX(vidX);
-
-  name += " XAIF(";
+  XercesStrX   vid = XercesStrX(vidX);  
+  name += ", (";
   name += vid.c_str();
+  name += ", ";
+  name += xaifName.c_str();
   name += ")";
   
   return name;
