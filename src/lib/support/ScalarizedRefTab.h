@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.9 2004/06/16 14:27:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.10 2004/06/28 21:30:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -260,6 +260,7 @@ public:
 //      involves path collapsing)
 //      s%a
 //      b(i)%a
+//      s%b(i) ???
 //
 //   ?. 'array references & array operations' (whole arrays of scalar
 //      element-type) (may involve path collapsing)
