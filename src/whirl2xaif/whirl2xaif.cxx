@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.25 2004/01/29 23:16:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.26 2004/02/02 17:18:37 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -769,8 +769,6 @@ Check_PU_Pushed(const char *caller_name)
 
 //***************************************************************************
 
-#define FIXME_TRANSLATE_PARAMS
-
 #include <vector>
 using std::vector;
 
@@ -787,6 +785,7 @@ InlineTest(PU_Info* pu_forest)
   // -------------------------------------------------------
   const char* calleeNm = NULL;
   PU_Info*    calleePU = NULL;
+  WN*         calleeWN = NULL; // OPR_FUNC_ENTRY
   WN_MAP_TAB* calleeMaptab = NULL;
   SCOPE*      calleeStab = NULL;
   SYMTAB_IDX  calleeStabIdx = 0;
@@ -800,12 +799,13 @@ InlineTest(PU_Info* pu_forest)
     if (strncmp(nm, "inline_", 7) == 0) {
       calleeNm = nm;
       calleePU = pu;
+      calleeWN = PU_Info_tree_ptr(calleePU);
       calleeMaptab = PU_Info_maptab(pu);
       calleeStab = Scope_tab;
       calleeStabIdx = PU_lexical_level(PU_Info_pu(pu));
       break;
     }
-  }
+  } // global state set for calleePU
   
   // -------------------------------------------------------
   // 2. Find the caller, i.e. callsites to inline_x. In the MainPU
@@ -821,26 +821,19 @@ InlineTest(PU_Info* pu_forest)
     PU_Info* pu = (PU_Info*)procIt.Current();
     if (PU_is_mainpu(PU_Info_pu(pu))) {
       callerPU = pu;
+      callsiteWN = FindCallToInlinedFn(calleeNm, PU_Info_tree_ptr(callerPU));
       callerMaptab = PU_Info_maptab(pu);
       callerStab = Scope_tab;
       callerStabIdx = PU_lexical_level(PU_Info_pu(pu));
-      
-      callsiteWN = FindCallToInlinedFn(calleeNm, PU_Info_tree_ptr(callerPU));
       break;
     }
-  }
+  } // global state set for callerPU
   
   if (!callsiteWN) {
     return;
   }
-  
-  // FIXME: allocates WN_mem_pool_ptr, which is used in IPO_CLONE::Copy_Node
-  WN* bogus_wn = WN_CreateIntconst(OPC_I4INTCONST, 0);
-  
-  // Cf. IPO_INLINE::Process(), ipa/main/optimize/ipo_inline.cxx.
 
-#ifdef FIXME_TRANSLATE_PARAMS
-  // Gather parameters for callsite -- FIXME
+  // * Gather actual parameters (at callsite)
   INT nparam = WN_kid_count(callsiteWN);
   vector<ST*> callsiteParams(nparam);
   for (int i = 0; i < nparam; ++i) {
@@ -848,7 +841,9 @@ InlineTest(PU_Info* pu_forest)
     ST* st = WN_st(WN_kid0(parm));
     callsiteParams[i] = st;
   }
-#endif
+  
+  // For the below, compare to
+  // IPO_INLINE::Process(), ipa/main/optimize/ipo_inline.cxx.
   
   // -------------------------------------------------------
   // 1. Create a copy of the callee
@@ -858,59 +853,80 @@ InlineTest(PU_Info* pu_forest)
   
   // Global tables should point to callee
   PU_RestoreGlobalState(calleePU);
-
-  WN* calleeWN = PU_Info_tree_ptr(calleePU);
-
-#ifdef FIXME_TRANSLATE_PARAMS
-  // Gather formals for callee -- FIXME (OPR_FUNC_ENTRY)
-  nparam = WN_num_formals(calleeWN);
-  vector<ST*> calleeParams(nparam);
-  for (int i = 0; i < nparam; ++i) {
-    ST* st = WN_st(WN_formal(calleeWN, i));
-    calleeParams[i] = st;
-  }
-  assert(callsiteParams.size() == calleeParams.size());
-#endif
-
+  
+  // FIXME: allocates WN_mem_pool_ptr, which is used in IPO_CLONE::Copy_Node
+  WN* bogus_wn = WN_CreateIntconst(OPC_I4INTCONST, 0);
+  
   WN_MAP parentmap = WN_MAP_Create(MEM_pu_pool_ptr);
   IPO_SYMTAB ipo_symtab(calleeStab, callerStab, calleeStabIdx, callerStabIdx,
 			MEM_pu_pool_ptr, TRUE /*same_file*/);
-
-#ifdef FIXME_TRANSLATE_PARAMS
-  // Add mapping between callsite and callee parameters
-  for (int i = 0; i < callsiteParams.size(); ++i) {
-    ipo_symtab.Set_Cloned_ST(calleeParams[i], callsiteParams[i]);
-  }
-#endif
-  
   IPO_CLONE cloner(callerMaptab, calleeMaptab, parentmap,
 		   calleeStab, callerStab, calleeStabIdx, callerStabIdx,
 		   &ipo_symtab, MEM_pu_pool_ptr, TRUE /*same_file*/, 0);  
   
+  // * Copy symtabs of callee into caller's
   //cloner.Promote_Statics();
   cloner.Get_sym()->Update_Symtab(FALSE /*label_only*/);
-  
+    
+  // * Clone, setting symtab indices to reference caller's tables
   WN* inlinedBodyWn = cloner.Clone_Tree(WN_func_body(calleeWN));
   
-  // Global tables should point to caller
-  PU_RestoreGlobalState(callerPU);
-
+  // * Gather formals parameters (at callee)
+  nparam = WN_num_formals(calleeWN);
+  vector<ST*> calleeParams(nparam);
+  for (int i = 0; i < nparam; ++i) {
+    ST* st = WN_st(WN_formal(calleeWN, i));
+    st = ipo_symtab.Get_ST(st); // get the version on the caller side
+    calleeParams[i] = st;
+  }
+  assert(callsiteParams.size() == calleeParams.size());
+  
   // -------------------------------------------------------
-  // 2. Remove RETURN
+  // 2. Update and patch body of inlined function
   // -------------------------------------------------------
   // IPO_INLINE::Process_Callee(...)
+  //   IPO_INLINE::Clone_Callee(...) and
   //   IPO_INLINE::Walk_and_Update_Callee(...)
-  // W2CF_Parentize(inlinedBodyWn); // WN_Parentize()? ipo_parent.cxx
+
+  // Global tables should point to caller (cloned tree uses caller's symtab)
+  PU_RestoreGlobalState(callerPU);
+  
+  // * Recreate parent pointers
+  // W2CF_Parentize(inlinedBodyWn); // WN_Parentize() - ipo_parent.cxx
+  
+  // Prepare map: formal params -> actual params
+  map<ST*, ST*> formals2actuals;
+  for (int i = 0; i < nparam; ++i) {
+    ST* formalST = calleeParams[i];
+    ST* actualST = callsiteParams[i];
+    formals2actuals[formalST] = actualST;
+  }
+  
+  // * Replace any formal parameters with actual parameters
+  //   Cf. IPO_INLINE::Process_Formals(...) (actually only preparation
+  //   for Process_Op_Code(...)
+  // * Remove RETURN in body of inlined function
+  //   Cf. IPO_INLINE::Process_Op_Code(...)
   WN_TREE_CONTAINER<PRE_ORDER> wnIt(inlinedBodyWn);
   WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
   for (it = wnIt.begin(); it != wnIt.end(); ++it) {
     WN* curWN = it.Wn();
-    
     OPERATOR opr = WN_operator(curWN);
+    
+    // Replace reference to a formal param with actual param
+    if (OPERATOR_has_sym(opr)) {
+      ST* curST = WN_st(curWN);
+      ST* actualST = formals2actuals[curST];
+      if (actualST) {
+	WN_st_idx(curWN) = ST_st_idx(actualST);
+      }
+    }
+
+    // Remove returns
     if (opr == OPR_RETURN) {
       WN* blkWN = FindParentWNBlock(inlinedBodyWn, curWN);
       WN_DELETE_FromBlock(blkWN, curWN);
-      break;
+      break; // should only be one, at end of block (FIXME)
     }
   }
   
@@ -935,8 +951,7 @@ InlineTest(PU_Info* pu_forest)
   IR_set_dump_order(TRUE); // Preorder dump
   WN* callerWN = PU_Info_tree_ptr(callerPU);
   dump_tree(callerWN);
-#endif
-  
+#endif  
 }
 
 static WN* 
