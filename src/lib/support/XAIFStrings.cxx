@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.10 2003/10/01 16:31:27 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.11 2003/10/10 18:04:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -120,11 +120,12 @@ const char* XAIFStringRepository::c_strTbl[] = {
 
   // DerivativeAccumulator
   "xaif:DerivativePropagator", // block
-
+  
   "xaif:SetDeriv",             // stmt
+  "xaif:ZeroDeriv",
   "xaif:Sax",
   "xaif:Saxpy",
-
+  
   "xaif:Tgt",                  // expr
   "xaif:Src",
   "xaif:AX",
