@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.12 2004/02/17 18:55:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.13 2004/04/08 13:52:15 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -308,7 +308,7 @@ TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn,
 	kid = WN_next(kid);
       }
     } else {
-      for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
+      for (INT kidno = 0; kidno < WN_kid_count(wn); ++kidno) {
 	WN* kid = WN_kid(wn, kidno);
 	TestIR_OA_ForEachVarRef(os, kid, ir, vnmap);
       }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.19 2004/02/28 16:41:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.20 2004/04/08 13:52:15 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -111,7 +111,7 @@ main(int argc, char **argv)
     e.Report(cerr);
     exit(1);
   }
-  catch (Exception &e /* OpenAnalysis -- should be in namespace */) {
+  catch (Exception& e /* OpenAnalysis -- should be in namespace */) {
     e.report(cerr);
     exit(1);
   }
