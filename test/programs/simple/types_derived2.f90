@@ -28,13 +28,15 @@ subroutine cart2polar(c, p)
   type(polar), intent(out) :: p
   
   ! r^2 = x^2 + y^2
-  p%r = sqrt((c%x)**2 + (c%y)**2)
+! p%r = sqrt((c%x)**2 + (c%y)**2)
+  p%r = ((c%x)**2 + (c%y)**2)
   
   ! sin(theta) = y/r (more convenient than tan(theta) = y/x)
   if (p%r .eq. 0) then
      p%theta = 0
   else
-     p%theta = asin(c%y/p%r)
+!    p%theta = asin(c%y/p%r)
+     p%theta = sin(c%y/p%r)
   end if
   
   p%msg = "because"

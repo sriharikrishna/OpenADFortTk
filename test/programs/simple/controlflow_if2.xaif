@@ -53,7 +53,7 @@
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
 
     <xaif:BasicBlock vertex_id="2" scope_id="2" annotation="{WHIRL_Id#7:8:12}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#7} [pragma]"/>
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#7} [passive: OPR_PRAGMA]"/>
       <xaif:Assignment statement_id="2">
         <xaif:AssignmentLHS du_ud="3">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="C_3"/>
@@ -158,7 +158,7 @@
     <xaif:EndBranch vertex_id="5" annotation="{WHIRL_Id#}"/>
 
     <xaif:BasicBlock vertex_id="8" scope_id="2" annotation="{WHIRL_Id#42}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#42} [return]"/>
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#42} [passive: OPR_RETURN]"/>
     </xaif:BasicBlock>
 
     <xaif:Exit vertex_id="6" annotation="{WHIRL_Id#}"/>

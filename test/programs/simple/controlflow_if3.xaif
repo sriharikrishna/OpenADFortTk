@@ -50,7 +50,7 @@
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
 
     <xaif:BasicBlock vertex_id="2" scope_id="2" annotation="{WHIRL_Id#6:7}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#6} [pragma]"/>
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#6} [passive: OPR_PRAGMA]"/>
       <xaif:Assignment statement_id="2">
         <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X_2"/>
@@ -89,7 +89,7 @@
           <xaif:Constant vertex_id="1" type="real" value="8.90000000000000000000e+01"/>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:Marker statement_id="3" annotation="{WHIRL_Id#23} [return]"/>
+      <xaif:Marker statement_id="3" annotation="{WHIRL_Id#23} [passive: OPR_RETURN]"/>
     </xaif:BasicBlock>
 
     <xaif:Exit vertex_id="7" annotation="{WHIRL_Id#}"/>

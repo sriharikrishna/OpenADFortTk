@@ -95,13 +95,9 @@
 
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
 
-    <xaif:BasicBlock vertex_id="2" scope_id="2" annotation="{WHIRL_Id#5:9}"
-interface assignment ()
-module procedure CART_ASSIGN_CART 
-
-end interface 
->
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#9} [pragma]"/>
+    <xaif:BasicBlock vertex_id="2" scope_id="2" annotation="{WHIRL_Id#5:9}">
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#5} [passive: OPR_INTERFACE]"/>
+      <xaif:Marker statement_id="2" annotation="{WHIRL_Id#9} [passive: OPR_PRAGMA]"/>
     </xaif:BasicBlock>
 
     <xaif:Exit vertex_id="3" annotation="{WHIRL_Id#}"/>
@@ -120,7 +116,7 @@ end interface
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
 
     <xaif:BasicBlock vertex_id="2" scope_id="3" annotation="{WHIRL_Id#16:17:19:21}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#16} [pragma]"/>
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#16} [passive: OPR_PRAGMA]"/>
       <xaif:Assignment statement_id="2">
         <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="scalarizedref0"/>
@@ -141,7 +137,7 @@ end interface
           </xaif:VariableReference>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:Marker statement_id="4" annotation="{WHIRL_Id#21} [return]"/>
+      <xaif:Marker statement_id="4" annotation="{WHIRL_Id#21} [passive: OPR_RETURN]"/>
     </xaif:BasicBlock>
 
     <xaif:Exit vertex_id="3" annotation="{WHIRL_Id#}"/>
@@ -159,8 +155,8 @@ end interface
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
 
     <xaif:BasicBlock vertex_id="2" scope_id="4" annotation="{WHIRL_Id#27:28:29:45}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#27} [pragma]"/>
-      <xaif:Marker statement_id="2" annotation="{WHIRL_Id#28} [use coordrec_]"/>
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#27} [passive: OPR_PRAGMA]"/>
+      <xaif:Marker statement_id="2" annotation="{WHIRL_Id#28} [passive: OPR_USE]"/>
       <xaif:Assignment statement_id="3">
         <xaif:AssignmentLHS du_ud="3">
           <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="R_1"/>
@@ -187,7 +183,7 @@ end interface
           <xaif:ExpressionEdge edge_id="7" source="2" target="1" position="1"/>
         </xaif:AssignmentRHS>
       </xaif:Assignment>
-      <xaif:Marker statement_id="4" annotation="{WHIRL_Id#45} [return_val]"/>
+      <xaif:Marker statement_id="4" annotation="{WHIRL_Id#45} [passive: OPR_RETURN_VAL]"/>
     </xaif:BasicBlock>
 
     <xaif:Exit vertex_id="3" annotation="{WHIRL_Id#}"/>
@@ -204,8 +200,8 @@ end interface
     <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
 
     <xaif:BasicBlock vertex_id="2" scope_id="5" annotation="{WHIRL_Id#51:52:53:56:59:64:69:74:78:79}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#51} [pragma]"/>
-      <xaif:Marker statement_id="2" annotation="{WHIRL_Id#52} [use coordrec_]"/>
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#51} [passive: OPR_PRAGMA]"/>
+      <xaif:Marker statement_id="2" annotation="{WHIRL_Id#52} [passive: OPR_USE]"/>
       <xaif:Assignment statement_id="3">
         <xaif:AssignmentLHS du_ud="2">
           <xaif:SymbolReference vertex_id="1" scope_id="5" symbol_id="scalarizedref6"/>
@@ -263,7 +259,7 @@ end interface
         </xaif:AssignmentRHS>
       </xaif:Assignment>
       <xaif:SubroutineCall statement_id="9" scope_id="1" symbol_id="_END_25"/>
-      <xaif:Marker statement_id="10" annotation="{WHIRL_Id#79} [return]"/>
+      <xaif:Marker statement_id="10" annotation="{WHIRL_Id#79} [passive: OPR_RETURN]"/>
     </xaif:BasicBlock>
 
     <xaif:Exit vertex_id="4" annotation="{WHIRL_Id#}"/>
