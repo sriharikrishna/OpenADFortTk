@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/Makefile,v 1.6 2003/12/19 21:07:07 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/Makefile,v 1.7 2004/02/27 20:23:19 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -33,6 +33,7 @@ VPATH = $(SRCS)
 # objects are placed wherever the compilation is done
 OBJS = \
 	main.o \
+	Args.o \
 	xaif2whirl.o \
 	xaif2whirl_stmt.o \
 	xaif2whirl_expr.o \

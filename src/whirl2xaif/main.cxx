@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.17 2004/02/26 14:24:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.18 2004/02/27 20:23:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -52,6 +52,9 @@
 
 //************************** System Include Files ***************************
 
+#include <iostream>
+using std::endl;
+using std::cout;
 #include <string>
 
 //************************** Open64 Include Files ***************************
@@ -60,7 +63,6 @@
 
 #include "cmplrs/rcodes.h"  // return codes
 #include "tracing.h"        // trace routines
-#include "file_util.h"      // New_Extension, Last_Pathname_Component
 #include "ir_reader.h"      // fdump_tree
 
 //************************ OpenAnalysis Include Files ***********************
@@ -69,6 +71,7 @@
 
 //*************************** User Include Files ****************************
 
+#include "Args.h"
 #include "whirl2xaif.h"
 
 #include <lib/support/xmlostream.h>
@@ -79,25 +82,18 @@
 static int
 real_main(int argc, char **argv);
 
+static std::ostream*
+InitOutputStream(Args& args);
+
+static void
+FiniOutputStream(std::ostream* os);
+
 static void 
 OpenFile(std::ofstream& fs, const char* filename);
 
 static void 
 CloseFile(std::ofstream& fs);
 
-static void 
-ProcessCommandLine(int, char **);
-
-//************************** Forward Declarations ***************************
-
-std::string ProgramName;
-std::string WHIRL_filename;
-std::string XAIF_filename;
-
-// Options (FIXME)
-bool opt_dumpIR = false;
-bool opt_inlineTest = false;
-void InlineTest(PU_Info* pu_forest);
 
 //***************************************************************************
 
@@ -113,6 +109,10 @@ main(int argc, char **argv)
   }
   catch (Exception &e /* OpenAnalysis -- should be in namespace */) {
     e.report(cerr);
+    exit(1);
+  }
+  catch (CmdLineParser::Exception& e) {
+    e.Report(cerr); // fatal error
     exit(1);
   }
   catch (...) {
@@ -154,48 +154,36 @@ real_main(int argc, char **argv)
   Diag_Init();
   Diag_Set_Max_Diags(100); // Maximum 100 warnings by default
   Diag_Set_Phase("WHIRL to XAIF: driver");
-
-  ProcessCommandLine(argc, argv);
   
-  std::ofstream ofs;
-  OpenFile(ofs, XAIF_filename.c_str()); // FIXME: errors
+  Args args(argc, argv);
+  std::ostream* os = InitOutputStream(args);
   
   // -------------------------------------------------------
   // 3. Read WHIRL IR
   // -------------------------------------------------------
-  PU_Info* pu_forest = ReadIR(WHIRL_filename.c_str());
+  PU_Info* pu_forest = ReadIR(args.whirlFileNm.c_str());
   PrepareIR(pu_forest); // FIXME (should this be part of translation?)
 
   // -------------------------------------------------------
   // 4. Translate WHIRL into XAIF
   // -------------------------------------------------------  
   
-  if (opt_inlineTest) { // FIXME:
-    InlineTest(pu_forest); 
-  }
-  
-  cerr << ProgramName << " translates " << WHIRL_filename << " into "
-       << XAIF_filename << std::endl;
+  (*os) << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n";
+  whirl2xaif::TranslateIR(*os, pu_forest);
 
-  if (opt_dumpIR) { DumpIR(pu_forest); }
-  ofs << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n";
-  whirl2xaif::TranslateIR(ofs, pu_forest);
-
-  // FIXME: Temporary test
-  if (opt_inlineTest) { 
-    std::string file = WHIRL_filename;
-    file += ".inline.B";
+  bool writeIR = false;
+  if (writeIR) { 
+    std::string file = "out.B"; // FIXME
     WriteIR(file.c_str(), pu_forest); 
+  } else {
+    FreeIR(pu_forest); // Writing frees some of the WHIRL maps
   }
-  
-  // FIXME: why does Writing the IR does some freeing (Arg!)
-  if (!opt_inlineTest) { FreeIR(pu_forest); }
   
   // -------------------------------------------------------
   // 5. Finalization
   // -------------------------------------------------------
-  CloseFile(ofs);
-
+  FiniOutputStream(os);
+  
   // If we've seen errors, note them and terminate
   INT local_ecount, local_wcount;
   if ( Get_Error_Count ( &local_ecount, &local_wcount ) ) {
@@ -211,104 +199,30 @@ real_main(int argc, char **argv)
 
 
 //***************************************************************************
-// from be/be/driver_util.c (FIXME: convert to getopts)
-//***************************************************************************
-
-/* Default file extensions: */
-#define IRB_FILE_EXTENSION ".B" /* WHIRL file */
-
-// ProcessCommandLine: Process the command line arguments. Evaluate
-// all flags and set up global options.
-//
-// Note: Src_File_Name, Irb_File_Name, Obj_File_Name are globals
-static void
-ProcessCommandLine(int argc, char **argv)
-{
-  ProgramName = Last_Pathname_Component(argv[0]);
-
-  /* Check the command line flags: */
-  BOOL dashdash_flag = FALSE;
-  char* opt;
-  
-  for (INT16 i = 1; i < argc; i++) {
-    // -------------------------------------------------------
-    // A '--' signifies no more options
-    // -------------------------------------------------------
-    if (argv[i] != NULL && (strcmp(argv[i], "--") == 0)) {
-      dashdash_flag = TRUE;
-      continue;
-    }
-    
-    if ( !dashdash_flag && argv[i] != NULL && *(argv[i]) == '-' ) {
-      // -------------------------------------------------------
-      // An option (beginning with '-')
-      // -------------------------------------------------------
-      opt = argv[i]+1; // points to option name, skipping '-'
-      
-      if (strcmp(opt, "d") == 0) { 
-        opt_dumpIR = true;
-        continue;
-      }
-
-#if 0 // example of option that takes an argument
-      if (strcmp(opt, "I") == 0) { 
-        PersistentIDsToPrint = argv[++i]; // FIXME: should test array bounds
-        continue;
-      }
-#endif
-      
-      if (strcmp(opt, "i") == 0) { 
-        opt_inlineTest = true;
-        continue;
-      }
-      
-    } else if (argv[i] != NULL) {
-      // -------------------------------------------------------
-      // A non-option or immediately after a '--'
-      // -------------------------------------------------------
-      dashdash_flag = FALSE;
-      Src_File_Name = argv[i];
-    } 
-  }
-
-  if (Src_File_Name == NULL) {
-    ErrMsg(EC_No_Sources);
-    exit(RC_USER_ERROR); // FIXME: return error
-  }
-  
-  // WHIRL file name
-  WHIRL_filename = New_Extension(Src_File_Name, IRB_FILE_EXTENSION);
-  Irb_File_Name = (char*)WHIRL_filename.c_str(); // make Open64 happy
-    
-  // We want the output files to be created in the current directory,
-  // so strip off any directory path, and substitute the suffix 
-  // appropriately.
-  XAIF_filename = New_Extension(Last_Pathname_Component(Src_File_Name), 
-                                ".xaif");
-}
-
-
-//***************************************************************************
 // 
 //***************************************************************************
 
-/* ====================================================================
- * FIXME: 
- * Open_Read_File()
- *    Opens the file with the given name and path for reading.
- *
- * Open_Append_File()
- *
- *    Opens the file with the given name for appending more to its
- *    end if it already exists, or to create it if it does not
- *    already exist.
- *
- * Open_Create_File()
- *
- *    Same as Open_Append_File(), but a new file is always created,
- *    possibly overwriting an existing file.
- * ====================================================================
- */
+static std::ostream*
+InitOutputStream(Args& args)
+{
+  if (args.xaifFileNm.empty()) {
+    // Use cout
+    return &(cout);
+  } else {
+    ofstream* ofs = new ofstream;
+    OpenFile(*ofs, args.xaifFileNm.c_str());
+    return ofs;
+  }
+}
+
+static void
+FiniOutputStream(std::ostream* os)
+{
+  if (os != &cout) {
+    delete os;
+  }
+}
+
 
 static void 
 OpenFile(std::ofstream& fs, const char* filename)
@@ -319,12 +233,6 @@ OpenFile(std::ofstream& fs, const char* filename)
   if (!fs.is_open() || fs.fail()) {
     ErrMsg(EC_IR_Open, filename, 0/*FIXME*/);
   } 
-  
-#if 0//FIXME
-  fs.open(filename, ios::out | ios::app);
-  fs = Open_Append_File(W2F_File_Name[kind]);
-#endif
-
 }
 
 static void

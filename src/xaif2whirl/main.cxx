@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.10 2004/02/26 14:24:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.11 2004/02/27 20:23:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -46,7 +46,6 @@
 
 #include "cmplrs/rcodes.h"  // return codes
 #include "tracing.h"        // trace routines
-#include "file_util.h"      // New_Extension, Last_Pathname_Component
 #include "ir_reader.h"      // fdump_tree
 
 //************************ OpenAnalysis Include Files ***********************
@@ -55,6 +54,7 @@
 
 //*************************** User Include Files ****************************
 
+#include "Args.h"
 #include "xaif2whirl.h"
 #include "XAIF_SAXHandler.h"
 #include "XAIF_DOMErrorHandler.h"
@@ -86,15 +86,7 @@ XercesInit();
 static int
 XercesFini();
 
-static void
-ProcessCommandLine(int argc, char **argv);
-
 //*************************** Forward Declarations ***************************
-
-std::string ProgramName;
-std::string WHIRL_filename;
-std::string XAIF_filename;
-std::string WHIRL_out_filename;
 
 // Options (FIXME)
 bool opt_typeChangeInWHIRL = false;
@@ -157,25 +149,23 @@ real_main(int argc, char **argv)
   if ( (ret = XercesInit()) != 0 ) { return ret; /* FIXME */ }
   XAIFStrings.XMLInitialize();
 
-  ProcessCommandLine(argc, argv);
+  Args args(argc, argv);
+  opt_typeChangeInWHIRL = args.changeActiveTyInWHIRL; // FIXME
 
   // -------------------------------------------------------
   // 3. Read WHIRL IR as basis for translation
   // -------------------------------------------------------
-  PU_Info* pu_forest = ReadIR(WHIRL_filename.c_str());
+  PU_Info* pu_forest = ReadIR(args.inWhirlFileNm.c_str());
   PrepareIR(pu_forest); // FIXME (should this be part of translation?)
   
   // -------------------------------------------------------
   // 4. Translate XAIF into WHIRL
   // -------------------------------------------------------  
+  
+  ret = main_DOM(pu_forest, args.xaifFileNm.c_str()); // FIXME check return
+  //ret = main_SAX(xaifFileNm.c_str());
 
-  cerr << ProgramName << " translates (" << WHIRL_filename << ", "
-       << XAIF_filename << ") into " << WHIRL_out_filename << std::endl;
-
-  ret = main_DOM(pu_forest, XAIF_filename.c_str()); // FIXME check return
-  //ret = main_SAX(XAIF_filename.c_str());
-
-  WriteIR(WHIRL_out_filename.c_str(), pu_forest);
+  WriteIR(args.outWhirlFileNm.c_str(), pu_forest);
   //FreeIR(pu_forest);
   
   // -------------------------------------------------------
@@ -359,68 +349,4 @@ XercesFini()
   return 0;
 }
 
-
-//***************************************************************************
-// from be/be/driver_util.c (FIXME: convert to getopts)
-//***************************************************************************
-
-/* Default file extensions: */
-#define IRB_FILE_EXTENSION ".B" /* WHIRL file */
-
-// ProcessCommandLine: Process the command line arguments. Evaluate
-// all flags and set up global options.
-//
-// Note: Src_File_Name, Irb_File_Name, Obj_File_Name are globals
-static void
-ProcessCommandLine(int argc, char **argv)
-{
-  ProgramName = Last_Pathname_Component(argv[0]);
-
-  /* Check the command line flags: */
-  INT Src_Count = 0;
-  BOOL dashdash_flag = FALSE;
-  char* opt;
-  
-  for (INT16 i = 1; i < argc; i++) {
-    // -------------------------------------------------------
-    // A '--' signifies no more options
-    // -------------------------------------------------------
-    if (argv[i] != NULL && (strcmp(argv[i], "--") == 0)) {
-      dashdash_flag = TRUE;
-      continue;
-    }
-    
-    if ( !dashdash_flag && argv[i] != NULL && *(argv[i]) == '-' ) {
-      // -------------------------------------------------------
-      // An option (beginning with '-')
-      // -------------------------------------------------------
-      opt = argv[i]+1; // points to option name, skipping '-'
-      
-      if (strcmp(opt, "t") == 0) { 
-        opt_typeChangeInWHIRL = true; // FIXME
-        continue;
-      }
-
-    } else if (argv[i] != NULL) {
-      // -------------------------------------------------------
-      // A non-option or immediately after a '--'
-      // -------------------------------------------------------
-      dashdash_flag = FALSE;
-      if (i+1 < argc) { 
-        WHIRL_filename = argv[i];
-        XAIF_filename = argv[++i];
-        break;
-      }
-    } 
-  }
-
-  if ( !(WHIRL_filename.length() > 0 && XAIF_filename.length() > 0) ) {
-    ErrMsg(EC_No_Sources);
-    exit(RC_USER_ERROR); // FIXME: return error
-  }
-  
-  Irb_File_Name = (char*)WHIRL_filename.c_str(); // make Open64 happy
-
-  WHIRL_out_filename = New_Extension(XAIF_filename.c_str(), ".x2w.B");
-}
-
+//****************************************************************************
