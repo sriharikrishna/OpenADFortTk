@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.63 2004/06/03 13:15:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.64 2004/06/09 20:43:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -255,15 +255,12 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ctxt.SetWNParentMap(&wnParentMap);
 
   // 1. Non-scalar symbol table
-  ScalarizedRefTab_W2X* symtab = new ScalarizedRefTab_W2X(); // FIXME
-  AddToScalarizedRefTabOp op(symtab);
-  ForAllNonScalarRefs(fbody, op); //FIXME
-  ctxt.SetScalarizedRefTab(symtab);
+  ScalarizedRefTab_W2X* tab = ScalarizedRefTableMap.Find(Current_PU_Info);
+  ctxt.SetScalarizedRefTab(tab);
   
   // 2. WHIRL<->ID maps
-  pair<WNToWNIdMap*, WNIdToWNMap*> wnmaps = CreateWhirlIdMaps(wn);
-  delete wnmaps.second;
-  ctxt.SetWNToIdMap(wnmaps.first);
+  WNToWNIdMap* wnmap = new WNToWNIdMap(wn);
+  ctxt.SetWNToIdMap(wnmap);
   
   AddControlFlowEndTags(wn, &wnParentMap); // FIXME
 
@@ -359,8 +356,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // Cleanup
   // -------------------------------------------------------
   ctxt.DeleteContext();
-  delete symtab;
-  delete wnmaps.first;
+  delete wnmap;
   
   return whirl2xaif::good;
 }

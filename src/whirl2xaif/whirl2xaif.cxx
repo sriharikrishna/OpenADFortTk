@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.41 2004/06/03 13:15:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.42 2004/06/09 20:43:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -123,8 +123,10 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   //IntrinsicTable.DDump();
   
   if (!pu_forest) { return; }
-
+  
+  // -------------------------------------------------------
   // 1. Initialization
+  // -------------------------------------------------------
   Pro64IRInterface irInterface;
   xml::ostream xos(os.rdbuf());
   XlationContext ctxt;
@@ -132,19 +134,24 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   DumpTranslationHeaderComment(xos); // FIXME (optional)
   
   // Initialize global id maps
-  pair<SymTabToSymTabIdMap*, SymTabIdToSymTabMap*> stabmaps =
-    CreateSymTabIdMaps(pu_forest);
-  ctxt.SetSymTabToIdMap(stabmaps.first);
-  delete stabmaps.second;
+  SymTabToSymTabIdMap* stabmap = new SymTabToSymTabIdMap(pu_forest);
+  ctxt.SetSymTabToIdMap(stabmap);
   
-  pair<PUToPUIdMap*, PUIdToPUMap*> pumaps = CreatePUIdMaps(pu_forest);
-  ctxt.SetPUToIdMap(pumaps.first);
-  delete pumaps.second;
+  PUToPUIdMap* pumap = new PUToPUIdMap(pu_forest);
+  ctxt.SetPUToIdMap(pumap);
   
-  // FIXME: create map of non-scalar refs -> scalarized dummy symbols
+  // FIXME: WNToWNIdTabMap...
+
+  // Create scalarized var reference table.  Note: At the moment we
+  // must create all tables in memory because they must be available
+  // for the ScopeHeirarchy.
+  ScalarizedRefTableMap.Create(pu_forest);
   
-  
-  // 2. Create CallGraph (massage OA version into XAIF version)
+  // -------------------------------------------------------
+  // 2. Create and dump CallGraph
+  // -------------------------------------------------------
+
+  // Create CallGraph (massage OA version into XAIF version)
   Pro64IRProcIterator irProcIter(pu_forest);
   ST* st = ST_ptr(PU_Info_proc_sym(pu_forest));
   CallGraph cgraph(irInterface, &irProcIter, (SymHandle)st);
@@ -152,7 +159,7 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   MassageOACallGraphIntoXAIFCallGraph(&cgraph);
   //cgraph->dump(cerr);
   
-  // 3. Dump CallGraph header info and ScopeHierarchy
+  // Dump CallGraph header info and ScopeHierarchy
   xos << BegElem("xaif:CallGraph")
       << Attr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
       << Attr("xmlns:xaif", "http://www.mcs.anl.gov/XAIF")
@@ -164,7 +171,7 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   TranslateScopeHierarchy(xos, pu_forest, ctxt);
   ctxt.DeleteContext();
   
-  // 4. Dump CallGraph vertices
+  // Dump CallGraph vertices
   DGraphNodeVec* nodes = SortDGraphNodes(&cgraph);
   for (DGraphNodeVec::iterator nodeIt = nodes->begin();
        nodeIt != nodes->end(); ++nodeIt) {
@@ -175,7 +182,7 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   }
   delete nodes;
   
-  // 5. Dump CallGraph edges
+  // Dump CallGraph edges
   DGraphEdgeVec* edges = SortDGraphEdges(&cgraph);
   for (DGraphEdgeVec::iterator edgeIt = edges->begin(); 
        edgeIt != edges->end(); ++edgeIt) {
@@ -186,11 +193,16 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   }
   delete edges;
   
-  // 6. Done!
+  // Done!
   xos << EndElem; /* xaif:CallGraph */
+
+
+  // -------------------------------------------------------
+  // 3. Cleanup
+  // -------------------------------------------------------
   
-  delete stabmaps.first;
-  delete pumaps.first;
+  delete stabmap;
+  delete pumap;
 }
 
 
@@ -230,12 +242,14 @@ TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId,
 {
   PU_SetGlobalState(pu);
   
+  ScalarizedRefTab_W2X* tab = ScalarizedRefTableMap.Find(pu);
+  
   // Translate current symbol table
   SymTabId scopeId = ctxt.FindSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
   
   xos << BegElem("xaif:Scope") << Attr("vertex_id", scopeId) 
       << SymTabIdAnnot(scopeId) << EndAttrs;
-  xlate_SymbolTables(xos, CURRENT_SYMTAB, NULL, ctxt);
+  xlate_SymbolTables(xos, CURRENT_SYMTAB, tab, ctxt);
   xos << EndElem << std::endl;
   
   // Generate an edge to parent
@@ -279,6 +293,10 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
 			Is_Set_PU_Info_flags(pu, PU_IS_COMPILER_GENERATED));
   Is_True(!isCompilerGen, ("Compiler generated PU!")); // FIXME
 
+  // -------------------------------------------------------
+  // Translate the PU
+  // -------------------------------------------------------
+  
   // FIXME: how is PU_f90_lang() different from (Language == LANG_F90)?
   PU& real_pu = PU_Info_pu(pu); 
   WN2F_F90_pu = (PU_f90_lang(real_pu) != 0); // FIXME: set F90 flag

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.48 2004/05/28 22:35:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.49 2004/06/09 20:43:54 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -245,25 +245,28 @@ xaif2whirl::TranslateIR(PU_Info* pu_forest, const DOMDocument* doc)
   
   if (!pu_forest) { return; }
   
+  // -------------------------------------------------------
   // 1. Initialization
+  // -------------------------------------------------------
   XlationContext ctxt;
   
   // Initialize global id maps
-  pair<SymTabToSymTabIdMap*, SymTabIdToSymTabMap*> stabmaps =
-    CreateSymTabIdMaps(pu_forest);
-  ctxt.SetIdToSymTabMap(stabmaps.second);
-  delete stabmaps.first;
+  SymTabIdToSymTabMap* stabmap = new SymTabIdToSymTabMap(pu_forest);
+  ctxt.SetIdToSymTabMap(stabmap);
   
-  pair<PUToPUIdMap*, PUIdToPUMap*> pumaps = CreatePUIdMaps(pu_forest);
-  delete pumaps.first;
-  ctxt.SetIdToPUMap(pumaps.second);
-    
+  PUIdToPUMap* pumap = new PUIdToPUMap(pu_forest);
+  ctxt.SetIdToPUMap(pumap);
+  
+  // -------------------------------------------------------
   // 2. Translate
+  // -------------------------------------------------------
   TranslateCallGraph(pu_forest, doc, ctxt);
   
+  // -------------------------------------------------------
   // 3. Cleanup
-  delete stabmaps.second;
-  delete pumaps.second;
+  // -------------------------------------------------------
+  delete stabmap;
+  delete pumap;
 }
 
 
@@ -372,9 +375,11 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   ctxt.SetWNParentMap(&wnParentMap);
   
   // 1. WHIRL<->ID maps
-  pair<WNToWNIdMap*, WNIdToWNMap*> wnmaps = CreateWhirlIdMaps(wn_pu);
-  ctxt.SetWNToIdMap(wnmaps.first);
-  ctxt.SetIdToWNMap(wnmaps.second);
+  WNToWNIdMap* wnmapx = new WNToWNIdMap();
+  WNIdToWNMap* wnmapy = new WNIdToWNMap();
+  CreateWhirlIdMaps(wn_pu, wnmapx, wnmapy);
+  ctxt.SetWNToIdMap(wnmapx);
+  ctxt.SetIdToWNMap(wnmapy);
   
   // -------------------------------------------------------
   // 2. Update passing style for arguments (especially used in reverse
@@ -484,8 +489,8 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   // -------------------------------------------------------
   // 5. Cleanup
   // -------------------------------------------------------
-  delete wnmaps.first;
-  delete wnmaps.second;
+  delete wnmapx;
+  delete wnmapy;
 }
 
 
