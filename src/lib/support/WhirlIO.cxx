@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v 1.8 2004/02/26 14:24:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v 1.9 2005/01/12 20:00:38 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -107,7 +107,8 @@ ReadIR(const char* irfilename)
   
   // Open file, read PU info and setup symbol tables
   Open_Input_Info(irfilename);
-  Initialize_Symbol_Tables(FALSE);
+  Read_Global_Data = "bogus-value-as-argument-to-Initialize_Symbol_Tables";
+  Initialize_Symbol_Tables(FALSE /*reserve_index_zero*/);
   New_Scope(GLOBAL_SYMTAB, Malloc_Mem_Pool, FALSE);
   PU_Info *pu_forest = Read_Global_Info(NULL);
   Initialize_Special_Global_Symbols();
