@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.6 2003/05/23 18:33:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.7 2003/07/16 12:24:40 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -794,8 +794,12 @@ WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    TY_IDX array_ty;
 
 
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ARRAY,
-                    (DIAG_W2F_UNEXPECTED_OPC, "xlate_ARRAY"));
+   // FIXME: this was ARRAY not ARRSECTION
+   //ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ARRAY,
+   //                 (DIAG_W2F_UNEXPECTED_OPC, "xlate_ARRAY"));
+   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ARRSECTION,
+                    (DIAG_W2F_UNEXPECTED_OPC, "xlate_ARRSECTION"));
+
 
    /* Only allow taking the address of an array element for F90!
     *

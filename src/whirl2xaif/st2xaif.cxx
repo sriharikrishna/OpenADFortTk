@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.8 2003/06/02 13:43:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.9 2003/07/16 12:24:40 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -228,7 +228,7 @@ private:
 //
 //   SYMTAB: not actually a type, but refers to all of the tables at a
 //   particular level/scope.  Besides a global scope, there is a local
-//   scope for each PU.  Each scope contains a number of different
+//   scope for each nested PU.  Each scope contains a number of different
 //   tables, some of which are common to all levels (e.g. ST_TAB) and
 //   some of which are specific to global (e.g. PU_TAB) or local
 //   levels (e.g. LABEL_TAB).

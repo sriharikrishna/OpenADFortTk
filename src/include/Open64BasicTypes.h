@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/include/Open64BasicTypes.h,v 1.3 2003/05/21 18:21:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/include/Open64BasicTypes.h,v 1.4 2003/07/16 12:24:40 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -40,6 +40,7 @@
 #include "pu_info.h"	   /* for PU_Info */
 #include "wn.h"            /* WN nodes */
 #include "wn_util.h"       /* WN walk, insert and copy routines */
+#include "wn_tree_util.h"  /* WN_TREE_ITER, WN_TREE_CONTAINER */
 #include "wio.h"           /* WHIRL I/O */
 #include "wutil.h"         /* WHIRL intrinsic utilities */
 #include "intrn_info.h"    /* WHIRL INTR macros */     

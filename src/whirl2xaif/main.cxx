@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.6 2003/07/09 19:43:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.7 2003/07/16 12:24:40 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -122,11 +122,13 @@ DumpIR(PU_Info *pu_forest);
 
 // Options (FIXME)
 // Src_File_Name, Irb_File_Name, Obj_File_Name
-const char* ProgramName = NULL;
+const char* ProgramName = NULL; // FIXME: change to std::string
 char WHIRL_filename[PATH_MAX+1] = "";
 char XAIF_filename[PATH_MAX+1] = "";
 
 bool opt_dumpIR = false;
+bool opt_testPersistentIDs = false;      // FIXME
+const char* PersistentIDsToPrint = NULL; // write persistent ids if 
 
 //************************** Forward Declarations ***************************
 
@@ -502,6 +504,17 @@ Process_Command_Line (INT argc, char **argv)
 	opt_dumpIR = true;
 	continue;
       }
+
+      if (strcmp(opt, "i") == 0) { 
+	opt_testPersistentIDs = true;
+	continue;
+      }
+
+      if (strcmp(opt, "I") == 0) { 
+	PersistentIDsToPrint = argv[++i]; // FIXME: should test array bounds
+	continue;
+      }
+
       
     } else if (argv[i] != NULL) {
       dashdash_flag = FALSE;

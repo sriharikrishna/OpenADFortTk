@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.9 2003/06/02 13:43:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.10 2003/07/16 12:24:40 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -104,6 +104,11 @@
 using namespace whirl2xaif;
 using namespace xml; // for xml::ostream, etc
 
+// FIXME: REMOVE: defined in main.cxx
+extern bool opt_testPersistentIDs;
+extern const char* PersistentIDsToPrint;
+void PERSISTENT_ID_TESTER(WN* wn);
+
 //************************** Forward Declarations ***************************
 
 // Type of handler-functions for translating WHIRL to XAIF.
@@ -191,11 +196,11 @@ static const WN2F_OPR_HANDLER WN2F_Opr_Handler_List[] = {
   {OPR_MLOAD, &WN2F_mload},
   {OPR_ARRAY, &xlate_ARRAY},
   
-  {OPR_ARRAYEXP,&WN2F_arrayexp},      
-  {OPR_ARRSECTION,&WN2F_arrsection},  
-  {OPR_TRIPLET,&WN2F_triplet},        
-  {OPR_SRCTRIPLET,&WN2F_src_triplet},        
-  {OPR_WHERE,&WN2F_where},	       
+  {OPR_ARRAYEXP,&WN2F_arrayexp},
+  {OPR_ARRSECTION,&WN2F_arrsection},
+  {OPR_TRIPLET,&WN2F_triplet},
+  {OPR_SRCTRIPLET,&WN2F_src_triplet},
+  {OPR_WHERE,&WN2F_where},
   {OPR_INTRINSIC_OP, &WN2F_intrinsic_op},
   {OPR_TAS, &WN2F_tas},
   {OPR_SELECT, &WN2F_select},
@@ -347,6 +352,8 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     
   AddToNonScalarSymTabOp op(symtab);
   ForAllNonScalarRefs(fbody, op); //FIXME
+
+  PERSISTENT_ID_TESTER(wn);
   
   // Emit symbol table for this function
   //FIXME: xlate_SymbolTables(xos, CURRENT_SYMTAB, symtab, ctxt);
@@ -1312,5 +1319,68 @@ WN2F_End_Routine_Strings(xml::ostream& xos, INT32 func_id)
   } else {  /* F77 routine */
     xos << "END !" << PUINFO_FUNC_NAME << std::endl << std::endl;
   }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// FIXME: REMOVE
+
+#include <set>
+
+typedef std::set<unsigned long> IdSet;
+
+void PERSISTENT_ID_TESTER_INIT(IdSet& x, const char* idstr);
+
+void PERSISTENT_ID_TESTER(WN* wn)
+{  
+  static unsigned long id = 0; // 0 reserved as NULL
+  static IdSet IdsToFind;
+
+  // Initialize if necessary
+  if (id == 0) {
+    PERSISTENT_ID_TESTER_INIT(IdsToFind, PersistentIDsToPrint);
+  }
+
+  // Iterate over the whirl tree finding or assigning persistent ids
+  WN_TREE_CONTAINER<PRE_ORDER> wtree(wn);
+  WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
+
+  for (it = wtree.begin(); it != wtree.end(); ++it) {
+    WN* curWN = it.Wn();
+    unsigned long curId = ++id;
+    bool dumpNode = false;
+
+    if (IdsToFind.size() > 0) {
+      if (IdsToFind.find(curId) != IdsToFind.end()) {
+	dumpNode = true; // We have found a matching node
+      }
+    } else {
+      if (IsNonScalarRef(curWN)) {
+	dumpNode = true;
+      }
+    }
+    
+    if (dumpNode) {
+      fprintf(stderr, "\n-----[%lu]-----\n", curId);
+      IR_set_dump_order(TRUE); /* dump parent before children*/
+      fdump_tree(stderr, curWN);
+    }
+  }
+  
+}
+
+void PERSISTENT_ID_TESTER_INIT(IdSet& x, const char* idstr)
+{
+  if (!idstr) { return; }
+  
+  char* tok = strtok(const_cast<char*>(idstr), ":");
+  while (tok != NULL) {
+
+    unsigned long id = strtol(tok, (char **)NULL, 10);
+    x.insert(id);
+
+    tok = strtok((char*)NULL, ":");
+  }
+
 }
 
