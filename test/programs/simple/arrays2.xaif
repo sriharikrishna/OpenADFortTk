@@ -408,8 +408,6 @@
   <xaif:ControlFlowGraph vertex_id="4" scope_id="1" symbol_id="compute2__28" annotation="{PU_Id#2}">
     <xaif:ArgumentList/>
 
-    <xaif:Exit vertex_id="16" annotation="{WHIRL_Id#}"/>
-
     <xaif:Entry vertex_id="14" annotation="{WHIRL_Id#}"/>
 
     <xaif:BasicBlock vertex_id="15" scope_id="3" annotation="{WHIRL_Id#164:165:167:178:189:200:238:239:240:257:258}">
@@ -494,6 +492,8 @@
       <xaif:Marker statement_id="10" annotation="{WHIRL_Id#257} [pragma]"/>
       <xaif:Marker statement_id="11" annotation="{WHIRL_Id#258} [return]"/>
     </xaif:BasicBlock>
+
+    <xaif:Exit vertex_id="16" annotation="{WHIRL_Id#}"/>
 
     <xaif:ControlFlowEdge edge_id="1" source="14" target="15"/>
     <xaif:ControlFlowEdge edge_id="2" source="15" target="16"/>

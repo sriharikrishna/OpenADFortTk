@@ -253,6 +253,8 @@
   <xaif:ControlFlowGraph vertex_id="4" scope_id="1" symbol_id="scopingtest__38" annotation="{PU_Id#4}">
     <xaif:ArgumentList/>
 
+    <xaif:Entry vertex_id="16" annotation="{WHIRL_Id#}"/>
+
     <xaif:BasicBlock vertex_id="17" scope_id="5" annotation="{WHIRL_Id#135:136:137:139:141:146:147}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#135} [pragma]"/>
       <xaif:Marker statement_id="2" annotation="{WHIRL_Id#136} [use globals_]"/>
@@ -289,8 +291,6 @@
     </xaif:BasicBlock>
 
     <xaif:Exit vertex_id="19" annotation="{WHIRL_Id#}"/>
-
-    <xaif:Entry vertex_id="16" annotation="{WHIRL_Id#}"/>
 
     <xaif:ControlFlowEdge edge_id="1" source="16" target="17"/>
     <xaif:ControlFlowEdge edge_id="2" source="17" target="19"/>
