@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.19 2004/05/06 21:53:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.20 2004/05/07 20:04:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -79,6 +79,7 @@ const char* XAIFStringRepository::c_strTbl[] = {
   
   "xaif:ArgumentList",
   "xaif:ArgumentSymbolReference",
+  "intent",
   
   "xaif:Replacement",
   "placeholder",

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.19 2004/05/06 21:53:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.20 2004/05/07 20:04:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -69,15 +69,16 @@ public:
     ATTR_kind,
     ATTR_type,
     ATTR_shape,
-
+    
     // -----------------------------------------------------
-
+    
     // xaif:ControlFlowGraph, xaif:ReplacementList, xaif:Replacement
     ELEM_CFG,
     ELEM_ReplaceList,
     
     ELEM_ArgList,
     ELEM_ArgSymRef,
+    ATTR_intent,
     
     ELEM_Replacement,
     ATTR_placeholder,
@@ -259,6 +260,8 @@ public:
   XMLCh*      elem_ArgList_x() const { return x_strTbl[ELEM_ArgList]; }
   const char* elem_ArgSymRef() const { return c_strTbl[ELEM_ArgSymRef]; }
   XMLCh*      elem_ArgSymRef_x() const { return x_strTbl[ELEM_ArgSymRef]; }
+  const char* attr_intent() const { return c_strTbl[ATTR_intent]; }
+  XMLCh*      attr_intent_x() const { return x_strTbl[ATTR_intent]; }
   
   const char* elem_Replacement() const { return c_strTbl[ELEM_Replacement]; }
   XMLCh*      elem_Replacement_x() const { return x_strTbl[ELEM_Replacement]; }
