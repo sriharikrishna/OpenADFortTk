@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.50 2004/03/29 23:40:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.51 2004/04/14 21:26:31 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -142,7 +142,7 @@ GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt);
 
 
 static void
-AddControlFlowEndTags(WN* wn);
+AddControlFlowEndTags(WN* wn, WhirlParentMap* wnParentMap);
 
 static void
 MassageOACFGIntoXAIFCFG(CFG* cfg);
@@ -216,16 +216,23 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // -------------------------------------------------------
   // Collect auxillary data
   // -------------------------------------------------------
+
+  // 0. WHIRL parent map
+  WhirlParentMap wnParentMap(wn);
+  ctxt.SetWNParentMap(&wnParentMap);
+
   // 1. Non-scalar symbol table
   NonScalarSymTab* symtab = new NonScalarSymTab(); // FIXME
   AddToNonScalarSymTabOp op(symtab);
   ForAllNonScalarRefs(fbody, op); //FIXME
-
+  ctxt.SetNonScalarSymTab(symtab);
+  
   // 2. WHIRL<->ID maps
   pair<WNToWNIdMap*, WNIdToWNMap*> wnmaps = CreateWhirlIdMaps(wn);
   delete wnmaps.second;
-
-  AddControlFlowEndTags(wn); // FIXME
+  ctxt.SetWNToIdMap(wnmaps.first);
+  
+  AddControlFlowEndTags(wn, &wnParentMap); // FIXME
 
   // 3. OpenAnalysis CFG
   Pro64IRInterface irInterface;
@@ -238,6 +245,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   set<SymHandle>* params = GetParamSymHandleSet(wn);
   UJNumbers vnmap(cfg, *params);
   delete params;
+  ctxt.SetWNToValNum(&vnmap);
 
   // 5. Massage CFG (wait until after Uwe numbers have been computed)
   MassageOACFGIntoXAIFCFG(&cfg);
@@ -251,8 +259,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // -------------------------------------------------------
   // Translate CFG (et al.) to XAIF
   // -------------------------------------------------------
-  ctxt.CreateContext(XlationContext::NOFLAG, symtab, wnmaps.first);
-  ctxt.CurContext().SetValNum(&vnmap);
+  ctxt.CreateContext(XlationContext::NOFLAG, wn);
   
   // Dump CFG vertices (basic blocks) in sorted order ('normalized')
   // Note: It might seem that instead of sorting, we could simply use
@@ -267,7 +274,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 #endif
   
   // try a BFS iterator.  too bad for dead code. (actually DFS-- BFS
-  // not yet implmented)
+  // not yet implmented) -- toposort FIXME
   std::set<DGraph::Node*> usedNodes;
   for (DGraph::DFSIterator nodeIt(cfg); (bool)nodeIt; ++nodeIt) {
     CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
@@ -1278,13 +1285,10 @@ GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt)
 
 //***************************************************************************
 
-#include <lib/support/WhirlParentize.h>
-
 // AddControlFlowEndTags: Add control flow end tags
 // FIXME: assumes fully structured control flow???
-// FIXME: no not use FindParentWNBlock()
 static void
-AddControlFlowEndTags(WN* wn)
+AddControlFlowEndTags(WN* wn, WhirlParentMap* wnParentMap)
 {
   WN_TREE_CONTAINER<PRE_ORDER> wtree(wn);
   WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
@@ -1337,7 +1341,7 @@ AddControlFlowEndTags(WN* wn)
 	ipWN = curWN;
       }
       if (ipWN) {
-	WN* blkWN = FindParentWNBlock(wn, ipWN);
+	WN* blkWN = wnParentMap->FindBlock(ipWN);
 	WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndBranch());
 	WN_INSERT_BlockAfter(blkWN, ipWN, newWN); // 'newWN' after 'ipWN'
       }
