@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.17 2004/04/29 21:32:19 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.18 2004/05/11 17:48:34 eraxxon Exp $
 # -*-makefile-*-
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -9,7 +9,7 @@
 # Makefile
 #############################################################################
 
-include $(WHIRL2XAIF)/test/Makeinclude.config
+include $(OPENADFORTTK)/test/Makeinclude.config
 
 #############################################################################
 # Configuration
@@ -52,12 +52,12 @@ F90_MASTERS1 = $(shell ls *.f90)
 F90_MASTERS1 := $(filter-out $(F90_EXCEPTIONS1), $(F90_MASTERS1))
 
 # Pipeline
-MFEF90  = $(WHIRL2XAIF_OPEN64)/crayf90/sgi/mfef90
-WHIRL2F = $(WHIRL2XAIF_OPEN64)/whirl2f/whirl2f
-W2X     = $(WHIRL2XAIF)/obj/$(WHIRL2XAIF_PLATFORM)/obj/whirl2xaif
-NORM    = $(WHIRL2XAIF)/test/util/normalize
+MFEF90  = $(OPENADFORTTK_OPEN64)/crayf90/sgi/mfef90
+WHIRL2F = $(OPENADFORTTK_OPEN64)/whirl2f/whirl2f
+W2X     = $(OPENADFORTTK)/obj/$(OPENADFORTTK_PLATFORM)/obj/whirl2xaif
+NORM    = $(OPENADFORTTK)/test/util/normalize
 
-OPENAD  = $(WHIRL2XAIF)/obj/$(WHIRL2XAIF_PLATFORM)/obj/openad
+OPENAD  = $(OPENADFORTTK)/obj/$(OPENADFORTTK_PLATFORM)/obj/openad
 
 #############################################################################
 # Building Rules for bloop tests:
@@ -112,7 +112,7 @@ tests_pipeline_clean:
 	rm -f *.w2f.pp.f
 
 schema : schema_clean
-	@if [ "$(WHIRL2XAIF_PLATFORM)" = "i686-Cygwin" ]; then \
+	@if [ "$(OPENADFORTTK_PLATFORM)" = "i686-Cygwin" ]; then \
 	  ln $(XAIFSCHEMAROOT)/schema/xaif*.xsd . ; \
 	else \
 	  ln -s $(XAIFSCHEMAROOT)/schema/xaif*.xsd . ; \

@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/Attic/Makefile,v 1.6 2004/02/27 00:36:32 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/Attic/Makefile,v 1.7 2004/05/11 17:48:33 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -12,7 +12,7 @@
 # Site/machine/architecture dependent configuration 
 #############################################################################
 
-include $(WHIRL2XAIF)/src/Makeinclude.config
+include $(OPENADFORTTK)/src/Makeinclude.config
 
 OPEN64_IFLAGS += -I$(OPEN64)/be/whirl2f -I$(OPEN64)/be/whirl2c
 
@@ -26,9 +26,9 @@ endif
 
 .SUFFIXES: .cxx .h .d .cpp
 
-EXE = $(WHIRL2XAIF_OBJ_PATH)/$(EXE_WHIRLTESTER)
+EXE = $(OPENADFORTTK_OBJ_PATH)/$(EXE_WHIRLTESTER)
 
-LIBRARY = $(WHIRL2XAIF_OBJ_PATH)/$(LIB_WHIRLTESTER)
+LIBRARY = $(OPENADFORTTK_OBJ_PATH)/$(LIB_WHIRLTESTER)
 
 VPATH = $(SRCS)
 
@@ -43,7 +43,7 @@ OBJS = \
 # USER_* flags come from "Makeinclude.config"
 CXXFLAGS := $(USER_CXXFLAGS)
 CFLAGS := $(USER_CFLAGS)
-IFLAGS := $(USER_C_IFLAGS) -I. -I$(VPATH) -I$(WHIRL2XAIF_INCLUDE_PATH) \
+IFLAGS := $(USER_C_IFLAGS) -I. -I$(VPATH) -I$(OPENADFORTTK_INCLUDE_PATH) \
 	$(OPEN64_IFLAGS) $(OA_IFLAGS) 
 LDFLAGS := $(USER_C_LDFLAGS) $(OA_LDFLAGS) -lm
 
@@ -52,12 +52,12 @@ ifneq ($(PLATFORM),i686-Cygwin)
   LDFLAGS += -ldl
 endif
 
-LIBS = $(LIBRARY) $(WHIRL2XAIF_OBJ_PATH)/$(LIB_SUPPORT) \
+LIBS = $(LIBRARY) $(OPENADFORTTK_OBJ_PATH)/$(LIB_SUPPORT) \
 	$(OPEN64TARG)/whirl2f/whirl2f.$(DSOext) \
 	$(OPEN64TARG)/whirl2f/be.$(DSOext)
 
-#	$(WHIRL2XAIF_OBJ_PATH)/$(LIB_WHIRLREADER) \
-#	$(WHIRL2XAIF_OBJ_PATH)/$(LIB_COMUTIL) 
+#	$(OPENADFORTTK_OBJ_PATH)/$(LIB_WHIRLREADER) \
+#	$(OPENADFORTTK_OBJ_PATH)/$(LIB_COMUTIL) 
 
 #############################################################################
 # Compiling Rules:

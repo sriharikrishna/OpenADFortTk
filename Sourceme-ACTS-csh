@@ -1,14 +1,14 @@
 # -*-Mode: sh;-*-
 # For csh or tcsh
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.16 2004/03/12 18:21:44 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.17 2004/05/11 17:48:33 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
 #############################################################################
 
-setenv WHIRL2XAIF "${HOME}/Develop/whirl2xaif"
+setenv OPENADFORTTK "${HOME}/Develop/OpenADFortTk"
 
-set PLATFORM=`cd ${WHIRL2XAIF}/src/config; ./hpcplatform`
+set PLATFORM=`cd ${OPENADFORTTK}/config; ./hpcplatform`
 switch ($PLATFORM)
 case i686-Cygwin:
   set base="/cygdrive/c/Tmp/ACTS"
@@ -43,7 +43,7 @@ unset base
 # System dependent
 #############################################################################
 
-set PLATFORM=`cd ${WHIRL2XAIF}/src/config; ./hpcplatform`
+set PLATFORM=`cd ${OPENADFORTTK}/config; ./hpcplatform`
 
 switch ($PLATFORM)
   case i686-Linux:
@@ -86,16 +86,16 @@ alias ir_b2a  ${OPEN64ROOT}/ir_tools/ir_b2a
 alias ir_size ${OPEN64ROOT}/ir_tools/ir_size
 
 #############################################################################
-# whirl2xaif
+# OpenADFortTk
 #############################################################################
 
-source ${WHIRL2XAIF}/Sourceme-csh
+source ${OPENADFORTTK}/Sourceme-csh
 
-setenv WHIRL2XAIF_OPEN64BASE "${OPEN64_BASE}/osprey1.0"
-setenv WHIRL2XAIF_OPEN64  "${OPEN64ROOT}"
-setenv WHIRL2XAIF_OA      "${OPENANALYSISROOT}"
-setenv WHIRL2XAIF_XERCESC "${XERCESCROOT}"
-setenv WHIRL2XAIF_BOOST   "${BOOSTROOT}"
+setenv OPENADFORTTK_OPEN64BASE "${OPEN64_BASE}/osprey1.0"
+setenv OPENADFORTTK_OPEN64  "${OPEN64ROOT}"
+setenv OPENADFORTTK_OA      "${OPENANALYSISROOT}"
+setenv OPENADFORTTK_XERCESC "${XERCESCROOT}"
+setenv OPENADFORTTK_BOOST   "${BOOSTROOT}"
 
 #############################################################################
 # Paths

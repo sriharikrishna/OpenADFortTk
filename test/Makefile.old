@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/Makefile.old,v 1.1 2004/01/25 02:34:21 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/Makefile.old,v 1.2 2004/05/11 17:48:33 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -12,7 +12,7 @@
 # Site/machine/architecture dependent configuration 
 #############################################################################
 
-include $(WHIRL2XAIF)/test/Makeinclude.config
+include $(OPENADFORTTK)/test/Makeinclude.config
 
 #############################################################################
 # Site/machine/architecture independent configuration 
@@ -34,9 +34,9 @@ check : run_tests
 TESTDIRS = lib/support
 
 build_tests: 
-	src=$(WHIRL2XAIF)/test ; \
+	src=$(OPENADFORTTK)/test ; \
 	for dir in $(TESTDIRS) ; do \
-	  obj=$(WHIRL2XAIF_OBJ_PATH)/test/$$dir ; \
+	  obj=$(OPENADFORTTK_OBJ_PATH)/test/$$dir ; \
 	  mkdir -p $$obj ; \
 	  cd $$obj ; \
 	  $(MAKE) -f $$src/$$dir/Makefile SRCS=$$src/$$dir ; \
@@ -45,9 +45,9 @@ build_tests:
 # FIXME: It may be better to place test running in the respective
 # directory (where it is built).
 run_tests: 
-	src=$(WHIRL2XAIF)/test ; \
+	src=$(OPENADFORTTK)/test ; \
 	for dir in $(TESTDIRS) ; do \
-	  testdir=$(WHIRL2XAIF_OBJ_PATH)/test/$$dir ; \
+	  testdir=$(OPENADFORTTK_OBJ_PATH)/test/$$dir ; \
 	  for test in `ls $$testdir/*.test` ; do \
 	    $$test ; \
 	  done \
@@ -62,9 +62,9 @@ run_tests:
 clean: veryclean
 
 veryclean:
-	testdir=$(WHIRL2XAIF_OBJ_PATH)/test ; \
-	if [ -n "$(WHIRL2XAIF_OBJ_PATH)" \
-	     -a "$(WHIRL2XAIF_OBJ_PATH)" != "/" ] ; then \
+	testdir=$(OPENADFORTTK_OBJ_PATH)/test ; \
+	if [ -n "$(OPENADFORTTK_OBJ_PATH)" \
+	     -a "$(OPENADFORTTK_OBJ_PATH)" != "/" ] ; then \
 	  /bin/rm -f -r $${testdir}; \
 	fi
 

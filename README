@@ -1,9 +1,9 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.18 2004/04/22 18:56:05 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.19 2004/05/11 17:48:33 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
 ==
-== Location: ${WHIRL2XAIF}
+== Location: ${OPENADFORTTK}
 ==
 =============================================================================
 
@@ -51,9 +51,9 @@ xercesc
   [HiPerSoft cvs: user@koolkat2.cs.rice.edu:/Volumes/cvsrep/developer]
   cvs co xercesc
 
-whirl2xaif
+OpenADFortTk
   [HiPerSoft cvs: user@koolkat2.cs.rice.edu:/Volumes/cvsrep/developer]
-  cvs co whirl2xaif
+  cvs co OpenADFortTk
 
 xaifbooster, angel, boost
   xaifbooster
@@ -73,19 +73,25 @@ xaifbooster, angel, boost
 xaif-1.0
   bk clone http://xaif.bkbits.net/xaif-1.0
 
+-----------------------------------------------------------------------------
+
+CVSROOT=/home/naumann/CVSHOME
+
+ALL/ACTS/TESTSUITE/REVERSE_MODE
+
 =============================================================================
 
 2. Building
 --------------------
 
-Please use the same C++ compiler for Open64, OpenAnalysis and whirl2xaif!
+Please use the same C++ compiler for Open64, OpenAnalysis and OpenADFortTk!
 
-1. Prepare env using whirl2xaif/Sourceme-ACTS-{csh,sh}.
+1. Prepare env using OpenADFortTk/Sourceme-ACTS-{csh,sh}.
    
    Open and make sure paths in first section are correct.  Then source
    the appropriate file.
 
-   source whirl2xaif/Sourceme-ACTS-{csh,sh}
+   source OpenADFortTk/Sourceme-ACTS-{csh,sh}
 
 
 2. Build Open64's mfef90 (Open64 front end) and whirl2f (Open64 backend).
@@ -115,12 +121,12 @@ Please use the same C++ compiler for Open64, OpenAnalysis and whirl2xaif!
    make CXX="<C++ compiler>" CC="<C compiler>"
 
 
-5. Build whirl2xaif.
+5. Build OpenADFortTk.
 
    Ensure the correct C++ compiler is used in
-     ${WHIRL2XAIF}/src/Makeinclude.config.${WHIRL2XAIF_PLATFORM}
+     ${OPENADFORTTK}/src/Makeinclude.config.${OPENADFORTTK_PLATFORM}
 
-   cd ${WHIRL2XAIF}/src
+   cd ${OPENADFORTTK}/src
    make 
 
 
@@ -156,7 +162,7 @@ Type "openad --help" for more information.
 [Prehistoric stuff]
 =============================================================================
 
-4. Brief comments on whirl2xaif sources
+4. Brief comments on OpenADFortTk sources
 --------------------
 
 The sources are littered with FIXMEs and REMOVEs.  A great deal of
@@ -194,7 +200,7 @@ Originaly based on whirl2f, whirl2xaif has been changed significantly:
   * significantly cleaned up code
 
 Currently the binaries are just stored with the build files in
-${WHIRL2XAIF}/obj/${WHIRL2XAIF_PLATFORM}.  This directory is
+${OPENADFORTTK}/obj/${OPENADFORTTK_PLATFORM}.  This directory is
 automatically created during the build.
 
 [whirl2xaif links with be.so. Building whirl2f will ensure the 

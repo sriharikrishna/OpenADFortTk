@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.11 2004/02/27 00:35:53 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.12 2004/05/11 17:48:33 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -13,7 +13,7 @@
 # Site/machine/architecture dependent configuration 
 #############################################################################
 
-include $(WHIRL2XAIF)/src/Makeinclude.config
+include $(OPENADFORTTK)/src/Makeinclude.config
 
 ifndef SRCS
 SRCS = .
@@ -25,7 +25,7 @@ endif
 
 .SUFFIXES: .cxx .h .d .cpp
 
-LIBRARY = $(WHIRL2XAIF_OBJ_PATH)/$(LIB_SUPPORT)
+LIBRARY = $(OPENADFORTTK_OBJ_PATH)/$(LIB_SUPPORT)
 
 VPATH = $(SRCS)
 
@@ -56,7 +56,7 @@ OBJS = \
 
 CXXFLAGS := $(USER_CXXFLAGS) 
 CFLAGS := $(USER_CFLAGS) 
-IFLAGS := $(USER_C_IFLAGS) -I. -I$(VPATH) -I$(WHIRL2XAIF_INCLUDE_PATH) \
+IFLAGS := $(USER_C_IFLAGS) -I. -I$(VPATH) -I$(OPENADFORTTK_INCLUDE_PATH) \
 	$(OPEN64_IFLAGS) $(OA_IFLAGS) $(XERCES_IFLAGS)
 
 #############################################################################

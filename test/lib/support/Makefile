@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/lib/support/Makefile,v 1.1 2004/01/25 02:34:21 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/lib/support/Makefile,v 1.2 2004/05/11 17:48:34 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -12,7 +12,7 @@
 # Site/machine/architecture dependent configuration 
 #############################################################################
 
-include $(WHIRL2XAIF)/test/Makeinclude.config
+include $(OPENADFORTTK)/test/Makeinclude.config
 
 ifndef SRCS
 SRCS = .
@@ -27,7 +27,7 @@ endif
 TESTS = $(notdir $(shell ls $(SRCS)/*.test.cxx))
 
 EXES = $(patsubst %.test.cxx, %.test, $(TESTS))
-  #$(WHIRL2XAIF_OBJ_PATH)
+  #$(OPENADFORTTK_OBJ_PATH)
 
 VPATH = $(SRCS)
 
@@ -39,11 +39,11 @@ OBJS =
 # USER_* flags come from "Makeinclude.config"
 CXXFLAGS := $(USER_CXXFLAGS)
 CFLAGS := $(USER_CFLAGS)
-IFLAGS := $(USER_C_IFLAGS) -I. -I$(VPATH) -I$(WHIRL2XAIF_INCLUDE_PATH) \
+IFLAGS := $(USER_C_IFLAGS) -I. -I$(VPATH) -I$(OPENADFORTTK_INCLUDE_PATH) \
           $(BOOST_IFLAGS)
 LDFLAGS := $(USER_C_LDFLAGS) -lm
 
-LIBS = $(WHIRL2XAIF_OBJ_PATH)/$(LIB_SUPPORT)
+LIBS = $(OPENADFORTTK_OBJ_PATH)/$(LIB_SUPPORT)
 
 #############################################################################
 # Compiling Rules:

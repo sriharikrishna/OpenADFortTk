@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makefile,v 1.6 2004/04/23 17:08:00 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makefile,v 1.7 2004/05/11 17:48:33 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -19,7 +19,7 @@
 # Site/machine/architecture dependent configuration 
 #############################################################################
 
-include $(WHIRL2XAIF)/src/Makeinclude.config
+include $(OPENADFORTTK)/src/Makeinclude.config
 
 #############################################################################
 # Site/machine/architecture independent configuration 
@@ -41,9 +41,9 @@ exes: build_exes
 EXEDIRS = whirl2xaif xaif2whirl testers
 
 build_exes: build_libs
-	src=$(WHIRL2XAIF)/src ; \
+	src=$(OPENADFORTTK)/src ; \
 	for exe in $(EXEDIRS) ; do \
-	  obj=$(WHIRL2XAIF_OBJ_PATH)/exe-$$exe ; \
+	  obj=$(OPENADFORTTK_OBJ_PATH)/exe-$$exe ; \
 	  mkdir -p $$obj ; \
 	  cd $$obj ; \
 	  $(MAKE) -f $$src/$$exe/Makefile SRCS=$$src/$$exe ; \
@@ -60,9 +60,9 @@ LIBDIRS = lib/support
 
 build_libs: 
 ifdef LIBDIRS
-	src=$(WHIRL2XAIF)/src ; \
+	src=$(OPENADFORTTK)/src ; \
 	for lib in $(LIBDIRS) ; do \
-	  obj=$(WHIRL2XAIF_OBJ_PATH)/$$lib ; \
+	  obj=$(OPENADFORTTK_OBJ_PATH)/$$lib ; \
 	  mkdir -p $$obj ; \
 	  cd $$obj ; \
 	  $(MAKE) -f $$src/$$lib/Makefile SRCS=$$src/$$lib ; \
@@ -84,7 +84,7 @@ install_real: exes
 install_post: install_scripts
 
 install_scripts:
-	cp -f $(WHIRL2XAIF)/test/util/openad $(WHIRL2XAIF_OBJ_PATH)/.
+	cp -f $(OPENADFORTTK)/test/util/openad $(OPENADFORTTK_OBJ_PATH)/.
 
 # uninstall everything
 uninstall: clean
@@ -99,9 +99,9 @@ uninstall: clean
 clean: veryclean
 
 veryclean:
-	if [ -n "$(WHIRL2XAIF_OBJ_PATH)" \
-	     -a "$(WHIRL2XAIF_OBJ_PATH)" != "/" ] ; then \
-	  /bin/rm -f -r $(WHIRL2XAIF_OBJ_PATH); \
+	if [ -n "$(OPENADFORTTK_OBJ_PATH)" \
+	     -a "$(OPENADFORTTK_OBJ_PATH)" != "/" ] ; then \
+	  /bin/rm -f -r $(OPENADFORTTK_OBJ_PATH); \
 	fi
 
 .PHONY: clean veryclean
