@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.12 2003/07/24 14:36:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.13 2003/07/24 20:30:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -78,7 +78,7 @@
 
 //************************** Open64 Include Files ***************************
 
-#include "Open64BasicTypes.h"
+#include <include/Open64BasicTypes.h>
 
 //*************************** User Include Files ****************************
 
@@ -96,7 +96,7 @@
 #include "ty2xaif.h"
 #include "tcon2f.h"
 
-#include "Pro64IRInterface.h"
+#include <lib/support/Pro64IRInterface.h>
 #include <OpenAnalysis/CFG/CFG.h>
 
 //************************** Forward Declarations ***************************

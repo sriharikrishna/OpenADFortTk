@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/w2cf_parentize.cxx,v 1.3 2003/07/24 14:36:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/w2cf_parentize.cxx,v 1.4 2003/07/24 20:30:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -50,7 +50,7 @@
 //
 //***************************************************************************
 
-#include "Open64BasicTypes.h"
+#include <include/Open64BasicTypes.h>
 
 #include "w2cf_parentize.h"
 

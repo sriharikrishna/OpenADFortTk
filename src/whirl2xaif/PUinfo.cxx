@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.cxx,v 1.5 2003/07/24 14:36:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.cxx,v 1.6 2003/07/24 20:30:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -77,7 +77,7 @@
 #include <string.h>
 
 
-#include "Open64BasicTypes.h"
+#include <include/Open64BasicTypes.h>
 #include "targ_sim.h"
 
 

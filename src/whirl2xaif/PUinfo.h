@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.h,v 1.2 2003/07/24 14:36:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.h,v 1.3 2003/07/24 20:30:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -180,9 +180,9 @@
  * ====================================================================
  */
 
-#include "Open64BasicTypes.h"
+#include <include/Open64BasicTypes.h>
 
-#include "xmlostream.h"  /* xml::ostream, etc */ //REMOVE
+#include <lib/support/xmlostream.h>  /* xml::ostream, etc */ //REMOVE
 
         /*----- Information about call sites -----*/
         /*----------------------------------------*/

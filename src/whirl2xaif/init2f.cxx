@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.cxx,v 1.5 2003/07/24 14:36:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.cxx,v 1.6 2003/07/24 20:30:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -85,7 +85,7 @@
 
 //************************** Open64 Include Files ***************************
 
-#include "Open64BasicTypes.h"
+#include <include/Open64BasicTypes.h>
 
 //*************************** User Include Files ****************************
 
@@ -96,7 +96,7 @@
 #include "st2xaif.h"
 #include "ty2xaif.h"
 #include "tcon2f.h"
-#include "xmlostream.h"
+#include <lib/support/xmlostream.h>
 #include "XlationContext.h"
 
 //************************** Forward Declarations ***************************

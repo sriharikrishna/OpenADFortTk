@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.11 2003/07/24 14:36:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.12 2003/07/24 20:30:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -102,7 +102,7 @@
 
 //************************** Open64 Include Files ***************************
 
-#include "Open64BasicTypes.h"
+#include <include/Open64BasicTypes.h>
 
 //*************************** User Include Files ****************************
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.8 2003/07/24 14:36:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.9 2003/07/24 20:30:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -68,7 +68,7 @@
 
 //************************** Open64 Include Files ***************************
 
-#include "Open64BasicTypes.h" /* Open64 basic types */
+#include <include/Open64BasicTypes.h> /* Open64 basic types */
 #include "pf_cg.h"
 #include "region_util.h"     /* For RID and RID_map */
 

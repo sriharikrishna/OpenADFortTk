@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.h,v 1.2 2003/07/24 14:36:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.h,v 1.3 2003/07/24 20:30:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -59,11 +59,11 @@
 
 //************************** Open64 Include Files ***************************
 
-#include "Open64BasicTypes.h"
+#include <include/Open64BasicTypes.h>
 
 //*************************** User Include Files ****************************
 
-#include "xmlostream.h"  /* xml::ostream, etc */
+#include <lib/support/xmlostream.h>  /* xml::ostream, etc */
 
 //************************** Forward Declarations ***************************
 
@@ -72,8 +72,8 @@
 /* ====================================================================
  * ====================================================================
  *
- * $Revision: 1.2 $
- * $Date: 2003/07/24 14:36:15 $
+ * $Revision: 1.3 $
+ * $Date: 2003/07/24 20:30:04 $
  * $Author: eraxxon $
  * $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.h,v $
  *

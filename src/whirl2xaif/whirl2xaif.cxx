@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.11 2003/07/24 14:36:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.12 2003/07/24 20:30:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -58,7 +58,7 @@
 
 //************************** Open64 Include Files ***************************
 
-#include "Open64BasicTypes.h"
+#include <include/Open64BasicTypes.h>
 
 #include <sys/elf_whirl.h>  /* for WHIRL_REVISION */
 #include "config_flist.h"   /* For FLIST command line parameters */
@@ -76,7 +76,7 @@
 #include "wn2xaif.h"
 #include "wn2xaif_stmt.h"
 
-#include "Pro64IRInterface.h"
+#include <lib/support/Pro64IRInterface.h>
 #include <OpenAnalysis/CallGraph/CallGraph.h> //CALLGRAPH
 
 //************************** Forward Declarations ***************************

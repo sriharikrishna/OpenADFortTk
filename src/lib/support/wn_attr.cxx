@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.3 2003/07/24 14:36:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.4 2003/07/24 20:30:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -62,7 +62,7 @@
  * ====================================================================
  */
 
-#include "Open64BasicTypes.h"
+#include <include/Open64BasicTypes.h>
 
 #include "wn_attr.h"
 #include "whirl2f_common.h"
