@@ -1,4 +1,4 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.1.1.1 2003/05/13 21:54:08 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.2 2003/06/24 18:33:47 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
@@ -47,11 +47,8 @@ with
    
 3. Build OA.
 
-   Ensure the correct C++ compiler is used in 
-     ${WHIRL2XAIF}/../OpenAnalysis/Makefile
-  
-   cd ${WHIRL2XAIF}/../OpenAnalysis
-   make IRHANDLE=PTR
+   cd .../OpenAnalysis
+   make CXX="<compiler>" CXXFLAGS="-g"
 
 4. Build whirl2xaif:
 
