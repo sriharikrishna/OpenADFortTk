@@ -100,9 +100,11 @@ sub get_template_info {
 	     /^!\$TEMPLATE_DECLARARTION_PRAGMA\$ id="template"/){
 	   return ();
        }
-       if ($line =~ /^ \s+ subroutine \s+ template/ix) {
-	   my($arglist) = $info{args} ? $info{args} . "," . "call_nr,version"
-                        	      : "call_nr,version";
+       if (my($t_args) = ($line =~ /^ \s+ subroutine \s+ template \s*
+			          \( \s* ([^\)]*) \s* \)/ix)) {
+	   
+	   my($comma) = $info{args} =~ /\w+/ && $t_args =~ /\w+/ ? ',' : '';
+	   my($arglist) = $info{args} . $comma . $t_args;
 	   return(<<HEAD);
        subroutine $info{name}($arglist)
 HEAD
