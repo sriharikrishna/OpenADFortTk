@@ -9,8 +9,9 @@ $ADDLINES = bless {},'ADL';
 $COMMENT_OUT = bless {},'CMO';
 
 @EXPORT = qw($UNCHANGED $ADDLINES $COMMENT_OUT declare_after
-              lines_from_heredoc);
+              lines_from_heredoc fconcat);
 
+$NO_TRIM = 0;
 
 $type = qr/logical |
            real (?: \s* \* \s*\d )?   |
@@ -113,7 +114,7 @@ sub new_from_lines
 	}
 	unless ($line =~ /$comment/io)
 	{
-	    $line = substr($line,0,72);
+	    $line = substr($line,0,72) unless $NO_TRIM;
 	    while ($lines[0] =~ /$continuation/)
 	    {
 	        my($cont) = shift @lines;
@@ -175,7 +176,9 @@ sub kill_bang_comments
 {
     local($_) = @_;
 
-    s/!(?!.*['"]).*$//;
+    return $_ if (/^\s*!/); # is a comment line
+
+    s/!(?!.*[\'\"]).*$//;
 
     return $_; 
 }
@@ -203,6 +206,13 @@ sub add_text_lines {
 		     @lines);
     return $self;
 }
+sub fconcat {
+    my($f) = Ffile->empty();
+    foreach (@_){
+	$f->add_lines($_->lines());
+    }
+    return $f;
+} 
 sub lines
 {
     my($self) = @_;
@@ -428,4 +438,10 @@ sub lines_from_heredoc {
     local($_) = shift;
     return /^(.*\n)/mg;
 }
+sub linearr {
+    my($self) = @_;
+
+    return (map {$_->line()} $self->lines());
+}
+
 1;

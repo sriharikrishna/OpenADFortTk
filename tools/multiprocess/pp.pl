@@ -13,6 +13,11 @@ use lib "$RealBin/Lib/FT";
 use Ffile;
 use FTscan;
 use FTpat;
+use FTUnit;
+
+use ADxaif;
+use ADinline;
+use ADtemplate;
 
 use PPsetup;
 use File::Basename;
@@ -21,42 +26,15 @@ my($infile) = $ARGV[0];
 my($name,$dir,$ext) = fileparse($infile,'\.[Ff]');
 my($outfile) = $dir . $name . ".pp" . $ext;
 
-Ffile->new($infile)->rewrite_sem(\&xaifpp)->write($outfile);
+my($inl) = ADinline->new(Ffile->new('ad_inline.f'));
+my($template) = ADtemplate->new(Ffile->new('ad_template.f'));
 
-sub xaifpp {
-    my($line) = @_;
-    my($scn) = FTscan->new($line);
-    if ($scn->match(qr/use $TB w2f__types $TBE /x)){
-	return($line,<<'U');
-      use active_module
-U
-    }
-    if($line =~ /^\s+real\(w2f__8\)\s+/i) {
-	$line =~s/real\(w2f__8\)/type(active) ::/i;
-	return $line;
-    }
-    if($scn->match(qr/ __(?: value | deriv )__ $TB \( $TB/x)){
-	return ($scn->grterm(qr/__value__/,\&xaifv_t)
-	            ->grterm(qr/__deriv__/,\&xaifd_t)
-		    ->lstring());
-    }
-    return($UNCHANGED);
-}
-sub xaifv_t {
-    my($v) = $_[0]->copy();
-    my(@tl) = $v->tl();
-    $v->set_tl(@tl[2 .. $#tl-1]); # pick up arg tokens
-    my($s) = $v->str();
+my($ffi) = Ffile->new($infile)->rewrite_sem(\&xaifpp)
+           ->rewrite($inl->inline());
 
-    return FTscan->new("$s%v");
-}
+my($ffit) = fconcat( map {$template->instantiate($_)}
+		     FTUnit->new($ffi)->units() );
 
-sub xaifd_t {
-    my($v) = $_[0]->copy();
-    my(@tl) = $v->tl();
-    $v->set_tl(@tl[2 .. $#tl-1]); # pick up arg tokens
-    my($s) = $v->str();
+$ffit->write($outfile);
 
-    return FTscan->new("$s");
-}
 

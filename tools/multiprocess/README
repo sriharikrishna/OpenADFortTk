@@ -1,0 +1,17 @@
+To use the preprocessor, you *must* define 2 files:
+
+   ad_inline.f
+   ad_template.f
+
+When you run the preprocessor, you *must* have these 2 specific
+files in the directory where you run the pipeline. 
+
+Sample files are supplied in the Samples Directory.
+
+Known limitations:
+
+   The indentation sucks.
+
+   No error checking (doubly defined definitions, missing
+   template directives, etc will all cause massive failure)
+
