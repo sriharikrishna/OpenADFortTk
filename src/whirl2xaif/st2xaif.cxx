@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.39 2004/07/30 17:51:44 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.40 2004/10/06 22:10:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -197,7 +197,7 @@ TCON2F_translate(TCON tvalue, BOOL is_logical, TY_IDX object_ty)
 
   // FIXME: for now we use this hack to return a string
   std::ostringstream sstr;
-  const char* floatstr = NULL;
+  char* floatstr = NULL;
   
   if (is_logical && MTYPE_type_class(TCON_ty(tvalue)) & MTYPE_CLASS_INTEGER) {
     // Treat it as regular integral constant, unless it has value 0 or 1.

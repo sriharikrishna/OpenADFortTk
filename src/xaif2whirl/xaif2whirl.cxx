@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.58 2004/07/30 17:52:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.59 2004/10/06 22:10:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -1807,9 +1807,10 @@ xaif2whirl::GetIntrinsicKey(const DOMElement* elem)
   XercesStrX annotStr_x = XercesStrX(annot);
   const char* annotStr = annotStr_x.c_str();
 
+  // Note: Sun wants the first arg to strstr to be char*.  Stupid.
   std::string key;
   char *start = NULL, *end = NULL;
-  start = strstr(annotStr, XAIFStrings.tag_IntrinsicKey());
+  start = strstr(const_cast<char*>(annotStr), XAIFStrings.tag_IntrinsicKey());
   if (start) {
     start = start + strlen(annotStr);
     end = strstr(start, XAIFStrings.tag_End());
@@ -2132,6 +2133,7 @@ ConvertIntoGlobalST(ST* st)
   // Modify/Add 'st' to common block
   Set_ST_base(*st, *OpenADCommonBlockST);
   Set_ST_ofst(*st, OpenADCommonBlockOffset);
+  return st;
 }
 
 

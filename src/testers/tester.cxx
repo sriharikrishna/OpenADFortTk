@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.15 2004/06/16 14:27:31 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.16 2004/10/06 22:10:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -214,6 +214,7 @@ DumpExprNode(std::ostream& os, ExprTree::Node* node, Pro64IRInterface& ir)
     os << " const"; 
   }
   os << " }";
+  return 0;
 }
 
 
@@ -268,6 +269,7 @@ TestIR_OA_ForEachWNPU(std::ostream& os, WN* wn_pu)
   
   UJNumbers vnmap(cfg, params);
   TestIR_OA_ForEachVarRef(os, wn_pu, irInterface, vnmap);
+  return 0;
 }
 
 static void

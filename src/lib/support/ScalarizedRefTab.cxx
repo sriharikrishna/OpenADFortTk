@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.11 2004/07/31 19:47:33 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.12 2004/10/06 22:10:29 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -463,5 +463,6 @@ AddToScalarizedRefTabOp::operator()(const WN* wn)
 
   // insert <wn, sym> in tab
   tab->Insert(wn, sym);
+  return 0;
 }
 

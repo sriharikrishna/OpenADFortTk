@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.73 2004/07/30 17:51:44 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.74 2004/10/06 22:10:31 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -134,7 +134,9 @@ GetCFGControlFlowVertexType(WN* wstmt);
 static std::string
 GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt);
 
-static pair<bool, INT64>
+// NOTE: removed static for Sun's compiler (supposed to be in unnamed
+// namespace now)
+pair<bool, INT64>
 GetCFGEdgeCondVal(const CFG::Edge* edge);
 
 // lt_CFGEdge: Used to sort CFG::Edges by src, sink and condition value.
@@ -1750,7 +1752,7 @@ GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt)
 // whether the edge has a condition value, and if so, its value.
 // (There is no reserved NULL value for the condition value; it should
 // only be used when the first part of the pair is true!)
-static pair<bool, INT64>
+pair<bool, INT64>
 GetCFGEdgeCondVal(const CFG::Edge* edge)
 {
   CFG::EdgeType ety = edge->getType();

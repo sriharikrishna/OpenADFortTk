@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.4 2004/08/09 19:58:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.5 2004/10/06 22:10:30 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -662,6 +662,7 @@ whirl2sexp::xlate_IDNAME(sexp::ostream& sos, WN* wn)
   sos << BegList << GenSexpWNOpr(wn) // WN_OPR
       << BegList << GenSexpSymRef(st_idx) << Atom(ofst) << EndList // WN_ATTRS
       << EndList;
+  return whirl2sexp::good;
 }
 
 

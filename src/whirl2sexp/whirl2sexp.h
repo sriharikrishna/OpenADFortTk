@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.h,v 1.1 2004/08/05 18:38:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.h,v 1.2 2004/10/06 22:10:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -47,7 +47,7 @@ namespace whirl2sexp {
       FOO3       = 0x00000004, // 
       FOO4       = 0x00000008, // 
     };
-  };
+  }
   
   
   // Translate the PU forest (should already be in memory)

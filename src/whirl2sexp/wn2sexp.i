@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.i,v 1.2 2004/08/09 19:58:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.i,v 1.3 2004/10/06 22:10:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -50,7 +50,7 @@ public:
   WNXlationTable();
   ~WNXlationTable();
 
-  Handler operator[](OPERATOR opr) const { Find(opr); }
+  Handler operator[](OPERATOR opr) const { return Find(opr); }
   Handler Find(OPERATOR opr) const { return table[opr]; }
   
   void Dump(std::ostream& os = std::cerr) const;

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.33 2004/08/05 18:36:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.34 2004/10/06 22:10:31 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -68,6 +68,7 @@
 
 #include <sstream> //FIXME
 #include <cassert> //FIXME
+#include <strings.h>
 
 //************************** Open64 Include Files ***************************
 

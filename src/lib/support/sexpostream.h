@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.h,v 1.3 2004/08/09 14:35:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.h,v 1.4 2004/10/06 22:10:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -70,7 +70,7 @@ namespace sexp {
     inline void 
     ResetFlag(int& flags, IOFlags_t flg) { flags = (flags & ~flg); }
     
-  }; /* namespace IOFlags */
+  } /* namespace IOFlags */
 
 
 class ostream : public std::ostream {

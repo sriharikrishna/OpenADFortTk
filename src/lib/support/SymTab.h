@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.11 2004/06/17 13:32:26 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.12 2004/10/06 22:10:29 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -100,7 +100,7 @@ public:
   
   // Is the symbol active in the AD sense
   bool IsActive() const { return active; }
-  bool SetActive(bool act) { active = act; }
+  void SetActive(bool act) { active = act; }
   
   virtual void Dump(std::ostream& o = std::cerr) const;
   virtual void DDump() const;

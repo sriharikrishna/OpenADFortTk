@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.29 2004/07/28 19:04:25 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.30 2004/10/06 22:10:31 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -84,8 +84,8 @@ namespace whirl2xaif {
 
   // xlate_PregRef: (essentially a special version of xlate_SymRef for PREGs)
   whirl2xaif::status
-  whirl2xaif::xlate_PregRef(xml::ostream& xos, ST* st, TY_IDX preg_ty, 
-			    PREG_IDX preg_idx, XlationContext& ctxt);
+  xlate_PregRef(xml::ostream& xos, ST* st, TY_IDX preg_ty, 
+		PREG_IDX preg_idx, XlationContext& ctxt);
   
   // xlate_SymRef: Given a base symbol 'base_st' and an offset 'offset'
   // within it, generate an XAIF expression to reference an object of
