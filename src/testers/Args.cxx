@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/Args.cxx,v 1.1 2004/02/27 00:34:17 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/Args.cxx,v 1.2 2004/02/27 20:20:51 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -34,34 +34,40 @@ using std::string;
 static const char* version_info = "version .289";
 
 static const char* usage_summary =
-"[mode] [general options] <whirl-B-file>\n";
+"[mode] [options] <whirl-file>\n";
 
 static const char* usage_details =
+"Given a WHIRL file and a mode, do something.\n"
+"\n"
 "Modes:\n"
 "      --ir            run a test routine on IR\n"
 "      --oa-ujnum      test OA UJ numbering\n"
 "      --whirl2f       test whirl2f\n"
 "\n"
-"General Options:\n"
+"Options:\n"
 "  -d, --dump          dump the WHIRL IR\n"
 "  -V, --version       print version information\n"
 "  -h, --help          print this help\n"
 "      --debug [lvl]   debug mode at level `lvl'\n";
 
+
+#define CLP CmdLineParser
+
 CmdLineParser::OptArgDesc Args::optArgs[] = {
   // Modes
-  {  0 , "ir",         CmdLineParser::ARG_NONE },
-  {  0 , "oa-ujnum",   CmdLineParser::ARG_NONE },
-  {  0 , "whirl2f",    CmdLineParser::ARG_NONE },
+  {  0 , "ir",         CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
+  {  0 , "oa-ujnum",   CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
+  {  0 , "whirl2f",    CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
   
-  // Standard options
-  { 'd', "dump",       CmdLineParser::ARG_NONE },
-  { 'V', "version",    CmdLineParser::ARG_NONE },
-  { 'h', "help",       CmdLineParser::ARG_NONE },
-  {  0 , "debug",      CmdLineParser::ARG_OPT },
+  // Options
+  { 'd', "dump",       CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
+  { 'V', "version",    CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
+  { 'h', "help",       CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
+  {  0 , "debug",      CLP::ARG_OPT,  CLP::DUPOPT_CLOB, NULL },
   CmdLineParser::OptArgDesc_NULL
 };
 
+#undef CLP
 
 //***************************************************************************
 // Args
@@ -81,8 +87,6 @@ Args::Args(int argc, const char* const argv[])
 void
 Args::Ctor()
 {
-  runMode = 0;    // default: 0 (invalid)
-  dumpIR = false; // default: false
   debug = 0;      // default: 0 (off)
 }
 
@@ -128,7 +132,7 @@ Args::Parse(int argc, const char* const argv[])
     // Parse the command line
     // -------------------------------------------------------
     parser.Parse(optArgs, argc, argv);
-    
+
     // -------------------------------------------------------
     // Sift through results, checking for symantic errors
     // -------------------------------------------------------
