@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.10 2003/12/29 20:44:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.11 2004/01/13 03:47:00 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -194,9 +194,11 @@ public:
   //--------------------------------------------------------
   IRStmtIterator *LoopBody (StmtHandle h);
   StmtHandle LoopHeader (StmtHandle h);
-  bool LoopIterationsDefinedAtEntry (StmtHandle h);
-  ExprHandle GetLoopCondition (StmtHandle h); 
   StmtHandle GetLoopIncrement (StmtHandle h);
+  bool LoopIterationsDefinedAtEntry (StmtHandle h);
+
+  // condition for loop
+  ExprHandle GetLoopCondition (StmtHandle h); 
 
   //--------------------------------------------------------
   // Invariant: a two-way conditional or a multi-way conditional MUST provide
@@ -213,18 +215,22 @@ public:
   // Structured multiway conditionals
   //--------------------------------------------------------
   int NumMultiCases (StmtHandle h);
-  // condition for multi body 
+  IRStmtIterator *MultiBody (StmtHandle h, int bodyIndex);
+  bool IsBreakImplied (StmtHandle multicond);
+  bool IsCatchAll(StmtHandle h, int bodyIndex);
+  IRStmtIterator *GetMultiCatchall (StmtHandle h);
+
+  // condition for multi body
   ExprHandle GetSMultiCondition (StmtHandle h, int bodyIndex);
   // multi-way beginning expression
   ExprHandle GetMultiExpr (StmtHandle h);
-  IRStmtIterator *MultiBody (StmtHandle h, int bodyIndex);
-  bool IsBreakImplied (StmtHandle multicond);
-  IRStmtIterator *GetMultiCatchall (StmtHandle h);
 
   //--------------------------------------------------------
   // Unstructured two-way conditionals: 
   //--------------------------------------------------------
   StmtLabel  GetTargetLabel (StmtHandle h, int n);
+
+  // condition for two-way branch
   ExprHandle GetCondition (StmtHandle h);
 
   //--------------------------------------------------------
@@ -233,6 +239,8 @@ public:
   int NumUMultiTargets (StmtHandle h);
   StmtLabel GetUMultiTargetLabel (StmtHandle h, int targetIndex);
   StmtLabel GetUMultiCatchallLabel (StmtHandle h);
+
+  // condition for u-multi way
   ExprHandle GetUMultiCondition (StmtHandle h, int targetIndex);
 
   //--------------------------------------------------------

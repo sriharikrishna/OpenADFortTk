@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.11 2003/12/29 20:44:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.12 2004/01/13 03:47:00 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -694,6 +694,15 @@ Pro64IRInterface::GetMultiCatchall (StmtHandle h)
 
 bool
 Pro64IRInterface::IsBreakImplied (StmtHandle multicond)
+{
+  // Whirl does not appear to have a structured switch statement.
+  assert (0);
+  return false;
+}
+
+
+bool
+Pro64IRInterface::IsCatchAll (StmtHandle h, int bodyIndex)
 {
   // Whirl does not appear to have a structured switch statement.
   assert (0);
