@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.26 2004/03/12 18:22:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.27 2004/03/23 18:11:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -285,6 +285,7 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   delete wnmaps.second;
 }
 
+
 // TranslateBB: 
 static void
 TranslateBB(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
@@ -301,6 +302,7 @@ TranslateBB(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
     // skip anything else for now
   }
 }
+
 
 static void
 xlate_BasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
@@ -418,6 +420,7 @@ xlate_BBCondition(WN* wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
   // -------------------------------------------------------
   PatchWNExpr(wn, condKid /* kidno */, ctxt);
 }
+
 
 //****************************************************************************
 
@@ -642,6 +645,7 @@ RemoveFromWhirlIdMaps(WN* wn, WNToWNIdMap* wn2idmap, WNIdToWNMap* id2wnmap)
   }
 }
 
+
 //****************************************************************************
 
 Symbol*
@@ -658,6 +662,7 @@ xaif2whirl::GetSymbol(const DOMElement* elem, XlationContext& ctxt)
   
   return ctxt.FindSym(scopeId.c_str(), symId.c_str());
 }
+
 
 Symbol*
 GetOrCreateSymbol(const char* sname, XlationContext& ctxt)
@@ -690,6 +695,7 @@ GetOrCreateBogusTmpSymbol(XlationContext& ctxt)
   static const char* sname = "OpenAD_bogus";
   return GetOrCreateSymbol(sname, ctxt);
 }
+
 
 
 static void
@@ -840,11 +846,13 @@ xaif2whirl::GetActiveAttr(const DOMElement* elem)
   return GetBoolAttr(elem, XAIFStrings.attr_active_x(), true /* default */);
 }
 
+
 bool
 xaif2whirl::GetDerivAttr(const DOMElement* elem)
 {
   return GetBoolAttr(elem, XAIFStrings.attr_deriv_x(), false /* default */);
 }
+
 
 unsigned int
 xaif2whirl::GetPositionAttr(const DOMElement* elem)
@@ -883,11 +891,13 @@ xaif2whirl::GetSymTabId(const DOMElement* elem)
   return GetId<SymTabId>(elem, XAIFStrings.tag_SymTabId());
 }
 
+
 SymId
 xaif2whirl::GetSymId(const DOMElement* elem)
 {
   return GetId<SymId>(elem, XAIFStrings.tag_SymId());
 }
+
 
 PUId
 xaif2whirl::GetPUId(const DOMElement* elem)
@@ -895,11 +905,13 @@ xaif2whirl::GetPUId(const DOMElement* elem)
   return GetId<PUId>(elem, XAIFStrings.tag_PUId());
 }
 
+
 WNId
 xaif2whirl::GetWNId(const DOMElement* elem)
 {
   return GetId<WNId>(elem, XAIFStrings.tag_WHIRLId());
 }
+
 
 IdList<WNId>*
 xaif2whirl::GetWNIdList(const DOMElement* elem)
@@ -919,6 +931,7 @@ xaif2whirl::GetId(const DOMElement* elem, const char* tag)
   T id = GetId<T>(annotStr.c_str(), tag);
   return id;
 }
+
 
 template <class T>
 IdList<T>*
@@ -1109,6 +1122,7 @@ MY_Make_Array_Type1 (TYPE_ID elem_ty, INT32 ndim, INT64 len)
 {
   return MY_Make_Array_Type(MTYPE_To_TY (elem_ty), ndim, len);
 }
+
 
 static TY_IDX
 MY_Make_Array_Type (TY_IDX elem_ty, INT32 ndim, INT64 len)
