@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.h,v 1.2 2004/01/29 23:16:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.h,v 1.3 2004/02/10 15:23:24 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -70,12 +70,19 @@ extern OPTIONS_STACK *Options_Stack; // for PU and region level pragmas
 
 //***************************************************************************
 
+// ReadIR: Given a WHIRL filename, reads the entire contents into
+// memory to form a PU forest (a collection of PU trees).  Prepares
+// both the regular symbol tables and the back end symbol tables.
 PU_Info*
 ReadIR(const char* irfilename);
 
+// WriteIR: given a filename write the entire IR (a PU forest) to
+// disk.  *Warning*: Writing to disk also frees part of the IR when
+// compiled with BACK_END.
 void 
 WriteIR(const char* irfilename, PU_Info* pu_forest);
 
+// FreeIR: Given a PU forest, frees all memory consumed by it.
 void 
 FreeIR(PU_Info *pu_forest);
 
