@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.14 2004/04/20 13:14:12 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.15 2004/04/23 17:08:15 eraxxon Exp $
 # -*-makefile-*-
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -91,14 +91,14 @@ tests_pipeline:
 	@echo "--- structured control flow ---"
 	@for f in $(F90b_STRUCTURED) ; do \
 	  printf "  " ; \
-	  $(OPENAD) -v --bb --x2w-bb $${f} ; \
+	  $(OPENAD) -v 1 -n --bb --x2w-bb $${f} ; \
 	  printf "  " ; \
-	  $(OPENAD) -v --bb --x2w-structured $${f} ; \
+	  $(OPENAD) -v 1 -n --bb --x2w-structured $${f} ; \
 	done
 	@echo "--- unstructured control flow ---"
 	@for f in $(F90b_UNSTRUCTURED) ; do \
 	  printf "  " ; \
-	  $(OPENAD) -v --bb --x2w-unstructured $${f} ; \
+	  $(OPENAD) -v 1 -n --bb --x2w-unstructured $${f} ; \
 	done
 
 tests_post:
