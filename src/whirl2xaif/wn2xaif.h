@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.13 2003/10/01 16:32:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.14 2003/11/13 14:55:36 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -111,6 +111,7 @@
 #include "XlationContext.h"
 #include <lib/support/xmlostream.h>
 #include <lib/support/WhirlIDMaps.h>
+#include <lib/support/IntrinsicXlationTable.h>
 
 //************************** Forward Declarations ***************************
 
@@ -119,6 +120,8 @@
 //***************************************************************************
 
 namespace whirl2xaif {
+
+extern IntrinsicXlationTable IntrinsicTable;
 
 extern void 
 WN2F_initialize(void);

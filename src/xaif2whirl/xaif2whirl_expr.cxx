@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.4 2003/10/10 17:57:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.5 2003/11/13 14:55:37 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -140,12 +140,6 @@ GetRTypeFromOpands(TYPE_ID ty1, TYPE_ID ty2);
 
 static TYPE_ID
 GetMType(unsigned int cl, unsigned int bytesz);
-
-static UINT
-GetIntrinsicOperandNum(const char* name);
-
-static OPERATOR
-GetIntrinsicOperator(const char* name);
 
 static OPCODE
 GetIntrinsicOpcode(OPERATOR opr, std::vector<WN*>& opands);
@@ -383,6 +377,8 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
 }
 
 
+// xlate_Intrinsic: An XAIF intrinsic becomes either a special WHIRL
+// node or a WHIRL call.
 static WN*
 xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 {
@@ -394,14 +390,18 @@ xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 
   const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
   XercesStrX nm = XercesStrX(nmX);
-  
-  UINT opnd_num = GetIntrinsicOperandNum(nm.c_str());
-  OPERATOR op = GetIntrinsicOperator(nm.c_str());
-  
+
+  IntrinsicXlationTable::XAIFOpr xopr = IntrinsicXlationTable::Intrinsic;
+  IntrinsicXlationTable::WHIRLInfo* info
+    = IntrinsicTable.FindWHIRLInfo(xopr, nm.c_str());
+  if (!info) {
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Bad Intrinsic."));
+  }
+
   // 1. Gather the operands, sorted by the "position" attribute
-  ASSERT_FATAL(n->num_incoming() == opnd_num, 
+  ASSERT_FATAL(n->num_incoming() == info->numop, 
 	       (DIAG_A_STRING, "Programming error."));
-  std::vector<MyDGNode*> opnd(opnd_num, NULL); 
+  std::vector<MyDGNode*> opnd(info->numop, NULL); 
   
   DGraph::IncomingEdgesIterator it = DGraph::IncomingEdgesIterator(n);
   for (int i = 0; (bool)it; ++it, ++i) {
@@ -412,25 +412,33 @@ xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   std::sort(opnd.begin(), opnd.end(), lt_ExprArgument()); // ascending
   
   // 2. Translate each operand into a WHIRL expression tree
-  std::vector<WN*> opnd_wn(opnd_num, NULL); 
-  for (int i = 0; i < opnd_num; ++i) {
+  std::vector<WN*> opnd_wn(info->numop, NULL); 
+  for (int i = 0; i < info->numop; ++i) {
     opnd_wn[i] = xlate_Expression(g, opnd[i], ctxt);
   }
-  
-  // 3. Find the opcode for the expression
-  OPCODE opc = GetIntrinsicOpcode(op, opnd_wn);
-  
-  // 4. Create a WHIRL expression tree for the operator and operands
-  switch (opnd_num) {
-  case 1: // unary
-    return WN_CreateExp1(opc, opnd_wn[0]);
-  case 2: // binary
-    return WN_CreateExp2(opc, opnd_wn[0], opnd_wn[1]);
-  case 3: // ternary
-    return WN_CreateExp3(opc, opnd_wn[0], opnd_wn[1], opnd_wn[2]);
-  default:
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
-  } 
+
+  // 3. Translate into either WHIRL OPR_CALL or a WHIRL expression operator
+  WN* wn = NULL;
+  if (info->opr == OPR_CALL) { 
+    TYPE_ID rtype = MTYPE_F8; // FIXME
+    wn = CreateIntrinsicCall(rtype, info->name, opnd_wn);
+  } else {
+    // Find the opcode for the expression
+    OPCODE opc = GetIntrinsicOpcode(info->opr, opnd_wn);
+    
+    // Create a WHIRL expression tree for the operator and operands
+    switch (info->numop) {
+    case 1: // unary
+      wn = WN_CreateExp1(opc, opnd_wn[0]); break;
+    case 2: // binary
+      wn = WN_CreateExp2(opc, opnd_wn[0], opnd_wn[1]); break;
+    case 3: // ternary
+      wn = WN_CreateExp3(opc, opnd_wn[0], opnd_wn[1], opnd_wn[2]); break;
+    default:
+      ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+    } 
+  }
+  return wn;
 }
 
 static WN*
@@ -442,7 +450,7 @@ xlate_FunctionCall(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   
   DOMElement* elem = n->GetElem();
   
-  // FIXME: children are expr; find num of args
+  // FIXME: children are expr; find num of args (use Intrinsic function above)
   assert(false && "implement"); 
   return NULL;
 }
@@ -869,52 +877,6 @@ GetMType(unsigned int cl, unsigned int bytesz)
   return ty;
 }
 
-
-// FIXME: create tables for these
-static UINT 
-GetIntrinsicOperandNum(const char* name)
-{
-  if (!name) { return 0; }
-  
-  if ((strcmp(name, "minus_scal") == 0) ||
-      (strcmp(name, "sqr_scal") == 0) ||
-      (strcmp(name, "myINT") == 0)) { // FIXME
-    return 1;
-  } else if ((strcmp(name, "add_scal_scal") == 0) ||
-	     (strcmp(name, "sub_scal_scal") == 0) ||
-	     (strcmp(name, "mul_scal_scal") == 0) ||
-	     (strcmp(name, "div_scal_scal") == 0)) {
-    return 2;
-  } else {
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Bad Intrinsic."));
-    return 0;
-  }
-}
-
-static OPERATOR 
-GetIntrinsicOperator(const char* name)
-{
-  if (!name) { return OPERATOR_UNKNOWN; }
-  
-  if (strcmp(name, "minus_scal") == 0) {
-    return OPR_NEG;
-  } else if (strcmp(name, "sqr_scal") == 0) {
-    return OPR_SQRT;
-  } else if (strcmp(name, "myINT") == 0) { // FIXME
-    return OPR_TRUNC;
-  } else if (strcmp(name, "add_scal_scal") == 0) {
-    return OPR_ADD;
-  } else if (strcmp(name, "sub_scal_scal") == 0) {
-    return OPR_SUB;
-  } else if (strcmp(name, "mul_scal_scal") == 0) {
-    return OPR_MPY;
-  } else if (strcmp(name, "div_scal_scal") == 0) {
-    return OPR_DIV;
-  } else {
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Bad Intrinsic."));
-    return OPERATOR_UNKNOWN;
-  }
-}
 
 static OPCODE
 GetIntrinsicOpcode(OPERATOR opr, std::vector<WN*>& opands)

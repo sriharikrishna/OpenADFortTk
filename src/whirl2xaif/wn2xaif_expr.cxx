@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.14 2003/10/10 17:46:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.15 2003/11/13 14:55:36 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -96,9 +96,11 @@ static WN2F_STATUS
 xlate_BinaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
 			  WN *wn0, WN *wn1, XlationContext& ctxt);
 
+#if 0 // REMOVE
 static WN2F_STATUS 
 xlate_OpToIntrinsic(xml::ostream& xos, OPCODE opcode, WN *wn0, WN *wn1, 
 		    XlationContext& ctxt);
+#endif
 
 static WN2F_STATUS 
 xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty, 
@@ -108,325 +110,6 @@ static WN2F_STATUS
 DumpExprEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid, UINT pos);
 
 //***************************************************************************
-
-/*---- Fortran names for binary and unary arithmetic operations -------*/
-/*---------------------------------------------------------------------*/
-
-
-/* The builtin Fortran operations will begin with a special character
- * or an alphabetic character, where those beginning with an alphabetic
- * character will be applied like functions and all others will be
- * applied in usual infix format.  When a name begins with '_', it is
- * a whirl2f special symbol to be applied like a function.  It will
- * be implemented in a library made available to be linked in with 
- * compiled whirl2f code.
- * -- FIXME: this is outdated now --
- */
-
-#define WN2F_IS_INFIX_PRE(opc)   (Opc_Fname[opc][0] == 'I')
-#define WN2F_IS_FUNCALL_PRE(opc) (Opc_Fname[opc][0] == 'F')
-
-#define WN2F_IS_INFIX_OP(opc) \
-   (Opc_Fname[opc]!=NULL && WN2F_IS_INFIX_PRE(opc))
-
-#define WN2F_IS_FUNCALL_OP(opc) \
-   (Opc_Fname[opc]!=NULL && WN2F_IS_FUNCALL_PRE(opc))
-
-// Return the name minus the identifying prefix
-#define GET_OPC_FNAME(opc) ((const char*)&(Opc_Fname[opcode][2]))
-
-
-
-/* Mapping from opcodes to Fortran names for arithmetic/logical 
- * operations.  An empty (NULL) name will occur for non-
- * arithmetic/logical opcodes, which must be handled by special
- * handler-functions.  This mapping is dynamically initialized,
- * based on Fname_Map[], in WN2F_Expr_Initialize().
- */
-#define NUMBER_OF_OPCODES (OPCODE_LAST+1)
-static const char *Opc_Fname[NUMBER_OF_OPCODES];
-   
-
-typedef struct Fname_PartialMap
-{
-   OPCODE      opc;
-   const char *fname;
-} FNAME_PARTIALMAP;
-
-#define NUMBER_OF_FNAME_PARTIALMAPS \
-   sizeof(Fname_Map) / sizeof(FNAME_PARTIALMAP)
-
-// whirlop; xaifexp; xaifname
-
-// FIXME: Convert this to a with an extra value to determine whether
-// this is a whirlf funccall or known operator.
-
-// FIXME: convert this to OPR_ as opposed to OPC_ stuff
-static const FNAME_PARTIALMAP Fname_Map[] =
-{
-  // Unary Operator
-  {OPC_U8NEG, "I_minus_scal"},
-  {OPC_FQNEG, "I_minus_scal"},
-  {OPC_I8NEG, "I_minus_scal"},
-  {OPC_U4NEG, "I_minus_scal"},
-  {OPC_CQNEG, "I_minus_scal"},
-  {OPC_F8NEG, "I_minus_scal"},
-  {OPC_C8NEG, "I_minus_scal"},
-  {OPC_I4NEG, "I_minus_scal"},
-  {OPC_F4NEG, "I_minus_scal"},
-  {OPC_C4NEG, "I_minus_scal"},
-
-  {OPC_I4ABS, "F_ABS"},
-  {OPC_F4ABS, "F_ABS"},
-  {OPC_FQABS, "F_ABS"},
-  {OPC_I8ABS, "F_ABS"},
-  {OPC_F8ABS, "F_ABS"},
-  {OPC_F4SQRT, "F_SQRT"},
-  {OPC_C4SQRT, "F_SQRT"},
-  {OPC_FQSQRT, "F_SQRT"},
-  {OPC_CQSQRT, "F_SQRT"},
-  {OPC_F8SQRT, "F_SQRT"},
-  {OPC_C8SQRT, "F_SQRT"},
-  {OPC_I4F4RND, "F_JNINT"},
-  {OPC_I4FQRND, "F_JIQNNT"},
-  {OPC_I4F8RND, "F_JIDNNT"},
-  {OPC_U4F4RND, "F_JNINT"},
-  {OPC_U4FQRND, "F_JIQNNT"},
-  {OPC_U4F8RND, "F_JIDNNT"},
-  {OPC_I8F4RND, "F_KNINT"},
-  {OPC_I8FQRND, "F_KIQNNT"},
-  {OPC_I8F8RND, "F_KIDNNT"},
-  {OPC_U8F4RND, "F_KNINT"},
-  {OPC_U8FQRND, "F_KIQNNT"},
-  {OPC_U8F8RND, "F_KIDNNT"},
-  {OPC_I4F4TRUNC, "F_myINT"},
-  {OPC_I4FQTRUNC, "F_myINT"},
-  {OPC_I4F8TRUNC, "F_myINT"},
-  {OPC_U4F4TRUNC, "F_myINT"},
-  {OPC_U4FQTRUNC, "F_myINT"},
-  {OPC_U4F8TRUNC, "F_myINT"},
-  {OPC_I8F4TRUNC, "F_myINT"},
-  {OPC_I8FQTRUNC, "F_myINT"},
-  {OPC_I8F8TRUNC, "F_myINT"},
-  {OPC_U8F4TRUNC, "F_myINT"},
-  {OPC_U8FQTRUNC, "F_myINT"},
-  {OPC_U8F8TRUNC, "F_myINT"},
-  {OPC_I4F4CEIL, "F_CEILING"},
-  {OPC_I4FQCEIL, "F_CEILING"},
-  {OPC_I4F8CEIL, "F_CEILING"},
-  {OPC_I8F4CEIL, "F_CEILING"},
-  {OPC_I8FQCEIL, "F_CEILING"},
-  {OPC_I8F8CEIL, "F_CEILING"},
-  {OPC_I4F4FLOOR, "F_FLOOR"},
-  {OPC_I4FQFLOOR, "F_FLOOR"},
-  {OPC_I4F8FLOOR, "F_FLOOR"},
-  {OPC_I8F4FLOOR, "F_FLOOR"},
-  {OPC_I8FQFLOOR, "F_FLOOR"},
-  {OPC_I8F8FLOOR, "F_FLOOR"},
-  {OPC_I4BNOT, "F_NOT"},
-  {OPC_U8BNOT, "F_NOT"},
-  {OPC_I8BNOT, "F_NOT"},
-  {OPC_U4BNOT, "F_NOT"},
-// >> WHIRL 0.30: replace OPC_LNOT by OPC_B and OPC_I4 variant
-// TODO WHIRL 0.30: get rid of OPC_I4 variant
-  {OPC_BLNOT, "I_Not"},
-  {OPC_I4LNOT, "I_Not"},
-// << WHIRL 0.30: replace OPC_LNOT by OPC_B and OPC_I4 variant
-  {OPC_U8ADD, "I_add_scal_scal"}, // xaif binary op
-  {OPC_FQADD, "I_add_scal_scal"}, // xaif binary op
-  {OPC_I8ADD, "I_add_scal_scal"}, // xaif binary op
-  {OPC_U4ADD, "I_add_scal_scal"}, // xaif binary op
-  {OPC_CQADD, "I_add_scal_scal"}, // xaif binary op
-  {OPC_F8ADD, "I_add_scal_scal"}, // xaif binary op
-  {OPC_C8ADD, "I_add_scal_scal"}, // xaif binary op
-  {OPC_I4ADD, "I_add_scal_scal"}, // xaif binary op
-  {OPC_F4ADD, "I_add_scal_scal"}, // xaif binary op
-  {OPC_C4ADD, "I_add_scal_scal"}, // xaif binary op
-  {OPC_U8SUB, "I_sub_scal_scal"}, // xaif binary op
-  {OPC_FQSUB, "I_sub_scal_scal"}, // xaif binary op
-  {OPC_I8SUB, "I_sub_scal_scal"}, // xaif binary op
-  {OPC_U4SUB, "I_sub_scal_scal"}, // xaif binary op
-  {OPC_CQSUB, "I_sub_scal_scal"}, // xaif binary op
-  {OPC_F8SUB, "I_sub_scal_scal"}, // xaif binary op
-  {OPC_C8SUB, "I_sub_scal_scal"}, // xaif binary op
-  {OPC_I4SUB, "I_sub_scal_scal"}, // xaif binary op
-  {OPC_F4SUB, "I_sub_scal_scal"}, // xaif binary op
-  {OPC_C4SUB, "I_sub_scal_scal"}, // xaif binary op
-  {OPC_U8MPY, "I_mul_scal_scal"}, // xaif binary op
-  {OPC_FQMPY, "I_mul_scal_scal"}, // xaif binary op
-  {OPC_I8MPY, "I_mul_scal_scal"}, // xaif binary op
-  {OPC_U4MPY, "I_mul_scal_scal"}, // xaif binary op
-  {OPC_CQMPY, "I_mul_scal_scal"}, // xaif binary op
-  {OPC_F8MPY, "I_mul_scal_scal"}, // xaif binary op
-  {OPC_C8MPY, "I_mul_scal_scal"}, // xaif binary op
-  {OPC_I4MPY, "I_mul_scal_scal"}, // xaif binary op
-  {OPC_F4MPY, "I_mul_scal_scal"}, // xaif binary op
-  {OPC_C4MPY, "I_mul_scal_scal"}, // xaif binary op
-  {OPC_U8DIV, "I_div_scal_scal"},
-  {OPC_FQDIV, "I_div_scal_scal"},
-  {OPC_I8DIV, "I_div_scal_scal"},
-  {OPC_U4DIV, "I_div_scal_scal"},
-  {OPC_CQDIV, "I_div_scal_scal"},
-  {OPC_F8DIV, "I_div_scal_scal"},
-  {OPC_C8DIV, "I_div_scal_scal"},
-  {OPC_I4DIV, "I_div_scal_scal"},
-  {OPC_F4DIV, "I_div_scal_scal"},
-  {OPC_C4DIV, "I_div_scal_scal"},
-  {OPC_I4MOD, "F_MOD"},
-  {OPC_U8MOD, "F_MOD"},
-  {OPC_I8MOD, "F_MOD"},
-  {OPC_U8MOD, "F_MOD"},
-  {OPC_U4MOD, "F_MOD"},
-  {OPC_I4REM, "F_MOD"},
-  {OPC_U8REM, "F_MOD"},
-  {OPC_I8REM, "F_MOD"},
-  {OPC_U4REM, "F_MOD"},
-  {OPC_I4MAX, "F_MAX"},
-  {OPC_U8MAX, "F_MAX"},
-  {OPC_F4MAX, "F_MAX"},
-  {OPC_FQMAX, "F_MAX"},
-  {OPC_I8MAX, "F_MAX"},
-  {OPC_U4MAX, "F_MAX"},
-  {OPC_F8MAX, "F_MAX"},
-  {OPC_I4MIN, "F_MIN"},
-  {OPC_U8MIN, "F_MIN"},
-  {OPC_F4MIN, "F_MIN"},
-  {OPC_FQMIN, "F_MIN"},
-  {OPC_I8MIN, "F_MIN"},
-  {OPC_U4MIN, "F_MIN"},
-  {OPC_F8MIN, "F_MIN"},
-  {OPC_I4BAND, "I_IAnd"},
-  {OPC_U8BAND, "I_IAnd"},
-  {OPC_I8BAND, "I_IAnd"},
-  {OPC_U4BAND, "I_IAnd"},
-  {OPC_I4BIOR, "I_IOr"},
-  {OPC_U8BIOR, "I_IOr"},
-  {OPC_I8BIOR, "I_IOr"},
-  {OPC_U4BIOR, "I_IOr"},
-  {OPC_I4BXOR, "F_IEOR"},
-  {OPC_U8BXOR, "F_IEOR"},
-  {OPC_I8BXOR, "F_IEOR"},
-  {OPC_U4BXOR, "F_IEOR"},
-// >> WHIRL 0.30: replaced OPC_{LAND,LIOR,CAND,CIOR} by OPC_B and OPC_I4 variants
-// TODO WHIRL 0.30: get rid of OPC_I4 variants
-  {OPC_BLAND, "I_And"},
-  {OPC_I4LAND, "I_And"},
-  {OPC_BLIOR, "I_Or"},
-  {OPC_I4LIOR, "I_Or"},
-  {OPC_BCAND, "I_And"},
-  {OPC_I4CAND, "I_And"},
-  {OPC_BCIOR, "I_Or"},
-  {OPC_I4CIOR, "I_Or"},
-// << WHIRL 0.30: replaced OPC_{LAND,LIOR,CAND,CIOR} by OPC_B and OPC_I4 variants
-  {OPC_I4SHL, "F_ISHIFT"},
-  {OPC_U8SHL, "F_ISHIFT"},
-  {OPC_I8SHL, "F_ISHIFT"},
-  {OPC_U4SHL, "F_ISHIFT"},
-  {OPC_I4ASHR, "F_IASHR"},
-  {OPC_U8ASHR, "F_IASHR"},
-  {OPC_I8ASHR, "F_IASHR"},
-  {OPC_U4ASHR, "F_IASHR"},
-// >> WHIRL 0.30: replaced OPC_T1{EQ,NE,GT,GE,LT,LE} by OPC_B and OPC_I4 variants
-// TODO WHIRL 0.30: get rid of OPC_I4 variants
-  {OPC_BU8EQ, "I_Equal"},
-  {OPC_BFQEQ, "I_Equal"},
-  {OPC_BI8EQ, "I_Equal"},
-  {OPC_BU4EQ, "I_Equal"},
-  {OPC_BCQEQ, "I_Equal"},
-  {OPC_BF8EQ, "I_Equal"},
-  {OPC_BC8EQ, "I_Equal"},
-  {OPC_BI4EQ, "I_Equal"},
-  {OPC_BF4EQ, "I_Equal"},
-  {OPC_BC4EQ, "I_Equal"},
-  {OPC_BU8NE, "I_NotEqual"},
-  {OPC_BFQNE, "I_NotEqual"},
-  {OPC_BI8NE, "I_NotEqual"},
-  {OPC_BU4NE, "I_NotEqual"},
-  {OPC_BCQNE, "I_NotEqual"},
-  {OPC_BF8NE, "I_NotEqual"},
-  {OPC_BC8NE, "I_NotEqual"},
-  {OPC_BI4NE, "I_NotEqual"},
-  {OPC_BF4NE, "I_NotEqual"},
-  {OPC_BC4NE, "I_NotEqual"},
-  {OPC_BI4GT, "I_GreaterThan"},
-  {OPC_BU8GT, "I_GreaterThan"},
-  {OPC_BF4GT, "I_GreaterThan"},
-  {OPC_BFQGT, "I_GreaterThan"},
-  {OPC_BI8GT, "I_GreaterThan"},
-  {OPC_BU4GT, "I_GreaterThan"},
-  {OPC_BF8GT, "I_GreaterThan"},
-  {OPC_BI4GE, "I_GreaterOrEqual"},
-  {OPC_BU8GE, "I_GreaterOrEqual"},
-  {OPC_BF4GE, "I_GreaterOrEqual"},
-  {OPC_BFQGE, "I_GreaterOrEqual"},
-  {OPC_BI8GE, "I_GreaterOrEqual"},
-  {OPC_BU4GE, "I_GreaterOrEqual"},
-  {OPC_BF8GE, "I_GreaterOrEqual"},
-  {OPC_BI4LT, "I_LessThan"},
-  {OPC_BU8LT, "I_LessThan"},
-  {OPC_BF4LT, "I_LessThan"},
-  {OPC_BFQLT, "I_LessThan"},
-  {OPC_BI8LT, "I_LessThan"},
-  {OPC_BU4LT, "I_LessThan"},
-  {OPC_BF8LT, "I_LessThan"},
-  {OPC_BI4LE, "I_LessOrEqual"},
-  {OPC_BU8LE, "I_LessOrEqual"},
-  {OPC_BF4LE, "I_LessOrEqual"},
-  {OPC_BFQLE, "I_LessOrEqual"},
-  {OPC_BI8LE, "I_LessOrEqual"},
-  {OPC_BU4LE, "I_LessOrEqual"},
-  {OPC_BF8LE, "I_LessOrEqual"},
-  {OPC_I4U8EQ, "I_Equal"},
-  {OPC_I4FQEQ, "I_Equal"},
-  {OPC_I4I8EQ, "I_Equal"},
-  {OPC_I4U4EQ, "I_Equal"},
-  {OPC_I4CQEQ, "I_Equal"},
-  {OPC_I4F8EQ, "I_Equal"},
-  {OPC_I4C8EQ, "I_Equal"},
-  {OPC_I4I4EQ, "I_Equal"},
-  {OPC_I4F4EQ, "I_Equal"},
-  {OPC_I4C4EQ, "I_Equal"},
-  {OPC_I4U8NE, "I_NotEqual"},
-  {OPC_I4FQNE, "I_NotEqual"},
-  {OPC_I4I8NE, "I_NotEqual"},
-  {OPC_I4U4NE, "I_NotEqual"},
-  {OPC_I4CQNE, "I_NotEqual"},
-  {OPC_I4F8NE, "I_NotEqual"},
-  {OPC_I4C8NE, "I_NotEqual"},
-  {OPC_I4I4NE, "I_NotEqual"},
-  {OPC_I4F4NE, "I_NotEqual"},
-  {OPC_I4C4NE, "I_NotEqual"},
-  {OPC_I4I4GT, "I_GreaterThan"},
-  {OPC_I4U8GT, "I_GreaterThan"},
-  {OPC_I4F4GT, "I_GreaterThan"},
-  {OPC_I4FQGT, "I_GreaterThan"},
-  {OPC_I4I8GT, "I_GreaterThan"},
-  {OPC_I4U4GT, "I_GreaterThan"},
-  {OPC_I4F8GT, "I_GreaterThan"},
-  {OPC_I4I4GE, "I_GreaterOrEqual"},
-  {OPC_I4U8GE, "I_GreaterOrEqual"},
-  {OPC_I4F4GE, "I_GreaterOrEqual"},
-  {OPC_I4FQGE, "I_GreaterOrEqual"},
-  {OPC_I4I8GE, "I_GreaterOrEqual"},
-  {OPC_I4U4GE, "I_GreaterOrEqual"},
-  {OPC_I4F8GE, "I_GreaterOrEqual"},
-  {OPC_I4I4LT, "I_LessThan"},
-  {OPC_I4U8LT, "I_LessThan"},
-  {OPC_I4F4LT, "I_LessThan"},
-  {OPC_I4FQLT, "I_LessThan"},
-  {OPC_I4I8LT, "I_LessThan"},
-  {OPC_I4U4LT, "I_LessThan"},
-  {OPC_I4F8LT, "I_LessThan"},
-  {OPC_I4I4LE, "I_LessOrEqual"},
-  {OPC_I4U8LE, "I_LessOrEqual"},
-  {OPC_I4F4LE, "I_LessOrEqual"}, 
-  {OPC_I4FQLE, "I_LessOrEqual"},
-  {OPC_I4I8LE, "I_LessOrEqual"},
-  {OPC_I4U4LE, "I_LessOrEqual"},
-  {OPC_I4F8LE, "I_LessOrEqual"}
-// << WHIRL 0.30: replaced OPC_T1{EQ,NE,GT,GE,LT,LE} by OPC_B and OPC_I4 variants
-}; /* Fname_Map */
-
 
 /*------------------------- Value Conversions -------------------------*/
 /*---------------------------------------------------------------------*/
@@ -796,27 +479,12 @@ WN2F_Binary_Substr_Op(xml::ostream& xos,
 
 void WN2F_Expr_initialize(void)
 {
-   INT  map;
-
-   /* Reset the Opc_Fname array.  This has already been
-    * implicitly done by declaring it as static:
-    *
-    *    OPCODE   opc;
-    *    for (opc = 0; opc < NUMBER_OF_OPCODES; opc++)
-    *       Opc_Fname[opc] = NULL;
-    *
-    * Initialize the Opc_Fname array:
-    */
-   for (map = 0; map < NUMBER_OF_FNAME_PARTIALMAPS; map++) {
-     Opc_Fname[Fname_Map[map].opc] = Fname_Map[map].fname;
-   }
-
    /* Initialize the Conv_Op array (default value is NULL) */
+   INT  map;
    for (map = 0; map < NUMBER_OF_CONV_OPS; map++) {
      Conv_Op[Conv_Op_Map[map].from][Conv_Op_Map[map].to] = 
        Conv_Op_Map[map].name;
    }
-
 } /* WN2F_Expr_initialize */
 
 
@@ -890,18 +558,17 @@ whirl2xaif::xlate_UnaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ASSERT_DBG_FATAL(WN_kid_count(wn) == 1, 
 		   (DIAG_W2F_UNEXPECTED_NUM_KIDS, 
 		    WN_kid_count(wn), 1, WN_opc_name(wn)));
-  
-  if (WN2F_IS_INFIX_OP(WN_opcode(wn))) {
+
+  if (IntrinsicTable.FindXAIFInfo(WN_operator(wn), NULL)) {
     xlate_UnaryOpToIntrinsic(xos, WN_opcode(wn), WN_Tree_Type(wn), 
 			     WN_kid0(wn), ctxt);
-  } else if (WN2F_IS_FUNCALL_OP(WN_opcode(wn))) {
-    xlate_OpToIntrinsic(xos, WN_opcode(wn), WN_kid0(wn), NULL, ctxt);
   } else {
     ASSERT_DBG_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_OPC, "xlate_UnaryOp"));
   }
   
   return EMPTY_WN2F_STATUS;
 }
+
 
 WN2F_STATUS 
 WN2F_realpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
@@ -936,6 +603,7 @@ WN2F_realpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    return EMPTY_WN2F_STATUS;
 } /* WN2F_realpart */
 
+
 WN2F_STATUS 
 WN2F_imagpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
@@ -966,8 +634,9 @@ WN2F_imagpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    return EMPTY_WN2F_STATUS;
 } /* WN2F_imagpart */
 
+
 WN2F_STATUS 
-xlate_PAREN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::xlate_PAREN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_PAREN, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_PAREN"));
@@ -975,46 +644,9 @@ xlate_PAREN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return TranslateWN(xos, WN_kid0(wn), ctxt);
 }
 
-WN2F_STATUS
-WN2F_ceil(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-   ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_CEIL, 
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_ceil"));
-   ASSERT_DBG_FATAL(WN_kid_count(wn) == 1, 
-		    (DIAG_W2F_UNEXPECTED_NUM_KIDS, 
-		     WN_kid_count(wn), 1, WN_opc_name(wn)));
-
-   /* Special handling for opcodes that do not have an intrinsic
-    * counterpart in compiler versions < v7.00. TODO: define this one.
-    */
-   //REMOVE ASSERT_DBG_WARN(!W2F_Ansi_Format, (DIAG_W2F_UNEXPECTED_OPC, "WN2F_ceil"));
-   
-   xlate_OpToIntrinsic(xos, WN_opcode(wn), WN_kid0(wn), NULL, ctxt);
-
-   return EMPTY_WN2F_STATUS;
-} /* WN2F_ceil */
-
-WN2F_STATUS
-WN2F_floor(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-   ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_FLOOR, 
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_floor"));
-   ASSERT_DBG_FATAL(WN_kid_count(wn) == 1, 
-		    (DIAG_W2F_UNEXPECTED_NUM_KIDS, 
-		     WN_kid_count(wn), 1, WN_opc_name(wn)));
-
-   /* Special handling for opcodes that do not have an intrinsic
-    * counterpart in compiler versions < v7.00. TODO: define this one.
-    */
-   //REMOVE ASSERT_DBG_WARN(!W2F_Ansi_Format, (DIAG_W2F_UNEXPECTED_OPC, "WN2F_floor"));
-
-   xlate_OpToIntrinsic(xos, WN_opcode(wn), WN_kid0(wn), NULL, ctxt);
-
-   return EMPTY_WN2F_STATUS;
-} /* WN2F_floor */
 
 WN2F_STATUS 
-xlate_RECIP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::xlate_RECIP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
    ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_RECIP, 
 		    (DIAG_W2F_UNEXPECTED_OPC, "xlate_RECIP"));
@@ -1044,6 +676,7 @@ xlate_RECIP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    return EMPTY_WN2F_STATUS;
 }
 
+
 WN2F_STATUS 
 WN2F_rsqrt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
@@ -1060,6 +693,7 @@ WN2F_rsqrt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
    return EMPTY_WN2F_STATUS;
 } /* WN2F_rsqrt */
+
 
 WN2F_STATUS 
 WN2F_parm(xml::ostream& xos, WN *wn, XlationContext& ctxt)
@@ -1081,6 +715,7 @@ WN2F_parm(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 } /* WN2F_parm */
 
+
 WN2F_STATUS 
 WN2F_alloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
@@ -1093,6 +728,7 @@ WN2F_alloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
    return EMPTY_WN2F_STATUS;
 } /* WN2F_alloca */
+
 
 WN2F_STATUS 
 WN2F_dealloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
@@ -1116,6 +752,7 @@ WN2F_dealloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    return EMPTY_WN2F_STATUS;
 } /* WN2F_dealloca */
 
+
 //***************************************************************************
 // Expression Operators: Binary Operations
 //***************************************************************************
@@ -1127,14 +764,9 @@ whirl2xaif::xlate_BinaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_NUM_KIDS, 
 		    WN_kid_count(wn), 2, WN_opc_name(wn)));
   
-  // FIXME: tag whether we have an infix/func like op, but otherwise,
-  // we don't care.
-  if (WN2F_IS_INFIX_OP(WN_opcode(wn))) {
+  if (IntrinsicTable.FindXAIFInfo(WN_operator(wn), NULL)) {
     xlate_BinaryOpToIntrinsic(xos, WN_opcode(wn), WN_Tree_Type(wn), 
 			      WN_kid0(wn), WN_kid1(wn), ctxt);
-  } else if (WN2F_IS_FUNCALL_OP(WN_opcode(wn))) {
-    xlate_OpToIntrinsic(xos, WN_opcode(wn), 
-			WN_kid0(wn), WN_kid1(wn), ctxt);
   } else {
     ASSERT_DBG_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_OPC, "xlate_BinaryOp"));
   }
@@ -1178,62 +810,6 @@ WN2F_complex(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return EMPTY_WN2F_STATUS;
 }
 
-WN2F_STATUS
-WN2F_ashr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-  TY_IDX const rty = Stab_Mtype_To_Ty(WN_rtype(wn));
-  
-  ASSERT_DBG_FATAL(WN_kid_count(wn) == 2, 
-		   (DIAG_W2F_UNEXPECTED_NUM_KIDS, 
-		    WN_kid_count(wn), 2, WN_opc_name(wn)));
-
-#if 0// REMOVE
-   if (W2F_Ansi_Format)
-   {
-      /* Special handling for opcodes that do not have an intrinsic
-       * counterpart in compiler versions < v7.00.
-       */
-      switch (WN_opcode(wn))
-      {
-      case OPC_I4ASHR:
-	 xos << "I4ASHR";
-	 break;
-      case OPC_U8ASHR:
-	 xos << "U8ASHR";
-	 break;
-      case OPC_I8ASHR:
-	 xos << "I8ASHR";
-	 break;
-      case OPC_U4ASHR:
-	 xos << "I4ASHR";
-	 break;
-      default:
-	 ASSERT_DBG_FATAL(FALSE, 
-			  (DIAG_W2F_UNEXPECTED_OPC, "WN2F_ashr"));
-	 break;
-      }
-
-      /* No need to parenthesize subexpressions */
-      set_XlationContext_no_parenthesis(ctxt);
-
-      xos << "(";
-      xlate_Operand(xos, WN_kid0(wn), rty, TRUE, /* call-by-value */ ctxt);
-      xos << ",";
-      xlate_Operand(xos, WN_kid1(wn), rty, TRUE, /* call-by-value */ ctxt);
-      xos << ")";
-   }
-   else
-#endif
-   {
-     /* Has an intrinsic counterpart in compiler versions >= v7.00.
-      */
-     ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_ASHR, 
-		      (DIAG_W2F_UNEXPECTED_OPC, "WN2F_ashr"));
-     xlate_OpToIntrinsic(xos, WN_opcode(wn), WN_kid0(wn), WN_kid1(wn), ctxt);
-   }
-   
-   return EMPTY_WN2F_STATUS;
-} /* WN2F_ashr */
 
 WN2F_STATUS 
 WN2F_lshr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
@@ -1323,7 +899,7 @@ WN2F_madd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xlate_Operand(xos, WN_kid(wn,2), result_ty,
 		!TY_Is_Character_Reference(result_ty),ctxt);
   xos << "+";
-  xlate_Operand(xos, WN_kid(wn, 0), result_ty,
+  xlate_Operand(xos, WN_kid(wn,0), result_ty,
 		!TY_Is_Character_Reference(result_ty), ctxt);
   xos << ")";
   
@@ -1597,12 +1173,15 @@ xlate_BinaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
     wn0_ty = wn1_ty = Stab_Mtype_To_Ty(OPCODE_desc(opcode));
   }
 
+  IntrinsicXlationTable::XAIFInfo* info // FIXME (perhaps pass?)
+    = IntrinsicTable.FindXAIFInfo(OPCODE_operator(opcode), NULL);
+  ASSERT_FATAL(info, (DIAG_A_STRING, "intrinsic lookup failed!"));
   UINT targid, srcid0, srcid1;
-
+  
   // Operation
   targid = ctxt.GetNewVId();
   xos << BegElem("xaif:Intrinsic") << Attr("vertex_id", targid)
-      << Attr("name", GET_OPC_FNAME(opcode)) << Attr("type", "***") << EndElem;
+      << Attr("name", info->name) << Attr("type", "***") << EndElem;
   
   // First operand
   srcid0 = ctxt.PeekVId();
@@ -1620,6 +1199,9 @@ xlate_BinaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
   
   return EMPTY_WN2F_STATUS;
 }
+
+
+#if 0 // FIXME REMOVE
 
 // xlate_OpToIntrinsic: Translate a WHIRL unary or binary operator to a
 // XAIF function call.  'wn1' should be NULL for a WHIRL unary operator. 
@@ -1668,6 +1250,9 @@ xlate_OpToIntrinsic(xml::ostream& xos, OPCODE opcode, WN *wn0, WN *wn1,
   return EMPTY_WN2F_STATUS;
 }
 
+#endif
+
+
 // xlate_Operand: Translate a WHIRL operand (from an operator) to XAIF.  On success returns the non-zero 'vertex_id' used for the XAIF 
 static WN2F_STATUS
 xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty, 
@@ -1698,6 +1283,7 @@ xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty,
   
   return EMPTY_WN2F_STATUS;
 }
+
 
 static WN2F_STATUS 
 DumpExprEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid, UINT pos)

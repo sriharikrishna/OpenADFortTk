@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.6 2003/10/10 17:57:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.7 2003/11/13 14:55:37 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -23,6 +23,7 @@
 //************************* System Include Files ****************************
 
 #include <iostream>
+#include <vector>
 
 //************************* Xerces Include Files ****************************
 
@@ -37,6 +38,7 @@
 #include "XlationContext.h"
 
 #include <lib/support/WhirlIDMaps.h>
+#include <lib/support/IntrinsicXlationTable.h>
 
 //*************************** Forward Declarations ***************************
 
@@ -45,6 +47,8 @@ XERCES_CPP_NAMESPACE_USE
 //****************************************************************************
 
 namespace xaif2whirl {
+
+extern IntrinsicXlationTable IntrinsicTable;
 
 void
 TranslateIR(PU_Info* pu_forest, const DOMDocument* doc);
@@ -126,6 +130,9 @@ GetIdList(const char* idstr, const char* tag);
 
 WN*
 CreateIntrinsicCall(TYPE_ID rtype, const char* fname, unsigned int argc);
+
+WN*
+CreateIntrinsicCall(TYPE_ID rtype, const char* fname, std::vector<WN*>& args);
 
 inline WN*
 CreateParm(WN *arg, UINT32 flag)

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.h,v 1.5 2003/09/05 21:41:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.h,v 1.6 2003/11/13 14:55:36 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -58,25 +58,39 @@
 extern void WN2F_Expr_initialize(void);
 extern void WN2F_Expr_finalize(void);
 
-namespace whirl2xaif { /* FIXME */
-
 //***************************************************************************
 // Expression Operators: Unary Operations
 //***************************************************************************
 
+namespace whirl2xaif {
+
 extern WN2F_STATUS 
 xlate_UnaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+extern WN2F_STATUS 
+xlate_PAREN(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+extern WN2F_STATUS 
+xlate_RECIP(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+}; /* namespace whirl2xaif */
 
 //***************************************************************************
 // Expression Operators: Binary Operations
 //***************************************************************************
 
+namespace whirl2xaif {
+
 extern WN2F_STATUS 
 xlate_BinaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+}; /* namespace whirl2xaif */
 
 //***************************************************************************
 // Leaf Operators (Other)
 //***************************************************************************
+
+namespace whirl2xaif {
 
 extern WN2F_STATUS 
 xlate_CONST(xml::ostream& xos, WN *wn, XlationContext& ctxt);
@@ -84,9 +98,10 @@ xlate_CONST(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 extern WN2F_STATUS 
 xlate_INTCONST(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-
 }; /* namespace whirl2xaif */
 
+
+//***************************************************************************
 
 extern WN2F_STATUS 
    WN2F_intrinsic_op(xml::ostream& xos, WN *wn, XlationContext& ctxt);
@@ -110,28 +125,13 @@ extern WN2F_STATUS
    WN2F_imagpart(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
-   xlate_PAREN(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-extern WN2F_STATUS 
    WN2F_complex(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-extern WN2F_STATUS
-   WN2F_ceil(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-extern WN2F_STATUS
-   WN2F_floor(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-extern WN2F_STATUS
-   WN2F_ashr(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
    WN2F_lshr(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
    WN2F_bnor(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-extern WN2F_STATUS 
-   xlate_RECIP(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
    WN2F_rsqrt(xml::ostream& xos, WN *wn, XlationContext& ctxt);
@@ -148,21 +148,14 @@ extern WN2F_STATUS
 extern WN2F_STATUS 
    WN2F_nmsub(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-
-extern WN2F_STATUS 
-   WN2F_eq(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-extern WN2F_STATUS 
-   WN2F_ne(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
 extern WN2F_STATUS 
    WN2F_parm(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
-WN2F_alloca(xml::ostream& xos, WN *wn, XlationContext& ctxt) ;
+   WN2F_alloca(xml::ostream& xos, WN *wn, XlationContext& ctxt) ;
 
 extern WN2F_STATUS 
-WN2F_dealloca(xml::ostream& xos, WN *wn, XlationContext& ctxt) ;
+   WN2F_dealloca(xml::ostream& xos, WN *wn, XlationContext& ctxt) ;
 
 #endif /* wn2xaif_expr_INCLUDED */
 

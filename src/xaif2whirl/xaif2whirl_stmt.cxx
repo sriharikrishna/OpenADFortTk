@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.4 2003/10/10 17:57:33 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.5 2003/11/13 14:55:37 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -187,9 +187,7 @@ xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
 		 (DIAG_A_STRING, "Programming error."));
     
     unsigned int pos = GetPositionAttr(arg); // 1-based
-    ASSERT_FATAL(1 <= pos /* && pos <= numArgs */, 
-		 (DIAG_A_STRING, "Error."));
-    // FIXME: removed second test to accomodate missing constant arguments
+    ASSERT_FATAL(1 <= pos && pos <= numArgs, (DIAG_A_STRING, "Error."));
     
     // Note: We do *not* check the deriv flag; any active variable
     // references should be passed as is.
@@ -206,15 +204,15 @@ xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
   // -------------------------------------------------------
   // 2. Create function call
   // -------------------------------------------------------
-  TYPE_ID rtype = MTYPE_V; // MTYPE_F8 for FuncCall
+  TYPE_ID rtype = MTYPE_V; // void type for subroutine call
   Symbol* sym = GetSymbol(elem, ctxt);
-  WN* callWN = WN_Call(rtype, MTYPE_V, numArgs, sym->GetST());
   
-  WN_Set_Call_Default_Flags(callWN); // FIXME
-  WN_Set_Call_Parm_Mod(callWN);
+  WN* callWN = WN_Call(rtype, MTYPE_V, numArgs, sym->GetST());
+  WN_Set_Call_Default_Flags(callWN); // set conservative assumptions
   
   for (int i = 0; i < numArgs; ++i) {
-    if (args_wn[i]) { // FIXME: do we need to handle paramaters differently?
+    if (args_wn[i]) { 
+      // conservatively assume pass by reference
       WN_actual(callWN, i) = CreateParm(args_wn[i], WN_PARM_BY_REFERENCE);
     }
   }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.13 2003/10/10 17:57:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.14 2003/11/13 14:55:37 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -57,6 +57,8 @@ using std::cerr;
 using std::endl;
 
 using namespace xaif2whirl;
+
+IntrinsicXlationTable xaif2whirl::IntrinsicTable(IntrinsicXlationTable::X2W);
 
 static void
 TranslateCallGraph(PU_Info* pu_forest, const DOMDocument* doc, 
@@ -953,10 +955,24 @@ CreateIntrinsicCall(TYPE_ID rtype, const char* fname, unsigned int argc)
   ST* st = Gen_Intrinsic_Function(ty, fname); // create if non-existant
   
   WN* callWN = WN_Call(rtype, MTYPE_V, argc, st);
-  WN_Set_Call_Default_Flags(callWN);
+  WN_Set_Call_Default_Flags(callWN); // set conservative assumptions
   
   return callWN;
 }
 
+WN*
+CreateIntrinsicCall(TYPE_ID rtype, const char* fname, std::vector<WN*>& args)
+{
+  WN* callWN = CreateIntrinsicCall(rtype, fname, args.size());
+  
+  for (unsigned int i = 0; i < args.size(); ++i) {
+    if (args[i]) { 
+      // conservatively assume pass by reference
+      WN_actual(callWN, i) = CreateParm(args[i], WN_PARM_BY_REFERENCE);
+    }
+  }
+  
+  return callWN;
+}
 
 //****************************************************************************
