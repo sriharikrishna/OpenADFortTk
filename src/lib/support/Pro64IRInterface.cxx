@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.20 2004/05/24 13:28:24 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.21 2004/06/09 20:42:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -889,22 +889,31 @@ BuildExprTreeForWN(ExprTree* tree, WN* wn)
   // represents the LHS of the assignment.)
   OPERATOR opr = WN_operator(wn);
   OPCODE opcode = WN_opcode(wn);
-  if ( !(opr == OPR_STID || OPERATOR_is_expression(opr)) ) {
+  if ( !(opr == OPR_STID || OPERATOR_is_call(opr) 
+	 || OPERATOR_is_expression(opr)) ) {
     return root;
   }
   
   // 2. Create a parent tree node for the curent WN
   root = new ExprTree::Node(OPCODE_name(opcode));
   tree->add(root);
-
-  // FIXME: check this out
+  
+  static char buf[512];
+  buf[0] = '\0';
+  // FIXME: check this out; OPR_INTCONST, add const handle
   if (OPERATOR_has_sym(opr)) {
     root->setSymHandle((SymHandle)WN_st(wn));
   }
-  // FIXME: if constant add special handle
-  
+  if (OPERATOR_has_offset(opr)) {
+    sprintf(buf + strlen(buf), "%u:", WN_offset(wn));
+  }
+  if (OPERATOR_has_1ty(opr)) {
+    strcat(buf, TY_name(WN_ty(wn)));
+  }
+  root->setAttr(buf);
+ 
   // 3. Create sub trees for each child and link them to the parent
-  // parent node (we know this will never be OPR_BLOCK)
+  // node (we know this will never be OPR_BLOCK)
   if ( !(OPERATOR_is_leaf(opr) || opr == OPR_STID) ) {
     for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
       WN* kid_wn = WN_kid(wn, kidno);
