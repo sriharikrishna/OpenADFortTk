@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.22 2004/01/19 21:41:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.23 2004/01/25 02:43:07 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -65,19 +65,23 @@
 #include "file_util.h"      /* For Last_Pathname_Component */
 #include "flags.h"          /* for OPTION_GROUP */
 #include "timing.h"         /* Start/Stop Timer */
+#include "clone.h"          /* IPO_CLONE */
+
+//************************ OpenAnalysis Include Files ***********************
+
+#include <OpenAnalysis/CallGraph/CallGraph.h>
 
 //*************************** User Include Files ****************************
 
 #include "whirl2xaif.h"
 #include "whirl2f_common.h"
 #include "PUinfo.h"
-#include "w2cf_parentize.h" /* For W2CF_Parent_Map and W2FC_Parentize */
 #include "st2xaif.h"
 #include "wn2xaif.h"
 #include "wn2xaif_stmt.h"
 
 #include <lib/support/Pro64IRInterface.h>
-#include <OpenAnalysis/CallGraph/CallGraph.h> //CALLGRAPH
+#include <lib/support/WhirlParentize.h>
 
 //************************** Forward Declarations ***************************
 
@@ -745,3 +749,193 @@ Check_PU_Pushed(const char *caller_name)
   return (PUinfo_current_func != NULL);
 }
 
+//***************************************************************************
+
+//#define FIXME_TRANSLATE_PARAMS
+
+#include <vector>
+using std::vector;
+
+static WN* 
+FindCallToInlinedFn(const char* callee_nm, WN* wn);
+
+void 
+InlineTest(PU_Info* pu_forest)
+{
+  // Note: can only inline subroutines
+
+  // -------------------------------------------------------
+  // 1. Find inlined functions (callee) named inline_x
+  // -------------------------------------------------------
+  const char* calleeNm = NULL;
+  PU_Info*    calleePU = NULL;
+  WN_MAP_TAB* calleeMaptab = NULL;
+  SCOPE*      calleeStab = NULL;
+  SYMTAB_IDX  calleeStabIdx = 0;
+  
+  Pro64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.IsValid(); ++procIt) { 
+    PU_Info* pu = (PU_Info*)procIt.Current();
+    ST_IDX st = PU_Info_proc_sym(pu);
+    const char* nm = ST_name(st);
+
+    if (strncmp(nm, "inline_", 7) == 0) {
+      calleeNm = nm;
+      calleePU = pu;
+      calleeMaptab = PU_Info_maptab(pu);
+      calleeStab = Scope_tab;
+      calleeStabIdx = PU_lexical_level(PU_Info_pu(pu));
+      break;
+    }
+  }
+  
+  // -------------------------------------------------------
+  // 2. Find the caller, i.e. callsites to inline_x. In the MainPU
+  // -------------------------------------------------------
+  PU_Info*    callerPU = NULL;
+  WN*         callsiteWN = NULL;
+  WN_MAP_TAB* callerMaptab = NULL;
+  SCOPE*      callerStab = NULL;
+  SYMTAB_IDX  callerStabIdx = 0;
+  
+  procIt.Reset();
+  for ( ; procIt.IsValid(); ++procIt) { 
+    PU_Info* pu = (PU_Info*)procIt.Current();
+    if (PU_is_mainpu(PU_Info_pu(pu))) {
+      callerPU = pu;
+      callerMaptab = PU_Info_maptab(pu);
+      callerStab = Scope_tab;
+      callerStabIdx = PU_lexical_level(PU_Info_pu(pu));
+      
+      callsiteWN = FindCallToInlinedFn(calleeNm, PU_Info_tree_ptr(callerPU));
+      break;
+    }
+  }
+  
+  if (!callsiteWN) {
+    return;
+  }
+  
+  // FIXME: allocates WN_mem_pool_ptr, which is used in IPO_CLONE::Copy_Node
+  WN* bogus_wn = WN_CreateIntconst(OPC_I4INTCONST, 0);
+  
+  // Cf. IPO_INLINE::Process(), ipa/main/optimize/ipo_inline.cxx.
+
+#ifdef FIXME_TRANSLATE_PARAMS
+  // Gather parameters for callsite -- FIXME
+  INT nparam = WN_kid_count(callsiteWN);
+  vector<ST*> callsiteParams(nparam);
+  for (int i = 0; i < nparam; ++i) {
+    WN* parm = WN_kid(callsiteWN, i);
+    ST* st = WN_st(WN_kid0(parm));
+    callsiteParams[i] = st;
+  }
+#endif
+  
+  // -------------------------------------------------------
+  // 1. Create a copy of the callee
+  // -------------------------------------------------------
+  // IPO_INLINE::Process_Callee(...)
+  //   IPO_INLINE::Clone_Callee(...)
+  
+  // Global tables should point to callee
+  RestoreOpen64PUGlobalVars(calleePU);
+
+  WN* calleeWN = PU_Info_tree_ptr(calleePU);
+
+#ifdef FIXME_TRANSLATE_PARAMS
+  // Gather formals for callee -- FIXME (OPR_FUNC_ENTRY)
+  nparam = WN_num_formals(calleeWN);
+  vector<ST*> calleeParams(nparam);
+  for (int i = 0; i < nparam; ++i) {
+    ST* st = WN_st(WN_formal(calleeWN, i));
+    calleeParams[i] = st;
+  }
+  assert(callsiteParams.size() == calleeParams.size());
+#endif
+
+  WN_MAP parentmap = WN_MAP_Create(MEM_pu_pool_ptr);
+  IPO_SYMTAB ipo_symtab(calleeStab, callerStab, calleeStabIdx, callerStabIdx,
+			MEM_pu_pool_ptr, TRUE /*same_file*/);
+
+#ifdef FIXME_TRANSLATE_PARAMS
+  // Add mapping between callsite and callee parameters
+  for (int i = 0; i < callsiteParams.size(); ++i) {
+    ipo_symtab.Set_Cloned_ST(calleeParams[i], callsiteParams[i]);
+  }
+#endif
+  
+  IPO_CLONE cloner(callerMaptab, calleeMaptab, parentmap,
+		   calleeStab, callerStab, calleeStabIdx, callerStabIdx,
+		   &ipo_symtab, MEM_pu_pool_ptr, TRUE /*same_file*/, 0);  
+  
+  //cloner.Promote_Statics();
+  cloner.Get_sym()->Update_Symtab(FALSE /*label_only*/);
+  
+  WN* inlinedBodyWn = cloner.Clone_Tree(WN_func_body(calleeWN));
+  
+  // Global tables should point to caller
+  SaveOpen64PUGlobalVars(calleePU);
+  RestoreOpen64PUGlobalVars(callerPU);
+
+  // -------------------------------------------------------
+  // 2. Remove RETURN
+  // -------------------------------------------------------
+  // IPO_INLINE::Process_Callee(...)
+  //   IPO_INLINE::Walk_and_Update_Callee(...)
+  // W2CF_Parentize(inlinedBodyWn); // WN_Parentize()? ipo_parent.cxx
+  WN_TREE_CONTAINER<PRE_ORDER> wnIt(inlinedBodyWn);
+  WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
+  for (it = wnIt.begin(); it != wnIt.end(); ++it) {
+    WN* curWN = it.Wn();
+    
+    OPERATOR opr = WN_operator(curWN);
+    if (opr == OPR_RETURN) {
+      WN* blkWN = FindParentWNBlock(inlinedBodyWn, curWN);
+      WN_DELETE_FromBlock(blkWN, curWN);
+      break;
+    }
+  }
+  
+  // -------------------------------------------------------
+  // 3. Replace callsite with body of inlined function
+  // -------------------------------------------------------
+  // IPO_INLINE::Post_Process_Caller(...)
+  if (WN_first (inlinedBodyWn) != NULL) {
+    // Replace callsite with body of inlined function
+    WN_next (WN_prev (callsiteWN)) = WN_first (inlinedBodyWn);
+    WN_prev (WN_first (inlinedBodyWn)) = WN_prev (callsiteWN);
+    
+    WN_next (WN_last (inlinedBodyWn)) = WN_next (callsiteWN);
+    WN_prev (WN_next (callsiteWN)) = WN_last (inlinedBodyWn);
+  } else {
+    // Replace callsite with (empty) body of inlined function
+    WN_next (WN_prev (callsiteWN)) = WN_next (callsiteWN);
+    WN_prev (WN_next (callsiteWN)) = WN_prev (callsiteWN);
+  }
+  
+  IR_set_dump_order(TRUE); // Preorder dump
+  WN* callerWN = PU_Info_tree_ptr(callerPU);
+  dump_tree(callerWN);
+  
+  SaveOpen64PUGlobalVars(callerPU);
+}
+
+static WN* 
+FindCallToInlinedFn(const char* calleeNm, WN* wn)
+{
+  WN_TREE_CONTAINER<PRE_ORDER> wnIt(wn);
+  WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
+  for (it = wnIt.begin(); it != wnIt.end(); ++it) {
+    WN* curWN = it.Wn();
+    
+    OPERATOR opr = WN_operator(curWN);
+    if (opr == OPR_CALL && (strcmp(ST_name(WN_st(curWN)), calleeNm) == 0)) {
+      return curWN;
+    }
+  }
+  
+  return NULL;
+}
+
+//***************************************************************************
