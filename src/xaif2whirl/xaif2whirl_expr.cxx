@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.19 2004/05/03 18:06:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.20 2004/05/04 23:52:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -162,6 +162,21 @@ xaif2whirl::TranslateExpression(const DOMElement* elem, XlationContext& ctxt)
   WN* wn = xlate_Expression(g, n, ctxt);
   delete g;
 
+  return wn;
+}
+
+
+// TranslateExpressionSimple: Translates certain XAIF expressions into
+// special WHIRL expressions in order to conform to WHIRL
+// requirements.
+WN*
+xaif2whirl::TranslateExpressionSimple(const DOMElement* elem, 
+				      XlationContext& ctxt)
+{
+  ctxt.CreateContext(XlationContext::EXPRSIMPLE);
+  WN* wn = TranslateExpression(elem, ctxt);
+  ctxt.DeleteContext();
+  
   return wn;
 }
 
@@ -338,17 +353,19 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
     wn = Make_Const(tcon);
   } 
   else if (strcmp(type.c_str(), "integer") == 0) {
-    // Integer constant: Integer constants typically need to have an
-    // associated symbol (ST*) and consequently we typically represent
-    // this as an OPR_CONST, not OPR_INTCONST.  However, certain
-    // special expressions need an INTCONST.  E.g.: array indices,
-    // loop updates.
+    // Integer constant: Note that we have turned off WHIRL's
+    // expression simplifier, which can cause problems with our code.
+    // Also note that certain special expressions need an I4INTCONST.
+    // E.g.: array indices, loop updates.
     INT64 val = strtol(value.c_str(), (char **)NULL, 10);
     if (ctxt.IsArrayIdx() || ctxt.IsExprSimple()) {
-      wn = WN_CreateIntconst(OPC_I4INTCONST, val);
+      wn = WN_CreateIntconst(OPC_I4INTCONST, (INT32)val);
     } else {
-      TCON tcon = Host_To_Targ(DefaultMTypeInt, val);
-      wn = Make_Const(tcon); 
+      // the WHIRL simplifier messes up int CONST nodes
+      //TCON tcon = Host_To_Targ(DefaultMTypeInt, val);
+      //wn = Make_Const(tcon); 
+      OPCODE opc = OPCODE_make_op(OPR_INTCONST, DefaultMTypeInt, MTYPE_V);
+      wn = WN_CreateIntconst(opc, val);
     }
   } 
   else if (strcmp(type.c_str(), "bool") == 0) {
