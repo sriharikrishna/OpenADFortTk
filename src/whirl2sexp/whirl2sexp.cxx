@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.cxx,v 1.1 2004/08/05 18:38:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.cxx,v 1.2 2004/08/06 17:29:53 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -137,9 +137,10 @@ GenHeader(sexp::ostream& sos)
 void
 xlate_IR(sexp::ostream& sos, PU_Info* pu_forest, int flags)
 {
-  if (!pu_forest) { return; }
+  whirl2sexp::TranslateGlobalSymbolTables(sos);
+  sos << sexp::EndLine;
   
-  // FIXME: xlate_SymbolTables(xos, GLOBAL_SYMTAB, NULL);
+  if (!pu_forest) { return; }
   
   // Translate each PU-tree
   for (PU_Info* pu_tree = pu_forest; 

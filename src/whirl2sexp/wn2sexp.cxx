@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.1 2004/08/05 18:38:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.2 2004/08/06 17:29:53 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -83,11 +83,15 @@ whirl2sexp::TranslateWNChildren(sexp::ostream& sos, WN* wn)
 
 // Cf. GenSexpSym
 sexp::ostream&
-operator<<(std::ostream& os, const GenSexpSymInfo_& x) 
+operator<<(std::ostream& os, const GenSexpSymInfo_& x)
 {
   sexp::ostream& sos = dynamic_cast<sexp::ostream&>(os);
-  
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+
+  ST_IDX st_idx = x.val;
+  UINT lvl = (UINT)ST_IDX_level(st_idx);
+  UINT idx = (UINT)ST_IDX_index(st_idx);
+
+  sos << BegList << Atom("st") << Atom(lvl) << Atom(idx) << EndList;
   
   return sos;
 }
@@ -98,8 +102,13 @@ sexp::ostream&
 operator<<(std::ostream& os, const GenSexpTyInfo_& x)
 {
   sexp::ostream& sos = dynamic_cast<sexp::ostream&>(os);
+
+  TY_IDX ty_idx = x.val;
+  const char* nm = TY_name(ty_idx);
   
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  using namespace sexp::IOFlags;
+  sos << BegList << Atom("ty") << Atom(A_DQUOTE, nm) << Atom(ty_idx) 
+      << EndList;
   
   return sos;
 }
@@ -147,7 +156,7 @@ operator<<(std::ostream& os, const GenSexpSymRefInfo_& x)
   } 
   
   using namespace sexp::IOFlags;
-  sos << BegList << Atom("sym") << Atom(A_DQUOTE, nm) << Atom(lvl) << Atom(idx)
+  sos << BegList << Atom("st") << Atom(A_DQUOTE, nm) << Atom(lvl) << Atom(idx)
       << EndList;
   
   return sos;
@@ -179,6 +188,9 @@ operator<<(std::ostream& os, const GenSexpTyUseInfo_& x)
   
   return sos;
 }
+
+
+// Cf. GenBeginFlgList
 
 
 //***************************************************************************
@@ -260,7 +272,7 @@ whirl2sexp::xlate_structured_cf(sexp::ostream& sos, WN* wn)
   sos << BegList;                       // WN_ATTRS
   if (opr == OPR_IF) {
     UINT32 flg = WN_if_flag(wn);
-    sos << BegList << Atom("flgFIXME") << Atom(flg) << EndList;
+    sos << GenBeginFlgList(flg) << EndList;
   }
   sos << EndList << EndLine; 
   TranslateWNChildren(sos, wn);         // KIDs
@@ -297,7 +309,7 @@ whirl2sexp::xlate_GOTOx_LABEL(sexp::ostream& sos, WN* wn)
   sos << BegList << Atom(lbl);        // WN_ATTRS
   if (opr == OPR_LABEL) {
     UINT32 flg = WN_label_flag(wn);
-    sos << BegList << Atom("flgFIXME") << Atom(flg) << EndList;
+    sos << GenBeginFlgList(flg) << EndList;
   }
   sos << EndList;
   if (opr == OPR_LABEL) {             // KID 0
@@ -439,7 +451,7 @@ whirl2sexp::xlate_xCALL(sexp::ostream& sos, WN* wn)
     sos << BegList << Atom("intrn") << Atom(nm) << Atom(intrn) << EndList;
   }
   if (opr != OPR_VFCALL) {
-    sos << BegList << Atom("flgFIXME") << Atom(flg) << EndList;
+    sos << GenBeginFlgList(flg) << EndList;
   }
   sos << EndList;
   if (WN_kid_count(wn) > 0) {
@@ -466,7 +478,7 @@ whirl2sexp::xlate_IO(sexp::ostream& sos, WN* wn)
   sos << BegList << GenSexpWNOpr(wn); // WN_OPR
   sos << BegList                      // WN_ATTRS
       << BegList << Atom("ios") << Atom(A_DQUOTE, nm) << Atom(ios) << EndList
-      << BegList << Atom("flgFIXME") << Atom(flg) << EndList
+      << GenBeginFlgList(flg) << EndList
       << EndList << EndLine;
   TranslateWNChildren(sos, wn);       // KIDs
   sos << EndList;
@@ -864,7 +876,7 @@ whirl2sexp::xlate_PARM(sexp::ostream& sos, WN* wn)
 
   sos << BegList << GenSexpWNOpr(wn);     // WN_OPR
   sos << BegList                          // WN_ATTRS
-      << BegList << Atom("flgFIXME") << Atom(flg) << EndList
+      << GenBeginFlgList(flg) << EndList
       << GenSexpTyUse(ty_idx) << EndList << EndLine; 
   TranslateWN(sos, WN_kid0(wn));          // KID 0
   sos << EndList;

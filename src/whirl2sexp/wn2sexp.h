@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.h,v 1.1 2004/08/05 18:38:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.h,v 1.2 2004/08/06 17:29:53 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -92,10 +92,10 @@ TranslateWN(WN* val)
 // ---------------------------------------------------------
 
 struct GenSexpSymInfo_ {
-  ST* val;
+  ST_IDX val;
 };
 struct GenSexpTyInfo_ {
-  TY* val;
+  TY_IDX val;
 };
 
 struct GenSexpWNOprInfo_ {
@@ -108,12 +108,17 @@ struct GenSexpTyUseInfo_ {
   TY_IDX val;
 };
 
+template <class T>
+struct GenBeginFlgListInfo_ {
+  T val;
+};
+
 
 sexp::ostream&
 operator<<(std::ostream& os, const GenSexpSymInfo_& x);
 
 inline GenSexpSymInfo_ 
-GenSexpSym(ST* val)
+GenSexpSym(ST_IDX val)
 {
   GenSexpSymInfo_ x;
   x.val = val;
@@ -125,7 +130,7 @@ sexp::ostream&
 operator<<(std::ostream& os, const GenSexpTyInfo_& x);
 
 inline GenSexpTyInfo_ 
-GenSexpTy(TY* val)
+GenSexpTy(TY_IDX val)
 {
   GenSexpTyInfo_ x;
   x.val = val;
@@ -167,6 +172,33 @@ GenSexpTyUse(TY_IDX val)
   x.val = val;
   return x;
 }
+
+
+// Cf. GenBeginFlgList
+template <class T>
+sexp::ostream&
+operator<<(std::ostream& os, const GenBeginFlgListInfo_<T>& x)
+{
+  sexp::ostream& sos = dynamic_cast<sexp::ostream&>(os);
+  
+  T val = x.val;
+  
+  using namespace sexp::IOFlags;
+  sos << BegList << Atom("flg") << Atom(A_HEX, val);
+  // Do not end the list!
+  
+  return sos;
+}
+
+template <class T>
+inline GenBeginFlgListInfo_<T> 
+GenBeginFlgList(T val)
+{
+  GenBeginFlgListInfo_<T> x;
+  x.val = val;
+  return x;
+}
+
 
 //***************************************************************************
 
