@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.7 2003/09/05 21:41:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.8 2003/12/03 01:32:46 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -121,13 +121,18 @@ public:
   Pro64IRUseDefIterator() { assert (0); }
   ~Pro64IRUseDefIterator() { }
 
-  LeafHandle Current () { return 0; }
-  bool IsValid () { return false; }
-  void operator++ () { }
+  LeafHandle Current () { return (LeafHandle) (*node_list_iter); }
+  bool IsValid () { return (node_list_iter != node_list_end); }
+  void operator++ () { ++node_list_iter; };
 
   void Reset() { }
 	
 private:
+  std::list<WN *> uses_node_list;
+  std::list<WN *> defs_node_list;
+  std::list<WN *>::iterator node_list_iter;
+  std::list<WN *>::iterator node_list_end;
+  void build_use_def_lists (WN *, int);
 };
 
 class Pro64IRCallsiteIterator : public IRCallsiteIterator {

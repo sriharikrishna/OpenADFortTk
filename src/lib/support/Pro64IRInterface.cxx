@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.6 2003/09/05 21:41:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.7 2003/12/03 01:32:46 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -159,8 +159,101 @@ Pro64IRProcIterator::build_pu_list(PU_Info* pu)
 // will be initialized to either the list of uses or the list of defs.
 Pro64IRUseDefIterator::Pro64IRUseDefIterator (WN *subtree, int uses_or_defs)
 {
-  // stub
+  // FIXME
+  if (subtree && ! OPERATOR_is_not_executable (WN_operator (subtree))) {
+    build_use_def_lists (subtree, 0);
+  }
+
+  if (uses_or_defs == IRUseDefIterator::Uses) {
+    node_list_iter = uses_node_list.begin ();
+    node_list_end = uses_node_list.end ();
+  } else {
+    node_list_iter = defs_node_list.begin ();
+    node_list_end = defs_node_list.end ();
+  }
 }
+
+
+// Determine the nodes corresponding to the uses (r-values) of 't' or to
+// the definitions (l-values) of 't'.
+//
+// These are stored in the given private members uses_node_list and
+// defs_node_lists.
+//
+// Parameter lhs_of_store indicates that the LHS of a store is being
+// processed, so that an LDA can be correctly determined to be a use or
+// definition.
+void
+Pro64IRUseDefIterator::build_use_def_lists (WN *t, int flags)
+{
+  enum { OuterMost_OPR_ARRAY = 1 };
+  OPERATOR opr = WN_operator (t);
+  switch (opr) {
+  // FIXME: ISTOREBITS, ISTOREX, MSTORE?
+  case OPR_LDID:
+  case OPR_LDBITS:
+  case OPR_IDNAME:
+    assert (OPERATOR_has_sym (opr));
+    uses_node_list.push_back (t);
+    return;
+  case OPR_STID:
+  case OPR_STBITS:
+    assert (OPERATOR_has_sym (opr));
+    defs_node_list.push_back (t);
+    break;
+  case OPR_LDA:
+    assert (OPERATOR_has_sym (opr));
+    // Perhaps strange, but Whirl has the notion of taking the address of a
+    // constant.  The FORTRAN call foo(2) in Whirl is foo(OPR_LDA(2)). We
+    // don't want a constant noted as a use or def.
+    if (ST_sym_class (WN_st (t)) != CLASS_CONST) {
+      uses_node_list.push_back (t);
+    }
+    return;
+  case OPR_LDMA:
+    assert (OPERATOR_has_sym (opr));
+    uses_node_list.push_back (t);
+    return;
+  case OPR_ISTORE:
+    // Process kid0, the RHS of the store.
+    build_use_def_lists (WN_kid0 (t), 0);
+    // Process kid1, the LHS of the store.
+    build_use_def_lists (WN_kid1 (t), OuterMost_OPR_ARRAY);
+    return;
+  case OPR_ARRAY:
+  case OPR_ARRSECTION:
+    // Kid 0 is an LDA or LDID which represents the base of the array being
+    // referenced or defined. Only an outermost OPR_ARRAY of a subtree will
+    // ever represent a definition of an array section or element (e.g., In
+    // reference A(G(I)) = X, variable A is a definition, while G is a use).
+    WN *base = WN_kid0 (t);
+    assert (WN_operator (base) == OPR_LDA || WN_operator (base) == OPR_LDID);
+    if ((flags & OuterMost_OPR_ARRAY)) {
+      defs_node_list.push_back (base);
+    } else {
+      uses_node_list.push_back (base);
+    }
+    flags &= ~OuterMost_OPR_ARRAY;
+    // Kids 1..n are dimensions, which we need to ignore. Kids n+1..2n
+    // are the index expressions.
+    int ndims = WN_kid_count (t) >> 1;
+    for (int kid = 0; kid < ndims; kid++) {
+      if (! OPERATOR_is_stmt (WN_operator (WN_kid (t, kid+ndims+1)))) {
+        build_use_def_lists (WN_kid (t, kid+ndims+1), flags);
+      }
+    } // for kids
+    return;
+  } // switch
+
+  // Recursively visit all kids (that aren't statements) adding their
+  // uses and defs.
+  for (int kid = 0; kid < WN_kid_count (t); kid++) {
+    if (! OPERATOR_is_stmt (WN_operator (WN_kid (t, kid)))) {
+      build_use_def_lists (WN_kid (t, kid), flags);
+    }
+  } // for kids
+}
+
 
 //-----------------------------------------------------------------------------
 
