@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.13 2004/07/30 17:50:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.14 2005/03/16 21:27:56 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -486,8 +486,18 @@ WN_GetBaseObjType(const WN* wn)
       WN* baseptr = WN_kid1(wn); // address expression as WN
       TY_IDX baseptr_ty = WN_ty(wn); // == WN_Tree_Type(baseptr)
       ty = TY_pointed(baseptr_ty); 
-      FORTTK_ASSERT((baseptr_ty == WN_Tree_Type(baseptr)),
-		    "Internal error: base pointer types are inconsistent");
+      // This assertion is not always true, e.g. given this Fortan:
+      //   F(i)%v = y
+      // and this WHIRL
+      //   F8ISTORE 0 T<29,anon_ptr.,8>
+      //    ...
+      //    U8ARRAY 1 16                          (lhs)
+      //     U8U8LDID 0 <2,3,F> T<57,anon_ptr.,8> (base)
+      //     ...
+      // because the baseptr_ty and baseptr types are different, the
+      // structure element reference will implicitly take place!
+      //FORTTK_ASSERT((baseptr_ty == WN_Tree_Type(baseptr)),
+      //              "Internal error: base pointer types are inconsistent");
       break;
     }
     
