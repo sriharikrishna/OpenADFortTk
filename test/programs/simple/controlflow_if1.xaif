@@ -74,7 +74,7 @@
 
     <xaif:Exit vertex_id="7" annotation="{WHIRL_Id#}"/>
 
-    <xaif:If vertex_id="8" annotation="{WHIRL_Id#8}">
+    <xaif:Branch vertex_id="8" annotation="{WHIRL_Id#8}">
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_gteq_scal_scal" type="***"/>
         <xaif:VariableReference vertex_id="2" du_ud="1">
@@ -84,7 +84,7 @@
         <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
         <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
       </xaif:Condition>
-    </xaif:If>
+    </xaif:Branch>
 
     <xaif:BasicBlock vertex_id="9" scope_id="2" annotation="{WHIRL_Id#18:19}">
       <xaif:SubroutineCall statement_id="1" scope_id="1" symbol_id="_END_21"/>
@@ -97,7 +97,7 @@
     <xaif:ControlFlowEdge edge_id="4" source="4" target="5"/>
     <xaif:ControlFlowEdge edge_id="5" source="5" target="9"/>
     <xaif:ControlFlowEdge edge_id="6" source="6" target="7"/>
-    <xaif:ControlFlowEdge edge_id="7" source="8" target="3"/>
+    <xaif:ControlFlowEdge edge_id="7" source="8" target="3" has_condition_value="true"/>
     <xaif:ControlFlowEdge edge_id="8" source="8" target="4"/>
     <xaif:ControlFlowEdge edge_id="9" source="9" target="7"/>
   </xaif:ControlFlowGraph>

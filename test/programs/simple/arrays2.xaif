@@ -386,11 +386,11 @@
 
     <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
     <xaif:ControlFlowEdge edge_id="2" source="2" target="3"/>
-    <xaif:ControlFlowEdge edge_id="3" source="3" target="4"/>
+    <xaif:ControlFlowEdge edge_id="3" source="3" target="4" has_condition_value="true"/>
     <xaif:ControlFlowEdge edge_id="4" source="3" target="8"/>
     <xaif:ControlFlowEdge edge_id="5" source="4" target="5"/>
     <xaif:ControlFlowEdge edge_id="6" source="5" target="14"/>
-    <xaif:ControlFlowEdge edge_id="7" source="8" target="9"/>
+    <xaif:ControlFlowEdge edge_id="7" source="8" target="9" has_condition_value="true"/>
     <xaif:ControlFlowEdge edge_id="8" source="8" target="12"/>
     <xaif:ControlFlowEdge edge_id="9" source="9" target="10"/>
     <xaif:ControlFlowEdge edge_id="10" source="10" target="15"/>

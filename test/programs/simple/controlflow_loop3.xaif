@@ -166,7 +166,7 @@
 
     <xaif:Exit vertex_id="10" annotation="{WHIRL_Id#}"/>
 
-    <xaif:If vertex_id="11" annotation="{WHIRL_Id#82}">
+    <xaif:Branch vertex_id="11" annotation="{WHIRL_Id#82}">
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_lt_scal_scal" type="***"/>
         <xaif:VariableReference vertex_id="2" du_ud="3">
@@ -176,9 +176,9 @@
         <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
         <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
       </xaif:Condition>
-    </xaif:If>
+    </xaif:Branch>
 
-    <xaif:If vertex_id="12" annotation="{WHIRL_Id#34}">
+    <xaif:Branch vertex_id="12" annotation="{WHIRL_Id#34}">
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
         <xaif:VariableReference vertex_id="2" du_ud="1">
@@ -188,7 +188,7 @@
         <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
         <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
       </xaif:Condition>
-    </xaif:If>
+    </xaif:Branch>
 
     <xaif:BasicBlock vertex_id="13" scope_id="3" annotation="{WHIRL_Id#89}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#89} [goto 1]"/>
@@ -207,9 +207,9 @@
     <xaif:ControlFlowEdge edge_id="7" source="7" target="13"/>
     <xaif:ControlFlowEdge edge_id="8" source="8" target="9"/>
     <xaif:ControlFlowEdge edge_id="9" source="9" target="14"/>
-    <xaif:ControlFlowEdge edge_id="10" source="11" target="5"/>
+    <xaif:ControlFlowEdge edge_id="10" source="11" target="5" has_condition_value="true"/>
     <xaif:ControlFlowEdge edge_id="11" source="11" target="6"/>
-    <xaif:ControlFlowEdge edge_id="12" source="12" target="4"/>
+    <xaif:ControlFlowEdge edge_id="12" source="12" target="4" has_condition_value="true"/>
     <xaif:ControlFlowEdge edge_id="13" source="12" target="8"/>
     <xaif:ControlFlowEdge edge_id="14" source="13" target="3"/>
     <xaif:ControlFlowEdge edge_id="15" source="14" target="10"/>

@@ -294,7 +294,7 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
 
     <xaif:Exit vertex_id="15" annotation="{WHIRL_Id#}"/>
 
-    <xaif:If vertex_id="16" annotation="{WHIRL_Id#63}">
+    <xaif:Branch vertex_id="16" annotation="{WHIRL_Id#63}">
       <!-- OPR_TRUEBR label=5 -->
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_land_scal_scal" type="***"/>
@@ -315,9 +315,9 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
         <xaif:ExpressionEdge edge_id="5" source="2" target="1" position="1"/>
         <xaif:ExpressionEdge edge_id="6" source="5" target="1" position="2"/>
       </xaif:Condition>
-    </xaif:If>
+    </xaif:Branch>
 
-    <xaif:If vertex_id="17" annotation="{WHIRL_Id#74}">
+    <xaif:Branch vertex_id="17" annotation="{WHIRL_Id#74}">
       <!-- OPR_TRUEBR label=2 -->
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_land_scal_scal" type="***"/>
@@ -338,7 +338,7 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
         <xaif:ExpressionEdge edge_id="5" source="2" target="1" position="1"/>
         <xaif:ExpressionEdge edge_id="6" source="5" target="1" position="2"/>
       </xaif:Condition>
-    </xaif:If>
+    </xaif:Branch>
 
     <xaif:EndLoop vertex_id="18" annotation="{WHIRL_Id#}"/>
 
@@ -353,7 +353,7 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
     <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
     <xaif:ControlFlowEdge edge_id="2" source="2" target="3"/>
     <xaif:ControlFlowEdge edge_id="3" source="3" target="4"/>
-    <xaif:ControlFlowEdge edge_id="4" source="4" target="5"/>
+    <xaif:ControlFlowEdge edge_id="4" source="4" target="5" has_condition_value="true"/>
     <xaif:ControlFlowEdge edge_id="5" source="4" target="11"/>
     <xaif:ControlFlowEdge edge_id="6" source="5" target="16"/>
     <xaif:ControlFlowEdge edge_id="7" source="6" target="18"/>
@@ -364,9 +364,9 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
     <xaif:ControlFlowEdge edge_id="12" source="12" target="15"/>
     <xaif:ControlFlowEdge edge_id="13" source="13" target="12"/>
     <xaif:ControlFlowEdge edge_id="14" source="14" target="15"/>
-    <xaif:ControlFlowEdge edge_id="15" source="16" target="6"/>
+    <xaif:ControlFlowEdge edge_id="15" source="16" target="6" has_condition_value="true"/>
     <xaif:ControlFlowEdge edge_id="16" source="16" target="7"/>
-    <xaif:ControlFlowEdge edge_id="17" source="17" target="8"/>
+    <xaif:ControlFlowEdge edge_id="17" source="17" target="8" has_condition_value="true"/>
     <xaif:ControlFlowEdge edge_id="18" source="17" target="9"/>
     <xaif:ControlFlowEdge edge_id="19" source="18" target="4"/>
     <xaif:ControlFlowEdge edge_id="20" source="19" target="17"/>

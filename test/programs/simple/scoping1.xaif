@@ -207,7 +207,7 @@
 
     <xaif:Exit vertex_id="8" annotation="{WHIRL_Id#}"/>
 
-    <xaif:If vertex_id="9" annotation="{WHIRL_Id#121}">
+    <xaif:Branch vertex_id="9" annotation="{WHIRL_Id#121}">
       <!-- OPR_TRUEBR label=2 -->
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_lt_scal_scal" type="***"/>
@@ -218,7 +218,7 @@
         <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
         <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
       </xaif:Condition>
-    </xaif:If>
+    </xaif:Branch>
 
     <xaif:BasicBlock vertex_id="10" scope_id="4" annotation="{WHIRL_Id#125}">
       <xaif:Assignment statement_id="1">
@@ -242,12 +242,12 @@
     <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
     <xaif:ControlFlowEdge edge_id="2" source="2" target="3"/>
     <xaif:ControlFlowEdge edge_id="3" source="3" target="4"/>
-    <xaif:ControlFlowEdge edge_id="4" source="4" target="5"/>
+    <xaif:ControlFlowEdge edge_id="4" source="4" target="5" has_condition_value="true"/>
     <xaif:ControlFlowEdge edge_id="5" source="4" target="6"/>
     <xaif:ControlFlowEdge edge_id="6" source="5" target="9"/>
     <xaif:ControlFlowEdge edge_id="7" source="6" target="8"/>
     <xaif:ControlFlowEdge edge_id="8" source="7" target="10"/>
-    <xaif:ControlFlowEdge edge_id="9" source="9" target="6"/>
+    <xaif:ControlFlowEdge edge_id="9" source="9" target="6" has_condition_value="true"/>
     <xaif:ControlFlowEdge edge_id="10" source="9" target="7"/>
     <xaif:ControlFlowEdge edge_id="11" source="10" target="11"/>
     <xaif:ControlFlowEdge edge_id="12" source="11" target="4"/>
