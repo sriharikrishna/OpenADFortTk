@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.41 2004/04/30 14:26:37 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.42 2004/04/30 20:39:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -2060,7 +2060,7 @@ XAIFTyToWHIRLTy(const char* type)
     ty = MTYPE_To_TY(MTYPE_F8);
   } 
   else if (strcmp(type, "integer") == 0) {
-    ty = MTYPE_To_TY(MTYPE_I4); // FIXME_INTSZ
+    ty = MTYPE_To_TY(DefaultMTypeInt);
   } 
   else {
     // don't know about anything else yet

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.17 2004/04/29 21:29:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.18 2004/04/30 20:39:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -347,7 +347,7 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
     if (ctxt.IsArrayIdx() || ctxt.IsExprSimple()) {
       wn = WN_CreateIntconst(OPC_I4INTCONST, val);
     } else {
-      TCON tcon = Host_To_Targ(MTYPE_I4, val); // FIXME_INTSZ
+      TCON tcon = Host_To_Targ(DefaultMTypeInt, val);
       wn = Make_Const(tcon); 
     }
   } 
@@ -569,8 +569,8 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
     
     // FIXME: take care of small integer types
     if (MTYPE_byte_size(dty) < 4) {
-      if (MTYPE_is_unsigned(dty)) { rty = MTYPE_U4; } // FIXME_INTSZ
-      else if (MTYPE_is_signed(dty)) { rty = MTYPE_I4; } // FIXME_INTSZ
+      if (MTYPE_is_unsigned(dty)) { rty = DefaultMTypeUInt; }
+      else if (MTYPE_is_signed(dty)) { rty = DefaultMTypeInt; }
     }
 
     wn = WN_CreateLdid(OPR_LDID, rty, dty, 0, st, ty, 0);
