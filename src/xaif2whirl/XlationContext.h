@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.h,v 1.5 2003/10/10 17:57:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.h,v 1.6 2004/03/29 23:41:35 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -71,6 +71,7 @@ public:
     LVALUE           = 0x00000020, // var ref should be an lvalue (inheritD)
     ARRAY            = 0x00000040, // an array reference (inheritD)
     ARRAYIDX         = 0x00000080, // an array index expr (inheritD)
+    EXPRSIMPLE       = 0x00000100, // within a 'simple' expr (inheritD)
   };
 
 public:
@@ -133,6 +134,12 @@ public:
   bool IsArrayIdx() const { return CurContext().AreFlags(ARRAYIDX); }
   void SetArrayIdx()      { CurContext().SetFlags(ARRAYIDX); }
   void ResetArrayIdx()    { CurContext().ResetFlags(ARRAYIDX); }
+
+  // A simple expression (e.g. Fortran loop init, update) (inherited)
+  bool IsExprSimple() const { return CurContext().AreFlags(EXPRSIMPLE); }
+  void SetExprSimple()      { CurContext().SetFlags(EXPRSIMPLE); }
+  void ResetExprSimple()    { CurContext().ResetFlags(EXPRSIMPLE); }
+
 
   // -------------------------------------------------------
   // Id maps

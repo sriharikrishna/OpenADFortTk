@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.cxx,v 1.5 2003/10/10 17:57:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.cxx,v 1.6 2004/03/29 23:41:35 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -86,6 +86,7 @@ XlationContext::Ctor(uint32_t flags_)
   if (enclCtxt->AreFlags(LVALUE)) { curCtxt.SetFlags(LVALUE); }
   if (enclCtxt->AreFlags(ARRAY)) { curCtxt.SetFlags(ARRAY); }
   if (enclCtxt->AreFlags(ARRAYIDX)) { curCtxt.SetFlags(ARRAYIDX); }
+  if (enclCtxt->AreFlags(EXPRSIMPLE)) { curCtxt.SetFlags(EXPRSIMPLE); }
 
   return (*this);
 }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.11 2004/03/24 13:33:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.12 2004/03/29 23:41:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -73,8 +73,23 @@ GetOrCreateBogusTmpSymbol(XlationContext& ctxt);
 
 namespace xaif2whirl {
   
+  // Generic attribute retrieval funtions
+  bool
+  GetBoolAttr(const DOMElement* elem, XMLCh* attr, bool default_val);
+
+  int
+  GetIntAttr(const DOMElement* elem, XMLCh* attr, int default_val);
+
   // Return the value of the respective attribute.  The default values
   // are given below if the attribute is not present.
+
+  // Default: false.
+  bool
+  GetHasConditionAttr(const DOMElement* elem);
+
+  // Default: 0.
+  unsigned int
+  GetCondAttr(const DOMElement* elem);
   
   // Default: true.
   bool
@@ -158,19 +173,56 @@ CreateParm(WN *arg, UINT32 flag)
 
 //***************************************************************************
 
-// MyDGNode: Used to create convenient graphs from XAIF graphs
-typedef std::map<std::string, DGraph::Node*> VertexIdToDGraphNodeMap;
+class MyDGNode;
 
+typedef std::map<std::string, MyDGNode*> VertexIdToMyDGNodeMap;
+
+// ---------------------------------------------------------
+// MyDGNode, MyDGEdge: Used to create graph structures from XAIF
+// graphs (lists of nodes and edges)
+// ---------------------------------------------------------
 class MyDGNode : public DGraph::Node {
 public:
-  MyDGNode(const DOMElement* e_) : e(e_) { }
+  MyDGNode(const DOMElement* e_) : e(e_) { Ctor(); }
   virtual ~MyDGNode() { }
+  
+  DOMElement* GetElem() const { return const_cast<DOMElement*>(e); }
+  
+  // getId: An id unique within instances of this class
+  virtual unsigned int getId() const { return id; }
+  // resetIds: reset id numbering
+  static void resetIds() { nextId = 1; }
+  
+private:
+  void Ctor() { id = nextId++; }
+  static unsigned int nextId;
+  
+  const DOMElement* e;
+  unsigned int id; // 0 is reserved; first instance is 1
+};
 
+class MyDGEdge : public DGraph::Edge {
+public:
+  MyDGEdge(DGraph::Node* source_, DGraph::Node* sink_, const DOMElement* e_) 
+    : DGraph::Edge(source_, sink_), e(e_) { }
+  virtual ~MyDGEdge() { }
+  
   DOMElement* GetElem() const { return const_cast<DOMElement*>(e); }
   
 private:
   const DOMElement* e;
 };
+
+
+// GetSuccessor: Assuming node has 0 or 1 outgoing edges, return the
+// successor node.  In most graphs the successor will be along the
+// outgoing edge, and this parameter defaults to true.
+extern MyDGNode*
+GetSuccessor(MyDGNode* node, bool succIsOutEdge = true);
+
+extern MyDGNode*
+GetSuccessorAlongEdge(MyDGNode* node, unsigned int condition, 
+		      bool succIsOutEdge = true);
 
 //***************************************************************************
 

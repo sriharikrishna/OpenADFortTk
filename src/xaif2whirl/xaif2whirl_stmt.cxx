@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.7 2004/03/12 18:22:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.8 2004/03/29 23:41:35 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -104,6 +104,9 @@ static WN*
 CreateAssignment(WN* lhs, WN* rhs);
 
 static WN*
+CreateAssignment(ST* lhs, WN* rhs);
+
+static WN*
 CreateZeroConst(TYPE_ID ty);
 
 static WN*
@@ -119,18 +122,49 @@ xaif2whirl::TranslateStmt(const DOMElement* stmt, XlationContext& ctxt)
   const XMLCh* name = stmt->getNodeName();
   if (XMLString::equals(name, XAIFStrings.elem_Assign_x())) {
     wn = xlate_Assignment(stmt, ctxt);
-  } else if (XMLString::equals(name, XAIFStrings.elem_SubCall_x())) {
+  } 
+  else if (XMLString::equals(name, XAIFStrings.elem_LpInit_x()) ||
+	   XMLString::equals(name, XAIFStrings.elem_LpUpdate_x())) {
+    wn = TranslateAssignmentSimple(stmt, ctxt);
+  } 
+  else if (XMLString::equals(name, XAIFStrings.elem_SubCall_x())) {
     wn = xlate_SubroutineCall(stmt, ctxt);
-  } else if (XMLString::equals(name, XAIFStrings.elem_InlinableSubCall_x())) {
+  } 
+  else if (XMLString::equals(name, XAIFStrings.elem_InlinableSubCall_x())) {
     wn = xlate_InlinableSubroutineCall(stmt, ctxt);
-  } else if (XMLString::equals(name, XAIFStrings.elem_Marker_x())) {
+  } 
+  else if (XMLString::equals(name, XAIFStrings.elem_Marker_x())) {
     // nothing
-  } else if (XMLString::equals(name, XAIFStrings.elem_DerivProp_x())) {
+  } 
+  else if (XMLString::equals(name, XAIFStrings.elem_DerivProp_x())) {
     wn = xlate_DerivativePropagator(stmt, ctxt);
-  } else {
+  } 
+  else {
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
   }
   
+  return wn;
+}
+
+
+// TranslateAssignmentSimple: Translates certain XAIF assignment
+// statements into special WHIRL assignment statements in order to
+// conform to WHIRL requirements.
+WN* 
+xaif2whirl::TranslateAssignmentSimple(const DOMElement* elem, 
+				      XlationContext& ctxt)
+{
+  DOMElement* lhs_elem = GetChildElement(elem, XAIFStrings.elem_AssignLHS_x());
+  DOMElement* rhs_elem = GetChildElement(elem, XAIFStrings.elem_AssignRHS_x());
+  DOMElement* lhsref = GetFirstChildElement(lhs_elem);
+  
+  ST* lhs = TranslateVarRefSimple(lhsref, ctxt);
+  
+  ctxt.CreateContext(XlationContext::EXPRSIMPLE);
+  WN* rhs = xlate_AssignmentRHS(rhs_elem, ctxt);
+  ctxt.DeleteContext();
+  
+  WN* wn = CreateAssignment(lhs, rhs);
   return wn;
 }
 
@@ -516,6 +550,17 @@ CreateAssignment(WN* lhs, WN* rhs)
   // FIXME: first argument is bogus // WN_Tree_Type(rhs)
   TY_IDX ty = Make_Pointer_Type(MTYPE_To_TY(MTYPE_F8));
   WN* wn = WN_Istore(MTYPE_F8, 0, ty, lhs, rhs, 0);
+  return wn;
+}
+
+
+static WN*
+CreateAssignment(ST* lhs, WN* rhs)
+{
+  // A special version of the above for situations in which WHIRL
+  // requires STID assignments (e.g. loop initialization and updates).
+  TY_IDX ty = WN_Tree_Type(rhs); // referenced-obj = base-obj
+  WN* wn = WN_Stid(TY_mtype(ty), 0, lhs, ty, rhs, 0);
   return wn;
 }
 

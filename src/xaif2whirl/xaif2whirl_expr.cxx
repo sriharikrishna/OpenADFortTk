@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.11 2004/03/24 13:33:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.12 2004/03/29 23:41:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -24,6 +24,7 @@
 
 #include <iostream>
 #include <vector>
+using std::vector;
 #include <algorithm>
 
 //************************* Xerces Include Files ****************************
@@ -64,16 +65,15 @@ using std::endl;
 
 using namespace xaif2whirl;
 
-// Used with CreateExpressionGraph
-// lt_ExprArgument: Used to sort operands (arguments) of (to) an
-// expression by the "position" attribute
-struct lt_ExprArgument
+// sort_Position: Used to sort operands of (arguments to) an expression
+// by the "position" attribute
+struct sort_Position
 {
-  // return true if n1 < n2; false otherwise
-  bool operator()(const MyDGNode* n1, const MyDGNode* n2) const
+  // return true if e1 < e2; false otherwise
+  bool operator()(const MyDGEdge* e1, const MyDGEdge* e2) const
   {
-    unsigned int pos1 = GetPositionAttr(n1->GetElem());
-    unsigned int pos2 = GetPositionAttr(n2->GetElem());
+    unsigned int pos1 = GetPositionAttr(e1->GetElem());
+    unsigned int pos2 = GetPositionAttr(e2->GetElem());
     return (pos1 < pos2);
   }
 };
@@ -105,6 +105,9 @@ xlate_BooleanOperation(DGraph* g, MyDGNode* n, XlationContext& ctxt);
 static WN*
 xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt);
 
+static ST*
+xlate_SymbolReferenceSimple(const DOMElement* elem, XlationContext& ctxt);
+
 static WN*
 xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt);
 
@@ -125,7 +128,7 @@ static TYPE_ID
 GetRType(WN* wn);
 
 static TYPE_ID
-GetRTypeFromOpands(std::vector<WN*>& opands);
+GetRTypeFromOpands(vector<WN*>& opands);
 
 static TYPE_ID
 GetRTypeFromOpands(TYPE_ID ty1, TYPE_ID ty2);
@@ -134,10 +137,10 @@ static TYPE_ID
 GetMType(unsigned int cl, unsigned int bytesz);
 
 static OPCODE
-GetWNExprOpcode(OPERATOR opr, std::vector<WN*>& opands);
+GetWNExprOpcode(OPERATOR opr, vector<WN*>& opands);
 
 static INTRINSIC
-GetWNIntrinsic(const char* intrnNm, std::vector<WN*>& opands, TYPE_ID* dtype);
+GetWNIntrinsic(const char* intrnNm, vector<WN*>& opands, TYPE_ID* dtype);
 
 //****************************************************************************
 
@@ -157,6 +160,7 @@ xaif2whirl::TranslateExpression(const DOMElement* elem, XlationContext& ctxt)
 
   return wn;
 }
+
 
 static WN*
 xlate_Expression(DGraph* g, MyDGNode* n, XlationContext& ctxt)
@@ -195,6 +199,7 @@ xlate_Expression(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   return wn;
 }
 
+
 static WN*
 xlate_VarRef(const DOMElement* elem, XlationContext& ctxt)
 {
@@ -215,6 +220,7 @@ xlate_VarRef(const DOMElement* elem, XlationContext& ctxt)
   
   return wn;
 }
+
 
 // TranslateVarRef: Given the first node in a variable reference
 // graph, create a variable reference.
@@ -250,6 +256,32 @@ xaif2whirl::TranslateVarRef(const DOMElement* elem, XlationContext& ctxt)
   
   return wn;
 }
+
+
+// TranslateSimpleVarRef: Given the first node in a simple variable
+// reference graph, create a variable reference.  No value/deriv
+// selector can be created.
+ST*
+xaif2whirl::TranslateVarRefSimple(const DOMElement* elem, XlationContext& ctxt)
+{
+  if (!elem) {
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+  }
+  
+  // This must be a plain XAIF symbol reference (a one-vertex graph)
+  const XMLCh* nameX = elem->getNodeName();
+  if ( !(XMLString::equals(nameX, XAIFStrings.elem_SymRef_x()) &&
+	 GetNextSiblingElement(elem) == NULL) ) {
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "XAIF error..."));
+  }
+  
+  ctxt.CreateContext(XlationContext::NOFLAG);
+  ST* st = xlate_SymbolReferenceSimple(elem, ctxt);
+  ctxt.DeleteContext();
+  
+  return st;
+}
+
 
 static WN*
 xlate_VarRef(DGraph* g, MyDGNode* n, XlationContext& ctxt)
@@ -302,15 +334,16 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
     wn = Make_Const(tcon);
   } 
   else if (strcmp(type.c_str(), "integer") == 0) {
-    // Integer constant: Integer constants that are used in non-index
-    // expressions typically need to have an associated symbol
-    // (ST*). Consequently we typically represent this as an
-    // OPR_CONST, not OPR_INTCONST.
+    // Integer constant: Integer constants typically need to have an
+    // associated symbol (ST*) and consequently we typically represent
+    // this as an OPR_CONST, not OPR_INTCONST.  However, certain
+    // special expressions need an INTCONST.  E.g.: array indices,
+    // loop updates.
     INT64 val = strtol(value.c_str(), (char **)NULL, 10);
-    if (ctxt.IsArrayIdx()) {
+    if (ctxt.IsArrayIdx() || ctxt.IsExprSimple()) {
       wn = WN_CreateIntconst(OPC_I4INTCONST, val);
     } else {
-      TCON tcon = Host_To_Targ(MTYPE_I8, val);
+      TCON tcon = Host_To_Targ(MTYPE_I4, val); // FIXME: was _I8
       wn = Make_Const(tcon); 
     }
   } 
@@ -382,20 +415,18 @@ xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   // 1. Gather the operands, sorted by the "position" attribute
   ASSERT_FATAL(n->num_incoming() == info->numop, 
 	       (DIAG_A_STRING, "Programming error."));
-  std::vector<MyDGNode*> opnd(info->numop, NULL); 
-  
+  vector<MyDGEdge*> opnd_edge(info->numop, NULL);
   DGraph::IncomingEdgesIterator it = DGraph::IncomingEdgesIterator(n);
   for (int i = 0; (bool)it; ++it, ++i) {
-    DGraph::Edge* edge = (DGraph::Edge*)it;
-    opnd[i] = dynamic_cast<MyDGNode*>(edge->source());
+    opnd_edge[i] = dynamic_cast<MyDGEdge*>((DGraph::Edge*)it);
   }
-  
-  std::sort(opnd.begin(), opnd.end(), lt_ExprArgument()); // ascending
+  std::sort(opnd_edge.begin(), opnd_edge.end(), sort_Position()); // ascending
   
   // 2. Translate each operand into a WHIRL expression tree
-  std::vector<WN*> opnd_wn(info->numop, NULL); 
+  vector<WN*> opnd_wn(info->numop, NULL); 
   for (int i = 0; i < info->numop; ++i) {
-    opnd_wn[i] = xlate_Expression(g, opnd[i], ctxt);
+    MyDGNode* opnd = dynamic_cast<MyDGNode*>(opnd_edge[i]->source());
+    opnd_wn[i] = xlate_Expression(g, opnd, ctxt);
   }
 
   // 3. Translate into either WHIRL OPR_CALL or a WHIRL expression operator
@@ -438,6 +469,7 @@ xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   return wn;
 }
 
+
 static WN*
 xlate_FunctionCall(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 {
@@ -451,6 +483,7 @@ xlate_FunctionCall(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   assert(false && "implement"); 
   return NULL;
 }
+
 
 static WN*
 xlate_BooleanOperation(DGraph* g, MyDGNode* n, XlationContext& ctxt)
@@ -466,6 +499,9 @@ xlate_BooleanOperation(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   return NULL;
 }
 
+
+// xlate_SymbolReferenceSimple: Translate a symbol reference.  May an
+// active flag in 'ctxt' that is inherited *up* the context stack.
 static WN*
 xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
 {
@@ -533,6 +569,18 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
   return wn;
 }
 
+
+// xlate_SymbolReferenceSimple: Translate a simple symbol reference.
+// Do not set an active flag.
+static ST*
+xlate_SymbolReferenceSimple(const DOMElement* elem, XlationContext& ctxt)
+{
+  Symbol* sym = GetSymbol(elem, ctxt);
+  ST* st = sym->GetST();
+  return st;
+}
+
+
 static WN*
 xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 {
@@ -546,7 +594,7 @@ xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   // 1. Translate the index expression for each dimension
   // -------------------------------------------------------
   unsigned int rank = GetChildElementCount(elem);
-  std::vector<WN*> indices(rank); 
+  vector<WN*> indices(rank); 
   
   DOMElement* dim = GetFirstChildElement(elem);
   for (int i = 0; dim; dim = GetNextSiblingElement(dim), ++i) {
@@ -568,12 +616,7 @@ xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   // -------------------------------------------------------
   // 2. Translate the array symbol reference
   // -------------------------------------------------------
-  ASSERT_FATAL(n->num_incoming() == 1,
-	       (DIAG_A_STRING, "Programming error."));
-  DGraph::IncomingEdgesIterator it = DGraph::IncomingEdgesIterator(n);
-  DGraph::Edge* edge = (DGraph::Edge*)it;
-  
-  MyDGNode* n1 = dynamic_cast<MyDGNode*>(edge->source());
+  MyDGNode* n1 = GetSuccessor(n, false /* succIsOutEdge */);
   const XMLCh* nmX = n1->GetElem()->getNodeName();
   ASSERT_FATAL(XMLString::equals(nmX, XAIFStrings.elem_SymRef_x()),
 	       (DIAG_A_STRING, "Programming error."));
@@ -648,8 +691,9 @@ xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 static DGraph* 
 CreateExpressionGraph(const DOMElement* elem, bool varRef)
 {
+  MyDGNode::resetIds();
   DGraph* g = new DGraph;
-  VertexIdToDGraphNodeMap m;
+  VertexIdToMyDGNodeMap m;
 
   // Setup variables
   XMLCh* edgeStr = NULL;
@@ -676,21 +720,11 @@ CreateExpressionGraph(const DOMElement* elem, bool varRef)
       XercesStrX src = XercesStrX(srcX);
       XercesStrX targ = XercesStrX(targX);
 
-      MyDGNode* gn1 = NULL, *gn2 = NULL; // src and targ
-      
-      VertexIdToDGraphNodeMap::iterator it = m.find(std::string(src.c_str()));
-      if (it != m.end()) { 
-	gn1 = dynamic_cast<MyDGNode*>((*it).second); 
-      }
-      
-      it = m.find(std::string(targ.c_str()));
-      if (it != m.end()) { 
-	gn2 = dynamic_cast<MyDGNode*>((*it).second); 
-      }
-      
+      MyDGNode* gn1 = m[std::string(src.c_str())];  // source
+      MyDGNode* gn2 = m[std::string(targ.c_str())]; // target
       ASSERT_FATAL(gn1 && gn2, (DIAG_A_STRING, "Programming error."));
       
-      DGraph::Edge* ge = new DGraph::Edge(gn1, gn2); // src, targ
+      MyDGEdge* ge = new MyDGEdge(gn1, gn2, e); // src, targ
       g->add(ge);
       
     } else {
@@ -701,8 +735,7 @@ CreateExpressionGraph(const DOMElement* elem, bool varRef)
       
       MyDGNode* gn = new MyDGNode(e);
       g->add(gn);
-      m.insert(make_pair(std::string(vid.c_str()), 
-			 dynamic_cast<DGraph::Node*>(gn)));
+      m[std::string(vid.c_str())] = gn;
     } 
     
   } while ( (e = GetNextSiblingElement(e)) );
@@ -729,6 +762,7 @@ CreateExpressionGraph(const DOMElement* elem, bool varRef)
   
   return g;
 }
+
 
 //****************************************************************************
 
@@ -790,6 +824,7 @@ CreateValueSelector(WN* wn)
   }
 }
 
+
 // CreateDerivSelector: Select the deriv portion of 'wn', by wrapping
 // a dummy intrinsic call around it
 // N.B.: This creates a OPR_CALL node, which is not an expression.
@@ -826,6 +861,7 @@ CreateDerivSelector(WN* wn)
   }
 }
 
+
 //****************************************************************************
 
 static TYPE_ID
@@ -846,15 +882,16 @@ GetRType(WN* wn)
   return rty;
 }
 
+
 static TYPE_ID
-GetRTypeFromOpands(std::vector<WN*>& opands)
+GetRTypeFromOpands(vector<WN*>& opands)
 {
   int opands_num = opands.size();
   ASSERT_FATAL(opands_num > 0, (DIAG_A_STRING, "Programming error."));
   
   // 1. Gather types for operands
-  std::vector<TY_IDX> opands_ty(opands_num); // FIXME
-  std::vector<TYPE_ID> opands_mty(opands_num);
+  vector<TY_IDX> opands_ty(opands_num); // FIXME
+  vector<TYPE_ID> opands_mty(opands_num);
   for (int i = 0; i < opands_num; ++i) {
     // FIXME: change WN_Tree_Type to accept the CALL node
     //TY_IDX ty = WN_Tree_Type(opands[i]); // TYPE_ID 
@@ -870,6 +907,7 @@ GetRTypeFromOpands(std::vector<WN*>& opands)
   
   return mty;
 }
+
 
 static TYPE_ID
 GetRTypeFromOpands(TYPE_ID ty1, TYPE_ID ty2)
@@ -920,6 +958,7 @@ GetRTypeFromOpands(TYPE_ID ty1, TYPE_ID ty2)
   return ty;
 }
 
+
 // GetMType: Scan Machine_Types table for the right type.
 static TYPE_ID
 GetMType(unsigned int cl, unsigned int bytesz)
@@ -936,14 +975,16 @@ GetMType(unsigned int cl, unsigned int bytesz)
 
 
 static OPCODE
-GetWNExprOpcode(OPERATOR opr, std::vector<WN*>& opands)
+GetWNExprOpcode(OPERATOR opr, vector<WN*>& opands)
 {
   // 1. Find mtype suggested from operands
   TYPE_ID mty = GetRTypeFromOpands(opands);
 
   // 2. Find a dtype (operator dependent) FIXME/FIXME
   TYPE_ID dty = MTYPE_V; // typical dtype for intrinsics
-  if (opr == OPR_TRUNC || opr == OPR_LT || opr == OPR_GT) {
+  if (opr == OPR_TRUNC || 
+      opr == OPR_EQ || opr == OPR_NE || opr == OPR_GT || opr == OPR_GE ||
+      opr == OPR_LT || opr == OPR_LE) {
     dty = mty;
   } 
   
@@ -958,14 +999,19 @@ GetWNExprOpcode(OPERATOR opr, std::vector<WN*>& opands)
   else if (opr == OPR_TRUNC) {
     // trunc: i
     rty = GetMType(MTYPE_CLASS_INTEGER, MTYPE_byte_size(rty));
+  } 
+  else if (opr == OPR_EQ || opr == OPR_NE || opr == OPR_GT || opr == OPR_GE ||
+	   opr == OPR_LT || opr == OPR_LE) {
+    rty = GetMType(MTYPE_CLASS_INTEGER, 4);
   }
   
   OPCODE opc = OPCODE_make_op(opr, rty, dty);
   return opc;
 }
 
+
 static INTRINSIC
-GetWNIntrinsic(const char* intrnNm, std::vector<WN*>& opands, TYPE_ID* dtype)
+GetWNIntrinsic(const char* intrnNm, vector<WN*>& opands, TYPE_ID* dtype)
 {
   // 1. Find dtype suggested from operands
   TYPE_ID mty = GetRTypeFromOpands(opands);
