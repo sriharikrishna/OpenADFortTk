@@ -54,7 +54,8 @@ sub get_template_info {
 #
 {
     my($seek_decls,$seek_frag,$frag) = (0,0,-1);
-    my(%info) = (name => '',
+    my(%info) = (unitnm => '',
+		 name => '',
 		 args => '',
 		 decls => [],
 		 frags => [],
@@ -62,7 +63,8 @@ sub get_template_info {
 
     sub _init {
 	($seek_decls,$seek_frag,$frag) = (0,0,-1);
-	%info = (name => '',
+	%info = (unitnm => '',
+		 name => '',
 		 args => '',
 		 decls => [],
 		 frags => [],
@@ -99,8 +101,10 @@ sub get_template_info {
 	    return ();
 	}
 	my($scn) = FTscan->new($line);
-	if ( my($name,$args) = $scn->match(qr/^subroutine $TB (\w+) 
-					   (?: $TB \( $TB (.*) $TB \))?/ix)){
+	if ( my($unitnm,$name,$args) = 
+	       $scn->match(qr/^(program|subroutine) $TB (\w+)
+			   (?: $TB \( $TB (.*) $TB \))?/ix)){
+	    $info{unitnm} = $unitnm->str();
 	    $info{name} = $name->str();
 	    $info{args} = $args->str();
 	    $seek_decls = 1;
