@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.19 2004/02/20 21:11:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.20 2004/02/23 18:24:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -64,6 +64,7 @@
 #include "whirl2xaif.i"
 #include "XlationContext.h"
 #include <lib/support/xmlostream.h>
+#include <lib/support/XAIFStrings.h>
 #include <lib/support/IntrinsicXlationTable.h>
 
 //************************** Forward Declarations ***************************
@@ -128,6 +129,10 @@ extern DGraphEdgeVec*
 SortDGraphEdges(DGraph* g);
 
 
+//***************************************************************************
+// XAIF xml::ostream utilities
+//***************************************************************************
+
 // DumpGraphEdge: Generic edge dumper.  Given an edge name 'nm', id,
 // source id, target id and position, dumps the edge in XAIF.  If
 // 'pos' is 0 it will not be output.
@@ -166,6 +171,159 @@ DumpExprGraphEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid,
 
 
 //***************************************************************************
+// XAIF xml::ostream operators
+//***************************************************************************
+
+// ---------------------------------------------------------
+// AttrSymId: Generate an XAIF symbol id attribute
+// ---------------------------------------------------------
+
+struct AttrSymTab_ {
+  const ST* st;
+};
+
+inline ostream&
+operator<<(std::ostream& os, const AttrSymTab_& x) 
+{
+  xml::ostream& xos = dynamic_cast<xml::ostream&>(os); // FIXME
+
+  const char* st_name = ST_name(x.st);
+  SymId st_id = (SymId)ST_index(x.st);
+  
+  xos << xml::BegAttr(XAIFStrings.attr_symId())
+      << st_name << "_" << st_id
+      << xml::EndAttr;
+
+  return xos;
+}
+
+// AttrSymId: Given a symtab symbol (ST*), generate a symbol id attribute
+inline AttrSymTab_
+AttrSymId(ST* st_)
+{
+  AttrSymTab_ x;
+  x.st = st_;
+  return x;
+}
+
+
+// ---------------------------------------------------------
+// AttrAnnot, AttrAnnotVal: Generate an XAIF annotation attribute
+// ---------------------------------------------------------
+template<class T> 
+struct AttrAnnotInfo_ {
+  bool completeAttr;
+  const char* tag;
+  const T* val;
+};
+
+template<class T> 
+ostream&
+operator<<(std::ostream& os, const AttrAnnotInfo_<T>& x) 
+{
+  xml::ostream& xos = dynamic_cast<xml::ostream&>(os); // FIXME
+
+  if (x.completeAttr) {
+    xos << xml::BegAttr(XAIFStrings.attr_annot());
+  }
+
+  xos << x.tag << *x.val << XAIFStrings.tag_End();
+  
+  if (x.completeAttr) {
+    xos << xml::EndAttr;
+  }
+
+  return xos;
+}
+
+// AttrAnnot: Given a tag and a value, generate a complete annotiation
+// attribute
+template<class T> 
+AttrAnnotInfo_<T> 
+AttrAnnot(const char* tag_, const T& val_)
+{
+  AttrAnnotInfo_<T> x;
+  x.completeAttr = true;
+  x.tag = tag_;
+  x.val = &val_;
+  return x;
+}
+
+// AttrAnnotVal: Given a tag and a value, generate only the
+// annotiation attribute value
+template<class T> 
+AttrAnnotInfo_<T>
+AttrAnnotVal(const char* tag_, const T& val_)
+{
+  AttrAnnotInfo_<T> x;
+  x.completeAttr = false;
+  x.val = &val_;
+  x.tag = tag_;
+  return x;
+}
+
+// *AttrAnnot: Given a value, generate a complete annotiation
+// attribute with appropriate tag
+template<class T> 
+AttrAnnotInfo_<T> 
+SymTabIdAnnot(const T& val_) 
+{
+  return AttrAnnot(XAIFStrings.tag_SymTabId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+SymIdAnnot(const T& val_) 
+{
+  return AttrAnnot(XAIFStrings.tag_SymId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+PUIdAnnot(const T& val_) 
+{
+  return AttrAnnot(XAIFStrings.tag_PUId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+WhirlIdAnnot(const T& val_) 
+{
+  return AttrAnnot(XAIFStrings.tag_WHIRLId(), val_);
+}
+
+// *AttrAnnotVal: Given a tag and a value, generate only the
+// annotiation attribute value with the appropriate tag
+template<class T> 
+AttrAnnotInfo_<T>
+SymTabIdAnnotVal(const T& val_)
+{
+  return AttrAnnotVal(XAIFStrings.tag_SymTabId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+SymIdAnnotVal(const T& val_)
+{
+  return AttrAnnotVal(XAIFStrings.tag_SymId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+PUIdAnnotVal(const T& val_)
+{
+  return AttrAnnotVal(XAIFStrings.tag_PUId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+WhirlIdAnnotVal(const T& val_)
+{
+  return AttrAnnotVal(XAIFStrings.tag_WHIRLId(), val_);
+}
+
+
+//***************************************************************************
 // 
 //***************************************************************************
 
@@ -183,26 +341,6 @@ public:
   // Returns 0 on success; non-zero on error.
   virtual int operator()(const WN* wn) = 0;
 private: 
-};
-
-
-//FIXME: locate elsewhere...
-#include <lib/support/SymTab.h> // FIXME
-
-// Given a symbol table, add references to it
-class AddToNonScalarSymTabOp : public ForAllNonScalarRefsOp {
-public:
-  AddToNonScalarSymTabOp(NonScalarSymTab* symtab_);
-  ~AddToNonScalarSymTabOp() { }
-  
-  NonScalarSymTab* GetSymTab() { return symtab; }
-
-  // Given a non-scalar reference 'wn', create a dummy variable and
-  // add to the map.  
-  int operator()(const WN* wn);
-
-private:
-  NonScalarSymTab* symtab;
 };
 
 void 
