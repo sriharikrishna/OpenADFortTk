@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.2 2003/05/20 22:50:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.3 2003/06/24 18:34:31 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -273,28 +273,28 @@ typedef enum Diag_Code
    ((a_truth) ? \
     (void) 1 :  \
     (Diag_Set_Srcpos(WN_Get_Linenum(wn)), \
-     diag_handler ## diag_args))
+     diag_handler  diag_args))
   
 #define DIAG_ASSERT_LOC(a_truth, diag_handler, diag_args) \
    ((a_truth) ? \
     (void) 1 :  \
-    (Diag_Set_Location(__FILE__, __LINE__), diag_handler ## diag_args))
+    (Diag_Set_Location(__FILE__, __LINE__), diag_handler  diag_args))
 
 #define DIAG_ASSERT_LOC_SRCPOS(a_truth, diag_handler, diag_args, wn) \
    ((a_truth) ? \
     (void) 1 :  \
     (Diag_Set_Location(__FILE__, __LINE__), \
      Diag_Set_Srcpos(WN_Get_Linenum(wn)), \
-     diag_handler ## diag_args))
+     diag_handler  diag_args))
 
 #define DIAG_ASSERT_NOLOC(a_truth, diag_handler, diag_args) \
-   ((a_truth) ? (void) 1 : diag_handler ## diag_args)
+   ((a_truth) ? (void) 1 : diag_handler  diag_args)
 
 #define DIAG_ASSERT_NOLOC_SRCPOS(a_truth, diag_handler, diag_args, wn) \
    ((a_truth) ? \
     (void) 1 : \
     (Diag_Set_Srcpos(WN_Get_Linenum(wn)), \
-     diag_handler ## diag_args))
+     diag_handler  diag_args))
 
 extern void Diag_Set_Location(const char *file_name, INT line_number);
 extern void Diag_Set_Srcpos(SRCPOS srcpos);
