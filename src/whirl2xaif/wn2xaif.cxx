@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.17 2003/08/25 13:58:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.18 2003/09/02 15:02:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -108,10 +108,7 @@ using namespace whirl2xaif;
 using namespace xml; // for xml::ostream, etc
 
 // FIXME: REMOVE: defined in main.cxx
-extern bool opt_testPersistentIDs;
-extern const char* PersistentIDsToPrint;
 extern bool opt_testTypes;
-void PERSISTENT_ID_TESTER(WN* wn, WNIdToWNMap* id2wnmap, WNToWNIdMap* wn2idmap);
 void CONVERT_TYPES_TESTER(SYMTAB_IDX symtab_lvl);
 
 //************************** Forward Declarations ***************************
@@ -365,19 +362,17 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   AddToNonScalarSymTabOp op(symtab);
   ForAllNonScalarRefs(fbody, op); //FIXME
 
-  pair<WNIdToWNMap*, WNToWNIdMap*> wnmaps = CreateWhirlIdMaps(wn);
+  pair<WNToWNIdMap*, WNIdToWNMap*> wnmaps = CreateWhirlIdMaps(wn);
+  delete wnmaps.second;
   
-  ctxt.CreateContext(XlationContext::NOFLAG, symtab, wnmaps.second);
+  ctxt.CreateContext(XlationContext::NOFLAG, symtab, wnmaps.first);
 
   // -------------------------------------------------------
   // FIXME: junk and temporary testing
   // -------------------------------------------------------
-
   // Emit symbol table for this function
   //FIXME: xlate_SymbolTables(xos, CURRENT_SYMTAB, symtab, ctxt);
 
-  if (opt_testPersistentIDs) { 
-    PERSISTENT_ID_TESTER(wn, wnmaps.first, wnmaps.second); }
   if (opt_testTypes) { CONVERT_TYPES_TESTER(CURRENT_SYMTAB); }
   
   // -------------------------------------------------------
@@ -397,8 +392,8 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     std::string ids = GetIDsForStmtsInBB(n, ctxt);
     const char* vtype = GetCFGVertexType(&cfg, n);
 
-    xos << BegElem(vtype) << Attr("vertex_id", n->getID())
-	<< Attr("annotation", ids);
+    xos << BegElem(vtype) << Attr("vertex_id", n->getID()) 
+	<< WhirlIdAnnot(ids);
     ctxt.CreateContext();
     for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
       WN* wstmt = (WN *)((StmtHandle)stmtIt);
@@ -425,7 +420,6 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ctxt.DeleteContext();
   delete symtab;
   delete wnmaps.first;
-  delete wnmaps.second;
   
   return EMPTY_WN2F_STATUS;
 }
@@ -639,7 +633,7 @@ xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 static std::string
 GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt)
 {
-  std::string idstr = XAIFStrings.tag_IRIds();
+  std::string idstr;
   bool emptystr = true;
   
   for (CFG::NodeStatementsIterator stmtIt(node); (bool)stmtIt; ++stmtIt) {
@@ -1451,73 +1445,6 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
 }
 
 //***************************************************************************
-
-
-/////////////////////////////////////////////////////////////////////////////
-// FIXME: REMOVE: Temporary tests
-
-void PERSISTENT_ID_TESTER_INIT(WNIdSet& x, const char* idstr);
-
-void PERSISTENT_ID_TESTER(WN* wn, WNIdToWNMap* id2wnmap, WNToWNIdMap* wn2idmap)
-{  
-  static bool initialized;
-  static WNIdSet IdsToFind;
-
-  // Initialize if necessary
-  if (!initialized) {
-    PERSISTENT_ID_TESTER_INIT(IdsToFind, PersistentIDsToPrint);
-    IR_set_dump_order(TRUE); /* dump parent before children*/
-    initialized = true;
-  }
-
-  if (IdsToFind.size() > 0) {
-    // -----------------------------------------------------
-    // Find WN* from persistant IDs mode: 
-    // -----------------------------------------------------
-    WNIdSet::iterator it;
-    for (it = IdsToFind.begin(); it != IdsToFind.end(); ++it) {
-      WNId curId = *it;
-      WN* curWN = id2wnmap->Find(curId);
-
-      fprintf(stderr, "\n-----[%lu]-----\n", curId);
-      fdump_tree(stderr, curWN);
-    }
-    
-  } else {
-    // -----------------------------------------------------
-    // Find IDs from WN* mode:
-    // -----------------------------------------------------
-    WN_TREE_CONTAINER<PRE_ORDER> wtree(wn);
-    WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
-    
-    for (it = wtree.begin(); it != wtree.end(); ++it) {
-      WN* curWN = it.Wn();
-      
-      if (IsNonScalarRef(curWN)) {
-	WNId curId = wn2idmap->Find(curWN);
-
-	fprintf(stderr, "\n-----[%lu]-----\n", curId);
-	fdump_tree(stderr, curWN);
-      }
-    }
-  }
-
-}
-
-void PERSISTENT_ID_TESTER_INIT(WNIdSet& x, const char* idstr)
-{
-  if (!idstr) { return; }
-  
-  char* tok = strtok(const_cast<char*>(idstr), ":");
-  while (tok != NULL) {
-
-    unsigned long id = strtol(tok, (char **)NULL, 10);
-    x.insert(id);
-
-    tok = strtok((char*)NULL, ":");
-  }
-
-}
 
 /////////////////////////////////////////////////////////////////////////////
 // FIXME: REMOVE

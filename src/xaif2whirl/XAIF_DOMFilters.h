@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.4 2003/08/25 13:58:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.5 2003/09/02 15:02:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -48,6 +48,18 @@ GetLastChildElement(DOMNode* n);
 
 DOMElement*
 GetChildElement(DOMNode* n, XMLCh* name);
+
+unsigned int
+GetChildElementCount(DOMNode* n);
+
+DOMElement*
+GetPrevSiblingElement(DOMNode* n);
+
+DOMElement*
+GetNextSiblingElement(DOMNode* n);
+
+DOMElement*
+GetNextSiblingElement(DOMNode* n, XMLCh* name);
 
 //****************************************************************************
 
@@ -143,29 +155,31 @@ public:
   short acceptNode(const DOMNode *node) const;
 
   static bool IsStmt(const DOMNode *node);
-  static bool IsNop(const DOMNode *node);
-  static bool IsDerivAccum(const DOMNode *node);
+  static bool IsMarker(const DOMNode *node);
+  static bool IsDerivProp(const DOMNode *node);
 
 private:
 };
 
 
-class XAIF_Derivative : public DOMNodeFilter
+class XAIF_DerivPropStmt : public DOMNodeFilter
 {
 public:
   // -----------------------------------------------------------------------
   //  Constructors and Destructor
   // -----------------------------------------------------------------------
-  XAIF_Derivative() { }
-  ~XAIF_Derivative() { }
+  XAIF_DerivPropStmt() { }
+  ~XAIF_DerivPropStmt() { }
   
   // -----------------------------------------------------------------------
   //  Implementation of the filter interface
   // -----------------------------------------------------------------------
   short acceptNode(const DOMNode *node) const;
 
-  static bool IsDeriv(const DOMNode *node);
-
+  static bool IsSetDeriv(const DOMNode *node);
+  static bool IsSax(const DOMNode *node);
+  static bool IsSaxpy(const DOMNode *node);
+  
 private:
 };
 

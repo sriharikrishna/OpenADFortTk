@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.9 2003/08/11 14:24:23 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.10 2003/09/02 15:02:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -150,6 +150,10 @@ public:
   XlationContext();
   virtual ~XlationContext();
 
+  // -------------------------------------------------------
+  // Context manipulation (Create, Delete...)
+  // -------------------------------------------------------
+
   // Create a new child context and make it the current context
   XlationContext& CreateContext();
   XlationContext& CreateContext(mUINT32 flags_);
@@ -165,8 +169,9 @@ public:
   // Returns the current context
   Ctxt& CurContext() const { return const_cast<Ctxt&>(ctxtstack.front()); }
 
-  // FIXME  
-  StabToScopeIdMap& GetStabToScopeIdMap() { return stabToScopeIdMap; }
+  // -------------------------------------------------------
+  // Id generation
+  // -------------------------------------------------------
 
   // GetNewId: Ids for vertices and edges within the translated
   // graphs.  Returns a new id (id > 0), guaranteed to be unique
@@ -179,12 +184,31 @@ public:
   UINT GetEId() const { return CurContext().GetEId(); } // FIXME
   UINT PeekEId() const { return CurContext().PeekEId(); }
 
-  // FIXME (see above)
+  // -------------------------------------------------------
+  // Id maps
+  // -------------------------------------------------------
+
+  // ST_TAB* -> SymTabId map: (We do not assume ownership of the map)
+  SymTabId FindSymTabId(ST_TAB* stab);
+  SymTabToSymTabIdMap* GetSymTabToIdMap() const { return stab2idMap; }
+  void SetSymTabToIdMap(SymTabToSymTabIdMap* x) { stab2idMap = x; }
+  
+  // PU_Info* -> PUId map: (We do not assume ownership of the map)
+  PUId FindPUId(PU_Info* pu);
+  PUToPUIdMap* GetPUToIdMap() const { return pu2idMap; }
+  void SetPUToIdMap(PUToPUIdMap* x) { pu2idMap = x; }
+
+  // WN* -> WNId map
+  WNId FindWNId(WN* wn);
+
+  // -------------------------------------------------------
+  // Misc
+  // -------------------------------------------------------
+
   // Searches for symbol tables and queries them for 'wn'.  The symbol
   // table search begins at the current context and continues to
   // parents.
   NonScalarSym* FindNonScalarSym(WN* wn);
-  WNId FindWNId(WN* wn);
 
   WN* GetWN() { return CurContext().GetWN(); }
 
@@ -372,7 +396,8 @@ private:
   typedef CtxtStack::const_iterator CtxtStackItC;
 
 private:
-  StabToScopeIdMap stabToScopeIdMap;
+  SymTabToSymTabIdMap* stab2idMap;
+  PUToPUIdMap* pu2idMap;
 
   CtxtStack ctxtstack;
 };

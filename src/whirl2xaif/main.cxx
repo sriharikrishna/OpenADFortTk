@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.11 2003/08/01 16:00:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.12 2003/09/02 15:02:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -98,8 +98,6 @@ std::string XAIF_filename;
 
 // Options (FIXME)
 bool opt_dumpIR = false;
-bool opt_testPersistentIDs = false;      // FIXME
-const char* PersistentIDsToPrint = NULL; // write persistent ids if 
 bool opt_testTypes = false;
 
 //***************************************************************************
@@ -248,15 +246,12 @@ ProcessCommandLine(int argc, char **argv)
 	continue;
       }
 
-      if (strcmp(opt, "i") == 0) { 
-	opt_testPersistentIDs = true;
-	continue;
-      }
-
+#if 0 // example of option that takes an argument
       if (strcmp(opt, "I") == 0) { 
 	PersistentIDsToPrint = argv[++i]; // FIXME: should test array bounds
 	continue;
       }
+#endif
       
       if (strcmp(opt, "t") == 0) { 
 	opt_testTypes = true;

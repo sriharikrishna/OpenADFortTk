@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XercesStrX.h,v 1.1 2003/08/01 16:41:13 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XercesStrX.h,v 1.2 2003/09/02 15:02:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -43,6 +43,7 @@ XERCES_CPP_NAMESPACE_USE
 class XercesStrX
 {
 public :
+  // Note: toTranscode can be NULL.
   XercesStrX(const XMLCh* const toTranscode)
   {
     local = XMLString::transcode(toTranscode);

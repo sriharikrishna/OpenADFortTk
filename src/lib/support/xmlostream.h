@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/xmlostream.h,v 1.4 2003/07/24 20:23:58 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/xmlostream.h,v 1.5 2003/09/02 15:02:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -339,11 +339,11 @@ operator<<(std::ostream& os, const AttrInfo_<T>& x)
 
 template<class T> 
 AttrInfo_<T>
-Attr(const char* attr, const T& val)
+Attr(const char* attr_, const T& val_)
 {
   AttrInfo_<T> x;
-  x.attr = attr;
-  x.val = &val;
+  x.attr = attr_;
+  x.val = &val_;
   return x;
 }
 

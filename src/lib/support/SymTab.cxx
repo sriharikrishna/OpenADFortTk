@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.cxx,v 1.5 2003/08/11 14:24:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.cxx,v 1.6 2003/09/02 15:02:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -42,41 +42,6 @@ static const char* cat(const char* str, UINT num)
   return buf;
 #undef SYMBUF_SZ
 }
-
-//***************************************************************************
-// StabToScopeIdMap
-//***************************************************************************
-
-StabToScopeIdMap::StabToScopeIdMap()
-{
-
-}
-
-StabToScopeIdMap::~StabToScopeIdMap()
-{
-  stabToScopeIdMap.clear();
-}
-
-UINT
-StabToScopeIdMap::Find(const ST_TAB* sttab_) const
-{
-  ST_TAB* sttab = const_cast<ST_TAB*>(sttab_); // the map uses non const types
-  
-  STTABToScopeIdMapItC it = stabToScopeIdMap.find(sttab);
-  UINT id = (it == stabToScopeIdMap.end()) ? 0 : (*it).second;
-  return id;
-}
-
-bool
-StabToScopeIdMap::Insert(const ST_TAB* sttab_, const UINT id)
-{
-  ST_TAB* sttab = const_cast<ST_TAB*>(sttab_); // the map uses non const types
-  
-  STTABToScopeIdMapVal val = STTABToScopeIdMapVal(sttab, id);
-  pair<STTABToScopeIdMapIt, bool> p = stabToScopeIdMap.insert(val);
-  return p.second;
-}
-
 
 //***************************************************************************
 // XAIFSymToWhirlSymMap

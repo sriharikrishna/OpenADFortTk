@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.6 2003/08/25 13:58:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.7 2003/09/02 15:02:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -75,17 +75,19 @@ TranslateStmt(DOMElement* stmt, XlationContext& ctxt);
 
 //*************************** Forward Declarations ***************************
 
-static PU_Info*
-FindPUForCFG(PU_Info* pu_forest, const char* name, 
-	     const char* scopeIdStr, const char* symIdStr);
-
 static bool
-FindNextStmtInterval(WN* &firstWN, WN* &lastWN, 
-		     DOMElement* bbElem, XlationContext& ctxt);
+FindNextStmtInterval(DOMElement* bbElem, IdList<WNId>* bbIdList, 
+		     WNIdToWNMap* wnmap, WN* blkWN,
+		     DOMElement* &begXAIF, DOMElement* &endXAIF,
+		     WN* &begWN, WN* &endWN);
 
 static WN*
-FindIntervalBoundary(DOMElement* elem, WNIdList* idlist, WNIdToWNMap* wnmap, 
-		     int boundary);
+FindIntervalBoundary(DOMElement* elem, IdList<WNId>* bbIdList, 
+		     WNIdToWNMap* wnmap, WN* blkWN, int boundary);
+
+static WN* 
+FindWNBlock(DOMElement* bbElem, WN* wn_pu, 
+	    IdList<WNId>* idlist, WNIdToWNMap* wnmap);
 
 static WN* 
 FindParentWNBlock(WN* wn_tree, WN* wn);
@@ -93,25 +95,14 @@ FindParentWNBlock(WN* wn_tree, WN* wn);
 static WN* 
 FindSafeInsertionPoint(WN* blckWN, WN* stmtWN);
 
-static WNIdList*
-GetWNIdList(DOMElement* elem);
-
-static WNIdList*
-GetWNIdList(const char* idstr);
-
 //****************************************************************************
 
 static void
 xlate_Scope(DOMElement* elem, XAIFSymToWhirlSymMap* symMap, 
 	    XlationContext& ctxt);
 
-//****************************************************************************
-
-UINT 
-GetIntrinsicOperandNum(const char* name);
-
-OPERATOR 
-GetIntrinsicOperator(const char* name);
+static ST*
+GetST(DOMElement* elem, XlationContext& ctxt);
 
 //****************************************************************************
 
@@ -139,9 +130,25 @@ xaif2whirl::TranslateIR(PU_Info* pu_forest, DOMDocument* doc)
   
   if (!pu_forest) { return; }
   
+  // 1. Initialization
   XlationContext ctxt;
-
+  
+  // Initialize global id maps
+  pair<SymTabToSymTabIdMap*, SymTabIdToSymTabMap*> stabmaps =
+    CreateSymTabIdMaps(pu_forest);
+  ctxt.SetIdToSymTabMap(stabmaps.second);
+  delete stabmaps.first;
+  
+  pair<PUToPUIdMap*, PUIdToPUMap*> pumaps = CreatePUIdMaps(pu_forest);
+  delete pumaps.first;
+  ctxt.SetIdToPUMap(pumaps.second);
+    
+  // 2. Translate
   TranslateCallGraph(pu_forest, doc, ctxt);
+  
+  // 3. Cleanup
+  delete stabmaps.second;
+  delete pumaps.second;
 }
 
 
@@ -150,14 +157,11 @@ static void
 TranslateCallGraph(PU_Info* pu_forest, DOMDocument* doc, XlationContext& ctxt)
 {
   // FIXME: Do something about the ScopeHeirarchy
-  PUIdToPUMap* pumap = CreatePUIdMaps(pu_forest);
-  ctxt.SetIdToPUMap(pumap);
-
   XAIFSymToWhirlSymMap* symmap = TranslateScopeHierarchy(doc, ctxt);
   ctxt.SetXAIFSymToWhirlSymMap(symmap);
   
   // -------------------------------------------------------
-  // Translate each ControlFlowGraph in the CalGraph
+  // Translate each ControlFlowGraph in the CallGraph
   // -------------------------------------------------------
   DOMNodeIterator* it = 
     doc->createNodeIterator(doc, DOMNodeFilter::SHOW_ALL, 
@@ -169,7 +173,6 @@ TranslateCallGraph(PU_Info* pu_forest, DOMDocument* doc, XlationContext& ctxt)
   }
   it->release();
   
-  delete pumap;
   delete symmap;
 }
 
@@ -200,26 +203,16 @@ TranslateScopeHierarchy(DOMDocument* doc, XlationContext& ctxt)
 static void
 TranslateCFG(PU_Info* pu_forest, DOMElement* cfgElem, XlationContext& ctxt)
 {
-  //FIXME: 
-  const XMLCh* nameX = cfgElem->getAttribute(XAIFStrings.attr_annot_x());
-  const XMLCh* scopeIdX = cfgElem->getAttribute(XAIFStrings.attr_scopeId_x());
-  const XMLCh* symIdX = cfgElem->getAttribute(XAIFStrings.attr_symId_x());
-  
-  XercesStrX name = XercesStrX(nameX);
-  XercesStrX scopeId = XercesStrX(scopeIdX);
-  XercesStrX symId = XercesStrX(symIdX);
-
-  cout << XercesStrX(cfgElem->getNodeName()) << ": " << name 
-       << " // " << scopeId << ", " << symId << endl;
-
   // -------------------------------------------------------
-  // Try to find the matching PU; if so, translate XAIF CFG to WHIRL PU.
+  // Translate XAIF CFG to WHIRL PU.
   // -------------------------------------------------------
-  PU_Info* pu = FindPUForCFG(pu_forest, name.c_str(), scopeId.c_str(),
-			     symId.c_str());
+  PUId puid = GetPUId(cfgElem);
+  PU_Info* pu = ctxt.FindPU(puid);
   if (!pu) { return; }
-
-
+  
+  ST* st = GetST(cfgElem, ctxt);
+  cout << XercesStrX(cfgElem->getNodeName()) << ": " << ST_name(st) << endl;
+  
   // If we found the PU, translate
   RestoreOpen64PUGlobalVars(pu);
 
@@ -236,9 +229,9 @@ TranslateCFG(PU_Info* pu_forest, DOMElement* cfgElem, XlationContext& ctxt)
 static void
 TranslateCFG(WN *wn_pu, DOMElement* cfgElem, XlationContext& ctxt)
 {
-  pair<WNIdToWNMap*, WNToWNIdMap*> wnmaps = CreateWhirlIdMaps(wn_pu);
-  ctxt.SetIdToWNMap(wnmaps.first);
-  ctxt.SetWNToIdMap(wnmaps.second);
+  pair<WNToWNIdMap*, WNIdToWNMap*> wnmaps = CreateWhirlIdMaps(wn_pu);
+  ctxt.SetWNToIdMap(wnmaps.first);
+  ctxt.SetIdToWNMap(wnmaps.second);
   
   // -------------------------------------------------------
   // Translate each BasicBlock in the CFG
@@ -249,6 +242,8 @@ TranslateCFG(WN *wn_pu, DOMElement* cfgElem, XlationContext& ctxt)
 			    new XAIF_BBElemFilter(), true);
   for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
     DOMElement* elem = dynamic_cast<DOMElement*>(node);
+    
+    // FIXME: only need to check xaif:BasicBlock
     TranslateBB(wn_pu, elem, ctxt);
   }
   it->release();
@@ -268,165 +263,203 @@ TranslateCFG(WN *wn_pu, DOMElement* cfgElem, XlationContext& ctxt)
 static void
 TranslateBB(WN *wn_pu, DOMElement* bbElem, XlationContext& ctxt)
 {
-  WN* firstWN = NULL, *lastWN = NULL;
-  while ( FindNextStmtInterval(firstWN, lastWN, bbElem, ctxt) ) {
+  // Find some info now to prevent several recalculations
+  IdList<WNId>* idlist = GetWNIdList(bbElem);
+  WNIdToWNMap* wnmap = ctxt.GetIdToWNMap();
+  WN* blkWN = FindWNBlock(bbElem, wn_pu, idlist, wnmap);
 
-    // We now have an *inclusive* interval [firstWN, lastWN] of
-    // statements thatw will be replaced with new statements.
-
-    // 1a. Find the parent BLOCK (for use later)
-    WN* blckWN = FindParentWNBlock(wn_pu, firstWN);
-
-    // 1b. Find (or create) a statement just prior to the interval to
-    // serve as an insertion point.
-    WN* ipWN = FindSafeInsertionPoint(blckWN, firstWN);
+  // Translate
+  DOMElement* begXAIF = NULL, *endXAIF = NULL;
+  WN* begWN = NULL, *endWN = NULL;
+  while (FindNextStmtInterval(bbElem, idlist, wnmap, blkWN,
+			      begXAIF, endXAIF, begWN, endWN)) {
     
-    // 2. Delete all statements in the interval
-    for (WN* wn = firstWN; (wn); wn = (wn == lastWN) ? NULL : WN_next(wn)) {
-      WN_DELETE_FromBlock(blckWN, wn);
+    // We now have two intervals.  [begWN, endWN) represents the WHIRL
+    // statements that will be replaced with the XAIF statements
+    // [begXAIF, endXAIF)
+#if 0
+    cout << "beg: "; XercesDumpNode(begXAIF);
+    cout << "end: "; XercesDumpNode(endXAIF);
+#endif
+    
+    // 1. Find (or create) a statement just prior to the interval to
+    // serve as an insertion point.
+    WN* ipWN = FindSafeInsertionPoint(blkWN, begWN);
+    
+    // 2. Delete all WHIRL statements within [begWN, endWN)
+    for (WN* wn = begWN; (wn != endWN); wn = WN_next(wn)) {
+      WN_DELETE_FromBlock(blkWN, wn);
     }
     
-    // 3. For each new statement, create a WHIRL node and insert it
-    DOMDocument* doc = bbElem->getOwnerDocument();
-    DOMNodeIterator* it = 
-      doc->createNodeIterator(bbElem, DOMNodeFilter::SHOW_ALL, 
-			      new XAIF_BBStmtElemFilter(), true);
-    for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
-      DOMElement* stmtXAIF = dynamic_cast<DOMElement*>(node);
+    // 3. For each new XAIF statement within [begXAIF, endXAIF),
+    // create a WHIRL node and insert it
+    for (DOMElement* stmt = begXAIF; (stmt != endXAIF); 
+	 stmt = GetNextSiblingElement(stmt)) {
       
-      WN* wn = TranslateStmt(stmtXAIF, ctxt);
+      WN* wn = TranslateStmt(stmt, ctxt);
       if (!wn) { continue; }
 
-      // Find the soon-to-be new insertion point      
+      // Find the soon-to-be new insertion point
       WN* newIP = (WN_operator(wn) == OPR_BLOCK) ? WN_last(wn) : wn;
 
       // If 'wn' is a OPR_BLOCK, the block is automatically deleted
-      WN_INSERT_BlockAfter(blckWN, ipWN, wn); 
-      ipWN = newIP;
-      
+      WN_INSERT_BlockAfter(blkWN, ipWN, wn); 
+      ipWN = newIP; // update the new insertion point
     }
-    it->release();
   }
+
+  // Cleanup
+  delete idlist;
 }
 
 //****************************************************************************
 
-// FIXME: This should use PU ID!!
-
-// FindPUForCFG: Find the PU in 'pu_forest' that matches the name and
-// scope/symbol ids.  If name is non-empty, the scopeId and symId
-// should be non-empty.
-static PU_Info*
-FindPUForCFG(PU_Info* pu_forest, const char* name, 
-	     const char* scopeIdStr, const char* symIdStr)
-{
-  if (!name || name[0] == '\0'
-      || !scopeIdStr || scopeIdStr[0] == '\0'
-      || !symIdStr || symIdStr == '\0') {
-    return NULL;
-  }
-
-  unsigned long symId = strtol(symIdStr, (char **)NULL, 10);
-  
-  Pro64IRProcIterator procIt(pu_forest);
-  for ( ; procIt.IsValid(); ++procIt) { 
-    PU_Info* pu = (PU_Info*)procIt.Current();
-    ST* st = ST_ptr(PU_Info_proc_sym(pu));
-    
-    if (symId == ST_index(st) && strcmp(name, ST_name(st)) == 0) {
-      return pu;
-    }
-  }
-  
-  return NULL;
-}
-
-
-// FindNextStmtInterval: Finds intervals of WHIRL-tagged-Nops within
-// the XAIF BB 'bbElem'.  Sets the WHIRL nodes 'firstWN' and 'lastWN'
-// to the WN corresponding to the first statement *after* the
-// beginning xaif:Nop or *before* the last xaif:Nop, respectively.  If
-// explicit intervals are not formed by xaif:Nops, implicit Nops are
-// assumed to exist.
+// FindNextStmtInterval: Finds the next translation interval within
+// the XAIF BB 'bbElem' given the current interval.  The current
+// interval's status is defined by [begXAIF, endXAIF) both of which
+// are NULL when no interval yet exists.  The function finds two new
+// intervals, the XAIF statements [begXAIF, endXAIF) and their
+// corresponding WHIRL statements [begWN, endWN).  Returns true if an
+// interval has been found and the interval boundaries appropriately
+// updated; otherwise, returns false.  Note that in the latter case,
+// original interval boundaries are not necessary preserved.
+//
+// N.B.: The interval's end value is NULL when every element from and
+// including the begin point is included.  This implies that for valid
+// intervals, 'endXAIF' will either be an xaif:Marker element or NULL;
+// and 'begXAIF' will never be an xaif:Marker element.
+//
+// Intervals within the BB are created by the presence of xaif:Marker
+// elements that contain a WhirlId annotation, but xaif:Marker's are
+// not actually within the interval.  If no explicit xaif:Marker
+// begins or ends the BB, its existence is assumed.
 static bool
-FindNextStmtInterval(WN* &firstWN, WN* &lastWN, 
-		     DOMElement* bbElem, XlationContext& ctxt) 
+FindNextStmtInterval(DOMElement* bbElem, IdList<WNId>* bbIdList, 
+		     WNIdToWNMap* wnmap, WN* blkWN,
+		     DOMElement* &begXAIF, DOMElement* &endXAIF,
+		     WN* &begWN, WN* &endWN)
 {
-  // FIXME: For the time being we assume there can only be one interval!
-  bool firstInterval = (firstWN) ? false : true;
-  if (!firstInterval) { return false; }
+  // 1. Find beginning of the interval
+  if (!begXAIF) {
+    begXAIF = GetFirstChildElement(bbElem);   // first interval
+    if (GetWNId(begXAIF) != 0) {
+      begXAIF = GetNextSiblingElement(begXAIF);
+    }
+  } else if (endXAIF) {
+    begXAIF = GetNextSiblingElement(endXAIF); // successive intervals
+  } else {
+    begXAIF = NULL;                           // no more intervals exist
+  }  
+  begWN = FindIntervalBoundary(begXAIF, bbIdList, wnmap, blkWN, 0 /* beg */);
+
+  // 2. Find ending of the interval
+  if (begXAIF) {
+
+    // See if another xaif:Marker exists containing a WhirlId
+    // annotation; if not 'endXAIF' will be NULL.  (Note that we may
+    // encounter an xaif:Marker without the annotation.)
+    endXAIF = begXAIF; // of course, we start from the beginning!
+    while ( (endXAIF = 
+	     GetNextSiblingElement(endXAIF, XAIFStrings.elem_Marker_x())) ) {
+      if (GetWNId(endXAIF) != 0) {
+	break; // found!
+      }
+    }
+    endWN = FindIntervalBoundary(endXAIF, bbIdList, wnmap, blkWN, 1 /* end */);
+    
+  } else {
+    endXAIF = NULL;
+    endWN = NULL;
+  }  
   
-  WNIdToWNMap* wnmap = ctxt.GetIdToWNMap();
-  
-  // 1. Find the set of WHIRL nodes in this BB
-  WNIdList* idlist = GetWNIdList(bbElem);
-  
-  // 2. Find the interval boundaries
-  DOMElement* firstE = GetFirstChildElement(bbElem);
-  firstWN = FindIntervalBoundary(firstE, idlist, wnmap, 0 /* beg */);
-  
-  DOMElement* lastE = GetLastChildElement(bbElem);
-  lastWN = FindIntervalBoundary(lastE, idlist, wnmap, 1 /* end */);
-  
-  // 3. Cleanup
-  delete idlist;
-  
-  return ((firstWN != NULL) && (lastWN != NULL));
+  return (begXAIF && begWN);
 }
 
 
 // FindIntervalBoundary: Finds the appropriate WN* for the given
-// interval boundary statement 'elem' and boundary type (begin/end). 
-// If the interval boundary statement is an xaif:Nop, return the WN
-// immediate after/before it for boundary type begin/end,
-// respectively.  Otherwise, use 'idlist' and 'wnmap' to return the
-// appropriate WN.  If NULL is returned, this is a null interval.
-// 
+// interval boundary statement 'elem' and boundary type (begin/end).
+// The boundary is assumed to be of the form [beg, end), where beg is
+// never an xaif:Marker statement and end is xaif:Marker or NULL.  
+//
 // boundary: 0 (begin), 1 (end)
+//
+// For begin boundaries: If 'elem' is non-NULL the corrresponding
+//   WN* should never be NULL.
+// For end boundaries: If 'elem' is non-NULL, the corresponding WN*
+//   may be NULL.
 static WN*
-FindIntervalBoundary(DOMElement* elem, WNIdList* bbIdList, WNIdToWNMap* wnmap, 
-		     int boundary)
+FindIntervalBoundary(DOMElement* elem, IdList<WNId>* bbIdList, 
+		     WNIdToWNMap* wnmap, WN* blkWN, int boundary)
 {
   if (!elem) {
     return NULL;
   }
 
-  bool found = false;
-  WNIdList* idlist = GetWNIdList(elem);
   WN* wn = NULL;
-  
-  // If the stmt is a WHIRLID-Nop, find the WN from it
-  if (XAIF_BBStmtElemFilter::IsNop(elem)) {
-    if (idlist->size() == 1) {
-      wn = wnmap->Find(idlist->front());
-      assert(wn);
-      
-      // move one stmt after or before this
-      if (boundary == 0) {
-	wn = WN_next(wn); // may become NULL
-      } else {
-	wn = WN_prev(wn); // may become NULL
+  if (boundary == 0) {
+    
+    // For begin boundaries: If the previous element is an xaif:Marker
+    // with WhirlId annotation, use it to find the WN*; otherwise try
+    // to use 'bbIdList' to return the first WN* in the list.
+    DOMElement* prev = GetPrevSiblingElement(elem);
+    if (prev && XAIF_BBStmtElemFilter::IsMarker(prev)) {
+      WNId id = GetWNId(prev);
+      if (id != 0) {
+	wn = wnmap->Find(id);
+
+	// We used 'prev' to find 'wn'.  Correct interval boundary. 
+	WN* nextWN = WN_next(wn); // May be NULL! (see above)
+
+	if (nextWN) {
+	  wn = nextWN;
+	} else {
+	  // The interval corresponding to 'elem' is the NULL interval
+	  // after 'wn'.  We must create a dummy WN* to represent it
+	  // with [beg, end) notation.
+	  WN* newWN = WN_CreateAssert(0, WN_CreateIntconst(OPC_I4INTCONST, 
+							   (INT64)1));
+	  WN_INSERT_BlockAfter(blkWN, wn, newWN);
+	  wn = newWN; // set 'wn' to the new node
+	}
       }
-      
-      found = true; // found an interval (null or non-NULL)
     }
-  } 
-  
-  // Otherwise, use the first or last BB WHIRLID.
-  if (!found && bbIdList->size() > 0) {
-    if (boundary == 0) {
+    if (!wn && bbIdList->size() > 0) {
       wn = wnmap->Find(bbIdList->front());
-    } else if (boundary == 1) {
-      wn = wnmap->Find(bbIdList->back());
     }
-    found = true; // found a non-NULL interval
-    assert(wn);
+
+  } else if (boundary == 1) {
+
+    // For end boundaries: If 'elem' is an xaif:Marker with WhirlId
+    // annotation, use it to find the WN*; otherwise return NULL.
+    if (XAIF_BBStmtElemFilter::IsMarker(elem)) {
+      WNId id = GetWNId(elem);
+      if (id != 0) {
+	wn = wnmap->Find(id);
+      }
+    }
+
+  } else {
+    assert(false && "Programming Error!");
   }
   
-  delete idlist;
   return wn;
 }
 
+
+// FindWNBlock: Given an XAIF basic block element, find the
+// corresponding WHIRL block.
+static WN* 
+FindWNBlock(DOMElement* bbElem, WN* wn_pu, 
+	    IdList<WNId>* idlist, WNIdToWNMap* wnmap)
+{
+  // We pass 'idlist' to avoid continual reparsing
+  WN* wn = wnmap->Find(idlist->front());
+  if (wn) {
+    return FindParentWNBlock(wn_pu, wn);
+  } else {
+    return NULL;
+  }
+}
 
 // FindParentWNBlock: Given two WHIRL nodes, a subtree 'wn_tree' and an
 // some descendent 'wn', return the BLOCK WN that contains 'wn', or
@@ -470,74 +503,14 @@ FindSafeInsertionPoint(WN* blckWN, WN* stmtWN)
   }
 
   // 2. There is no previous statement so we insert a dummy stmt to
-  // serve as a handle.  The compiler will be able to optimize this
-  // away later.
+  // serve as a handle.  whirl2f should ignore this.  (If not, a
+  // compiler will be able to optimize this away.)
   ipWN = WN_CreateAssert(0, WN_CreateIntconst(OPC_I4INTCONST, (INT64)1));
   WN_INSERT_BlockBefore(blckWN, stmtWN, ipWN);
   return ipWN;
 }
 
-
-// GetPUId: Returns the PUId attached to the node FIXME
-static PUId
-GetPUId(DOMElement* elem)
-{
-  // FIXME: we need to use real scope tags
-  const XMLCh* attrX = elem->getAttribute(XAIFStrings.attr_Vid_x());
-  XercesStrX attr = XercesStrX(attrX);
-  
-  PUId id = strtol(attr.c_str(), (char **)NULL, 10);
-  return id;
-}
-
-
-// GetWNIdList: Returns a list of any WHIRLIDs attached to the
-// annotation attribute.
-//
-// The returned list may be empty; the caller is responsible for
-// freeing returned memory.
-static WNIdList*
-GetWNIdList(DOMElement* elem)
-{
-  const XMLCh* annot = elem->getAttribute(XAIFStrings.attr_annot_x());
-  XercesStrX annotStr = XercesStrX(annot);
-  WNIdList* idlist = GetWNIdList(annotStr.c_str());
-  return idlist;
-}
-
-
-// GetWNIdList: Converts the ids in the string 'idstr' into a list of
-// 'WNId'.
-//
-// The returned list may be empty; the caller is responsible for
-// freeing returned memory.
-static WNIdList*
-GetWNIdList(const char* idstr)
-{
-  WNIdList* idlist = new WNIdList;
-
-  if (!idstr) { return idlist; }
-  
-  // Find the tag indicating presence of list
-  const char* start = strstr(idstr, XAIFStrings.tag_IRIds());
-  if (!start) { return idlist; }
-  start += strlen(XAIFStrings.tag_IRIds()); // move pointer past tag
-  
-  // Parse the colon separated id list
-  char* tok = strtok(const_cast<char*>(start), ":");
-  while (tok != NULL) {
-    
-    WNId id = strtol(tok, (char **)NULL, 10);
-    idlist->push_back(id);
-    
-    tok = strtok((char*)NULL, ":");
-  }
-
-  return idlist;
-}
-
 //****************************************************************************
-
 
 static WN* 
 xlate_Assignment(DOMElement* elem, XlationContext& ctxt);
@@ -554,10 +527,10 @@ xlate_SubroutineCall(DOMElement* elem, XlationContext& ctxt);
 
 
 static WN* 
-xlate_DerivativeAccumulator(DOMElement* elem, XlationContext& ctxt);
+xlate_DerivativePropagator(DOMElement* elem, XlationContext& ctxt);
 
 static WN* 
-xlate_Derivative(DOMElement* elem, XlationContext& ctxt);
+xlate_Saxpy(DOMElement* elem, XlationContext& ctxt, bool saxpy);
 
 
 static WN*
@@ -572,9 +545,6 @@ xlate_VarRef(DOMElement* elem, XlationContext& ctxt, bool lvalue);
 static WN*
 xlate_Constant(DOMElement* elem, XlationContext& ctxt);
 
-
-static ST*
-GetST(DOMElement* elem, XlationContext& ctxt);
 
 static WN*
 CreateParm(WN *arg, UINT32 flag);
@@ -594,10 +564,10 @@ TranslateStmt(DOMElement* stmt, XlationContext& ctxt)
     wn = xlate_Assignment(stmt, ctxt);
   } else if (XMLString::equals(name, XAIFStrings.elem_SubCall_x())) {
     wn = xlate_SubroutineCall(stmt, ctxt);
-  } else if (XMLString::equals(name, XAIFStrings.elem_Nop_x())) {
+  } else if (XMLString::equals(name, XAIFStrings.elem_Marker_x())) {
     // nothing
-  } else if (XMLString::equals(name, XAIFStrings.elem_DerivAccum_x())) {
-    wn = xlate_DerivativeAccumulator(stmt, ctxt);
+  } else if (XMLString::equals(name, XAIFStrings.elem_DerivProp_x())) {
+    wn = xlate_DerivativePropagator(stmt, ctxt);
   } else {
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
   }
@@ -648,19 +618,29 @@ xlate_SubroutineCall(DOMElement* elem, XlationContext& ctxt)
 
 // Must not return an empty block
 static WN* 
-xlate_DerivativeAccumulator(DOMElement* elem, XlationContext& ctxt)
+xlate_DerivativePropagator(DOMElement* elem, XlationContext& ctxt)
 {
   WN* blckWN = WN_CreateBlock();
-
-  // Accumulate saxpy calls and add to block
+  
+  // Accumulate derivative propagator statements and add to block
   DOMDocument* doc = elem->getOwnerDocument();
   DOMNodeIterator* it = 
     doc->createNodeIterator(elem, DOMNodeFilter::SHOW_ALL, 
-			    new XAIF_Derivative(), true);
+			    new XAIF_DerivPropStmt(), true);
   for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
-    DOMElement* deriv = dynamic_cast<DOMElement*>(node);
+    DOMElement* stmt = dynamic_cast<DOMElement*>(node);
     
-    WN* wn = xlate_Derivative(deriv, ctxt);
+    WN* wn = NULL;
+    if (XAIF_DerivPropStmt::IsSetDeriv(stmt)) {
+      assert(false); // FIXME
+    } else if (XAIF_DerivPropStmt::IsSax(stmt)) {
+      wn = xlate_Saxpy(stmt, ctxt, false);
+    } else if (XAIF_DerivPropStmt::IsSaxpy(stmt) ) {
+      wn = xlate_Saxpy(stmt, ctxt, true);
+    } else {
+      assert(false && "Programming Error!");
+    }
+    
     WN_INSERT_BlockLast(blckWN, wn);
   }
   it->release();
@@ -676,22 +656,29 @@ xlate_DerivativeAccumulator(DOMElement* elem, XlationContext& ctxt)
 
 
 static WN* 
-xlate_Derivative(DOMElement* elem, XlationContext& ctxt)
+xlate_Saxpy(DOMElement* elem, XlationContext& ctxt, bool saxpy)
 {
-  // subroutine saxpy_a_a(y,x,dydx) 
-  DOMElement* dep = GetChildElement(elem, XAIFStrings.elem_Dependent_x());
-  DOMElement* ind = GetChildElement(elem, XAIFStrings.elem_Independent_x());
-  DOMElement* partial = GetChildElement(elem, XAIFStrings.elem_PDeriv_x());
+  // FIXME: better sax/saxpy abstraction
+  // saxpy_a_a(a,x,y) and sax_a_a(a,x,y)
+  const char* fn = (saxpy) ? "saxpy_a_a" : "sax_a_a";
 
-  WN* depWN = xlate_VarRef(dep, ctxt, false);
-  WN* indWN = xlate_VarRef(ind, ctxt, false);
-  WN* partialWN = TranslateExpression(GetFirstChildElement(partial), ctxt);
+  // FIXME: could be a list. We ensure there is no list for now.
+  assert(GetChildElementCount(elem) == 2);
+
+  DOMElement* AX = GetChildElement(elem, XAIFStrings.elem_AX_x());
+  DOMElement* A = GetChildElement(AX, XAIFStrings.elem_A_x());
+  DOMElement* X = GetChildElement(AX, XAIFStrings.elem_X_x());
+  DOMElement* Y = GetChildElement(elem, XAIFStrings.elem_Y_x());
+
+  WN* a_wn = TranslateExpression(GetFirstChildElement(A), ctxt);
+  WN* x_wn = xlate_VarRef(X, ctxt, false);
+  WN* y_wn = xlate_VarRef(Y, ctxt, false);
 
   // ------------------------------------------- // FIXME
   // WN *call = Gen_Call_Shell(name, rtype, 3); // wn_instrument.cxx
-
+  
   TY_IDX ty = Make_Function_Type(MTYPE_To_TY(MTYPE_V));
-  ST* st = Gen_Intrinsic_Function(ty, "saxpy_a_a"); // create if non-existant
+  ST* st = Gen_Intrinsic_Function(ty, const_cast<char*>(fn)); // create if non-existant
 
   Clear_PU_no_side_effects(Pu_Table[ST_pu(st)]); // FIXME
   Clear_PU_is_pure(Pu_Table[ST_pu(st)]);
@@ -704,9 +691,9 @@ xlate_Derivative(DOMElement* elem, XlationContext& ctxt)
   WN_Set_Call_Parm_Mod(callWN);
   // ---------------------------------------------
   
-  WN_actual(callWN, 0) = CreateParm(depWN, WN_PARM_BY_REFERENCE);
-  WN_actual(callWN, 1) = CreateParm(indWN, WN_PARM_BY_VALUE);
-  WN_actual(callWN, 2) = CreateParm(partialWN, WN_PARM_BY_VALUE);
+  WN_actual(callWN, 0) = CreateParm(a_wn, WN_PARM_BY_VALUE);
+  WN_actual(callWN, 1) = CreateParm(x_wn, WN_PARM_BY_REFERENCE);
+  WN_actual(callWN, 2) = CreateParm(y_wn, WN_PARM_BY_REFERENCE);
   
   return callWN;
 }
@@ -1016,23 +1003,18 @@ static void
 xlate_Scope(DOMElement* elem, XAIFSymToWhirlSymMap* symMap, 
 	    XlationContext& ctxt)
 {
-  // FIXME: 
-  // Find the corresponding WHIRL scope (only PUs for now)
-  // Currently, scopes may refer to either the global scope (id = 1)
-  // or PUs (id > 1). 
-  PUId id = GetPUId(elem);
-  PU_Info* pu = NULL;
-  if (id > 1) {
-    pu = ctxt.FindPU(id);
-  }
+  // Find the corresponding WHIRL symbol table (ST_TAB)
+  SymTabId symtabId = GetSymTabId(elem);
+  pair<ST_TAB*, PU_Info*> stab = ctxt.FindSymTab(symtabId);
+  assert(stab.first);
   
-  // FIXME
+  // Find the scope id
   const XMLCh* scopeIdX = elem->getAttribute(XAIFStrings.attr_Vid_x());
   XercesStrX scopeId = XercesStrX(scopeIdX);
 
   // Translate the xaif:SymbolTable (the only child)
   DOMElement* symtabElem = GetFirstChildElement(elem);
-  xlate_SymbolTable(symtabElem, scopeId.c_str(), pu, symMap); 
+  xlate_SymbolTable(symtabElem, scopeId.c_str(), stab.second, symMap);
 }  
 
 static void
@@ -1040,7 +1022,6 @@ xlate_SymbolTable(DOMElement* STElem, const char* scopeId, PU_Info* pu,
 		  XAIFSymToWhirlSymMap* symMap)
 {
   // For all xaif:Symbol in the xaif:SymbolTable
-
   DOMDocument* doc = STElem->getOwnerDocument();
   DOMNodeIterator* it = 
     doc->createNodeIterator(STElem, DOMNodeFilter::SHOW_ALL, 
@@ -1065,43 +1046,40 @@ xlate_Symbol(DOMElement* elem, const char* scopeId, PU_Info* pu,
     RestoreOpen64PUGlobalVars(pu);
     level = CURRENT_SYMTAB; // PU_lexical_level
   }
+  
+  SymId symId = GetSymId(elem);
+
+  const XMLCh* symNmX = elem->getAttribute(XAIFStrings.attr_symId_x());
+  XercesStrX symNm = XercesStrX(symNmX);
 
   // 2. Find or Create symbol
   ST* st = NULL;
-
-  const XMLCh* symIdX = elem->getAttribute(XAIFStrings.attr_symId_x());
-  XercesStrX symId = XercesStrX(symIdX);
-  static const char* tag = "SymbolTable_";//FIXME: add explicit ST tag
-  
-  if (strncmp(symId.c_str(), tag, strlen(tag)) == 0) {
-    // Create the symbol
-    st = New_ST(level);
-    //string symstr = symId.c_str();
+  if (symId == 0) {  // check temporary tag FIXME
     
+    // Create the symbol
     const XMLCh* kindX = elem->getAttribute(XAIFStrings.attr_kind_x());
     const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
     const XMLCh* shapeX = elem->getAttribute(XAIFStrings.attr_shape_x());
-
+    
     XercesStrX kind = XercesStrX(kindX);
     XercesStrX type = XercesStrX(typeX);
     XercesStrX shape = XercesStrX(shapeX);
     
     assert( strcmp(kind.c_str(), "variable" ) == 0 ); // FIXME: assume only
-    assert( strcmp(type.c_str(), "double" ) == 0 );   // scalar, doubles
+    assert( strcmp(type.c_str(), "real" ) == 0 );     // scalar, reals
     assert( strcmp(shape.c_str(), "scalar" ) == 0 );
     
-    ST_Init(st, Save_Str(symId.c_str()), CLASS_VAR, SCLASS_AUTO, EXPORT_LOCAL,
+    st = New_ST(level);
+    ST_Init(st, Save_Str(symNm.c_str()), CLASS_VAR, SCLASS_AUTO, EXPORT_LOCAL,
 	    MTYPE_To_TY(MTYPE_F8));
     
   } else {
     // Find the symbol
-    UINT32 idx = strtol(symId.c_str(), (char **)NULL, 10);
-    assert(idx != 0);
-    st = &(Scope_tab[level].st_tab->Entry(idx));
+    st = &(Scope_tab[level].st_tab->Entry(symId));
   }
   
   // 3. Add the symbol to the map
-  symMap->Insert(scopeId, symId.c_str(), st);
+  symMap->Insert(scopeId, symNm.c_str(), st);
   
   // 4. Finalize
   if (pu) {
@@ -1110,6 +1088,8 @@ xlate_Symbol(DOMElement* elem, const char* scopeId, PU_Info* pu,
 } 
 
 //****************************************************************************
+
+// FIXME: move to another place
 
 UINT 
 GetIntrinsicOperandNum(const char* name)
@@ -1141,3 +1121,119 @@ GetIntrinsicOperator(const char* name)
   }
   // OPR_SUB, OPR_MPY, OPR_DIV
 }
+
+
+//****************************************************************************
+
+// FIXME: move to another place
+
+SymTabId
+GetSymTabId(DOMElement* elem)
+{
+  return GetId<SymTabId>(elem, XAIFStrings.tag_SymTabId());
+}
+
+SymId
+GetSymId(DOMElement* elem)
+{
+  return GetId<SymId>(elem, XAIFStrings.tag_SymId());
+}
+
+PUId
+GetPUId(DOMElement* elem)
+{
+  return GetId<PUId>(elem, XAIFStrings.tag_PUId());
+}
+
+WNId
+GetWNId(DOMElement* elem)
+{
+  return GetId<WNId>(elem, XAIFStrings.tag_WHIRLId());
+}
+
+IdList<WNId>*
+GetWNIdList(DOMElement* elem)
+{
+  return GetIdList<WNId>(elem, XAIFStrings.tag_WHIRLId());
+}
+
+
+// GetId, GetIdList: <see header>
+template <class T>
+T
+GetId(DOMElement* elem, const char* tag)
+{
+  const XMLCh* annot = (elem) ? elem->getAttribute(XAIFStrings.attr_annot_x())
+    : NULL;
+  XercesStrX annotStr = XercesStrX(annot);
+  T id = GetId<T>(annotStr.c_str(), tag);
+  return id;
+}
+
+template <class T>
+IdList<T>*
+GetIdList(DOMElement* elem, const char* tag)
+{
+  const XMLCh* annot = (elem) ? elem->getAttribute(XAIFStrings.attr_annot_x())
+    : NULL;
+  XercesStrX annotStr = XercesStrX(annot);
+  IdList<T>* idlist = GetIdList<T>(annotStr.c_str(), tag);
+  return idlist;
+}
+
+
+// GetId, GetIdList: <see header>
+template <class T>
+T
+GetId(const char* idstr, const char* tag)
+{
+  T id = 0;
+  if (!idstr) { return id; }
+
+  // Find the tag indicating presence of id
+  const char* start = strstr(idstr, tag);
+  if (!start) { return id; }
+  start += strlen(tag); // move pointer past tag
+  
+  char* endptr = NULL;
+  id = strtol(start, &endptr, 10);
+
+  unsigned int len = strlen(XAIFStrings.tag_End());
+  assert(endptr && strncmp(endptr, XAIFStrings.tag_End(), len) == 0);
+  return id;
+}
+
+template <class T>
+IdList<T>*
+GetIdList(const char* idstr, const char* tag)
+{
+  IdList<T>* idlist = new IdList<T>;
+
+  if (!idstr) { return idlist; }
+  
+  // Find the tag indicating presence of list
+  const char* start = strstr(idstr, tag);
+  if (!start) { return idlist; }
+  start += strlen(tag); // move pointer past tag
+  
+  // Parse the colon separated id list.  The list is ended by
+  // XAIFStrings.tag_End()
+  char* tok = strtok(const_cast<char*>(start), ":");
+  while (tok != NULL) {
+    
+    char* endptr = NULL;
+    T id = strtol(tok, &endptr, 10);
+    if (endptr != tok) { 
+      assert(id != 0);
+      idlist->push_back(id); // we found some digits to convert
+    }
+
+    tok = strtok((char*)NULL, ":");
+    if (endptr && strcmp(endptr, XAIFStrings.tag_End()) == 0) {
+      assert(tok == NULL); // we should be done with iteration now
+    }
+  }
+
+  return idlist;
+}
+

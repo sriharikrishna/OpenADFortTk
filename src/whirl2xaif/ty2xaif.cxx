@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.10 2003/07/24 20:30:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.11 2003/09/02 15:02:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1493,7 +1493,6 @@ TranslateTYToSymType(TY_IDX ty_idx)
       str = "integer"; 
     } else if (MTYPE_is_float(mt)) { 
       str = "real"; 
-      if (TY_size(ty) >= 8) { str = "double"; }
     }
 
   } else if (TY_kind(ty) == KIND_ARRAY) {

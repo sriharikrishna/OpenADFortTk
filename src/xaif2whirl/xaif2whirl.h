@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.1 2003/08/01 16:41:13 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.2 2003/09/02 15:02:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -46,6 +46,61 @@ void
 TranslateIR(PU_Info* pu_forest, DOMDocument* doc);
  
 }; /* namespace xaif2whirl */
+
+//****************************************************************************
+// FIXME: move to another file
+
+UINT 
+GetIntrinsicOperandNum(const char* name);
+
+OPERATOR 
+GetIntrinsicOperator(const char* name);
+
+
+#include <lib/support/WhirlIDMaps.h>
+
+SymTabId
+GetSymTabId(DOMElement* elem);
+
+SymId
+GetSymId(DOMElement* elem);
+
+PUId
+GetPUId(DOMElement* elem);
+
+WNId
+GetWNId(DOMElement* elem);
+
+IdList<WNId>*
+GetWNIdList(DOMElement* elem);
+
+
+// GetId, GetIdList: Returns an id or list of ids from the given tag
+// within the annotation attribute.  For the non-list version, 0 is
+// returned if no id is found. For the list version, the returned list
+// may be empty; the caller is responsible for freeing returned
+// memory.
+template <class T>
+T
+GetId(DOMElement* elem, const char* tag);
+
+template <class T>
+IdList<T>*
+GetIdList(DOMElement* elem, const char* tag);
+
+
+// GetId, GetIdList: Returns an id or the list of ids from the given
+// tag within the string 'idstr'.  For the non-list version, 0 is
+// returned if no id is found.  For the list version, the returned
+// list may be empty; the caller is responsible for freeing returned
+// memory.
+template <class T>
+T
+GetId(const char* idstr, const char* tag);
+
+template <class T>
+IdList<T>*
+GetIdList(const char* idstr, const char* tag);
 
 //***************************************************************************
 

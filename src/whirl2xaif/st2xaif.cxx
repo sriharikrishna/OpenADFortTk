@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.14 2003/08/11 14:24:23 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.15 2003/09/02 15:02:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -413,7 +413,7 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
   }
 #endif
   
-  const char* st_name = W2CF_Symtab_Nameof_St(st);
+  const char* st_name = ST_name(st); // W2CF_Symtab_Nameof_St(st);
   ST* base = ST_base(st);
   TY_IDX ty = ST_type(st);
   
@@ -446,11 +446,10 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
     const char* shape_str = TranslateTYToSymShape(ty);
     if (!shape_str) { shape_str = "***"; }
 
-    xos << Comment(st_name);
-    xos << BegElem("xaif:Symbol") << Attr("symbol_id", (UINT)ST_index(st)) 
-	<< Attr("kind", "variable")
-	<< Attr("type", ty_str)
-	<< Attr("shape", shape_str) << EndElem;
+    SymId st_id = (SymId)ST_index(st);
+    xos << BegElem("xaif:Symbol") << Attr("symbol_id", st_name) 
+	<< Attr("kind", "variable") << Attr("type", ty_str)
+	<< Attr("shape", shape_str) << SymIdAnnot(st_id) << EndElem;
   }
 
   //FIXME: TY2F_translate(xos, ty, ctxt); // Add type specs
@@ -561,10 +560,12 @@ xlate_STDecl_FUNC(xml::ostream& xos, ST* st, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
 		    ST_sym_class(st), "xlate_STDecl_FUNC"));
 
-  const char* funcnm = W2CF_Symtab_Nameof_St(st);
-  xos << Comment(funcnm);
-  xos << BegElem("xaif:Symbol")  << Attr("symbol_id", (UINT)ST_index(st)) 
-      << Attr("kind", "subroutine") << Attr("type", "void") << EndElem;
+  const char* st_name = ST_name(st); // W2CF_Symtab_Nameof_St(st);
+  SymId st_id = (SymId)ST_index(st);
+
+  xos << BegElem("xaif:Symbol") << Attr("symbol_id", st_name) 
+      << Attr("kind", "subroutine") << Attr("type", "void")
+      << SymIdAnnot(st_id) << EndElem;
 
 #if 0 // REMOVE
   // Specify the function return type, unless it is void
@@ -637,8 +638,6 @@ xlate_STUse_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
 		    ST_sym_class(st), "xlate_STUse_VAR"));
 
-  StabToScopeIdMap& map = ctxt.GetStabToScopeIdMap();
-
   TY_IDX return_ty = PUINFO_RETURN_TY; // FIXME
 
   /* Note that we do not trust the ST_is_return_var() flag,
@@ -652,7 +651,6 @@ xlate_STUse_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
      * refer to the function return value.
      */
     xos << PUINFO_FUNC_NAME;
-
   }
 #if 0 // FIXME xlate_SymRef moves from 'base' to 'field' (cannot reciprocate)
   else if (Stab_Is_Based_At_Common_Or_Equivalence(st)) {
@@ -671,14 +669,13 @@ xlate_STUse_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
   else {
     // FIXME: abstract
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-    UINT scopeid = map.Find(sttab);
-    ASSERT_FATAL(scopeid != 0, (DIAG_UNIMPLEMENTED, 0, "xlate_STUse_VAR"));
+    SymTabId scopeid = ctxt.FindSymTabId(sttab);
+    const char* st_name = ST_name(st);
 
-    xos << BegComment << "sym = " << W2CF_Symtab_Nameof_St(st) << EndComment;
     xos << BegElem("xaif:SymbolReference") 
 	<< Attr("vertex_id", ctxt.GetNewVId())
 	<< Attr("scope_id", scopeid)
-	<< Attr("symbol_id", (UINT)ST_index(st)) << EndElem;
+	<< Attr("symbol_id", st_name) << EndElem;
   }
 }
 
@@ -763,7 +760,6 @@ void
 whirl2xaif::xlate_Params(xml::ostream& xos, WN* wn, ST* st, ST** params, 
 			 INT32 num_params, XlationContext& ctxt)
 {
-  StabToScopeIdMap& map = ctxt.GetStabToScopeIdMap();
   TY_IDX funtype = ST_pu_type(st);
   TY_IDX return_ty = Func_Return_Type(funtype);
   
@@ -784,14 +780,12 @@ whirl2xaif::xlate_Params(xml::ostream& xos, WN* wn, ST* st, ST** params,
       // FIXME: abstract (SymbolReference)
       ST* st = params[param];
       ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-      UINT scopeid = map.Find(sttab);
-      ASSERT_FATAL(scopeid != 0, (DIAG_UNIMPLEMENTED, 0, "xlate_Params"));
-      
-      xos << BegComment << "sym = " << W2CF_Symtab_Nameof_St(st) << EndComment;
+      SymTabId scopeid = ctxt.FindSymTabId(sttab);
+      const char* st_name = ST_name(st);
+
       xos << BegElem("xaif:ArgumentSymbolReference") 
-	  << Attr("position", position) 
-	  << Attr("scope_id", scopeid)
-	  << Attr("symbol_id", (UINT)ST_index(st)) << EndElem;
+	  << Attr("position", position) << Attr("scope_id", scopeid)
+	  << Attr("symbol_id", st_name) << EndElem;
       
       position++;
     }

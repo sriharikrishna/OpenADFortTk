@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.8 2003/08/11 14:24:23 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.9 2003/09/02 15:02:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -70,8 +70,8 @@
 //***************************************************************************
 
 XlationContext::XlationContext()
-  : flags(0)
-{ 
+  : flags(0), stab2idMap(NULL), pu2idMap(NULL)
+{
   ctxtstack.push_front(Ctxt());
 }
 
@@ -79,6 +79,10 @@ XlationContext::~XlationContext()
 {
   ctxtstack.clear(); // clear the stack
 }
+
+// -------------------------------------------------------
+// Context manipulation (Create, Delete...)
+// -------------------------------------------------------
 
 XlationContext&
 XlationContext::CreateContext()
@@ -140,20 +144,24 @@ XlationContext::DeleteContext()
   return (*this);
 }
 
+// -------------------------------------------------------
+// Id maps
+// -------------------------------------------------------
 
-NonScalarSym* 
-XlationContext::FindNonScalarSym(WN* wn)
+SymTabId
+XlationContext::FindSymTabId(ST_TAB* stab)
 {
-  for (XlationContextIterator it(*this); it.IsValid(); ++it) {
-    Ctxt* ctxt = it.Current();
-    NonScalarSymTab* symtab = ctxt->GetSymTab();
-    if (symtab) {
-      // We found a symbol table. Query it.
-      NonScalarSym* sym = symtab->Find(wn);
-      if (sym) { return sym; }
-    }
-  }
-  return NULL;
+  SymTabToSymTabIdMap* map = GetSymTabToIdMap();
+  if (map) { return (map->Find(stab)); }
+  return 0;
+}
+
+PUId
+XlationContext::FindPUId(PU_Info* pu)
+{
+  PUToPUIdMap* map = GetPUToIdMap();
+  if (map) { return (map->Find(pu)); }
+  return 0;
 }
 
 WNId
@@ -171,6 +179,24 @@ XlationContext::FindWNId(WN* wn)
   return 0;
 }
 
+// -------------------------------------------------------
+// Misc
+// -------------------------------------------------------
+
+NonScalarSym* 
+XlationContext::FindNonScalarSym(WN* wn)
+{
+  for (XlationContextIterator it(*this); it.IsValid(); ++it) {
+    Ctxt* ctxt = it.Current();
+    NonScalarSymTab* symtab = ctxt->GetSymTab();
+    if (symtab) {
+      // We found a symbol table. Query it.
+      NonScalarSym* sym = symtab->Find(wn);
+      if (sym) { return sym; }
+    }
+  }
+  return NULL;
+}
 
 void 
 XlationContext::Dump(std::ostream& o, const char* pre) const

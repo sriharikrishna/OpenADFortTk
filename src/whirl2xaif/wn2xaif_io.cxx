@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.8 2003/08/01 16:00:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.9 2003/09/02 15:02:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1173,7 +1173,7 @@ WN2F_ios_write(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << BegElem("xaif:SubroutineCall") 
       << Attr("statement_id", ctxt.GetNewVId())
       << Attr("symbol_id", "WRITE****")
-      << WhirlIDAnnotation(ctxt.FindWNId(wn));
+      << WhirlIdAnnot(ctxt.FindWNId(wn));
   
   set_XlationContext_issue_ioc_asterisk(ctxt);
   
@@ -1225,7 +1225,7 @@ WN2F_ios_cr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << BegElem("xaif:SubroutineCall") 
       << Attr("statement_id", ctxt.GetNewVId())
       << Attr("symbol_id", io_op)
-      << WhirlIDAnnotation(ctxt.FindWNId(wn));
+      << WhirlIdAnnot(ctxt.FindWNId(wn));
   
   /* count items in control list */
   INT iol_kid;

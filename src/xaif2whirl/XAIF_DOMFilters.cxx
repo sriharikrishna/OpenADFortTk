@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.4 2003/08/25 13:58:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.5 2003/09/02 15:02:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -96,6 +96,8 @@ XercesDumpNode(DOMNode* n, int iter)
 DOMElement*
 GetFirstChildElement(DOMNode* n)
 {
+  if (!n) { return NULL; }
+
   DOMNodeList* children = n->getChildNodes();
   if (children) {
     for (XMLSize_t i = 0; i < children->getLength(); ++i) {
@@ -111,6 +113,8 @@ GetFirstChildElement(DOMNode* n)
 DOMElement*
 GetLastChildElement(DOMNode* n)
 {
+  if (!n) { return NULL; }
+
   DOMNodeList* children = n->getChildNodes();
   if (children) {
     for (int i = ((int)children->getLength() - 1); i >= 0; --i) {
@@ -126,6 +130,8 @@ GetLastChildElement(DOMNode* n)
 DOMElement*
 GetChildElement(DOMNode* n, XMLCh* name)
 {
+  if (!n) { return NULL; }
+
   DOMNodeList* children = n->getChildNodes();
   if (children) {
     for (XMLSize_t i = 0; i < children->getLength(); ++i) {
@@ -134,6 +140,64 @@ GetChildElement(DOMNode* n, XMLCh* name)
 	  && XMLString::equals(name, child->getNodeName())) {
 	return dynamic_cast<DOMElement*>(child);
       }
+    }
+  }
+  return NULL;
+}
+
+unsigned int
+GetChildElementCount(DOMNode* n)
+{
+  unsigned int cnt = 0;
+  if (!n) { return cnt; }
+
+  DOMNodeList* children = n->getChildNodes();
+  if (children) {
+    for (XMLSize_t i = 0; i < children->getLength(); ++i) {
+      DOMNode* child = children->item(i);
+      if (child->getNodeType() == DOMNode::ELEMENT_NODE) { ++cnt; }
+    }
+  }
+  return cnt;
+}
+
+DOMElement*
+GetPrevSiblingElement(DOMNode* n)
+{
+  if (!n) { return NULL; }
+
+  DOMNode* node = n;
+  while ( (node = node->getPreviousSibling()) ) {
+    if (node->getNodeType() == DOMNode::ELEMENT_NODE) {
+      return dynamic_cast<DOMElement*>(node);
+    }
+  }
+  return NULL;
+}
+
+DOMElement*
+GetNextSiblingElement(DOMNode* n)
+{
+  if (!n) { return NULL; }
+
+  DOMNode* node = n;
+  while ( (node = node->getNextSibling()) ) {
+    if (node->getNodeType() == DOMNode::ELEMENT_NODE) {
+      return dynamic_cast<DOMElement*>(node);
+    }
+  }
+  return NULL;
+}
+
+DOMElement*
+GetNextSiblingElement(DOMNode* n, XMLCh* name)
+{
+  if (!n) { return NULL; }
+
+  DOMNode* node = n;
+  while ( (node = GetNextSiblingElement(node)) ) { // node must be a DOMElement
+    if (XMLString::equals(name, node->getNodeName())) {
+      return dynamic_cast<DOMElement*>(node);
     }
   }
   return NULL;
@@ -221,41 +285,56 @@ XAIF_BBStmtElemFilter::IsStmt(const DOMNode *node)
   const XMLCh* name = node->getNodeName();
   return (XMLString::equals(name, XAIFStrings.elem_Assign_x())
 	  || XMLString::equals(name, XAIFStrings.elem_SubCall_x())
-	  || XMLString::equals(name, XAIFStrings.elem_Nop_x())
-	  || XMLString::equals(name, XAIFStrings.elem_DerivAccum_x()));
+	  || XMLString::equals(name, XAIFStrings.elem_Marker_x())
+	  || XMLString::equals(name, XAIFStrings.elem_DerivProp_x()));
 }
 
 
 bool 
-XAIF_BBStmtElemFilter::IsNop(const DOMNode *node)
+XAIF_BBStmtElemFilter::IsMarker(const DOMNode *node)
 {
   const XMLCh* name = node->getNodeName();
-  return (XMLString::equals(name, XAIFStrings.elem_Nop_x()));
+  return (XMLString::equals(name, XAIFStrings.elem_Marker_x()));
 }
 
 bool 
-XAIF_BBStmtElemFilter::IsDerivAccum(const DOMNode *node)
+XAIF_BBStmtElemFilter::IsDerivProp(const DOMNode *node)
 {
   const XMLCh* name = node->getNodeName();
-  return (XMLString::equals(name, XAIFStrings.elem_DerivAccum_x()));
+  return (XMLString::equals(name, XAIFStrings.elem_DerivProp_x()));
 }
 
 //****************************************************************************
 
 short
-XAIF_Derivative::acceptNode(const DOMNode *node) const
+XAIF_DerivPropStmt::acceptNode(const DOMNode *node) const
 {
-  if ( (node->getNodeType() == DOMNode::ELEMENT_NODE) && IsDeriv(node) ) {
+  if ( (node->getNodeType() == DOMNode::ELEMENT_NODE) 
+       && (IsSetDeriv(node) || IsSax(node) || IsSaxpy(node)) ) {
     return FILTER_ACCEPT;
   }
   return FILTER_SKIP;
 }
 
 bool 
-XAIF_Derivative::IsDeriv(const DOMNode *node)
+XAIF_DerivPropStmt::IsSetDeriv(const DOMNode *node)
 {
   const XMLCh* name = node->getNodeName();
-  return (XMLString::equals(name, XAIFStrings.elem_Deriv_x()));
+  return (XMLString::equals(name, XAIFStrings.elem_SetDeriv_x()));
+}
+
+bool 
+XAIF_DerivPropStmt::IsSax(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_Sax_x()));
+}
+
+bool 
+XAIF_DerivPropStmt::IsSaxpy(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_Saxpy_x()));
 }
 
 //****************************************************************************

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.cxx,v 1.1 2003/08/13 23:01:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.cxx,v 1.2 2003/09/02 15:02:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -43,6 +43,14 @@ XlationContext::XlationContext()
 
 XlationContext::~XlationContext()
 {
+}
+
+pair<ST_TAB*, PU_Info*>
+XlationContext::FindSymTab(SymTabId stabId)
+{
+  SymTabIdToSymTabMap* map = GetIdToSymTabMap();
+  if (map) { return (map->Find(stabId)); }
+  return pair<ST_TAB*, PU_Info*>(NULL, NULL);
 }
 
 PU_Info*

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.11 2003/08/25 13:58:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.12 2003/09/02 15:02:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -143,7 +143,7 @@ whirl2xaif::xlate_PRAGMA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_PRAGMA"));
 
   xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIDAnnotationVal(ctxt.FindWNId(wn))
+      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
       << " [pragma]" << EndAttr
       << EndElem;
 

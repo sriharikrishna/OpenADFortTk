@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.14 2003/08/08 19:51:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.15 2003/09/02 15:02:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -130,7 +130,7 @@ TranslateScopeHierarchy(xml::ostream& xos, PU_Info* pu_forest,
 
 static void
 TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId, 
-			  UINT32& nextId, XlationContext& ctxt);
+			  XlationContext& ctxt);
 
 static void 
 TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
@@ -153,15 +153,26 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   Diag_Set_Phase("WHIRL to XAIF: translate IR");
 
   if (!pu_forest) { return; }
-  
+
+  // 1. Initialization
   Pro64IRInterface irInterface;
   xml::ostream xos(os.rdbuf());
   XlationContext ctxt;
 
+  DumpTranslationHeaderComment(xos); // FIXME (optional)
   W2F_Init(); // FIXME
-  DumpTranslationHeaderComment(xos); // FIXME
-
-  // 1. Create CallGraph
+  
+  // Initialize global id maps
+  pair<SymTabToSymTabIdMap*, SymTabIdToSymTabMap*> stabmaps =
+    CreateSymTabIdMaps(pu_forest);
+  ctxt.SetSymTabToIdMap(stabmaps.first);
+  delete stabmaps.second;
+  
+  pair<PUToPUIdMap*, PUIdToPUMap*> pumaps = CreatePUIdMaps(pu_forest);
+  ctxt.SetPUToIdMap(pumaps.first);
+  delete pumaps.second;
+  
+  // 2. Create CallGraph
   Pro64IRProcIterator irProcIter(pu_forest);
   ST* st = ST_ptr(PU_Info_proc_sym(pu_forest));
   CallGraph cgraph(irInterface, &irProcIter, (SymHandle)st);
@@ -175,13 +186,13 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   
   TranslateScopeHierarchy(xos, pu_forest, ctxt);
 
-  // 2. Dump CallGraph vertices
+  // 3. Dump CallGraph vertices
   for (CallGraph::NodesIterator nodeIt(cgraph); (bool)nodeIt; ++nodeIt) {
     CallGraph::Node* n = dynamic_cast<CallGraph::Node*>((DGraph::Node*)nodeIt);
     TranslatePU(xos, (PU_Info*)n->GetDef(), n->getID(), ctxt);
   }
   
-  // 3. Dump CallGraph edges
+  // 4. Dump CallGraph edges
   for (CallGraph::EdgesIterator edgesIt(cgraph); (bool)edgesIt; ++edgesIt) {
     CallGraph::Edge* e =
       dynamic_cast<CallGraph::Edge*>((DGraph::Edge*)edgesIt);
@@ -193,9 +204,12 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
 	<< Attr("target", n2->getID()) << EndElem; // FIXME: DumpGraphEdge
   }
   
-  // 4. Done!
+  // 5. Done!
   xos << EndElem; /* xaif:CallGraph */
   
+  delete stabmaps.first;
+  delete pumaps.first;
+
   W2F_Fini(); // FIXME
 }
 
@@ -205,27 +219,23 @@ static void
 TranslateScopeHierarchy(xml::ostream& xos, PU_Info* pu_forest, 
 			XlationContext& ctxt)
 {
-  // For now we implicitly create the ScopeHierarchy/ScopeGraph using
-  // DFS-style iteration of PUs.  During translation of the
-  // ScopeHierarchy we create a ST_TAB* to Scope vertex_id map for
-  // later symbol references.
-
-  UINT32 nextId = 0; // 0 is NULL
-  StabToScopeIdMap& map = ctxt.GetStabToScopeIdMap();
+  // We implicitly create the ScopeHierarchy/ScopeGraph using
+  // DFS-style iteration of PUs.  In addition to the global scope,
+  // there is one scope for each PU.
 
   xos << BegElem("xaif:ScopeHierarchy");
 
   // Translate global symbol table
-  UINT32 gid = ++nextId;
-  map.Insert(Scope_tab[GLOBAL_SYMTAB].st_tab, gid);
+  SymTabId scopeId = ctxt.FindSymTabId(Scope_tab[GLOBAL_SYMTAB].st_tab);
   
-  xos << BegElem("xaif:Scope") << Attr("vertex_id", gid) << EndAttrs;
+  xos << BegElem("xaif:Scope") << Attr("vertex_id", scopeId)
+      << SymTabIdAnnot(scopeId) << EndAttrs;
   xlate_SYMTAB(xos, GLOBAL_SYMTAB, ctxt);
   xos << EndElem << std::endl;
 
   // Translate each PU, descending into children first
   for (PU_Info *pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
-    TranslateScopeHierarchyPU(xos, pu, gid, nextId, ctxt);
+    TranslateScopeHierarchyPU(xos, pu, scopeId, ctxt);
   }
   
   xos << EndElem; /* xaif:ScopeHierarchy */
@@ -234,28 +244,27 @@ TranslateScopeHierarchy(xml::ostream& xos, PU_Info* pu_forest,
 
 static void
 TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId, 
-			  UINT32& nextId, XlationContext& ctxt)
+			  XlationContext& ctxt)
 {
   RestoreOpen64PUGlobalVars(pu); 
-  StabToScopeIdMap& map = ctxt.GetStabToScopeIdMap();
   
   // Translate current symbol table
-  UINT32 id = ++nextId;
-  map.Insert(Scope_tab[CURRENT_SYMTAB].st_tab, id);
+  SymTabId scopeId = ctxt.FindSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
   
-  xos << BegElem("xaif:Scope") << Attr("vertex_id", id) << EndAttrs;
+  xos << BegElem("xaif:Scope") << Attr("vertex_id", scopeId) 
+      << SymTabIdAnnot(scopeId) << EndAttrs;
   xlate_SYMTAB(xos, CURRENT_SYMTAB, ctxt);
   xos << EndElem << std::endl;
   
-  // Generate an edge to parent
+  // Generate an edge to parent // FIXME: use DumpGraphEdge
   xos << BegElem("xaif:ScopeEdge") << Attr("edge_id", ctxt.GetNewEId())
       << Attr("source", parentId) 
-      << Attr("target", id) << EndElem << std::endl; // FIXME: DumpGraphEdge
+      << Attr("target", scopeId) << EndElem << std::endl;
   
   // Recursively translate all children
   for (PU_Info *child = PU_Info_child(pu); child != NULL;
        child = PU_Info_next(child)) {
-    TranslateScopeHierarchyPU(xos, child, id, nextId, ctxt);
+    TranslateScopeHierarchyPU(xos, child, scopeId, ctxt);
   }
   
   SaveOpen64PUGlobalVars(pu);
@@ -288,13 +297,14 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
 	  && (!Is_Set_PU_Info_flags(pu, PU_IS_COMPILER_GENERATED)));
 #endif
 
-    StabToScopeIdMap& map = ctxt.GetStabToScopeIdMap();
+    PUId puId = ctxt.FindPUId(pu);
+
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-    UINT scopeid = map.Find(sttab);
+    SymTabId scopeId = ctxt.FindSymTabId(sttab);
+    const char* st_name = ST_name(st);
 
-    xos << Attr("scope_id", scopeid) << Attr("symbol_id", (UINT)ST_index(st))
-	<< Attr("annotation", ST_name(st)) << EndAttrs; // FIXME
-
+    xos << Attr("scope_id", scopeId) << Attr("symbol_id", st_name)
+	<< PUIdAnnot(puId) << EndAttrs;
     TranslateWNPU(xos, wn_pu, ctxt);
     xos << EndElem;
     
@@ -302,7 +312,7 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
 
   } else {
     // FIXME: inlinable/noninlinable
-    xos << EndElem;    
+    xos << EndElem; 
   }
   
   xos << std::endl;

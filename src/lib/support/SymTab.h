@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.5 2003/08/11 14:24:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.6 2003/09/02 15:02:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -33,38 +33,6 @@
 //*************************** User Include Files ****************************
 
 //************************** Forward Declarations ***************************
-
-//***************************************************************************
-// StabToScopeIdMap (FIXME)
-//***************************************************************************
-
-class StabToScopeIdMap 
-{
-public:
-  // Constructor allocates an empty data structure
-  StabToScopeIdMap();
-  virtual ~StabToScopeIdMap();
-
-  // Find: 0 is reserved as NULL
-  UINT Find(const ST_TAB* sttab) const;
-
-  // Insert: insert <'sttab','id'> pair in the map and return true; if
-  // 'st_tab' already exists, the operation fails and returns false.
-  bool Insert(const ST_TAB* sttab, const UINT id);
-  
-  // Return number of entries
-  unsigned int GetSize() const { return stabToScopeIdMap.size(); }
-
-private:
-  typedef std::map<ST_TAB*, UINT>           STTABToScopeIdMap;
-  typedef STTABToScopeIdMap::iterator       STTABToScopeIdMapIt;
-  typedef STTABToScopeIdMap::const_iterator STTABToScopeIdMapItC;
-  typedef STTABToScopeIdMap::value_type     STTABToScopeIdMapVal;
-
-private:
-  STTABToScopeIdMap stabToScopeIdMap;
-};
-
 
 //***************************************************************************
 // XAIFSymToWhirlSymMap (FIXME)

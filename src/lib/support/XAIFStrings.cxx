@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.5 2003/08/25 13:58:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.6 2003/09/02 15:02:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -101,16 +101,27 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "value",
   
   // DerivativeAccumulator
-  "xaif:DerivativeAccumulator", // stmt
-  "xaif:Derivative",
-  "xaif:PartialDerivative",
-  "xaif:Independent",
-  "xaif:Dependent",
+  "xaif:DerivativePropagator", // block
+
+  "xaif:SetDeriv",             // stmt
+  "xaif:Sax",
+  "xaif:Saxpy",
+
+  "xaif:Tgt",                  // expr
+  "xaif:Src",
+  "xaif:AX",
+  "xaif:A",
+  "xaif:X",
+  "xaif:Y",
   
   // -----------------------------------------------------
   
   // Special tags
-  "[WHIRLIDS]"
+  "{SymTab_Id#",
+  "{Sym_Id#",
+  "{PU_Id#",
+  "{WHIRL_Id#",
+  "}"
 };
 
 //****************************************************************************

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.9 2003/08/11 14:24:23 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.10 2003/09/02 15:02:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -168,15 +168,18 @@ xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 //***************************************************************************
 
 // ---------------------------------------------------------
-// WhirlIDAnnotation, WhirlIDAnnotationVal
+// AttrAnnot, AttrAnnotVal
 // ---------------------------------------------------------
-struct WhirlIDAnnotationInfo_ {
-  WNId wnid;
+template<class T> 
+struct AttrAnnotInfo_ {
   bool completeAttr;
+  const char* tag;
+  const T* val;
 };
 
-inline ostream&
-operator<<(std::ostream& os, const WhirlIDAnnotationInfo_& x) 
+template<class T> 
+ostream&
+operator<<(std::ostream& os, const AttrAnnotInfo_<T>& x) 
 {
   xml::ostream& xos = dynamic_cast<xml::ostream&>(os); // FIXME
 
@@ -184,8 +187,8 @@ operator<<(std::ostream& os, const WhirlIDAnnotationInfo_& x)
     xos << xml::BegAttr(XAIFStrings.attr_annot());
   }
 
-  xos << XAIFStrings.tag_IRIds() << x.wnid;
-
+  xos << x.tag << *x.val << XAIFStrings.tag_End();
+  
   if (x.completeAttr) {
     xos << xml::EndAttr;
   }
@@ -193,28 +196,91 @@ operator<<(std::ostream& os, const WhirlIDAnnotationInfo_& x)
   return xos;
 }
 
-// Given a WHIRL node 'wn', outputs a complete annotation attribute with a
-// whirl id list. 
-inline WhirlIDAnnotationInfo_ 
-WhirlIDAnnotation(WNId wnid_)
+// AttrAnnot: Given a tag and a value, generate a complete annotiation
+// attribute
+template<class T> 
+AttrAnnotInfo_<T> 
+AttrAnnot(const char* tag_, const T& val_)
 {
-  WhirlIDAnnotationInfo_ x;
-  x.wnid = wnid_;
+  AttrAnnotInfo_<T> x;
   x.completeAttr = true;
+  x.tag = tag_;
+  x.val = &val_;
   return x;
 }
 
-// Given a WHIRL node 'wn', outputs an annotation value with a whirl
-// id list. 
-inline WhirlIDAnnotationInfo_ 
-WhirlIDAnnotationVal(WNId wnid_)
+// AttrAnnotVal: Given a tag and a value, generate only the
+// annotiation attribute value
+template<class T> 
+AttrAnnotInfo_<T>
+AttrAnnotVal(const char* tag_, const T& val_)
 {
-  WhirlIDAnnotationInfo_ x;
-  x.wnid = wnid_;
+  AttrAnnotInfo_<T> x;
   x.completeAttr = false;
+  x.val = &val_;
+  x.tag = tag_;
   return x;
 }
 
+// *AttrAnnot: Given a value, generate a complete annotiation
+// attribute with appropriate tag
+template<class T> 
+AttrAnnotInfo_<T> 
+SymTabIdAnnot(const T& val_) 
+{
+  return AttrAnnot(XAIFStrings.tag_SymTabId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+SymIdAnnot(const T& val_) 
+{
+  return AttrAnnot(XAIFStrings.tag_SymId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+PUIdAnnot(const T& val_) 
+{
+  return AttrAnnot(XAIFStrings.tag_PUId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+WhirlIdAnnot(const T& val_) 
+{
+  return AttrAnnot(XAIFStrings.tag_WHIRLId(), val_);
+}
+
+// *AttrAnnotVal: Given a tag and a value, generate only the
+// annotiation attribute value with the appropriate tag
+template<class T> 
+AttrAnnotInfo_<T>
+SymTabIdAnnotVal(const T& val_)
+{
+  return AttrAnnotVal(XAIFStrings.tag_SymTabId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+SymIdAnnotVal(const T& val_)
+{
+  return AttrAnnotVal(XAIFStrings.tag_SymId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+PUIdAnnotVal(const T& val_)
+{
+  return AttrAnnotVal(XAIFStrings.tag_PUId(), val_);
+}
+
+template<class T> 
+AttrAnnotInfo_<T>
+WhirlIdAnnotVal(const T& val_)
+{
+  return AttrAnnotVal(XAIFStrings.tag_WHIRLId(), val_);
+}
 
 //***************************************************************************
 

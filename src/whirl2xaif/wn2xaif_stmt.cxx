@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.14 2003/08/25 13:58:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.15 2003/09/02 15:02:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -325,7 +325,7 @@ xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_GOTO"));
   
   xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIDAnnotationVal(ctxt.FindWNId(wn))
+      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
       << " [goto " << WN_label_number(wn) << "]" << EndAttr
       << EndElem;
   
@@ -341,7 +341,7 @@ WN2F_agoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_agoto"));
 
   xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIDAnnotationVal(ctxt.FindWNId(wn))
+      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
       << " [***FIXME: agoto]" << EndAttr
       << EndElem;
 
@@ -371,7 +371,7 @@ xlate_RETURN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_RETURN"));
   
   xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIDAnnotationVal(ctxt.FindWNId(wn))
+      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
       << " [return]" << EndAttr
       << EndElem;
   
@@ -396,7 +396,7 @@ xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_LABEL"));
   
   xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
-      << BegAttr("annotation") << WhirlIDAnnotationVal(ctxt.FindWNId(wn))
+      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
       << " [label " << WN_label_number(wn) << "]" << EndAttr
       << EndElem;
   
@@ -562,8 +562,6 @@ xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   }
 
   // -------------------------------------------------------
-  StabToScopeIdMap& map = ctxt.GetStabToScopeIdMap();
-
   if (WN_operator(wn) == OPR_INTRINSIC_CALL) {
     /* FIXME: Note that all intrinsics that return a CHARACTER string
      * will have been treated specially in WN2F_intrinsic_call(),
@@ -577,7 +575,7 @@ xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     // OPR_ICALL: TranslateWN(xos, WN_kid(wn, WN_kid_count(wn) - 1), ctxt);
     ST* st = WN_st(wn);
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-    UINT scopeid = map.Find(sttab);
+    SymTabId scopeid = ctxt.FindSymTabId(sttab);
     ASSERT_FATAL(scopeid != 0, (DIAG_UNIMPLEMENTED, 0, "xlate_CALL"));
 
     xos << BegComment << "sym = " << W2CF_Symtab_Nameof_St(st) << EndComment;

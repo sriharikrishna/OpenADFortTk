@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.h,v 1.1 2003/08/13 23:01:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.h,v 1.2 2003/09/02 15:02:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -45,39 +45,48 @@ public:
   XlationContext();
   virtual ~XlationContext();
   
-
-  // ID->PU map: (We do not assume ownership of the map)
+  // -------------------------------------------------------
+  // Id maps
+  // -------------------------------------------------------
+  
+  // SymTabId -> ST_TAB* map: (We do not assume ownership of the map)
+  pair<ST_TAB*, PU_Info*> FindSymTab(SymTabId stabId);
+  SymTabIdToSymTabMap* GetIdToSymTabMap() const { return id2stabMap; }
+  void SetIdToSymTabMap(SymTabIdToSymTabMap* x) { id2stabMap = x; }
+  
+  // PUId -> PU_Info* map: (We do not assume ownership of the map)
   PU_Info* FindPU(PUId puid);
   PUIdToPUMap* GetIdToPUMap() const { return id2puMap; }
   void SetIdToPUMap(PUIdToPUMap* x) { id2puMap = x; }
-
-  // WHIRL->ID map: (We do not assume ownership of the map)
+  
+  // WN* -> WNId map: (We do not assume ownership of the map)
   WNId FindWNId(WN* wn);
   WNToWNIdMap* GetWNToIdMap() const { return wn2idMap; }
   void SetWNToIdMap(WNToWNIdMap* x) { wn2idMap = x; }
-
-  // ID->WHIRL map: (We do not assume ownership of the map)
+  
+  // WNId -> WN* map: (We do not assume ownership of the map)
   WN* FindWN(WNId wnid);
   WNIdToWNMap* GetIdToWNMap() const { return id2wnMap; }
   void SetIdToWNMap(WNIdToWNMap* x) { id2wnMap = x; }
-
-  // XAIFSym->WhirlSym map: (We do not assume ownership of the map)
+  
+  // XAIFSym -> WhirlSym map: (We do not assume ownership of the map)
   ST* FindSym(const char* scopeid, const char* symid);
   XAIFSymToWhirlSymMap* GetXAIFSymToWhirlSymMap() const { return xsym2wsymMap; }
   void SetXAIFSymToWhirlSymMap(XAIFSymToWhirlSymMap* x) { xsym2wsymMap = x; }
-
-
+  
+  
   virtual void Dump(std::ostream& o = std::cerr, const char* pre = "") const;
   virtual void DDump() const;
-
+  
 private: 
   // Disable for now
   XlationContext(const XlationContext& x) { }
   XlationContext& operator=(const XlationContext& x) { return *this; }
   
 private:
+  SymTabIdToSymTabMap* id2stabMap;
   PUIdToPUMap* id2puMap;
-  WNToWNIdMap* wn2idMap; 
+  WNToWNIdMap* wn2idMap;
   WNIdToWNMap* id2wnMap;
   XAIFSymToWhirlSymMap* xsym2wsymMap;
 };
