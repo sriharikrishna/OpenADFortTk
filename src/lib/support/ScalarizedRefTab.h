@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.2 2004/06/02 02:01:28 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.3 2004/06/02 18:51:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -57,18 +57,29 @@ WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2);
 
 
 //***************************************************************************
-// ScalarizedRefTab
+// WNToScalarizedRefTabMap
+//***************************************************************************
+
+
+
+//***************************************************************************
+// WNToScalarizedRefTab
 //***************************************************************************
 
 class ScalarizedRef;
 
-// 'ScalarizedRefTab' is a special symbol table mapping certain
+// 'WNToScalarizedRefTab' is a special symbol table mapping certain
 // non-scalar WHIRL references to dummy scalar variables
-class ScalarizedRefTab {
+
+
+// WNToWNToScalarizedRefTab
+// ScalarizedRefToWNTab
+
+class WNToScalarizedRefTab {
 public:
   // Constructor allocates an empty data structure
-  ScalarizedRefTab();
-  virtual ~ScalarizedRefTab();
+  WNToScalarizedRefTab();
+  virtual ~WNToScalarizedRefTab();
   
   // Find: find 
   ScalarizedRef* Find(const WN* wn) const;
@@ -90,12 +101,12 @@ public:
   virtual void Dump(std::ostream& o = std::cerr, const char* pre = "") const;
   virtual void DDump() const;
   
-  friend class ScalarizedRefTabIterator;
+  friend class WNToScalarizedRefTabIterator;
   
 protected:
   // Should not be used
-  ScalarizedRefTab(const ScalarizedRefTab& x) { }
-  ScalarizedRefTab& operator=(const ScalarizedRefTab& x) { return *this; }
+  WNToScalarizedRefTab(const WNToScalarizedRefTab& x) { }
+  WNToScalarizedRefTab& operator=(const WNToScalarizedRefTab& x) { return *this; }
 
 private: 
   // A map of WN* to ScalarizedRef*.
@@ -139,20 +150,20 @@ private:
 private:
   std::string name; // FIXME:
   UINT id; 
-  
+
   static UINT nextId; // for globally uniqe id numbers
 };
 
 
 //***************************************************************************
-// ScalarizedRefTabIterator
+// WNToScalarizedRefTabIterator
 //***************************************************************************
 
-// 'ScalarizedRefTabIterator': iterator for symbols in a 'ScalarizedRefTab'
-class ScalarizedRefTabIterator {
+// 'WNToScalarizedRefTabIterator': iterator for symbols in a 'WNToScalarizedRefTab'
+class WNToScalarizedRefTabIterator {
 public:   
-  ScalarizedRefTabIterator(const ScalarizedRefTab& x);
-  ~ScalarizedRefTabIterator();
+  WNToScalarizedRefTabIterator(const WNToScalarizedRefTab& x);
+  ~WNToScalarizedRefTabIterator();
 
   // Returns the current WN* or NULL
   WN* CurrentSrc() const {
@@ -177,15 +188,15 @@ public:
 
 private:
   // Should not be used
-  ScalarizedRefTabIterator();
-  ScalarizedRefTabIterator(const ScalarizedRefTabIterator& x);
-  ScalarizedRefTabIterator& operator=(const ScalarizedRefTabIterator& x)
+  WNToScalarizedRefTabIterator();
+  WNToScalarizedRefTabIterator(const WNToScalarizedRefTabIterator& x);
+  WNToScalarizedRefTabIterator& operator=(const WNToScalarizedRefTabIterator& x)
     { return *this; }
 
 protected:
 private:
-  const ScalarizedRefTab& symtab;
-  ScalarizedRefTab::WNToSymMapItC it;
+  const WNToScalarizedRefTab& symtab;
+  WNToScalarizedRefTab::WNToSymMapItC it;
 };
 
 //***************************************************************************

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.60 2004/06/02 02:01:29 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.61 2004/06/02 18:51:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -95,20 +95,20 @@ IntrinsicXlationTable whirl2xaif::IntrinsicTable(IntrinsicXlationTable::W2X);
 
 //************************** Forward Declarations ***************************
 
-// AddToScalarizedRefTabOp: Given a ScalarizedRefTab, add references to it
-class AddToScalarizedRefTabOp : public ForAllNonScalarRefsOp {
+// AddToWNToScalarizedRefTabOp: Given a WNToScalarizedRefTab, add references to it
+class AddToWNToScalarizedRefTabOp : public ForAllNonScalarRefsOp {
 public:
-  AddToScalarizedRefTabOp(ScalarizedRefTab* symtab_);
-  ~AddToScalarizedRefTabOp() { }
+  AddToWNToScalarizedRefTabOp(WNToScalarizedRefTab* symtab_);
+  ~AddToWNToScalarizedRefTabOp() { }
   
-  ScalarizedRefTab* GetSymTab() { return symtab; }
+  WNToScalarizedRefTab* GetSymTab() { return symtab; }
 
   // Given a non-scalar reference 'wn', create a dummy variable and
   // add to the map.  
   int operator()(const WN* wn);
 
 private:
-  ScalarizedRefTab* symtab;
+  WNToScalarizedRefTab* symtab;
 };
 
 
@@ -277,10 +277,10 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ctxt.SetWNParentMap(&wnParentMap);
 
   // 1. Non-scalar symbol table
-  ScalarizedRefTab* symtab = new ScalarizedRefTab(); // FIXME
-  AddToScalarizedRefTabOp op(symtab);
+  WNToScalarizedRefTab* symtab = new WNToScalarizedRefTab(); // FIXME
+  AddToWNToScalarizedRefTabOp op(symtab);
   ForAllNonScalarRefs(fbody, op); //FIXME
-  ctxt.SetScalarizedRefTab(symtab);
+  ctxt.SetWNToScalarizedRefTab(symtab);
   
   // 2. WHIRL<->ID maps
   pair<WNToWNIdMap*, WNIdToWNMap*> wnmaps = CreateWhirlIdMaps(wn);
@@ -1112,7 +1112,7 @@ ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
 }
 
 
-AddToScalarizedRefTabOp::AddToScalarizedRefTabOp(ScalarizedRefTab* symtab_)
+AddToWNToScalarizedRefTabOp::AddToWNToScalarizedRefTabOp(WNToScalarizedRefTab* symtab_)
 { 
   symtab = symtab_;
   assert(symtab != NULL);
@@ -1122,7 +1122,7 @@ AddToScalarizedRefTabOp::AddToScalarizedRefTabOp(ScalarizedRefTab* symtab_)
 // Given a non-scalar reference 'wn', create a dummy variable and
 // add to the map.  
 int 
-AddToScalarizedRefTabOp::operator()(const WN* wn) 
+AddToWNToScalarizedRefTabOp::operator()(const WN* wn) 
 {
   // Base case
 #if 0 // FIXME
