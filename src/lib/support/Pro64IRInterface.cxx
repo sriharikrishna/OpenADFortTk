@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.8 2003/12/03 20:43:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.9 2003/12/04 23:17:35 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -874,11 +874,15 @@ BuildExprTreeForWN(ExprTree* tree, WN* wn)
 {
   ExprTree::Node* root = NULL;
   if (!wn) { return root; }
-
-  // 1. Sanity checking
+  
+  // 1. Sanity checking.  (In the context of expressions, OPR_STID
+  // represents the LHS of the assignment.)
+  OPERATOR opr = WN_operator(wn);
   OPCODE opcode = WN_opcode(wn);
-  if (!OPCODE_is_expression(opcode)) { return root; }
-
+  if ( !(opr == OPR_STID || OPERATOR_is_expression(opr)) ) {
+    return root;
+  }
+  
   // 2. Create a parent tree node for the curent WN
   root = new ExprTree::Node(OPCODE_name(opcode));
   tree->add(root);
