@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.9 2004/04/28 15:24:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.10 2004/05/07 20:04:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -66,20 +66,6 @@
  *    ST2F_deref_translate:
  *       Translate a pointer variable to its dereferenced version.
  *
- *    ST2F_func_header:
- *       Adds tokens for the function header (parameter declarations,
- *       function name, and return type) in a function definition. Note 
- *       that the resultant token buffer will not have appended a 
- *       newline after the function header.
- *
- *    xlate_PregRef:
- *       Given an ST_type(), a preg offset, and a context, this function 
- *       appends the name of the preg to the given xml::ostream&.  The 
- *       preg will be declared as a side-effect of this call if it has 
- *       not yet been declared in the current context.  It is left to 
- *       the caller to cast the resultant value to ST_type(st) when:
- *       PUinfo_Preg_Type(ST_type(st)) != ST_type(st).
- *
  *    ST2F_Declare_Tempvar:
  *       Declares a tempvar with the given index in the local scope.
  *
@@ -128,13 +114,6 @@ namespace whirl2xaif {
   xlate_NonScalarSymTab(xml::ostream& xos, NonScalarSymTab* symtab, 
 			XlationContext& ctxt);
   
-  extern void
-  xlate_Params(xml::ostream& xos, WN* wn,
-	       ST* st,           /* Function ST entry     */
-  	       ST** params,      /* Array of  parameters  */
-	       INT32 num_params, /* # of parms in array   */
-	       XlationContext& ctxt);
-
   extern void 
   TranslateSTDecl(xml::ostream& xos, ST* st, XlationContext& ctxt);
   
@@ -159,15 +138,6 @@ TCON2F_translate(TCON tvalue, BOOL is_logical);
 
 extern void 
 ST2F_deref_translate(xml::ostream& xos, ST* st, XlationContext& ctxt);
-
-extern void 
-ST2F_func_header(xml::ostream& xos,
-		 WN* wn,
-		 ST *st,           /* Function ST entry */
-		 ST  **params,       /* Array of parameters */
-		 INT32  num_parms,    /* # of parms in params */
-		 BOOL   is_altentry, /* Alternate entry */
-		 XlationContext& ctxt);
 
 extern void 
 ST2F_Declare_Tempvar(TY_IDX ty, UINT idx);
