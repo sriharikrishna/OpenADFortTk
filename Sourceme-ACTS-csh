@@ -1,6 +1,6 @@
 # -*-Mode: sh;-*-
 # For csh or tcsh
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.10 2003/12/19 21:16:06 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.11 2003/12/29 20:44:02 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
@@ -61,7 +61,7 @@ switch ($PLATFORM)
     set o64targ="targ_sparc_solaris"
     breaksw
   default:
-    echo "$PLATFORM '$$PLATFORM' is unknown..."
+    echo "PLATFORM '${PLATFORM}' is unknown..."
     breaksw
 endsw
 
