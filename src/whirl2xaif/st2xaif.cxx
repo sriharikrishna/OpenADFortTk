@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.3 2003/05/14 19:29:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.4 2003/05/16 13:21:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -60,9 +60,9 @@
  *
  *    See st2f.h for a description of the exported functions and 
  *    variables.  This module translates ST nodes into variable and
- *    function declarations (xlate_STToSymbol), and gets the 
+ *    function declarations (TranslateSTDecl), and gets the 
  *    lvalue for a variable or function when directly referenced in
- *    an expression (ST2F_use_translate).  We provide a special 
+ *    an expression (TranslateSTUse).  We provide a special 
  *    interface to deal with pseudo registers (pregs), but some 
  *    symbols must be handled by the context in which they appear,
  *    since this context uniquely determines the reference (e.g. 
@@ -133,22 +133,36 @@ static void ST2F_Declare_Return_Type(xml::ostream& xos,TY_IDX return_ty,
 /*------- Handlers for references to and declarations of symbols ------*/
 /*---------------------------------------------------------------------*/
 
-static void ST2F_ignore(xml::ostream& xos, ST *st, XlationContext& ctxt);
+static void 
+ST2F_ignore(xml::ostream& xos, ST *st, XlationContext& ctxt);
 
-static void ST2F_decl_error(xml::ostream& xos, ST *st, XlationContext& ctxt);
-static void xlate_STVAR_ToSymbol(xml::ostream& xos, ST *st, XlationContext& ctxt);
-static void xlate_STFUNC_ToSymbol(xml::ostream& xos, ST *st, XlationContext& ctxt);
-static void ST2F_decl_const(xml::ostream& xos, ST *st, XlationContext& ctxt);
-static void ST2F_decl_preg(xml::ostream& xos, ST *st, XlationContext& ctxt);
-static void ST2F_decl_block(xml::ostream& xos, ST *st, XlationContext& ctxt);
-static void ST2F_decl_name(xml::ostream& xos, ST *st, XlationContext& ctxt);
-static void ST2F_decl_type (xml::ostream& xos, ST *st, XlationContext& ctxt);
+static void 
+xlate_STDecl_error(xml::ostream& xos, ST *st, XlationContext& ctxt);
+static void 
+xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt);
+static void 
+xlate_STDecl_FUNC(xml::ostream& xos, ST *st, XlationContext& ctxt);
+static void 
+xlate_STDecl_CONST(xml::ostream& xos, ST *st, XlationContext& ctxt);
+static void 
+xlate_STDecl_PREG(xml::ostream& xos, ST *st, XlationContext& ctxt);
+static void 
+xlate_STDecl_BLOCK(xml::ostream& xos, ST *st, XlationContext& ctxt);
+static void 
+xlate_STDecl_NAME(xml::ostream& xos, ST *st, XlationContext& ctxt);
+static void 
+xlate_STDecl_TYPE(xml::ostream& xos, ST *st, XlationContext& ctxt);
 
-static void ST2F_use_error(xml::ostream& xos, ST *st, XlationContext& ctxt);
-static void ST2F_use_var(xml::ostream& xos, ST *st, XlationContext& ctxt);
-static void ST2F_use_func(xml::ostream& xos, ST *st, XlationContext& ctxt);
-static void ST2F_use_const(xml::ostream& xos, ST *st, XlationContext& ctxt);
-static void ST2F_use_block(xml::ostream& xos, ST *st, XlationContext& ctxt);
+static void 
+ST2F_use_error(xml::ostream& xos, ST *st, XlationContext& ctxt);
+static void 
+ST2F_use_var(xml::ostream& xos, ST *st, XlationContext& ctxt);
+static void 
+ST2F_use_func(xml::ostream& xos, ST *st, XlationContext& ctxt);
+static void 
+ST2F_use_const(xml::ostream& xos, ST *st, XlationContext& ctxt);
+static void 
+ST2F_use_block(xml::ostream& xos, ST *st, XlationContext& ctxt);
 
 //***************************************************************************
 
@@ -192,12 +206,12 @@ public:
 	return;
       }
     } else if (dop) {
-      xlate_STToSymbol(xos, st, ctxt);
+      TranslateSTDecl(xos, st, ctxt);
       return;
     } 
 #endif
     
-    xlate_STToSymbol(xos, st, ctxt);
+    TranslateSTDecl(xos, st, ctxt);
   }
   
 private:
@@ -291,7 +305,7 @@ WN2F_Append_Symtab_Consts(xml::ostream& xos, SYMTAB_IDX symtab)
     /* TODO: Full support for sym_consts */
     if (tokens != NULL) {
       xos << std::endl;
-      xlate_STToSymbol(xos, st, ctxt);
+      TranslateSTDecl(xos, st, ctxt);
     }
   }
 #endif
@@ -314,20 +328,20 @@ WN2F_Append_Symtab_Vars(xml::ostream& xos, SYMTAB_IDX symtab)
 
 typedef void (*XlateSTHandlerFunc)(xml::ostream&, ST*, XlationContext&);
 
-static const XlateSTHandlerFunc xlate_STToSymbol_HandlerTable[CLASS_COUNT] =
+static const XlateSTHandlerFunc TranslateSTDecl_HandlerTable[CLASS_COUNT] =
 {
   &ST2F_ignore,      /* CLASS_UNK    == 0x00 */
-  &xlate_STVAR_ToSymbol,    /* CLASS_VAR    == 0x01 */
-  &xlate_STFUNC_ToSymbol,   /* CLASS_FUNC   == 0x02 */
-  &ST2F_decl_const,  /* CLASS_CONST  == 0x03 */
-  &ST2F_decl_preg,   /* CLASS_PREG   == 0x04 */
-  &ST2F_decl_block,  /* CLASS_BLOCK  == 0x05 */
-  &ST2F_decl_name,   /* CLASS_NAME   == 0x06 */
-  &ST2F_decl_error,  /* CLASS_MODULE == 0x07 */
-  &ST2F_decl_type,   /* CLASS_TYPE   == 0x08 */
+  &xlate_STDecl_VAR,    /* CLASS_VAR    == 0x01 */
+  &xlate_STDecl_FUNC,   /* CLASS_FUNC   == 0x02 */
+  &xlate_STDecl_CONST,  /* CLASS_CONST  == 0x03 */
+  &xlate_STDecl_PREG,   /* CLASS_PREG   == 0x04 */
+  &xlate_STDecl_BLOCK,  /* CLASS_BLOCK  == 0x05 */
+  &xlate_STDecl_NAME,   /* CLASS_NAME   == 0x06 */
+  &xlate_STDecl_error,  /* CLASS_MODULE == 0x07 */
+  &xlate_STDecl_TYPE,   /* CLASS_TYPE   == 0x08 */
 };
 
-static const XlateSTHandlerFunc ST2F_Use_Handler[CLASS_COUNT] =
+static const XlateSTHandlerFunc TranslateSTUse_HandlerTable[CLASS_COUNT] =
 {
   &ST2F_ignore,      /* CLASS_UNK   == 0x00 */
   &ST2F_use_var,     /* CLASS_VAR   == 0x01 */
@@ -341,15 +355,15 @@ static const XlateSTHandlerFunc ST2F_Use_Handler[CLASS_COUNT] =
 //***************************************************************************
 
 void 
-xlate_STToSymbol(xml::ostream& xos, ST* st, XlationContext& ctxt)
+whirl2xaif::TranslateSTDecl(xml::ostream& xos, ST* st, XlationContext& ctxt)
 { 
-  xlate_STToSymbol_HandlerTable[ST_sym_class(st)](xos, st, ctxt);
+  TranslateSTDecl_HandlerTable[ST_sym_class(st)](xos, st, ctxt);
 } 
 
 void 
-ST2F_use_translate(xml::ostream& xos, ST* st, XlationContext& ctxt)
+whirl2xaif::TranslateSTUse(xml::ostream& xos, ST* st, XlationContext& ctxt)
 { 
-  ST2F_Use_Handler[ST_sym_class(st)](xos, st, ctxt);
+  TranslateSTUse_HandlerTable[ST_sym_class(st)](xos, st, ctxt);
 }
 
 
@@ -380,22 +394,22 @@ ST2F_ignore(xml::ostream& xos, ST *st, XlationContext& ctxt)
 }
 
 static void 
-ST2F_decl_error(xml::ostream& xos, ST *st, XlationContext& ctxt)
+xlate_STDecl_error(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(FALSE, (DIAG_W2F_UNEXPECTED_SYMCLASS,
-			   ST_sym_class(st), "ST2F_decl_error"));
+			   ST_sym_class(st), "xlate_STDecl_error"));
 }
 
 static void 
-xlate_STVAR_ToSymbol(xml::ostream& xos, ST *st, XlationContext& ctxt)
+xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {  
   ASSERT_DBG_FATAL(ST_sym_class(st) == CLASS_VAR, 
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
-		    ST_sym_class(st), "xlate_STVAR_ToSymbol"));
+		    ST_sym_class(st), "xlate_STDecl_VAR"));
   
   if (Current_scope > GLOBAL_SYMTAB) {
     ASSERT_DBG_FATAL(!PUINFO_RETURN_TO_PARAM || st != PUINFO_RETURN_PARAM, 
-		     (DIAG_W2F_DECLARE_RETURN_PARAM, "xlate_STVAR_ToSymbol"));
+		     (DIAG_W2F_DECLARE_RETURN_PARAM, "xlate_STDecl_VAR"));
     // FIXME: we don't need this
   }
 
@@ -406,7 +420,8 @@ xlate_STVAR_ToSymbol(xml::ostream& xos, ST *st, XlationContext& ctxt)
   xos << Comment(st_name);
   xos << BegElem("xaif:Symbol") << Attr("symbol_id", (UINT)ST_index(st)) 
       << Attr("kind", "variable")
-      << Attr("type", "real -- fixme") << EndElem;
+      << Attr("type", "***")
+      << Attr("shape", "***") << EndElem;
 
   //FIXME: TY2F_translate(xos, ty, ctxt); // Add type specs
 
@@ -443,7 +458,7 @@ xlate_STVAR_ToSymbol(xml::ostream& xos, ST *st, XlationContext& ctxt)
     /* To counteract the Fortran call-by-reference semantics */
     ASSERT_DBG_FATAL(TY_Is_Pointer(ty), 
 		     (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-		      TY_kind(ty), "xlate_STVAR_ToSymbol"));
+		      TY_kind(ty), "xlate_STDecl_VAR"));
     if (TY_kind(TY_pointed(ST_type(st))) == KIND_FUNCTION) {
       xos << "EXTERNAL ";
     } else {
@@ -507,67 +522,69 @@ xlate_STVAR_ToSymbol(xml::ostream& xos, ST *st, XlationContext& ctxt)
 
 }
 
-
 static void 
-ST2F_decl_type(xml::ostream& xos, ST *st, XlationContext& ctxt)
-{
-  const char  *st_name = W2CF_Symtab_Nameof_St(st);
-  TY_IDX       ty_rt = ST_type(st);
-  
-  ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_TYPE, 
-		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
-		    ST_sym_class(st), "ST2F_decl_type"));
-
-  if (Current_scope > GLOBAL_SYMTAB) 
-    ASSERT_DBG_FATAL(!PUINFO_RETURN_TO_PARAM || st != PUINFO_RETURN_PARAM, 
-		     (DIAG_W2F_DECLARE_RETURN_PARAM, "ST2F_decl_type"));
-  
-  //xos << BegComment << "type id=" << (UINT)ST_index(st) << EndComment; 
-  //FIXME TY2F_translate(xos, ST_type(st), 1, ctxt);
-}
-
-static void 
-xlate_STFUNC_ToSymbol(xml::ostream& xos, ST* st, XlationContext& ctxt)
+xlate_STDecl_FUNC(xml::ostream& xos, ST* st, XlationContext& ctxt)
 {
   // This only makes sense for "external" functions in Fortran,
   // while we should not do anything for other functions.
   ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_FUNC,
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
-		    ST_sym_class(st), "xlate_STFUNC_ToSymbol"));
+		    ST_sym_class(st), "xlate_STDecl_FUNC"));
 
   const char* funcnm = W2CF_Symtab_Nameof_St(st);
   xos << Comment(funcnm);
+  xos << BegElem("xaif:Symbol")  << Attr("symbol_id", (UINT)ST_index(st)) 
+      << Attr("kind", "subroutine") << Attr("type", "void") << EndElem;
 
+#if 0 // REMOVE
   // Specify the function return type, unless it is void
   TY_IDX return_ty = Func_Return_Type(ST_pu_type(st));
-  // FIXME: ST2F_Declare_Return_Type(xos, return_ty, ctxt);  
-
-  xos << BegElem("xaif:Symbol")  << Attr("symbol_id", (UINT)ST_index(st)) 
-      << Attr("kind", "subroutine") << Attr("type", return_ty) << EndElem;
+  ST2F_Declare_Return_Type(xos, return_ty, ctxt);  
+#endif
 }
 
 static void 
-ST2F_decl_const(xml::ostream& xos, ST *st, XlationContext& ctxt)
+xlate_STDecl_CONST(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
   //xos << BegComment << "const id=" << (UINT)ST_index(st) << EndComment; 
 }
 
 static void 
-ST2F_decl_preg(xml::ostream& xos, ST *st, XlationContext& ctxt)
+xlate_STDecl_PREG(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
   //xos << BegComment << "preg id=" << (UINT)ST_index(st) << EndComment;
 }
 
 static void 
-ST2F_decl_block(xml::ostream& xos, ST *st, XlationContext& ctxt)
+xlate_STDecl_BLOCK(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
   //xos << BegComment << "block id=" << (UINT)ST_index(st) << EndComment;
 }
 
 static void 
-ST2F_decl_name(xml::ostream& xos, ST *st, XlationContext& ctxt)
+xlate_STDecl_NAME(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
   //xos << BegComment << "name id=" << (UINT)ST_index(st) << EndComment;
+}
+
+static void 
+xlate_STDecl_TYPE(xml::ostream& xos, ST *st, XlationContext& ctxt)
+{
+  ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_TYPE, 
+		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
+		    ST_sym_class(st), "xlate_STDecl_TYPE"));
+
+  const char  *st_name = W2CF_Symtab_Nameof_St(st);
+  TY_IDX       ty_rt = ST_type(st);
+
+  if (Current_scope > GLOBAL_SYMTAB) 
+    ASSERT_DBG_FATAL(!PUINFO_RETURN_TO_PARAM || st != PUINFO_RETURN_PARAM, 
+		     (DIAG_W2F_DECLARE_RETURN_PARAM, "xlate_STDecl_TYPE"));
+ 
+#if 0 // FIXME 
+  xos << BegComment << "type id=" << (UINT)ST_index(st) << EndComment; 
+  TY2F_translate(xos, ST_type(st), 1, ctxt);
+#endif
 }
 
 /*---------------- hidden routines to handle ST uses ------------------*/
@@ -958,10 +975,10 @@ ST2F_func_header(xml::ostream& xos, WN* wn,
 	    xos << std::endl;
 	  }
 
-	  xlate_STToSymbol(xos, params[param], ctxt);
+	  TranslateSTDecl(xos, params[param], ctxt);
 	  //xos << std::endl;
 	} else if (!strcasecmp(W2CF_Symtab_Nameof_St(rslt), func_name)) {
-	  xlate_STToSymbol(xos, params[param], ctxt);
+	  TranslateSTDecl(xos, params[param], ctxt);
 	  //xos << std::endl;
 	}
       }
@@ -1049,7 +1066,7 @@ static void
 ST2F_Declare_Return_Type(xml::ostream& xos, TY_IDX return_ty, 
 			 XlationContext& ctxt)
 {
-  /* The TY represents a dummy procedure or a function return type */
+  // The TY represents a dummy procedure or a function return type
   if ( (return_ty != (TY_IDX)0) && (TY_kind(return_ty) != KIND_VOID) ) {
     /* Use integral type for pointer returns */
     if (TY_Is_Pointer(return_ty))

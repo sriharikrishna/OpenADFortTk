@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.2 2003/05/14 01:10:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.3 2003/05/16 13:21:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -165,11 +165,11 @@ WN2F_Callsite_Directives(xml::ostream& xos,
   XlationContext ctxt; // FIXME
   if (WN_Call_Inline(call_wn)) {
     xos << "C*$* inline(";
-    ST2F_use_translate(xos, func_st, ctxt);
+    TranslateSTUse(xos, func_st, ctxt);
     xos << ')';
   } else if (WN_Call_Dont_Inline(call_wn)) {
     xos << "C*$* noinline(";
-    ST2F_use_translate(xos, func_st, ctxt);
+    TranslateSTUse(xos, func_st, ctxt);
     xos << ')';
   }
 } /* WN2F_Callsite_Directives */
@@ -229,7 +229,7 @@ WN2F_Function_Call_Lhs(xml::ostream& rhs_tokens,  /* The function call */
 	 ST2F_Use_Preg(lhs_tokens, ST_type(result_var), var_offset);
 
       else if (TY_kind(ST_type(result_var)) == KIND_STRUCT)   /* avoid FLD selection of Offset_Symref */
-	 ST2F_use_translate(lhs_tokens,result_var);
+	 TranslateSTUse(lhs_tokens,result_var);
 
       else
 	 WN2F_Offset_Symref(lhs_tokens,  
@@ -907,7 +907,7 @@ WN2F_Translate_DoLoop_Bound(xml::ostream& tokens,
    char        *intrname;
    char         opname;
    
-   WN2F_translate(bound_expr, bound->opnd0, ctxt);
+   TranslateWN(bound_expr, bound->opnd0, ctxt);
    if (bound->const0 != 0)
    {
      Append_Token_Special(bound_expr, '+');
@@ -991,7 +991,7 @@ WN2F_Translate_DoLoop_Bound(xml::ostream& tokens,
       {
 	 /* Translate the second operand */
 	 opnd1_expr = New_Token_Buffer();
-	 (void)WN2F_translate(opnd1_expr, bound->op[op_idx].opnd1, ctxt);
+	 (void)TranslateWN(opnd1_expr, bound->op[op_idx].opnd1, ctxt);
 
 	 /* Apply the second operand to the first one */
 	 if (is_intrinsic)
@@ -1147,7 +1147,7 @@ public:
     if (ST_sclass(st) == SCLASS_DGLOBAL) {
       if(ST_is_initialized(st))  {
 	if (!Has_Base_Block(st) || ST_class(ST_base_idx(st)) == CLASS_BLOCK) {
-	  xlate_STToSymbol(xos, st, ctxt);
+	  TranslateSTDecl(xos, st, ctxt);
 	}
       }
     }
@@ -1236,16 +1236,16 @@ WN2F_block(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       if (induction_step != NULL && WN_next(stmt) == NULL 
 	  && WN_operator(stmt) == OPR_LABEL) {
 	/* Add induction step before loop-label */
-	WN2F_translate(xos_stmt, induction_step, ctxt);
+	TranslateWN(xos_stmt, induction_step, ctxt);
 	induction_step = NULL;
       }
-      WN2F_translate(xos_stmt, stmt, ctxt);
+      TranslateWN(xos_stmt, stmt, ctxt);
     }
   }
   
   /* Append the induction-step as the last statement in the block */
   if (induction_step != NULL)
-    WN2F_translate(xos_stmt, induction_step, ctxt);
+    TranslateWN(xos_stmt, induction_step, ctxt);
   
   if (is_pu_block)
     WN2F_Exit_PU_Block(xos, xos_stmt);
@@ -1295,7 +1295,7 @@ WN2F_region(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	   stmt = WN_next(stmt))
       {
 	 if (!WN2F_Skip_Stmt(stmt))
-	   WN2F_translate(xos, stmt, ctxt);
+	   TranslateWN(xos, stmt, ctxt);
       }
 
       if (!W2F_No_Pragmas)
@@ -1327,7 +1327,7 @@ WN2F_region(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	   stmt = WN_next(stmt))
       {
 	 if (!WN2F_Skip_Stmt(stmt))
-	    (void)WN2F_translate(xos, stmt, ctxt);
+	    (void)TranslateWN(xos, stmt, ctxt);
       }
 
       /* Close the region, if necessary, based on the kind of region
@@ -1377,7 +1377,7 @@ WN2F_compgoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       /* Need to add one to the controlling expression, since it is
        * zero-based in WHIRL and 1-based in Fortran.
        */
-      WN2F_translate(xos, WN_compgoto_idx(wn), ctxt);
+      TranslateWN(xos, WN_compgoto_idx(wn), ctxt);
       xos << "+1";
    }
 
@@ -1432,12 +1432,12 @@ WN2F_do_loop(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       if (!XlationContext_no_newline(ctxt))
       {
 	 set_XlationContext_no_newline(ctxt);
-	 (void)WN2F_translate(xos, WN_start(wn), ctxt);
+	 (void)TranslateWN(xos, WN_start(wn), ctxt);
 	 reset_XlationContext_no_newline(ctxt);
       }
       else
       {
-	 (void)WN2F_translate(xos, WN_start(wn), ctxt);
+	 (void)TranslateWN(xos, WN_start(wn), ctxt);
       }
       //REMOVE reset_XlationContext_emit_stid(ctxt);
       xos << ',';
@@ -1445,23 +1445,23 @@ WN2F_do_loop(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       WN2F_Translate_DoLoop_Bound(xos, bound, ctxt);
       xos << ',';
 
-      WN2F_translate(xos, step_size, ctxt);
-      WN2F_translate(xos, WN_do_body(wn), ctxt);
+      TranslateWN(xos, step_size, ctxt);
+      TranslateWN(xos, WN_do_body(wn), ctxt);
       xos << std::endl << "END DO";
    }
    else /* Generate a DO WHILE loop */
    {
-      (void)WN2F_translate(xos, WN_start(wn), ctxt);
+      (void)TranslateWN(xos, WN_start(wn), ctxt);
       xos << std::endl << "DO WHILE(";
       set_XlationContext_has_logical_arg(ctxt);
       set_XlationContext_no_parenthesis(ctxt);
-      (void)WN2F_translate(xos, WN_end(wn), ctxt);
+      (void)TranslateWN(xos, WN_end(wn), ctxt);
       reset_XlationContext_no_parenthesis(ctxt);
       reset_XlationContext_has_logical_arg(ctxt);
       xos << ')';
 
       set_XlationContext_induction_step(ctxt, WN_step(wn));
-      (void)WN2F_translate(xos, WN_do_body(wn), ctxt);
+      (void)TranslateWN(xos, WN_do_body(wn), ctxt);
 
       xos << std::endl;
       xos << std::endl << "END DO";
@@ -1508,11 +1508,11 @@ WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		      0,                                  /* object-ofst */
 		      ctxt);
    xos << '=';
-   WN2F_translate(xos, WN_start(wn), ctxt);
+   TranslateWN(xos, WN_start(wn), ctxt);
    xos << ',';
-   WN2F_translate(xos, WN_end(wn), ctxt);
+   TranslateWN(xos, WN_end(wn), ctxt);
    xos << ',';
-   WN2F_translate(xos, WN_step(wn), ctxt);
+   TranslateWN(xos, WN_step(wn), ctxt);
    
    /* Terminate the implied do-loop expression */
    xos << ')';
@@ -1555,12 +1555,12 @@ WN2F_do_while(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    xos << "DO WHILE(" << tmpvar_name << ')';
 
    /* loop body and termination test initialization (in temporary variable) */
-   (void)WN2F_translate(xos, WN_while_body(wn), ctxt);
+   (void)TranslateWN(xos, WN_while_body(wn), ctxt);
    xos << std::endl;
    Append_Token_String(xos, tmpvar_name);
    xos << "=";
    set_XlationContext_has_logical_arg(ctxt);
-   (void)WN2F_translate(xos, WN_while_test(wn), ctxt);
+   (void)TranslateWN(xos, WN_while_test(wn), ctxt);
    reset_XlationContext_has_logical_arg(ctxt);
 
    /* Close the loop and allow reuse of the termination test 
@@ -1583,12 +1583,12 @@ WN2F_while_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    /* Termination test */
    xos << std::endl << "DO WHILE(";
    set_XlationContext_has_logical_arg(ctxt);
-   WN2F_translate(xos, WN_while_test(wn), ctxt);
+   TranslateWN(xos, WN_while_test(wn), ctxt);
    reset_XlationContext_has_logical_arg(ctxt);
    xos << ')';
 
    /* loop body */
-   WN2F_translate(xos, WN_while_body(wn), ctxt);
+   TranslateWN(xos, WN_while_body(wn), ctxt);
 
    /* close the loop */
    xos << std::endl << "END DO";
@@ -1610,24 +1610,24 @@ WN2F_if(xml::ostream& xos, WN *wn, XlationContext& ctxt)
      /* Emit only the THEN body, provided it is non-empty */
      if (WN_operator(WN_then(wn)) != OPR_BLOCK || 
 	 WN_first(WN_then(wn)) != NULL) {
-       WN2F_translate(xos, WN_then(wn), ctxt);
+       TranslateWN(xos, WN_then(wn), ctxt);
      }
    } else { /* Not a redundant guard (from whirl2f perspective) */
      /* IF header */
      xos << std::endl;
      xos << "IF(";
      set_XlationContext_has_logical_arg(ctxt);
-     WN2F_translate(xos, WN_if_test(wn), ctxt);
+     TranslateWN(xos, WN_if_test(wn), ctxt);
      reset_XlationContext_has_logical_arg(ctxt);
      xos << ") THEN";
      
      /* THEN body */
-     WN2F_translate(xos, WN_then(wn), ctxt);
+     TranslateWN(xos, WN_then(wn), ctxt);
      
      /* ELSE body */
      if (!WN_else_is_empty(wn)) {
        xos << std::endl << "ELSE";
-       WN2F_translate(xos, WN_else(wn), ctxt);
+       TranslateWN(xos, WN_else(wn), ctxt);
      }
      
      /* if closing */
@@ -1658,7 +1658,7 @@ WN2F_agoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_agoto"));
 
    xos << std::endl << "GO TO";
-   WN2F_translate(xos, WN_kid0(wn), ctxt);
+   TranslateWN(xos, WN_kid0(wn), ctxt);
    
    return EMPTY_WN2F_STATUS;
 } /* WN2F_agoto */
@@ -1675,10 +1675,10 @@ WN2F_condbr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    set_XlationContext_has_logical_arg(ctxt);
    if (WN_operator(wn) == OPR_FALSEBR) {
      xos << ".NOT. (";
-     WN2F_translate(xos, WN_condbr_cond(wn), ctxt);
+     TranslateWN(xos, WN_condbr_cond(wn), ctxt);
      xos << ')';
    } else { /* WN_operator(wn) == OPR_TRUEBR */
-     WN2F_translate(xos, WN_condbr_cond(wn), ctxt);
+     TranslateWN(xos, WN_condbr_cond(wn), ctxt);
    }
    reset_XlationContext_has_logical_arg(ctxt);
    xos << ") GO TO" << WHIRL2F_number_as_name(WN_label_number(wn));
@@ -1746,7 +1746,7 @@ WN2F_return(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 	    /* Assign the return value to PUINFO_FUNC_ST */
 	    xos << std::endl;
-	    ST2F_use_translate(xos, PUINFO_FUNC_ST, ctxt);
+	    TranslateSTUse(xos, PUINFO_FUNC_ST, ctxt);
 	    xos << '=';
 	    if (ST_class(result_var) == CLASS_PREG)
 	      ST2F_Use_Preg(xos, ST_type(result_var),var_offset);
@@ -1772,9 +1772,9 @@ WN2F_return(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	 
 	 /* Assign object being stored to PUINFO_FUNC_NAME */
 	 xos << std::endl;
-	 ST2F_use_translate(xos, PUINFO_FUNC_ST, ctxt);
+	 TranslateSTUse(xos, PUINFO_FUNC_ST, ctxt);
 	 xos << '=';
-	 WN2F_translate(xos, WN_kid0(result_store), ctxt);
+	 TranslateWN(xos, WN_kid0(result_store), ctxt);
       }
       else if (RETURN_PREG_num_pregs(PUinfo_return_preg) == 1 &&
 	       TY_Is_Preg_Type(PUINFO_RETURN_TY))
@@ -1790,7 +1790,7 @@ WN2F_return(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		     (DIAG_W2F_INCOMPATIBLE_TYS, "WN2F_return"));
 
 	 xos << std::endl;
-	 ST2F_use_translate(xos, PUINFO_FUNC_ST, ctxt);
+	 TranslateSTUse(xos, PUINFO_FUNC_ST, ctxt);
 	 xos << "=";
 	 ST2F_Use_Preg(xos, preg_ty, preg_num);
       }
@@ -1827,19 +1827,19 @@ WN2F_return_val(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	  ("Invalid operator for WN2F_return_val()"));
   xos << std::endl << "RETURN";
   if (WN_operator(WN_kid0(wn)) != OPR_LDID) {
-    WN2F_translate(xos, WN_kid0(wn), ctxt);
+    TranslateWN(xos, WN_kid0(wn), ctxt);
   }
   return EMPTY_WN2F_STATUS;
 }
 
 WN2F_STATUS 
-WN2F_label(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_LABEL, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_label"));
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_LABEL"));
   
   const char *label = WHIRL2F_number_as_name(WN_label_number(wn));
-  xos << BegElem("***CONTINUE") << Attr("label*", label) << EndElem;
+  xos << BegComment << "CONTINUE label:" << label << EndComment;
   
   return EMPTY_WN2F_STATUS;
 }
@@ -1929,7 +1929,7 @@ WN2F_intrinsic_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    default:
       regular_call = TRUE;
       xos << std::endl;
-      WN2F_call(xos, wn, ctxt);
+      xlate_CALL(xos, wn, ctxt);
       break;
    }
 
@@ -1951,7 +1951,7 @@ WN2F_intrinsic_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 WN2F_STATUS 
-WN2F_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   /* Generates a function-call and ensures that the return value
    * is returned into the appropriate context, be it a variable
@@ -2027,7 +2027,7 @@ WN2F_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       WN2F_Prev_CallSite = CALLSITE_next(WN2F_Prev_CallSite);
     
     ASSERT_DBG_FATAL(CALLSITE_call(WN2F_Prev_CallSite) == wn,
-		     (DIAG_W2F_UNEXPECTED_CALLSITE, "WN2F_call()"));
+		     (DIAG_W2F_UNEXPECTED_CALLSITE, "xlate_CALL()"));
     
     // Next, save off the function return value to a (temporary)
     // variable or a return-register, as is appropriate.
@@ -2039,7 +2039,7 @@ WN2F_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
        */
       ASSERT_DBG_WARN(return_to_param || first_arg_idx == 0,
 		      (DIAG_A_STRING, 
-		       "WN2F_call expects first argument as kid0 "
+		       "xlate_CALL expects first argument as kid0 "
 		       "when not returning through first argument"));
       if (return_to_param) {
 	/* Return through a parameter:  Assign the call-value to
@@ -2076,7 +2076,7 @@ WN2F_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     
     if (WN_operator(wn) == OPR_CALL) {
 
-      ST2F_use_translate(xos, WN_st(wn), ctxt);
+      TranslateSTUse(xos, WN_st(wn), ctxt);
 
       if (strcmp(ST_name(WN_st(wn)),"_ALLOCATE") == 0) {
 	is_allocate_stmt = TRUE;
@@ -2097,12 +2097,12 @@ WN2F_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
     } else if (WN_operator(wn) == OPR_ICALL) {
 
-      WN2F_translate(xos, WN_kid(wn, WN_kid_count(wn) - 1), ctxt);
+      TranslateWN(xos, WN_kid(wn, WN_kid_count(wn) - 1), ctxt);
 
     } else { /* (WN_operator(wn) == OPR_PICCALL) */
       ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PICCALL, 
-		       (DIAG_W2F_UNEXPECTED_OPC, "WN2F_call"));
-      ST2F_use_translate(xos, WN_st(wn), ctxt);
+		       (DIAG_W2F_UNEXPECTED_OPC, "xlate_CALL"));
+      TranslateSTUse(xos, WN_st(wn), ctxt);
     }   
   }
   
@@ -2165,7 +2165,7 @@ WN2F_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // last ones in the list (see also ST2F_func_header()).  Note
   // that we should not need to use any special-casing for 
   // ADRTMP or VALTMP OPR_INTRINSIC_OP nodes, as these should be
-  // handled appropriately by WN2F_translate().
+  // handled appropriately by TranslateWN().
   set_XlationContext_no_parenthesis(ctxt);
     
   for (arg_idx = first_arg_idx, implicit_args = 0; 
@@ -2187,7 +2187,7 @@ WN2F_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	 */
 	if (WN_kid(wn, arg_idx)!=NULL) {
 	  first_nonemptyarg = TRUE;
-	  WN2F_translate(xos, WN_kid(wn, arg_idx), ctxt);
+	  TranslateWN(xos, WN_kid(wn, arg_idx), ctxt);
 	}
       } else if ((WN_operator(kidofparm) != OPR_CALL 
 		  && (TY_Is_Character_Reference(arg_ty)  
@@ -2241,7 +2241,7 @@ WN2F_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	  else
 	    has_stat=FALSE;
 	  first_nonemptyarg = TRUE;
-	  WN2F_translate(xos, WN_kid(wn, arg_idx), ctxt);
+	  TranslateWN(xos, WN_kid(wn, arg_idx), ctxt);
 	}
 	//	 xos << ")";
       }
@@ -2304,7 +2304,7 @@ WN2F_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << EndElem;
   
   return EMPTY_WN2F_STATUS;
-} /* WN2F_call */
+} /* xlate_CALL */
 
 
 WN2F_STATUS 
@@ -2325,15 +2325,15 @@ WN2F_prefetch(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   if (WN_operator(wn) == OPR_PREFETCH) {
     Append_Token_String(xos, StrCat("PREFETCH(", Ptr_as_String(wn), ")"));
     
-    (void)WN2F_translate(xos, WN_kid0(wn), ctxt);
+    (void)TranslateWN(xos, WN_kid0(wn), ctxt);
     
     xos << StrCat("OFFS=", WHIRL2F_number_as_name(WN_offset(wn)));
   } else { /* (WN_operator(wn) == OPR_PREFETCHX) */
     xos << StrCat("PREFETCH(", Ptr_as_String(wn),")");
       
-    WN2F_translate(xos, WN_kid0(wn), ctxt);
+    TranslateWN(xos, WN_kid0(wn), ctxt);
     xos << "+";
-    WN2F_translate(xos, WN_kid1(wn), ctxt);
+    TranslateWN(xos, WN_kid1(wn), ctxt);
   }
   
   /* Emit the prefetch flags information (pf_cg.h) on a separate line */
@@ -2364,7 +2364,7 @@ WN2F_eval(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    xos << "CALL _EVAL(";
    set_XlationContext_has_logical_arg(ctxt);
    set_XlationContext_no_parenthesis(ctxt);
-   (void)WN2F_translate(xos, WN_kid0(wn), ctxt);
+   (void)TranslateWN(xos, WN_kid0(wn), ctxt);
    xos << ')';
 
    return EMPTY_WN2F_STATUS;
@@ -2405,7 +2405,7 @@ WN2F_use_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       Append_Token_String(xos,st_name);
   }
   
-  // (void)WN2F_translate(xos, WN_kid0(wn), ctxt);
+  // (void)TranslateWN(xos, WN_kid0(wn), ctxt);
 # endif
      
   return EMPTY_WN2F_STATUS;
@@ -2464,7 +2464,7 @@ WN2F_switch(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   //Append_F77_Indented_Newline(xos, 1/*empty-lines*/, NULL/*label*/);
   //  xos << "SELECT CASE (";
-  //(void)WN2F_translate(xos, WN_condbr_cond(wn), ctxt);
+  //(void)TranslateWN(xos, WN_condbr_cond(wn), ctxt);
   // xos << ")";
   
   kid1wn = WN_kid1(wn);
@@ -2478,9 +2478,9 @@ WN2F_switch(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	}
     }
   
-  (void)WN2F_translate(xos, WN_kid1(wn), ctxt);
+  (void)TranslateWN(xos, WN_kid1(wn), ctxt);
   if (WN_kid_count(wn) == 3)
-    (void)WN2F_translate(xos, WN_kid2(wn), ctxt);
+    (void)TranslateWN(xos, WN_kid2(wn), ctxt);
   //  Append_F77_Indented_Newline(xos, 1/*empty-lines*/, NULL/*label*/);
   //  xos << "END SELECT ";
   
@@ -2497,7 +2497,7 @@ WN2F_casegoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << std::endl;
   //  xos << "CASE";
   xos << "IF (";
-  ST2F_use_translate(xos, st, ctxt);
+  TranslateSTUse(xos, st, ctxt);
   std::string val = TCON2F_translate(Host_To_Targ(MTYPE_I4,WN_const_val(wn)),
 				     FALSE);
   xos << " .EQ. " << val << ')' 
@@ -2688,7 +2688,7 @@ static const char unnamed_interface[] = "unnamed interface";
 	  
 	  if (param_st[param] != NULL) {
 	    xos << std::endl;
-	    xlate_STToSymbol(xos, param_st[param], ctxt);
+	    TranslateSTDecl(xos, param_st[param], ctxt);
 	    if (ST_is_optional_argument(param_st[param])) {
 	      xos << std::endl;
 	      xos << "OPTIONAL ";
@@ -2735,7 +2735,7 @@ WN2F_ar_construct(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    xos << "/";
    for (kid = 0; kid < WN_kid_count(wn); kid++) {
 
-      (void)WN2F_translate(xos,WN_kid(wn,kid), ctxt);
+      (void)TranslateWN(xos,WN_kid(wn,kid), ctxt);
       if (kid < WN_kid_count(wn)-1)
          xos << ",";
     }
@@ -2754,13 +2754,13 @@ WN2F_noio_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    INT kid;
    INT numkids = 5;
    xos << "(";
-   (void)WN2F_translate(xos,WN_kid0(wn),ctxt);
+   (void)TranslateWN(xos,WN_kid0(wn),ctxt);
    xos << ",";
-   (void)WN2F_translate(xos,WN_kid1(wn),ctxt);
+   (void)TranslateWN(xos,WN_kid1(wn),ctxt);
    xos << "=";
    
    for (kid = 2;kid<numkids; kid++) {
-      (void)WN2F_translate(xos,WN_kid(wn,kid),ctxt);
+      (void)TranslateWN(xos,WN_kid(wn,kid),ctxt);
      if (kid < numkids-1)
        xos << ",";
     }

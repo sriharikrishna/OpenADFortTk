@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.2 2003/05/14 01:10:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.3 2003/05/16 13:21:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -57,10 +57,10 @@
  *
  * Description:
  *
- *    ST2F_use_translate:
+ *    TranslateSTUse:
  *       Translate a variable reference.
  *
- *    xlate_STToSymbol:
+ *    TranslateSTDecl:
  *       Translate a variable declaration
  *
  *    ST2F_deref_translate:
@@ -111,36 +111,38 @@ class NonScalarSymTab;
 
 namespace whirl2xaif {
 
-void 
+extern void 
 xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
 		   NonScalarSymTab* nonscalarsymtab, 
 		   XlationContext& ctxt);
 
-void 
+extern void 
 xlate_SYMTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
 	     XlationContext& ctxt);
 
-void 
+extern void 
 xlate_NonScalarSymTab(xml::ostream& xos, NonScalarSymTab* symtab, 
 		      XlationContext& ctxt);
 
-void
+extern void
 xlate_Params(xml::ostream& xos, WN* wn,
 	     ST* st,           /* Function ST entry     */
 	     ST** params,      /* Array of  parameters  */
 	     INT32 num_params, /* # of parms in array   */
 	     XlationContext& ctxt);
 
-}; /* namespace whirl2xaif */
+extern void 
+TranslateSTDecl(xml::ostream& xos, ST* st, XlationContext& ctxt);
 
 extern void 
-ST2F_use_translate(xml::ostream& xos, ST* st, XlationContext& ctxt);
+TranslateSTUse(xml::ostream& xos, ST* st, XlationContext& ctxt);
+
+}; /* namespace whirl2xaif */
+
 
 extern void 
 ST2F_deref_translate(xml::ostream& xos, ST* st, XlationContext& ctxt);
 
-extern void 
-xlate_STToSymbol(xml::ostream& xos, ST* st, XlationContext& ctxt);
 
 
 extern void 

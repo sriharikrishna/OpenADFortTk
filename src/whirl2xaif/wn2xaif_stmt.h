@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.2 2003/05/14 01:10:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.3 2003/05/16 13:21:23 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -113,7 +113,7 @@ extern WN2F_STATUS
 WN2F_return_val(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
-WN2F_label(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS
 WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt); 
@@ -124,7 +124,7 @@ extern WN2F_STATUS
 WN2F_intrinsic_call(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
-WN2F_call(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS
 WN2F_use_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt);  

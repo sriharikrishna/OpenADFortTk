@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.2 2003/05/14 19:29:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.3 2003/05/16 13:21:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -834,7 +834,7 @@ WN2F_cvt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_CVT, 
 		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_cvt"));
 
-   WN2F_translate(xos, WN_kid0(wn), ctxt);
+   TranslateWN(xos, WN_kid0(wn), ctxt);
 
 /*  Maybe we shouldn't or needn't  explicitly output these kinds of 
     convert in .w2f.f file----fzhao
@@ -857,10 +857,10 @@ WN2F_cvtl(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   /* Only convert if it is necessary */
   if (Conv_Op[TY_mtype(dtype)][TY_mtype(rtype)] != NULL ) {
-    WN2F_translate(xos, WN_kid0(wn), ctxt);
+    TranslateWN(xos, WN_kid0(wn), ctxt);
     WN2F_Convert(xos, TY_mtype(dtype), TY_mtype(rtype));
   } else {
-    WN2F_translate(xos, WN_kid0(wn), ctxt);
+    TranslateWN(xos, WN_kid0(wn), ctxt);
   }
   return EMPTY_WN2F_STATUS;
 }
@@ -873,7 +873,7 @@ WN2F_tas(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   // Just ignore TAS operators for now.  TODO: make sure this
   // is always ok.
-  return WN2F_translate(xos, WN_kid0(wn), ctxt);
+  return TranslateWN(xos, WN_kid0(wn), ctxt);
 }
 
 
@@ -927,7 +927,7 @@ WN2F_realpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       break;
    }
    xos << "(";
-   WN2F_translate(xos, WN_kid0(wn), ctxt);
+   TranslateWN(xos, WN_kid0(wn), ctxt);
    xos << ")";
    
    return EMPTY_WN2F_STATUS;
@@ -957,7 +957,7 @@ WN2F_imagpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       break;
    }
    xos << "(imagpart";
-   WN2F_translate(xos, WN_kid0(wn), ctxt);
+   TranslateWN(xos, WN_kid0(wn), ctxt);
    xos << "imagpart)";
    
    return EMPTY_WN2F_STATUS;
@@ -969,7 +969,7 @@ xlate_PAREN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_PAREN, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_PAREN"));
   
-  return WN2F_translate(xos, WN_kid0(wn), ctxt);
+  return TranslateWN(xos, WN_kid0(wn), ctxt);
 }
 
 WN2F_STATUS
@@ -1069,11 +1069,11 @@ WN2F_parm(xml::ostream& xos, WN *wn, XlationContext& ctxt)
             XlationContext_is_logical_arg(ctxt)) //fzhao Jan
       {
         set_XlationContext_has_logical_arg(ctxt);
-        WN2F_translate(xos, WN_kid0(wn), ctxt);
+        TranslateWN(xos, WN_kid0(wn), ctxt);
          reset_XlationContext_has_logical_arg(ctxt);
        }
     else
-         WN2F_translate(xos, WN_kid0(wn), ctxt);
+         TranslateWN(xos, WN_kid0(wn), ctxt);
    return EMPTY_WN2F_STATUS;
 
 } /* WN2F_parm */
@@ -1085,7 +1085,7 @@ WN2F_alloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_alloca"));
 
    xos << "OPR_ALLOCA(";
-   WN2F_translate(xos,WN_kid0(wn),ctxt);
+   TranslateWN(xos,WN_kid0(wn),ctxt);
    xos << ")";
 
    return EMPTY_WN2F_STATUS;
@@ -1104,7 +1104,7 @@ WN2F_dealloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    xos << std::endl << "CALL OPR_DEALLOCA(";
    i = 0 ;
    while (i < n) {
-     WN2F_translate(xos,WN_kid(wn,i),ctxt);
+     TranslateWN(xos,WN_kid(wn,i),ctxt);
      if (++i < n)
        xos << ",";
    }
@@ -1170,9 +1170,9 @@ WN2F_complex(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    set_XlationContext_no_parenthesis(ctxt);
 
    xos << "("; /* getting real part */
-   (void)WN2F_translate(xos, WN_kid0(wn), ctxt);
+   (void)TranslateWN(xos, WN_kid0(wn), ctxt);
    xos << ","; /* getting imaginary part */
-   (void)WN2F_translate(xos, WN_kid1(wn), ctxt);
+   (void)TranslateWN(xos, WN_kid1(wn), ctxt);
    xos << ")";
 
    return EMPTY_WN2F_STATUS;
@@ -1292,13 +1292,13 @@ WN2F_select(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       so I will output it that way for now */
    
    xos << "MERGE(";
-   WN2F_translate(xos, WN_kid1(wn), ctxt);
+   TranslateWN(xos, WN_kid1(wn), ctxt);
    xos << ",";
 
-   WN2F_translate(xos, WN_kid2(wn), ctxt);
+   TranslateWN(xos, WN_kid2(wn), ctxt);
    xos << ",";
 
-   WN2F_translate(xos, WN_kid0(wn), ctxt);
+   TranslateWN(xos, WN_kid0(wn), ctxt);
    
    xos << ")";
 #if 0
@@ -1491,7 +1491,7 @@ WN2F_intrinsic_op(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    case INTRN_U8VADRTMP:
       /* Implicit call by reference.  Emit the dereferenced parameter.
        */
-      WN2F_translate(xos, WN_kid0(wn), ctxt);
+      TranslateWN(xos, WN_kid0(wn), ctxt);
       break;
 
    case INTRN_I4VALTMP:
@@ -1505,7 +1505,7 @@ WN2F_intrinsic_op(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       /* Call-by-value.  Assume the ctxt determines when it is
        * necessary to put a %val qualifier around the argument.
        */
-      WN2F_translate(xos, WN_kid0(wn), ctxt);
+      TranslateWN(xos, WN_kid0(wn), ctxt);
       break;     
       
    default:
@@ -1613,7 +1613,6 @@ xlate_BinaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
   // Edges
   DumpExprEdge(xos, ctxt.GetNewEId(), srcid0, targid, 1);
   if (is_binary_op) { DumpExprEdge(xos, ctxt.GetNewEId(), srcid1, targid, 2); }
-  xos << std::endl;
   
   return EMPTY_WN2F_STATUS;
 }
@@ -1684,7 +1683,7 @@ xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty,
 		       0,                      /* offset from address */
 		       ctxt);
   } else {
-    WN2F_translate(xos, opnd, ctxt);
+    TranslateWN(xos, opnd, ctxt);
   }
   
   return EMPTY_WN2F_STATUS;

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.2 2003/05/14 19:29:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.3 2003/05/16 13:21:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -89,12 +89,6 @@ using namespace xml; // for xml::ostream, etc
 extern WN* PU_Body;
 extern BOOL Array_Bnd_Temp_Var;
 
-#define NUMBER_OF_OPERATORS (OPERATOR_LAST + 1)
-// #define DBGPATH 1
-typedef WN2F_STATUS (*WN2F_HANDLER_FUNC)(xml::ostream&, WN*, XlationContext&);
-extern WN2F_HANDLER_FUNC  WN2F_Handler[NUMBER_OF_OPERATORS];
-BOOL Use_Purple_Array_Bnds_Placeholder = FALSE;
-
 /* TY2F_Handler[] maps a TY_kind to a function that translates
  * a type of the given kind into Fortran.  Should the ordinal
  * numbering of the KIND change in "../common/com/stab.h", then
@@ -102,17 +96,25 @@ BOOL Use_Purple_Array_Bnds_Placeholder = FALSE;
  */
 
 typedef void (*TY2F_HANDLER_FUNC)(xml::ostream&, TY_IDX, XlationContext& ctxt);
-static void TY2F_invalid(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt);
-static void TY2F_scalar(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt);
-static void TY2F_array(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt);
-static void TY2F_array_for_pointer(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt);
-static void TY2F_struct(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt);
-static void TY2F_2_struct(xml::ostream& xos,TY_IDX ty, XlationContext& ctxt);
-static void TY2F_pointer(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt);
-static void TY2F_void(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt);
+
+static void 
+TY2F_invalid(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt);
+static void 
+TY2F_scalar(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt);
+static void 
+TY2F_array(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt);
+static void 
+TY2F_array_for_pointer(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt);
+static void 
+TY2F_struct(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt);
+static void 
+TY2F_2_struct(xml::ostream& xos,TY_IDX ty, XlationContext& ctxt);
+static void 
+TY2F_pointer(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt);
+static void 
+TY2F_void(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt);
 
 //***************************************************************************
-
 
 static const TY2F_HANDLER_FUNC TY2F_Handler[KIND_LAST/*TY_KIND*/] = {
    &TY2F_invalid,   /* KIND_INVALID */
@@ -129,6 +131,25 @@ static const TY2F_HANDLER_FUNC TY2F_Handler[KIND_LAST/*TY_KIND*/] = {
 #define NOT_BITFIELD_OR_IS_FIRST_OF_BITFIELD(f) \
   (!FLD_is_bit_field(f) || (FLD_is_bit_field(f) && (FLD_bofst(f) == 0) || FLD_bofst(f) > 16))
 
+//***************************************************************************
+
+void
+TY2F_translate(xml::ostream& xos, TY_IDX ty, BOOL notyapp, XlationContext& ctxt)
+{
+  // Dispatch the translation-task to the appropriate handler function.
+  if (!notyapp)
+    TY2F_Handler[TY_kind(Ty_Table[ty])](xos, ty, ctxt);
+  else
+    TY2F_2_struct(xos, ty, ctxt);
+}
+
+void 
+TY2F_translate(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt)
+{
+  TY2F_translate(xos, ty, 0, ctxt);
+}
+
+
 /*---------------------- A few utility routines -----------------------*/
 /*---------------------------------------------------------------------*/
 
@@ -137,7 +158,7 @@ WN2F_tempvar_rhs(xml::ostream& xos, WN * wn)
 {
   /* The rhs */
   XlationContext ctxt;
-  whirl2xaif::WN2F_translate(xos, WN_kid0(wn), ctxt);
+  whirl2xaif::TranslateWN(xos, WN_kid0(wn), ctxt);
 }
 
 static void
@@ -198,7 +219,7 @@ TY2F_Append_ARB(xml::ostream& xos, ARB_HANDLE arb, TY_IDX ty_idx,
 	<< Attr("name", "lb") << Attr("value", lb) << EndElem;
     xos << BegElem("xaif:Property") << Attr("id", ctxt.GetNewVId()) 
 	<< Attr("name", "ub") << Attr("value", ub) << EndElem;
-    
+
   }
 } 
 
@@ -221,10 +242,9 @@ static BOOL
 TY2F_Pointer_To_Dope(TY_IDX ty)
 {
   /* Is this a pointer to a dope vector base */
-
   return (strcmp(TY_name(TY_pointed(ty)),".base.") == 0) ;
-
 }
+
 static FLD_PATH_INFO *
 New_Fld_Path_Info(FLD_HANDLE fld)
 {
@@ -865,7 +885,6 @@ TY2F_invalid(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt)
   xos << "<TY2F_invalid>";
 }
 
-
 static void
 TY2F_scalar(xml::ostream& xos, TY_IDX ty_idx, XlationContext& ctxt)
 {
@@ -943,7 +962,6 @@ TY2F_scalar(xml::ostream& xos, TY_IDX ty_idx, XlationContext& ctxt)
   xos << BegElem("xaif:Property") << Attr("id", ctxt.GetNewVId()) 
       << Attr("name", "whirltype") << Attr("value", TY_name(ty)) << EndElem;
 }
-
 
 static void
 TY2F_array(xml::ostream& xos, TY_IDX ty_idx, XlationContext& ctxt)
@@ -1120,8 +1138,6 @@ TY2F_array_for_pointer(xml::ostream& xos, TY_IDX ty_idx, XlationContext& ctxt)
 } /* TY2F_array_for_pointer */
 
 
-
-
 static void
 TY2F_struct(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt)
 {
@@ -1222,22 +1238,6 @@ TY2F_void(xml::ostream& xos, TY_IDX ty_idx, XlationContext& ctxt)
 
 /*------------------------ exported routines --------------------------*/
 /*---------------------------------------------------------------------*/
-
-void
-TY2F_translate(xml::ostream& xos, TY_IDX ty, BOOL notyapp, XlationContext& ctxt)
-{
-  // Dispatch the translation-task to the appropriate handler function.
-  if (!notyapp)
-    TY2F_Handler[TY_kind(Ty_Table[ty])](xos, ty, ctxt);
-  else
-    TY2F_2_struct(xos, ty, ctxt);
-}
-
-void 
-TY2F_translate(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt)
-{
-  TY2F_translate(xos, ty, 0, ctxt);
-}
 
 
 void 
@@ -1380,7 +1380,6 @@ TY2F_Translate_Equivalence(xml::ostream& xos, TY_IDX ty_idx, BOOL alt_return)
 } /* TY2F_Translate_Equivalence */
 
 
-
 FLD_PATH_INFO * 
 TY2F_Free_Fld_Path(FLD_PATH_INFO *fld_path)
 {
@@ -1476,9 +1475,9 @@ TY2F_Translate_Fld_Path(xml::ostream&   xos,
       if (fld_path->arr_elt) 
 	{
 	  if (fld_path->arr_wn != NULL)
-	      WN2F_array_bounds(xos,fld_path->arr_wn,FLD_type(f), ctxt);
+	    WN2F_array_bounds(xos,fld_path->arr_wn,FLD_type(f), ctxt);
 	  else 
-              ;
+	    ;
 
 	  // TY2F_Translate_ArrayElt(xos,FLD_type(f),fld_path->arr_ofst);
 	  /* Looks like this stmt(above) is a bug.We don't need
@@ -1488,17 +1487,15 @@ TY2F_Translate_Fld_Path(xml::ostream&   xos,
 	}
 
       /* Separate fields with the dot-notation. */
-
       fld_path = fld_path->next;
       if (fld_path != NULL)
       {
-	 TY2F_Fld_Separator(xos) ;
-	 alt_ret_name = FALSE; /* Only applies to first field on the path */
+	TY2F_Fld_Separator(xos) ;
+	alt_ret_name = FALSE; /* Only applies to first field on the path */
       }
     } /* while */
 
 } /* TY2F_Translate_Fld_Path */
-
 
 
 extern void
@@ -1529,8 +1526,6 @@ TY2F_Point_At_Path(FLD_PATH_INFO * path, STAB_OFFSET off)
 {
   /* given a fld path, return a pointer to */
   /* the slot at the given offset          */
-
-
   while (path != NULL )
   {
     if (FLD_ofst(path->fld) >= off)

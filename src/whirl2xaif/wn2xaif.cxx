@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.3 2003/05/14 19:29:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.4 2003/05/16 13:21:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -61,7 +61,7 @@
  *   separated into different source files.  However, the interfaces
  *   to those source-files should only ever be accessed from this file.
  *
- *      WN2F_translate:
+ *      TranslateWN:
  *         Translates an arbitrary WN tree into a sequence of tokens,
  *         appended to the end of the given token-buffer.  The task of
  *         translation will be dispatched to a member in a set of
@@ -84,12 +84,14 @@
 
 #include "wn2xaif.h"
 #include "whirl2f_common.h"
-#include "PUinfo.h"          /* From be/whirl2c directory */
-#include "wn2xaif_stmt.h"       /* Only used by this module */
-#include "wn2f_pragma.h"     /* Only used by this module */
-#include "wn2xaif_expr.h"       /* Only used by this module */
-#include "wn2xaif_mem.h" /* Only used by this module */
-#include "wn2xaif_io.h"         /* Only used by this module */
+#include "PUinfo.h"
+
+#include "wn2xaif_stmt.h"
+#include "wn2xaif_expr.h"
+#include "wn2xaif_mem.h"
+#include "wn2xaif_io.h"
+#include "wn2f_pragma.h"
+
 #include "st2f.h"
 #include "ty2f.h"
 #include "tcon2f.h"
@@ -104,27 +106,26 @@ using namespace xml; // for xml::ostream, etc
 
 //************************** Forward Declarations ***************************
 
-static BOOL PU_Need_End_Contains = FALSE; // need CONTAINS/END for nested procs
-static BOOL PU_Dangling_Contains = FALSE; // have done CONTAINS, need END...
-
-static void WN2F_End_Routine_Strings(xml::ostream& xos, INT32 func_id);
-
-
 // Type of handler-functions for translating WHIRL to XAIF.
 typedef WN2F_STATUS (*XlateWNHandlerFunc)(xml::ostream&, WN*, XlationContext&);
 
-// Declarations of top-level handler-functions for translation from
-// WHIRL to Fortran. FIXME
-namespace whirl2xaif {
+static WN2F_STATUS
+xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-WN2F_STATUS xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-WN2F_STATUS xlate_ALTENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-WN2F_STATUS xlate_COMMENT(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-  
-WN2F_STATUS xlate_ignore(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-WN2F_STATUS xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+static WN2F_STATUS 
+xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-}; /* namespace whirl2xaif */
+static const char*
+GetCFGVertexType(CFG* cfg, CFG::Node* n);
+
+static WN2F_STATUS 
+xlate_CFCondition(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+static WN2F_STATUS 
+xlate_LoopInitialization(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+static WN2F_STATUS 
+xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 //***************************************************************************
 
@@ -168,17 +169,17 @@ static const WN2F_OPR_HANDLER WN2F_Opr_Handler_List[] = {
   {OPR_TRUEBR, &WN2F_condbr},
   {OPR_RETURN, &WN2F_return},
   {OPR_RETURN_VAL, &WN2F_return_val},
-  {OPR_LABEL, &WN2F_label},
+  {OPR_LABEL, &xlate_LABEL},
   {OPR_ISTORE, &xlate_ISTORE},
   {OPR_PSTORE, &WN2F_pstore},   
   {OPR_ISTOREX, &xlate_ISTOREX},
   {OPR_MSTORE, &WN2F_mstore},
   {OPR_STID, &xlate_STID},
   {OPR_PSTID, &WN2F_pstid},   
-  {OPR_CALL, &WN2F_call},
+  {OPR_CALL, &xlate_CALL},
   {OPR_INTRINSIC_CALL, &WN2F_intrinsic_call},
-  {OPR_ICALL, &WN2F_call},
-  {OPR_PICCALL, &WN2F_call},
+  {OPR_ICALL, &xlate_CALL},
+  {OPR_PICCALL, &xlate_CALL},
   {OPR_EVAL, &WN2F_eval},
   {OPR_PREFETCH, &WN2F_prefetch},
   {OPR_PREFETCHX, &WN2F_prefetch},
@@ -301,218 +302,8 @@ whirl2xaif::WN2F_finalize(void)
   Stab_Free_Tmpvars();
 }
 
-
-// FIXME: do we want this here?
 WN2F_STATUS 
-TranslateCFGNodeStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-  if (!wn) { return EMPTY_WN2F_STATUS; }
-
-  OPERATOR opr = WN_operator(wn);
-  switch (opr) {
-    
-    // In OA, loop nodes represent the *condition* (not the body)
-  case OPR_DO_LOOP:
-    xos << BegElem("***LOOP: DO");
-    WN2F_translate(xos, WN_end(wn), ctxt);
-    xos << EndElem;
-    break;
-  case OPR_DO_WHILE:
-    xos << BegElem("***LOOP: DO WHILE");
-    WN2F_translate(xos, WN_while_test(wn), ctxt);
-    xos << EndElem;
-    break;
-  case OPR_WHILE_DO:
-    xos << BegElem("***LOOP: WHILE_DO");
-    WN2F_translate(xos, WN_while_test(wn), ctxt);
-    xos << EndElem;
-    break;
-
-    // In OA, IF and BR nodes represent the *condition* (not the body)
-  case OPR_IF:
-    xos << BegElem("***IF");
-    WN2F_translate(xos, WN_if_test(wn), ctxt);
-    xos << EndElem;
-    break;
-  case OPR_TRUEBR:
-    xos << BegElem("***TRUEBR") << Attr("_label", WN_label_number(wn));
-    WN2F_translate(xos, WN_kid0(wn), ctxt);
-    xos << EndElem;
-    break;
-  case OPR_FALSEBR:
-    xos << BegElem("***FALSEBR") << Attr("_label", WN_label_number(wn));
-    WN2F_translate(xos, WN_kid0(wn), ctxt);
-    xos << EndElem;
-    break;
-
-  default: 
-    WN2F_translate(xos, wn, ctxt);
-  }
-
-  return EMPTY_WN2F_STATUS;
-}
-
-//***************************************************************************
-
-#include "SymTab.h" // FIXME
-
-// ForAllNonScalarRefsOp: Abstract base class for the operator passed
-// to the function 'ForAllNonScalarRefs(...)'.  Any caller of this
-// function must define its own operator object, using this class
-// as a base class and providing a definition for 'operator()'.
-class ForAllNonScalarRefsOp {
-public:
-  ForAllNonScalarRefsOp() { }
-  virtual ~ForAllNonScalarRefsOp() { }
-
-  // Given a non-scalar reference 'wn', does something interesting.
-  // Returns 0 on success; non-zero on error.
-  virtual int operator()(const WN* wn) = 0;
-private: 
-};
-
-// Given a symbol table, add references to it
-class AddToNonScalarSymTabOp : public ForAllNonScalarRefsOp {
-public:
-  AddToNonScalarSymTabOp(NonScalarSymTab* symtab_) 
-  { 
-    symtab = symtab_;
-    assert(symtab != NULL);
-  }
-  ~AddToNonScalarSymTabOp() { }
-  
-  NonScalarSymTab* GetSymTab() { return symtab; }
-
-  // Given a non-scalar reference 'wn', create a dummy variable and
-  // add to the map.  
-  int operator()(const WN* wn) 
-  {
-    // Base case
-#if 0 // FIXME
-    fprintf(stderr, "----------\n");
-    IR_set_dump_order(TRUE); /* dump parent before children*/
-    fdump_tree(stderr, (WN*)wn); // FIXME: append this to a symtab somewhere
-#endif
-
-    NonScalarSym* sym = new NonScalarSym();
-    bool ret = symtab->Insert(wn, sym);
-    return (ret) ? 0 : 1;
-  }
-  
-private:
-  NonScalarSymTab* symtab;
-};
-
-// FIXME
-void ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op);
-
-// NOTE: for store OPERATORs, only the LHS is checked
-BOOL 
-IsNonScalarRef(const WN* wn)
-{
-  // FIXME: Only an outermost OPR_ARRAY of a subtree will
-  // ever represent a definition of an array section or element (e.g., In
-  // reference A(G(I)) = X, variable A is a definition, while G is a use).
-
-  OPERATOR opr = WN_operator (wn);
-  switch (opr) {
-    // FIXME 
-    // ILOADX, ISTOREX
-    // ILDBITS, ISTBITS
-    // MLOAD, MSTORE: memref
-    // OPR_IDNAME:
-    
-  case OPR_LDA:  // FIXME:
-  case OPR_LDMA: // FIXME: 
-    break; // can this be used to access records?
-    
-  case OPR_LDID:
-  case OPR_LDBITS: 
-  case OPR_STID:
-  case OPR_STBITS: { // symref
-    // For stores, only check LHS (kid1)
-    TY_IDX baseobj_ty = ST_type(WN_st(wn));
-    TY_IDX refobj_ty = WN_ty(wn);
-    return (IsNonScalarRef(baseobj_ty, refobj_ty));
-  }
-  
-  case OPR_ILOAD: { // memref
-    TY_IDX baseobj_ty = TY_pointed(WN_load_addr_ty(wn));
-    TY_IDX baseobj_ty1 = TY_pointed(WN_Tree_Type(WN_kid0(wn))); // FIXME
-    assert(baseobj_ty = baseobj_ty1); // FIXME
-    TY_IDX refobj_ty = WN_ty(wn);
-    return (IsNonScalarRef(baseobj_ty, refobj_ty));
-  }
-
-  case OPR_ISTORE: { // memref
-    // Only check LHS (kid1)
-    TY_IDX baseobj_ty = TY_pointed(WN_ty(wn));
-    TY_IDX refobj_ty = TY_pointed(WN_ty(wn));
-    return (IsNonScalarRef(baseobj_ty, refobj_ty));
-  }
-
-  case OPR_ARRAY:
-  case OPR_ARRSECTION: {
-    // Arrays: 
-    // Kid 0 is an LDA or LDID which represents the base of the array
-    // being referenced or defined. Kids 1..n are dimensions; Kids
-    // n+1..2n are the index expressions.
-    WN* base = WN_kid0(wn);
-    assert(WN_operator(base) == OPR_LDA || WN_operator(base) == OPR_LDID);
-    return TRUE;
-  }
-
-  case OPR_ARRAYEXP: // FIXME
-    return TRUE;
-    
-  } // switch
-
-  return FALSE;
-}
-
-//FIXME: op should not be const because we call op(), which is non const.
-void 
-ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
-{
-  OPERATOR opr = WN_operator(wn);
-  if (wn == NULL) {
-    // Base case
-  } else if (IsNonScalarRef(wn)) {
-
-    // Base case
-    int ret = op(wn); // FIXME: what to do on error?
-    
-    // Special recursive case: Since WHIRL stores are statements (not
-    // expressions) we need to check the RHS (kid0) of the implied
-    // assignment for non-scalar references.
-    if (OPERATOR_is_store(opr)) {
-      ForAllNonScalarRefs(WN_kid0(wn), op);
-    }
-
-  } else if (!OPERATOR_is_leaf(opr)) {
-    
-    // General recursive case
-    if (WN_opcode(wn) == OPC_BLOCK) {
-      WN *kid = WN_first(wn);
-      while (kid) {
-	ForAllNonScalarRefs(kid, op);
-	kid = WN_next(kid);
-      }
-    } else {
-      for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
-	WN* kid = WN_kid(wn, kidno);
-	ForAllNonScalarRefs(kid, op);
-      }
-    }
-    
-  }
-}
-
-//***************************************************************************
-
-
-WN2F_STATUS 
-whirl2xaif::WN2F_translate(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {   
   const BOOL parenthesize = !XlationContext_no_parenthesis(ctxt);
 
@@ -542,16 +333,15 @@ whirl2xaif::WN2F_translate(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   }
 
   // Dispatch to the appropriate handler for this construct.
-  OPERATOR op = WN_opc_operator(wn);
-  return WN2F_Handler[op](xos, wn, ctxt);
+  OPERATOR opr = WN_opc_operator(wn);
+  //xos << BegComment << "Translating " << OPERATOR_name(opr) << EndComment;
+  return WN2F_Handler[opr](xos, wn, ctxt);
 }
 
 
 //***************************************************************************
 // 
 //***************************************************************************
-
-static void xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 WN2F_STATUS
 whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
@@ -588,15 +378,14 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // Dump CFG vertices (basic blocks)
   for (CFG::NodesIterator nodeIt(cfg); (bool)nodeIt; ++nodeIt) {
     CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
-    //FIXME: try dfs iterator?
-    //FIXME: n->longdump(cfg, std::cerr); std::cerr << endl;
+    // n->longdump(cfg, std::cerr); std::cerr << endl;
     
-    xos << BegElem("xaif:BasicBlock") << Attr("vertex_id", n->getID());
+    const char* vtype = GetCFGVertexType(&cfg, n);
+    xos << BegElem(vtype) << Attr("vertex_id", n->getID());
     ctxt.CreateContext();
     for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
       WN* wstmt = (WN *)((StmtHandle)stmtIt);
-      TranslateCFGNodeStmt(xos, wstmt, ctxt); // FIXME
-      //WN2F_translate(xos, wstmt, ctxt);
+      xlate_BBStmt(xos, wstmt, ctxt);
     }
     ctxt.DeleteContext();
     xos << EndElem << std::endl;
@@ -663,7 +452,12 @@ whirl2xaif::xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return EMPTY_WN2F_STATUS;
 }
 
-static void
+
+//***************************************************************************
+// 
+//***************************************************************************
+
+static WN2F_STATUS
 xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   //FIXME
@@ -691,13 +485,295 @@ xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ST2F_func_header(xos, wn, &St_Table[WN_entry_name(wn)], 
 		   param_st, nparam, opc == OPC_ALTENTRY, ctxt);
 #endif
+  return EMPTY_WN2F_STATUS;
+}
+
+// xlate_BBStmt: 
+static WN2F_STATUS 
+xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+{
+  if (!wn) { return EMPTY_WN2F_STATUS; }
+
+  OPERATOR opr = WN_operator(wn);
+  const char* opr_str = OPERATOR_name(opr);
+  switch (opr) {
+    
+    // In OA, loop nodes represent the *condition* (not the body)
+  case OPR_DO_LOOP:
+    xos << Comment(opr_str);
+    xlate_LoopInitialization(xos, WN_start(wn), ctxt);
+    xlate_CFCondition(xos, WN_end(wn), ctxt);
+    xlate_LoopUpdate(xos, WN_step(wn), ctxt);
+    break;
+  case OPR_DO_WHILE:
+  case OPR_WHILE_DO:
+    xos << Comment(opr_str);
+    xlate_CFCondition(xos, WN_while_test(wn), ctxt);
+    break;
+
+    // In OA, IF and BR nodes represent the *condition* (not the body)
+  case OPR_IF:
+    xos << Comment(opr_str);
+    xlate_CFCondition(xos, WN_if_test(wn), ctxt);
+    break;
+  case OPR_TRUEBR:
+  case OPR_FALSEBR:
+    xos << BegComment << opr_str << " label=" << WN_label_number(wn)
+	<< EndComment;
+    xlate_CFCondition(xos, WN_kid0(wn), ctxt);
+    break;
+    
+  default: 
+    TranslateWN(xos, wn, ctxt);
+  }
+  
+  return EMPTY_WN2F_STATUS;
+}
+
+// xlate_BBStmt: A CFG vertex is either an Entry, Exit or is
+// classified by virtue of its last statement (If, ForLoop, PreLoop,
+// PostLoop).  These should be mutually exclusive classifications.
+static const char*
+GetCFGVertexType(CFG* cfg, CFG::Node* n)
+{
+  // We know these are cheap so they can be recomputed each time we are called
+  CFG::Node* entry = cfg->Entry();
+  CFG::Node* exit = cfg->Exit();
+  
+  if (n == entry) {
+    return "xaif:Entry";
+  } else if (n == exit) { 
+    return "xaif:Exit";
+  }
+  
+  // FIXME: At the moment, it seems we have to iterate over all
+  // statements since there is no way to access the last statement.
+  CFG::NodeStatementsIterator stmtIt(n);
+  for (bool inLoop = true; ((bool)stmtIt && inLoop); ++stmtIt) {
+    WN* wstmt = (WN *)((StmtHandle)stmtIt);
+    
+    // Note: Control flow nodes represent the *condition* (not the body)
+    OPERATOR opr = WN_operator(wstmt);
+    switch (opr) {
+    case OPR_DO_LOOP: 
+      return "xaif:ForLoop";
+    case OPR_DO_WHILE: 
+      return "xaif:PostLoop";
+    case OPR_WHILE_DO:
+      return "xaif:PreLoop";
+    case OPR_IF: 
+    case OPR_TRUEBR:
+    case OPR_FALSEBR:
+      return "xaif:If";
+    }
+  }
+  
+  return "xaif:BasicBlock"; // default type
+}
+
+// xlate_CFCondition: Translate the BB's control flow condition (Loops, Ifs)
+static WN2F_STATUS 
+xlate_CFCondition(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+{
+  xos << BegElem("xaif:Condition");
+  ctxt.CreateContext();
+  TranslateWN(xos, wn, ctxt);
+  ctxt.DeleteContext();
+  xos << EndElem;
+  
+  return EMPTY_WN2F_STATUS;
+}
+
+static WN2F_STATUS 
+xlate_LoopInitialization(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+{
+  xos << BegElem("xaif:Initialization");
+  ctxt.CreateContext();
+  TranslateWN(xos, wn, ctxt);
+  ctxt.DeleteContext();
+  xos << EndElem;
+  
+  return EMPTY_WN2F_STATUS;
+}
+
+static WN2F_STATUS 
+xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+{
+  xos << BegElem("xaif:Update");
+  ctxt.CreateContext();
+  TranslateWN(xos, wn, ctxt);
+  ctxt.DeleteContext();
+  xos << EndElem;
+  
+  return EMPTY_WN2F_STATUS;
+}
+
+//***************************************************************************
+
+AddToNonScalarSymTabOp::AddToNonScalarSymTabOp(NonScalarSymTab* symtab_)
+{ 
+  symtab = symtab_;
+  assert(symtab != NULL);
+}
+
+// Given a non-scalar reference 'wn', create a dummy variable and
+// add to the map.  
+int 
+AddToNonScalarSymTabOp::operator()(const WN* wn) 
+{
+  // Base case
+#if 0 // FIXME
+  fprintf(stderr, "----------\n");
+  IR_set_dump_order(TRUE); /* dump parent before children*/
+  fdump_tree(stderr, (WN*)wn); // FIXME: append this to a symtab somewhere
+#endif
+  
+  NonScalarSym* sym = new NonScalarSym();
+  bool ret = symtab->Insert(wn, sym);
+  return (ret) ? 0 : 1;
+}
+
+BOOL 
+IsScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty) 
+{
+  if (TY_IsNonScalar(refobj_ty)) {
+    // This is a reference to a non-scalar or a non-scalar within a
+    // non-scalar (e.g. a record or a record within a record)
+    return false; 
+  } else if (TY_Is_Scalar(refobj_ty)) {
+    // Test whether 'baseobj_ty' is assignable to 'refobj_ty'.  If
+    // not, we have a non-scalar reference (e.g. a field within a
+    // structure; an element within an array).
+    return (WN2F_Can_Assign_Types(baseobj_ty, refobj_ty));
+  } else {
+    return false;
+  }
+}
+
+BOOL 
+IsNonScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty) 
+{
+  return (!IsScalarRef(baseobj_ty, refobj_ty));
+}
+
+// NOTE: for store OPERATORs, only the LHS is checked
+BOOL 
+IsNonScalarRef(const WN* wn)
+{
+  // FIXME: Only an outermost OPR_ARRAY of a subtree will
+  // ever represent a definition of an array section or element (e.g., In
+  // reference A(G(I)) = X, variable A is a definition, while G is a use).
+
+  OPERATOR opr = WN_operator (wn);
+  switch (opr) {
+    // FIXME 
+    // ILOADX, ISTOREX
+    // ILDBITS, ISTBITS
+    // MLOAD, MSTORE: memref
+    // OPR_IDNAME:
+    
+  case OPR_LDA:  // FIXME:
+  case OPR_LDMA: // FIXME: 
+    break; // can this be used to access records?
+    
+  case OPR_LDID:
+  case OPR_LDBITS: 
+  case OPR_STID:
+  case OPR_STBITS: { // symref
+    // For stores, only check LHS (kid1)
+    TY_IDX baseobj_ty = ST_type(WN_st(wn));
+    TY_IDX refobj_ty = WN_ty(wn);
+    return (IsNonScalarRef(baseobj_ty, refobj_ty));
+  }
+  
+  case OPR_ILOAD: { // memref
+    TY_IDX baseobj_ty = TY_pointed(WN_load_addr_ty(wn));
+    TY_IDX baseobj_ty1 = TY_pointed(WN_Tree_Type(WN_kid0(wn))); // FIXME
+    assert(baseobj_ty = baseobj_ty1); // FIXME
+    TY_IDX refobj_ty = WN_ty(wn);
+    return (IsNonScalarRef(baseobj_ty, refobj_ty));
+  }
+
+  case OPR_ISTORE: { // memref
+    // Only check LHS (kid1)
+    TY_IDX baseobj_ty = TY_pointed(WN_ty(wn));
+    TY_IDX refobj_ty = TY_pointed(WN_ty(wn));
+    return (IsNonScalarRef(baseobj_ty, refobj_ty));
+  }
+
+  case OPR_ARRAY:
+  case OPR_ARRSECTION: {
+    // Arrays: 
+    // Kid 0 is an LDA or LDID which represents the base of the array
+    // being referenced or defined. Kids 1..n are dimensions; Kids
+    // n+1..2n are the index expressions.
+    WN* base = WN_kid0(wn);
+    assert(WN_operator(base) == OPR_LDA || WN_operator(base) == OPR_LDID);
+    return TRUE;
+  }
+
+  case OPR_ARRAYEXP: // FIXME
+    return TRUE;
+    
+  } // switch
+
+  return FALSE;
+}
+
+// FIXME: 
+BOOL 
+WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2)
+{
+  BOOL simple = Stab_Identical_Types(ty1, ty2, FALSE, /*check_quals*/
+				     FALSE, /*check_scalars*/ 
+				     TRUE); /*ptrs_as_scalars*/
+  BOOL special = (TY_Is_Array(ty1) && TY_is_character(ty1) && 
+		  TY_Is_Array(ty2) && TY_is_character(ty2));
+  return (simple || special);
+}
+
+//FIXME: op should not be const because we call op(), which is non const.
+void 
+ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
+{
+  OPERATOR opr = WN_operator(wn);
+  if (wn == NULL) {
+    // Base case
+  } else if (IsNonScalarRef(wn)) {
+
+    // Base case
+    int ret = op(wn); // FIXME: what to do on error?
+    
+    // Special recursive case: Since WHIRL stores are statements (not
+    // expressions) we need to check the RHS (kid0) of the implied
+    // assignment for non-scalar references.
+    if (OPERATOR_is_store(opr)) {
+      ForAllNonScalarRefs(WN_kid0(wn), op);
+    }
+
+  } else if (!OPERATOR_is_leaf(opr)) {
+    
+    // General recursive case
+    if (WN_opcode(wn) == OPC_BLOCK) {
+      WN *kid = WN_first(wn);
+      while (kid) {
+	ForAllNonScalarRefs(kid, op);
+	kid = WN_next(kid);
+      }
+    } else {
+      for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
+	WN* kid = WN_kid(wn, kidno);
+	ForAllNonScalarRefs(kid, op);
+      }
+    }
+    
+  }
 }
 
 
 //***************************************************************************
 // 
 //***************************************************************************
-
 
 /*------------ Translation of addressing and dereferencing -------------*/
 /*----------------------------------------------------------------------*/
@@ -936,7 +1012,7 @@ WN2F_Offset_Symref(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
     translate_var_ref = &ST2F_deref_translate;
   } else {
     /* A direct reference or an implicit dereference */
-    translate_var_ref = &ST2F_use_translate;
+    translate_var_ref = &TranslateSTUse;
   }
   
   
@@ -1083,7 +1159,7 @@ WN2F_Offset_Memref(xml::ostream& xos,
     /* Optimizer may put address PREGS into ARRAYs */
     /* and high level type is more or less useless */
     /* just go with WN tree ADDs etc.              */
-    WN2F_translate(xos, addr, ctxt);    
+    TranslateWN(xos, addr, ctxt);    
     if (offset != 0) {
       xos << '+' << offset /* "%lld" */;
     }
@@ -1092,7 +1168,7 @@ WN2F_Offset_Memref(xml::ostream& xos,
     if (IsScalarRef(base_ty, ref_ty)) { // FIXME
       ASSERT_WARN(offset == 0, (DIAG_W2F_UNEXPEXTED_OFFSET, offset,
 				"WN2F_Offset_Memref"));
-      WN2F_translate(xos, addr, ctxt);
+      TranslateWN(xos, addr, ctxt);
     } else if (TY_Is_Array(base_ty)) { 
       
       // 2. Array reference (non-scalar) 
@@ -1107,11 +1183,11 @@ WN2F_Offset_Memref(xml::ostream& xos,
       }
 
       if (TY_Is_Character_String(base_ty)) {
-	WN2F_translate(xos, addr, ctxt); /* String lvalue */	  
+	TranslateWN(xos, addr, ctxt); /* String lvalue */	  
 	if (!XlationContext_has_no_arr_elmt(ctxt))
 	  TY2F_Translate_ArrayElt(xos, base_ty, offset);
       } else {
-	WN2F_translate(xos, addr, ctxt); /* Array lvalue */
+	TranslateWN(xos, addr, ctxt); /* Array lvalue */
 	if (!XlationContext_has_no_arr_elmt(ctxt))
 	  TY2F_Translate_ArrayElt(xos, base_ty, offset);
 	else
@@ -1171,7 +1247,7 @@ WN2F_Offset_Memref(xml::ostream& xos,
       addr = det._nested_addr;
       
       /* Get the base expression to precede the path */
-      WN2F_translate(xos, addr, ctxt);
+      TranslateWN(xos, addr, ctxt);
       TY2F_Fld_Separator(xos);
       
       /* Append the path-name, perhaps w/o array subscripts. */
@@ -1189,6 +1265,15 @@ WN2F_Offset_Memref(xml::ostream& xos,
 
   return EMPTY_WN2F_STATUS;
 } /* WN2F_Offset_Memref */
+
+//***************************************************************************
+
+//REMOVE
+static BOOL PU_Need_End_Contains = FALSE; // need CONTAINS/END for nested procs
+static BOOL PU_Dangling_Contains = FALSE; // have done CONTAINS, need END...
+
+static void 
+WN2F_End_Routine_Strings(xml::ostream& xos, INT32 func_id);
 
 #if 0 // REMOVE
 extern void
@@ -1260,38 +1345,3 @@ WN2F_End_Routine_Strings(xml::ostream& xos, INT32 func_id)
   }
 }
 
-
-BOOL 
-IsScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty) 
-{
-  if (TY_IsNonScalar(refobj_ty)) {
-    // This is a reference to a non-scalar or a non-scalar within a
-    // non-scalar (e.g. a record or a record within a record)
-    return false; 
-  } else if (TY_Is_Scalar(refobj_ty)) {
-    // Test whether 'baseobj_ty' is assignable to 'refobj_ty'.  If
-    // not, we have a non-scalar reference (e.g. a field within a
-    // structure; an element within an array).
-    return (WN2F_Can_Assign_Types(baseobj_ty, refobj_ty));
-  } else {
-    return false;
-  }
-}
-
-BOOL 
-IsNonScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty) 
-{
-  return (!IsScalarRef(baseobj_ty, refobj_ty));
-}
-
-// FIXME: 
-BOOL 
-WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2)
-{
-  BOOL simple = Stab_Identical_Types(ty1, ty2, FALSE, /*check_quals*/
-				     FALSE, /*check_scalars*/ 
-				     TRUE); /*ptrs_as_scalars*/
-  BOOL special = (TY_Is_Array(ty1) && TY_is_character(ty1) && 
-		  TY_Is_Array(ty2) && TY_is_character(ty2));
-  return (simple || special);
-}

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.2 2003/05/14 01:10:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.3 2003/05/16 13:21:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -588,7 +588,7 @@ WN2F_Append_Value_Reference(xml::ostream& xos, WN *expression)
     */
    if (TY_Is_Pointer(WN_Tree_Type(expression)))
       context.SetDerefAddr();
-   (void)WN2F_translate(xos, expression, context);
+   (void)TranslateWN(xos, expression, context);
 } // WN2F_Append_Value_Reference
 
 
@@ -602,7 +602,7 @@ WN2F_Prepend_Value_Reference(xml::ostream& xos, WN *expression)
     */
    if (TY_Is_Pointer(WN_Tree_Type(expression)))
      context.SetDerefAddr();
-   WN2F_translate(xos, expression, context);
+   TranslateWN(xos, expression, context);
    
    ///*FIXMEprepend*/ Append_And_Reclaim_Token_List(tokens, &expr_tokens);
 
@@ -791,7 +791,7 @@ Append_Distribution(xml::ostream& xos, WN **apragma, WN_PRAGMA_ID id)
       case DISTRIBUTE_CYCLIC_EXPR:
          xos << "cyclic";
          xos << "(";
-         WN2F_translate(xos, WN_kid0(distr[dim].cyclic_expr), context);
+         TranslateWN(xos, WN_kid0(distr[dim].cyclic_expr), context);
          xos << ")";
          break;
 
@@ -1671,7 +1671,7 @@ WN2F_process_pragma(xml::ostream& xos, WN **next, XlationContext& ctxt)
       else {
          /* A common symbol */
          xos << "/";
-	 ST2F_use_translate(xos, WN_st(apragma), ctxt);
+	 TranslateSTUse(xos, WN_st(apragma), ctxt);
          xos << "/";
       }
       break;

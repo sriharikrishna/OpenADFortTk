@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.3 2003/05/14 19:29:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.4 2003/05/16 13:21:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -315,7 +315,7 @@ TranslateWNPU(xml::ostream& xos, WN *wn_pu, XlationContext& ctxt)
   PU& pu = Pu_Table[ST_pu( WN_st(PUinfo_current_func) )]; // FIXME: 
   WN2F_F90_pu = PU_f90_lang(pu) != 0;
 
-  WN2F_translate(xos, wn_pu, ctxt);
+  TranslateWN(xos, wn_pu, ctxt);
   
   if (!pu_is_pushed) { W2F_Pop_PU(); }
   
@@ -499,7 +499,7 @@ W2F_def_ST(FILE *outfile, ST *st)
     return;
   
   tokens = New_Token_Buffer();
-  xlate_STToSymbol(tokens, st);
+  TranslateSTDecl(tokens, st);
   Write_And_Reclaim_Tokens(outfile, W2F_File[W2F_LOC_FILE], &tokens);
   W2F_Undo_Whirl_Side_Effects();
 #endif
@@ -527,7 +527,7 @@ W2F_Translate_Wn(FILE *outfile, WN *wn)
    Diag_Set_Phase("whirl 2 xaif translation");
 
    tokens = New_Token_Buffer();
-   (void)WN2F_translate(tokens, wn, context);
+   (void)TranslateWN(tokens, wn, context);
    Write_And_Reclaim_Tokens(outfile, W2F_File[W2F_LOC_FILE], &tokens);
    W2F_Undo_Whirl_Side_Effects();
 
@@ -553,7 +553,7 @@ W2F_Translate_Wn_Str(char *strbuf, UINT bufsize, WN *wn)
    Diag_Set_Phase("whirl 2 xaif translation");
 
    tokens = New_Token_Buffer();
-   (void)WN2F_translate(tokens, wn, context);
+   (void)TranslateWN(tokens, wn, context);
    Str_Write_And_Reclaim_Tokens(strbuf, bufsize, &tokens);
    W2F_Undo_Whirl_Side_Effects();
 

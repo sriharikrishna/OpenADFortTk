@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.2 2003/05/14 19:29:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.3 2003/05/16 13:21:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -208,7 +208,7 @@ WN2F_Expr_Plus_Literal(std::string& str,
       std::ostringstream xos_sstr;
       xml::ostream xos(xos_sstr.rdbuf());
 
-      WN2F_translate(xos, wn, ctxt);
+      TranslateWN(xos, wn, ctxt);
       str += xos_sstr.str();
     }
     
@@ -255,12 +255,12 @@ WN2F_OLD_Den_Arr_Idx(xml::ostream& xos, WN *idx_expr, XlationContext& ctxt)
 	reset_XlationContext_no_parenthesis(ctxt);
 	xos << '(';
       }
-      WN2F_translate(xos, nexpr, ctxt);
+      TranslateWN(xos, nexpr, ctxt);
       xos << '+' << str;
       if (parenthesize)
 	xos << ')';
     } else {
-      WN2F_translate(xos, nexpr, ctxt);
+      TranslateWN(xos, nexpr, ctxt);
     }
   } else if (WN_operator(idx_expr) == OPR_SUB && 
 	     (WN_is_constant_expr(WN_kid1(idx_expr)) || 
@@ -290,11 +290,11 @@ WN2F_OLD_Den_Arr_Idx(xml::ostream& xos, WN *idx_expr, XlationContext& ctxt)
 	xos << '(';
       } 
       if (!cexpr_is_lhs) {
-	WN2F_translate(xos, nexpr, ctxt);
+	TranslateWN(xos, nexpr, ctxt);
 	xos << '-' << str;
       } else {
 	xos << str << '-';
-	WN2F_translate(xos, nexpr, ctxt);
+	TranslateWN(xos, nexpr, ctxt);
       }
       if (parenthesize)
 	xos << ')';
@@ -305,11 +305,11 @@ WN2F_OLD_Den_Arr_Idx(xml::ostream& xos, WN *idx_expr, XlationContext& ctxt)
 	  xos << '(';
 	}
 	xos << '-';
-	WN2F_translate(xos, nexpr, ctxt);
+	TranslateWN(xos, nexpr, ctxt);
 	if (parenthesize)
 	  xos << ')';
       } else {
-	WN2F_translate(xos, nexpr, ctxt);
+	TranslateWN(xos, nexpr, ctxt);
       }
     }
   } else {
@@ -359,12 +359,12 @@ WN2F_Denormalize_Array_Idx(xml::ostream& xos,
 	 reset_XlationContext_no_parenthesis(ctxt);
 	 xos << '(';
        }
-       WN2F_translate(xos, nexpr, ctxt);
+       TranslateWN(xos, nexpr, ctxt);
        xos << '+' << str;
        if (parenthesize)
 	 xos << ')';
      } else {
-       WN2F_translate(xos, nexpr, ctxt);
+       TranslateWN(xos, nexpr, ctxt);
      }
 
    } else if (WN_operator(idx_expr) == OPR_SUB && 
@@ -394,11 +394,11 @@ WN2F_Denormalize_Array_Idx(xml::ostream& xos,
 	  reset_XlationContext_no_parenthesis(ctxt);
 	  xos << '(';
 	} if (!cexpr_is_lhs) {
-	  WN2F_translate(xos, nexpr, ctxt);
+	  TranslateWN(xos, nexpr, ctxt);
 	  xos << '-' << str;
 	} else {
 	  xos << str << '-';
-	  WN2F_translate(xos, nexpr, ctxt);
+	  TranslateWN(xos, nexpr, ctxt);
 	}
 	if (parenthesize)
 	  xos << ')';
@@ -410,11 +410,11 @@ WN2F_Denormalize_Array_Idx(xml::ostream& xos,
 	    xos << '(';
 	  }
 	  xos << '-';
-	  WN2F_translate(xos, nexpr, ctxt);
+	  TranslateWN(xos, nexpr, ctxt);
 	  if (parenthesize)
 	    xos << ')';
 	} else {
-	  WN2F_translate(xos, nexpr, ctxt);
+	  TranslateWN(xos, nexpr, ctxt);
 	}
       }
       
@@ -450,7 +450,7 @@ WN2F_Normalize_Idx_To_Onedim(xml::ostream& xos, WN* wn, XlationContext& ctxt)
     WN2F_Denormalize_Array_Idx(xos, WN_array_index(wn, dim1), ctxt);
     for (dim2 = dim1+1; dim2 < WN_num_dim(wn); dim2++) {
       xos << "*";
-      WN2F_translate(xos, WN_array_dim(wn, dim2), ctxt);
+      TranslateWN(xos, WN_array_dim(wn, dim2), ctxt);
     }
   }
 }
@@ -485,10 +485,10 @@ WN2F_Substring(xml::ostream& xos,
       if (WN_operator(lower_bnd) != OPR_INTCONST ||
 	  WN_const_val(lower_bnd) != 0)
       {
-	 WN2F_translate(xos, lower_bnd, ctxt);
+	 TranslateWN(xos, lower_bnd, ctxt);
 	 xos << "+";
       }
-      WN2F_translate(xos, substring_size, ctxt);
+      TranslateWN(xos, substring_size, ctxt);
       xos << ")";
    }
 } /* WN2F_Substring */
@@ -854,7 +854,6 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TY_IDX ref_ty = WN_ty(wn);
 
   // Assignment
-  xos << Comment("STID...");
   xos << BegElem("xaif:Assignment") << Attr("statement_id", ctxt.GetNewVId());
   
   // LHS of assignment
@@ -875,7 +874,7 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // RHS of assignment
   xos << BegElem("xaif:AssignmentRHS") << EndAttr;
   ctxt.CreateContext(XlationContext::NOFLAG, wn);
-  WN2F_translate(xos, WN_kid0(wn), ctxt);
+  TranslateWN(xos, WN_kid0(wn), ctxt);
   ctxt.DeleteContext();
   xos << EndElem;
 
@@ -903,7 +902,6 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   assert(baseptr_ty == WN_Tree_Type(baseptr)); // FIXME
   
   // Assignment
-  xos << Comment("ISTORE...");
   xos << BegElem("xaif:Assignment") << Attr("statement_id", ctxt.GetNewVId());
   
   // LHS of assignment (dereference address)
@@ -923,7 +921,7 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   // RHS of assignment
   xos << BegElem("xaif:AssignmentRHS") << EndAttr;
   ctxt.CreateContext(XlationContext::NOFLAG, wn);
-  WN2F_translate(xos, WN_kid0(wn), ctxt);
+  TranslateWN(xos, WN_kid0(wn), ctxt);
   ctxt.DeleteContext();
   xos << EndElem;
 
@@ -977,7 +975,7 @@ WN2F_mstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << "mstore=" << std::endl;
   
   /* The rhs */
-  WN2F_translate(xos, WN_kid0(wn), ctxt);
+  TranslateWN(xos, WN_kid0(wn), ctxt);
 
   return EMPTY_WN2F_STATUS;
 }
@@ -1017,10 +1015,10 @@ WN2F_pstid(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    /* The rhs */
    if (TY_is_logical(Ty_Table[WN_ty(wn)])) {
      set_XlationContext_has_logical_arg(ctxt);
-     WN2F_translate(xos, WN_kid0(wn), ctxt);
+     TranslateWN(xos, WN_kid0(wn), ctxt);
      reset_XlationContext_has_logical_arg(ctxt);
    } else
-     WN2F_translate(xos, WN_kid0(wn), ctxt);
+     TranslateWN(xos, WN_kid0(wn), ctxt);
 
    return EMPTY_WN2F_STATUS;
 } /* WN2F_pstid */
@@ -1065,10 +1063,10 @@ WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    /* The rhs */
    if (TY_is_logical(Ty_Table[TY_pointed(WN_ty(wn))])) {
      set_XlationContext_has_logical_arg(ctxt);
-     WN2F_translate(xos, WN_kid0(wn), ctxt);
+     TranslateWN(xos, WN_kid0(wn), ctxt);
      reset_XlationContext_has_logical_arg(ctxt);
    } else {
-     WN2F_translate(xos, WN_kid0(wn), ctxt);
+     TranslateWN(xos, WN_kid0(wn), ctxt);
    }
    
    return EMPTY_WN2F_STATUS;
@@ -1111,7 +1109,7 @@ WN2F_array(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     /* a preg or sym has been used as an address, usually after
        optimization don't know base type, or anything else so use
        OPR_ARRAY to generate bounds */
-    WN2F_translate(xos, kid, ctxt);
+    TranslateWN(xos, kid, ctxt);
     WN2F_Array_Slots(xos,wn,ctxt,TRUE);     
   } else {
     array_ty = W2F_TY_pointed(ptr_ty, "base of OPC_ARRAY");
@@ -1128,7 +1126,7 @@ WN2F_array(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	    || TY_size(TY_AR_etype(array_ty)) < TY_size(array_ty))) {
       // This array access is just a weird representation for an implicit
       // reference parameter dereference.  Ignore the array indexing.
-      WN2F_translate(xos, kid, ctxt);
+      TranslateWN(xos, kid, ctxt);
 
     } else if (!TY_ptr_as_array(Ty_Table[ptr_ty]) 
 	       && TY_Is_Character_String(array_ty) ) {
@@ -1142,7 +1140,7 @@ WN2F_array(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       // A regular array access
       // Get the base of the object to be indexed into, still using
       // ctxt.IsDerefAddr().
-      WN2F_translate(xos, kid, ctxt);
+      TranslateWN(xos, kid, ctxt);
       ctxt.ResetDerefAddr();
       WN2F_array_bounds(xos, wn, array_ty, ctxt);
     }
@@ -1192,7 +1190,7 @@ WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
        /* don't know base type, or anything else so use OPR_ARRAY to generate bounds
 */
 
-     WN2F_translate(xos, kid, ctxt);
+     TranslateWN(xos, kid, ctxt);
      WN2F_Arrsection_Slots(xos,wn,ctxt,TRUE);
    }
    else
@@ -1216,7 +1214,7 @@ WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
           * reference parameter dereference.  Ignore the array indexing.
           */
 
-       WN2F_translate(xos, kid, ctxt);
+       TranslateWN(xos, kid, ctxt);
      }
      else if (!TY_ptr_as_array(Ty_Table[ptr_ty]) && TY_Is_Character_String(array_ty))
      {
@@ -1243,7 +1241,7 @@ WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
            /* Get the base of the object to be indexed into, still using
             * ctxt.IsDerefAddr().
             */
-       WN2F_translate(xos, kid, ctxt);
+       TranslateWN(xos, kid, ctxt);
        ctxt.ResetDerefAddr();
 
    if ( XlationContext_has_no_arr_elmt(ctxt))
@@ -1264,14 +1262,14 @@ WN2F_where(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << "WHERE";
   xos << "(";
   kid  =WN_kid0(wn);
-  WN2F_translate(xos, kid, ctxt);
+  TranslateWN(xos, kid, ctxt);
   xos << ")";
   kid   =WN_kid1(wn);
-  WN2F_translate(xos, kid, ctxt);
+  TranslateWN(xos, kid, ctxt);
   kid   = WN_kid2(wn);
   xos << std::endl;
   xos << "END WHERE";
-  WN2F_translate(xos, kid, ctxt);
+  TranslateWN(xos, kid, ctxt);
   return EMPTY_WN2F_STATUS;
 }
 
@@ -1281,7 +1279,7 @@ WN2F_arrayexp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   WN    * kid;
   kid    = WN_kid0(wn);
-  WN2F_translate(xos, kid, ctxt);
+  TranslateWN(xos, kid, ctxt);
   return EMPTY_WN2F_STATUS;
 }
 
@@ -1334,30 +1332,30 @@ WN2F_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	  WN_operator(kid1) == OPR_INTCONST ) {
 	if (WN_const_val(kid1)==1) {
 	  if (WN_const_val(kid0)== 0) {
-	    WN2F_translate(xos, kid2, ctxt);
+	    TranslateWN(xos, kid2, ctxt);
 	  }
 	  else {
-	    WN2F_translate(xos, kid1, ctxt);
+	    TranslateWN(xos, kid1, ctxt);
 	    xos << "+";
-	    WN2F_translate(xos, kid2, ctxt); }
+	    TranslateWN(xos, kid2, ctxt); }
 	}
 	else {
 	  if (WN_const_val(kid0)== 0){
-            WN2F_translate(xos, kid1, ctxt);
+            TranslateWN(xos, kid1, ctxt);
 	    xos << "*";
-	    WN2F_translate(xos, kid2, ctxt); }
+	    TranslateWN(xos, kid2, ctxt); }
 	  else {
-	    WN2F_translate(xos, kid0, ctxt);
+	    TranslateWN(xos, kid0, ctxt);
 	    xos << "+";
-	    WN2F_translate(xos, kid1, ctxt);
+	    TranslateWN(xos, kid1, ctxt);
 	    xos << "*";
-	    WN2F_translate(xos, kid2, ctxt); }
+	    TranslateWN(xos, kid2, ctxt); }
 	}
       }
       else 
 	if (WN_operator(kid1) == OPR_INTCONST &&
 	    WN_operator(kid2) == OPR_INTCONST) {
-	  WN2F_translate(xos, kid0, ctxt);
+	  TranslateWN(xos, kid0, ctxt);
 	  xos << "+";
 	  
 	  std::string val;
@@ -1377,71 +1375,71 @@ WN2F_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
               WN_operator(kid2) == OPR_INTCONST) {
 	    if (WN_const_val(kid2)==1) {
 	      if (WN_const_val(kid0)== 0) {
-		WN2F_translate(xos, kid1, ctxt);
+		TranslateWN(xos, kid1, ctxt);
 	      }
 	      else {
-		WN2F_translate(xos, kid0, ctxt);
+		TranslateWN(xos, kid0, ctxt);
 		xos << "+";
-		WN2F_translate(xos, kid1, ctxt); 
+		TranslateWN(xos, kid1, ctxt); 
 	      }
             }
             else {
 	      if (WN_const_val(kid0)== 0){
-		WN2F_translate(xos, kid2, ctxt);
+		TranslateWN(xos, kid2, ctxt);
 		xos << "*";
-		WN2F_translate(xos, kid1, ctxt); }
+		TranslateWN(xos, kid1, ctxt); }
 	      else {
-		WN2F_translate(xos, kid0, ctxt);
+		TranslateWN(xos, kid0, ctxt);
 		xos << "+";
-		WN2F_translate(xos, kid1, ctxt);
+		TranslateWN(xos, kid1, ctxt);
 		xos << "*";
-		WN2F_translate(xos, kid2, ctxt); }
+		TranslateWN(xos, kid2, ctxt); }
 	    }
 	  }
            else 
 	     if (WN_operator(kid0) == OPR_INTCONST){ 
 	       if (WN_const_val(kid0)==0) {
-		 WN2F_translate(xos, kid1, ctxt);
+		 TranslateWN(xos, kid1, ctxt);
 		 xos << "*";
-		 WN2F_translate(xos, kid2, ctxt);}
+		 TranslateWN(xos, kid2, ctxt);}
 	       else {
-                 WN2F_translate(xos, kid0, ctxt);
+                 TranslateWN(xos, kid0, ctxt);
                  xos << "+";
-                 WN2F_translate(xos, kid1, ctxt);
+                 TranslateWN(xos, kid1, ctxt);
                  xos << "*";
-                 WN2F_translate(xos, kid2, ctxt);
+                 TranslateWN(xos, kid2, ctxt);
 	       }
 	     }
 	     else 
 	       if (WN_operator(kid1) == OPR_INTCONST){
-		 WN2F_translate(xos, kid0, ctxt);
+		 TranslateWN(xos, kid0, ctxt);
 		 xos << "+";
 		 if (WN_const_val(kid1)==1){
-		   WN2F_translate(xos, kid2, ctxt);}
+		   TranslateWN(xos, kid2, ctxt);}
                  else {
-		   WN2F_translate(xos, kid1, ctxt);
+		   TranslateWN(xos, kid1, ctxt);
 		   xos << "*";
-		   WN2F_translate(xos, kid2, ctxt);
+		   TranslateWN(xos, kid2, ctxt);
 		 }
 	       }
 	       else
 		 if (WN_operator(kid2) == OPR_INTCONST) {
-		   WN2F_translate(xos, kid0, ctxt);
+		   TranslateWN(xos, kid0, ctxt);
 		   xos << "+";
 		   if (WN_const_val(kid2)==1)
-		     WN2F_translate(xos, kid1, ctxt);
+		     TranslateWN(xos, kid1, ctxt);
 		   else
 		     {
-		       WN2F_translate(xos, kid2, ctxt);
+		       TranslateWN(xos, kid2, ctxt);
 		       xos << "*";
-		       WN2F_translate(xos, kid1, ctxt);
+		       TranslateWN(xos, kid1, ctxt);
 		     }
 		 }
     if ((WN_operator(kid1) == OPR_INTCONST) && 
 	(WN_const_val(kid1)==1))  {
     } else {
       xos << ":";
-      WN2F_translate(xos, kid1, ctxt);
+      TranslateWN(xos, kid1, ctxt);
     } 
   }  
   return EMPTY_WN2F_STATUS;
@@ -1458,16 +1456,16 @@ WN2F_src_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   kid0=WN_kid0(wn);
   kid1=WN_kid1(wn);
   kid2=WN_kid2(wn);
-  WN2F_translate(xos, kid0, ctxt);
+  TranslateWN(xos, kid0, ctxt);
   xos << ":";
-  WN2F_translate(xos, kid1, ctxt); 
+  TranslateWN(xos, kid1, ctxt); 
   
   if (WN_operator(kid2) == OPR_INTCONST &&
       WN_const_val(kid2) == 1)
     ;
   else {
     xos << ":";
-    WN2F_translate(xos, kid2, ctxt); 
+    TranslateWN(xos, kid2, ctxt); 
   }
   
   return EMPTY_WN2F_STATUS;  
@@ -1528,7 +1526,7 @@ WN2F_Arrsection_Slots(xml::ostream& xos, WN *wn, XlationContext& ctxt, BOOL pare
 # if 0 /* original code without thinking about co_array */
     for (dim = WN_num_dim(wn)-1; dim >= 0; dim--) {
       if (WN_operator(WN_array_index(wn, dim))==OPR_SRCTRIPLET) {
-	WN2F_translate(xos, WN_array_index(wn, dim), ctxt);    
+	TranslateWN(xos, WN_array_index(wn, dim), ctxt);    
       } else {
 	WN2F_Denormalize_Array_Idx(xos, WN_array_index(wn, dim), ctxt);
       }
@@ -1538,7 +1536,7 @@ WN2F_Arrsection_Slots(xml::ostream& xos, WN *wn, XlationContext& ctxt, BOOL pare
 # endif
     for (dim = WN_num_dim(wn)-1; dim >= co_dim; dim--) {
       if (WN_operator(WN_array_index(wn, dim))==OPR_SRCTRIPLET) {
-	WN2F_translate(xos, WN_array_index(wn, dim), ctxt);
+	TranslateWN(xos, WN_array_index(wn, dim), ctxt);
       } else {
 	WN2F_Denormalize_Array_Idx(xos, WN_array_index(wn, dim), ctxt);
       }
@@ -1556,7 +1554,7 @@ WN2F_Arrsection_Slots(xml::ostream& xos, WN *wn, XlationContext& ctxt, BOOL pare
     
     for (dim = co_dim-1; dim >= 0; dim--) {
       if (WN_operator(WN_array_index(wn, dim))==OPR_SRCTRIPLET) {
-	WN2F_translate(xos, WN_array_index(wn, dim), ctxt);
+	TranslateWN(xos, WN_array_index(wn, dim), ctxt);
       } else {
 	WN2F_Denormalize_Array_Idx(xos, WN_array_index(wn, dim), ctxt);
       }
@@ -1799,7 +1797,7 @@ WN2F_String_Argument(xml::ostream& xos, WN* base_parm, WN* length,
     /* probably CHAR(INT) within IO stmt. convert via CHAR & process
        rest elsewhere */
     xos << "(char";
-    WN2F_translate(xos,WN_kid0(base),ctxt);
+    TranslateWN(xos,WN_kid0(base),ctxt);
     xos << ')';
     return;
   }
@@ -1824,7 +1822,7 @@ WN2F_String_Argument(xml::ostream& xos, WN* base_parm, WN* length,
       str_length = -1 ;  
     
     ctxt.SetDerefAddr();
-    WN2F_translate(xos, base, ctxt);
+    TranslateWN(xos, base, ctxt);
     ctxt.ResetDerefAddr();
     
   } else {
@@ -1870,7 +1868,7 @@ WN2F_String_Argument(xml::ostream& xos, WN* base_parm, WN* length,
 
       /* Get the string base and substring notation for the argument.  */
       ctxt.SetDerefAddr();
-      WN2F_translate(xos, base, ctxt);
+      TranslateWN(xos, base, ctxt);
       ctxt.ResetDerefAddr();
     }
 # if 0
@@ -1902,7 +1900,7 @@ WN2F_Block(xml::ostream& xos, ST* st, STAB_OFFSET offset, XlationContext& ctxt)
 {
   /* An ST of CLASS_BLOCK may appear in f90 IO, at -O2 */
   /* put out something for the whirl browser           */
-  ST2F_use_translate(xos, st, ctxt);
+  TranslateSTUse(xos, st, ctxt);
   if (offset != 0) {
     xos << "+ " << Num2Str(offset, "%lld");
   }

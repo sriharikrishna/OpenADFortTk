@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.2 2003/05/14 19:29:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.3 2003/05/16 13:21:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -83,14 +83,14 @@
  *           its given type and the offset from the base-address.
  *
  *   WN2F_initialize: This initializes any WN to Fortran translation
- *           and must always be called prior to any WN2F_translate()
+ *           and must always be called prior to any TranslateWN()
  *           call.
  *
  *   WN2F_finalize: This finalizes any WN to Fortran translation
  *           and should be called after all processing related
  *           to a whirl2f translation is complete.
  *
- *   WN2F_translate:  Translates a WN subtree into a sequence of Fortran
+ *   TranslateWN:  Translates a WN subtree into a sequence of Fortran
  *           tokens, which are added to the given xml::ostream&.
  *
  *   WN2F_Emit_End_Stmt: a utility to insert an END statement for
@@ -127,9 +127,83 @@ extern void
 WN2F_finalize(void);
 
 extern WN2F_STATUS 
-WN2F_translate(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 }; /* namespace whirl2xaif */
+
+//***************************************************************************
+
+// Declarations of top-level handler-functions for translation from
+// WHIRL to XIAF. 
+namespace whirl2xaif {
+
+extern WN2F_STATUS 
+xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+extern WN2F_STATUS 
+xlate_ALTENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+extern WN2F_STATUS 
+xlate_COMMENT(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  
+extern WN2F_STATUS 
+xlate_ignore(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+extern WN2F_STATUS 
+xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+}; /* namespace whirl2xaif */
+
+
+//***************************************************************************
+
+// FIXME: 
+// ForAllNonScalarRefsOp: Abstract base class for the operator passed
+// to the function 'ForAllNonScalarRefs(...)'.  Any caller of this
+// function must define its own operator object, using this class
+// as a base class and providing a definition for 'operator()'.
+class ForAllNonScalarRefsOp {
+public:
+  ForAllNonScalarRefsOp() { }
+  virtual ~ForAllNonScalarRefsOp() { }
+
+  // Given a non-scalar reference 'wn', does something interesting.
+  // Returns 0 on success; non-zero on error.
+  virtual int operator()(const WN* wn) = 0;
+private: 
+};
+
+BOOL 
+IsScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty);
+BOOL
+IsNonScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty);
+BOOL 
+IsNonScalarRef(const WN* wn);
+void 
+ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op);
+
+BOOL WN2F_Can_Assign_Types(TY_IDX t1, TY_IDX t2);
+
+//FIXME: locate elsewhere...
+#include "SymTab.h" // FIXME
+
+// Given a symbol table, add references to it
+class AddToNonScalarSymTabOp : public ForAllNonScalarRefsOp {
+public:
+  AddToNonScalarSymTabOp(NonScalarSymTab* symtab_);
+  ~AddToNonScalarSymTabOp() { }
+  
+  NonScalarSymTab* GetSymTab() { return symtab; }
+
+  // Given a non-scalar reference 'wn', create a dummy variable and
+  // add to the map.  
+  int operator()(const WN* wn);
+
+private:
+  NonScalarSymTab* symtab;
+};
+
+//***************************************************************************
 
 
     /* ---- Utilities to aid in WN to Fortran translation ---- */
@@ -140,10 +214,6 @@ WN2F_translate(xml::ostream& xos, WN *wn, XlationContext& ctxt);
    ((opc) == OPC_BLNOT || (opc) == OPC_BLAND || (opc) == OPC_BLIOR || \
     (opc) == OPC_I4LNOT || (opc) == OPC_I4LAND || (opc) == OPC_I4LIOR)
 
-// FIXME: 
-BOOL IsScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty);
-BOOL IsNonScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty);
-BOOL WN2F_Can_Assign_Types(TY_IDX t1, TY_IDX t2);
 
 extern void WN2F_Address_Of(xml::ostream& xos);
 
