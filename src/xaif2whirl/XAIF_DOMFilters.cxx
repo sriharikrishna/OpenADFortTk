@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.7 2003/09/16 14:30:58 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.8 2003/09/17 19:43:49 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -311,13 +311,11 @@ bool
 XAIF_BBElemFilter::IsAnyBB(const DOMNode *node)
 {
   const XMLCh* name = node->getNodeName();
-  return (XMLString::equals(name, XAIFStrings.elem_BB_x())
+  return (IsBB(node) 
 	  || XMLString::equals(name, XAIFStrings.elem_BBEntry_x()) 
 	  || XMLString::equals(name, XAIFStrings.elem_BBExit_x()) 
-	  || XMLString::equals(name, XAIFStrings.elem_BBIf_x()) 
-	  || XMLString::equals(name, XAIFStrings.elem_BBForLoop_x()) 
-	  || XMLString::equals(name, XAIFStrings.elem_BBPreLoop_x())
-	  || XMLString::equals(name, XAIFStrings.elem_BBPostLoop_x()));
+	  || IsBBIf(node) || IsBBForLoop(node) 
+	  || IsBBPreLoop(node) || IsBBPostLoop(node));
 }
 
 bool 
@@ -325,6 +323,34 @@ XAIF_BBElemFilter::IsBB(const DOMNode *node)
 {
   const XMLCh* name = node->getNodeName();
   return (XMLString::equals(name, XAIFStrings.elem_BB_x()));
+}
+
+bool 
+XAIF_BBElemFilter::IsBBIf(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_BBIf_x()));
+}
+
+bool 
+XAIF_BBElemFilter::IsBBForLoop(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_BBForLoop_x()));
+}
+
+bool 
+XAIF_BBElemFilter::IsBBPreLoop(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_BBPreLoop_x()));
+}
+
+bool 
+XAIF_BBElemFilter::IsBBPostLoop(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_BBPostLoop_x()));
 }
 
 //****************************************************************************
