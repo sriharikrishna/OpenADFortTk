@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlParentize.h,v 1.1 2004/01/25 02:38:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlParentize.h,v 1.2 2004/02/19 22:02:07 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -41,7 +41,9 @@
 //   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlParentize.h,v $
 //
 // Purpose:
-//   [The purpose of this file]
+//   A WHIRL abstract syntax tree only contains child pointers -- no
+//   parent pointers.  WhirlParentMap provides parent pointers -- in
+//   an auxillary object -- for times when they would be useful.
 //
 // Description:
 //   [The set of functions, macros, etc. defined in the file]
@@ -67,35 +69,43 @@
 //***************************************************************************
 
 extern WN* 
-FindParentWNBlock(WN* wn_tree, WN* wn);
+FindParentWNBlock(const WN* wn_tree, const WN* wn);
 
 //***************************************************************************
 
-/* ====================================================================
- * ====================================================================
- * Description:
- *  
- *    The W2CF_Parent_Map is defined to be WN_MAP_UNDEFINED in 
- *    w2cf_parentize.c, and must be set by the user of this module
- *    before using any of the utilities (macros or subroutines).
- *
- * ====================================================================
- * ====================================================================
- */
+// WhirlParentMap
+class WhirlParentMap {
+public:
+  
+  WhirlParentMap();
+  WhirlParentMap(const WN* wn); // automatically creates the map
+  ~WhirlParentMap();
+  
+  // Create: Given a WN*, creates the map.  Clears any previously existing map.
+  void Create(const WN* wn);
+  
+  // Clear: Clears the map.
+  void Clear();
 
-extern WN_MAP W2CF_Parent_Map;
-
-inline const WN *W2CF_Get_Parent(const WN *wn)
-{
-   return (const WN *)WN_MAP_Get(W2CF_Parent_Map, wn);
-} /* W2CF_Get_Parent */
-
-inline void W2CF_Set_Parent(WN *wn, const WN *p)
-{
-   WN_MAP_Set(W2CF_Parent_Map, wn, (void *)p);
-} /* W2CF_Set_Parent */
-
-extern void W2CF_Parentize(const WN* wn);
+  // Find: Given a WN*, return its parent.  N.B. Does not check that
+  // the map exists.
+  WN* Find(const WN* wn) { return (WN *)WN_MAP_Get(parentMap, wn); }
+  
+  // Insert: Given a WN* and its parent, insert in the map. Overwrites
+  // any existing value.
+  void Insert(const WN* wn, const WN* parent) {
+    WN_MAP_Set(parentMap, (WN*)wn, (void *)parent);
+  }
+  
+private:
+  void Ctor();
+  void Parentize(const WN* wn);
+  
+private:
+  // For now keep the implementation using Open64's WN_MAP
+  MEM_POOL memPool;
+  WN_MAP parentMap;
+};
 
 //***************************************************************************
 

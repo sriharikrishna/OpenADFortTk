@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlParentize.cxx,v 1.1 2004/01/25 02:38:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlParentize.cxx,v 1.2 2004/02/19 22:02:07 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -62,18 +62,17 @@
 
 //************************** Forward Declarations ***************************
 
-WN_MAP W2CF_Parent_Map = WN_MAP_UNDEFINED;
-
 //***************************************************************************
+
+// FIXME: FindParentWNBlock was written before I learned about the
+// parent map.  I should rewrite the former to use the latter.
+
 
 // FindParentWNBlock: Given two WHIRL nodes, a subtree 'wn_tree' and an
 // some descendent 'wn', return the BLOCK WN that contains 'wn', or
 // NULL.
-// 
-// FIXME: I can't see a more efficient way of doing this (besides some
-// sort of pre-calculated map) since we don't have parent pointers.
 WN* 
-FindParentWNBlock(WN* wn_tree, WN* wn)
+FindParentWNBlock(const WN* wn_tree, const WN* wn)
 {
   if (!wn_tree || !wn) { return NULL; }
 
@@ -92,7 +91,7 @@ FindParentWNBlock(WN* wn_tree, WN* wn)
 	
 	// Test this child
 	if (kid == wn) {
-	  return wn_tree; // we found the parent block|
+	  return const_cast<WN*>(wn_tree); // we found the parent block|
 	} 
 
 	// Recursively test 
@@ -119,37 +118,88 @@ FindParentWNBlock(WN* wn_tree, WN* wn)
 }
 
 //***************************************************************************
-// 
+// WhirlParentMap
 //***************************************************************************
 
-void 
-W2CF_Parentize(const WN* wn)
+// Note: whirl2f implementation of parentizing for each PU
+// W2F_Push_PU
+//   MEM_POOL_Push(&W2F_Parent_Pool);
+//   W2CF_Parent_Map = WN_MAP_Create(&W2F_Parent_Pool);
+//   W2CF_Parentize(pu);
+// W2F_Pop_PU
+//   WN_MAP_Delete(W2CF_Parent_Map);
+//   W2CF_Parent_Map = WN_MAP_UNDEFINED;
+//   MEM_POOL_Pop(&W2F_Parent_Pool);
+
+WhirlParentMap::WhirlParentMap() 
 {
-   /* Given a tree, initialize its parent pointers.
-    * Override what was there, if anything.
-    * Do not update parent pointer of the root node 'wn'.
-    * This is copied from be/lno/lwn_util.h!
-    */
+  Ctor();
+}
+
+WhirlParentMap::WhirlParentMap(const WN* wn)
+{
+  Ctor();
+  Create(wn);
+}
+
+void 
+WhirlParentMap::Ctor()
+{
+  // Create a pool to hold the parent map for every PU, one at a time.
+  MEM_POOL_Initialize(&memPool, "WhirlParentMap_Pool", FALSE);
+  MEM_POOL_Push(&memPool);   
+  parentMap = WN_MAP_UNDEFINED;
+}
+
+WhirlParentMap::~WhirlParentMap() 
+{ 
+  MEM_POOL_Pop(&memPool);
+  MEM_POOL_Delete(&memPool);
+}
+
+void 
+WhirlParentMap::Create(const WN* wn)
+{
+  if (parentMap != WN_MAP_UNDEFINED) {
+    Clear();
+  }
+  
+  parentMap = WN_MAP_Create(&memPool);
+  Parentize(wn);
+}
+
+void 
+WhirlParentMap::Clear()
+{
+  WN_MAP_Delete(parentMap);
+  parentMap = WN_MAP_UNDEFINED;
+}
+
+// Parentize: Given a tree, initialize its parent pointers, overriding
+// anything that may have been in the map.  Does not update parent
+// pointer of the root node 'wn'.
+void 
+WhirlParentMap::Parentize(const WN* wn)
+{
   OPERATOR opr = WN_operator(wn);
   
   if (!OPERATOR_is_leaf(opr)) {
     if (opr == OPR_BLOCK) { // WN_opcode(wn) == OPC_BLOCK
       WN *kid = WN_first(wn);
       while (kid) {
-	W2CF_Set_Parent(kid, wn);
-	W2CF_Parentize(kid);
+	Insert(kid, wn);
+	Parentize(kid);
 	kid = WN_next(kid);
       }
     } else {
-      INT kidno;
-      WN *kid;
-      for (kidno=0; kidno < WN_kid_count(wn); kidno++) {
-	kid = WN_kid (wn, kidno);
+      for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
+	WN* kid = WN_kid(wn, kidno);
 	if (kid) { 
-	  W2CF_Set_Parent(kid, wn);
-	  W2CF_Parentize(kid);
+	  Insert(kid, wn);
+	  Parentize(kid);
 	}
       }
     }
   }
-} /* W2FC_Parentize */
+}
+
