@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.h,v 1.1 2004/08/05 18:38:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.h,v 1.2 2004/08/06 17:29:33 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -52,6 +52,8 @@ namespace sexp {
       // atom flags
       A_SQUOTE   = 0x00000001, // single quote atom
       A_DQUOTE   = 0x00000002, // double quote atom
+      A_OCT      = 0x00000010, // use oct mode; revert to dec 
+      A_HEX      = 0x00000020, // use hex mode; revert to dec
 
       // list flags
       L_foofoo1  = 0x10000000, // ...

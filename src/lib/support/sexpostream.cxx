@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.cxx,v 1.1 2004/08/05 18:38:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.cxx,v 1.2 2004/08/06 17:29:33 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -157,6 +157,12 @@ sexp::ostream::BegAtom(int aflags)
   if (IsFlag(aflags, A_DQUOTE) || IsFlag(flags, A_DQUOTE)) {
     (*this) << '"';
   }
+  if (IsFlag(aflags, A_OCT) || IsFlag(flags, A_OCT)) {
+    (*this) << std::oct << "0";
+  }
+  if (IsFlag(aflags, A_HEX) || IsFlag(flags, A_HEX)) {
+    (*this) << std::hex << "0x";
+  }
   
   curAtomFlags = aflags;
   SetState(LIST_OPENI);
@@ -178,6 +184,10 @@ sexp::ostream::EndAtom()
   int& flags = slistStack.front();
   if (IsFlag(curAtomFlags, A_DQUOTE) || IsFlag(flags, A_DQUOTE)) {
     (*this) << '"';
+  }
+  if (IsFlag(curAtomFlags, A_OCT) || IsFlag(flags, A_OCT) ||
+      IsFlag(curAtomFlags, A_HEX) || IsFlag(flags, A_HEX)) {
+    (*this) << std::dec;
   }
   
   curAtomFlags = IOFlags::NONE;
