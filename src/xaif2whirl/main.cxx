@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.4 2003/08/25 13:58:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.5 2003/12/19 21:06:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -38,6 +38,7 @@
 #include <xercesc/dom/DOMDocument.hpp>
 #include <xercesc/dom/DOMException.hpp>
 #include <xercesc/dom/DOMImplementation.hpp>
+#include <xercesc/dom/DOMNodeIterator.hpp>
 
 //************************** Open64 Include Files ***************************
 
@@ -168,8 +169,8 @@ real_main(INT argc, char **argv)
   cerr << ProgramName << " translates (" << WHIRL_filename << ", "
        << XAIF_filename << ") into " << WHIRL_out_filename << std::endl;
 
-  main_DOM(pu_forest, XAIF_filename.c_str()); // FIXME check return
-  //ret = main_SAX(xmlFile);
+  ret = main_DOM(pu_forest, XAIF_filename.c_str()); // FIXME check return
+  //ret = main_SAX(XAIF_filename.c_str());
 
   WriteIR(WHIRL_out_filename.c_str(), pu_forest);
   //FreeIR(pu_forest);
@@ -268,18 +269,17 @@ ReadXAIF_DOM(const char* xaiffilenm)
 
 
 // Print the DOM IR
-#if 0
 static void
 PrintIR_DOM(DOMDocument* doc)
 {
   DOMNodeIterator* it = 
     doc->createNodeIterator(doc, DOMNodeFilter::SHOW_ELEMENT, NULL, true);
   for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
+    // XercesStrX::DDumpXMLStr(node->getNodeName());
     cout << XercesStrX(node->getNodeName()) << endl;
   }
   it->release();
 }
-#endif
 
 //****************************************************************************
 

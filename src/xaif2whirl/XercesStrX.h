@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XercesStrX.h,v 1.2 2003/09/02 15:02:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XercesStrX.h,v 1.3 2003/12/19 21:06:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -53,15 +53,27 @@ public :
 
   const char* c_str() const { return local; }
 
+  // For debugging
+  static void DumpXMLStr(std::ostream& os, const XMLCh* const xmlstr);
+  static void DDumpXMLStr(const XMLCh* const xmlstr);
+
 private :
   char* local;
 };
 
+
 inline std::ostream& 
-operator<<(std::ostream& target, const XercesStrX& toDump)
+operator<<(std::ostream& os, const XMLCh* const toDump)
 {
-  target << toDump.c_str();
-  return target;
+  XercesStrX::DumpXMLStr(os, toDump);
+  return os;
+}
+
+inline std::ostream& 
+operator<<(std::ostream& os, const XercesStrX& toDump)
+{
+  os << toDump.c_str();
+  return os;
 }
 
 //***************************************************************************
