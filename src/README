@@ -1,4 +1,4 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/README,v 1.1 2004/12/15 21:05:15 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/README,v 1.2 2005/01/12 19:59:45 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/README,v $
@@ -10,6 +10,11 @@ Contents:
   2. Some Intersting support code (from the perspective of Open64)
 
 =============================================================================
+
+
+* Note: Neither PU_Infos nor the debugging symbol table (DST) is
+currently translated.
+
 
 1. whirl2sexp
 --------------------
