@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.cxx,v 1.7 2004/07/30 17:50:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.cxx,v 1.8 2004/12/23 16:26:40 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -110,7 +110,9 @@ void
 FortTk_TheMostVisitedBreakpointInHistory(const char* filenm, 
 					 unsigned int lineno)
 {
-  char a = (filenm) ? filenm[0] : 0;
+  // Prevent this routine from ever being inlined
+  static unsigned count = 0;
+  count++;
 }
 
 
