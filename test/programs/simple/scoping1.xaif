@@ -164,7 +164,6 @@
     </xaif:BasicBlock>
 
     <xaif:PreLoop vertex_id="4" annotation="{WHIRL_Id#37}">
-      <!-- OPR_WHILE_DO -->
       <xaif:Condition>
         <xaif:VariableReference vertex_id="1" du_ud="3">
           <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="t__1_4"/>
@@ -204,22 +203,7 @@
       <xaif:Marker statement_id="2" annotation="{WHIRL_Id#130} [return]"/>
     </xaif:BasicBlock>
 
-    <xaif:BasicBlock vertex_id="7" scope_id="4" annotation="{WHIRL_Id#125}">
-      <xaif:Assignment statement_id="1">
-        <xaif:AssignmentLHS du_ud="7">
-          <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="t__1_4"/>
-        </xaif:AssignmentLHS>
-        <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
-          <xaif:VariableReference vertex_id="2" du_ud="6">
-            <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="X_1"/>
-          </xaif:VariableReference>
-          <xaif:Constant vertex_id="3" type="real" value="0.00000000000000000000e+00"/>
-          <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
-          <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
-        </xaif:AssignmentRHS>
-      </xaif:Assignment>
-    </xaif:BasicBlock>
+    <xaif:EndBranch vertex_id="7" annotation="{WHIRL_Id#}"/>
 
     <xaif:Exit vertex_id="8" annotation="{WHIRL_Id#}"/>
 
@@ -236,6 +220,25 @@
       </xaif:Condition>
     </xaif:If>
 
+    <xaif:BasicBlock vertex_id="10" scope_id="4" annotation="{WHIRL_Id#125}">
+      <xaif:Assignment statement_id="1">
+        <xaif:AssignmentLHS du_ud="7">
+          <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="t__1_4"/>
+        </xaif:AssignmentLHS>
+        <xaif:AssignmentRHS>
+          <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
+          <xaif:VariableReference vertex_id="2" du_ud="6">
+            <xaif:SymbolReference vertex_id="1" scope_id="4" symbol_id="X_1"/>
+          </xaif:VariableReference>
+          <xaif:Constant vertex_id="3" type="real" value="0.00000000000000000000e+00"/>
+          <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
+          <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
+        </xaif:AssignmentRHS>
+      </xaif:Assignment>
+    </xaif:BasicBlock>
+
+    <xaif:EndLoop vertex_id="11" annotation="{WHIRL_Id#}"/>
+
     <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
     <xaif:ControlFlowEdge edge_id="2" source="2" target="3"/>
     <xaif:ControlFlowEdge edge_id="3" source="3" target="4"/>
@@ -243,9 +246,11 @@
     <xaif:ControlFlowEdge edge_id="5" source="4" target="6"/>
     <xaif:ControlFlowEdge edge_id="6" source="5" target="9"/>
     <xaif:ControlFlowEdge edge_id="7" source="6" target="8"/>
-    <xaif:ControlFlowEdge edge_id="8" source="7" target="4"/>
+    <xaif:ControlFlowEdge edge_id="8" source="7" target="10"/>
     <xaif:ControlFlowEdge edge_id="9" source="9" target="6"/>
     <xaif:ControlFlowEdge edge_id="10" source="9" target="7"/>
+    <xaif:ControlFlowEdge edge_id="11" source="10" target="11"/>
+    <xaif:ControlFlowEdge edge_id="12" source="11" target="4"/>
   </xaif:ControlFlowGraph>
 
   <!-- ******************************************************************** -->

@@ -183,7 +183,6 @@ doloop_count        </xaif:AssignmentLHS>
     </xaif:BasicBlock>
 
     <xaif:ForLoop vertex_id="4" annotation="{WHIRL_Id#42}">
-      <!-- OPR_DO_LOOP -->
       <xaif:Initialization>
         <xaif:AssignmentLHS du_ud="15">
 doloop_var        </xaif:AssignmentLHS>
@@ -258,13 +257,7 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
       </xaif:Assignment>
     </xaif:BasicBlock>
 
-    <xaif:BasicBlock vertex_id="7" scope_id="3" annotation="{WHIRL_Id#71}">
-      <xaif:SubroutineCall statement_id="1" scope_id="1" symbol_id="compute__20">
-        <xaif:Argument position="1">
-          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_7"/>
-        </xaif:Argument>
-      </xaif:SubroutineCall>
-    </xaif:BasicBlock>
+    <xaif:EndBranch vertex_id="7" annotation="{WHIRL_Id#}"/>
 
     <xaif:BasicBlock vertex_id="8" scope_id="3" annotation="{WHIRL_Id#88:89:90:91:116:117}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#88} [label 2]"/>
@@ -275,19 +268,19 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
       <xaif:Marker statement_id="6" annotation="{WHIRL_Id#117} [goto 1]"/>
     </xaif:BasicBlock>
 
-    <xaif:BasicBlock vertex_id="9" scope_id="3" annotation="{WHIRL_Id#}"/>
+    <xaif:EndBranch vertex_id="9" annotation="{WHIRL_Id#}"/>
 
-    <xaif:BasicBlock vertex_id="10" scope_id="3" annotation="{WHIRL_Id#87}">
+    <xaif:BasicBlock vertex_id="11" scope_id="3" annotation="{WHIRL_Id#87}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#87} [goto 3]"/>
     </xaif:BasicBlock>
 
-    <xaif:BasicBlock vertex_id="11" scope_id="3" annotation="{WHIRL_Id#137:138:139}">
+    <xaif:BasicBlock vertex_id="12" scope_id="3" annotation="{WHIRL_Id#137:138:139}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#137} [label 1]"/>
       <xaif:SubroutineCall statement_id="2" scope_id="1" symbol_id="_END_23"/>
       <xaif:Marker statement_id="3" annotation="{WHIRL_Id#139} [return]"/>
     </xaif:BasicBlock>
 
-    <xaif:BasicBlock vertex_id="12" scope_id="3" annotation="{WHIRL_Id#118:119:120:121:136}">
+    <xaif:BasicBlock vertex_id="13" scope_id="3" annotation="{WHIRL_Id#118:119:120:121:136}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#118} [label 6]"/>
       <xaif:Marker statement_id="2" annotation="{WHIRL_Id#119} [comment]"/>
       <xaif:Marker statement_id="3" annotation="{WHIRL_Id#120} [pragma]"/>
@@ -295,13 +288,13 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
       <xaif:Marker statement_id="5" annotation="{WHIRL_Id#136} [pragma]"/>
     </xaif:BasicBlock>
 
-    <xaif:BasicBlock vertex_id="13" scope_id="3" annotation="{WHIRL_Id#140}">
+    <xaif:BasicBlock vertex_id="14" scope_id="3" annotation="{WHIRL_Id#140}">
       <xaif:Marker statement_id="1" annotation="{WHIRL_Id#140} [return]"/>
     </xaif:BasicBlock>
 
-    <xaif:Exit vertex_id="14" annotation="{WHIRL_Id#}"/>
+    <xaif:Exit vertex_id="15" annotation="{WHIRL_Id#}"/>
 
-    <xaif:If vertex_id="15" annotation="{WHIRL_Id#63}">
+    <xaif:If vertex_id="16" annotation="{WHIRL_Id#63}">
       <!-- OPR_TRUEBR label=5 -->
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_land_scal_scal" type="***"/>
@@ -324,7 +317,7 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
       </xaif:Condition>
     </xaif:If>
 
-    <xaif:If vertex_id="16" annotation="{WHIRL_Id#74}">
+    <xaif:If vertex_id="17" annotation="{WHIRL_Id#74}">
       <!-- OPR_TRUEBR label=2 -->
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_land_scal_scal" type="***"/>
@@ -347,24 +340,36 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
       </xaif:Condition>
     </xaif:If>
 
+    <xaif:EndLoop vertex_id="18" annotation="{WHIRL_Id#}"/>
+
+    <xaif:BasicBlock vertex_id="19" scope_id="3" annotation="{WHIRL_Id#71}">
+      <xaif:SubroutineCall statement_id="1" scope_id="1" symbol_id="compute__20">
+        <xaif:Argument position="1">
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_7"/>
+        </xaif:Argument>
+      </xaif:SubroutineCall>
+    </xaif:BasicBlock>
+
     <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
     <xaif:ControlFlowEdge edge_id="2" source="2" target="3"/>
     <xaif:ControlFlowEdge edge_id="3" source="3" target="4"/>
     <xaif:ControlFlowEdge edge_id="4" source="4" target="5"/>
-    <xaif:ControlFlowEdge edge_id="5" source="4" target="10"/>
-    <xaif:ControlFlowEdge edge_id="6" source="5" target="15"/>
-    <xaif:ControlFlowEdge edge_id="7" source="6" target="9"/>
-    <xaif:ControlFlowEdge edge_id="8" source="7" target="16"/>
-    <xaif:ControlFlowEdge edge_id="9" source="8" target="11"/>
-    <xaif:ControlFlowEdge edge_id="10" source="9" target="4"/>
-    <xaif:ControlFlowEdge edge_id="11" source="10" target="3"/>
-    <xaif:ControlFlowEdge edge_id="12" source="11" target="14"/>
-    <xaif:ControlFlowEdge edge_id="13" source="12" target="11"/>
-    <xaif:ControlFlowEdge edge_id="14" source="13" target="14"/>
-    <xaif:ControlFlowEdge edge_id="15" source="15" target="6"/>
-    <xaif:ControlFlowEdge edge_id="16" source="15" target="7"/>
-    <xaif:ControlFlowEdge edge_id="17" source="16" target="6"/>
-    <xaif:ControlFlowEdge edge_id="18" source="16" target="8"/>
+    <xaif:ControlFlowEdge edge_id="5" source="4" target="11"/>
+    <xaif:ControlFlowEdge edge_id="6" source="5" target="16"/>
+    <xaif:ControlFlowEdge edge_id="7" source="6" target="18"/>
+    <xaif:ControlFlowEdge edge_id="8" source="7" target="19"/>
+    <xaif:ControlFlowEdge edge_id="9" source="8" target="12"/>
+    <xaif:ControlFlowEdge edge_id="10" source="9" target="6"/>
+    <xaif:ControlFlowEdge edge_id="11" source="11" target="3"/>
+    <xaif:ControlFlowEdge edge_id="12" source="12" target="15"/>
+    <xaif:ControlFlowEdge edge_id="13" source="13" target="12"/>
+    <xaif:ControlFlowEdge edge_id="14" source="14" target="15"/>
+    <xaif:ControlFlowEdge edge_id="15" source="16" target="6"/>
+    <xaif:ControlFlowEdge edge_id="16" source="16" target="7"/>
+    <xaif:ControlFlowEdge edge_id="17" source="17" target="8"/>
+    <xaif:ControlFlowEdge edge_id="18" source="17" target="9"/>
+    <xaif:ControlFlowEdge edge_id="19" source="18" target="4"/>
+    <xaif:ControlFlowEdge edge_id="20" source="19" target="17"/>
   </xaif:ControlFlowGraph>
 
   <xaif:CallGraphEdge edge_id="1" source="2" target="1"/>

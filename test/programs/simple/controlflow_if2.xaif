@@ -165,14 +165,11 @@
       </xaif:Assignment>
     </xaif:BasicBlock>
 
-    <xaif:BasicBlock vertex_id="5" scope_id="2" annotation="{WHIRL_Id#42}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#42} [return]"/>
-    </xaif:BasicBlock>
+    <xaif:EndBranch vertex_id="5" annotation="{WHIRL_Id#}"/>
 
     <xaif:Exit vertex_id="6" annotation="{WHIRL_Id#}"/>
 
     <xaif:If vertex_id="7" annotation="{WHIRL_Id#14}">
-      <!-- OPR_IF -->
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
         <xaif:VariableReference vertex_id="2" du_ud="3">
@@ -184,13 +181,18 @@
       </xaif:Condition>
     </xaif:If>
 
+    <xaif:BasicBlock vertex_id="8" scope_id="2" annotation="{WHIRL_Id#42}">
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#42} [return]"/>
+    </xaif:BasicBlock>
+
     <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
     <xaif:ControlFlowEdge edge_id="2" source="2" target="7"/>
     <xaif:ControlFlowEdge edge_id="3" source="3" target="5"/>
     <xaif:ControlFlowEdge edge_id="4" source="4" target="5"/>
-    <xaif:ControlFlowEdge edge_id="5" source="5" target="6"/>
+    <xaif:ControlFlowEdge edge_id="5" source="5" target="8"/>
     <xaif:ControlFlowEdge edge_id="6" source="7" target="3"/>
     <xaif:ControlFlowEdge edge_id="7" source="7" target="4"/>
+    <xaif:ControlFlowEdge edge_id="8" source="8" target="6"/>
   </xaif:ControlFlowGraph>
 
 </xaif:CallGraph>

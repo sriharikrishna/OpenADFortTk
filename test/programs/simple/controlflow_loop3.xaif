@@ -158,33 +158,15 @@
 
     <xaif:BasicBlock vertex_id="6" scope_id="3" annotation="{WHIRL_Id#}"/>
 
-    <xaif:BasicBlock vertex_id="7" scope_id="3" annotation="{WHIRL_Id#89}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#89} [goto 1]"/>
-    </xaif:BasicBlock>
+    <xaif:EndBranch vertex_id="7" annotation="{WHIRL_Id#}"/>
 
     <xaif:BasicBlock vertex_id="8" scope_id="3" annotation="{WHIRL_Id#}"/>
 
-    <xaif:BasicBlock vertex_id="9" scope_id="3" annotation="{WHIRL_Id#91}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#91} [return]"/>
-    </xaif:BasicBlock>
+    <xaif:EndBranch vertex_id="9" annotation="{WHIRL_Id#}"/>
 
     <xaif:Exit vertex_id="10" annotation="{WHIRL_Id#}"/>
 
-    <xaif:If vertex_id="11" annotation="{WHIRL_Id#34}">
-      <!-- OPR_IF -->
-      <xaif:Condition>
-        <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
-        <xaif:VariableReference vertex_id="2" du_ud="1">
-          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_1"/>
-        </xaif:VariableReference>
-        <xaif:Constant vertex_id="3" type="real" value="0.00000000000000000000e+00"/>
-        <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
-        <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
-      </xaif:Condition>
-    </xaif:If>
-
-    <xaif:If vertex_id="12" annotation="{WHIRL_Id#82}">
-      <!-- OPR_IF -->
+    <xaif:If vertex_id="11" annotation="{WHIRL_Id#82}">
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_lt_scal_scal" type="***"/>
         <xaif:VariableReference vertex_id="2" du_ud="3">
@@ -196,19 +178,41 @@
       </xaif:Condition>
     </xaif:If>
 
+    <xaif:If vertex_id="12" annotation="{WHIRL_Id#34}">
+      <xaif:Condition>
+        <xaif:Intrinsic vertex_id="1" name="bogus_gt_scal_scal" type="***"/>
+        <xaif:VariableReference vertex_id="2" du_ud="1">
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_1"/>
+        </xaif:VariableReference>
+        <xaif:Constant vertex_id="3" type="real" value="0.00000000000000000000e+00"/>
+        <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
+        <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
+      </xaif:Condition>
+    </xaif:If>
+
+    <xaif:BasicBlock vertex_id="13" scope_id="3" annotation="{WHIRL_Id#89}">
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#89} [goto 1]"/>
+    </xaif:BasicBlock>
+
+    <xaif:BasicBlock vertex_id="14" scope_id="3" annotation="{WHIRL_Id#91}">
+      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#91} [return]"/>
+    </xaif:BasicBlock>
+
     <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
     <xaif:ControlFlowEdge edge_id="2" source="2" target="3"/>
-    <xaif:ControlFlowEdge edge_id="3" source="3" target="11"/>
-    <xaif:ControlFlowEdge edge_id="4" source="4" target="12"/>
+    <xaif:ControlFlowEdge edge_id="3" source="3" target="12"/>
+    <xaif:ControlFlowEdge edge_id="4" source="4" target="11"/>
     <xaif:ControlFlowEdge edge_id="5" source="5" target="10"/>
     <xaif:ControlFlowEdge edge_id="6" source="6" target="7"/>
-    <xaif:ControlFlowEdge edge_id="7" source="7" target="3"/>
+    <xaif:ControlFlowEdge edge_id="7" source="7" target="13"/>
     <xaif:ControlFlowEdge edge_id="8" source="8" target="9"/>
-    <xaif:ControlFlowEdge edge_id="9" source="9" target="10"/>
-    <xaif:ControlFlowEdge edge_id="10" source="11" target="4"/>
-    <xaif:ControlFlowEdge edge_id="11" source="11" target="8"/>
-    <xaif:ControlFlowEdge edge_id="12" source="12" target="5"/>
-    <xaif:ControlFlowEdge edge_id="13" source="12" target="6"/>
+    <xaif:ControlFlowEdge edge_id="9" source="9" target="14"/>
+    <xaif:ControlFlowEdge edge_id="10" source="11" target="5"/>
+    <xaif:ControlFlowEdge edge_id="11" source="11" target="6"/>
+    <xaif:ControlFlowEdge edge_id="12" source="12" target="4"/>
+    <xaif:ControlFlowEdge edge_id="13" source="12" target="8"/>
+    <xaif:ControlFlowEdge edge_id="14" source="13" target="3"/>
+    <xaif:ControlFlowEdge edge_id="15" source="14" target="10"/>
   </xaif:ControlFlowGraph>
 
   <!-- ******************************************************************** -->
