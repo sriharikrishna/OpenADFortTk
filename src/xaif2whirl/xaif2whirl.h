@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.10 2004/03/12 18:22:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.11 2004/03/24 13:33:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -32,6 +32,10 @@
 //************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
+
+//************************ OpenAnalysis Include Files ***********************
+
+#include <OpenAnalysis/Utils/DGraph.h>
 
 //*************************** User Include Files ****************************
 
@@ -151,6 +155,22 @@ CreateParm(WN *arg, UINT32 flag)
   TYPE_ID rtype = WN_rtype(arg);
   return WN_CreateParm(rtype, arg, MTYPE_To_TY(rtype), flag);
 }
+
+//***************************************************************************
+
+// MyDGNode: Used to create convenient graphs from XAIF graphs
+typedef std::map<std::string, DGraph::Node*> VertexIdToDGraphNodeMap;
+
+class MyDGNode : public DGraph::Node {
+public:
+  MyDGNode(const DOMElement* e_) : e(e_) { }
+  virtual ~MyDGNode() { }
+
+  DOMElement* GetElem() const { return const_cast<DOMElement*>(e); }
+  
+private:
+  const DOMElement* e;
+};
 
 //***************************************************************************
 

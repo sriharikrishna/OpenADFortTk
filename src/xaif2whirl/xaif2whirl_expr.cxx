@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.10 2004/02/25 16:23:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.11 2004/03/24 13:33:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -37,10 +37,6 @@
 
 #include <include/Open64BasicTypes.h>
 
-//************************ OpenAnalysis Include Files ***********************
-
-#include <OpenAnalysis/Utils/DGraph.h>
-
 //*************************** User Include Files ****************************
 
 #include "xaif2whirl.h"
@@ -68,20 +64,7 @@ using std::endl;
 
 using namespace xaif2whirl;
 
-// MyDGNode: Used with CreateExpressionGraph
-typedef std::map<std::string, DGraph::Node*> IdToNodeMap;
-
-class MyDGNode : public DGraph::Node {
-public:
-  MyDGNode(const DOMElement* e_) : e(e_) { }
-  virtual ~MyDGNode() { }
-
-  DOMElement* GetElem() const { return const_cast<DOMElement*>(e); }
-  
-private:
-  const DOMElement* e;
-};
-
+// Used with CreateExpressionGraph
 // lt_ExprArgument: Used to sort operands (arguments) of (to) an
 // expression by the "position" attribute
 struct lt_ExprArgument
@@ -180,38 +163,32 @@ xlate_Expression(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 {
   // Recursively translate the DAG (tree) rooted at this node
   DOMElement* elem = n->GetElem();
-  ASSERT_FATAL(elem, (DIAG_A_STRING, "Programming error."));
   
   const XMLCh* nameX = elem->getNodeName();
   XercesStrX name = XercesStrX(nameX);
   
   WN* wn = NULL;
   if (XMLString::equals(nameX, XAIFStrings.elem_VarRef_x())) {
-
     // VariableReference
     wn = xlate_VarRef(elem, ctxt);
-
-  } else if (XMLString::equals(nameX, XAIFStrings.elem_Constant_x())) {
-    
+  } 
+  else if (XMLString::equals(nameX, XAIFStrings.elem_Constant_x())) {
     // Constant
     wn = xlate_Constant(elem, ctxt);
-
-  } else if (XMLString::equals(nameX, XAIFStrings.elem_Intrinsic_x())) {
-    
+  } 
+  else if (XMLString::equals(nameX, XAIFStrings.elem_Intrinsic_x())) {
     // Intrinsic
     wn = xlate_Intrinsic(g, n, ctxt);
-    
-  } else if (XMLString::equals(nameX, XAIFStrings.elem_FuncCall_x())) {
-
+  } 
+  else if (XMLString::equals(nameX, XAIFStrings.elem_FuncCall_x())) {
     // FunctionCall
     wn = xlate_FunctionCall(g, n, ctxt);
-
-  } else if (XMLString::equals(nameX, XAIFStrings.elem_BoolOp_x())) {
-    
+  } 
+  else if (XMLString::equals(nameX, XAIFStrings.elem_BoolOp_x())) {
     // BooleanOperation
     wn = xlate_BooleanOperation(g, n, ctxt);
-    
-  } else {
+  } 
+  else {
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Unknown Expression element"));
   }
 
@@ -288,16 +265,14 @@ xlate_VarRef(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   WN* wn = NULL;  
   const XMLCh* nameX = elem->getNodeName();
   if (XMLString::equals(nameX, XAIFStrings.elem_SymRef_x())) {
-    
     // SymbolReference
     wn = xlate_SymbolReference(elem, ctxt);
-
-  } else if (XMLString::equals(nameX, XAIFStrings.elem_ArrayElemRef_x())) {
-    
+  } 
+  else if (XMLString::equals(nameX, XAIFStrings.elem_ArrayElemRef_x())) {
     // ArrayElementReference
     wn = xlate_ArrayElementReference(g, n, ctxt);
-    
-  } else {
+  } 
+  else {
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Unknown Variable Reference element"));
   }
   
@@ -321,14 +296,12 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
   WN* wn = NULL;
   if ((strcmp(type.c_str(), "real") == 0) ||
       (strcmp(type.c_str(), "double") == 0)) {
-
     // Floating point constant
     double val = strtod(value.c_str(), (char **)NULL);
     TCON tcon = Host_To_Targ_Float(MTYPE_F8, val);
     wn = Make_Const(tcon);
-
-  } else if (strcmp(type.c_str(), "integer") == 0) {
-    
+  } 
+  else if (strcmp(type.c_str(), "integer") == 0) {
     // Integer constant: Integer constants that are used in non-index
     // expressions typically need to have an associated symbol
     // (ST*). Consequently we typically represent this as an
@@ -340,9 +313,8 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
       TCON tcon = Host_To_Targ(MTYPE_I8, val);
       wn = Make_Const(tcon); 
     }
-    
-  } else if (strcmp(type.c_str(), "bool") == 0) {
-    
+  } 
+  else if (strcmp(type.c_str(), "bool") == 0) {
     // Boolean constant: boolean values can be true/false or 1/0
     // We use OPR_CONST instead of OPR_INTCONST so that we can set the
     // boolean flag for a TY.
@@ -360,15 +332,13 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
     ST* st = New_Const_Sym(Enter_tcon(tcon), MTYPE_To_TY(TCON_ty(tcon)));
     Set_TY_is_logical(ST_type(st));
     wn = WN_CreateConst(OPC_I4CONST, st);
-    
-  } else if (strcmp(type.c_str(), "char") == 0) {
-
+  } 
+  else if (strcmp(type.c_str(), "char") == 0) {
     // Character constant. Cf. cwh_stmt.cxx:349
     // wn = WN_CreateIntconst(OPC_I4INTCONST, (INT64)val);
     assert(false); // FIXME
-
-  } else if (strcmp(type.c_str(), "string") == 0) {
-
+  } 
+  else if (strcmp(type.c_str(), "string") == 0) {
     // String constant. A string constant reference to "S" looks like:
     //   U4U1ILOAD 0 T<43,.character.,1> T<175,anon_ptr.,8>
     //     U8LDA 0 <1,596,(1_bytes)_"S"> T<127,anon_ptr.,8>
@@ -382,7 +352,6 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
     TYPE_ID rty = TY_mtype(ty_ptr); // Pointer_Mtype
     WN* lda = WN_CreateLda(OPR_LDA, rty, MTYPE_V, 0, ty_ptr, st, 0);
     wn = WN_CreateIload(OPR_ILOAD, MTYPE_U4, MTYPE_U1, 0, ty, ty_ptr, lda, 0);
-    
   }
 
   return wn;
@@ -680,7 +649,7 @@ static DGraph*
 CreateExpressionGraph(const DOMElement* elem, bool varRef)
 {
   DGraph* g = new DGraph;
-  IdToNodeMap m;
+  VertexIdToDGraphNodeMap m;
 
   // Setup variables
   XMLCh* edgeStr = NULL;
@@ -709,7 +678,7 @@ CreateExpressionGraph(const DOMElement* elem, bool varRef)
 
       MyDGNode* gn1 = NULL, *gn2 = NULL; // src and targ
       
-      IdToNodeMap::iterator it = m.find(std::string(src.c_str()));
+      VertexIdToDGraphNodeMap::iterator it = m.find(std::string(src.c_str()));
       if (it != m.end()) { 
 	gn1 = dynamic_cast<MyDGNode*>((*it).second); 
       }
@@ -840,14 +809,17 @@ CreateDerivSelector(WN* wn)
     if (opr == OPR_LDA) {
       STAB_OFFSET offset = WN_lda_offset(wn) + 8;
       WN_lda_offset(wn) = offset;
-    } else if (opr == OPR_LDID || opr == OPR_ILOAD) {
+    } 
+    else if (opr == OPR_LDID || opr == OPR_ILOAD) {
       STAB_OFFSET offset = WN_load_offset(wn) + 8;
       WN_load_offset(wn) = offset;
-    } else if (opr == OPR_ARRAY) {
+    } 
+    else if (opr == OPR_ARRAY) {
       // ARRAY: Place an ADD around the ARRAY with the offset
       WN* offsetWN = WN_CreateIntconst(OPC_U8INTCONST, 8);
       retWN = WN_CreateExp2(OPC_U8ADD, wn, offsetWN);
-    } else {
+    } 
+    else {
       ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
     }
     return retWN;
@@ -982,7 +954,8 @@ GetWNExprOpcode(OPERATOR opr, std::vector<WN*>& opands)
   if (opr == OPR_SQRT && MTYPE_is_integral(rty)) {
     // sqrt: f, z
     rty = GetMType(MTYPE_CLASS_FLOAT, MTYPE_byte_size(rty));
-  } else if (opr == OPR_TRUNC) {
+  } 
+  else if (opr == OPR_TRUNC) {
     // trunc: i
     rty = GetMType(MTYPE_CLASS_INTEGER, MTYPE_byte_size(rty));
   }
