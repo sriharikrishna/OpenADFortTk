@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.cxx,v 1.8 2004/12/23 16:26:40 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.cxx,v 1.9 2005/02/01 22:31:43 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -84,7 +84,8 @@
 
 int FORTTK_DBG_LVL_PUB = 0;
 
-static char        Diag_Phase_Name[80] = "";
+static const UINT  Diag_Phase_Name_Len = 80;
+static char        Diag_Phase_Name[Diag_Phase_Name_Len+1] = "";
 static FILE       *Diag_File = NULL;
 static int         Diag_Max_Diags = 10;  /* Default */
 static int         Diag_Warn_Count = 0;
@@ -236,7 +237,8 @@ void
 Diag_Set_Phase(const char *phase_name)
 {
   Set_Error_Phase(phase_name); /* Initiate the common error handler */
-  (void)strcpy(Diag_Phase_Name, phase_name);
+  (void)strncpy(Diag_Phase_Name, phase_name, Diag_Phase_Name_Len);
+  Diag_Phase_Name[Diag_Phase_Name_Len] = '\0';
 }
 
 
