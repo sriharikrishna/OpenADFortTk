@@ -1,4 +1,4 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.5 2003/10/14 19:26:53 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.6 2003/10/14 19:45:29 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
@@ -22,7 +22,7 @@ Open64
   cvs co Open64
 
 OpenAnalysis
-  cvs co OpenAnalysis -r ValNum-init
+  cvs co -r ValNum-init OpenAnalysis
   cvs update -j HEAD
 
 xercesc [if necessary]
