@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.7 2004/02/18 18:41:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.8 2004/03/19 16:54:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -177,6 +177,7 @@ ST2F_Declare_Tempvar(TY_IDX ty, UINT idx);
 
 //-------------------------------------
 
+// FIXME: see: wn_attr.h WN_Call_First_Arg_Idx
 #define ST2F_FIRST_PARAM_IDX(funtype) \
    (Func_Return_To_Param(funtype)? \
     (Func_Return_Character(funtype)? 2 : 1) : 0)

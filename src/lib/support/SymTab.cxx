@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.cxx,v 1.9 2003/10/14 20:26:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.cxx,v 1.10 2004/03/19 16:54:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -76,15 +76,13 @@ IsVarRefTranslatableToXAIF(const WN* wn)
   case OPR_LDID:
   case OPR_LDBITS: { // symref
     TY_IDX baseobj_ty = ST_type(WN_st(wn));
-    TY_IDX refobj_ty = WN_ty(wn);
+    TY_IDX refobj_ty = WN_Tree_Type(wn);
     return (IsScalarRef(baseobj_ty, refobj_ty));
   }
   
   case OPR_ILOAD: { // memref
     TY_IDX baseobj_ty = TY_pointed(WN_load_addr_ty(wn));
-    TY_IDX baseobj_ty1 = TY_pointed(WN_Tree_Type(WN_kid0(wn))); // FIXME
-    ASSERT_FATAL(baseobj_ty = baseobj_ty1, (DIAG_A_STRING, "Error!")); //FIXME
-    TY_IDX refobj_ty = WN_ty(wn);
+    TY_IDX refobj_ty = WN_Tree_Type(wn);
     return (IsScalarRef(baseobj_ty, refobj_ty));
   }
   
@@ -134,7 +132,6 @@ IsNonScalarRef(const WN* wn)
     // ILOADX, ISTOREX
     // ILDBITS, ISTBITS
     // MLOAD, MSTORE: memref
-    // OPR_IDNAME:
     
   case OPR_LDA:  // FIXME:
   case OPR_LDMA: // FIXME: 
@@ -145,23 +142,16 @@ IsNonScalarRef(const WN* wn)
   case OPR_STID:
   case OPR_STBITS: { // symref
     // For stores, only check LHS (kid1)
-    TY_IDX baseobj_ty = ST_type(WN_st(wn));
-    TY_IDX refobj_ty = WN_ty(wn);
+    TY_IDX baseobj_ty = WN_GetBaseObjType(wn);
+    TY_IDX refobj_ty = WN_GetRefObjType(wn);
     return (IsNonScalarRef(baseobj_ty, refobj_ty));
   }
   
-  case OPR_ILOAD: { // memref
-    TY_IDX baseobj_ty = TY_pointed(WN_load_addr_ty(wn));
-    TY_IDX baseobj_ty1 = TY_pointed(WN_Tree_Type(WN_kid0(wn))); // FIXME
-    ASSERT_FATAL(baseobj_ty = baseobj_ty1, (DIAG_A_STRING, "Error!")); //FIXME
-    TY_IDX refobj_ty = WN_ty(wn);
-    return (IsNonScalarRef(baseobj_ty, refobj_ty));
-  }
-
+  case OPR_ILOAD: 
   case OPR_ISTORE: { // memref
-    // Only check LHS (kid1)
-    TY_IDX baseobj_ty = TY_pointed(WN_ty(wn));
-    TY_IDX refobj_ty = TY_pointed(WN_ty(wn));
+    // For stores, only check LHS (kid1)
+    TY_IDX baseobj_ty = WN_GetBaseObjType(wn);
+    TY_IDX refobj_ty = WN_GetRefObjType(wn);
     return (IsNonScalarRef(baseobj_ty, refobj_ty));
   }
 

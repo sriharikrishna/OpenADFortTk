@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.27 2004/02/26 14:24:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.28 2004/03/19 16:54:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -308,19 +308,17 @@ whirl2xaif::xlate_LDA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ASSERT_DBG_FATAL(ST_class(WN_st(wn)) != CLASS_PREG, 
 		   (DIAG_W2F_CANNOT_LDA_PREG));
   
-  // The referenced object's address is at some offset from the base
-  // object.  These are types for 1) the base object and a pointer to
-  // it 2) the referenced object.
+  // Base and referenced (some offset, possibly 0, from base) objects
   ST* base_st = WN_st(wn); // symbol for base object
-  TY_IDX base_ty = ST_type(base_st);
-  if (TY_is_f90_pointer(base_ty)) { base_ty = TY_pointed(base_ty); }
+  TY_IDX base_ty = WN_GetBaseObjType(wn);
   TY_IDX baseptr_ty = Stab_Pointer_To(base_ty);
-
-  // Sometimes we need to deal with buggy WHIRL code, where the type
-  // associated with an LDA is not a pointer type.  For such cases
-  // we infer a type; it may be wrong but it is the best we can do.
-  TY_IDX ref_ty = (TY_Is_Pointer(WN_ty(wn))) ? TY_pointed(WN_ty(wn)) : base_ty;
-    
+  TY_IDX ref_ty = WN_GetRefObjType(wn); // a pointer type
+  
+  // Implicit dereference (Note: sometimes we need to deal with buggy
+  // WHIRL code, where ref_ty is not a pointer type.  In this case we
+  // guess a type.
+  ref_ty = (TY_Is_Pointer(ref_ty)) ? TY_pointed(ref_ty) : base_ty;
+  
   ctxt.CurContext().SetWN(wn);
   ctxt.ResetDerefAddr();
   set_XlationContext_has_no_arr_elmt(ctxt);
@@ -337,12 +335,10 @@ whirl2xaif::xlate_LDID(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_LDID, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_LDID"));
 
-  // The referenced object's address is at some offset from the base
-  // object.  These are types for 1) the base object and a pointer to
-  // it 2) the referenced object.
-  TY_IDX base_ty = ST_type(WN_st(wn));
+  // Base and referenced (some offset, possibly 0, from base) objects
+  TY_IDX base_ty = WN_GetBaseObjType(wn);
   TY_IDX baseptr_ty;
-  TY_IDX ref_ty = WN_ty(wn);
+  TY_IDX ref_ty = WN_GetRefObjType(wn);
   
   if (ST_class(WN_st(wn)) == CLASS_PREG) {
     ST2F_Use_Preg(xos, base_ty, WN_load_offset(wn)); // FIXME if WN_load_offset(wn) == -1
@@ -410,22 +406,19 @@ whirl2xaif::xlate_ILOAD(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ILOAD, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_ILOAD"));
 
-  // The referenced object's address is at some offset from the base
-  // object.  These are types for 1) the base object and a pointer to
-  // it 2) the referenced object.
+  // Base and referenced (some offset, possibly 0, from base) objects
   WN* baseptr = WN_kid0(wn); // address expression as WN
-  TY_IDX baseptr_ty = WN_load_addr_ty(wn); // == WN_Tree_Type(baseptr)
-  TY_IDX base_ty = TY_pointed(baseptr_ty); 
-  TY_IDX ref_ty = WN_ty(wn);
-
+  TY_IDX base_ty = WN_GetBaseObjType(wn);
+  TY_IDX baseptr_ty = Stab_Pointer_To(base_ty);
+  TY_IDX ref_ty = WN_GetRefObjType(wn);
+  
   // Translate into a reference (dereference address???)
   ctxt.CurContext().SetWN(wn);
   if (WN_operator(baseptr) == OPR_LDA || WN_operator(baseptr) == OPR_LDID)
     set_XlationContext_has_no_arr_elmt(ctxt); // FIXME
   
-  xlate_MemRef(xos, baseptr, baseptr_ty, ref_ty,
-		     WN_load_offset(wn), ctxt);
-
+  xlate_MemRef(xos, baseptr, baseptr_ty, ref_ty, WN_load_offset(wn), ctxt);
+  
   reset_XlationContext_has_no_arr_elmt(ctxt);
 
   return whirl2xaif::good;
@@ -475,14 +468,11 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_STID, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_STID"));
 
-  // For LHS (the storage container):
-  // The referenced object's address is at some offset from the base
-  // object.  These are types for 1) the base object and a pointer to
-  // it 2) the referenced object.
+  // LHS base and referenced (some offset, possibly 0, from base) objects
   ST* base_st = WN_st(wn); // symbol for base object
-  TY_IDX base_ty = ST_type(base_st);
+  TY_IDX base_ty = WN_GetBaseObjType(wn);
   TY_IDX baseptr_ty = Stab_Pointer_To(base_ty);
-  TY_IDX ref_ty = WN_ty(wn);
+  TY_IDX ref_ty = WN_GetRefObjType(wn);
   
   // Assignment
   if (!ctxt.IsAssign()) {
@@ -529,16 +519,11 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ISTORE, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_ISTORE"));
 
-  // For LHS (the storage container):
-  // The referenced object's address is at some offset from the base
-  // object.  These are types for 1) the base object and a pointer to
-  // it 2) the referenced object.
+  // LHS base and referenced (some offset, possibly 0, from base) objects
   WN* baseptr = WN_kid1(wn); // address expression as WN
-  TY_IDX baseptr_ty = WN_ty(wn); // == WN_Tree_Type(baseptr)
-  TY_IDX base_ty = TY_pointed(baseptr_ty); 
-  TY_IDX ref_ty = TY_pointed(WN_ty(wn)); // FIXME: no direct way to get this
-
-  assert(baseptr_ty == WN_Tree_Type(baseptr)); // FIXME
+  TY_IDX base_ty = WN_GetBaseObjType(wn);
+  TY_IDX baseptr_ty = Stab_Pointer_To(base_ty);
+  TY_IDX ref_ty = WN_GetRefObjType(wn);
   
   // Assignment
   if (!ctxt.IsAssign()) {

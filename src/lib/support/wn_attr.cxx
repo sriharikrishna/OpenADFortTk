@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.9 2004/02/23 22:33:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.10 2004/03/19 16:54:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -69,10 +69,14 @@
 
 //*************************** User Include Files ****************************
 
-#include "wn_attr.h"
 #include "stab_attr.h"
+#include "wn_attr.h"
+#include "diagnostics.h"
 
 //************************** Forward Declarations ***************************
+
+static TY_IDX
+WN_get_tld_type(const WN* wn);
 
 //***************************************************************************
 
@@ -124,258 +128,70 @@ WN_Cvtl_Ty(const WN *wn)
    return Stab_Mtype_To_Ty(cvtl_mtype);
 } /* WN_Cvtl_Ty */
 
-TY_IDX Get_Field_Type(TY_IDX base, int field_id) {
 
-  Is_True(TY_Is_Structured(base), ("CALLING GET_FIELD_TYPE with a non struct type"));
+//***************************************************************************
 
-  UINT cur_fld_id = 0;
-  FLD_HANDLE fh = FLD_get_to_field(base, field_id, cur_fld_id);
-  return FLD_type(fh);
-}
-
-/*------------------------ Exported functions -------------------------
- *---------------------------------------------------------------------*/
-
-
-static TY_IDX
-WN_get_tld_type(const WN* wn) 
-{
-  //wn must be TLD_ADDR(...)
-  WN* kid = WN_kid0(WN_kid0(wn));
-  TY_IDX result_ty = WN_Tree_Type(kid);
-  switch (TY_kind(result_ty)) {
-  case KIND_ARRAY: {
-    TY_IDX new_ty;
-    int dim = 1;
-    for (new_ty = TY_etype(result_ty); TY_kind(new_ty) == KIND_ARRAY; new_ty = TY_etype(new_ty), dim++);
-    for (;dim > 0; new_ty = Make_Pointer_Type(new_ty), dim--);
-    return new_ty;
-  }
-  case KIND_STRUCT:
-    if (WN_field_id(kid) != 0) {
-      return Make_Pointer_Type(Get_Field_Type(result_ty, WN_field_id(kid)));
-    }
-    return Make_Pointer_Type(result_ty);
-  case KIND_POINTER: {
-    //need to handle ptr to shared data as a speical case
-    TY_IDX pointed = TY_pointed(result_ty);
-    if (TY_is_shared(pointed)) {
-      if (TY_kind(pointed) != KIND_VOID &&
-	  Get_Type_Block_Size(pointed) <= 1) {
-	return Make_Pointer_Type(Make_Pointer_Type(pshared_ptr_idx));
-      } else {
-	return Make_Pointer_Type(Make_Pointer_Type(shared_ptr_idx));
-      }
-    }
-    //fall thru to the default case if not shared
-  }
-  default:
-    return Make_Pointer_Type(result_ty);
-  }
-}
-
-
-const char *
-WN_intrinsic_name(INTRINSIC intr_opc)
-{
-  const char *name = NULL;
-  Is_True(INTRINSIC_FIRST<=intr_opc && intr_opc<=INTRINSIC_LAST,
-	  ("Intrinsic Opcode (%d) out of range", intr_opc)); 
-  
-  if (INTRN_high_level_name(intr_opc) != NULL) {
-    name = INTRN_high_level_name(intr_opc);
-  } else {
-    name = get_intrinsic_name(intr_opc);
-  }
-  
-  return name;
-}
-
-
+// Return a TY that as closely as possible represents the type of the
+// given subexpression (wn).  Supports calls (both as statements and
+// expressions).  Also supports stores, returning the type of the
+// referenced object (possibly dereferencing a pointer type).
+//
+// Note: TY_is_logical() will only hold true when the TY is resolved
+// from a WN_ty or ST_ty attribute, not when it is resolved from an
+// MTYPE.
+//
+// Note: Pointer types may be created as a result of a call to this
+// routine.
 TY_IDX
-WN_intrinsic_return_ty(OPCODE wn_opc, INTRINSIC intr_opc, const WN *call)
+WN_Tree_Type(const WN* wn)
 {
-   TY_IDX ret_ty;
-   
-   Is_True(INTRINSIC_FIRST<=intr_opc && intr_opc<=INTRINSIC_LAST,
-	   ("Intrinsic Opcode (%d) out of range", intr_opc)); 
-   switch (INTRN_return_kind(intr_opc))
-   {
-   case IRETURN_UNKNOWN:
-      /* Use the opcode to get the type */
-      ret_ty = Stab_Mtype_To_Ty(OPCODE_rtype(wn_opc));
-      break;
-   case IRETURN_V:
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_V);
-      break;
-   case IRETURN_I1:
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_I1);
-      break;
-   case IRETURN_I2:
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_I2);
-      break;
-   case IRETURN_I4:
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_I4);
-      break;
-   case IRETURN_I8:
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_I8);
-      break;
-   case IRETURN_U1:
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_U1);
-      break;
-   case IRETURN_U2:
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_U2);
-      break;
-   case IRETURN_U4:
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_U4);
-      break;
-   case IRETURN_U8:
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_U8);
-      break;
-   case IRETURN_F4:
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_F4);
-      break;
-   case IRETURN_F8:
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_F8);
-      break;
-   case IRETURN_FQ:
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_FQ);
-      break;
-   case IRETURN_C4:
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_C4);
-      break;
-   case IRETURN_C8:
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_C8);
-      break;
-   case IRETURN_CQ:
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_CQ);
-      break;
-   case IRETURN_PV:
-      ret_ty = Stab_Pointer_To(Stab_Mtype_To_Ty(MTYPE_V));
-      break;
-   case IRETURN_PU1:
-      ret_ty = Stab_Pointer_To(Stab_Mtype_To_Ty(MTYPE_U1));
-      break;
-   case IRETURN_DA1:
-      ret_ty = WN_Tree_Type(WN_kid0(call));
-      break;
-   case IRETURN_M:
-     ret_ty = Stab_Mtype_To_Ty(MTYPE_M);
-     break;
-   default:
-      Is_True(FALSE, 
-	      ("Unexpected INTRN_RETKIND in WN_intrinsic_return_ty()"));
-      ret_ty = Stab_Mtype_To_Ty(MTYPE_V);
-      break;
-   }
-   
-   return ret_ty;
-} /* WN_intrinsic_return_ty */
-
-
-BOOL 
-WN_intrinsic_return_to_param(TY_IDX return_ty)
-{
-  // Assume there is only one case when the return value cannot be
-  // passed through registers: a quad precision complex number.
-  return (TY_mtype(return_ty) == MTYPE_CQ);
-}
-
-
-WN *
-WN_Get_PtrAdd_Intconst(WN* wn0, WN* wn1, TY_IDX pointed_ty)
-{
-   /* We make an attempt at retaining pointer types for ptr
-    * additions, where we expect the ptr expression to be of
-    * one of the following forms:
-    *
-    *    1)  ptr + expr
-    *    2)  ptr + expr*const
-    *    3)  ptr + const
-    *
-    * where const must be a multiple of the size of the pointed_ty
-    * and only abscent when the size is 1. If this pattern is not 
-    * found, then return NULL; otherwise return the const expression,
-    * if one is found, or the integral expression when size==1.
-    */
-   WN *intconst = NULL;
-	 
-   /* Identify the integral expression */
-   if (!TY_Is_Pointer(WN_Tree_Type(wn0)))
-      intconst = wn0;
-   else if (!TY_Is_Pointer(WN_Tree_Type(wn1)))
-      intconst = wn1;
-
-   /* Get the constant expression */
-   if (intconst != NULL && TY_size(pointed_ty) > 1)
-   {
-      /* Identify the integral constant expression */
-      if (WN_operator(intconst) == OPR_MPY)
-      {
-	 if (WN_operator(WN_kid0(intconst)) == OPR_INTCONST)
-	    intconst = WN_kid0(intconst);
-	 else if (WN_operator(WN_kid1(intconst)) == OPR_INTCONST)
-	    intconst = WN_kid1(intconst);
-	 else
-	    intconst = NULL;
-      }
-      else if (WN_operator(intconst) != OPR_INTCONST)
-	 intconst = NULL;
-   }
-   
-   /* Make sure the constant expression is a multiple of the size of type
-    * pointed to.
-    */
-   if (TY_size(pointed_ty) == 0 ||    /* incomplete type */
-       (intconst != NULL && 
-	WN_operator(intconst) == OPR_INTCONST &&
-	WN_const_val(intconst)%TY_size(pointed_ty) != 0LL))
-   {
-      intconst = NULL;
-   }
-   return intconst;
-} /* WN_Get_PtrAdd_Intconst */
-
-
-
-TY_IDX
-WN_Tree_Type(const WN *wn)
-{
-  /* Return a TY that as closely as possible represents the type of the
-   * given subexpression (wn).
-   *
-   * TY_is_logical() will only hold true when the TY is resolved from
-   * a WN_ty or ST_ty attribute, not when it is resolved from an MTYPE.
-   *
-   * Pointer types may be created as a result of a call to this routine.
-   */
-  
-  TY_IDX ty = MTYPE_To_TY(MTYPE_V); /* return value, default = void */
+  TY_IDX ty = MTYPE_To_TY(MTYPE_V); // default is void
   if (wn == NULL)
     return ty;
- 
-  if (OPCODE_is_expression(WN_opcode(wn))) {
-    switch (WN_operator(wn)) {
+
+  OPERATOR opr = WN_operator(wn);
+
+  if (OPERATOR_is_stmt(opr)) {
+    // -------------------------------------------------------
+    // Statements
+    // -------------------------------------------------------
+    if (OPERATOR_is_call(opr)) {
+      // CALLs: statements and expressions (in VH WHIRL)
+      ty = WN_Call_Return_Type(wn);      
+    } 
+    else if (OPERATOR_is_store(opr)) {
+      // STOREs: return type of lhs referenced *object*
+      ty = WN_GetRefObjType(wn);
+    }
+  }
+  else if (OPERATOR_is_expression(opr)) {
+    // -------------------------------------------------------
+    // Expressions
+    // -------------------------------------------------------
+    switch (opr) {
       
+      // LOADs
+    case OPR_LDA:
+    case OPR_LDMA:
+    case OPR_LDID:
+    case OPR_LDBITS:
+      ty = WN_GetRefObjType(wn);
+      break;
     case OPR_ILOAD:
     case OPR_ILOADX:
-      ty = WN_ty(wn);
-      if (TY_kind(ty) == KIND_STRUCT && // FIXME: is this right???
-	  WN_field_id(wn) > 0) {
+      ty = WN_ty(wn); // type of referenced object
+      if (TY_kind(ty) == KIND_STRUCT && WN_field_id(wn) > 0) {
+	ASSERT_FATAL(false, (DIAG_A_STRING, "Test me!")); // FIXME
 	//WEI: for field accesses we return the type of the field
 	ty = TY_pointed(WN_load_addr_ty(wn));
       }
       break;
-    case OPR_LDID:
-    case OPR_LDA:
-      ty = WN_ty(wn);
-      break;
       
-    case OPR_MLOAD:
-      /* There is not much we can do about this case */
+    case OPR_MLOAD: // type of referenced object
+      // There is not much we can do about this case
       if (WN_operator(WN_kid1(wn)) == OPR_INTCONST &&
 	  TY_Is_Structured(TY_pointed(WN_ty(wn)))) {
-
+	
 	/* WEI: for field accesses, get the type of the field */
 	if (WN_field_id(wn) != 0) {
 	  ty = Get_Field_Type(TY_pointed(WN_ty(wn)), WN_field_id(wn));
@@ -388,12 +204,13 @@ WN_Tree_Type(const WN *wn)
 	ty = TY_pointed(WN_ty(wn));
       }
       break;
+      
+      // ARRAYs
     case OPR_ARRSECTION:  
     case OPR_ARRAY:
     case OPR_ARRAYEXP:
     case OPR_ARRAY_CONSTRUCT:
-    case OPR_IMPLIED_DO:
-      
+    case OPR_IMPLIED_DO:      
       /* Get the address type denoted by the base offset by the
        * given indexing expression. Note that we do handle
        * pointers as arrays when there is no ambiguity, and
@@ -428,9 +245,8 @@ WN_Tree_Type(const WN *wn)
       break;
       
     case OPR_SELECT:
-      /* We make an attempt at retaining pointer types for ptr
-       * arithmetics.
-       */
+      // We make an attempt at retaining pointer types for ptr
+      // arithmetics.
       if (WN_rtype(wn) == Pointer_Mtype) {
 	ty = WN_Tree_Type(WN_kid0(wn));
 	if (!TY_Is_Pointer(ty)) {
@@ -478,7 +294,6 @@ WN_Tree_Type(const WN *wn)
       break;
       
     case OPR_INTRINSIC_OP:
-      
       if (WN_intrinsic(wn) == INTRN_TLD_ADDR) {
 	//in this case we get its actual type from its arguments
 	ty = WN_get_tld_type(wn);
@@ -500,8 +315,7 @@ WN_Tree_Type(const WN *wn)
 	  ty = WN_Tree_Type(WN_kid0(wn));
 	}
       } else {
-	ty = WN_intrinsic_return_ty(WN_opcode(wn),
-				    (INTRINSIC)WN_intrinsic(wn), wn);
+	ty = WN_intrinsic_return_ty(wn);
       }
       break;
       
@@ -570,13 +384,402 @@ WN_Tree_Type(const WN *wn)
       break;
       
     default:
-      /* Only the above forms of expression nodes are handled here */
-      ErrMsg ( EC_Invalid_Case, "WN_Tree_Type", __LINE__ );
+      ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
     } /* switch */
-  } /* else */
+  }
    
   return ty;
-} /* WN_Tree_Type */
+}
+
+
+TY_IDX 
+Get_Field_Type(TY_IDX base, int field_id) 
+{
+  ASSERT_FATAL(TY_Is_Structured(base), 
+	       (DIAG_A_STRING, "GET_FIELD_TYPE: non struct type"));
+  
+  UINT cur_fld_id = 0;
+  FLD_HANDLE fh = FLD_get_to_field(base, field_id, cur_fld_id);
+  return FLD_type(fh);
+}
+
+
+//***************************************************************************
+
+TY_IDX 
+WN_GetRefObjType(const WN* wn)
+{
+  TY_IDX ty = 0;
+  OPERATOR opr = WN_operator(wn); 
+  
+  switch (opr) {
+    case OPR_LDA:     // type of referenced (returned) address
+    case OPR_LDMA:
+      ty = WN_ty(wn); 
+      break;
+    
+    case OPR_LDID:    // type of referenced object
+    case OPR_LDBITS:
+      ty = WN_ty(wn); 
+      break;
+      
+    case OPR_ILOAD:   // type of referenced object
+    case OPR_ILOADX:
+      ty = WN_ty(wn);
+      WN_Tree_Type(wn); // FIXME: cf. WN_Tree_Type and structs
+      break;
+    
+    // STOREs represent the left-hand-side expression
+    case OPR_STID:    // type of referenced lhs object
+    case OPR_STBITS:
+      ty = WN_ty(wn);
+      break;
+      
+    case OPR_ISTORE:  // type of referenced lhs object
+    case OPR_ISTOREX:
+    case OPR_ISTBITS:
+      ty = TY_pointed(WN_ty(wn));
+      break;
+    
+    default: 
+      // NOTE: MLOAD, MSTORE are not supported
+      ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
+      break;
+  }
+  return ty;
+}
+
+
+TY_IDX 
+WN_GetBaseObjType(const WN* wn)
+{
+  TY_IDX ty = 0;
+  OPERATOR opr = WN_operator(wn); 
+
+  ST* st = NULL;
+  switch (opr) {
+    case OPR_LDA:
+    case OPR_LDMA:
+      st = WN_st(wn);
+      ty = ST_type(st);
+      if (TY_is_f90_pointer(ty)) { ty = TY_pointed(ty); }
+      break;
+    
+    case OPR_LDID:
+    case OPR_LDBITS:
+      st = WN_st(wn);
+      ty = ST_type(st);
+      break;
+      
+    case OPR_ILOAD:
+    case OPR_ILOADX: {
+      // WN* baseptr = WN_kid0(wn); // address expression as WN
+      TY_IDX baseptr_ty = WN_load_addr_ty(wn); // == WN_Tree_Type(baseptr)
+      ty = TY_pointed(baseptr_ty); 
+      break;
+    }
+    
+    // STOREs represent the left-hand-side expression
+    case OPR_STID: 
+    case OPR_STBITS:
+      st = WN_st(wn);
+      ty = ST_type(st);
+      break;
+      
+    case OPR_ISTORE: 
+    case OPR_ISTOREX:
+    case OPR_ISTBITS: {
+      WN* baseptr = WN_kid1(wn); // address expression as WN
+      TY_IDX baseptr_ty = WN_ty(wn); // == WN_Tree_Type(baseptr)
+      ty = TY_pointed(baseptr_ty); 
+      ASSERT_DBG_FATAL((baseptr_ty == WN_Tree_Type(baseptr)),
+		       (DIAG_A_STRING, "Programming Error."));
+      break;
+    }
+    
+    default: 
+      // NOTE: MLOAD, MSTORE are not supported
+      ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
+      break;
+  }
+  return ty;
+}
+
+
+// Does this make sense for intrinsic?
+TY_IDX 
+WN_Call_Type(const WN* wn)
+{
+  OPERATOR opr = WN_operator(wn); 
+  switch (opr) {
+  case OPR_CALL:  
+    return ST_pu_type(WN_st(wn)); 
+  case OPR_ICALL: 
+  case OPR_VFCALL: 
+    return WN_ty(wn);
+  case OPR_PICCALL: 
+    return ST_type(WN_st(wn));
+  case OPR_INTRINSIC_CALL:
+  default:
+    ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
+    return 0;
+  }
+}
+
+
+TY_IDX 
+WN_Call_Return_Type(const WN* wn)
+{
+  TY_IDX return_ty = 0;
+  OPERATOR opr = WN_operator(wn); 
+  if (opr == OPR_INTRINSIC_CALL) {
+    return_ty = WN_intrinsic_return_ty(wn);
+  } else {
+    TY_IDX func_ty = WN_Call_Type(wn);
+    return_ty = Func_Return_Type(func_ty);    
+  }
+  return return_ty;
+}
+
+
+INT
+WN_Call_First_Arg_Idx(const WN* wn)
+{
+  INT idx = 0;
+  OPERATOR opr = WN_operator(wn); 
+  if (opr == OPR_INTRINSIC_CALL) {
+    TY_IDX return_ty = WN_Call_Return_Type(wn);
+    BOOL return_to_param = WN_intrinsic_return_to_param(return_ty);
+    idx = (return_to_param? 1 : 0);
+  } else {
+    TY_IDX func_ty = WN_Call_Type(wn);
+    BOOL return_to_param = Func_Return_To_Param(func_ty);
+    idx = (return_to_param) ? (Func_Return_Character(func_ty)? 2 : 1) : 0;
+  }
+  return idx;
+}
+
+
+INT
+WN_Call_Last_Arg_Idx(const WN* wn)
+{
+  INT idx = WN_kid_count(wn) - 1; // default
+
+  OPERATOR opr = WN_operator(wn); 
+  switch (opr) {
+  case OPR_ICALL: 
+  case OPR_VFCALL: 
+  case OPR_PICCALL: 
+    idx = WN_kid_count(wn) - 2;
+    break;
+  }
+  return idx;
+}
+
+
+const char *
+WN_intrinsic_name(INTRINSIC intr_opc)
+{
+  const char *name = NULL;
+  Is_True(INTRINSIC_FIRST<=intr_opc && intr_opc<=INTRINSIC_LAST,
+	  ("Intrinsic Opcode (%d) out of range", intr_opc)); 
+  
+  if (INTRN_high_level_name(intr_opc) != NULL) {
+    name = INTRN_high_level_name(intr_opc);
+  } else {
+    name = get_intrinsic_name(intr_opc);
+  }
+  
+  return name;
+}
+
+
+TY_IDX
+WN_intrinsic_return_ty(const WN* call)
+{
+  TY_IDX ret_ty = 0;
+  
+  OPERATOR opr = WN_operator(call);
+  ASSERT_FATAL(opr == OPR_INTRINSIC_CALL || opr == OPR_INTRINSIC_OP,
+	       (DIAG_A_STRING, "Programming Error!"));
+  
+  INTRINSIC intr_opc = (INTRINSIC)WN_intrinsic(call);
+  switch (INTRN_return_kind(intr_opc)) {
+  case IRETURN_UNKNOWN: {
+    /* Use the opcode to get the type */
+    OPCODE opc = WN_opcode(call);
+    ret_ty = Stab_Mtype_To_Ty(OPCODE_rtype(opc));
+    break;
+  }
+  case IRETURN_V:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_V);
+    break;
+  case IRETURN_I1:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_I1);
+    break;
+  case IRETURN_I2:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_I2);
+    break;
+  case IRETURN_I4:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_I4);
+    break;
+  case IRETURN_I8:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_I8);
+    break;
+  case IRETURN_U1:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_U1);
+    break;
+  case IRETURN_U2:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_U2);
+    break;
+  case IRETURN_U4:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_U4);
+    break;
+  case IRETURN_U8:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_U8);
+    break;
+  case IRETURN_F4:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_F4);
+    break;
+  case IRETURN_F8:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_F8);
+    break;
+  case IRETURN_FQ:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_FQ);
+    break;
+  case IRETURN_C4:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_C4);
+    break;
+  case IRETURN_C8:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_C8);
+    break;
+  case IRETURN_CQ:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_CQ);
+    break;
+  case IRETURN_PV:
+    ret_ty = Stab_Pointer_To(Stab_Mtype_To_Ty(MTYPE_V));
+    break;
+  case IRETURN_PU1:
+    ret_ty = Stab_Pointer_To(Stab_Mtype_To_Ty(MTYPE_U1));
+    break;
+  case IRETURN_DA1:
+    ret_ty = WN_Tree_Type(WN_kid0(call));
+    break;
+  case IRETURN_M:
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_M);
+    break;
+  default:
+    ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
+    ret_ty = Stab_Mtype_To_Ty(MTYPE_V);
+    break;
+  }
+  
+  return ret_ty;
+} /* WN_intrinsic_return_ty */
+
+
+BOOL 
+WN_intrinsic_return_to_param(TY_IDX return_ty)
+{
+  // Assume there is only one case when the return value cannot be
+  // passed through registers: a quad precision complex number.
+  return (TY_mtype(return_ty) == MTYPE_CQ);
+}
+
+
+//***************************************************************************
+
+WN *
+WN_Get_PtrAdd_Intconst(WN* wn0, WN* wn1, TY_IDX pointed_ty)
+{
+   /* We make an attempt at retaining pointer types for ptr
+    * additions, where we expect the ptr expression to be of
+    * one of the following forms:
+    *
+    *    1)  ptr + expr
+    *    2)  ptr + expr*const
+    *    3)  ptr + const
+    *
+    * where const must be a multiple of the size of the pointed_ty
+    * and only abscent when the size is 1. If this pattern is not 
+    * found, then return NULL; otherwise return the const expression,
+    * if one is found, or the integral expression when size==1.
+    */
+   WN *intconst = NULL;
+	 
+   /* Identify the integral expression */
+   if (!TY_Is_Pointer(WN_Tree_Type(wn0)))
+      intconst = wn0;
+   else if (!TY_Is_Pointer(WN_Tree_Type(wn1)))
+      intconst = wn1;
+
+   /* Get the constant expression */
+   if (intconst != NULL && TY_size(pointed_ty) > 1)
+   {
+      /* Identify the integral constant expression */
+      if (WN_operator(intconst) == OPR_MPY)
+      {
+	 if (WN_operator(WN_kid0(intconst)) == OPR_INTCONST)
+	    intconst = WN_kid0(intconst);
+	 else if (WN_operator(WN_kid1(intconst)) == OPR_INTCONST)
+	    intconst = WN_kid1(intconst);
+	 else
+	    intconst = NULL;
+      }
+      else if (WN_operator(intconst) != OPR_INTCONST)
+	 intconst = NULL;
+   }
+   
+   /* Make sure the constant expression is a multiple of the size of type
+    * pointed to.
+    */
+   if (TY_size(pointed_ty) == 0 ||    /* incomplete type */
+       (intconst != NULL && 
+	WN_operator(intconst) == OPR_INTCONST &&
+	WN_const_val(intconst)%TY_size(pointed_ty) != 0LL))
+   {
+      intconst = NULL;
+   }
+   return intconst;
+} /* WN_Get_PtrAdd_Intconst */
 
 
 
+//***************************************************************************
+
+static TY_IDX
+WN_get_tld_type(const WN* wn) 
+{
+  //wn must be TLD_ADDR(...)
+  WN* kid = WN_kid0(WN_kid0(wn));
+  TY_IDX result_ty = WN_Tree_Type(kid);
+  switch (TY_kind(result_ty)) {
+  case KIND_ARRAY: {
+    TY_IDX new_ty;
+    int dim = 1;
+    for (new_ty = TY_etype(result_ty); TY_kind(new_ty) == KIND_ARRAY; new_ty = TY_etype(new_ty), dim++);
+    for (;dim > 0; new_ty = Make_Pointer_Type(new_ty), dim--);
+    return new_ty;
+  }
+  case KIND_STRUCT:
+    if (WN_field_id(kid) != 0) {
+      return Make_Pointer_Type(Get_Field_Type(result_ty, WN_field_id(kid)));
+    }
+    return Make_Pointer_Type(result_ty);
+  case KIND_POINTER: {
+    //need to handle ptr to shared data as a speical case
+    TY_IDX pointed = TY_pointed(result_ty);
+    if (TY_is_shared(pointed)) {
+      if (TY_kind(pointed) != KIND_VOID &&
+	  Get_Type_Block_Size(pointed) <= 1) {
+	return Make_Pointer_Type(Make_Pointer_Type(pshared_ptr_idx));
+      } else {
+	return Make_Pointer_Type(Make_Pointer_Type(shared_ptr_idx));
+      }
+    }
+    //fall thru to the default case if not shared
+  }
+  default:
+    return Make_Pointer_Type(result_ty);
+  }
+}

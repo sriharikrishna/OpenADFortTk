@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.7 2004/02/23 18:23:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.8 2004/03/19 16:54:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -572,6 +572,8 @@ Func_Return_Type(TY_IDX func_ty)
 {
   return TY_ret_type(func_ty);
 } 
+
+// see wn_attr: TY_IDX Func_Return_Type(WN* wn);
 
 inline BOOL 
 Func_Return_To_Param(TY_IDX func_ty)

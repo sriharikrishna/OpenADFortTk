@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.32 2004/03/03 21:45:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.33 2004/03/19 16:54:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -440,52 +440,27 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // -------------------------------------------------------
   // Gather info...
   // -------------------------------------------------------
-  TY_IDX return_ty = 0;
+  TY_IDX return_ty = WN_Call_Return_Type(wn);
+  INT first_arg_idx = WN_Call_First_Arg_Idx(wn);
+  INT last_arg_idx = WN_Call_Last_Arg_Idx(wn);
   BOOL is_user_call = FALSE;
   BOOL is_allocate_stmt = FALSE; 
-  BOOL return_to_param; // REMOVE
-  INT first_arg_idx, last_arg_idx;
-
-  if (opr == OPR_INTRINSIC_CALL) {
-    return_to_param = WN_intrinsic_return_to_param(return_ty);
-    return_ty = WN_intrinsic_return_ty(WN_opcode(wn), 
-				       (INTRINSIC) WN_intrinsic(wn), wn);
-    first_arg_idx = (return_to_param? 1 : 0);   
-    last_arg_idx = WN_kid_count(wn) - 1;
-
-  } else {
-    // Only two things vary for CALL, ICALL, and PICCALL nodes: the
-    // method used to get the function type and the last_arg_idx.
-    TY_IDX func_ty;
-    if (opr == OPR_CALL) {
-      is_user_call = TRUE;
-      func_ty = ST_pu_type(WN_st(wn));
-      last_arg_idx = WN_kid_count(wn) - 1;
-      
-      if (strcmp(ST_name(WN_st(wn)),"_ALLOCATE") == 0) {
-	is_allocate_stmt = TRUE;
-      } else if (strcmp(ST_name(WN_st(wn)),"_DEALLOCATE") == 0) {
-	set_XlationContext_has_no_arr_elmt(ctxt);
-	is_allocate_stmt = TRUE;
-      } 
-      if (strcmp(ST_name(WN_st(wn)),"PRESENT") == 0) {
-	set_XlationContext_has_no_arr_elmt(ctxt);
-      }
-
-    } else if (opr == OPR_ICALL) {
-      func_ty = WN_ty(wn);
-      last_arg_idx = WN_kid_count(wn) - 2;
-    } else { /* (opr == OPR_PICCALL) */
-      is_user_call = TRUE;
-      func_ty = ST_type(WN_st(wn));
-      last_arg_idx = WN_kid_count(wn) - 2;
+  
+  if (opr == OPR_CALL) {
+    is_user_call = TRUE;
+    const char* nm = ST_name(WN_st(wn));
+    if (strcmp(nm, "_ALLOCATE") == 0) {
+      is_allocate_stmt = TRUE;
+    } else if (strcmp(nm, "_DEALLOCATE") == 0) {
+      set_XlationContext_has_no_arr_elmt(ctxt);
+      is_allocate_stmt = TRUE;
+    } else if (strcmp(nm, "PRESENT") == 0) {
+      set_XlationContext_has_no_arr_elmt(ctxt);
     }
-
-    return_to_param = Func_Return_To_Param(func_ty);
-    return_ty = Func_Return_Type(func_ty);
-    first_arg_idx = ST2F_FIRST_PARAM_IDX(func_ty);
+  } else if (opr == OPR_PICCALL) {
+    is_user_call = TRUE;
   }
-
+  
   // -------------------------------------------------------
   //
   // -------------------------------------------------------
@@ -569,8 +544,10 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	}
 	
 	if (fmtry == MTYPE_M) {
-	  fmtry = TY_pointed(parm_ty);
-	  fmtry = TY_mtype(fmtry);
+	  if (TY_Is_Pointer(parm_ty)) { // FIXME: hack to handle KIND_STRUCT
+	    fmtry = TY_pointed(parm_ty);
+	    fmtry = TY_mtype(fmtry);
+	  }
 	}
 	
 	if ((TY_Is_Character_Reference(arg_ty) 

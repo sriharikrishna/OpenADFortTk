@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.9 2004/02/23 22:33:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.10 2004/03/19 16:54:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -226,23 +226,58 @@
 #define WN_Skip_Parm(arg) \
    ((arg)!=NULL && WN_operator(arg) == OPR_PARM? WN_kid0(arg) : arg)
 
+
+//***************************************************************************
+
+extern TY_IDX 
+WN_Tree_Type(const WN *wn);
+
 extern TY_IDX 
 Get_Field_Type(TY_IDX base, int field_id);
+
+//***************************************************************************
+
+// WN_GetRefObjType, WN_GetBaseObjType: For loads/stores, these are
+// types for 1) the base object and 2) the referenced object.  The
+// referenced object's address is at some offset (possibly 0) from the
+// base object.  Loads refer the rvalue object; stores refer to the
+// lvalue object.
+extern TY_IDX 
+WN_GetRefObjType(const WN* wn);
+
+extern TY_IDX 
+WN_GetBaseObjType(const WN* wn);
+
+
+// Calls and intrinsic calls
+
+extern TY_IDX 
+WN_Call_Type(const WN* wn);
+
+extern TY_IDX 
+WN_Call_Return_Type(const WN* wn);
+
+extern INT
+WN_Call_First_Arg_Idx(const WN* wn);
+
+extern INT
+WN_Call_Last_Arg_Idx(const WN* wn);
+
 
 extern const char * 
 WN_intrinsic_name(INTRINSIC intr_opc);
 
 extern TY_IDX 
-WN_intrinsic_return_ty(OPCODE wn_opc, INTRINSIC intr_opc, const WN *call);
+WN_intrinsic_return_ty(const WN *call);
 
 extern BOOL 
 WN_intrinsic_return_to_param(TY_IDX return_ty);
 
+//***************************************************************************
+
 extern WN *
 WN_Get_PtrAdd_Intconst(WN* wn0, WN* wn1, TY_IDX pointed_ty);
 
-extern TY_IDX 
-WN_Tree_Type(const WN *wn);
-
+//***************************************************************************
 
 #endif /* wn_attr_INCLUDED */
