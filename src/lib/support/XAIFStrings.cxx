@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.16 2004/03/29 23:40:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.17 2004/04/08 13:51:58 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -157,6 +157,10 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "{Sym_Id#",
   "{PU_Id#",
   "{WHIRL_Id#",
+  
+  "{StmtGoto#",
+  "{StmtLabel#",
+  
   "}"
 };
 

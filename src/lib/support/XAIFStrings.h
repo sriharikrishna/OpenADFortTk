@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.16 2004/03/29 23:40:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.17 2004/04/08 13:51:58 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -150,14 +150,17 @@ public:
     ELEM_Y,
 
     // -----------------------------------------------------
-
+    
     // Special tags
     TAG_SymTabId, // Tags a colon-separated list of symbol table (ST_TAB) ids
     TAG_SymId,    // Tags a colon-separated list of symbol (ST) ids
     
     TAG_PUId,     // Tags a colon-separated list of PU ids
     TAG_WHIRLId,  // Tags a colon-separated list of WHIRL (WN) ids
-
+    
+    TAG_StmtGoto,  // Tags a goto statement
+    TAG_StmtLabel, // Tags a label statement
+    
     TAG_End,      // End of tag information
     
     // -----------------------------------------------------
@@ -364,19 +367,25 @@ public:
   // Special tags
   const char* tag_SymTabId() const   { return c_strTbl[TAG_SymTabId]; }
   XMLCh*      tag_SymTabId_x() const { return x_strTbl[TAG_SymTabId]; }
-
+  
   const char* tag_SymId() const   { return c_strTbl[TAG_SymId]; }
   XMLCh*      tag_SymId_x() const { return x_strTbl[TAG_SymId]; }
-
+  
   const char* tag_PUId() const   { return c_strTbl[TAG_PUId]; }
   XMLCh*      tag_PUId_x() const { return x_strTbl[TAG_PUId]; }
-
+  
   const char* tag_WHIRLId() const   { return c_strTbl[TAG_WHIRLId]; }
   XMLCh*      tag_WHIRLId_x() const { return x_strTbl[TAG_WHIRLId]; }
-
+  
+  const char* tag_StmtGoto() const   { return c_strTbl[TAG_StmtGoto]; }
+  XMLCh*      tag_StmtGoto_x() const { return x_strTbl[TAG_StmtGoto]; }
+  
+  const char* tag_StmtLabel() const   { return c_strTbl[TAG_StmtLabel]; }
+  XMLCh*      tag_StmtLabel_x() const { return x_strTbl[TAG_StmtLabel]; }
+  
   const char* tag_End() const { return c_strTbl[TAG_End]; }
   XMLCh*      tag_End_x() const { return x_strTbl[TAG_End]; }
-
+  
 private:
   static const char* c_strTbl[];
   XMLCh** x_strTbl;
