@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.52 2004/06/22 21:09:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.53 2004/06/22 21:37:27 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -1266,6 +1266,10 @@ xlate_BBCond_OLD(WN* wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
     condKid = 0; // WN_kid0(wn) == WN_if_test(wn)
     break;
 
+  case OPR_SWITCH:
+    condKid = -1;
+    break; // integer expression
+    
   default: 
     ASSERT_FATAL(false, (DIAG_W2F_CANNOT_HANDLE_OPC, OPERATOR_name(opr), opr));
   }
@@ -1273,7 +1277,9 @@ xlate_BBCond_OLD(WN* wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
   // -------------------------------------------------------
   // 2. Ensure the condition expression is patched
   // -------------------------------------------------------
-  PatchWNExpr(wn, condKid /* kidno */, ctxt);
+  if (condKid >= 0) {
+    PatchWNExpr(wn, condKid /* kidno */, ctxt);
+  }
 }
 
 
