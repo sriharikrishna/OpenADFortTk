@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.6 2004/01/25 02:40:42 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.7 2004/02/27 00:36:09 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -171,6 +171,8 @@
 #include <include/Open64BasicTypes.h> /* "srcpos.h" */
 
 //*************************** User Include Files ****************************
+
+#include "Exception.h"
 
 //***************************************************************************
 
