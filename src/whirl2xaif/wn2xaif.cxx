@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.31 2004/02/11 14:44:42 mfagan Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.32 2004/02/17 18:54:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -79,6 +79,7 @@
 
 #include <string>   // STL
 #include <set>      // STL
+#include <vector>   // STL
 
 //************************** Open64 Include Files ***************************
 
@@ -112,6 +113,18 @@ IntrinsicXlationTable whirl2xaif::IntrinsicTable(IntrinsicXlationTable::W2X);
 
 //************************** Forward Declarations ***************************
 
+typedef std::vector<CFG::Node*> CFGNodeVec;
+
+class CFGNodeSorter {
+public:
+  // return true if n1 < n2; false otherwise
+  bool operator()(const CFG::Node* n1, const CFG::Node* n2) const {
+    return (n1->getID() < n2->getID());
+  }
+};
+
+//************************** Forward Declarations ***************************
+
 // Type of handler-functions for translating WHIRL to XAIF.
 typedef WN2F_STATUS (*XlateWNHandlerFunc)(xml::ostream&, WN*, XlationContext&);
 
@@ -142,6 +155,9 @@ GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt);
 
 static void
 MassageOACFGIntoXAIFCFG(CFG* cfg);
+
+static CFGNodeVec*
+SortCFGNodes(CFG* cfg);
 
 //***************************************************************************
 
@@ -415,9 +431,17 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   // FIXME: xlate_SymbolTables(xos, CURRENT_SYMTAB, symtab, ctxt);
 
-  // Dump CFG vertices (basic blocks)
-  for (CFG::NodesIterator nodeIt(cfg); (bool)nodeIt; ++nodeIt) {
-    CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
+  // Dump CFG vertices (basic blocks) in sorted order ('normalized')
+  // Note: It might seem that instead of sorting, we could simply use
+  // DGraph::DFSIterator.  However, procedures can have unreachable
+  // code that will not be found with a DFS.  A simple example of this
+  // is that WHIRL often has two OPR_RETURNs at the end of a
+  // procedure.
+  CFGNodeVec* cfgNodes = SortCFGNodes(&cfg);
+  CFGNodeVec::iterator nodeIt = cfgNodes->begin();
+  for ( ; nodeIt != cfgNodes->end(); ++nodeIt) {
+    
+    CFG::Node* n = (*nodeIt);
     // n->longdump(&cfg, std::cerr); std::cerr << endl;
     
     const char* vtype = GetCFGVertexType(&cfg, n);    
@@ -442,10 +466,11 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     // 3. BB element end tag
     xos << EndElem << std::endl;
   }
+  delete cfgNodes;
   
   // Dump CFG edges
-  for (CFG::EdgesIterator edgesIt(cfg); (bool)edgesIt; ++edgesIt) {
-    CFG::Edge* e = dynamic_cast<CFG::Edge*>((DGraph::Edge*)edgesIt);
+  for (CFG::EdgesIterator edgeIt(cfg); (bool)edgeIt; ++edgeIt) {
+    CFG::Edge* e = dynamic_cast<CFG::Edge*>((DGraph::Edge*)edgeIt);
     CFG::Node* n1 = dynamic_cast<CFG::Node*>(e->source());
     CFG::Node* n2 = dynamic_cast<CFG::Node*>(e->sink());
     
@@ -711,7 +736,6 @@ AddToNonScalarSymTabOp::operator()(const WN* wn)
   // Base case
 #if 0 // FIXME
   fprintf(stderr, "----------\n");
-  IR_set_dump_order(TRUE); /* dump parent before children*/
   fdump_tree(stderr, wn); // FIXME: append this to a symtab somewhere
 #endif
   
@@ -1311,40 +1335,34 @@ WN2F_End_Routine_Strings(xml::ostream& xos, INT32 func_id)
 
   PU & pu = Pu_Table[ST_pu(PUINFO_FUNC_ST)];
   
-  if (WN2F_F90_pu) {
-    if (PU_has_nested(pu) ) {
-      PU_Need_End_Contains = TRUE;
-      PU_Dangling_Contains = TRUE;
-    }
-    else {
-      
-      const char * p;
-      
-      if (PU_is_mainpu(pu)) 
-	p = "END";
-      
-      else {
-	TY_IDX rt = PUINFO_RETURN_TY;
-	
-	if (TY_kind(rt) == KIND_VOID) {
-          if (ST_is_in_module(PUINFO_FUNC_ST) && !PU_is_nested_func(pu))  
-            p = "END MODULE";
-          else {
-	    if (ST_is_block_data(PUINFO_FUNC_ST))
-	      p = "END BLOCK DATA";
-	    else
-	      p = "END SUBROUTINE";
-	  }
-        }
-	else
-      	  p = "END FUNCTION";
-      }
-      xos << p << std::endl;
-    }                                             
-
-  } else {  /* F77 routine */
-    xos << "END !" << PUINFO_FUNC_NAME << std::endl << std::endl;
+  if (PU_has_nested(pu) ) {
+    PU_Need_End_Contains = TRUE;
+    PU_Dangling_Contains = TRUE;
   }
+  else {
+    
+    const char * p;
+    if (PU_is_mainpu(pu)) 
+      p = "END";
+    
+    else {
+      TY_IDX rt = PUINFO_RETURN_TY;
+      
+      if (TY_kind(rt) == KIND_VOID) {
+	if (ST_is_in_module(PUINFO_FUNC_ST) && !PU_is_nested_func(pu))  
+	  p = "END MODULE";
+	else {
+	  if (ST_is_block_data(PUINFO_FUNC_ST))
+	    p = "END BLOCK DATA";
+	  else
+	    p = "END SUBROUTINE";
+	}
+      }
+      else
+	p = "END FUNCTION";
+    }
+    xos << p << std::endl;
+  }                                             
 }
 
 //***************************************************************************
@@ -1479,6 +1497,25 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
     }
   }
   
+}
+
+
+// SortCFGNodes: Sorts CFG nodes.  User must deallocate returned object.
+static CFGNodeVec*
+SortCFGNodes(CFG* cfg)
+{
+  CFGNodeVec* vec = new CFGNodeVec(cfg->num_nodes());
+
+  CFG::NodesIterator nodeIt(*cfg);
+  for (int i = 0; (bool)nodeIt; ++nodeIt, ++i) {
+    CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
+    (*vec)[i] = n;
+  }
+  
+  // Sort by id (ascending)
+  std::sort(vec->begin(), vec->end(), CFGNodeSorter());
+  
+  return vec;
 }
 
 //***************************************************************************
