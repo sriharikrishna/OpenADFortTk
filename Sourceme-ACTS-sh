@@ -1,16 +1,16 @@
 # -*-Mode: sh;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.18 2004/05/11 17:48:33 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.19 2004/05/11 18:14:49 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
 #############################################################################
 
-export OPENADFORTTK="/cygdrive/c/Tmp/Develop/OpenADFortTk"
+export OPENADFORTTK="/cygdrive/c/UserHome/Develop/OpenADFortTk"
 
 PLATFORM=`cd ${OPENADFORTTK}/config; ./hpcplatform`
 case $PLATFORM in
   i686-Cygwin) 
-    base="/cygdrive/c/Tmp/Develop"
+    base="/cygdrive/c/UserHome/Develop"
     ;;
   i686-Linux | ia64-Linux) 
     base="/local/eraxxon"
