@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.8 2004/02/23 18:23:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.9 2004/02/23 22:33:07 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -96,18 +96,6 @@
  * Macros yielding OPCODE information:
  * -----------------------------------
  *
- *   WN_opc_rtype:
- *      The OPC result type.
- *
- *   WN_opc_dtype:
- *      The OPC descriptor type.
- *
- *   WN_opc_operator:
- *      The OPC operator (OPR).
- *
- *   WN_opc_name:
- *      The OPC name in the form of a string.
- *
  *   INTR_is_adrtmp:
  *      An ADRTMP intrinsic opcode.
  *
@@ -198,14 +186,8 @@
 #define WN_switch_num_cases(wn) WN_num_entries(wn)
 #define WN_switch_has_default_case(wn) (WN_kid_count(wn) == 3)
 
-// FIXME/REMOVE
-#define WN_opc_rtype(wn) WN_rtype(wn)
-#define WN_opc_operator(wn) WN_operator(wn)
-#define WN_opc_dtype(wn) WN_desc(wn)
-#define WN_opc_name(wn) OPCODE_name(WN_opcode(wn))
-
 #define WN_is_constant_expr(wn) \
-   (WN_opc_operator(wn) == OPR_INTCONST || WN_opc_operator(wn) == OPR_CONST)
+   (WN_operator(wn) == OPR_INTCONST || WN_operator(wn) == OPR_CONST)
 
 #define INTR_is_adrtmp(intrn) \
    ((intrn) == INTRN_U4I1ADRTMP || \
@@ -242,7 +224,7 @@
     (intrn) == INTRN_CQVALTMP)
 
 #define WN_Skip_Parm(arg) \
-   ((arg)!=NULL && WN_opc_operator(arg) == OPR_PARM? WN_kid0(arg) : arg)
+   ((arg)!=NULL && WN_operator(arg) == OPR_PARM? WN_kid0(arg) : arg)
 
 extern TY_IDX 
 Get_Field_Type(TY_IDX base, int field_id);

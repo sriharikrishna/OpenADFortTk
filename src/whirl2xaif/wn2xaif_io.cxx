@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.18 2004/02/20 19:30:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.19 2004/02/23 22:33:07 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -529,7 +529,7 @@ xlate_IO_ITEM_control(xml::ostream& xos, WN* item, XlationContext& ctxt)
      * LDA of a string-constant (ST of class CONST).  Note that
      * a string-constant always is '\0' terminated.
      */
-    ASSERT_DBG_WARN((WN_opc_operator(WN_kid0(item)) == OPR_LDA &&
+    ASSERT_DBG_WARN((WN_operator(WN_kid0(item)) == OPR_LDA &&
 		     ST_class(WN_st(WN_kid0(item))) == CLASS_CONST),
 		    (DIAG_W2F_UNEXPECTED_IOC,
 		     IOITEM_name(WN_IOITEM(item)), "xlate_IO_ITEM_control"));
@@ -542,8 +542,8 @@ xlate_IO_ITEM_control(xml::ostream& xos, WN* item, XlationContext& ctxt)
   case IOC_EOR:
   case IOC_END:
     xos << IOITEM_name(item_kind);
-    ASSERT_DBG_WARN((WN_opc_operator(WN_kid0(item)) == OPR_GOTO),
-		    (DIAG_W2F_UNEXPECTED_OPC,WN_opc_operator(item),"ERR/END/EOR="));
+    ASSERT_DBG_WARN((WN_operator(WN_kid0(item)) == OPR_GOTO),
+		    (DIAG_W2F_UNEXPECTED_OPC,WN_operator(item),"ERR/END/EOR="));
     xos << WN_label_number(WN_kid0(item));
     break;
     
@@ -590,7 +590,7 @@ xlate_IO_ITEM_list(xml::ostream& xos, WN *item, XlationContext& ctxt)
   case IOL_ARRAY:
   case IOL_CHAR_ARRAY:
   case IOL_RECORD:
-    if (WN_opc_operator(WN_kid0(item)) == OPR_LDID       &&
+    if (WN_operator(WN_kid0(item)) == OPR_LDID       &&
 	ST_sclass(WN_st(WN_kid0(item))) == SCLASS_FORMAL &&
 	TY_Is_Pointer(WN_ty(WN_kid0(item)))              &&
 	TY_Is_Pointer(TY_pointed(WN_ty(WN_kid0(item))))) {

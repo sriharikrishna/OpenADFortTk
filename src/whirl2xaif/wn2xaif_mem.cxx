@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.25 2004/02/20 19:30:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.26 2004/02/23 22:33:07 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -436,7 +436,7 @@ whirl2xaif::status
 whirl2xaif::xlate_ILOADX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_WARN(FALSE, (DIAG_UNIMPLEMENTED, "xlate_ILOADX"));
-  xos << WN_opc_name(wn);  
+  xos << OPCODE_name(WN_opcode(wn));
   return whirl2xaif::good;
 }
 
@@ -581,7 +581,7 @@ whirl2xaif::status
 whirl2xaif::xlate_ISTOREX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_WARN(FALSE, (DIAG_UNIMPLEMENTED, "xlate_ISTOREX"));
-  xos << std::endl << WN_opc_name(wn);
+  xos << std::endl << OPCODE_name(WN_opcode(wn));
   return whirl2xaif::good;
 }
 

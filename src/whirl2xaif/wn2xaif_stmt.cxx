@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.29 2004/02/23 18:25:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.30 2004/02/23 22:33:07 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -58,7 +58,6 @@
 //************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
-#include "pf_cg.h"
 
 //*************************** User Include Files ****************************
 
@@ -726,7 +725,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       
       if ((arg_idx+implicit_args) == (last_arg_idx-1)) { 
 	if (opr == OPR_CALL && is_allocate_stmt) {
-	  if (WN_opc_operator(WN_kid0(WN_kid(wn, last_arg_idx))) == OPR_LDA) {
+	  if (WN_operator(WN_kid0(WN_kid(wn, last_arg_idx))) == OPR_LDA) {
 	    // xos << ",";
 	    xos << "STAT=";
 	    has_stat=TRUE;

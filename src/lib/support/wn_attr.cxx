@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.8 2004/02/23 18:23:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.9 2004/02/23 22:33:07 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -117,7 +117,7 @@ WN_Cvtl_Ty(const WN *wn)
     * given bitsize.
     */ 
    const INT   cvtl_bytes = WN_cvtl_bits(wn)>>3;
-   const MTYPE dest_mtype = WN_opc_rtype(wn);
+   const MTYPE dest_mtype = WN_rtype(wn);
    const BOOL  is_signed = MTYPE_signed(dest_mtype);
    const MTYPE cvtl_mtype = WN_Cvtl_Mtype[is_signed? 1 : 0][cvtl_bytes];
 
@@ -310,16 +310,16 @@ WN_Get_PtrAdd_Intconst(WN* wn0, WN* wn1, TY_IDX pointed_ty)
    if (intconst != NULL && TY_size(pointed_ty) > 1)
    {
       /* Identify the integral constant expression */
-      if (WN_opc_operator(intconst) == OPR_MPY)
+      if (WN_operator(intconst) == OPR_MPY)
       {
-	 if (WN_opc_operator(WN_kid0(intconst)) == OPR_INTCONST)
+	 if (WN_operator(WN_kid0(intconst)) == OPR_INTCONST)
 	    intconst = WN_kid0(intconst);
-	 else if (WN_opc_operator(WN_kid1(intconst)) == OPR_INTCONST)
+	 else if (WN_operator(WN_kid1(intconst)) == OPR_INTCONST)
 	    intconst = WN_kid1(intconst);
 	 else
 	    intconst = NULL;
       }
-      else if (WN_opc_operator(intconst) != OPR_INTCONST)
+      else if (WN_operator(intconst) != OPR_INTCONST)
 	 intconst = NULL;
    }
    
@@ -328,7 +328,7 @@ WN_Get_PtrAdd_Intconst(WN* wn0, WN* wn1, TY_IDX pointed_ty)
     */
    if (TY_size(pointed_ty) == 0 ||    /* incomplete type */
        (intconst != NULL && 
-	WN_opc_operator(intconst) == OPR_INTCONST &&
+	WN_operator(intconst) == OPR_INTCONST &&
 	WN_const_val(intconst)%TY_size(pointed_ty) != 0LL))
    {
       intconst = NULL;
@@ -431,15 +431,15 @@ WN_Tree_Type(const WN *wn)
       /* We make an attempt at retaining pointer types for ptr
        * arithmetics.
        */
-      if (WN_opc_rtype(wn) == Pointer_Mtype) {
+      if (WN_rtype(wn) == Pointer_Mtype) {
 	ty = WN_Tree_Type(WN_kid0(wn));
 	if (!TY_Is_Pointer(ty)) {
 	  ty = WN_Tree_Type(WN_kid1(wn));
 	  if (!TY_Is_Pointer(ty))
-	    ty = MTYPE_To_TY(WN_opc_rtype(wn));
+	    ty = MTYPE_To_TY(WN_rtype(wn));
 	}
       } else
-	ty = MTYPE_To_TY(WN_opc_rtype(wn));
+	ty = MTYPE_To_TY(WN_rtype(wn));
       break;	    
       
     case OPR_CVTL:
@@ -456,12 +456,12 @@ WN_Tree_Type(const WN *wn)
        * then return this as the type of the expression, otherwise
        * return the type indicated by the opc_rtype.
        */
-      if (WN_opc_rtype(wn) == Pointer_Mtype) {
+      if (WN_rtype(wn) == Pointer_Mtype) {
 	ty = WN_Tree_Type(WN_kid0(wn));
 	if (!TY_Is_Pointer(ty)) {
 	  ty = WN_Tree_Type(WN_kid1(wn));
 	  if (!TY_Is_Pointer(ty))
-	    ty = MTYPE_To_TY(WN_opc_rtype(wn));
+	    ty = MTYPE_To_TY(WN_rtype(wn));
 	}
 	
 #ifdef _BUILD_WHIRL2C
@@ -470,11 +470,11 @@ WN_Tree_Type(const WN *wn)
 	    WN_Get_PtrAdd_Intconst(WN_kid0(wn), 
 				   WN_kid1(wn),
 				   TY_pointed(ty)) == NULL) {
-	  ty = MTYPE_To_TY(WN_opc_rtype(wn));
+	  ty = MTYPE_To_TY(WN_rtype(wn));
 	}
 #endif /* _BUILD_WHIRL2C */
       } else
-	ty = MTYPE_To_TY(WN_opc_rtype(wn));
+	ty = MTYPE_To_TY(WN_rtype(wn));
       break;
       
     case OPR_INTRINSIC_OP:
@@ -550,7 +550,7 @@ WN_Tree_Type(const WN *wn)
     case OPR_HIGHPART:
     case OPR_LOWPART:
     case OPR_HIGHMPY:
-      ty = MTYPE_To_TY(WN_opc_rtype(wn));
+      ty = MTYPE_To_TY(WN_rtype(wn));
       break;
       
     case OPR_PARM:

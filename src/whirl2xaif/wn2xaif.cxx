@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.40 2004/02/23 18:25:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.41 2004/02/23 22:33:07 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -327,7 +327,7 @@ whirl2xaif::status
 whirl2xaif::xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // Warn about opcodes we cannot translate, but keep translating.
-  OPERATOR opr = WN_opc_operator(wn);
+  OPERATOR opr = WN_operator(wn);
   ASSERT_WARN(FALSE, (DIAG_W2F_CANNOT_HANDLE_OPC, OPERATOR_name(opr), opr));
   
   xos << BegComment << "*** Unknown WHIRL operator: " << OPERATOR_name(opr)
@@ -1028,7 +1028,6 @@ GetParamSymHandleSet(WN* wn_pu)
 
 
 // xlate_BBStmt: 
-// FIXME: we know that loop and if BBs should only have one node in them.
 static void
 xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
@@ -1074,6 +1073,8 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 // BasicBlock, or special structured control flow (If, ForLoop,
 // PreLoop, PostLoop).  These should be mutually exclusive
 // classifications.
+// FIXME: we know that loop and if BBs should only have one node in
+// them. because of MassageOA...
 static const char*
 GetCFGVertexType(CFG* cfg, CFG::Node* n)
 {
