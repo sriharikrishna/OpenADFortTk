@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.4 2003/07/24 14:36:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.5 2003/07/24 20:20:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -38,7 +38,7 @@
 
 //************************** Open64 Include Files ***************************
 
-#include "Open64BasicTypes.h"
+#include <include/Open64BasicTypes.h>
 #include "ir_reader.h" // For dump_wn(). //FIXME
 
 //*************************** User Include Files ****************************
