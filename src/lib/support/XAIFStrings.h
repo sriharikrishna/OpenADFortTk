@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.11 2003/10/10 18:04:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.12 2004/02/24 16:28:27 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -84,6 +84,9 @@ public:
     ELEM_BBPreLoop,
     ELEM_BBPostLoop,
 
+    ELEM_BBEndBranch,
+    ELEM_BBEndLoop,
+    
     ELEM_Condition,
 
     // Statements
@@ -242,6 +245,11 @@ public:
   XMLCh*      elem_BBPreLoop_x() const { return x_strTbl[ELEM_BBPreLoop]; }
   const char* elem_BBPostLoop() const { return c_strTbl[ELEM_BBPostLoop]; }
   XMLCh*      elem_BBPostLoop_x() const { return x_strTbl[ELEM_BBPostLoop]; }
+  
+  const char* elem_BBEndBranch() const { return c_strTbl[ELEM_BBEndBranch]; }
+  XMLCh*      elem_BBEndBranch_x() const { return x_strTbl[ELEM_BBEndBranch]; }
+  const char* elem_BBEndLoop() const { return c_strTbl[ELEM_BBEndLoop]; }
+  XMLCh*      elem_BBEndLoop_x() const { return x_strTbl[ELEM_BBEndLoop]; }
 
   const char* elem_Condition() const { return c_strTbl[ELEM_Condition]; }
   XMLCh*      elem_Condition_x() const { return x_strTbl[ELEM_Condition]; }

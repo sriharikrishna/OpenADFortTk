@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.41 2004/02/23 22:33:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.42 2004/02/24 16:28:27 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -126,6 +126,9 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 static const char*
 GetCFGVertexType(CFG* cfg, CFG::Node* n);
 
+static const char*
+GetStructuredCFGVertexType(WN* wstmt);
+
 static void 
 xlate_CFCondition(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
@@ -138,6 +141,9 @@ xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 static std::string
 GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt);
 
+
+static void
+AddStructuredCFEndTags(WN* wn);
 
 static void
 MassageOACFGIntoXAIFCFG(CFG* cfg);
@@ -196,8 +202,7 @@ whirl2xaif::TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 // xlate_FUNC_ENTRY: Given the root of a WHIRL tree, and an
 // appropriate context 'ctxt', emits XAIF for the tree to the 'xos'
-// stream.  Assumes that the global symbol table pointer
-// 'Current_Symtab' already valid.
+// stream.  Assumes that Open64 symbol table globals are already set.
 whirl2xaif::status
 whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
@@ -217,7 +222,9 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // 2. WHIRL<->ID maps
   pair<WNToWNIdMap*, WNIdToWNMap*> wnmaps = CreateWhirlIdMaps(wn);
   delete wnmaps.second;
-  
+
+  AddStructuredCFEndTags(wn); // FIXME
+
   // 3. OpenAnalysis CFG
   Pro64IRInterface irInterface;
   Pro64IRStmtIterator irStmtIter(fbody);
@@ -260,9 +267,12 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     SymTabId scopeId = ctxt.FindSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
     std::string ids = GetIDsForStmtsInBB(n, ctxt);
     
+    if (vtype == XAIFStrings.elem_BBEndBranch() || // FIXME: hack
+	vtype == XAIFStrings.elem_BBEndLoop()) { ids = ""; }
+      
     // 1. BB element begin tag
     xos << BegElem(vtype) << Attr("vertex_id", n->getId());
-    if (strcmp(vtype, "xaif:BasicBlock") == 0) { // FIXME: more elegant?
+    if (vtype == XAIFStrings.elem_BB()) {
       xos << Attr("scope_id", scopeId);
     }
     xos << WhirlIdAnnot(ids);
@@ -1027,52 +1037,55 @@ GetParamSymHandleSet(WN* wn_pu)
 }
 
 
-// xlate_BBStmt: 
+// xlate_BBStmt: Given a statement within an XAIF basic block,
+// properly translate it.
 static void
 xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   if (!wn) { return; }
-
+  
+  // If a structured statement, it must be translated specially.
+  // Otherwise simply dispatch to TranslateWN(...).
+  const char* vty = GetStructuredCFGVertexType(wn);
   OPERATOR opr = WN_operator(wn);
   const char* opr_str = OPERATOR_name(opr);
-  switch (opr) {
-    
-    // In OA, loop nodes represent the *condition* (not the body).
-    // For a DO_LOOP, it additionally represents the initialization
-    // and update statements.
-  case OPR_DO_LOOP:
-    xos << Comment(opr_str);
+
+  if (vty == XAIFStrings.elem_BBForLoop()) {
     xlate_LoopInitialization(xos, WN_start(wn), ctxt);
     xlate_CFCondition(xos, WN_end(wn), ctxt);
     xlate_LoopUpdate(xos, WN_step(wn), ctxt);
-    break;
-  case OPR_DO_WHILE:
-  case OPR_WHILE_DO:
-    xos << Comment(opr_str);
+  } 
+  else if (vty == XAIFStrings.elem_BBPostLoop() ||
+	   vty == XAIFStrings.elem_BBPreLoop()) {
     xlate_CFCondition(xos, WN_while_test(wn), ctxt);
-    break;
-
-    // In OA, IF and BR nodes represent the *condition* (not the body)
-  case OPR_IF:
-    xos << Comment(opr_str);
+  }
+  else if (vty == XAIFStrings.elem_BBIf()) {
+    if (opr == OPR_TRUEBR || opr == OPR_FALSEBR) {
+      xos << BegComment << opr_str << " label=" << WN_label_number(wn)
+	  << EndComment;
+    }
     xlate_CFCondition(xos, WN_if_test(wn), ctxt);
-    break;
-  case OPR_TRUEBR:
-  case OPR_FALSEBR:
-    xos << BegComment << opr_str << " label=" << WN_label_number(wn)
-	<< EndComment;
-    xlate_CFCondition(xos, WN_kid0(wn), ctxt);
-    break;
-    
-  default: 
+  } 
+  else if (vty == XAIFStrings.elem_BBEndBranch() ||
+	   vty == XAIFStrings.elem_BBEndLoop()) {
+    // skip bogus comment statement
+  }
+  else {
     TranslateWN(xos, wn, ctxt);
   }
 }
 
+
 // GetCFGVertexType: A CFG vertex is either an Entry, Exit,
-// BasicBlock, or special structured control flow (If, ForLoop,
-// PreLoop, PostLoop).  These should be mutually exclusive
-// classifications.
+// BasicBlock, or a special structured control flow vertex (e.g., If,
+// ForLoop, PreLoop, PostLoop).  The string returned is from
+// 'XAIFStrings' which means users can compare on pointer value
+// (instead of using strcmp()).
+//
+// Vertices are classified by the statements contained within.  Since
+// the classifications are mutually exclusive, a vertex should not
+// contain two statements that correspond to structured control flow.
+//
 // FIXME: we know that loop and if BBs should only have one node in
 // them. because of MassageOA...
 static const char*
@@ -1083,35 +1096,69 @@ GetCFGVertexType(CFG* cfg, CFG::Node* n)
   CFG::Node* exit = cfg->Exit();
   
   if (n == entry) {
-    return "xaif:Entry";
+    return XAIFStrings.elem_BBEntry();
   } else if (n == exit) { 
-    return "xaif:Exit";
+    return XAIFStrings.elem_BBExit();
   }
-
+  
   // FIXME: we do not need to iterate over all statements since
   // control flow statements contructs will be in their own xaif:BB.
   CFG::NodeStatementsIterator stmtIt(n);
   for (bool inLoop = true; ((bool)stmtIt && inLoop); ++stmtIt) {
     WN* wstmt = (WN *)((StmtHandle)stmtIt);
-    
-    // Note: Control flow nodes represent the *condition* (not the body)
-    OPERATOR opr = WN_operator(wstmt);
-    switch (opr) {
-    case OPR_DO_LOOP: 
-      return "xaif:ForLoop";
-    case OPR_DO_WHILE: 
-      return "xaif:PostLoop";
-    case OPR_WHILE_DO:
-      return "xaif:PreLoop";
-    case OPR_IF: 
-    case OPR_TRUEBR:
-    case OPR_FALSEBR:
-      return "xaif:If";
+    const char* vty = GetStructuredCFGVertexType(wstmt);
+    if (vty) { 
+      return vty; 
     }
   }
   
-  return "xaif:BasicBlock"; // default type
+  return XAIFStrings.elem_BB(); // default, non-structured type
 }
+
+
+// GetStructuredCFGVertexType: If the WHIRL statement corresponds to a
+// special structured CFG vertex, return that type.  Otherwise return
+// NULL.  Returns strings from XAIFStrings.
+static const char*
+GetStructuredCFGVertexType(WN* wstmt)
+{
+  OPERATOR opr = WN_operator(wstmt);
+  switch (opr) {
+    
+    // In OA, loop nodes represent the *condition* (not the body).
+    // For a DO_LOOP, it additionally represents the initialization
+    // and update statements.
+  case OPR_DO_LOOP: 
+    return XAIFStrings.elem_BBForLoop();
+  case OPR_DO_WHILE: 
+    return XAIFStrings.elem_BBPostLoop();
+  case OPR_WHILE_DO:
+    return XAIFStrings.elem_BBPreLoop();
+
+    // In OA, IF and BR nodes represent the *condition* (not the body)
+  case OPR_IF: 
+  case OPR_TRUEBR:
+  case OPR_FALSEBR:
+    return XAIFStrings.elem_BBIf();
+    
+    // Currently we use special comments to denote EndBranch and EndLoop
+  case OPR_COMMENT: 
+    {
+      static const char* endbr = XAIFStrings.elem_BBEndBranch();
+      static const char* endlp = XAIFStrings.elem_BBEndLoop();
+      const char* com = Index_To_Str(WN_GetComment(wstmt));
+      if (strcmp(com, endbr) == 0) {
+	return endbr;
+      } else if (strcmp(com, endlp) == 0) {
+	return endlp;
+      }
+      // fall through
+    }
+  }
+  
+  return NULL;
+}
+
 
 // xlate_CFCondition: Translate the BB's control flow condition (Loops, Ifs)
 static void 
@@ -1171,6 +1218,42 @@ GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt)
 
 
 //***************************************************************************
+
+#include <lib/support/WhirlParentize.h>
+
+// AddStructuredCFEndTags: Add structured control flow end tags
+// FIXME: assumes fully structured control flow
+static void
+AddStructuredCFEndTags(WN* wn)
+{
+  WN_TREE_CONTAINER<PRE_ORDER> wtree(wn);
+  WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
+  for (it = wtree.begin(); it != wtree.end(); ++it) {
+    WN* curWN = it.Wn();
+    OPERATOR opr = WN_operator(curWN);
+
+    // Find structured control flow
+    const char* endty = NULL;
+    const char* vty = GetStructuredCFGVertexType(curWN);
+    if (vty == XAIFStrings.elem_BBForLoop() || 
+	vty == XAIFStrings.elem_BBPostLoop() ||
+	vty == XAIFStrings.elem_BBPreLoop()) {
+      endty = XAIFStrings.elem_BBEndLoop();
+    } 
+    else if (vty == XAIFStrings.elem_BBIf()) {
+      endty = XAIFStrings.elem_BBEndBranch();
+    }
+    
+    // Insert end placeholder statement
+    if (endty) {
+      WN* blkWN = FindParentWNBlock(wn, curWN);
+      WN* newWN = WN_CreateComment((char*)endty);
+      WN_INSERT_BlockAfter(blkWN, curWN, newWN); // 'newWN' after 'curWN'
+    }
+    
+  }
+}
+
 
 // MassageOACFGIntoXAIFCFG: Convert an OpenAnalysis CFG into a valid XAIF CFG
 // 
@@ -1277,7 +1360,7 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
     // may be in.  New basic blocks are not created.
 
     // FIXME: use a better classification method 
-    if (strcmp(GetCFGVertexType(cfg, n), "xaif:ForLoop") == 0) {
+    if (GetCFGVertexType(cfg, n) == XAIFStrings.elem_BBForLoop()) {
       assert(n->size() == 1);
       CFG::NodeStatementsIterator stmtIt(n); 
       WN* loopWN = (WN *)((StmtHandle)stmtIt);
@@ -1298,6 +1381,33 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
 	    break;
 	  }
 	}
+      }
+    }
+  }
+
+  // -------------------------------------------------------
+  // 3. Split basic blocks with EndLoop and EndBranch tags (FIXME)
+  // -------------------------------------------------------
+
+  // EndLoop and EndBranch statments should be at the beginning of any
+  // basic block.
+  for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
+    CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
+    
+    if (n->size() > 1) {
+      CFG::NodeStatementsIterator stmtIt(n);
+      WN* wn = (WN*)((StmtHandle)stmtIt);
+	
+      const char* vty = GetStructuredCFGVertexType(wn);
+      if (vty == XAIFStrings.elem_BBEndBranch() ||
+	  vty == XAIFStrings.elem_BBEndLoop()) {
+	
+	// advance iterator to find start of new basic block
+	++stmtIt;
+	WN* startWN = (WN*)((StmtHandle)stmtIt);
+
+	CFG::Node* newblock = cfg->splitBlock(n, (StmtHandle)startWN);
+	cfg->connect(n, newblock, CFG::FALLTHROUGH_EDGE);
       }
     }
   }
