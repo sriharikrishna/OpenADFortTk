@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.cxx,v 1.6 2004/06/09 21:59:31 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.cxx,v 1.7 2004/06/30 23:45:17 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -165,7 +165,10 @@ void
 CreateWhirlIdMaps(WN* wn, WNToWNIdMap* x, WNIdToWNMap* y)
   
 {
-  static UINT nextId = 0; // 0 reserved as NULL
+  // Note: Do not use a static id because it would then require that
+  // this function be called in the same order across two different
+  // runs.
+  UINT nextId = 0; // 0 reserved as NULL
   
   // Iterate over the whirl tree finding or assigning persistent ids
   WN_TREE_CONTAINER<PRE_ORDER> wtree(wn);
