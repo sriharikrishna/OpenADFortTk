@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.27 2003/11/26 14:49:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.28 2003/12/06 00:21:37 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -78,10 +78,17 @@
 #include <stdlib.h> // ANSI: cstdlib // for strtol
 
 #include <string>   // STL
+#include <set>      // STL
 
 //************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
+
+//************************ OpenAnalysis Include Files ***********************
+
+#include <OpenAnalysis/CFG/CFG.h>
+#include <OpenAnalysis/ValueNumbers/ValueNumbers.h>
+#include <lib/support/Pro64IRInterface.h>
 
 //*************************** User Include Files ****************************
 
@@ -96,19 +103,12 @@
 #include "st2xaif.h"
 #include "ty2xaif.h"
 
-#include <lib/support/Pro64IRInterface.h>
-#include <OpenAnalysis/CFG/CFG.h>
-
 //************************** Forward Declarations ***************************
 
 using namespace whirl2xaif;
 using namespace xml; // for xml::ostream, etc
 
 IntrinsicXlationTable whirl2xaif::IntrinsicTable(IntrinsicXlationTable::W2X);
-
-// FIXME: REMOVE: defined in main.cxx
-extern bool opt_testTypes;
-void CONVERT_TYPES_TESTER(SYMTAB_IDX symtab_lvl);
 
 //************************** Forward Declarations ***************************
 
@@ -117,6 +117,9 @@ typedef WN2F_STATUS (*XlateWNHandlerFunc)(xml::ostream&, WN*, XlationContext&);
 
 static WN2F_STATUS
 xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+static set<SymHandle>* 
+GetParamSymHandleSet(WN* wn_pu);
 
 static WN2F_STATUS 
 xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt);
@@ -361,56 +364,56 @@ whirl2xaif::TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 // 
 //***************************************************************************
 
+// xlate_FUNC_ENTRY: Given the root of a WHIRL tree, and an
+// appropriate context 'ctxt', emits XAIF for the tree to the 'xos'
+// stream.  Assumes that the global symbol table pointer
+// 'Current_Symtab' already valid.
+
 WN2F_STATUS
 whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  /* Add tokens for the function header and body to "tokens".  Note
-   * that the whole function definition will appended to the buffer,
-   * while the task of writing the tokens to file and freeing up
-   * the buffer is left to the caller.
-   *
-   * Assume that Current_Symtab has been updated (see bedriver.c).
-   * Note that Current_PU is not maintained, but we instead get to
-   * it through PUinfo_current_func.
-   */
-  ASSERT_DBG_FATAL(WN_opcode(wn) == OPC_FUNC_ENTRY, 
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_FUNC_ENTRY, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_FUNC_ENTRY"));
-
+  
   WN* fbody = WN_func_body(wn);
-    
-  // -------------------------------------------------------
-  // Translate the function header
-  // -------------------------------------------------------
-  xlate_EntryPoint(xos, wn, ctxt); 
 
   // -------------------------------------------------------
   // Collect auxillary data
   // -------------------------------------------------------
+  // 1. Non-scalar symbol table
   NonScalarSymTab* symtab = new NonScalarSymTab(); // FIXME
   AddToNonScalarSymTabOp op(symtab);
   ForAllNonScalarRefs(fbody, op); //FIXME
 
+  // 2. WHIRL<->ID maps
   pair<WNToWNIdMap*, WNIdToWNMap*> wnmaps = CreateWhirlIdMaps(wn);
   delete wnmaps.second;
   
-  ctxt.CreateContext(XlationContext::NOFLAG, symtab, wnmaps.first);
-
-  // -------------------------------------------------------
-  // FIXME: junk and temporary testing
-  // -------------------------------------------------------
-  // Emit symbol table for this function
-  //FIXME: xlate_SymbolTables(xos, CURRENT_SYMTAB, symtab, ctxt);
-
-  if (opt_testTypes) { CONVERT_TYPES_TESTER(CURRENT_SYMTAB); }
-  
-  // -------------------------------------------------------
-  // Create and Ouptut CFG representation
-  // -------------------------------------------------------
+  // 3. OpenAnalysis CFG
   Pro64IRInterface irInterface;
   Pro64IRStmtIterator irStmtIter(fbody);
   CFG cfg(irInterface, &irStmtIter, (SymHandle)WN_st(wn), true);
   
+  // 4. OpenAnalysis Uwe numbers
+  set<SymHandle>* params = GetParamSymHandleSet(wn);
+  ValueNumbers vnmap(cfg, *params);
+  delete params;
+
+  // 5. Massage CFG (wait until after Uwe numbers have been computed)
   MassageOACFGIntoXAIFCFG(&cfg);
+  
+  // -------------------------------------------------------
+  // Translate the function header
+  // -------------------------------------------------------
+  xlate_EntryPoint(xos, wn, ctxt); 
+  
+  // -------------------------------------------------------
+  // Translate CFG (et al.) to XAIF
+  // -------------------------------------------------------
+  ctxt.CreateContext(XlationContext::NOFLAG, symtab, wnmaps.first);
+  ctxt.CurContext().SetValNum(&vnmap);
+  
+  // FIXME: xlate_SymbolTables(xos, CURRENT_SYMTAB, symtab, ctxt);
 
   // Dump CFG vertices (basic blocks)
   for (CFG::NodesIterator nodeIt(cfg); (bool)nodeIt; ++nodeIt) {
@@ -527,6 +530,23 @@ xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 #endif
   return EMPTY_WN2F_STATUS;
 }
+
+
+// GetParamSymHandleSet: Return a set of SymHandles representing the
+// parameters of the OPR_FUNC_ENTRY.
+static set<SymHandle>* 
+GetParamSymHandleSet(WN* wn_pu)
+{
+  // Accumulate the ST* for parameters
+  set<SymHandle>* params = new set<SymHandle>;
+  INT nparam = WN_num_formals(wn_pu);
+  for (int i = 0; i < nparam; ++i) {
+    ST* st = WN_st(WN_formal(wn_pu, i));
+    params->insert((SymHandle)st);
+  }
+  return params;
+}
+
 
 // xlate_BBStmt: 
 // FIXME: we know that loop and if BBs should only have one node in them.
@@ -968,7 +988,8 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
   bool newContext = false;
   if (!constant && !ctxt.IsVarRef()) {
     xos << BegElem(XAIFStrings.elem_VarRef())
-	<< Attr("vertex_id", ctxt.GetNewVId());
+	<< Attr("vertex_id", ctxt.GetNewVId())
+	<< Attr("alias", ctxt.FindVN(ctxt.GetWN_MR()));
     ctxt.CreateContext(XlationContext::VARREF); // FIXME: do we need wn?
     newContext = true; 
   }
@@ -1141,7 +1162,8 @@ WN2F_Offset_Memref(xml::ostream& xos,
   bool newContext = false; 
   if (!constant && !ctxt.IsVarRef()) {
     xos << BegElem(XAIFStrings.elem_VarRef())
-	<< Attr("vertex_id", ctxt.GetNewVId());
+	<< Attr("vertex_id", ctxt.GetNewVId())
+	<< Attr("alias", ctxt.FindVN(ctxt.GetWN_MR()));
     ctxt.CreateContext(XlationContext::VARREF); // FIXME: do we need wn?
     newContext = true; 
   }
@@ -1459,6 +1481,10 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
 
 /////////////////////////////////////////////////////////////////////////////
 // FIXME: REMOVE
+
+// FIXME: REMOVE: defined in main.cxx
+extern bool opt_testTypes;
+void CONVERT_TYPES_TESTER(SYMTAB_IDX symtab_lvl);
 
 TY_IDX
 find_ADIFOR_type_for_BUILTINS(TY_IDX ty_idx);

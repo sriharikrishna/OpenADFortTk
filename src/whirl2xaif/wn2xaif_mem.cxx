@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.15 2003/10/01 16:32:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.16 2003/12/06 00:21:37 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -323,6 +323,7 @@ whirl2xaif::xlate_LDA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // we infer a type; it may be wrong but it is the best we can do.
   TY_IDX ref_ty = (TY_Is_Pointer(WN_ty(wn))) ? TY_pointed(WN_ty(wn)) : base_ty;
     
+  ctxt.CurContext().SetWN(wn);
   ctxt.ResetDerefAddr();
   set_XlationContext_has_no_arr_elmt(ctxt);
   xlate_SymRef(xos, base_st, baseptr_ty, ref_ty, WN_lda_offset(wn), ctxt);
@@ -394,7 +395,7 @@ whirl2xaif::xlate_LDID(xml::ostream& xos, WN* wn, XlationContext& ctxt)
       // parameter.
     }
 #endif
-    
+    ctxt.CurContext().SetWN(wn);
     set_XlationContext_has_no_arr_elmt(ctxt); // FIXME why?
     xlate_SymRef(xos, WN_st(wn), baseptr_ty, ref_ty, WN_load_offset(wn), ctxt);
     reset_XlationContext_has_no_arr_elmt(ctxt);
@@ -420,6 +421,7 @@ whirl2xaif::xlate_ILOAD(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TY_IDX ref_ty = WN_ty(wn);
 
   // Translate into a reference (dereference address???)
+  ctxt.CurContext().SetWN(wn);
   if (WN_operator(baseptr) == OPR_LDA || WN_operator(baseptr) == OPR_LDID)
     set_XlationContext_has_no_arr_elmt(ctxt); // FIXME
   
@@ -729,7 +731,8 @@ xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   bool newContext = false; // FIXME: abstract (symref, memref)
   if (!ctxt.IsVarRef()) {
     xos << BegElem(XAIFStrings.elem_VarRef())
-	<< Attr("vertex_id", ctxt.GetNewVId());
+	<< Attr("vertex_id", ctxt.GetNewVId())
+	<< Attr("alias", ctxt.FindVN(wn));
     ctxt.CreateContext(XlationContext::VARREF, wn); // FIXME: do we need wn?
     newContext = true; 
   }
