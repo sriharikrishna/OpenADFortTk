@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.30 2004/04/28 15:24:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.31 2004/07/28 19:04:25 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -341,9 +341,11 @@ whirl2xaif::xlate_LDID(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   TY_IDX ref_ty = WN_GetRefObjType(wn);
   
   if (ST_class(WN_st(wn)) == CLASS_PREG) {
+    // Note: WN_load_offset() is the PREG_IDX
     ctxt.CurContext().SetWN(wn);
-    xlate_PregRef(xos, WN_st(wn), base_ty, WN_load_offset(wn), ctxt); // FIXME if WN_load_offset(wn) == -1
-  } else {
+    xlate_PregRef(xos, WN_st(wn), base_ty, WN_load_offset(wn), ctxt);
+  } 
+  else {
 
     // FIXME: Stab_Pointer_To, et. al. create types!!!
     if (ctxt.IsDerefAddr() && TY_Is_Pointer(base_ty)) {
@@ -488,8 +490,10 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for LHS
   
   if (ST_class(base_st) == CLASS_PREG) { // FIXME
+    // Note: WN_load_offset() is the PREG_IDX
     xlate_PregRef(xos, base_st, base_ty, WN_store_offset(wn), ctxt);
-  } else {
+  } 
+  else {
     xlate_SymRef(xos, base_st, baseptr_ty, ref_ty, WN_store_offset(wn), ctxt);
   }
   

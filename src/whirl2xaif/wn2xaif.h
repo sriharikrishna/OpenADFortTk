@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.28 2004/06/03 13:15:37 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.29 2004/07/28 19:04:25 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -304,6 +304,13 @@ inline AttrAnnotInfo_<const char*>
 IntrinsicKeyAnnot(const char*& val_)
 {
   return AttrAnnot(XAIFStrings.tag_IntrinsicKey(), val_);
+}
+
+template<class T>
+AttrAnnotInfo_<T>
+PregIdAnnot(const T& val_)
+{
+  return AttrAnnot(XAIFStrings.tag_PregId(), val_);
 }
 
 

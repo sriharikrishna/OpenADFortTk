@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.71 2004/06/29 21:32:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.72 2004/07/28 19:04:25 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -464,7 +464,8 @@ whirl2xaif::xlate_PregRef(xml::ostream& xos, ST* st, TY_IDX preg_ty,
 
   xos << BegElem("xaif:SymbolReference") 
       << Attr("vertex_id", ctxt.GetNewVId())
-      << Attr("scope_id", scopeid) << AttrSymId(st) << EndElem;
+      << Attr("scope_id", scopeid) << AttrSymId(st) << PregIdAnnot(preg_idx)
+      << EndElem;
   
   if (closeVarRef) {
     xos << EndElem /* elem_VarRef() */;
