@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlGlobalStateUtils.h,v 1.1 2004/01/29 23:17:00 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlGlobalStateUtils.h,v 1.2 2004/02/11 18:05:55 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -35,7 +35,7 @@
 //   and store this in a PU->scope_symbol_table map.  This map is
 //   automatically populated by the WHIRL reader.  Although the map
 //   can be queried, users will most often prepare the global state
-//   for a given pu by calling PU_RestoreGlobalState(pu).
+//   for a given pu by calling PU_SetGlobalState(pu).
 //
 //  (Note: It would be preferable to have a PU_Info* store its own
 //  lexical scope table.  This would require moderate revisions of
@@ -69,14 +69,30 @@ extern PUToScopedSymTabMap PUToScopeTabMap;
 
 //***************************************************************************
 
-// PU_RestoreGlobalState: Restores all global state for 'pu'.  This
+// PU_SetGlobalState: Restores all global state for 'pu'.  This
 // function may be called as many times as neceessary. 
 //   - Current_Map_Tab
 //   - Current_pu
 //   - CURRENT_SYMTAB
 //   - Scope_tab
 void
-PU_RestoreGlobalState(PU_Info* pu);
+PU_SetGlobalState(PU_Info* pu);
+
+
+// PU_AllocBEGlobalSymtab, PU_FreeBEGlobalSymtab: Allocate and free
+// the back end *global* symbol tables. These routines *must* be paired.
+void
+PU_AllocBEGlobalSymtab();
+void
+PU_FreeBEGlobalSymtab();
+
+// PU_AllocBELocalSymtab, PU_FreeBELocalSymtab: Allocate and free
+// the back end *local* symbol tables for the pu and all of its
+// children.  For a given PU, these routines *must* be paired.
+void
+PU_AllocBELocalSymtab(PU_Info* pu);
+void
+PU_FreeBELocalSymtab(PU_Info* pu);
 
 //***************************************************************************
 
@@ -86,7 +102,7 @@ namespace WhirlGlobalStateUtils_hidden {
 
 
   // Save global state so that it can be restored with
-  // PU_RestoreGlobalState().  Assumes that all global state for 'pu'
+  // PU_SetGlobalState().  Assumes that all global state for 'pu'
   // is correctly set.  This should only be called *once* for each PU.
   void
   PU_SaveGlobalState(PU_Info* pu);

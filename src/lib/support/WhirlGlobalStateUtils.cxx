@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlGlobalStateUtils.cxx,v 1.1 2004/01/29 23:17:00 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlGlobalStateUtils.cxx,v 1.2 2004/02/11 18:05:55 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -35,18 +35,108 @@ PUToScopedSymTabMap PUToScopeTabMap;
 
 //***************************************************************************
 
-// PU_RestoreGlobalState: 
+// PU_SetGlobalState: 
 void
-PU_RestoreGlobalState(PU_Info* pu)
+PU_SetGlobalState(PU_Info* pu)
 {
   // 'pu' must be in memory (change some global pointers around)
   assert(PU_Info_state(pu, WT_TREE) == Subsect_InMem); // Subsect_Written?
   Current_Map_Tab = PU_Info_maptab(pu);
   Current_pu = &PU_Info_pu(pu);
+  Current_PU_Info = pu;
   CURRENT_SYMTAB = PU_lexical_level(*Current_pu);
   Scope_tab = PUToScopeTabMap.Find(pu);
   assert(Scope_tab);
 }
+
+
+// PU_AllocBEGlobalSymtab:
+void
+PU_AllocBEGlobalSymtab()
+{
+  // Initialize back end symbol table (e.g. w2cf relies on this)
+  BE_symtab_initialize_be_scopes();
+  BE_symtab_alloc_scope_level(GLOBAL_SYMTAB);
+  for (SYMTAB_IDX lvl = 0; lvl <= GLOBAL_SYMTAB; ++lvl) {
+    if (Scope_tab[lvl].st_tab) {
+      Scope_tab[lvl].st_tab->Register(*Be_scope_tab[lvl].be_st_tab);
+    } else { // only level 0 should not have st_tab
+      Is_True(lvl == 0, ("Nonexistent st_tab for level %d", lvl));
+    }
+  }
+}
+
+
+// PU_FreeBEGlobalSymtab: 
+void
+PU_FreeBEGlobalSymtab()
+{
+  // Free back end symtabs (from 0 <= lvl <= GLOBAL_SYMTAB)
+  for (SYMTAB_IDX lvl = GLOBAL_SYMTAB; lvl <= GLOBAL_SYMTAB; --lvl) {
+    if (Scope_tab[lvl].st_tab) {
+      Scope_tab[lvl].st_tab->Un_register(*Be_scope_tab[lvl].be_st_tab);
+      Be_scope_tab[lvl].be_st_tab->Clear();
+    } else { // only level 0 should not have st_tab
+      Is_True(lvl == 0, ("Nonexistent st_tab for level %d", lvl));
+    }
+  }
+  BE_symtab_free_be_scopes();
+}
+
+
+// PU_AllocBELocalSymtab:
+void
+PU_AllocBELocalSymtab_helper(PU_Info* pu);
+
+void
+PU_AllocBELocalSymtab(PU_Info* pu)
+{
+  PU_SetGlobalState(pu); // just in case
+  
+  PU_AllocBELocalSymtab_helper(pu);
+  for (PU_Info* child = PU_Info_child(pu); child != NULL;
+       child = PU_Info_next(child)) {
+    PU_AllocBELocalSymtab_helper(child);
+  }
+}
+
+void
+PU_AllocBELocalSymtab_helper(PU_Info* pu)
+{
+  // Initialize local back end symtab.  Assume symtab is already
+  // prepared for pu.
+  SYMTAB_IDX lvl = PU_lexical_level(PU_Info_pu(pu));
+  BE_symtab_alloc_scope_level(lvl);
+  Scope_tab[lvl].st_tab->Register(*Be_scope_tab[lvl].be_st_tab);
+}
+
+
+// PU_FreeBELocalSymtab:
+void
+PU_FreeBELocalSymtab_helper(PU_Info* pu);
+
+void
+PU_FreeBELocalSymtab(PU_Info* pu)
+{
+  PU_SetGlobalState(pu); // just in case
+
+  PU_FreeBELocalSymtab_helper(pu);
+  for (PU_Info* child = PU_Info_child(pu); child != NULL;
+       child = PU_Info_next(child)) {
+    PU_FreeBELocalSymtab_helper(child);
+  }
+}
+
+void
+PU_FreeBELocalSymtab_helper(PU_Info* pu)
+{
+  // Free local back end symtab.  Assume symtab is already prepared
+  // for pu.
+  SYMTAB_IDX lvl = PU_lexical_level(PU_Info_pu(pu));
+  Scope_tab[lvl].st_tab->Un_register(*Be_scope_tab[lvl].be_st_tab);
+  Be_scope_tab[lvl].be_st_tab->Clear();
+}
+
 
 //***************************************************************************
 
@@ -75,14 +165,16 @@ void
 WhirlGlobalStateUtils_hidden::PU_SaveGlobalState(PU_Info* pu)
 {
   // We assume that the global state has already been properly prepared.
-
+  
   // Create a scope table large enough for this lexical level and
   // insert it into the map. Note: we intentionally do not set
   // 'Scope_tab' to this copy in order to stave off the likely memory
   // leak as long as possible.
-  INT size = (PU_lexical_level(*Current_pu) + 1) * sizeof(SCOPE);
-  SCOPE* new_scope_tab = (SCOPE*)MEM_POOL_Alloc(Malloc_Mem_Pool, size);
-  memcpy(new_scope_tab, Scope_tab, size);
+  SYMTAB_IDX lvl = PU_lexical_level(*Current_pu);
+  INT sz = (lvl + 1) * sizeof(SCOPE);
+  SCOPE* new_scope_tab = (SCOPE*)MEM_POOL_Alloc(Malloc_Mem_Pool, sz);
+  memcpy(new_scope_tab, Scope_tab, sz);
+  
   PUToScopeTabMap.Insert(pu, new_scope_tab);
 }
 
