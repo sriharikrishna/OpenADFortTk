@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.4 2003/07/24 20:20:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.5 2003/08/01 15:57:54 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -43,6 +43,14 @@
 
 //-----------------------------------------------------------------------------
 
+// cf. wn_mp.cxx 1278 ; dra_clone.cxx:974
+// PU_Info_symtab_ptr(pu)
+
+// (PU_lexical_level (&St_Table[PU_Info_proc_sym (pu)]))
+// Scope_tab[CURRENT_SYMTAB].st = WN_get_proc_sym(pu);
+
+// Callgraph: ipa_cg.cxx (1053)
+
 void 
 RestoreOpen64PUGlobalVars(PU_Info *pu)
 {
@@ -54,14 +62,6 @@ RestoreOpen64PUGlobalVars(PU_Info *pu)
   
   Restore_Local_Symtab(pu); // FIXME:SYMTAB
   // FIXME: can we make this restore itself and all its parents?
-  
-  // cf. wn_mp.cxx 1278 ; dra_clone.cxx:974
-  // PU_Info_symtab_ptr(pu)
-
-  // (PU_lexical_level (&St_Table[PU_Info_proc_sym (pu)]))
-  //Scope_tab[CURRENT_SYMTAB].st = WN_get_proc_sym(pu);
-
-  // Callgraph: ipa_cg.cxx (1053)
 }
 
 void
@@ -85,19 +85,27 @@ Pro64IRProcIterator::Pro64IRProcIterator(PU_Info* pu_forest)
     }
   }
 
+  pulist_iter = pulist.end(); // initialize to end state (important!)
   Reset();
 }
 
-// FIXME: destructor: it would be possible to call restoresymtab()
-// without finishing all the iteration.
+Pro64IRProcIterator::~Pro64IRProcIterator()
+{
+  // This destructor may be called without having finished a full
+  // iteration (cf. resetting in the middle of an iteration).  We must
+  // save symtab globals for the last pu.
+  // Note: memory leaks may cause big problems because this cleanup
+  // will not be performed.
+  cleanup_previous_pu();
+}
 
 void
 Pro64IRProcIterator::operator++()
 {
-  // FIXME save old
-  PU_Info *pu = (*pulist_iter);
-  SaveOpen64PUGlobalVars(pu);
+  // Symtab globals for the soon-to-be previous PU must be saved.
+  cleanup_previous_pu();
 
+  // Advance current PU
   ++pulist_iter;
   prepare_current_pu();
 }
@@ -105,7 +113,11 @@ Pro64IRProcIterator::operator++()
 void
 Pro64IRProcIterator::Reset()
 {
-  // FIXME save old (if resetting the middle of an iteration)
+  // If the iterator is being reset in the middle of an iteration, we
+  // must save symtab globals for the last pu.
+  cleanup_previous_pu();
+
+  // Reset
   pulist_iter = pulist.begin();
   prepare_current_pu();
 }
@@ -116,6 +128,15 @@ Pro64IRProcIterator::prepare_current_pu()
   if (IsValid()) {
     PU_Info *pu = (*pulist_iter);
     RestoreOpen64PUGlobalVars(pu);
+  }
+}
+
+void 
+Pro64IRProcIterator::cleanup_previous_pu()
+{
+  if (IsValid()) {
+    PU_Info *pu = (*pulist_iter);
+    SaveOpen64PUGlobalVars(pu);
   }
 }
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.5 2003/07/24 20:20:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.6 2003/08/01 15:57:54 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -58,9 +58,13 @@
 
 //***************************************************************************
 
+// When using multiple PUs at a time, this should be called to
+// prepare the global symbol table pointers the current PU.
 void 
 RestoreOpen64PUGlobalVars(PU_Info *pu);
 
+// When using multiple PUs at a time, this should be called to save
+// the global symbol table pointer for later use.
 void
 SaveOpen64PUGlobalVars(PU_Info *pu);
 
@@ -72,7 +76,7 @@ SaveOpen64PUGlobalVars(PU_Info *pu);
 class Pro64IRProcIterator : public IRProcIterator {
 public:
   Pro64IRProcIterator(PU_Info* pu_forest);
-  ~Pro64IRProcIterator() { }
+  ~Pro64IRProcIterator();
   
   ProcHandle Current() { return (ProcHandle)(*pulist_iter); }
   bool IsValid () { return (pulist_iter != pulist.end()); }
@@ -82,6 +86,8 @@ public:
 
 private:
   void prepare_current_pu();
+  void cleanup_previous_pu();
+
   std::list<PU_Info*> pulist; // list of PUs (functions)
   std::list<PU_Info*>::iterator pulist_iter;
   void build_pu_list(PU_Info* pu);
@@ -111,7 +117,7 @@ public:
 
   LeafHandle Current () { return 0; }
   bool IsValid () { return false; }
-  void operator++ () { };
+  void operator++ () { }
 
   void Reset() { }
 	
