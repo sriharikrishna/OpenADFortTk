@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.13 2004/04/14 14:52:32 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.14 2004/04/20 13:14:12 eraxxon Exp $
 # -*-makefile-*-
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -90,6 +90,8 @@ tests_pipeline:
 	@echo "*** exceptions: $(F90b_EXCEPTIONS) ***"
 	@echo "--- structured control flow ---"
 	@for f in $(F90b_STRUCTURED) ; do \
+	  printf "  " ; \
+	  $(OPENAD) -v --bb --x2w-bb $${f} ; \
 	  printf "  " ; \
 	  $(OPENAD) -v --bb --x2w-structured $${f} ; \
 	done
