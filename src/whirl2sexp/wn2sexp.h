@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.h,v 1.5 2005/01/07 19:00:17 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.h,v 1.6 2005/01/18 20:23:09 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -113,8 +113,11 @@ struct GenSexpTyUseInfo_ {
   TY_IDX val;
 };
 
+struct GenSexpFlgInfo_ {
+  const char* val;
+};
 template <class T>
-struct GenBeginFlgListInfo_ {
+struct GenBeginFlgListInfoX_ {
   T val;
 };
 
@@ -191,10 +194,23 @@ GenSexpTyUse(TY_IDX val)
 }
 
 
-// Cf. GenBeginFlgList
+// Cf. GenSexpFlg
+sexp::ostream&
+operator<<(std::ostream& os, const GenSexpFlgInfo_& x);
+
+inline GenSexpFlgInfo_
+GenSexpFlg(const char* val)
+{
+  GenSexpFlgInfo_ x;
+  x.val = val;
+  return x;
+}
+
+
+// FIXME: remove
 template <class T>
 sexp::ostream&
-operator<<(std::ostream& os, const GenBeginFlgListInfo_<T>& x)
+operator<<(std::ostream& os, const GenBeginFlgListInfoX_<T>& x)
 {
   sexp::ostream& sos = dynamic_cast<sexp::ostream&>(os);
   
@@ -202,17 +218,17 @@ operator<<(std::ostream& os, const GenBeginFlgListInfo_<T>& x)
   
   using namespace sexp;
   using namespace sexp::IOFlags;
-  sos << BegList << Atom(SexpTags::FLG) << Atom(A_HEX, val);
+  sos << BegList << Atom(SexpTags::FLG) << Atom(A_HEX, val); // FIXME
   // Do not end the list!
   
   return sos;
 }
 
 template <class T>
-inline GenBeginFlgListInfo_<T> 
+inline GenBeginFlgListInfoX_<T> 
 GenBeginFlgList(T val)
 {
-  GenBeginFlgListInfo_<T> x;
+  GenBeginFlgListInfoX_<T> x;
   x.val = val;
   return x;
 }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.cxx,v 1.6 2005/01/17 15:23:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.cxx,v 1.7 2005/01/18 20:23:09 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -136,9 +136,8 @@ sexp2whirl::TranslateGlobalSymbolTables(sexp_t* gbl_symtab, int flags)
   Initialize_Symbol_Tables(FALSE /*reserve_index_zero*/);
   { 
     // FIXME: if the above is FALSE we must do the following:
-    // action is one of: none, RESERVE_IDX, RESERVE_IDX && create_special_syms
-    Initialize_Strtab (0x1000);	// start with 4Kbytes for strtab.
-    // FIXME: not necessary
+    
+    // CANSKIP: Initialize_Strtab (0x1000); // start with 4Kbytes for strtab.
     
     UINT32 dummy_idx;
     memset (&New_PU ((PU_IDX&) dummy_idx), '\0', sizeof(PU));
@@ -155,8 +154,7 @@ sexp2whirl::TranslateGlobalSymbolTables(sexp_t* gbl_symtab, int flags)
         memset (&Zero, '\0', sizeof(TCON));
         idx = Tcon_Table.Insert (Zero);	// index 0: dummy
         // SKIP: init of consts
-	Initialize_TCON_strtab (1024);	// string table for TCONs
-        // FIXME: not necessary
+	// CANSKIP: Initialize_TCON_strtab (1024); // string table for TCONs
 
     New_Scope(GLOBAL_SYMTAB, Malloc_Mem_Pool, TRUE /*reserve_index_zero*/);
 
@@ -472,13 +470,15 @@ sexp2whirl::xlate_ST_TAB_entry(sexp_t* sx)
 
   // flags/flags_ext
   sexp_t* flags_sx = get_next(oset_sx);
-  sexp_t* flag1_sx = GetBeginFlgList(flags_sx);
-  sexp_t* flag2_sx = get_next(flag1_sx);
-  st->flags = get_value_ui32(flag1_sx);
-  st->flags_ext = get_value_ui64(flag2_sx); // FIXME: flag parsing
+  const char* flags_str = GetWhirlFlg(flags_sx);
+  st->flags = (UINT32)Str_To_ST_FLAGS(flags_str);
+
+  sexp_t* flagsext_sx = get_next(flags_sx);
+  const char* flagsext_str = GetWhirlFlg(flagsext_sx);
+  st->flags_ext = Str_To_ST_EXT_FLAGS(flagsext_str);
   
   // st_idx
-  sexp_t* st_idx_sx = get_next(flags_sx);
+  sexp_t* st_idx_sx = get_next(flagsext_sx);
   ST_IDX st_idx = GetWhirlSym(st_idx_sx);
   Set_ST_st_idx(*st, st_idx);
   
@@ -517,8 +517,8 @@ sexp2whirl::xlate_TY_TAB_entry(sexp_t* sx)
   
   // flags
   sexp_t* flags_sx = get_next(sz_sx);
-  sexp_t* flag1_sx = GetBeginFlgList(flags_sx);
-  UINT16 flg = (UINT16)get_value_ui32(flag1_sx); // FIXME: flag parsing
+  const char* flags_str = GetWhirlFlg(flags_sx);
+  UINT16 flg = (UINT16)Str_To_TY_FLAGS(flags_str);
   Set_TY_flags(*ty, flg);
   
   // arb/fld/tylist:         ARRAY, STRUCT, FUNCTION  (respectively)
@@ -582,9 +582,9 @@ sexp2whirl::xlate_PU_TAB_entry(sexp_t* sx)
   
   // src_lang
   sexp_t* srclang_sx = get_next(gp_sx);
-  mUINT8 srclang = (mUINT8)get_value_ui32(srclang_sx);
-  pu->src_lang = srclang; // FIXME: flag parsing
-
+  const char* srclang_str = GetWhirlFlg(srclang_sx);
+  pu->src_lang = (mUINT8)Str_To_PU_SRC_LANG_FLAGS(srclang_str);
+  
   // target_idx
   sexp_t* targidx_sx = get_next(srclang_sx);
   TARGET_INFO_IDX targidx = get_value_ui32(targidx_sx);
@@ -592,9 +592,9 @@ sexp2whirl::xlate_PU_TAB_entry(sexp_t* sx)
   
   // flags
   sexp_t* flags_sx = get_next(targidx_sx);
-  sexp_t* flag1_sx = GetBeginFlgList(flags_sx);
-  pu->flags = get_value_ui64(flag1_sx); // FIXME: flag parsing
-  
+  const char* flags_str = GetWhirlFlg(flags_sx);
+  pu->flags = Str_To_PU_FLAGS(flags_str);
+
   return pu;
 }
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.5 2005/01/17 15:23:18 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.6 2005/01/18 20:23:09 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -235,7 +235,28 @@ sexp2whirl::GetWhirlTyUse(sexp_t* sx)
 }
 
 
-// GetBeginFlgList
+// GetWhirlFlg
+const char*
+sexp2whirl::GetWhirlFlg(sexp_t* sx)
+{
+  using namespace sexp;
+  
+  // Sanity check
+  FORTTK_ASSERT(is_list(sx), FORTTK_UNEXPECTED_INPUT);
+  
+  sexp_t* tag_sx = get_elem0(sx);
+  const char* tagstr = get_value(tag_sx);
+  FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::FLG) == 0,
+		FORTTK_UNEXPECTED_INPUT);
+  
+  // Get the flag string
+  sexp_t* flg_sx = get_elem1(sx);
+  FORTTK_ASSERT(flg_sx, FORTTK_UNEXPECTED_INPUT);
+  
+  const char* flg = get_value(flg_sx);
+  return flg;
+}
+
 sexp_t*
 sexp2whirl::GetBeginFlgList(sexp_t* sx)
 {

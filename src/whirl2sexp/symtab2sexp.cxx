@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.9 2005/01/17 15:23:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.10 2005/01/18 20:23:09 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -399,7 +399,9 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ST* st)
   sos << GenSexpSym(stbase_idx) << Atom(oset);
   
   // flags/flags_ext
-  sos << GenBeginFlgList(st->flags) << Atom(A_HEX, st->flags_ext) << EndList;
+  const char* flg_str = ST_FLAGS_To_Str(st->flags);
+  const char* flgext_str = ST_EXT_FLAGS_To_Str(st->flags_ext);
+  sos << GenSexpFlg(flg_str) << GenSexpFlg(flgext_str);
   
   // st_idx
   ST_IDX st_idx = ST_st_idx(st);
@@ -436,7 +438,8 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TY* typ)
   
   // flags
   UINT16 flg = TY_flags(ty);
-  sos << GenBeginFlgList(flg) << EndList;
+  const char* flg_str = TY_FLAGS_To_Str(flg);
+  sos << GenSexpFlg(flg_str);
   
   // arb/fld/tylist:         ARRAY, STRUCT, FUNCTION  (respectively)
   // etype/pointed/pu_flags: ARRAY, POINTER, FUNCTION (respectively)
@@ -484,15 +487,17 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, PU* pu)
   
   // src_lang
   UINT64 srclang = PU_src_lang(*pu);
-  sos << Atom(srclang);
+  const char* srclang_str = PU_SRC_LANG_FLAGS_To_Str(srclang);
+  sos << GenSexpFlg(srclang_str);
   
   // target_idx
   TARGET_INFO_IDX targidx = PU_target_idx(*pu);
   sos << Atom(targidx);
 
   // flags
-  sos << GenBeginFlgList(pu->flags) << EndList;
-  
+  const char* flg_str = PU_FLAGS_To_Str(pu->flags);
+  sos << GenSexpFlg(flg_str);
+
   sos << EndList;
 }
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.h,v 1.3 2005/01/12 20:01:01 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.h,v 1.4 2005/01/18 20:23:09 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -82,8 +82,11 @@ namespace sexp2whirl {
   TY_IDX
   GetWhirlTyUse(sexp_t* sx);
   
+  const char*
+  GetWhirlFlg(sexp_t* sx);
+
   sexp_t*
-  GetBeginFlgList(sexp_t* sx);
+  GetBeginFlgList(sexp_t* sx); // FIXME
   
 }; /* namespace sexp2whirl */
 

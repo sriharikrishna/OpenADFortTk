@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.9 2005/01/17 15:23:18 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.10 2005/01/18 20:23:09 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -221,7 +221,19 @@ operator<<(std::ostream& os, const GenSexpTyUseInfo_& x)
 }
 
 
-// Cf. GenBeginFlgList
+// Cf. GenSexpFlg
+sexp::ostream&
+operator<<(std::ostream& os, const GenSexpFlgInfo_& x)
+{
+  sexp::ostream& sos = dynamic_cast<sexp::ostream&>(os);
+  
+  const char* val = x.val;
+
+  using namespace sexp::IOFlags;
+  sos << BegList << Atom(SexpTags::FLG) << Atom(A_DQUOTE, val) << EndList;
+  
+  return sos;
+}
 
 
 //***************************************************************************
