@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v 1.5 2004/02/11 14:16:42 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v 1.6 2004/02/11 18:05:23 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -123,19 +123,6 @@ ReadIR(const char* irfilename)
   New_Scope(GLOBAL_SYMTAB, Malloc_Mem_Pool, FALSE);
   PU_Info *pu_forest = Read_Global_Info(NULL);
   Initialize_Special_Global_Symbols();
-
-#if 0  
-  // Initialize back end symbol table (e.g. w2cf relies on this)
-  BE_symtab_initialize_be_scopes();
-  BE_symtab_alloc_scope_level(GLOBAL_SYMTAB);
-  for (SYMTAB_IDX lvl = 0; lvl <= GLOBAL_SYMTAB; ++lvl) {
-    if (Scope_tab[lvl].st_tab) {
-      Scope_tab[lvl].st_tab->Register(*Be_scope_tab[lvl].be_st_tab);
-    } else { // only level 0 should not have st_tab
-      Is_True(lvl == 0, ("Nonexistent st_tab for level %d", lvl));
-    }
-  }
-#endif
   
   // -------------------------------------------------------
   // 2. Read PUs and local symbol tables
@@ -160,13 +147,6 @@ ReadPU(PU_Info* pu)
   Read_Local_Info(MEM_pu_nz_pool_ptr, pu);
   WN *wn_pu = PU_Info_tree_ptr(pu); // made possible by Read_Local_Info()
 
-#if 0
-  // Initialize local back end symbol table
-  SYMTAB_IDX lvl = CURRENT_SYMTAB;
-  BE_symtab_alloc_scope_level(lvl);
-  Scope_tab[lvl].st_tab->Register(*Be_scope_tab[lvl].be_st_tab);
-#endif
-  
   /* FIXME: Always create region pool because there are many places where
    * they can be introduced. Needed for PUs with no regions also */
   /* NOTE: part of what REGION_initialize does can be moved
@@ -229,7 +209,7 @@ WriteIR(const char* irfilename, PU_Info* pu_forest)
 static void
 WritePU(PU_Info* pu)
 {
-  PU_RestoreGlobalState(pu);
+  PU_SetGlobalState(pu);
   
   Write_PU_Info(pu); // sets PU state to Subsect_Written
   
@@ -303,19 +283,6 @@ FreeIR(PU_Info* pu_forest)
   // 2. Free pu tree info and global symbol tables
   // -------------------------------------------------------
   Verify_SYMTAB(GLOBAL_SYMTAB);
-
-#if 0
-  // Free back end symtabs (from 0 <= lvl <= GLOBAL_SYMTAB)
-  for (SYMTAB_IDX lvl = GLOBAL_SYMTAB; lvl <= GLOBAL_SYMTAB; --lvl) {
-    if (Scope_tab[lvl].st_tab) {
-      Scope_tab[lvl].st_tab->Un_register(*Be_scope_tab[lvl].be_st_tab);
-      Be_scope_tab[lvl].be_st_tab->Clear();
-    } else { // only level 0 should not have st_tab
-      Is_True(lvl == 0, ("Nonexistent st_tab for level %d", lvl));
-    }
-  }
-  BE_symtab_free_be_scopes();
-#endif
   
   MEM_POOL_Pop(MEM_pu_nz_pool_ptr);
   MEM_POOL_Pop(MEM_pu_pool_ptr);
@@ -335,17 +302,10 @@ FreeIR(PU_Info* pu_forest)
 static void
 FreePU(PU_Info* pu)
 {
-  PU_RestoreGlobalState(pu);
+  PU_SetGlobalState(pu);
   
   //REGION_Finalize();
   Free_Local_Info(pu); // deletes all maps
-
-#if 0  
-  // Free back end symtab
-  SYMTAB_IDX lvl = CURRENT_SYMTAB;
-  Scope_tab[lvl].st_tab->Un_register(*Be_scope_tab[lvl].be_st_tab);
-  Be_scope_tab[lvl].be_st_tab->Clear();
-#endif
   
   // Now recursively process the child PU's.
   for (PU_Info *child = PU_Info_child(pu); child != NULL;
