@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.7 2004/06/09 20:42:29 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.8 2004/06/11 19:45:35 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -68,12 +68,6 @@ protected:
   ScalarizedRefTab_Base();
   virtual ~ScalarizedRefTab_Base();
   
-  // Return a globally unique name
-  std::string& GetName() { return name; }
-
-  // Return an id, globally unique across instances of this class
-  UINT GetId() const { return id; }
-
   // Insert 'x' into the ref pool if not already there
   void
   InsertIntoPool(ScalarizedRef* x)
@@ -89,11 +83,6 @@ protected:
   // references, we need a pool in which these references are entered
   // only once.
   ScalarizedRefPoolTy scalarizedRefPool;
-  
-  std::string name; // FIXME: 
-  UINT id;
-  
-  static UINT nextId; // for globally uniqe id numbers
 };
 
 
@@ -102,60 +91,36 @@ protected:
 //***************************************************************************
 
 class ScalarizedRef {
-
-public:
-  class CreateOp {
-  public:
-    CreateOp() { }
-    virtual ~CreateOp() { }
-    
-    // Given the current PU_Info*, the WN* of the first occurance of
-    // this reference in the PU, and the assoc hash string, create a
-    // ScalarizedRef
-    virtual ScalarizedRef* 
-    operator()(const PU_Info* pu, const WN* wn, const char* hstr) = 0;
-    
-  private: 
-  };
-  
-  class CreateOpDefault : public CreateOp {
-  public:
-    CreateOpDefault() { }
-    virtual ~CreateOpDefault() { }
-    
-    virtual ScalarizedRef* 
-    operator()(const PU_Info* pu, const WN* wn, const char* hstr) 
-    { return new ScalarizedRef(); }
-    
-  private: 
-  };
-
   
 public:
   // Constructor: if 'x' is supplied, it will be appended to the
   // symbol name
-  ScalarizedRef();
-  ScalarizedRef(const char* x);
+  ScalarizedRef(WN* wn, const char* x = NULL) { Ctor(wn, x);  }
   virtual ~ScalarizedRef();
   
   // GetName: Return a globally unique dummy symbol name
   std::string& GetName() { return name; }
+  // GetWN: first occurance of reference in PU
+  WN* GetWN() { return wn; }
   
   // GetId: Return an id, globally unique across instances of this class
   UINT GetId() const { return id; }
   
   virtual void Dump(std::ostream& o = std::cerr) const;
   virtual void DDump() const;
-  
+
 private:
   // These could make sense, but I just haven't implemented them yet
   ScalarizedRef(const ScalarizedRef& x) { }
   ScalarizedRef& operator=(const ScalarizedRef& x) { return *this; }
   
+  void Ctor(WN* wn, const char* x);
+  
 private:
-  std::string name; // FIXME:
   UINT id; 
-
+  std::string name;
+  WN* wn; // first occurance of reference in PU
+  
   static UINT nextId; // for globally uniqe id numbers
 };
 
@@ -188,12 +153,11 @@ class ScalarizedRefTab<ScalarizedRefTab_Base::W2X>
 public:
   // Constructor allocates an empty data structure
   ScalarizedRefTab();
-  ScalarizedRefTab(PU_Info* pu, ScalarizedRef::CreateOp* newref = NULL)
-  { Create(pu, newref); }
+  ScalarizedRefTab(PU_Info* pu) { Create(pu); }
   virtual ~ScalarizedRefTab();
   
   // Create: Fills in map
-  void Create(PU_Info* pu, ScalarizedRef::CreateOp* newref = NULL);
+  void Create(PU_Info* pu);
   
   // Find: a version with const params for convenience
   ScalarizedRef* 
@@ -266,12 +230,10 @@ class ScalarizedRefTabMap_W2X
 
 public:
   ScalarizedRefTabMap_W2X();
-  ScalarizedRefTabMap_W2X(PU_Info* pu_forest, 
-			  ScalarizedRef::CreateOp* newref = NULL)
-  { Create(pu_forest, newref); }
+  ScalarizedRefTabMap_W2X(PU_Info* pu_forest) { Create(pu_forest); }
   virtual ~ScalarizedRefTabMap_W2X();
   
-  void Create(PU_Info* pu_forest, ScalarizedRef::CreateOp* newref = NULL);
+  void Create(PU_Info* pu_forest);
 };
 
 
@@ -335,9 +297,7 @@ ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op);
 // AddToScalarizedRefTabOp: Given a ScalarizedRefTab, add references to it
 class AddToScalarizedRefTabOp : public ForAllNonScalarRefsOp {
 public:
-  AddToScalarizedRefTabOp(ScalarizedRefTab_W2X* tab_, 
-			  PU_Info* curpu_,
-			  ScalarizedRef::CreateOp& newref_);
+  AddToScalarizedRefTabOp(ScalarizedRefTab_W2X* tab_, PU_Info* curpu_);
   virtual ~AddToScalarizedRefTabOp();
   
   ScalarizedRefTab_W2X* GetTab() { return tab; }
@@ -352,7 +312,6 @@ private:
 private:
   ScalarizedRefTab_W2X* tab;
   PU_Info* curpu;
-  ScalarizedRef::CreateOp& newrefop;
   
   Pro64IRInterface ir;
   WorkMapTy workmap;

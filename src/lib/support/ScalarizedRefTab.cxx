@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.7 2004/06/09 20:42:29 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.8 2004/06/11 19:45:35 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -24,7 +24,6 @@
 //************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
-
 
 //************************ OpenAnalysis Include Files ***********************
 
@@ -60,12 +59,8 @@ static const char* cat(const char* str, UINT num)
 // ScalarizedRefTab (helper types)
 //***************************************************************************
 
-UINT ScalarizedRefTab_Base::nextId = 0; // static member
-
 ScalarizedRefTab_Base::ScalarizedRefTab_Base()
 {
-  id = nextId++;
-  name = cat("*nonscalarstab*", id);
 }
 
 ScalarizedRefTab_Base::~ScalarizedRefTab_Base()
@@ -90,19 +85,13 @@ ScalarizedRefTabMap_W2X::~ScalarizedRefTabMap_W2X()
 }
 
 void
-ScalarizedRefTabMap_W2X::Create(PU_Info* pu_forest, 
-				ScalarizedRef::CreateOp* newref)
+ScalarizedRefTabMap_W2X::Create(PU_Info* pu_forest)
 { 
-  ScalarizedRef::CreateOpDefault defnewref;
-  if (!newref) {
-    newref = &defnewref;
-  }
-  
   Pro64IRProcIterator procIt(pu_forest);
   for ( ; procIt.IsValid(); ++procIt) { 
     PU_Info* pu = (PU_Info*)procIt.Current();
     
-    ScalarizedRefTab_W2X* tab = new ScalarizedRefTab_W2X(pu, newref);
+    ScalarizedRefTab_W2X* tab = new ScalarizedRefTab_W2X(pu);
     Insert(pu, tab);
   }
 }
@@ -134,16 +123,11 @@ ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
 
 void
 ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
-Create(PU_Info* pu, ScalarizedRef::CreateOp* newref)
+Create(PU_Info* pu)
 { 
-  ScalarizedRef::CreateOpDefault defnewref;
-  if (!newref) {
-    newref = &defnewref;
-  }
-  
   WN* wn_pu = PU_Info_tree_ptr(pu);
   WN* fbody = WN_func_body(wn_pu);
-  AddToScalarizedRefTabOp op(this, pu, *newref);
+  AddToScalarizedRefTabOp op(this, pu);
   ForAllNonScalarRefs(fbody, op);
 }
 
@@ -180,10 +164,16 @@ DDump() const
 
 UINT ScalarizedRef::nextId = 0; // static member
 
-ScalarizedRef::ScalarizedRef()
+void
+ScalarizedRef::Ctor(WN* wn_, const char* x)
 {
+  wn = wn_;
   id = nextId++;
+  name.reserve(13 + ((x) ? strlen(x) : 0));
   name = cat("scalarizedref", id);
+  if (x) {
+    name += x;
+  }
 }
 
 ScalarizedRef::~ScalarizedRef()
@@ -258,21 +248,31 @@ IsScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty)
     // This is a reference to a non-scalar or a non-scalar within a
     // non-scalar (e.g. a record or a record within a record)
     return false; 
-  } else if (TY_Is_Scalar(refobj_ty)) {
+  } 
+  else if (TY_Is_Scalar(refobj_ty)) {
     // Test whether 'baseobj_ty' is assignable to 'refobj_ty'.  If
     // not, we have a non-scalar reference (e.g. a field within a
     // structure; an element within an array).
     return (WN2F_Can_Assign_Types(baseobj_ty, refobj_ty));
-  } else {
+  } 
+  else {
     return false;
   }
 }
+
+
+// FIXME: 
+// IsScalarRef --> IsRefScalar
+// IsNonScalarRef --> IsRefNonScalar  // IsRefTranslatableToXAIF
+// Add: IsRefScalarizable
+
 
 bool
 IsNonScalarRef(TY_IDX baseobj_ty, TY_IDX refobj_ty) 
 {
   return (!IsScalarRef(baseobj_ty, refobj_ty));
 }
+
 
 // NOTE: for store OPERATORs, only the LHS is checked
 bool
@@ -329,6 +329,7 @@ IsNonScalarRef(const WN* wn)
   return false;
 }
 
+
 // FIXME: 
 bool
 WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2)
@@ -375,7 +376,8 @@ ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
 	ForAllNonScalarRefs(kid, op);
 	kid = WN_next(kid);
       }
-    } else {
+    } 
+    else {
       for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
 	WN* kid = WN_kid(wn, kidno);
 	ForAllNonScalarRefs(kid, op);
@@ -387,10 +389,8 @@ ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
 
 
 AddToScalarizedRefTabOp::
-AddToScalarizedRefTabOp(ScalarizedRefTab_W2X* tab_, 
-			PU_Info* curpu_,
-			ScalarizedRef::CreateOp& newref_)
-  : tab(tab_), curpu(curpu_), newrefop(newref_)
+AddToScalarizedRefTabOp(ScalarizedRefTab_W2X* tab_, PU_Info* curpu_)
+  : tab(tab_), curpu(curpu_)
 { 
   ASSERT_FATAL(tab, (DIAG_A_STRING, "Programming Error."));
   ir = Pro64IRInterface();
@@ -417,9 +417,10 @@ AddToScalarizedRefTabOp::operator()(const WN* wn)
   ScalarizedRef* sym = NULL;
   WorkMapTy::iterator it = workmap.find(s);
   if (it == workmap.end()) {
-    sym = newrefop(curpu, wn, s.c_str());
+    sym = new ScalarizedRef(const_cast<WN*>(wn));
     workmap.insert(make_pair(s, sym));
-  } else {
+  } 
+  else {
     sym = (*it).second;
   }
   
