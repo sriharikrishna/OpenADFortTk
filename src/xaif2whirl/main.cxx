@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.19 2004/07/30 17:52:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.20 2004/08/05 18:36:54 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -104,6 +104,10 @@ main(int argc, char **argv)
   }
   catch (CmdLineParser::Exception& e) {
     e.Report(cerr); // fatal error
+    exit(1);
+  }
+  catch (FortTk::BaseException& e) {
+    e.Report(cerr);
     exit(1);
   }
   catch (Exception &e /* OpenAnalysis -- should be in namespace */) {

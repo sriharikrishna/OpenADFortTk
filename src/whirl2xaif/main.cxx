@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.22 2004/07/30 17:51:44 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.23 2004/08/05 18:36:54 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -106,6 +106,10 @@ main(int argc, char **argv)
   }
   catch (CmdLineParser::Exception& e) {
     e.Report(cerr); // fatal error
+    exit(1);
+  }
+  catch (FortTk::BaseException& e) {
+    e.Report(cerr);
     exit(1);
   }
   catch (xml::ostream::Exception& e) {
