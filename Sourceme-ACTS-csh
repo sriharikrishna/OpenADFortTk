@@ -1,6 +1,6 @@
 # -*-Mode: sh;-*-
 # For csh or tcsh
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.12 2004/01/25 02:35:38 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.13 2004/02/19 22:12:51 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
@@ -35,8 +35,7 @@ setenv XERCESC_BASE "${HOME}/Develop/xercesc"
 setenv XAIFBOOSTER_BASE "${base}/ACTS"
 setenv BOOST_BASE "${base}/ACTS/boost-1.30.2"
 setenv ANGEL_BASE "${base}/ACTS/angel"
-
-set XAIFSCHEMA="${base}/ACTS/xaif-1.0"
+setenv XAIFSCHEMA_BASE "${base}/ACTS/xaif-1.0"
 
 unset base
 
@@ -72,6 +71,7 @@ setenv XERCESCROOT "${XERCESC_BASE}/${PLATFORM}"
 setenv XAIFBOOSTERROOT "${XAIFBOOSTER_BASE}"
 setenv BOOSTROOT "${BOOST_BASE}"
 setenv ANGELROOT "${ANGEL_BASE}"
+setenv XAIFSCHEMAROOT "${XAIFSCHEMA_BASE}"
 
 unset o64targ
 
@@ -127,7 +127,7 @@ setenv XAIF_DIR "${XAIFBOOSTERROOT}"
 setenv BOOST_DIR "${BOOSTROOT}"
 
 set xbase="${XAIFBOOSTERROOT}/xaifBooster"
-set ii_xaif="${XAIFSCHEMA}/schema/examples/inlinable_intrinsics.xaif"
+set ii_xaif="${XAIFSCHEMAROOT}/schema/examples/inlinable_intrinsics.xaif"
 
 if ( "${PLATFORM}" == "i686-Cygwin" ) then 
   # convert to Windows path for XercesC
@@ -144,5 +144,4 @@ unset ii_xaif
 
 #############################################################################
 
-unset XAIFSCHEMA
 unset PLATFORM

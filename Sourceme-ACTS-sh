@@ -1,5 +1,5 @@
 # -*-Mode: sh;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.13 2004/01/25 02:35:38 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.14 2004/02/19 22:12:51 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
@@ -29,8 +29,7 @@ export XERCESC_BASE="${base}/xercesc"
 export XAIFBOOSTER_BASE="${base}/ACTS"
 export BOOST_BASE="${base}/ACTS/boost-1.30.2"
 export ANGEL_BASE="${base}/ACTS/angel"
-
-XAIFSCHEMA="${base}/ACTS/xaif-1.0"
+export XAIFSCHEMA_BASE="${base}/ACTS/xaif-1.0"
 
 unset base
 
@@ -61,6 +60,7 @@ export XERCESCROOT="${XERCESC_BASE}/${PLATFORM}"
 export XAIFBOOSTERROOT="${XAIFBOOSTER_BASE}"
 export BOOSTROOT="${BOOST_BASE}"
 export ANGELROOT="${ANGEL_BASE}"
+export XAIFSCHEMAROOT="${XAIFSCHEMA_BASE}"
 
 unset o64targ
 
@@ -116,7 +116,7 @@ export XAIF_DIR="${XAIFBOOSTERROOT}"
 export BOOST_DIR="${BOOSTROOT}"
 
 xbase="${XAIFBOOSTERROOT}/xaifBooster"
-ii_xaif="${XAIFSCHEMA}/schema/examples/inlinable_intrinsics.xaif"
+ii_xaif="${XAIFSCHEMAROOT}/schema/examples/inlinable_intrinsics.xaif"
 
 if [ "${PLATFORM}" = "i686-Cygwin" ]; then 
   # convert to Windows path for XercesC
@@ -133,5 +133,4 @@ unset ii_xaif
 
 #############################################################################
 
-unset XAIFSCHEMA
 unset PLATFORM
