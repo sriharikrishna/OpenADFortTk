@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.4 2003/05/21 18:21:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.5 2003/06/02 13:43:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -159,9 +159,6 @@ main(INT argc, char **argv)
 static INT
 real_main(INT argc, char **argv)
 {
-  //REMOVE Run_w2f = TRUE; // FIXME
-  //REMOVE Whirl2f_loaded = TRUE; // FIXME
-
   // -------------------------------------------------------
   // 1. Initialize Open64 
   // -------------------------------------------------------
@@ -187,7 +184,7 @@ real_main(INT argc, char **argv)
   // -------------------------------------------------------
   Preconfigure(); // REMOVE config.cxx
   Process_Command_Line(argc, argv);
-  Configure(); //REMOVE --need for WN_lower-- config.cxx
+  Configure(); // --need for WN_lower-- config.cxx
   Configure_Source(NULL); //REMOVE config.cxx //Most config variables set here
   
   Init_Operator_To_Opcode_Table(); // FIXME
@@ -201,7 +198,7 @@ real_main(INT argc, char **argv)
   PU_Info* pu_forest = NULL;
   pu_forest = LoadIR();
   
-  // if verbose and if translating to file
+  // if verbose and if translating to file...
   cerr << ProgramName << " translates " << WHIRL_filename << " into "
        << XAIF_filename << " based on source " << Src_File_Name << std::endl;
   
@@ -370,8 +367,6 @@ LoadPU(PU_Info *pu)
    * to when the .B file is read in.  (FIXME) */
   REGION_Initialize(wn_pu, PU_has_region(Get_Current_PU()));
 
-  // WN_Lower
-  
   Advance_Current_PU_Count();
 
   // Now recursively process the child PU's.

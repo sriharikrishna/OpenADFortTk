@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.5 2003/05/21 18:21:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.6 2003/06/02 13:43:23 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -145,7 +145,7 @@ extern WN2F_STATUS
 WN2F_casegoto(xml::ostream& xos, WN *wn, XlationContext& ctxt);  
 
 extern WN2F_STATUS 
-WN2F_prefetch(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+xlate_PREFETCH(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
 WN2F_eval(xml::ostream& xos, WN *wn, XlationContext& ctxt);

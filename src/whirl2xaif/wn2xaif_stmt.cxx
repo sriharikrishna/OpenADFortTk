@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.7 2003/05/23 18:33:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.8 2003/06/02 13:43:23 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -156,66 +156,23 @@ BOOL WN2F_Skip_Stmt(WN *wn) { return FALSE; /* FIXME */ }
 WN2F_STATUS 
 WN2F_region(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  /* Emit region #pragma, the WN_region_pragmas(wn), and the 
-   * WN_region_body(wn). */
-  WN  *stmt;
-  RID *rid;
-  BOOL good_rid; 
-  
   Is_True(WN_operator(wn) == OPR_REGION, 
 	  ("Invalid operator for WN2F_region()"));  
   Is_True(WN_operator(WN_region_body(wn)) == OPR_BLOCK, 
 	  ("Expected OPR_BLOCK as body of OPR_REGION in WN2F_region()"));
+
+  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
+
+#if 0 // REMOVE: See whirl2f for full version 
+  // WN_region_pragmas(wn)
+  set_XlationContext_explicit_region(ctxt);
   
-  good_rid = RID_map >= 0;
-  if (good_rid) 
-    rid = (RID *)WN_MAP_Get(RID_map, wn);
-  if (W2F_Emit_All_Regions ||
-      (!W2F_No_Pragmas && good_rid && 
-       (rid == NULL          ||              /* == RID_TYPE_pragma */
-	RID_type(rid) == RID_TYPE_pragma))) { /* User defined region */
-    xos << "C*$*" << std::endl;
-    xos << "REGION BEGIN";
-    
-    set_XlationContext_explicit_region(ctxt);
-    
-    if (!W2F_No_Pragmas)
-      WN2F_pragma_list_begin(xos, WN_first(WN_region_pragmas(wn)), ctxt);
-    
-    for (stmt = WN_first(WN_region_body(wn));
-	 stmt != NULL;
-	 stmt = WN_next(stmt)) {
-      if (!WN2F_Skip_Stmt(stmt))
-	TranslateWN(xos, stmt, ctxt);
-    }
-    
-    if (!W2F_No_Pragmas)
-      WN2F_pragma_list_end(xos, WN_first(WN_region_pragmas(wn)), ctxt);
-    
-    xos << "C*$*" << std::endl;
-    xos << "REGION END";
-  } else {
-    reset_XlationContext_explicit_region(ctxt);
-    
-    /* Emit the pragmas that are associated with regions and that have
-     * a corresponding pragma in the source language. */
-    if (!W2F_No_Pragmas)
-      WN2F_pragma_list_begin(xos, WN_first(WN_region_pragmas(wn)), ctxt);
-    
-    /* Emit the body of the region, making the actual region 
-     * markings and associated pragmas completely transparent. */
-    for (stmt = WN_first(WN_region_body(wn));
-	 stmt != NULL;
-	 stmt = WN_next(stmt)) {
-      if (!WN2F_Skip_Stmt(stmt))
-	TranslateWN(xos, stmt, ctxt);
-    }
-    
-    /* Close the region, if necessary, based on the kind of region
-     * we have as determined by the first pragma in the list. */
-    if (!W2F_No_Pragmas)
-      WN2F_pragma_list_end(xos, WN_first(WN_region_pragmas(wn)), ctxt);
-  } /* if emit pragma */
+  for (WN* stmt = WN_first(WN_region_body(wn)); stmt != NULL;
+       stmt = WN_next(stmt)) {
+    if (!WN2F_Skip_Stmt(stmt))
+      TranslateWN(xos, stmt, ctxt);
+  }
+#endif
   
   return EMPTY_WN2F_STATUS;
 } /* WN2F_region */
@@ -224,6 +181,7 @@ WN2F_region(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 WN2F_STATUS 
 WN2F_compgoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  // REMOVE
   WN         *goto_stmt;
   
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_COMPGOTO, 
@@ -278,6 +236,7 @@ xlate_DO_LOOP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 WN2F_STATUS 
 WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  // REMOVE
   ASSERT_DBG_FATAL(XlationContext_io_stmt(ctxt) &&
 		   XlationContext_no_newline(ctxt),
 		   (DIAG_W2F_UNEXPECTED_CONTEXT, "WN2F_implied_do"));
@@ -374,6 +333,7 @@ xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 WN2F_STATUS 
 WN2F_agoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  // REMOVE
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_AGOTO,
 		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_agoto"));
 
@@ -813,46 +773,14 @@ xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 WN2F_STATUS 
-WN2F_prefetch(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_PREFETCH(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  /* Prefetch information is currently added in a comment */
-  INT pflag;
-  
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PREFETCH ||
 		   WN_operator(wn) == OPR_PREFETCHX, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_prefetch"));
-  
-  /* Ensure array references are dereferenced and a comment line is begun */
-  ctxt.SetDerefAddr();
-  xos << std::endl;
-  
-  /* Get the prefetch identifier and address expression */
-  if (WN_operator(wn) == OPR_PREFETCH) {
-    Append_Token_String(xos, StrCat("PREFETCH(", Ptr_as_String(wn), ")"));
-    
-    TranslateWN(xos, WN_kid0(wn), ctxt);
-    
-    xos << StrCat("OFFS=", WHIRL2F_number_as_name(WN_offset(wn)));
-  } else { /* (WN_operator(wn) == OPR_PREFETCHX) */
-    xos << StrCat("PREFETCH(", Ptr_as_String(wn),")");
-      
-    TranslateWN(xos, WN_kid0(wn), ctxt);
-    xos << "+";
-    TranslateWN(xos, WN_kid1(wn), ctxt);
-  }
-  
-  /* Emit the prefetch flags information (pf_cg.h) on a separate line */
-  pflag = WN_prefetch_flag(wn);
-  //FIXME Set_Current_Indentation(Current_Indentation()+3);
-  xos << std::endl;
-  xos << (PF_GET_READ(pflag)? "read" : "write")
-      << " strid1=" << WHIRL2F_number_as_name(PF_GET_STRIDE_1L(pflag))
-      << " strid2=" << WHIRL2F_number_as_name(PF_GET_STRIDE_2L(pflag))
-      << " conf=" << WHIRL2F_number_as_name(PF_GET_CONFIDENCE(pflag));
-  //FIXME Set_Current_Indentation(Current_Indentation()-3);
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_PREFETCH"));
   
   return EMPTY_WN2F_STATUS;
-} /* WN2F_prefetch */
+}
 
 
 WN2F_STATUS
@@ -880,7 +808,7 @@ WN2F_use_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_use_stmt"));
 
   const char *st_name = W2CF_Symtab_Nameof_St(WN_st(wn));
-  xos << "===>use" << st_name;
+  xos << "===***>use" << st_name;
 
 #if 0
   if (WN_rtype(wn) == 1)
@@ -940,6 +868,7 @@ WN2F_implicit_bnd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 WN2F_STATUS
 WN2F_switch(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  // REMOVE
   WN *stmt;
   WN *kid1wn;
   
@@ -968,6 +897,7 @@ WN2F_switch(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 WN2F_STATUS
 WN2F_casegoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
+  // REMOVE
   ST *st;
   st = WN_st(wn);
   

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.4 2003/05/23 18:33:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.5 2003/06/02 13:43:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -212,7 +212,7 @@ public:
   void SetDerefAddr()      { flags = flags | DEREF_ADDR; }
   void ResetDerefAddr()    { flags = flags & ~DEREF_ADDR; } // Clear
   
-  // This reference
+  // Within a xaif:VariableReference (inherited)
   BOOL IsVarRef() const { return CurContext().AreFlags(VARREF); }
   void SetVarRef()      { CurContext().SetFlags(VARREF); }
   //void ResetVarRef() { CurContext().ResetFlags(VARREF); }

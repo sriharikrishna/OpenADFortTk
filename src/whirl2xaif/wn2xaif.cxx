@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.8 2003/05/23 18:33:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.9 2003/06/02 13:43:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -180,8 +180,8 @@ static const WN2F_OPR_HANDLER WN2F_Opr_Handler_List[] = {
   {OPR_ICALL, &xlate_CALL},
   {OPR_PICCALL, &xlate_CALL},
   {OPR_EVAL, &WN2F_eval},
-  {OPR_PREFETCH, &WN2F_prefetch},
-  {OPR_PREFETCHX, &WN2F_prefetch},
+  {OPR_PREFETCH, &xlate_PREFETCH},
+  {OPR_PREFETCHX, &xlate_PREFETCH},
   {OPR_PRAGMA, &WN2F_pragma},
   {OPR_XPRAGMA, &WN2F_pragma},
   {OPR_IO, &xlate_IO},
@@ -276,6 +276,7 @@ static const WN2F_OPR_HANDLER WN2F_Opr_Handler_List[] = {
 void 
 whirl2xaif::WN2F_initialize(void)
 {
+  // FIXME: compute on demand
   /* Reset the XlateWN_HandlerTable array */
   for (INT opr = 0; opr < NUMBER_OF_OPERATORS; opr++) {
     XlateWN_HandlerTable[opr] = &xlate_unknown;
@@ -473,10 +474,12 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     
     // In OA, loop nodes represent the *condition* (not the body)
   case OPR_DO_LOOP:
+    // FIXME: For the time being, we translate like a while loop b/c
+    // the loop init and update are spit out as BBs.
     xos << Comment(opr_str);
-    xlate_LoopInitialization(xos, WN_start(wn), ctxt);
+    //xlate_LoopInitialization(xos, WN_start(wn), ctxt);
     xlate_CFCondition(xos, WN_end(wn), ctxt);
-    xlate_LoopUpdate(xos, WN_step(wn), ctxt);
+    //xlate_LoopUpdate(xos, WN_step(wn), ctxt);
     break;
   case OPR_DO_WHILE:
   case OPR_WHILE_DO:
@@ -529,7 +532,10 @@ GetCFGVertexType(CFG* cfg, CFG::Node* n)
     OPERATOR opr = WN_operator(wstmt);
     switch (opr) {
     case OPR_DO_LOOP: 
-      return "xaif:ForLoop";
+      // FIXME: For the time being, we translate like a while loop b/c
+      // the loop init and update are spit out as BBs.
+      return "xaif:PreLoop";
+      // return "xaif:ForLoop";
     case OPR_DO_WHILE: 
       return "xaif:PostLoop";
     case OPR_WHILE_DO:
@@ -934,6 +940,33 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
    * ptr_as_array variables.  */
 
   TY_IDX base_ty = TY_pointed(baseptr_ty); 
+
+  /* Do the symbol translation from the base of BASED symbols */
+  if (Stab_Is_Based_At_Common_Or_Equivalence(base_st)) {
+    offset += ST_ofst(base_st); /* offset of based symbol */
+    base_st = ST_base(base_st); /* replace based symbol with its base */
+    
+    base_ty = ST_type(base_st);
+    baseptr_ty = Stab_Pointer_To(base_ty);
+    //Set_BE_ST_w2fc_referenced(base_st);
+  }
+  
+  /* Do the symbol translation from the base of fully split common symbols */
+  if (ST_is_split_common(base_st)) {
+    //Clear_BE_ST_w2fc_referenced(base_st); // no split base, just user COMMON
+    base_st = ST_full(base_st);
+    //Set_BE_ST_w2fc_referenced(base_st);
+    base_ty = ST_type(base_st);
+    
+    if (TY_Is_Pointer(base_ty))
+      base_ty = TY_pointed(base_ty);
+    
+    if (TY_is_f90_pointer(base_ty)) //Sept
+      base_ty = TY_pointed(base_ty);
+    
+    baseptr_ty = Stab_Pointer_To(base_ty);
+  }
+  
   
   /* Select variable-reference translation function */
   const BOOL deref_val = ctxt.IsDerefAddr();
@@ -958,6 +991,9 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
     newContext = true; 
   }
   
+
+
+
   
   // FIXME: for now, make sure this is only used for data refs 
   if (ST_class(base_st) == CLASS_FUNC) {
@@ -967,6 +1003,7 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
     TranslateSTUse(xos, base_st, ctxt);
     xos << "+ " << Num2Str(offset, "%lld");
   }
+  
   
   if (IsScalarRef(base_ty, ref_ty)) {
 
@@ -1016,34 +1053,47 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
     BOOL deref_fld;
     if ( !(TY_IsRecord(ref_ty) /* && FIXME*/) ) {
       deref_fld = (deref_val && !TY_Is_Pointer(ST_type(base_st))) ? TRUE:FALSE;
-      if (deref_fld) {  ref_ty = Stab_Pointer_To(ref_ty); }
+      if (deref_fld) { ref_ty = Stab_Pointer_To(ref_ty); }
       fld_path = TY2F_Get_Fld_Path(base_ty, ref_ty, offset);
     }
     
     if (fld_path == NULL) {
       translate_var_ref(xos, base_st, ctxt);
+    } else if (Stab_Is_Common_Block(base_st)) {
+      // Common block reference (do not translate as field ref)
+      // FIXME: make sure the fld_path is length 1 
+      ST_IDX st_idx = fld_path->fld.Entry()->st;
+      ST* st = (st_idx != 0) ? ST_ptr(st_idx) : NULL;
+      if (st) {
+	translate_var_ref(xos, st, ctxt);
+      } else { // FIXME
+	TY2F_Translate_Fld_Path(xos, fld_path, deref_fld, 
+				// (Stab_Is_Common_Block(base_st) || 
+				//  Stab_Is_Equivalence_Block(base_st)),
+				TRUE, FALSE/*as_is*/, ctxt);
+      }
+
     } else {
+      
+      // Structure: 
       /* Base the path at the 'base_st' object, and separate it from
        * the remainder of the path with the field selection operator. */
       translate_var_ref(xos, base_st, ctxt);
-      xos << (WN2F_F90_pu ? '%' : '.');
-	
+      TY2F_Fld_Separator(xos);
       TY2F_Translate_Fld_Path(xos, fld_path, deref_fld, 
 				// (Stab_Is_Common_Block(base_st) || 
 				//  Stab_Is_Equivalence_Block(base_st)),
 			      FALSE, FALSE/*as_is*/, ctxt);
-      TY2F_Free_Fld_Path(fld_path);
     }
+    if (fld_path) { TY2F_Free_Fld_Path(fld_path); }
 
     if (sym) { xos << EndElem; }
-
   }
 
   if (newContext) {
     ctxt.DeleteContext();
     xos << EndElem /* xaif:VariableReference */;
   }
-
   
   return EMPTY_WN2F_STATUS;
 } /* xlate_SymRef */

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.7 2003/05/21 18:21:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.8 2003/06/02 13:43:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -86,6 +86,7 @@ using namespace xml; // for xml::ostream, etc
 
 //***************************************************************************
 
+// REMOVE
 // statements that can be skipped in w2f translation
 #define W2F_MAX_SKIP_ITEMS 128
 static W2CF_SKIP_ITEM Skip[W2F_MAX_SKIP_ITEMS+1];

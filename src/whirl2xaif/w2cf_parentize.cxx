@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.h,v 1.3 2003/06/02 13:43:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/w2cf_parentize.cxx,v 1.2 2003/06/02 13:43:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -38,7 +38,7 @@
 //***************************************************************************
 //
 // File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.h,v $
+//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/w2cf_parentize.cxx,v $
 //
 // Purpose:
 //   [The purpose of this file]
@@ -46,32 +46,45 @@
 // Description:
 //   [The set of functions, macros, etc. defined in the file]
 //
-// Based on Open64 be/whirl2f/wn2f_pragma.h
+// Based on Open64 be/whirl2c/w2cf_parentize.cxx
 //
 //***************************************************************************
 
-#ifndef wn2xaif_pragma_INCLUDED
-#define wn2xaif_pragma_INCLUDED
-
-/* ====================================================================
- * ====================================================================
- *
- * Description:
- *
- *    WN2F_pragma:
- *       Translates a pragma present in a body of statements.
- *
- * ====================================================================
- * ====================================================================
- */
-
 #include "Open64BasicTypes.h"
 
-#include "xmlostream.h"
+#include "w2cf_parentize.h"
 
-extern WN2F_STATUS 
-WN2F_pragma(xml::ostream& xos, WN *wn, XlationContext& context);
-
-#endif /* wn2xaif_pragma_INCLUDED */
+WN_MAP W2CF_Parent_Map = WN_MAP_UNDEFINED;
 
 
+void 
+W2CF_Parentize(const WN* wn)
+{
+   /* Given a tree, initialize its parent pointers.
+    * Override what was there, if anything.
+    * Do not update parent pointer of the root node 'wn'.
+    * This is copied from be/lno/lwn_util.h!
+    */
+  OPERATOR opr = WN_operator(wn);
+  
+  if (!OPERATOR_is_leaf(opr)) {
+    if (opr == OPR_BLOCK) { // WN_opcode(wn) == OPC_BLOCK
+      WN *kid = WN_first(wn);
+      while (kid) {
+	W2CF_Set_Parent(kid, wn);
+	W2CF_Parentize(kid);
+	kid = WN_next(kid);
+      }
+    } else {
+      INT kidno;
+      WN *kid;
+      for (kidno=0; kidno < WN_kid_count(wn); kidno++) {
+	kid = WN_kid (wn, kidno);
+	if (kid) { 
+	  W2CF_Set_Parent(kid, wn);
+	  W2CF_Parentize(kid);
+	}
+      }
+    }
+  }
+} /* W2FC_Parentize */

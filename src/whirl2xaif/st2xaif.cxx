@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.7 2003/05/23 18:33:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.8 2003/06/02 13:43:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -654,19 +654,22 @@ xlate_STUse_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
      */
     xos << PUINFO_FUNC_NAME;
 
-  } else if (Stab_Is_Based_At_Common_Or_Equivalence(st)) {
+  }
+#if 0 // FIXME xlate_SymRef moves from 'base' to 'field' (cannot reciprocate)
+  else if (Stab_Is_Based_At_Common_Or_Equivalence(st)) {
     /* Reference the corresponding field in the common block (we do this
      * only to ensure that the name referenced matches the one used for
      * the member of the common-block at the place of declaration).  Note
      * that will full splitting, the original common block can be found
      * at ST_full(ST_base(st)).
      */
-    // XlationContext ctxt;  // FIXME
     xlate_SymRef(xos, ST_base(st) /*base-symbol*/,
-		       Stab_Pointer_To(ST_type(ST_base(st))), /*base-type*/
-		       ST_type(st) /*object-type*/, 
-		       ST_ofst(st) /*object-ofst*/, ctxt);
-  } else {
+		 Stab_Pointer_To(ST_type(ST_base(st))), /*base-type*/
+		 ST_type(st) /*object-type*/, 
+		 ST_ofst(st) /*object-ofst*/, ctxt);
+  }
+#endif
+  else {
     // FIXME: abstract
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
     UINT scopeid = map.Find(sttab);

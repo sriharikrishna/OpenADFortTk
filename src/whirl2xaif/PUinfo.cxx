@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.cxx,v 1.3 2003/05/21 18:22:58 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.cxx,v 1.4 2003/06/02 13:43:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -1189,13 +1189,20 @@ PUinfo_init_pu(const WN *pu, WN *body_part_of_interest)
     */
    if (!OPCODE_is_expression(WN_opcode(body_part_of_interest)))
       Accumulate_Stmt_PUinfo(body_part_of_interest);
-   
+
+#if 0 
+   // FIXME: eraxxon: this caused a problem on box_norm.F.  Does this
+   // have anything to do with eliminating the STID/RETURN lowering in
+   // whirl2f?  At any rate, we probably don't care about this crusty
+   // code except as an example of traversing calls.
+
    /* Traverse the statements and expressions in the current PU, 
     * accumulating information about pseudo register usage and 
     * refining the information about call-sites to account for 
     * unexpected uses of return-registers.
     */
    Accumulate_Expr_PUinfo(body_part_of_interest);
+#endif
 
    /* Push a new symbol-table for name-disambiguation, and enter 
     * every pseudo-register, variable, function, constant, and type

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.6 2003/05/23 18:33:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.7 2003/06/02 13:43:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -419,160 +419,136 @@ Construct_Fld_Path(FLD_HANDLE   fld,
 		   mUINT64   desired_offset,
 		   mUINT64   max_fld_size)
 {
-   /* Returns the field path through "fld" found to best match the 
-    * given offset and type.  As a minimum requirement, the offset 
-    * must be as desired and the type must have the desired size
-    * and alignment (with some concessions allowed for substrings).
-    * The path is terminate with a NULL next pointer.  When no 
-    * field matches the desired type and offset, NULL is returned.
-    */
-   FLD_PATH_INFO    *fld_path;
-   const mUINT64     fld_offset = FLD_ofst(fld);
-   TY_IDX            fld_ty = FLD_type(fld);
-   BOOL              is_array_elt = FALSE;
-   STAB_OFFSET       ofst_in_fld = 0;
-   
-    if (TY_is_f90_pointer(fld_ty))
-          fld_ty = TY_pointed(fld_ty);
-
-
-   /* This field cannot be on the path to a field with the given
-    * attributes, unless the desired_offset is somewhere within
-    * the field.
-    */
+  /* Returns the field path through "fld" found to best match the 
+   * given offset and type.  As a minimum requirement, the offset 
+   * must be as desired and the type must have the desired size
+   * and alignment (with some concessions allowed for substrings).
+   * The path is terminate with a NULL next pointer.  When no 
+   * field matches the desired type and offset, NULL is returned.
+   */
+  FLD_PATH_INFO    *fld_path;
+  const mUINT64     fld_offset = FLD_ofst(fld);
+  TY_IDX            fld_ty = FLD_type(fld);
+  BOOL              is_array_elt = FALSE;
+  STAB_OFFSET       ofst_in_fld = 0;
+  
+  if (TY_is_f90_pointer(fld_ty))
+    fld_ty = TY_pointed(fld_ty);
+  
+  
+  /* This field cannot be on the path to a field with the given
+   * attributes, unless the desired_offset is somewhere within
+   * the field.
+   */
 #if DBGPATH
-   printf (" Construct: fld %s, struct %s, desired %s , des off %d \n",
-	   FLD_name(fld),
-	   TY_name(struct_ty),
-	   TY_name(desired_ty),
-	   desired_offset);
+  printf (" Construct: fld %s, struct %s, desired %s , des off %d \n",
+	  FLD_name(fld), TY_name(struct_ty), TY_name(desired_ty),
+	  desired_offset);
 #endif
 
+  if (desired_offset < fld_offset ||
+      desired_offset >= (fld_offset + TY_size(fld_ty))) {
+    /* This field cannot be on the path to a field with the given
+     * attributes, since the desired_offset is nowhere within
+     * the field.
+     */
+    fld_path = NULL;
+#if DBGPATH
+    printf ("     found NULL\n");
+#endif
+  } else if (TY_Is_Array(fld_ty) && TY_is_character(fld_ty) &&
+	     TY_Is_Array(desired_ty) && TY_is_character(desired_ty)) {
+#if DBGPATH
+    printf ("     found char substring\n");
+#endif
+    /* A match is found! */
+    ofst_in_fld = (desired_offset - fld_offset)/TY_size(TY_AR_etype(fld_ty));
+    ofst_in_fld *= TY_size(TY_AR_etype(fld_ty));
+    if ((ofst_in_fld + TY_size(desired_ty)) > TY_size(fld_ty)) {
+      fld_path = NULL; /* The string does not fit */
+    } else {
+      fld_path = New_Fld_Path_Info(fld);
+      if (TY_size(fld_ty) != TY_size(desired_ty)) {
+	fld_path->arr_elt = TRUE;
+	fld_path->arr_ofst = ofst_in_fld;
+      } 
+    }
+  } else {
+    /* See if the field we are looking for may be an array element */
+    
+    if (TY_kind(desired_ty)==KIND_POINTER)   
+      desired_ty = TY_pointed(desired_ty);
+    if (TY_kind(desired_ty)==KIND_ARRAY)
+      desired_ty = TY_AR_etype(desired_ty);
 
-   if (desired_offset < fld_offset ||
-       desired_offset >= (fld_offset + TY_size(fld_ty)))
-   {
-      /* This field cannot be on the path to a field with the given
-       * attributes, since the desired_offset is nowhere within
-       * the field.
+    is_array_elt = (TY_Is_Array(fld_ty) &&
+		    (TY_Is_Structured(TY_AR_etype(fld_ty))||
+		     TY2F_is_character(fld_ty) ||
+		     Stab_Identical_Types(TY_AR_etype(fld_ty), desired_ty,
+					  FALSE,   /* check_quals */
+					  FALSE,   /* check_scalars */
+					  TRUE))); /* ptrs_as_scalars */
+#if DBGPATH
+    printf ("     is_array = %d, fld_ty %s \n",is_array_elt,TY_name(fld_ty));
+#endif
+
+    if (is_array_elt) {
+      fld_ty = TY_AR_etype(fld_ty);
+      ofst_in_fld =
+	((desired_offset - fld_offset)/TY_size(fld_ty)) * TY_size(fld_ty);
+    }
+    
+    if (TY_Is_Structured(fld_ty) &&
+	!Stab_Identical_Types(fld_ty, desired_ty,
+			      FALSE,  /* check_quals */
+			      FALSE,  /* check_scalars */
+			      TRUE)) {  /* ptrs_as_scalars */
+#if DBGPATH
+      printf ("     recurse \n");
+#endif
+      FLD_PATH_INFO *fld_path2 = 
+	TY2F_Get_Fld_Path(fld_ty, desired_ty, 
+			  desired_offset - (fld_offset+ofst_in_fld));
+      
+      /* If a matching path was found, attach "fld" to the path */
+      if (fld_path2 != NULL) {
+	if (TY_split(Ty_Table[fld_ty]))
+	  fld_path = fld_path2; /* A stransparent substructure */
+	else {
+	  fld_path = New_Fld_Path_Info(fld);
+	  fld_path->arr_elt = is_array_elt;
+	  fld_path->arr_ofst = ofst_in_fld;
+	  fld_path->next = fld_path2;
+	}
+      } else {
+	fld_path = NULL;
+      }
+    } else { /* This may be a field we want to take into account */
+      const STAB_OFFSET fld_size = TY2F_Fld_Size(fld, max_fld_size);
+
+      /* We only match a field with the expected size, offset
+       * and alignment.
        */
-      fld_path = NULL;
+      if (desired_offset != fld_offset+ofst_in_fld || /* unexpected ofst */
+       // fld_size < (TY_size(fld_ty)+ofst_in_fld) || /* unexpected size */
+	  TY_align(struct_ty) < TY_align(fld_ty)) {   /* unexpected align */
 #if DBGPATH
-      printf ("     found NULL\n");
+	printf ("     account - miss\n");
 #endif
-   }
-   else if (TY_Is_Array(fld_ty) && TY_is_character(fld_ty) &&
-	    TY_Is_Array(desired_ty) && TY_is_character(desired_ty))
-   {
+	
+	fld_path = NULL;
+      } else { /* A match is found! */
 #if DBGPATH
-      printf ("     found char substring\n");
+	printf ("     account - match\n");
 #endif
-      /* A match is found! */
-      ofst_in_fld = (desired_offset - fld_offset)/TY_size(TY_AR_etype(fld_ty));
-      ofst_in_fld *= TY_size(TY_AR_etype(fld_ty));
-      if ((ofst_in_fld + TY_size(desired_ty)) > TY_size(fld_ty))
-      {
-	 fld_path = NULL; /* The string does not fit */
-      }
-      else
-      {
-	 fld_path = New_Fld_Path_Info(fld);
-	 if (TY_size(fld_ty) != TY_size(desired_ty))
-	 {
-	    fld_path->arr_elt = TRUE;
-	    fld_path->arr_ofst = ofst_in_fld;
-	 } 
-      }
-   }
-   else
-   {
-      /* See if the field we are looking for may be an array element */
-
-      if(TY_kind(desired_ty)==KIND_POINTER)   
-          desired_ty = TY_pointed(desired_ty);
-      if (TY_kind(desired_ty)==KIND_ARRAY)
-          desired_ty = TY_AR_etype(desired_ty);
-
-      is_array_elt = (TY_Is_Array(fld_ty) &&
-		      (TY_Is_Structured(TY_AR_etype(fld_ty))||
-		       TY2F_is_character(fld_ty) ||
-		       Stab_Identical_Types(TY_AR_etype(fld_ty), desired_ty,
-					    FALSE,   /* check_quals */
-					    FALSE,   /* check_scalars */
-					    TRUE))); /* ptrs_as_scalars */
-#if DBGPATH
-      printf ("     is_array = %d, fld_ty %s \n",is_array_elt,TY_name(fld_ty));
-#endif
-
-      if (is_array_elt)
-      {
-	 fld_ty = TY_AR_etype(fld_ty);
-	 ofst_in_fld =
-	    ((desired_offset - fld_offset)/TY_size(fld_ty)) * TY_size(fld_ty);
-      }
-
-      if (TY_Is_Structured(fld_ty) &&
-	  !Stab_Identical_Types(fld_ty, desired_ty,
-				FALSE,  /* check_quals */
-				FALSE,  /* check_scalars */
-				TRUE))  /* ptrs_as_scalars */
-      {
-#if DBGPATH
-	printf ("     recurse \n");
-#endif
-	 FLD_PATH_INFO *fld_path2 = 
-	    TY2F_Get_Fld_Path(fld_ty, desired_ty, 
-			      desired_offset - (fld_offset+ofst_in_fld));
-	 
-	 /* If a matching path was found, attach "fld" to the path */
-	 if (fld_path2 != NULL)
-	 {
-	    if (TY_split(Ty_Table[fld_ty]))
-	       fld_path = fld_path2; /* A stransparent substructure */
-	    else
-	    {
-	       fld_path = New_Fld_Path_Info(fld);
-	       fld_path->arr_elt = is_array_elt;
-	       fld_path->arr_ofst = ofst_in_fld;
-	       fld_path->next = fld_path2;
-	    }
-	 }
-	 else
-	 {
-	    fld_path = NULL;
-	 }
-      }
-      else /* This may be a field we want to take into account */
-      {
-	 const STAB_OFFSET fld_size = TY2F_Fld_Size(fld, max_fld_size);
-
-	 /* We only match a field with the expected size, offset
-	  * and alignment.
-	  */
-       
-	 if (desired_offset != fld_offset+ofst_in_fld || /* unexpected ofst */
-//	     fld_size < (TY_size(fld_ty)+ofst_in_fld) || /* unexpected size */
-	     TY_align(struct_ty) < TY_align(fld_ty))     /* unexpected align */
-	 {
-#if DBGPATH
-	    printf ("     account - miss\n");
-#endif
-
-	    fld_path = NULL;
-	 }
-	 else /* A match is found! */
-	 {
-#if DBGPATH
-	   printf ("     account - match\n");
-#endif
-	    fld_path = New_Fld_Path_Info(fld);
-	    fld_path->arr_elt = is_array_elt;
-	    fld_path->arr_ofst = ofst_in_fld;
-	 }/*if*/
-      } /*if*/
-   } /*if*/
-
-   return fld_path;
+	fld_path = New_Fld_Path_Info(fld);
+	fld_path->arr_elt = is_array_elt;
+	fld_path->arr_ofst = ofst_in_fld;
+      }/*if*/
+    } /*if*/
+  } /*if*/
+  
+  return fld_path;
 } /* Construct_Fld_Path */
 
 
@@ -588,12 +564,11 @@ TY2F_Fld_Name(FLD_HANDLE fld,
    const char *fld_name;
 
    if (common_or_equivalence && !alt_return_name)
-      fld_name = W2CF_Symtab_Nameof_Fld(fld);
-   else
-   {
-      fld_name = WHIRL2F_make_valid_name(FLD_name(fld),FALSE);
-      if (fld_name == NULL || *fld_name == '\0')
-	 fld_name = W2CF_Symtab_Nameof_Fld(fld);
+     fld_name = W2CF_Symtab_Nameof_Fld(fld);
+   else {
+     fld_name = WHIRL2F_make_valid_name(FLD_name(fld),FALSE);
+     if (fld_name == NULL || *fld_name == '\0')
+       fld_name = W2CF_Symtab_Nameof_Fld(fld);
    }
    return fld_name;
 } /* TY2F_Fld_Name */
@@ -602,31 +577,17 @@ TY2F_Fld_Name(FLD_HANDLE fld,
 /*------ Utilities for accessing and declaring KIND_STRUCTs ------
  *----------------------------------------------------------------*/
 
-/* Local buffer to hold Fortran STRUCTURE declarations, which
- * should be appended to this buffer in the order in which
- * they are encountered.
- */
-static xml::ostream* TY2F_Structure_Decls = NULL; // FIXME
-
-
 static void
 TY2F_Equivalence(xml::ostream& xos, 
 		 const char  *equiv_name, 
 		 const char  *fld_name,
 		 STAB_OFFSET  fld_ofst)
 {
-   /* Append one equivalence statement to the tokens buffer,
-    * keeping in mind that the equiv_name is based at index 1.
-    */
-   xos << "EQUIVALENCE(";
-   Append_Token_String(xos, equiv_name); /* equiv_name at given offset */
-   xos << "(";
-//   Append_Token_String(xos, Num2Str(fld_ofst+1, "%lld"));
-/*June */
-   Append_Token_String(xos, Num2Str(fld_ofst, "%lld"));
-   xos << "),";
-   Append_Token_String(xos, fld_name);   /* fld_name at offset zero */
-   xos << ")";
+  /* Append one equivalence statement to the tokens buffer,
+   * keeping in mind that the equiv_name is based at index 1. */
+  xos << "EQUIVALENCE(" << equiv_name; /* equiv_name at given offset */
+  xos << "(" << Num2Str(fld_ofst, "%lld") << "),";
+  xos << fld_name << ")";  /* fld_name at offset zero */
 } /* TY2F_Equivalence */
 
 
@@ -639,8 +600,7 @@ TY2F_Equivalence_FldList(xml::ostream& xos,
 {
   FLD_ITER fld_iter = Make_fld_iter(fldlist);
 
-  do 
-    {
+  do {
       FLD_HANDLE fld (fld_iter);
 
       if (TY_split(Ty_Table[FLD_type(fld)]))
@@ -814,9 +774,7 @@ TY2F_Declare_Common_Flds(xml::ostream& xos,
   FLD_ITER fld_iter = Make_fld_iter(fldlist);
 
   /* Emit specification statements for every element of the
-   * common block, including equivalences.
-   */  
-
+   * common block, including equivalences. */  
   do {
     xos << std::endl;
     
@@ -824,14 +782,11 @@ TY2F_Declare_Common_Flds(xml::ostream& xos,
     TY_IDX ty = FLD_type(fld);
     
     /* Determine whether or not the common-block contains any
-     * equivalences (must all be at the top level).
-     */
-    
+     * equivalences (must all be at the top level). */    
     *is_equiv = *is_equiv || FLD_equivalence(fld);
     
     /* Declare as specified in the symbol table */
     if (TY_split(Ty_Table[ty])) {
-
       /* Treat a full split element as a transparent data-structure */
       TY2F_Declare_Common_Flds(xos, TY_flist(Ty_Table[ty]),
 			       alt_return, is_equiv);
@@ -1183,7 +1138,6 @@ TY2F_2_struct(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt)
     TY2F_Translate_Structure(xos, ty);
     Set_TY_is_translated_to_c(ty); /* Really, translated to Fortran, not C */
   }
-
 }
 
 
@@ -1335,7 +1289,6 @@ TY2F_Translate_Equivalence(xml::ostream& xos, TY_IDX ty_idx, BOOL alt_return)
     * the function/subprogram return-variable, which we should never
     * declare.
     */
-
   TY& ty = Ty_Table[ty_idx];
 
   FLD_HANDLE first_fld;
@@ -1380,48 +1333,38 @@ TY2F_Free_Fld_Path(FLD_PATH_INFO *fld_path)
 
 
 FLD_PATH_INFO * 
-TY2F_Get_Fld_Path(const TY_IDX struct_ty, 
-		  const TY_IDX object_ty,
+TY2F_Get_Fld_Path(const TY_IDX struct_ty, const TY_IDX object_ty, 
 		  STAB_OFFSET offset)
 {
-  FLD_PATH_INFO  *fld_path;
-  FLD_PATH_INFO  *fld_path2 = NULL;
-  TY & s_ty = Ty_Table[struct_ty] ;
-  FLD_ITER fld_iter ;
+  FLD_PATH_INFO* fld_path;
+  FLD_PATH_INFO* fld_path2 = NULL;
+  TY& s_ty = Ty_Table[struct_ty];
+  FLD_ITER fld_iter;
   
   ASSERT_DBG_FATAL(TY_kind(s_ty) == KIND_STRUCT,
-		   (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-		    TY_kind(s_ty),
+		   (DIAG_W2F_UNEXPECTED_TYPE_KIND, TY_kind(s_ty),
 		    "TY2F_Get_Fld_Path"));
   
   /* Get the best matching field path into fld_path2 */
-
   fld_iter = Make_fld_iter(TY_flist(s_ty));
-
+  
   do {
-      FLD_HANDLE fld (fld_iter);
-
-      if (NOT_BITFIELD_OR_IS_FIRST_OF_BITFIELD(fld_iter)) {
-	fld_path = Construct_Fld_Path(fld_iter,
-				      struct_ty,
-				      object_ty,
-				      offset,
-				      TY_size(s_ty));
-	if (fld_path2 == NULL)
-	  fld_path2 = fld_path;
-	else if (fld_path != NULL)
-	  fld_path2 = Select_Best_Fld_Path(fld_path2,
-					   fld_path,
-					   object_ty,
-					   offset);
-      }
-    } while (!FLD_last_field (fld_iter++)) ;
-
+    FLD_HANDLE fld (fld_iter);
+    
+    if (NOT_BITFIELD_OR_IS_FIRST_OF_BITFIELD(fld_iter)) {
+      fld_path = Construct_Fld_Path(fld_iter, struct_ty, object_ty,
+				    offset, TY_size(s_ty));
+      if (fld_path2 == NULL)
+	fld_path2 = fld_path;
+      else if (fld_path != NULL)
+	fld_path2 = Select_Best_Fld_Path(fld_path2, fld_path, object_ty,
+					 offset);
+    }
+  } while (!FLD_last_field (fld_iter++));
+  
   /* POSTCONDITION: fld_path2 points to the best match found */
-
   return fld_path2;
-
-} /* TY2F_Get_Fld_Path */
+}
 
 void
 TY2F_Translate_Fld_Path(xml::ostream&   xos,
@@ -1438,27 +1381,20 @@ TY2F_Translate_Fld_Path(xml::ostream&   xos,
    */
   while (fld_path != NULL) {
     FLD_HANDLE f (fld_path->fld);
+    const char* str;
     if (deref && TY_Is_Pointer(FLD_type(f)))
-      xos << W2CF_Symtab_Nameof_Fld_Pointee(f);
+      str = W2CF_Symtab_Nameof_Fld_Pointee(f);
     else
-      xos << TY2F_Fld_Name(f, member_of_common, alt_ret_name);
-  
+      str = TY2F_Fld_Name(f, member_of_common, alt_ret_name);
+    xos << BegElem("TYFLD") << Attr("***name", str) << EndElem;
+
     member_of_common = FALSE; /* Can only be true first time around */
     
     /* if an array element, form the subscript list. If an OPC_ARRAY */
     /* provides the subscripts, use it o/w use offset                */
-    
     if (fld_path->arr_elt) {
       if (fld_path->arr_wn != NULL)
-	WN2F_array_bounds(xos,fld_path->arr_wn,FLD_type(f), ctxt);
-      else 
-	;
-      
-      // TY2F_Translate_ArrayElt(xos,FLD_type(f),fld_path->arr_ofst);
-      /* Looks like this stmt(above) is a bug.We don't need
-       * translate array_element here since we already get array
-       * information from an operator associated with this
-       * processing */
+	WN2F_array_bounds(xos, fld_path->arr_wn, FLD_type(f), ctxt);
     }
     
     /* Separate fields with the dot-notation. */
@@ -1476,7 +1412,7 @@ extern void
 TY2F_Fld_Separator(xml::ostream& xos)
 {
   /* puts out the appropriate structure component separator*/
-  char p = '.' ;
+  char p = '.';
   if (WN2F_F90_pu) 
     p =  '%';
   xos << p;

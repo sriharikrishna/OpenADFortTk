@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.h,v 1.2 2003/05/23 18:33:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.h,v 1.3 2003/06/02 13:43:22 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -183,11 +183,11 @@ static  BOOL Array_Bnd_Temp_Var=FALSE;
 typedef struct Fld_Path_Info FLD_PATH_INFO;
 struct Fld_Path_Info
 {
-   FLD_HANDLE     fld;       /* Field on the path */
-   BOOL           arr_elt;   /* An element in an array field? */
-   STAB_OFFSET    arr_ofst;  /* Offset of element within an array field */
-   WN *           arr_wn;    /* if arr_elt, optional OPC_ARRAY with subscripts */
-   FLD_PATH_INFO *next;      /* Next field on the path */
+  FLD_HANDLE     fld;      // Field on the path
+  BOOL           arr_elt;  // An element in an array field?
+  STAB_OFFSET    arr_ofst; // Offset of element within an array field
+  WN *           arr_wn;   // if arr_elt, optional OPC_ARRAY with subscripts
+  FLD_PATH_INFO *next;     // Next field on the path
 };
 
 extern FLD_PATH_INFO * TY2F_Free_Fld_Path(FLD_PATH_INFO *fld_path);
