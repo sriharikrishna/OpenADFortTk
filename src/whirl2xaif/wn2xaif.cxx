@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.56 2004/05/10 13:57:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.57 2004/05/24 13:29:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1076,11 +1076,12 @@ DumpCFGraphEdge(xml::ostream& xos, UINT eid, CFG::Edge* edge)
 void 
 ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
 {
-  OPERATOR opr = WN_operator(wn);
-  if (wn == NULL) {
-    // Base case
-  } else if (IsNonScalarRef(wn)) {
+  // Special base case
+  if (wn == NULL) { return; }
 
+  OPERATOR opr = WN_operator(wn);
+  if (IsNonScalarRef(wn)) {
+    
     // Base case
     int ret = op(wn); // FIXME: what to do on error?
     
