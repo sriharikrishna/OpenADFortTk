@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.18 2003/10/13 14:18:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.19 2003/12/08 17:40:14 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -132,6 +132,10 @@ static void
 TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId, 
 			  XlationContext& ctxt);
 
+static void
+TranslatePU(xml::ostream& xos, CallGraph::Node* n, UINT32 vertexId,
+	    XlationContext& ctxt);
+
 static void 
 TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
 	    XlationContext& ctxt);
@@ -190,7 +194,7 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   // 3. Dump CallGraph vertices
   for (CallGraph::NodesIterator nodeIt(cgraph); (bool)nodeIt; ++nodeIt) {
     CallGraph::Node* n = dynamic_cast<CallGraph::Node*>((DGraph::Node*)nodeIt);
-    TranslatePU(xos, (PU_Info*)n->GetDef(), n->getID(), ctxt);
+    TranslatePU(xos, n, n->getID(), ctxt);
   }
   
   // 4. Dump CallGraph edges
@@ -214,6 +218,7 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   W2F_Fini(); // FIXME
 }
 
+
 //***************************************************************************
 
 static void
@@ -225,7 +230,7 @@ TranslateScopeHierarchy(xml::ostream& xos, PU_Info* pu_forest,
   // there is one scope for each PU.
 
   xos << BegElem("xaif:ScopeHierarchy");
-
+  
   // Translate global symbol table
   SymTabId scopeId = ctxt.FindSymTabId(Scope_tab[GLOBAL_SYMTAB].st_tab);
   
@@ -274,49 +279,68 @@ TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId,
 //***************************************************************************
 
 static void
-TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
+TranslatePU(xml::ostream& xos, CallGraph::Node* n, UINT32 vertexId,
 	    XlationContext& ctxt)
 {
-  
-  xos << Comment(whirl2xaif_divider_comment);
-  
-  if (pu && PU_is_mainpu(PU_Info_pu(pu))) {
-    xos << Comment("*** This is the PROGRAM routine ***");
-  }
-  xos << BegElem("xaif:ControlFlowGraph") << Attr("vertex_id", vertexId);
-  
-  if (pu) {
-    RestoreOpen64PUGlobalVars(pu);
-    ST* st = ST_ptr(PU_Info_proc_sym(pu));
-    WN *wn_pu = PU_Info_tree_ptr(pu);
-    //IR_set_dump_order(TRUE /*pre*/); fdump_tree(stderr, wn_pu);
-
-#if 0 // FIXME  
-    BOOL is_user_visible_pu = 
-      (CURRENT_SYMTAB == GLOBAL_SYMTAB + 1) 
-      || ((Language == LANG_F90) && (CURRENT_SYMTAB == GLOBAL_SYMTAB + 2)
-	  && (!Is_Set_PU_Info_flags(pu, PU_IS_COMPILER_GENERATED)));
-#endif
-
-    PUId puId = ctxt.FindPUId(pu);
-
-    ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-    SymTabId scopeId = ctxt.FindSymTabId(sttab);
-
-    xos << Attr("scope_id", scopeId) << AttrSymId(st)
-	<< PUIdAnnot(puId) << EndAttrs;
-    TranslateWNPU(xos, wn_pu, ctxt);
-    xos << EndElem;
-    
-    SaveOpen64PUGlobalVars(pu);
-
+  if (n->GetDef()) {
+    TranslatePU(xos, (PU_Info*)n->GetDef(), n->getID(), ctxt);
   } else {
-    // FIXME: inlinable/noninlinable
+    // FIXME: 
+    // These should be part of the global symbol table
+    ST* st = (ST*)n->GetSym();
+    ST_TAB* sttab = Scope_tab[GLOBAL_SYMTAB].st_tab;
+    SymTabId scopeId = ctxt.FindSymTabId(sttab);
+    
+    xos << BegElem("xaif:ControlFlowGraph") << Attr("vertex_id", vertexId)
+	<< Attr("scope_id", scopeId);
+    if (st) {
+      xos << AttrSymId(st);
+    } else {
+      xos << Attr("symbol_id", "NoValueForThisIntrinsicCall");
+    }
     xos << EndElem; 
   }
   
   xos << std::endl;
   xos.flush();
+}
+
+static void
+TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
+	    XlationContext& ctxt)
+{
+  if (!pu) { return; }
+  
+  xos << Comment(whirl2xaif_divider_comment);
+  
+  if (PU_is_mainpu(PU_Info_pu(pu))) {
+    xos << Comment("*** This is the PROGRAM routine ***");
+  }
+  xos << BegElem("xaif:ControlFlowGraph") << Attr("vertex_id", vertexId);
+  
+  RestoreOpen64PUGlobalVars(pu);
+  ST* st = ST_ptr(PU_Info_proc_sym(pu));
+  WN *wn_pu = PU_Info_tree_ptr(pu);
+  //IR_set_dump_order(TRUE /*pre*/); fdump_tree(stderr, wn_pu);
+
+#if 0 // FIXME  
+  BOOL is_user_visible_pu = 
+    (CURRENT_SYMTAB == GLOBAL_SYMTAB + 1) 
+    || ((Language == LANG_F90) && (CURRENT_SYMTAB == GLOBAL_SYMTAB + 2)
+	&& (!Is_Set_PU_Info_flags(pu, PU_IS_COMPILER_GENERATED)));
+#endif
+  
+  PUId puId = ctxt.FindPUId(pu);
+  
+  ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
+  SymTabId scopeId = ctxt.FindSymTabId(sttab);
+  
+  xos << Attr("scope_id", scopeId) << AttrSymId(st)
+      << PUIdAnnot(puId) << EndAttrs;
+  TranslateWNPU(xos, wn_pu, ctxt);
+  xos << EndElem; // xaif:ControlFlowGraph
+  
+  SaveOpen64PUGlobalVars(pu);
 }
 
 static void
