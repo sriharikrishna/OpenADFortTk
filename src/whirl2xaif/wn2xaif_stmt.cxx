@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.18 2003/11/13 14:55:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.19 2003/11/13 16:09:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -619,7 +619,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   BOOL has_stat = FALSE;
   BOOL first_nonemptyarg = FALSE;
   INT implicit_args;
-  UINT position = 1;
+  UINT position = 0; // invalid position id
 
   UINT srcid = 0; // used for intrinsics (FIXME)
 
@@ -635,7 +635,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	arg_ty = PU_prototype (Pu_Table[ST_pu(WN_st(kidofparm))]);
 
       
-      position++;
+      position++; // we have seen a valid argument
       if (xlate_as == 0 || xlate_as == 1) { 
 	// SubroutineCall, FunctionCall
 	xos << BegElem("xaif:Argument");
