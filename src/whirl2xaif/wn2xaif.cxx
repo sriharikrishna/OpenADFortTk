@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.47 2004/03/04 13:53:42 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.48 2004/03/04 16:54:27 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -126,7 +126,7 @@ static const char*
 GetCFGVertexType(CFG* cfg, CFG::Node* n);
 
 static const char*
-GetStructuredCFGVertexType(WN* wstmt);
+GetCFGControlFlowVertexType(WN* wstmt);
 
 static void 
 xlate_CFCondition(xml::ostream& xos, WN *wn, XlationContext& ctxt);
@@ -142,7 +142,7 @@ GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt);
 
 
 static void
-AddStructuredCFEndTags(WN* wn);
+AddControlFlowEndTags(WN* wn);
 
 static void
 MassageOACFGIntoXAIFCFG(CFG* cfg);
@@ -225,7 +225,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   pair<WNToWNIdMap*, WNIdToWNMap*> wnmaps = CreateWhirlIdMaps(wn);
   delete wnmaps.second;
 
-  AddStructuredCFEndTags(wn); // FIXME
+  AddControlFlowEndTags(wn); // FIXME
 
   // 3. OpenAnalysis CFG
   Pro64IRInterface irInterface;
@@ -1078,7 +1078,7 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   // If a structured statement, it must be translated specially.
   // Otherwise simply dispatch to TranslateWN(...).
-  const char* vty = GetStructuredCFGVertexType(wn);
+  const char* vty = GetCFGControlFlowVertexType(wn);
   OPERATOR opr = WN_operator(wn);
   const char* opr_str = OPERATOR_name(opr);
   
@@ -1092,9 +1092,14 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     xlate_CFCondition(xos, WN_while_test(wn), ctxt);
   }
   else if (vty == XAIFStrings.elem_BBBranch()) {
-    // (opr == OPR_SWITCH || opr == OPR_COMPGOTO) // WN_switch_test(wn);
-    // (opr == OPR_TRUEBR || opr == OPR_FALSEBR)
-    xlate_CFCondition(xos, WN_if_test(wn), ctxt);
+    WN* condWN = NULL;
+    if (opr == OPR_IF || opr == OPR_TRUEBR || opr == OPR_FALSEBR) {
+      condWN = WN_if_test(wn);
+    } else if (opr == OPR_SWITCH || opr == OPR_COMPGOTO) {
+      condWN = WN_switch_test(wn);
+    }
+    ASSERT_FATAL(condWN, (DIAG_UNIMPLEMENTED, "Programming Error."));
+    xlate_CFCondition(xos, condWN, ctxt);
   } 
   else if (vty == XAIFStrings.elem_BBEndBranch() ||
 	   vty == XAIFStrings.elem_BBEndLoop()) {
@@ -1135,7 +1140,7 @@ GetCFGVertexType(CFG* cfg, CFG::Node* n)
   // control flow statements contructs will be in their own xaif:BB.
   for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
     WN* wstmt = (WN *)((StmtHandle)stmtIt);
-    const char* vty = GetStructuredCFGVertexType(wstmt);
+    const char* vty = GetCFGControlFlowVertexType(wstmt);
     if (vty) { 
       return vty; 
     }
@@ -1145,11 +1150,11 @@ GetCFGVertexType(CFG* cfg, CFG::Node* n)
 }
 
 
-// GetStructuredCFGVertexType: If the WHIRL statement corresponds to a
-// special structured CFG vertex, return that type.  Otherwise return
-// NULL.  Returns strings from XAIFStrings.
+// GetCFGControlFlowVertexType: If the WHIRL statement corresponds to a
+// CFG *control flow* vertex, return that type.  Otherwise return NULL.
+// Returns strings from XAIFStrings.
 static const char*
-GetStructuredCFGVertexType(WN* wstmt) // FIXME
+GetCFGControlFlowVertexType(WN* wstmt) // FIXME
 {
   OPERATOR opr = WN_operator(wstmt);
   switch (opr) {
@@ -1165,9 +1170,13 @@ GetStructuredCFGVertexType(WN* wstmt) // FIXME
     return XAIFStrings.elem_BBPreLoop();
 
     // In OA, IF nodes represent the *condition* (not the body)
-  case OPR_IF: 
+  case OPR_IF:
+  case OPR_TRUEBR:   // unstructured
+  case OPR_FALSEBR:  // unstructured
     return XAIFStrings.elem_BBBranch();
-    // Unstructured: OPR_TRUEBR, OPR_FALSEBR, OPR_SWITCH, OPR_COMPGOTO
+  case OPR_SWITCH:   // unstructured
+  case OPR_COMPGOTO: // unstructured
+    return XAIFStrings.elem_BBBranch();
     
     // Currently we use special comments to denote EndBranch and EndLoop
   case OPR_COMMENT: 
@@ -1257,10 +1266,10 @@ GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt)
 
 #include <lib/support/WhirlParentize.h>
 
-// AddStructuredCFEndTags: Add structured control flow end tags
-// FIXME: assumes fully structured control flow
+// AddControlFlowEndTags: Add control flow end tags
+// FIXME: assumes fully structured control flow???
 static void
-AddStructuredCFEndTags(WN* wn)
+AddControlFlowEndTags(WN* wn)
 {
   WN_TREE_CONTAINER<PRE_ORDER> wtree(wn);
   WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
@@ -1269,14 +1278,14 @@ AddStructuredCFEndTags(WN* wn)
     OPERATOR opr = WN_operator(curWN);
 
     // Find structured control flow and insert placehoder statement
-    const char* vty = GetStructuredCFGVertexType(curWN);
+    const char* vty = GetCFGControlFlowVertexType(curWN);
     if (vty == XAIFStrings.elem_BBForLoop() || 
 	vty == XAIFStrings.elem_BBPostLoop() ||
 	vty == XAIFStrings.elem_BBPreLoop()) {
-      //    do (...)
-      //      ...
-      // -->  EndLoop
-      //    enddo
+      // do (...)
+      //   ...
+      // * EndLoop
+      // enddo
       WN* blkWN = NULL;
       if (opr == OPR_DO_LOOP) { 
 	blkWN = WN_do_body(curWN); 
@@ -1287,10 +1296,10 @@ AddStructuredCFEndTags(WN* wn)
       WN_INSERT_BlockLast(blkWN, newWN);
     }
     else if (vty == XAIFStrings.elem_BBBranch()) {
-      //     if (...) { ... }
-      //     else { ... }
-      //     endif
-      // --> EndBranch
+      //   if (...) { ... } OR   if (...) goto77 OR  switch(...)
+      //   else { ... }        * EndBranch           ...
+      //   endif                                     end
+      // * EndBranch                               * EndBranch
       WN* blkWN = FindParentWNBlock(wn, curWN);
       WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndBranch());
       WN_INSERT_BlockAfter(blkWN, curWN, newWN); // 'newWN' after 'curWN'
@@ -1479,7 +1488,7 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
       for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
 	WN* wn = (WN*)((StmtHandle)stmtIt);
 
-	const char* vty = GetStructuredCFGVertexType(wn);
+	const char* vty = GetCFGControlFlowVertexType(wn);
 	WN* startWN = NULL; // start of new basic block
 	if (vty == XAIFStrings.elem_BBEndBranch()) {
 	  ++stmtIt; // advance iterator to find start of new basic block
