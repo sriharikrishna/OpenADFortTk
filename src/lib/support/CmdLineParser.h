@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.h,v 1.1 2004/02/27 00:33:09 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.h,v 1.2 2004/02/27 20:20:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -17,8 +17,8 @@
 //
 //***************************************************************************
 
-#ifndef IntrinsicXlationTable_H 
-#define IntrinsicXlationTable_H
+#ifndef CmdLineParser_H 
+#define CmdLineParser_H
 
 //************************* System Include Files ****************************
 
@@ -44,8 +44,9 @@
 // specifiers) and regular arguments.  Provides functionality similar
 // to getopt() and GNU's getopt_long(), but in an easier to use -- and
 // in the case of getopt_long(), more portable -- package.  In
-// addition, routines to convert string arguments into numerical types
-// are also provided.
+// addition, the package provides configurable handling of duplicate
+// options/arguments and routines to convert string arguments into
+// numerical types.
 //
 // A user creates a NULL-terminated array of option descriptors
 // (OptArgDesc) indicating switch names and arguments, if any.  He
@@ -76,17 +77,30 @@
 //     '-'; this is an error.  
 //   - Long argument switches may be abbreviated if the abbreviation 
 //     is unique. 
-//   - If the same switch is passed multiple times, any arguments to
-//     the switch are accumulated in a colon-separated list.
+//   - Configurable handling of duplicate options and arguments.
 //
 // Limitations:
-//   - We do not currently enforce that an abbreviation will not match
-//     two different switches.)  
 //   - Unlike getopt(), we do not currently support short switch grouping,
 //     e.g. using -abc instead of -a -b -c.  [FIXME: we can assume that 
 //     only options without arguments are allowed to be grouped.]
-//   - We do not check the OptArgDesc array for bogus input. [FIXME]
-// 
+//   - We do not check for ambiguity in long switch abbreviations.
+//     Currently, such an abbreviation will match the first switch that
+//     it appears to abbreviate.
+//
+// Warnings:
+//   - Switches that take optional arguments can be confusing.  For
+//     example, assume a command 'foo' takes a filename and on option,
+//     --debug, which itself takes an optional debug level.  The
+//     following commands pose no difficulties:
+//       foo myfile
+//       foo --debug=3 myfile
+//       foo --debug 3 myfile
+//       foo myfile --debug
+//     However, in the following
+//       foo --debug myfile
+//     'myfile' is erroneously assumed to be the optional argument to
+//     --debug.  While the '--' token solves this, it remains awkward.
+//
 class CmdLineParser {
 public:
 
@@ -94,17 +108,28 @@ public:
   // Structure used to describe command line options
   // ---------------------------------------------------------
   
+  // Describes if an option switch takes an argument
   enum OptKind { 
-    ARG_NULL, 
+    ARG_NULL = 0,
     ARG_NONE, // switch does not take argument
     ARG_REQ,  // switch must take an argument
     ARG_OPT   // switch takes an (optional!) argument
   };
-
+  
+  // Describes how to handle duplicate options and option arguments
+  enum DupOptKind {
+    DUPOPT_NULL = 0,
+    DUPOPT_ERR,  // throw an exception for duplicate option or argument
+    DUPOPT_CLOB, // clobber any previous argument
+    DUPOPT_CAT   // concat all available arguments using 'dupArgSep'
+  };
+  
   struct OptArgDesc {
     
     bool operator==(const OptArgDesc& x) const { 
-      return (swShort == x.swShort && swLong == x.swLong && kind == x.kind);
+      return (swShort == x.swShort && swLong == x.swLong 
+	      && kind == x.kind && dupKind == x.dupKind
+	      && dupArgSep == x.dupArgSep);
     }
     bool operator!=(const OptArgDesc& x) const { return !(*this == x); }
     
@@ -112,6 +137,8 @@ public:
     const char swShort; // 0 if n/a
     const char* swLong; // NULL if n/a
     OptKind kind;
+    DupOptKind dupKind;
+    const char* dupArgSep; // separator for 'DUPARG_CONCAT'
   };
 
   static OptArgDesc OptArgDesc_NULL; // The NULL terminator
@@ -169,22 +196,22 @@ public:
   // Parsed Data: Optional arguments
   // -------------------------------------------------------
   
-  // IsOpt: Given a short or long switch, returns whether the switch
-  // has been seen.
+  // IsOpt: (IsOption) Given a short or long switch, returns whether
+  // the switch has been seen.
   bool IsOpt(const char swShort) const;
   bool IsOpt(const char* swLong) const;
   bool IsOpt(const std::string& sw) const;
 
-  // IsOptArg: Given a short or long switch, returns whether an
-  // argument is associated with it.  Designed for switches that
-  // optionally take arguments.
+  // IsOptArg: (IsOptionArgument) Given a short or long switch,
+  // returns whether an argument is associated with it.  Designed for
+  // switches that optionally take arguments.
   bool IsOptArg(const char swShort) const;
   bool IsOptArg(const char* swLong) const;
   bool IsOptArg(const std::string& sw) const;  
   
-  // GetOptArg: Given a short or long switch, get the argument
-  // associated with it.  Assumes user has verified that an argument
-  // *exists*.
+  // GetOptArg: (GetOptionArgument) Given a short or long switch, get
+  // the argument associated with it.  Assumes user has verified that
+  // an argument *exists*.
   const std::string& GetOptArg(const char swShort) const;
   const std::string& GetOptArg(const char* swLong) const;
   const std::string& GetOptArg(const std::string& sw) const;
@@ -220,6 +247,7 @@ private:
 private:
   void Ctor();
   void Reset();
+  void CheckForErrors(const OptArgDesc* optArgDescs);
 
   // Parsing helpers
   void 
@@ -229,10 +257,11 @@ private:
   FindOptDesc(const OptArgDesc* optArgDescs, const char* sw);
   
   void
-  AddOptArg(const OptArgDesc& desc, const std::string& arg);
+  AddOption(const OptArgDesc& desc, const std::string& arg);
   
   void
-  AddOptArg(const std::string& sw, const std::string& arg);
+  AddOption(const OptArgDesc& desc, 
+	    const std::string& sw, const std::string& arg);
 
 private:
   

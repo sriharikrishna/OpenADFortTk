@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.cxx,v 1.1 2004/02/27 00:35:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.cxx,v 1.2 2004/02/27 20:20:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -32,10 +32,9 @@
 
 using std::string;
 
-static string INTERNAL_ERR = "Internal error: Don't abuse me!";
+static string INTERNAL_ERR = "CmdLineParser internal error (Don't abuse me!)";
 static string MISSING_SWITCH = "Missing switch after -";
 static string UNKNOWN_SWITCH = "Unknown option switch: ";
-static string INVALID_ARG = "Invalid argument to option switch: ";
 static string MISSING_ARG = "Missing argument for switch: ";
 
 //****************************************************************************
@@ -71,7 +70,7 @@ IsArg(const char* str) { return (!IsSwitch(str) && !IsDashDash(str)); }
 //****************************************************************************
 
 CmdLineParser::OptArgDesc CmdLineParser::OptArgDesc_NULL = 
-  { 0, NULL, CmdLineParser::ARG_NULL };
+  { 0, NULL, CmdLineParser::ARG_NULL, CmdLineParser::DUPOPT_NULL, NULL };
 
 
 CmdLineParser::CmdLineParser() 
@@ -107,10 +106,7 @@ CmdLineParser::Parse(const OptArgDesc* optArgDescs,
   Reset();
   command = argv[0]; // always do first so it will be available after errors
   
-  // CheckForErrors(optArgDescs);
-  //   FIXME: add error checking phase:
-  //   - detect duplicate option entries
-  //   - invalid option entries (no switch)
+  CheckForErrors(optArgDescs);
   
   bool endOfOpts = false;  // are we at end of optional args?
   
@@ -154,7 +150,8 @@ CmdLineParser::Parse(const OptArgDesc* optArgDescs,
       // 3. Find argument for switch (if any) [N.B. may advance iteration!]
       if (d->kind == ARG_NONE) {
 	if (!arg.empty()) {
-	  string msg = INVALID_ARG + sw + "=" + arg;
+	  string msg = "Invalid argument `" + arg + "' to option switch `"
+	    + sw + "'";
 	  throw Exception(msg);
 	}
       } else if (d->kind == ARG_REQ || d->kind == ARG_OPT) {
@@ -170,8 +167,8 @@ CmdLineParser::Parse(const OptArgDesc* optArgDescs,
 	}
       }
       
-      // 4. Add to map
-      AddOptArg(*d, arg);
+      // 4. Add option switch and any argument to map
+      AddOption(*d, arg);
     }
     else { 
       // -------------------------------------------------------
@@ -396,6 +393,50 @@ CmdLineParser::Reset()
 }
 
 
+// CheckForErrors: Checks argument descriptor for errors
+void
+CmdLineParser::CheckForErrors(const OptArgDesc* optArgDescs)
+{
+  // FIXME
+  //   - detect duplicate option entries
+  
+  // Check individual descriptors
+  string msg;
+  string sw;
+  for (const OptArgDesc* p = optArgDescs; *p != OptArgDesc_NULL; ++p) {
+    // Verify that at least one switch is present
+    if (p->swShort == 0 && !p->swLong) {
+      msg = INTERNAL_ERR + ": Arg descriptor is missing a switch!";
+      throw Exception(msg);
+    }
+
+    if (p->swLong) {
+      sw = p->swLong; 
+    } else {
+      sw = p->swShort;
+    }
+    
+    // Verify that the kind is valid
+    if (p->kind == ARG_NULL) {
+      msg = INTERNAL_ERR + ": OptArgDesc.kind is invalid for: " + sw;
+      throw Exception(msg);
+    }
+    
+    // Verify that dupKind is valid
+    if (p->dupKind == DUPOPT_NULL) {
+      msg = INTERNAL_ERR + ": OptArgDesc.dupKind is invalid for: " + sw;
+      throw Exception(msg);
+    }
+    
+    // Verify that if dupKind == DUPOPT_CAT, dupArgSep is valid
+    if (p->dupKind == DUPOPT_CAT && !p->dupArgSep) {
+      msg = INTERNAL_ERR + ": OptArgDesc.dupArgSep is invalid for: " + sw;
+      throw Exception(msg);
+    }
+  }
+}
+
+
 // FindSwitchAndArg: Given an option string from argv (potentially
 // containing both an option and an argument), separate the two into
 // the switch and argument.  The values are assigned to 'sw' and
@@ -465,37 +506,56 @@ CmdLineParser::FindOptDesc(const OptArgDesc* optArgDescs, const char* sw)
 }
 
 
-// AddOptArg: Records the optional switch and argument in the
-// switch->argument map.  In order to support easy lookup, both the
-// long and short form of the switches are entered in the map.  
+// AddOption: Records the option switch and its (possibly optional)
+// argument in the switch->argument map.  In order to support easy
+// lookup, both the long and short form of the switches are entered in
+// the map.
 void
-CmdLineParser::AddOptArg(const OptArgDesc& desc, const string& arg)
+CmdLineParser::AddOption(const OptArgDesc& desc, const string& arg)
 {
   if (desc.swShort != 0) {
     string swShort(1, desc.swShort);
-    AddOptArg(swShort, arg);
+    AddOption(desc, swShort, arg);
   }
   if (desc.swLong) {
     string swLong(desc.swLong);
-    AddOptArg(swLong, arg);
+    AddOption(desc, swLong, arg);
   }
 }
 
 
-// AddOptArg: If the switch has no argument, NULL is used as its value.
-// In the event that the switch already exists in the map with an
-// argument, we append this argument creating a colon-separated list.
+// AddOption: Records the option switch and its (possibly optional)
+// argument in the switch->argument map.  If the switch is not in the
+// map, it is inserted with the available argument or NULL.  If it is
+// already the map, the option descriptor defines how to handle
+// duplicates.
 void
-CmdLineParser::AddOptArg(const string& sw, const string& arg)
+CmdLineParser::AddOption(const OptArgDesc& desc,
+			 const string& sw, const string& arg)
 {
   SwitchToArgMap::iterator it = switchToArgMap.find(sw);
   if (it == switchToArgMap.end()) {
+    // Insert in map
     string* theArg = (arg.empty()) ? NULL : new string(arg);
     switchToArgMap.insert(make_pair(sw, theArg));
   } else {
+    // Handle duplicates
     string* theArg = (*it).second;
-    if (theArg) {
-      *theArg += ":" + arg;
+    
+    if (desc.dupKind == DUPOPT_ERR) {
+      throw Exception("Duplicate switch: " + sw);
+    }
+    
+    if (!arg.empty()) {
+      if (!theArg) {
+	theArg = new string(arg);
+      } else {
+	if (desc.dupKind == DUPOPT_CLOB) {
+	  *theArg = arg;
+	} else if (desc.dupKind == DUPOPT_CAT) {
+	  *theArg += desc.dupArgSep + arg;
+	}
+      }
     }
   }
 }
