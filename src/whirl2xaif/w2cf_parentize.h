@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.h,v 1.3 2003/07/24 14:36:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/w2cf_parentize.h,v 1.2 2003/07/24 14:36:15 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -38,7 +38,7 @@
 //***************************************************************************
 //
 // File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.h,v $
+//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/w2cf_parentize.h,v $
 //
 // Purpose:
 //   [The purpose of this file]
@@ -46,53 +46,40 @@
 // Description:
 //   [The set of functions, macros, etc. defined in the file]
 //
-// Based on Open64 be/whirl2f/init2f.h
+// Based on Open64 be/whirl2c/w2cf_parentize.h
 //
 //***************************************************************************
 
-#ifndef init2f_INCLUDED
-#define init2f_INCLUDED
+#ifndef w2cf_parentize_INCLUDED
+#define w2cf_parentize_INCLUDED
 /* ====================================================================
  * ====================================================================
- *
  * Description:
- *
- *    INITO2F_translate:
- *       Appends a DATA statement for the ST associated with the given
- *       INITO list.  In the process, some equivalence specifications
- *       may be prepended to the Data_Stmt_Tokens.  Typical is as
- *       follows:
- *
- *           1) Upon entering a new PU block: Initialize Data_Stmt_Tokens
- *
- *           2) Upon declaring a variable: If it is initialized append
- *              the initializer to Data_Stmt_Tokens with a call to
- *	        INITO2F_translate(Data_Stmt_Tokens, inito).
- *
- *           3) Upon exiting a PU block: Append the contents of 
- *              Data_Stmt_Tokens to the PU tokens, and reclaim the
- *              Data_Stmt_Tokens xml::ostream&.
+ *  
+ *    The W2CF_Parent_Map is defined to be WN_MAP_UNDEFINED in 
+ *    w2cf_parentize.c, and must be set by the user of this module
+ *    before using any of the utilities (macros or subroutines).
  *
  * ====================================================================
  * ====================================================================
  */
 
-//************************** System Include Files ***************************
-
-//************************** Open64 Include Files ***************************
-
 #include "Open64BasicTypes.h"
 
-//*************************** User Include Files ****************************
+extern WN_MAP W2CF_Parent_Map;
 
-#include "whirl2f_common.h"
-#include "xmlostream.h"
-#include "XlationContext.h"
 
-//************************** Forward Declarations ***************************
+inline const WN *W2CF_Get_Parent(const WN *wn)
+{
+   return (const WN *)WN_MAP_Get(W2CF_Parent_Map, wn);
+} /* W2CF_Get_Parent */
 
-//***************************************************************************
+inline void W2CF_Set_Parent(WN *wn, const WN *p)
+{
+   WN_MAP_Set(W2CF_Parent_Map, wn, (void *)p);
+} /* W2CF_Set_Parent */
 
-extern void INITO2F_translate(xml::ostream& xos, INITO_IDX inito);
+extern void W2CF_Parentize(const WN* wn);
 
-#endif /* init2f_INCLUDED */
+
+#endif /* w2cf_parentize */

@@ -1,5 +1,5 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/include/Open64BasicTypes.h,v 1.4 2003/07/16 12:24:40 eraxxon Exp $
-// -*-C++-*-
+// -*-Mode: C++;-*-
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/include/Open64BasicTypes.h,v 1.5 2003/07/24 14:36:14 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *

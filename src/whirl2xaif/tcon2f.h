@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.h,v 1.3 2003/07/24 14:36:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/tcon2f.h,v 1.2 2003/07/24 14:36:15 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -38,7 +38,7 @@
 //***************************************************************************
 //
 // File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.h,v $
+//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/tcon2f.h,v $
 //
 // Purpose:
 //   [The purpose of this file]
@@ -46,53 +46,29 @@
 // Description:
 //   [The set of functions, macros, etc. defined in the file]
 //
-// Based on Open64 be/whirl2f/init2f.h
+// Based on Open64 be/whirl2f/tcon2f.h
 //
 //***************************************************************************
 
-#ifndef init2f_INCLUDED
-#define init2f_INCLUDED
+#ifndef tcon2f_INCLUDED
+#define tcon2f_INCLUDED
 /* ====================================================================
  * ====================================================================
  *
  * Description:
  *
- *    INITO2F_translate:
- *       Appends a DATA statement for the ST associated with the given
- *       INITO list.  In the process, some equivalence specifications
- *       may be prepended to the Data_Stmt_Tokens.  Typical is as
- *       follows:
- *
- *           1) Upon entering a new PU block: Initialize Data_Stmt_Tokens
- *
- *           2) Upon declaring a variable: If it is initialized append
- *              the initializer to Data_Stmt_Tokens with a call to
- *	        INITO2F_translate(Data_Stmt_Tokens, inito).
- *
- *           3) Upon exiting a PU block: Append the contents of 
- *              Data_Stmt_Tokens to the PU tokens, and reclaim the
- *              Data_Stmt_Tokens xml::ostream&.
- *
  * ====================================================================
  * ====================================================================
  */
 
-//************************** System Include Files ***************************
+#include <string>
 
-//************************** Open64 Include Files ***************************
+extern std::string TCON2F_hollerith(TCON tvalue);
 
-#include "Open64BasicTypes.h"
+extern std::string TCON2F_translate(TCON tvalue, BOOL is_logical,
+				    TY_IDX object_ty);
 
-//*************************** User Include Files ****************************
+extern std::string TCON2F_translate(TCON tvalue, BOOL is_logical);
 
-#include "whirl2f_common.h"
-#include "xmlostream.h"
-#include "XlationContext.h"
+#endif /* tcon2f_INCLUDED */
 
-//************************** Forward Declarations ***************************
-
-//***************************************************************************
-
-extern void INITO2F_translate(xml::ostream& xos, INITO_IDX inito);
-
-#endif /* init2f_INCLUDED */

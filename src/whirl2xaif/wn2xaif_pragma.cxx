@@ -1,5 +1,5 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.7 2003/06/02 13:43:22 eraxxon Exp $
-// -*-C++-*-
+// -*-Mode: C++;-*-
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.8 2003/07/24 14:36:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*

@@ -1,5 +1,5 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.2 2003/05/20 22:50:03 eraxxon Exp $
-// -*-C++-*-
+// -*-Mode: C++;-*-
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.3 2003/07/24 14:36:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -143,34 +143,68 @@ Pro64IRUseDefIterator::Pro64IRUseDefIterator (WN *subtree, int uses_or_defs)
 
 //-----------------------------------------------------------------------------
 
-Pro64IRProcCallIterator::Pro64IRProcCallIterator(WN *wn)
+Pro64IRCallsiteIterator::Pro64IRCallsiteIterator(WN *wn)
 {
-  if (wn && ! OPERATOR_is_not_executable (WN_operator (wn))) {
+  OPERATOR opr = WN_operator(wn);
+  if (wn && !OPERATOR_is_not_executable(opr)) {
+    //BriefAssertion(OPERATOR_is_stmt(opr));
     build_func_call_list(wn);
   }
 
-  wnlist_iter = wnlist.begin();
+  Reset();
 }
 
 void 
-Pro64IRProcCallIterator::build_func_call_list(WN *wn)
+Pro64IRCallsiteIterator::build_func_call_list(WN *wn)
 {
-  OPERATOR opr = WN_operator (wn);
-  switch (opr) {
-  case OPR_CALL:
-  case OPR_ICALL:
-  case OPR_PICCALL:
-  case OPR_VFCALL:
-  case OPR_INTRINSIC_CALL:
+  OPERATOR opr = WN_operator(wn);
+
+  // Add calls to call list
+  if (OPERATOR_is_call(opr)) {
     wnlist.push_back(wn);
-    for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
-      WN* kid = WN_kid(wn, kidno);
-      build_func_call_list(kid);
-    }
-    return;
+  }
+  
+  // Recur on subexpressions
+  for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
+    WN* kid = WN_kid(wn, kidno);
+    build_func_call_list(kid);
   }
 }
 
+void 
+Pro64IRCallsiteIterator::Reset()
+{
+  wnlist_iter = wnlist.begin();
+}
+
+
+//-----------------------------------------------------------------------------
+
+Pro64IRCallsiteParamIterator::Pro64IRCallsiteParamIterator(WN *wn)
+{
+  OPERATOR opr = WN_operator(wn);
+  assert(OPERATOR_is_call(opr));
+
+  // FIXME: should we test for a return value at the front?
+  
+  // Note: each kid is an OPR_PARM
+  mINT16 numactuals = WN_num_actuals(wn);
+  INT first_arg_idx = 0;
+
+  // Gather all parameter expressions
+  for (INT kidno = first_arg_idx; kidno < numactuals; kidno++) {
+    WN* kid = WN_kid(wn, kidno);
+    wnlist.push_back(kid);
+  }
+  
+  Reset();
+}
+
+void 
+Pro64IRCallsiteParamIterator::Reset()
+{
+  wnlist_iter = wnlist.begin();
+}
 
 //-----------------------------------------------------------------------------
 //
@@ -679,15 +713,27 @@ Pro64IRInterface::GetUMultiCondition (StmtHandle h, int targetIndex)
 
 
 //-----------------------------------------------------------------------------
-// Obtain uses and defs
+// Inspect call sites
 //-----------------------------------------------------------------------------
 
-IRProcCallIterator*
-Pro64IRInterface::GetProcCalls(StmtHandle h)
+IRCallsiteIterator*
+Pro64IRInterface::GetCallsites(StmtHandle h)
 {
   WN *wn = (WN *)h;
-  return new Pro64IRProcCallIterator(wn);
+  return new Pro64IRCallsiteIterator(wn);
 }
+
+
+IRCallsiteParamIterator*
+Pro64IRInterface::GetCallsiteParams(ExprHandle h)
+{
+  WN *wn = (WN *)h;
+  return new Pro64IRCallsiteParamIterator(wn);
+}
+
+//-----------------------------------------------------------------------------
+// Obtain uses and defs
+//-----------------------------------------------------------------------------
 
 IRUseDefIterator*
 Pro64IRInterface::GetUses (StmtHandle h)

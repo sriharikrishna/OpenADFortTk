@@ -1,5 +1,5 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.3 2003/06/24 18:34:31 eraxxon Exp $
-// -*-C++-*-
+// -*-Mode: C++;-*-
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.4 2003/07/24 14:36:14 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*

@@ -1,5 +1,5 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.2 2003/05/14 19:29:45 eraxxon Exp $
-// -*-C++-*-
+// -*-Mode: C++;-*-
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.3 2003/07/24 14:36:14 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *

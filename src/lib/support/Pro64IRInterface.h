@@ -1,5 +1,5 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.3 2003/05/21 18:21:38 eraxxon Exp $
-// -*-C++-*-
+// -*-Mode: C++;-*-
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.4 2003/07/24 14:36:14 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -72,7 +72,7 @@ SaveOpen64PUGlobalVars(PU_Info *pu);
 class Pro64IRProcIterator : public IRProcIterator {
 public:
   Pro64IRProcIterator(PU_Info* pu_forest);
-  ~Pro64IRProcIterator () { }
+  ~Pro64IRProcIterator() { }
   
   ProcHandle Current() { return (ProcHandle)(*pulist_iter); }
   bool IsValid () { return (pulist_iter != pulist.end()); }
@@ -89,43 +89,66 @@ private:
 
 class Pro64IRStmtIterator: public IRStmtIterator {
 public:
-  Pro64IRStmtIterator (WN *wn) : curr_wn(wn) { }
-  ~Pro64IRStmtIterator () { }
+  Pro64IRStmtIterator(WN *wn) : start_wn(wn), curr_wn(NULL) { Reset(); }
+  ~Pro64IRStmtIterator() { }
 
   StmtHandle Current () { return (StmtHandle)curr_wn; }
   bool IsValid () { return (curr_wn != 0); }
   void operator++ () { curr_wn = WN_next (curr_wn) ? WN_next (curr_wn) : 0; }
 
+  void Reset() { curr_wn = start_wn; }
+
 private:
+  WN *start_wn;
   WN *curr_wn;
 };
 
 class Pro64IRUseDefIterator: public IRUseDefIterator {
 public:
-  Pro64IRUseDefIterator (WN *n, int uses_or_defs);
-  Pro64IRUseDefIterator () { assert (0); }
-  ~Pro64IRUseDefIterator () { }
+  Pro64IRUseDefIterator(WN *n, int uses_or_defs);
+  Pro64IRUseDefIterator() { assert (0); }
+  ~Pro64IRUseDefIterator() { }
 
   LeafHandle Current () { return 0; }
   bool IsValid () { return false; }
   void operator++ () { };
+
+  void Reset() { }
 	
 private:
 };
 
-class Pro64IRProcCallIterator : public IRProcCallIterator {
+class Pro64IRCallsiteIterator : public IRCallsiteIterator {
 public:
-  Pro64IRProcCallIterator(WN *wn);
-  ~Pro64IRProcCallIterator () { }
+  Pro64IRCallsiteIterator(WN *wn);
+  ~Pro64IRCallsiteIterator() { }
   
   ExprHandle Current() { return (StmtHandle)(*wnlist_iter); }
   bool IsValid () { return (wnlist_iter != wnlist.end()); }
   void operator++() { ++wnlist_iter; }
+
+  void Reset();
   
 private:
   std::list<WN*> wnlist; // a list of function call nodes
   std::list<WN*>::iterator wnlist_iter;
   void build_func_call_list(WN *wn);
+};
+
+class Pro64IRCallsiteParamIterator : public IRCallsiteParamIterator {
+public:
+  Pro64IRCallsiteParamIterator(WN *wn);
+  ~Pro64IRCallsiteParamIterator() { }
+  
+  ExprHandle Current() { return (StmtHandle)(*wnlist_iter); }
+  bool IsValid () { return (wnlist_iter != wnlist.end()); }
+  void operator++() { ++wnlist_iter; }
+
+  void Reset();
+  
+private:
+  std::list<WN*> wnlist; // a list of function call nodes
+  std::list<WN*>::iterator wnlist_iter;
 };
 
 //-----------------------------------------------------------------------------
@@ -138,15 +161,20 @@ public:
   ~Pro64IRInterface () { }
 
   //--------------------------------------------------------
-  // General - all statement types
+  // Procedures and call sites
+  //--------------------------------------------------------
+  IRProcType GetProcType(ProcHandle h) { assert(0); return ProcType_ILLEGAL; }
+  IRStmtIterator *ProcBody(ProcHandle h);
+  IRCallsiteIterator *GetCallsites(StmtHandle h);
+  IRCallsiteParamIterator *GetCallsiteParams(ExprHandle h);
+  bool IsParamProcRef(ExprHandle h) { assert(0); return false; }
+  bool IsCallThruProcParam(ExprHandle h) { assert(0); return false; }
+
+  //--------------------------------------------------------
+  // Statements: General
   //--------------------------------------------------------
   IRStmtType GetStmtType (StmtHandle h);
   StmtLabel GetLabel (StmtHandle h);
-
-  //--------------------------------------------------------
-  // For procedures, compound statements
-  //--------------------------------------------------------
-  IRStmtIterator *ProcBody(ProcHandle h);
   IRStmtIterator *GetFirstInCompound (StmtHandle h);
 
   //--------------------------------------------------------
@@ -198,7 +226,6 @@ public:
   //--------------------------------------------------------
   // Obtain uses and defs
   //--------------------------------------------------------
-  IRProcCallIterator *GetProcCalls(StmtHandle h);
   IRUseDefIterator *GetUses (StmtHandle h);
   IRUseDefIterator *GetDefs (StmtHandle h);
 
@@ -212,8 +239,8 @@ public:
     return (SymHandle)st;
   }
 
-  SymHandle GetSymHandle(LeafHandle h) {
-    WN* wn = (WN *)h; // FIXME could be a ProcHandle
+  SymHandle GetSymHandle(ExprHandle h) {
+    WN* wn = (WN *)h; 
     ST* st = ((OPERATOR_has_sym(WN_operator(wn))) ? WN_st(wn) : NULL);
     return (SymHandle)st;
   }

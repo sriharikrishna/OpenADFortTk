@@ -1,5 +1,5 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.h,v 1.3 2003/06/02 13:43:22 eraxxon Exp $
-// -*-C++-*-
+// -*-Mode: C++;-*-
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.h,v 1.4 2003/07/24 14:36:15 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*

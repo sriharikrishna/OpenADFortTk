@@ -1,5 +1,5 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.9 2003/07/21 15:22:18 eraxxon Exp $
-// -*-C++-*-
+// -*-Mode: C++;-*-
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.10 2003/07/24 14:36:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -493,7 +493,7 @@ WN2F_STATUS
 xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // XAIF distinguishes between a subroutine call (statement) and
-  // function call (expression.
+  // function call (expression).
   
   /* Generates a function-call and ensures that the return value
    * is returned into the appropriate context, be it a variable

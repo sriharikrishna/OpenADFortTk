@@ -1,5 +1,5 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.cxx,v 1.4 2003/05/23 18:33:47 eraxxon Exp $
-// -*-C++-*-
+// -*-Mode: C++;-*-
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.cxx,v 1.5 2003/07/24 14:36:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*

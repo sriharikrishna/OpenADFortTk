@@ -1,5 +1,5 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/xmlostream.cxx,v 1.2 2003/07/21 15:22:51 eraxxon Exp $
-// -*-C++-*-
+// -*-Mode: C++;-*-
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/xmlostream.cxx,v 1.3 2003/07/24 14:36:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *

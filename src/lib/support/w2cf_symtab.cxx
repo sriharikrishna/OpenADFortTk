@@ -1,5 +1,5 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.cxx,v 1.2 2003/05/21 18:21:38 eraxxon Exp $
-// -*-C++-*-
+// -*-Mode: C++;-*-
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.cxx,v 1.3 2003/07/24 14:36:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
