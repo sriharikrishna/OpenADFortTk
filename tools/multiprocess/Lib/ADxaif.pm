@@ -8,6 +8,20 @@ use Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(xaifpp);
 
+BEGIN {
+    $decl1_re = qr/real\(w2f__8\)/i;
+    $active1_re = qr/^\s+$decl1_re\s+/i;
+    $decl2_re = qr/type \s+ \( \s* openadty_active(?:_init)? \s* \)/ix;
+    $active2_re = qr/^ \s+  $decl2_re/ix;
+    $active_re = $active2_re;
+    $decl_re = $decl2_re;
+}
+
+sub set_old {
+    $active_re = $active1_re;
+    $decl_re = $decl1_re;
+}
+
 sub xaifpp {
     my($line) = @_;
     my($scn) = FTscan->new($line);
@@ -16,8 +30,8 @@ sub xaifpp {
       use active_module
 U
     }
-    if($line =~ /^\s+real\(w2f__8\)\s+/i) {
-	$line =~s/real\(w2f__8\)/type(active) ::/i;
+    if($line =~ /$active_re/) {
+	$line =~s/$decl_re/type(active) ::/i;
 	return $line;
     }
     if($scn->match(qr/ __(?: value | deriv )__ $TB \( $TB/x)){

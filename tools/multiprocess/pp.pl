@@ -23,8 +23,12 @@ use PPsetup;
 use File::Basename;
 use Getopt::Long;
 
-my($forward) = 0;
-my($result) = GetOptions("forward" => \$forward);
+my($forward,$real) = (0,0);
+my($result) = GetOptions("forward" => \$forward,
+			 "real" => \$real);
+
+ADxaif::set_old() if ($real);
+
 
 my($infile) = $ARGV[0];
 my($name,$dir,$ext) = fileparse($infile,'\.[Ff]');
