@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.1 2003/08/01 15:59:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.2 2003/08/08 19:51:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -53,7 +53,6 @@ public:
     
     // xaif:ControlFlowGraph
     ELEM_CFG,
-    ATTR_CFGsubName, // subroutine_name
     
     // xaif:BasicBlock
     ELEM_BB,
@@ -63,9 +62,14 @@ public:
     ELEM_BBForLoop,
     ELEM_BBPreLoop,
     ELEM_BBPostLoop,
+
+    // xaif:BasicBlock statements
+    ELEM_Assign,
+    ELEM_SubCall,
+    ELEM_Nop,
     
     // Special tags
-    TAG_IRIds,     // Tags a colon-separated list of IR ids
+    TAG_IRIds,  // Tags a colon-separated list of IR ids
     
     NUM_STRINGS // Not a valid string!
   };
@@ -111,7 +115,6 @@ public:
   
   // xaif:ControlFlowGraph
   XMLCh*      elem_CFG_x() const { return x_strTbl[ELEM_CFG]; }
-  XMLCh*      attr_CFGsubName_x() const { return x_strTbl[ATTR_CFGsubName]; }
   
   // xaif:BasicBlock
   XMLCh*      elem_BB_x() const { return x_strTbl[ELEM_BB]; }
@@ -122,6 +125,11 @@ public:
   XMLCh*      elem_BBPreLoop_x() const { return x_strTbl[ELEM_BBPreLoop]; }
   XMLCh*      elem_BBPostLoop_x() const { return x_strTbl[ELEM_BBPostLoop]; }
 
+  // xaif:BasicBlock statements
+  XMLCh*      elem_Assign_x() const { return x_strTbl[ELEM_Assign]; }
+  XMLCh*      elem_SubCall_x() const { return x_strTbl[ELEM_SubCall]; }
+  XMLCh*      elem_Nop_x() const { return x_strTbl[ELEM_Nop]; }
+  
   // Special tags
   const char* tag_IRIds() const   { return c_strTbl[TAG_IRIds]; }
   XMLCh*      tag_IRIds_x() const { return x_strTbl[TAG_IRIds]; }

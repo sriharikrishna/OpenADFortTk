@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.1 2003/08/01 15:59:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.2 2003/08/08 19:51:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -52,7 +52,6 @@ const char* XAIFStringRepository::c_strTbl[] = {
 
   // xaif:ControlFlowGraph
   "xaif:ControlFlowGraph",
-  "subroutine_name",
 
   // xaif:BasicBlock
   "xaif:BasicBlock",
@@ -62,7 +61,12 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "xaif:ForLoop",
   "xaif:PreLoop",
   "xaif:PostLoop",
-
+  
+  // xaif:BasicBlock statements
+  "xaif:Assignment",
+  "xaif:SubroutineCall",
+  "xaif:Nop",
+  
   // Special tags
   "[WHIRLIDS]"
 };
