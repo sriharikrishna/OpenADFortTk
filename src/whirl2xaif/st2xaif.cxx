@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.37 2004/06/16 14:27:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.38 2004/06/17 13:33:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -362,14 +362,11 @@ whirl2xaif::xlate_ScalarizedRefTab(xml::ostream& xos,
 {
   if (!symtab) { return; }
   
-  // FIXME: *** may be active and non active non-scalar syms
-  
   for (ScalarizedRefTab_W2X::ScalarizedRefPoolTy::iterator it 
 	 = symtab->RefPoolBegin(); 
        it != symtab->RefPoolEnd(); ++it) {
     ScalarizedRef* sym = (*it);
     
-    // FIXME: need access to the WN to get type and determine activity
     WN* wn = sym->GetWN();
     TY_IDX ty = WN_Tree_Type(wn);
     const char* ty_str = TranslateTYToSymType(ty);

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.22 2004/04/28 15:24:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.23 2004/06/17 13:33:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1488,6 +1488,9 @@ TranslateTYToSymType(TY_IDX ty_idx)
       str = TranslateTYToSymType(ety_idx);
     }
   } 
+  else if (TY_kind(ty) == KIND_STRUCT) {
+    str = "opaque";
+  }  
   else if (TY_kind(ty) == KIND_FUNCTION) {
     str = "void";
   } 
@@ -1526,6 +1529,9 @@ TranslateTYToSymShape(TY_IDX ty_idx)
     }
 
   } 
+  else if (TY_kind(ty) == KIND_STRUCT) {
+    str = "scalar"; // FIXME
+  }  
   
   return str;
 }

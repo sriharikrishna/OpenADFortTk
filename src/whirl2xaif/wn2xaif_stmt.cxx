@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.36 2004/04/29 21:29:28 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.37 2004/06/17 13:33:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -736,9 +736,8 @@ whirl2xaif::status
 whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
 				 XlationContext& ctxt)
 {
-  // Handles all intrinsics that return a CHARACTER string; passes
-  // others to xlate_CALL.
-
+  // Handles all intrinsics that are translated into XAIF statements
+  
   WN   *arg_expr;
   TY_IDX arg_ty;
   INT  str_kid, length_kid, first_length_kid;
@@ -771,13 +770,16 @@ whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
 			   ctxt);
     }
     break;
-  case INTRN_CASSIGNSTMT:
-    xos << std::endl;
-    // arg 2 and 3: base of destination; length of base, respectively
-    WN2F_String_Argument(xos, WN_kid(wn,0), WN_kid(wn,2), ctxt);
-    xos << "=";
-    // arg 2 and 3: base of source; length of source, respectively
-    WN2F_String_Argument(xos, WN_kid(wn,1), WN_kid(wn,3), ctxt);
+
+  case INTRN_CASSIGNSTMT: 
+    // string assignment
+    // kid 0, 2: base of and length of destination; kid 1, 3: same, for source
+    //WN2F_String_Argument(xos, WN_kid(wn,0), WN_kid(wn,2), ctxt);
+    //WN2F_String_Argument(xos, WN_kid(wn,1), WN_kid(wn,3), ctxt);
+    xos << BegElem(XAIFStrings.elem_Marker()) 
+	<< Attr("statement_id", ctxt.GetNewVId())
+	<< BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+	<< " [cassignstmt]" << EndAttr << EndElem;
     break;
     
   case INTRN_STOP:
