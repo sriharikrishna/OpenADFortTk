@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.70 2004/06/29 16:57:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.71 2004/06/29 21:32:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1387,41 +1387,75 @@ AddControlFlowEndTags(WN* wn, WhirlParentMap* wnParentMap)
 // because when WHIRL is created from the new XAIF, we do not know how to
 // replace the deleted loop initialization node.]
 //
+// 3. Split basic blocks with EndLoop and EndBranch tags.  EndLoop and
+// EndBranch are taged statements inserted into WHIRL so that
+// corresponding CFG nodes will identify structured loops and
+// branches.  Since EndLoops and EndBranches must be mpty BBs we must
+// split any would in them into BasicBlocks.
+// 
 static void
 MassageOACFGIntoXAIFCFG(CFG* cfg)
 {
   IRInterface& irInterface = cfg->GetIRInterface();
 
+  typedef std::list< pair<DGraphNodeList::iterator, WN*> > MySplitList;
+
+  DGraphNodeList workList;  
+  MySplitList toSplit; // nodes to split
+  
   // -------------------------------------------------------
   // 1. Find BBs with conditionals and split them
   // -------------------------------------------------------
-  
-  // Iterate over BB nodes.  For each node with more than one
-  // statement, examine the statements.  If a conditional is found at
-  // the end of the BB, split it.  (The CFG iterator should handle the
-  // creation of new nodes in the middle of iteration.)
+
+  // a. Collect all BBs with more that one stmt into 'workList'
   for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
     CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
+    if ( (n->size() > 1) ) { 
+      workList.push_back(n);
+    }
+  }
+  
+  // b. Iterate over 'workList' nodes.  For each node examine the
+  // statements.  If a conditional is found at the end of the BB,
+  // split it.  A block will only need to be split at most once.
+  for (DGraphNodeList::iterator nodeIt = workList.begin(); 
+       nodeIt != workList.end(); ++nodeIt) {
+    CFG::Node* n = dynamic_cast<CFG::Node*>(*nodeIt);
     // n->longdump(cfg, std::cerr);
     
-    if (n->size() > 1) {
-      for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
-	StmtHandle stmt = (StmtHandle)stmtIt;
-	
-	IRStmtType ty = irInterface.GetStmtType(stmt);
-	if (ty == STRUCT_TWOWAY_CONDITIONAL
-	    || ty == USTRUCT_TWOWAY_CONDITIONAL_T
-	    || ty == USTRUCT_TWOWAY_CONDITIONAL_F
-	    || ty == STRUCT_MULTIWAY_CONDITIONAL
-	    || ty == USTRUCT_MULTIWAY_CONDITIONAL) {
-	  CFG::Node* newblock = cfg->splitBlock(n, stmt);
-	  cfg->connect(n, newblock, CFG::FALLTHROUGH_EDGE);
-	  break;
-	}
+    for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
+      StmtHandle stmt = (StmtHandle)stmtIt;
+      
+      IRStmtType ty = irInterface.GetStmtType(stmt);
+      if (ty == STRUCT_TWOWAY_CONDITIONAL
+	  || ty == USTRUCT_TWOWAY_CONDITIONAL_T
+	  || ty == USTRUCT_TWOWAY_CONDITIONAL_F
+	  || ty == STRUCT_MULTIWAY_CONDITIONAL
+	  || ty == USTRUCT_MULTIWAY_CONDITIONAL) {
+	toSplit.push_back(make_pair(nodeIt, (WN*)stmt));
+	break;
       }
     }
   }
-
+  
+  // c. Split blocks
+  for (MySplitList::iterator it = toSplit.begin(); 
+       it != toSplit.end(); ++it) {
+    DGraphNodeList::iterator nodeIt = (*it).first;
+    CFG::Node* n = dynamic_cast<CFG::Node*>(*nodeIt);
+    WN* startWN = (*it).second;
+    
+    CFG::Node* newblock = cfg->splitBlock(n, (StmtHandle)startWN);
+    cfg->connect(n, newblock, CFG::FALLTHROUGH_EDGE);
+    //n->longdump(cfg);
+    //newblock->longdump(cfg);
+  }
+  toSplit.clear();
+  
+  // d. clear 'workList'
+  workList.clear();
+  
+  
   // -------------------------------------------------------
   // 2. Recover OPR_DO_LOOPs
   // -------------------------------------------------------
@@ -1490,40 +1524,52 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
     delete n;
   }
   toRemove.clear();
-
+  
   
   // -------------------------------------------------------
   // 3. Split basic blocks with EndLoop and EndBranch tags
   // -------------------------------------------------------
   
-  // Note: some blocks will have to be split more than once.  E.g. 
-  //   EndBr
-  //   Assignment
-  //   EndLoop
+  // Notes:
+  //  - EndBranch statments will be the first or second statment
+  //   (switches) of a basic block; EndLoop at the end.
+  //  - Some blocks will have to be split more than once, requiring an
+  //    iterative algoritihm. E.g.
+  //      EndBr
+  //      Assignment
+  //      EndLoop
   
-  std::list< pair<CFG::Node*, WN*> > toSplit; // nodes to split
+  // uses 'workList'
+  // uses 'toSplit'
+  std::list<DGraphNodeList::iterator> toRem;
   
-  bool changed = true; // FIXME: this is really bad/inefficient
-  while (changed) {
-    changed = false;
-
-    // EndBranch statments will be the first or second statment
-    // (switches) of a basic block; EndLoop at the end.
-    for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
-      CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
+  // a. Collect all BBs with more that one stmt into 'workList'
+  for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
+    CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
+    if ( (n->size() > 1) ) { 
+      workList.push_back(n);
+    }
+  }
+  
+  // b. Iterate until 'workList' is empty (fixed-point is reached).  
+  // Each node in the worklist is guaranteed to have more than one stmt.
+  while (!workList.empty()) {
+    
+    for (DGraphNodeList::iterator nodeIt = workList.begin(); 
+	 nodeIt != workList.end(); ++nodeIt) {
+      CFG::Node* n = dynamic_cast<CFG::Node*>(*nodeIt);
       
-      if ( !(n->size() > 1) ) { 
-	continue;
-      }
-      
+      // 1. Find split-point for this node.  If there is none, remove it
+      // from 'workList'
     restart_loop:
+      
+      WN* bbSplitPointWN = NULL; // start of new basic block
       unsigned int stmtcount = 1;
       for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; 
 	   ++stmtIt, ++stmtcount) {
 	WN* wn = (WN*)((StmtHandle)stmtIt);
 	
 	const char* vty = GetCFGControlFlowVertexType(wn);
-	WN* startWN = NULL; // start of new basic block
 	if (vty == XAIFStrings.elem_BBEndBranch()) {
 	  // If EndBranch is not the first stmt, move it to the
 	  // beginning and restart the loop
@@ -1534,32 +1580,50 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
 	  }
 	  ++stmtIt; // advance iterator to find start of new basic block
 	  assert((bool)stmtIt);
-	  startWN = (WN*)((StmtHandle)stmtIt);
+	  bbSplitPointWN = (WN*)((StmtHandle)stmtIt);
+	  break;
 	}
 	else if (vty == XAIFStrings.elem_BBEndLoop()) {
-	  startWN = wn;
-	}
-	
-	if (startWN) { // delay so we don't break iteration
-	  toSplit.push_back(make_pair(n, startWN));	  
+	  bbSplitPointWN = wn;
 	  break;
 	}
       }
+      
+      if (bbSplitPointWN) {
+	toSplit.push_back(make_pair(nodeIt, bbSplitPointWN));
+      } else {
+	toRem.push_back(nodeIt);
+      }
     }
-    
-    // Split basic blocks
-    for (std::list< pair<CFG::Node*, WN*> >::iterator it = toSplit.begin();
+        
+    // 2. Split basic blocks
+    for (MySplitList::iterator it = toSplit.begin(); 
 	 it != toSplit.end(); ++it) {
-      changed = true;
-      CFG::Node* n = (*it).first;
+      DGraphNodeList::iterator nodeIt = (*it).first;
+      CFG::Node* n = dynamic_cast<CFG::Node*>(*nodeIt);
       WN* startWN = (*it).second;
       
       CFG::Node* newblock = cfg->splitBlock(n, (StmtHandle)startWN);
       cfg->connect(n, newblock, CFG::FALLTHROUGH_EDGE);
       //n->longdump(cfg);
       //newblock->longdump(cfg);
+
+      // Remove BBs with less than 1 stmt; add others
+      if (newblock->size() > 1) {
+	workList.push_back(newblock);
+      }
+      if ( !(n->size() > 1) ) {
+	toRem.push_back(nodeIt);
+      }
     }
     toSplit.clear();
+
+    // 3. Remove nodes from 'workList'
+    for (std::list<DGraphNodeList::iterator>::iterator it = toRem.begin(); 
+	 it != toRem.end(); ++it) {
+      workList.erase(*it); // *it is type DGraphNodeList::iterator
+    }
+    toRem.clear();
   }
   
 }
