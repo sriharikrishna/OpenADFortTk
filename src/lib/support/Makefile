@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.12 2004/05/11 17:48:33 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.13 2004/06/01 22:21:26 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -35,6 +35,7 @@ OBJS = \
 	IntrinsicXlationTable.o \
 	Pro64IRInterface.o \
 	SymTab.o \
+	ScalarizedRefTab.o \
 	WhirlGlobalStateUtils.o \
 	WhirlIDMaps.o \
 	WhirlIO.o \
