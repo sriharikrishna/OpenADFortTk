@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.4 2003/05/20 23:28:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.5 2003/05/21 18:21:38 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -78,8 +78,6 @@
 //************************** Open64 Include Files ***************************
 
 #include "Open64BasicTypes.h" /* Open64 basic types */
-#include "wio.h"
-#include "wutil.h"
 
 //*************************** User Include Files ****************************
 

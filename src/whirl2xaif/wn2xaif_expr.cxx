@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.5 2003/05/20 23:28:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.6 2003/05/21 18:21:38 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -68,7 +68,7 @@
 
 //************************** Open64 Include Files ***************************
 
-#include "intrn_info.h"          /* INTR macros */
+#include "Open64BasicTypes.h"
 
 //*************************** User Include Files ****************************
 

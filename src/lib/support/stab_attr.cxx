@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.cxx,v 1.2 2003/05/14 01:10:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.cxx,v 1.3 2003/05/21 18:21:38 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -63,7 +63,6 @@
  */
 
 #include "Open64BasicTypes.h"
-#include "const.h"
 
 #include "stab_attr.h"
 #include "whirl2f_common.h"

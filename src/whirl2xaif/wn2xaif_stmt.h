@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.4 2003/05/20 22:50:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.5 2003/05/21 18:21:38 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -74,7 +74,7 @@
 extern BOOL WN2F_Skip_Stmt(WN *stmt);
 
 extern WN2F_STATUS 
-WN2F_block(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+xlate_BLOCK(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
 WN2F_region(xml::ostream& xos, WN *wn, XlationContext& ctxt);
@@ -83,34 +83,34 @@ extern WN2F_STATUS
 WN2F_compgoto(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
-WN2F_do_loop(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+xlate_DO_LOOP(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
 WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
-WN2F_do_while(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+xlate_DO_WHILE(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
-WN2F_while_do(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+xlate_WHILE_DO(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
-WN2F_if(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+xlate_IF(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
-WN2F_goto(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
 WN2F_agoto(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
-WN2F_condbr(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+xlate_condBR(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
-WN2F_return(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+xlate_RETURN(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
-WN2F_return_val(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+xlate_RETURN_VAL(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
 xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt);

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.6 2003/05/20 23:28:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.7 2003/05/21 18:21:38 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -141,34 +141,33 @@ xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 #define NUMBER_OF_OPERATORS (OPERATOR_LAST + 1)
 static XlateWNHandlerFunc XlateWN_HandlerTable[NUMBER_OF_OPERATORS];
 
-
-typedef struct WN2F_Opr_Handler
+struct WN2F_OPR_HANDLER
 {
   OPERATOR          opr;
   XlateWNHandlerFunc  handler;
-} WN2F_OPR_HANDLER;
+};
 
 #define NUMBER_OF_OPR_HANDLERS \
    (sizeof(WN2F_Opr_Handler_List) / sizeof(WN2F_OPR_HANDLER))
 
 static const WN2F_OPR_HANDLER WN2F_Opr_Handler_List[] = {
   {OPR_FUNC_ENTRY, &xlate_FUNC_ENTRY},
-  {OPR_BLOCK, &WN2F_block},
+  {OPR_BLOCK, &xlate_BLOCK},
   {OPR_REGION, &WN2F_region},
-  {OPR_REGION_EXIT, &WN2F_goto},
-  /* {OPR_SWITCH, &WN2F_switch}, Not a Fortran construct! */
+  {OPR_REGION_EXIT, &xlate_GOTO},
+  {OPR_SWITCH, &WN2F_switch},
   {OPR_COMPGOTO, &WN2F_compgoto},
-  {OPR_DO_LOOP, &WN2F_do_loop},
-  {OPR_DO_WHILE, &WN2F_do_while},
-  {OPR_WHILE_DO, &WN2F_while_do},
-  {OPR_IF, &WN2F_if},
-  {OPR_GOTO, &WN2F_goto},
+  {OPR_DO_LOOP, &xlate_DO_LOOP},
+  {OPR_DO_WHILE, &xlate_DO_WHILE},
+  {OPR_WHILE_DO, &xlate_WHILE_DO},
+  {OPR_IF, &xlate_IF},
+  {OPR_GOTO, &xlate_GOTO},
   {OPR_AGOTO, &WN2F_agoto},
   {OPR_ALTENTRY, &xlate_ALTENTRY},
-  {OPR_FALSEBR, &WN2F_condbr},
-  {OPR_TRUEBR, &WN2F_condbr},
-  {OPR_RETURN, &WN2F_return},
-  {OPR_RETURN_VAL, &WN2F_return_val},
+  {OPR_FALSEBR, &xlate_condBR},
+  {OPR_TRUEBR, &xlate_condBR},
+  {OPR_RETURN, &xlate_RETURN},
+  {OPR_RETURN_VAL, &xlate_RETURN_VAL},
   {OPR_LABEL, &xlate_LABEL},
   {OPR_ISTORE, &xlate_ISTORE},
   {OPR_PSTORE, &WN2F_pstore},   
@@ -444,14 +443,14 @@ WN2F_STATUS
 whirl2xaif::xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // Warn about opcodes we cannot translate, but keep translating.
-  ASSERT_WARN(FALSE,
-	      (DIAG_W2F_CANNOT_HANDLE_OPC, WN_opc_name(wn), WN_opcode(wn)));
+  OPERATOR opr = WN_opc_operator(wn);
+  ASSERT_WARN(FALSE, (DIAG_W2F_CANNOT_HANDLE_OPC, OPERATOR_name(opr), opr));
   
-  xos << BegElem(WN_opc_name(wn)) << EndElem; // FIXME: error to stderr
+  xos << BegComment << "*** Unknown WHIRL operator: " << OPERATOR_name(opr)
+      << " ***" << EndComment;
   
   return EMPTY_WN2F_STATUS;
 }
-
 
 //***************************************************************************
 // 
@@ -780,7 +779,6 @@ ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
 
 /* just used to maintain the state of the recursions when */
 /* marking FLDs in nested addresses                       */
-
 class LOC_INFO {
 
 private:
@@ -814,12 +812,10 @@ LOC_INFO::WN2F_Find_And_Mark_Nested_Address(WN * addr)
   /* corresponding OPC_ARRAY. TY2F_Translate_Fld_Path will  */
   /* write the subscript list.                              */
 
-
   /* In general, just the lowest LDID/LDA remains to be     */
   /* processed, however if the lowest ARRAY node is not a   */
   /* fld, and belongs to the address ST, then return that   */
   /* ARRAY.                                                 */
-
   OPERATOR opr = WN_operator(addr);
   switch (opr)
   {
@@ -903,26 +899,24 @@ WN2F_Sum_Offsets(WN *addr)
 {
   /* Accumulate any offsets (ADDs) in this address   */
   /* tree. Used for computing Fld paths              */
-
   BOOL sum = 0;
 
-  switch (WN_operator(addr))
-  {
-    case OPR_ARRAY: 
-    case OPR_ARRAYEXP:
-    case OPR_ARRSECTION:
-   if (WN_operator(addr)==OPR_ARRAYEXP)
-       addr = WN_kid0(addr);
-
+  switch (WN_operator(addr)) {
+  case OPR_ARRAY: 
+  case OPR_ARRAYEXP:
+  case OPR_ARRSECTION:
+    if (WN_operator(addr)==OPR_ARRAYEXP)
+      addr = WN_kid0(addr);
+    
     sum += WN2F_Sum_Offsets(WN_kid0(addr));
     break;
-
-    case OPR_ADD:
+    
+  case OPR_ADD:
     sum += WN2F_Sum_Offsets(WN_kid0(addr));
     sum += WN2F_Sum_Offsets(WN_kid1(addr));
     break;
-
-    case OPR_INTCONST:
+    
+  case OPR_INTCONST:
     sum = WN_const_val(addr);
     break;
   }

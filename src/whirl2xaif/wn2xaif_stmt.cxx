@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.5 2003/05/20 23:28:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.6 2003/05/21 18:21:38 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -78,11 +78,8 @@
 //************************** Open64 Include Files ***************************
 
 #include "Open64BasicTypes.h" /* Open64 basic types */
-#include "const.h"            /* For FOR_ALL_CONSTANTS */
 #include "pf_cg.h"
 #include "region_util.h"      /* For RID and RID_map */
-#include "be_symtab.h"
-#include "intrn_info.h"       /* INTR macros */     
 
 //*************************** User Include Files ****************************
 
@@ -111,26 +108,13 @@ extern WN_MAP *W2F_Construct_Map;   /* Defined in w2f_driver.c */
 
 //***************************************************************************
 
-/*----------------- Call and return site utilities --------------------*/
-/*---------------------------------------------------------------------*/
-
 /* Lists of return and call sites for the current PU,
- * initialized by means of "PUinfo.h" facilities.
- */
+ * initialized by means of "PUinfo.h" facilities. */
 static RETURNSITE *WN2F_Next_ReturnSite = NULL;
 
-/*-------- The initializers and handlers statement translation --------*/
-/*---------------------------------------------------------------------*/
 
-BOOL 
-WN2F_Skip_Stmt(WN *stmt)
-{
-  return FALSE; // REMOVE
-}
-
-
-// find and emit any COMMONS that are initialized.
-// used by WN2F_Append_Block_Data below.
+// Find and emit any COMMONS that are initialized.
+//   For_all(St_Table,GLOBAL_SYMTAB,WN2F_emit_commons(xos));
 struct WN2F_emit_commons {
 public:
   WN2F_emit_commons(xml::ostream& xos_) : xos(xos_) { }
@@ -139,7 +123,7 @@ public:
   {
     //XlationContext& ctxt1 = ctxt; // FIXME (bug in gcc 3.0.4 it seems)
     if (ST_sclass(st) == SCLASS_DGLOBAL) {
-      if(ST_is_initialized(st))  {
+      if (ST_is_initialized(st))  {
 	if (!Has_Base_Block(st) || ST_class(ST_base_idx(st)) == CLASS_BLOCK) {
 	  TranslateSTDecl(xos, st, ctxt);
 	}
@@ -152,681 +136,284 @@ private:
   XlationContext ctxt;//FIXME
 };
 
-// Create a BLOCK DATA if any COMMONs in the global symbol
-// table are initialized. BLOCK DATA names are lost, but
-// that's ok - all (global) initializations that appeared
-// in the file are here.
-
-// REMOVE
-void
-WN2F_Append_Block_Data(xml::ostream& tokens)
-{
-#if 0//FIXME
-  xml::ostream& Decl_Stmt_Tokens;
-
-  Decl_Stmt_Tokens = New_Token_Buffer() ;
-  Data_Stmt_Tokens = New_Token_Buffer() ;
-  PUinfo_local_decls = New_Token_Buffer() ;
-
-  For_all(St_Table,GLOBAL_SYMTAB,WN2F_emit_commons(Decl_Stmt_Tokens)) ;
-
-  if (!Is_Empty_Token_Buffer(Decl_Stmt_Tokens)) 
-    {
-      Append_F77_Indented_Newline(tokens, 1, NULL);
-      Append_Token_String(tokens, "BLOCK DATA");
-
-# if 0
-      Append_F77_Indented_Newline(tokens, 1, NULL);
-      Append_Token_String(tokens, "IMPLICIT NONE");
-# endif
-
-      xos << "**** Variables ****\n"; //COMMENT
-      Append_F77_Indented_Newline(tokens, 1, NULL);
-      Append_And_Reclaim_Token_List(tokens, &Decl_Stmt_Tokens);
-
-      Append_And_Reclaim_Token_List(tokens,&PUinfo_local_decls);
-  
-      if (!Is_Empty_Token_Buffer(Data_Stmt_Tokens)) {
-	xos << "**** statements ****\n";//COMMENT
-	Append_And_Reclaim_Token_List(tokens, &Data_Stmt_Tokens);
-      }
-
-      Append_F77_Indented_Newline(tokens, 1, NULL) ;
-      Append_Token_String(tokens, "END") ;
-      Append_Token_Special(tokens, '\n');
-    }
-#endif
-}
-
+//***************************************************************************
+// 
+//***************************************************************************
 
 WN2F_STATUS 
-WN2F_block(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_BLOCK(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  WN          *stmt;
-  WN          *induction_step = NULL;
-  const BOOL   is_pu_block = ctxt.IsNewPU();
-  const BOOL   add_induction_step = XlationContext_insert_induction(ctxt);
-  
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_BLOCK, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_block"));
-  
-  // FIXME: This is not currently called
-  std::ostringstream xos_stmtstr;
-  xml::ostream xos_stmt(xos_stmtstr.rdbuf());
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_BLOCK"));
 
-  if (add_induction_step) {
-    induction_step = XlationContext_induction_stmt(ctxt);
-    reset_XlationContext_induction_step(ctxt);
-  }
+  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
   
-  if (is_pu_block) {
-    //FIXME: WN2F_Enter_PU_Block();
-    ctxt.ResetNewPU();
-  }
-  
-  /* Translate statements and determine variable usage */
-  for (stmt = WN_first(wn); stmt != NULL; stmt = WN_next(stmt)) {
-    if (!WN2F_Skip_Stmt(stmt)) {
-      if (induction_step != NULL && WN_next(stmt) == NULL 
-	  && WN_operator(stmt) == OPR_LABEL) {
-	/* Add induction step before loop-label */
-	TranslateWN(xos_stmt, induction_step, ctxt);
-	induction_step = NULL;
-      }
-      TranslateWN(xos_stmt, stmt, ctxt);
-    }
-  }
-  
-  /* Append the induction-step as the last statement in the block */
-  if (induction_step != NULL)
-    TranslateWN(xos_stmt, induction_step, ctxt);
-  
-  if (is_pu_block) {
-    //FIXME WN2F_Exit_PU_Block(xos, xos_stmt);
-  } else {
-    xos << xos_stmtstr.str();
-  }
   return EMPTY_WN2F_STATUS;
-} /* WN2F_block */
+}
 
+BOOL WN2F_Skip_Stmt(WN *wn) { return FALSE; /* FIXME */ }
 
 WN2F_STATUS 
 WN2F_region(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   /* Emit region #pragma, the WN_region_pragmas(wn), and the 
-    * WN_region_body(wn).
-    */
-   WN  *stmt;
-   RID *rid;
-   BOOL good_rid; 
-   
-   Is_True(WN_operator(wn) == OPR_REGION, 
-	   ("Invalid operator for WN2F_region()"));
-
-   Is_True(WN_operator(WN_region_body(wn)) == OPR_BLOCK, 
-	   ("Expected OPR_BLOCK as body of OPR_REGION in WN2F_region()"));
-
-   good_rid = RID_map >= 0;
-   if (good_rid) 
-     rid = (RID *)WN_MAP_Get(RID_map, wn);
-   if (W2F_Emit_All_Regions ||
-       (!W2F_No_Pragmas && good_rid && 
-        (rid == NULL          ||              /* == RID_TYPE_pragma */
-         RID_type(rid) == RID_TYPE_pragma)))  /* User defined region */
-   {
-     xos << "C*$*" << std::endl;
-     xos << "REGION BEGIN";
-
-     set_XlationContext_explicit_region(ctxt);
-
-      if (!W2F_No_Pragmas)
-         WN2F_pragma_list_begin(xos, 
-                                WN_first(WN_region_pragmas(wn)),
-                                ctxt);
-
-      for (stmt = WN_first(WN_region_body(wn));
-	   stmt != NULL;
-	   stmt = WN_next(stmt))
-      {
-	 if (!WN2F_Skip_Stmt(stmt))
-	   TranslateWN(xos, stmt, ctxt);
-      }
-
-      if (!W2F_No_Pragmas)
-         WN2F_pragma_list_end(xos,
-                              WN_first(WN_region_pragmas(wn)),
-                              ctxt);
-
-      xos << "C*$*" << std::endl;
-      xos << "REGION END";
-
-   }
-   else
-   {
-      reset_XlationContext_explicit_region(ctxt);
-
-      /* Emit the pragmas that are associated with regions and that have
-       * a corresponding pragma in the source language.
-       */
-      if (!W2F_No_Pragmas)
-         WN2F_pragma_list_begin(xos, 
-                                WN_first(WN_region_pragmas(wn)),
-                                ctxt);
-
-      /* Emit the body of the region, making the actual region 
-       * markings and associated pragmas completely transparent.
-       */
-      for (stmt = WN_first(WN_region_body(wn));
-	   stmt != NULL;
-	   stmt = WN_next(stmt))
-      {
-	 if (!WN2F_Skip_Stmt(stmt))
-	    (void)TranslateWN(xos, stmt, ctxt);
-      }
-
-      /* Close the region, if necessary, based on the kind of region
-       * we have as determined by the first pragma in the list.
-       */
-      if (!W2F_No_Pragmas)
-         WN2F_pragma_list_end(xos,
-                              WN_first(WN_region_pragmas(wn)),
-                              ctxt);
-   } /* if emit pragma */
-
-   return EMPTY_WN2F_STATUS;
+  /* Emit region #pragma, the WN_region_pragmas(wn), and the 
+   * WN_region_body(wn). */
+  WN  *stmt;
+  RID *rid;
+  BOOL good_rid; 
+  
+  Is_True(WN_operator(wn) == OPR_REGION, 
+	  ("Invalid operator for WN2F_region()"));  
+  Is_True(WN_operator(WN_region_body(wn)) == OPR_BLOCK, 
+	  ("Expected OPR_BLOCK as body of OPR_REGION in WN2F_region()"));
+  
+  good_rid = RID_map >= 0;
+  if (good_rid) 
+    rid = (RID *)WN_MAP_Get(RID_map, wn);
+  if (W2F_Emit_All_Regions ||
+      (!W2F_No_Pragmas && good_rid && 
+       (rid == NULL          ||              /* == RID_TYPE_pragma */
+	RID_type(rid) == RID_TYPE_pragma))) { /* User defined region */
+    xos << "C*$*" << std::endl;
+    xos << "REGION BEGIN";
+    
+    set_XlationContext_explicit_region(ctxt);
+    
+    if (!W2F_No_Pragmas)
+      WN2F_pragma_list_begin(xos, WN_first(WN_region_pragmas(wn)), ctxt);
+    
+    for (stmt = WN_first(WN_region_body(wn));
+	 stmt != NULL;
+	 stmt = WN_next(stmt)) {
+      if (!WN2F_Skip_Stmt(stmt))
+	TranslateWN(xos, stmt, ctxt);
+    }
+    
+    if (!W2F_No_Pragmas)
+      WN2F_pragma_list_end(xos, WN_first(WN_region_pragmas(wn)), ctxt);
+    
+    xos << "C*$*" << std::endl;
+    xos << "REGION END";
+  } else {
+    reset_XlationContext_explicit_region(ctxt);
+    
+    /* Emit the pragmas that are associated with regions and that have
+     * a corresponding pragma in the source language. */
+    if (!W2F_No_Pragmas)
+      WN2F_pragma_list_begin(xos, WN_first(WN_region_pragmas(wn)), ctxt);
+    
+    /* Emit the body of the region, making the actual region 
+     * markings and associated pragmas completely transparent. */
+    for (stmt = WN_first(WN_region_body(wn));
+	 stmt != NULL;
+	 stmt = WN_next(stmt)) {
+      if (!WN2F_Skip_Stmt(stmt))
+	TranslateWN(xos, stmt, ctxt);
+    }
+    
+    /* Close the region, if necessary, based on the kind of region
+     * we have as determined by the first pragma in the list. */
+    if (!W2F_No_Pragmas)
+      WN2F_pragma_list_end(xos, WN_first(WN_region_pragmas(wn)), ctxt);
+  } /* if emit pragma */
+  
+  return EMPTY_WN2F_STATUS;
 } /* WN2F_region */
 
 
 WN2F_STATUS 
 WN2F_compgoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   WN         *goto_stmt;
-   INT32       goto_entry;
-   const char *label_num;
-
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_COMPGOTO, 
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_compgoto"));
-   ASSERT_DBG_FATAL(WN_operator(WN_compgoto_table(wn)) == OPR_BLOCK,
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN_compgoto_table"));
-
-   /* Calculate the computed goto for the given cases */
-   if (WN_compgoto_num_cases(wn) > 0)
-   {
-     xos << std::endl << "GO TO(";
-      goto_stmt = WN_first(WN_compgoto_table(wn));
-      for (goto_entry = 0;
-	   goto_entry < WN_compgoto_num_cases(wn); 
-	   goto_entry++)
-      {
-	 ASSERT_DBG_FATAL(WN_operator(goto_stmt) == OPR_GOTO,
-			  (DIAG_W2F_UNEXPECTED_OPC, "COMPGOTO entry"));
-	 label_num = WHIRL2F_number_as_name(WN_label_number(goto_stmt));
-	 xos << label_num;
-	 if (goto_entry+1 < WN_compgoto_num_cases(wn))
-	   xos << ',';
-	 goto_stmt = WN_next(goto_stmt);
-      }
-      xos << "),";
-
-      /* Need to add one to the controlling expression, since it is
-       * zero-based in WHIRL and 1-based in Fortran.
-       */
-      TranslateWN(xos, WN_compgoto_idx(wn), ctxt);
-      xos << "+1";
-   }
-
-   /* Handle the default case as just a regular goto statement */
-   if (WN_compgoto_has_default_case(wn))
-      WN2F_goto(xos, WN_kid(wn,2), ctxt);
-
-   return EMPTY_WN2F_STATUS;
+  WN         *goto_stmt;
+  
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_COMPGOTO, 
+		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_compgoto"));
+  ASSERT_DBG_FATAL(WN_operator(WN_compgoto_table(wn)) == OPR_BLOCK,
+		   (DIAG_W2F_UNEXPECTED_OPC, "WN_compgoto_table"));
+  
+  /* Calculate the computed goto for the given cases */
+  if (WN_compgoto_num_cases(wn) > 0) {
+    xos << std::endl << "GO TO(";
+    goto_stmt = WN_first(WN_compgoto_table(wn));
+    for (INT32 goto_entry = 0;
+	 goto_entry < WN_compgoto_num_cases(wn); 
+	 goto_entry++) {
+      ASSERT_DBG_FATAL(WN_operator(goto_stmt) == OPR_GOTO,
+		       (DIAG_W2F_UNEXPECTED_OPC, "COMPGOTO entry"));
+      const char* label_num = WHIRL2F_number_as_name(WN_label_number(goto_stmt));
+      xos << label_num;
+      if (goto_entry+1 < WN_compgoto_num_cases(wn))
+	xos << ',';
+      goto_stmt = WN_next(goto_stmt);
+    }
+    xos << "),";
+    
+    /* Need to add one to the controlling expression, since it is
+     * zero-based in WHIRL and 1-based in Fortran.
+     */
+    TranslateWN(xos, WN_compgoto_idx(wn), ctxt);
+    xos << "+1";
+  }
+  
+  /* Handle the default case as just a regular goto statement */
+  if (WN_compgoto_has_default_case(wn))
+    xlate_GOTO(xos, WN_kid(wn,2), ctxt);
+  
+  return EMPTY_WN2F_STATUS;
 } /* WN2F_compgoto */
 
 
 WN2F_STATUS 
-WN2F_do_loop(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_DO_LOOP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-#if 0 // REMOVE
-   /* It is somewhat complicated to always translate this correctly
-    * back to Fortran, dependent on the form of the test-for-termination
-    * and the idx-variable-increment expressions.  When we deem it too
-    * complicated to be coped with, we generate a DO WHILE expression 
-    * instead.  This is an area we can probably always improve with more
-    * work.
-    */
-   STAB_OFFSET    idx_ofst;
-   ST            *idx_var;
-   WN            *step_size;
-   DO_LOOP_BOUND *bound;
-   WN            *loop_info;
-   
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_DO_LOOP,
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_do_loop"));
-   ASSERT_DBG_FATAL(WN_operator(WN_start(wn)) == OPR_STID,
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN_start"));
-   ASSERT_DBG_FATAL(WN_operator(WN_do_body(wn)) == OPR_BLOCK,
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN_do_body"));
-
-
-   loop_info = WN_do_loop_info(wn);
-
-   /* Whether or not we can generate a DO loop depends on the forms
-    * of WN_end(wn) and WN_step(wn), so the first thing we need to
-    * do is to accumulate some information about these.
-    */
-   idx_var = WN_st(WN_index(wn));
-   idx_ofst = WN_idname_offset(WN_index(wn));
-   step_size = WN2F_Get_DoLoop_StepSize(WN_step(wn), idx_var, idx_ofst);
-   bound = WN2F_Get_DoLoop_Bound(WN_end(wn), idx_var, idx_ofst, step_size);
-   
-   if (bound != NULL)
-   {
-      /* Generate a DO LOOP statement */
-     xos << std::endl << "DO";
-      //REMOVE set_XlationContext_emit_stid(ctxt);
-      if (!XlationContext_no_newline(ctxt))
-      {
-	 set_XlationContext_no_newline(ctxt);
-	 (void)TranslateWN(xos, WN_start(wn), ctxt);
-	 reset_XlationContext_no_newline(ctxt);
-      }
-      else
-      {
-	 (void)TranslateWN(xos, WN_start(wn), ctxt);
-      }
-      //REMOVE reset_XlationContext_emit_stid(ctxt);
-      xos << ',';
-
-      TranslateWN(xos, bound, ctxt); // WN2F_Translate_DoLoop_Bound(...)
-      xos << ',';
-
-      TranslateWN(xos, step_size, ctxt);
-      TranslateWN(xos, WN_do_body(wn), ctxt);
-      xos << std::endl << "END DO";
-   }
-   else /* Generate a DO WHILE loop */
-   {
-      (void)TranslateWN(xos, WN_start(wn), ctxt);
-      xos << std::endl << "DO WHILE(";
-      set_XlationContext_has_logical_arg(ctxt);
-      set_XlationContext_no_parenthesis(ctxt);
-      (void)TranslateWN(xos, WN_end(wn), ctxt);
-      reset_XlationContext_no_parenthesis(ctxt);
-      reset_XlationContext_has_logical_arg(ctxt);
-      xos << ')';
-
-      set_XlationContext_induction_step(ctxt, WN_step(wn));
-      (void)TranslateWN(xos, WN_do_body(wn), ctxt);
-
-      xos << std::endl;
-      xos << std::endl << "END DO";
-   }
-#endif
-   return EMPTY_WN2F_STATUS;
-} /* WN2F_do_loop */
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_DO_LOOP,
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_DO_LOOP"));
+  
+  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
+  
+  return EMPTY_WN2F_STATUS;
+}
 
 
 WN2F_STATUS 
 WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   /* This is a fortran implied do_loop, which can only occur as an
-    * an OPR_IO_ITEM.  We should always be able to regenerate
-    * an implied do-loop from this WHIRL tree, and we should safely
-    * be able to assert that XlationContext_io_stmt is TRUE.  Strictly
-    * speaking this can be viewed as an expression, rather than as a
-    * statement, but due to the commonality with regular do-loops
-    * we handle it in this module.
-    */
-   INT   kid;
-   BOOL  emitted;
-   ST   *idx_name;
-   
-   ASSERT_DBG_FATAL(XlationContext_io_stmt(ctxt) &&
-		    XlationContext_no_newline(ctxt),
-		    (DIAG_W2F_UNEXPECTED_CONTEXT, "WN2F_implied_do"));
-
-   /* Start an implied do-loop expression */
-   xos << '(';
-
-   /* Generate all the expression trees, separated by commas */
-   for (kid = 4; kid < WN_kid_count(wn); kid++) {
-     emitted = xlate_IO_ITEM(xos, WN_kid(wn, kid), ctxt);
-     if (emitted)
-       xos << ",";
-   }
-
-   /* Generate the loop expression */
-   idx_name = WN_st(WN_index(wn));
-   WN2F_Offset_Symref(xos, idx_name,                      /* base-symbol */
-		      Stab_Pointer_To(ST_type(idx_name)), /* base-type */
-		      ST_type(idx_name),                  /* object-type */
-		      0,                                  /* object-ofst */
-		      ctxt);
-   xos << '=';
-   TranslateWN(xos, WN_start(wn), ctxt);
-   xos << ',';
-   TranslateWN(xos, WN_end(wn), ctxt);
-   xos << ',';
-   TranslateWN(xos, WN_step(wn), ctxt);
-   
-   /* Terminate the implied do-loop expression */
-   xos << ')';
-   
-   return EMPTY_WN2F_STATUS;
+  ASSERT_DBG_FATAL(XlationContext_io_stmt(ctxt) &&
+		   XlationContext_no_newline(ctxt),
+		   (DIAG_W2F_UNEXPECTED_CONTEXT, "WN2F_implied_do"));
+  
+  /* This is a fortran implied do_loop, which can only occur as an
+   * an OPR_IO_ITEM.  We should always be able to regenerate
+   * an implied do-loop from this WHIRL tree, and we should safely
+   * be able to assert that XlationContext_io_stmt is TRUE.  Strictly
+   * speaking this can be viewed as an expression, rather than as a
+   * statement, but due to the commonality with regular do-loops
+   * we handle it in this module.
+   */
+  
+  /* Start an implied do-loop expression */
+  xos << '(';
+  
+  /* Generate all the expression trees, separated by commas */
+  for (INT kid = 4; kid < WN_kid_count(wn); kid++) {
+    BOOL emitted = xlate_IO_ITEM(xos, WN_kid(wn, kid), ctxt);
+    if (emitted)
+      xos << ",";
+  }
+  
+  /* Generate the loop expression */
+  ST* idx_name = WN_st(WN_index(wn));
+  WN2F_Offset_Symref(xos, idx_name,                      /* base-symbol */
+		     Stab_Pointer_To(ST_type(idx_name)), /* base-type */
+		     ST_type(idx_name),                  /* object-type */
+		     0,                                  /* object-ofst */
+		     ctxt);
+  xos << '=';
+  TranslateWN(xos, WN_start(wn), ctxt);
+  xos << ',';
+  TranslateWN(xos, WN_end(wn), ctxt);
+  xos << ',';
+  TranslateWN(xos, WN_step(wn), ctxt);
+  
+  /* Terminate the implied do-loop expression */
+  xos << ')';
+  
+  return EMPTY_WN2F_STATUS;
 } /* WN2F_implied_do */
 
 
 WN2F_STATUS 
-WN2F_do_while(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_DO_WHILE(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   const char *tmpvar_name;
-   UINT        tmpvar_idx;
-   TY_IDX      logical_ty;
-   
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_DO_WHILE,
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_do_while"));
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_DO_WHILE,
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_DO_WHILE"));
 
-   /* The base-type of the logical expression.  Note that TY_is_logical()
-    * will only hold true when the TY is resolved from a WN_ty or ST_ty
-    * attribute, not when it is resolved from an MTYPE (descriptor or
-    * result type).
-    */
-   logical_ty = WN_Tree_Type(WN_while_test(wn));
-   
-
-   xos << std::endl;
-   xos << "whirl2f:: DO loop with termination test after first iteration\n";
-   // Comment
-
-   /* termination test initialization (in temporary variable) */
-   tmpvar_idx = Stab_Lock_Tmpvar(logical_ty, &ST2F_Declare_Tempvar);
-   tmpvar_name = W2CF_Symtab_Nameof_Tempvar(tmpvar_idx);
-   Append_Token_String(xos, tmpvar_name);
-   xos << "=";
-   xos << ".TRUE.";
-   
-   /* loop header */
-   xos << std::endl;
-   xos << "DO WHILE(" << tmpvar_name << ')';
-
-   /* loop body and termination test initialization (in temporary variable) */
-   (void)TranslateWN(xos, WN_while_body(wn), ctxt);
-   xos << std::endl;
-   Append_Token_String(xos, tmpvar_name);
-   xos << "=";
-   set_XlationContext_has_logical_arg(ctxt);
-   (void)TranslateWN(xos, WN_while_test(wn), ctxt);
-   reset_XlationContext_has_logical_arg(ctxt);
-
-   /* Close the loop and allow reuse of the termination test 
-    * temporary variable.
-    */
-   xos << std::endl;
-   xos << "END DO";
-   Stab_Unlock_Tmpvar(tmpvar_idx);
-
-   return EMPTY_WN2F_STATUS;
-} /* WN2F_do_while */
+  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
+  
+  return EMPTY_WN2F_STATUS;
+}
 
 
 WN2F_STATUS 
-WN2F_while_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_WHILE_DO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_WHILE_DO,
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_while_do"));
-
-   /* Termination test */
-   xos << std::endl << "DO WHILE(";
-   set_XlationContext_has_logical_arg(ctxt);
-   TranslateWN(xos, WN_while_test(wn), ctxt);
-   reset_XlationContext_has_logical_arg(ctxt);
-   xos << ')';
-
-   /* loop body */
-   TranslateWN(xos, WN_while_body(wn), ctxt);
-
-   /* close the loop */
-   xos << std::endl << "END DO";
-
-   return EMPTY_WN2F_STATUS;
-} /* WN2F_while_do */
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_WHILE_DO,
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_WHILE_DO"));
+  
+  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
+  
+  return EMPTY_WN2F_STATUS;
+}
 
 
 WN2F_STATUS 
-WN2F_if(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_IF(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_IF,
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_if"));
-
-   /* Ignore if-guards inserted by lno, since these are redundant
-    * in High WHIRL.
-    */
-   if (WN_Is_If_Guard(wn)) {
-     /* Emit only the THEN body, provided it is non-empty */
-     if (WN_operator(WN_then(wn)) != OPR_BLOCK || 
-	 WN_first(WN_then(wn)) != NULL) {
-       TranslateWN(xos, WN_then(wn), ctxt);
-     }
-   } else { /* Not a redundant guard (from whirl2f perspective) */
-     /* IF header */
-     xos << std::endl;
-     xos << "IF(";
-     set_XlationContext_has_logical_arg(ctxt);
-     TranslateWN(xos, WN_if_test(wn), ctxt);
-     reset_XlationContext_has_logical_arg(ctxt);
-     xos << ") THEN";
-     
-     /* THEN body */
-     TranslateWN(xos, WN_then(wn), ctxt);
-     
-     /* ELSE body */
-     if (!WN_else_is_empty(wn)) {
-       xos << std::endl << "ELSE";
-       TranslateWN(xos, WN_else(wn), ctxt);
-     }
-     
-     /* if closing */
-     xos << std::endl << "ENDIF";
-   }
-   
-   return EMPTY_WN2F_STATUS;
-} /* WN2F_if */
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_IF,
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_IF"));
+  
+  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
+  
+  return EMPTY_WN2F_STATUS;
+}
 
 
 WN2F_STATUS 
-WN2F_goto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_GOTO || 
-		    WN_operator(wn) == OPR_REGION_EXIT,
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_goto"));
-
-   xos << std::endl << "GO TO" << WHIRL2F_number_as_name(WN_label_number(wn));
-   
-   return EMPTY_WN2F_STATUS;
-} /* WN2F_goto */
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_GOTO || 
+		   WN_operator(wn) == OPR_REGION_EXIT,
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_GOTO"));
+  
+  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
+  
+  return EMPTY_WN2F_STATUS;
+}
 
 
 WN2F_STATUS 
 WN2F_agoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_AGOTO,
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_agoto"));
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_AGOTO,
+		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_agoto"));
 
-   xos << std::endl << "GO TO";
-   TranslateWN(xos, WN_kid0(wn), ctxt);
-   
-   return EMPTY_WN2F_STATUS;
+  xos << std::endl << "GO TO";
+  TranslateWN(xos, WN_kid0(wn), ctxt); // FIXME
+  
+  return EMPTY_WN2F_STATUS;
 } /* WN2F_agoto */
 
 
 WN2F_STATUS 
-WN2F_condbr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_condBR(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_TRUEBR || 
-		    WN_operator(wn) == OPR_FALSEBR,
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_condbr"));
-
-   xos << std::endl << "IF(";
-   set_XlationContext_has_logical_arg(ctxt);
-   if (WN_operator(wn) == OPR_FALSEBR) {
-     xos << ".NOT. (";
-     TranslateWN(xos, WN_condbr_cond(wn), ctxt);
-     xos << ')';
-   } else { /* WN_operator(wn) == OPR_TRUEBR */
-     TranslateWN(xos, WN_condbr_cond(wn), ctxt);
-   }
-   reset_XlationContext_has_logical_arg(ctxt);
-   xos << ") GO TO" << WHIRL2F_number_as_name(WN_label_number(wn));
-   
-   return EMPTY_WN2F_STATUS;
-} /* WN2F_condbr */
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_TRUEBR || 
+		   WN_operator(wn) == OPR_FALSEBR,
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_condBR"));
+  
+  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
+  
+  return EMPTY_WN2F_STATUS;
+}
 
 WN2F_STATUS 
-WN2F_return(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_RETURN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   /* Ensures that the return value resides in the implicit
-    * return variable (PUINFO_FUNC_NAME), and returns control
-    * from the current PU (PUinfo_current_func).
-    */
-
-  if (WN2F_Next_ReturnSite ==NULL) //when will this  happen??  fzhao
-    return EMPTY_WN2F_STATUS;
-
-  ST* result_var = (ST *)RETURNSITE_return_var(WN2F_Next_ReturnSite);
-  const WN* result_store = RETURNSITE_store1(WN2F_Next_ReturnSite);
-  const STAB_OFFSET var_offset = RETURNSITE_var_offset(WN2F_Next_ReturnSite);
-  
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_RETURN,
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_return"));
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_RETURN"));
   
-  ASSERT_DBG_FATAL(RETURNSITE_return(WN2F_Next_ReturnSite) == wn,
-		   (DIAG_W2F_UNEXPECTED_RETURNSITE, "WN2F_return()"));
-  
-   /* Do not emit a return statement for the main program unit.
-    */
-  if (PU_is_mainpu(Get_Current_PU()) || 
-      strcmp(ST_name(WN_entry_name(PUinfo_current_func)), "MAIN__") == 0) {
-    WN2F_Next_ReturnSite = RETURNSITE_next(WN2F_Next_ReturnSite);
-    return EMPTY_WN2F_STATUS;
-  }
-   /* Save off the return-value, unless there is no return-value or
-    * it already resides where we expect it to be.
-    */
-#if 0 //REMOVE/FIXME
-   if ( REMOVE !PUINFO_RETURN_TO_PARAM                &&
-	PUINFO_RETURN_TY != (TY_IDX) 0         && 
-	TY_kind(PUINFO_RETURN_TY) != KIND_VOID &&
-	 RETURN_PREG_mtype(PUinfo_return_preg, 0) != MTYPE_V) 
-#endif
-   if (false)
-   {
-      /* Note that we make more assumptions here than in the case
-       * of whirl2c.  In particular, we always assume assignment
-       * compatibility between the return-variable and the location
-       * of the found return-value.
-       */
-      if (result_var != NULL)
-      {
-	 if (ST_class(result_var) == CLASS_PREG || 
-	     !ST_is_return_var(result_var))
-	 {
-	    /* PUinfo_init_pu() revealed that the return value is present
-	     * in a variable or non-return-register.  Now, move the value to
-	     * this return location.
-		     */
-		    TY_IDX rv_ty = ST_type(result_var);
-
-	    if (TY_kind(rv_ty) != KIND_STRUCT) 
-	    {
-	      ASSERT_WARN(WN2F_Can_Assign_Types(rv_ty, PUINFO_RETURN_TY),
-			  (DIAG_W2F_INCOMPATIBLE_TYS, "WN2F_return"));
-	    }
-
-	    /* Assign the return value to PUINFO_FUNC_ST */
-	    xos << std::endl;
-	    TranslateSTUse(xos, PUINFO_FUNC_ST, ctxt);
-	    xos << '=';
-	    if (ST_class(result_var) == CLASS_PREG)
-	      ST2F_Use_Preg(xos, ST_type(result_var),var_offset);
-	    else
-	      WN2F_Offset_Symref(xos, result_var, /* base variable */
-				 Stab_Pointer_To(ST_type(result_var)),
-				 /* expected type of base address */
-				 PUINFO_RETURN_TY,
-				 /* type of object to be loaded */
-				 var_offset, ctxt);
-	 }
-      }
-      else if (result_store != NULL)
-      {
-	 /* We have a store (an STID) into the return register, so just
-	  * assign the rhs into PUINFO_FUNC_NAME.
-	  */
-	 ASSERT_DBG_FATAL(WN_operator(result_store) == OPR_STID,
-			  (DIAG_W2F_UNEXPECTED_OPC, "WN2F_return"));
-	 ASSERT_WARN(WN2F_Can_Assign_Types(WN_Tree_Type(WN_kid0(result_store)),
-					   PUINFO_RETURN_TY),
-		     (DIAG_W2F_INCOMPATIBLE_TYS, "WN2F_return"));
-	 
-	 /* Assign object being stored to PUINFO_FUNC_NAME */
-	 xos << std::endl;
-	 TranslateSTUse(xos, PUINFO_FUNC_ST, ctxt);
-	 xos << '=';
-	 TranslateWN(xos, WN_kid0(result_store), ctxt);
-      }
-      else if (RETURN_PREG_num_pregs(PUinfo_return_preg) == 1 &&
-	       TY_Is_Preg_Type(PUINFO_RETURN_TY))
-      {
-	 /* There is a single return register holding the return value,
-	  * so return a reference to this register.
-	  */
-	 const MTYPE    preg_mtype = RETURN_PREG_mtype(PUinfo_return_preg, 0);
-	 TY_IDX const   preg_ty  = Stab_Mtype_To_Ty(preg_mtype);
-	 const PREG_IDX preg_num = RETURN_PREG_offset(PUinfo_return_preg, 0);
-
-	 ASSERT_WARN(WN2F_Can_Assign_Types(preg_ty, PUINFO_RETURN_TY),
-		     (DIAG_W2F_INCOMPATIBLE_TYS, "WN2F_return"));
-
-	 xos << std::endl;
-	 TranslateSTUse(xos, PUINFO_FUNC_ST, ctxt);
-	 xos << "=";
-	 ST2F_Use_Preg(xos, preg_ty, preg_num);
-      }
-      else /* Our most difficult case */
-      {
-	 /* The return-value is in two registers and we have not been
-	  * able to determine that it also resides in a variable.  
-	  * TODO: 
-	  * This could be handled by equivalencing the return-variable with
-	  * a type corresponding to the two registers, for then to assign
-	  * the register-values to the components of this equivalent
-	  * return value.  For now, do nothing but warn about this case!
-	  */
-# if 0 //Maybe it's all right---fzhao
-	 ASSERT_WARN(FALSE,
-		     (DIAG_UNIMPLEMENTED, "WN2F_return from two registers"));
-#endif
-
-      } /* if */
-   } /* if (need to store return value) */
-	   
-   /* Return control */
-   xos << std::endl;
-   xos << "RETURN";
-
-   WN2F_Next_ReturnSite = RETURNSITE_next(WN2F_Next_ReturnSite);
-   return EMPTY_WN2F_STATUS;
-} /* WN2F_return */
+  xos << Comment("RETURN");
+  return EMPTY_WN2F_STATUS;
+}
 
 WN2F_STATUS 
-WN2F_return_val(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_RETURN_VAL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   Is_True(WN_operator(wn) == OPR_RETURN_VAL,
-	  ("Invalid operator for WN2F_return_val()"));
-  xos << std::endl << "RETURN";
-  if (WN_operator(WN_kid0(wn)) != OPR_LDID) {
-    TranslateWN(xos, WN_kid0(wn), ctxt);
-  }
+	  ("Invalid operator for xlate_RETURN_VAL()"));
+  
+  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
+  
   return EMPTY_WN2F_STATUS;
 }
 
@@ -836,8 +423,7 @@ xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_LABEL, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_LABEL"));
   
-  const char *label = WHIRL2F_number_as_name(WN_label_number(wn));
-  xos << BegComment << "CONTINUE label=" << label << EndComment;
+  xos << BegComment << "label=" << WN_label_number(wn) << EndComment;
   
   return EMPTY_WN2F_STATUS;
 }
@@ -1244,7 +830,7 @@ WN2F_prefetch(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   if (WN_operator(wn) == OPR_PREFETCH) {
     Append_Token_String(xos, StrCat("PREFETCH(", Ptr_as_String(wn), ")"));
     
-    (void)TranslateWN(xos, WN_kid0(wn), ctxt);
+    TranslateWN(xos, WN_kid0(wn), ctxt);
     
     xos << StrCat("OFFS=", WHIRL2F_number_as_name(WN_offset(wn)));
   } else { /* (WN_operator(wn) == OPR_PREFETCHX) */
@@ -1279,129 +865,101 @@ WN2F_eval(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    ASSERT_DBG_FATAL(WN_operator(wn) == OPR_EVAL, 
 		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_eval"));
 
-   xos << std::endl;
    xos << "CALL _EVAL(";
-   set_XlationContext_has_logical_arg(ctxt);
-   set_XlationContext_no_parenthesis(ctxt);
-   (void)TranslateWN(xos, WN_kid0(wn), ctxt);
+   TranslateWN(xos, WN_kid0(wn), ctxt);
    xos << ')';
 
    return EMPTY_WN2F_STATUS;
 } /* WN2F_eval */
 
-//**********************************************
+
 WN2F_STATUS
 WN2F_use_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  const char *st_name = W2CF_Symtab_Nameof_St(WN_st(wn));
-// const char *st_name1;
-#if 0
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_USE,
 		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_use_stmt"));
 
-  int k ;
-  xos << std::endl;
-  xos << "use";
-  Append_Token_String(xos, st_name);
+  const char *st_name = W2CF_Symtab_Nameof_St(WN_st(wn));
+  xos << "===>use" << st_name;
+
+#if 0
   if (WN_rtype(wn) == 1)
     xos << ",only:";
   else 
     xos << ",";
   
-  for(k=0;k< WN_kid_count(wn);k=k+2 ) {
+  for(int k=0; k< WN_kid_count(wn); k=k+2 ) {
     st_name = W2CF_Symtab_Nameof_St(WN_st(WN_kid(wn,k)));
-    st_name1= W2CF_Symtab_Nameof_St(WN_st(WN_kid(wn,k+1)));
-    if (k==0)
-      ;
-    else
+    const char *st_name1 = W2CF_Symtab_Nameof_St(WN_st(WN_kid(wn,k+1)));
+    if (k!=0)
       xos << ","; 
-    if (strcmp(st_name,st_name1)) {
-      Append_Token_String(xos,st_name);
-      xos << "=>"; 
-      Append_Token_String(xos, st_name1);
-    }
-    else 
-      Append_Token_String(xos,st_name);
+    xos << st_name << "=>" << st_name1;
   }
   
-  // (void)TranslateWN(xos, WN_kid0(wn), ctxt);
+  // TranslateWN(xos, WN_kid0(wn), ctxt);
 # endif
      
   return EMPTY_WN2F_STATUS;
 } //WN2F_use_stmt
 
-//**********************************************
+
 WN2F_STATUS
 WN2F_namelist_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   int k ;
-
-   const char *st_name =  W2CF_Symtab_Nameof_St(WN_st(wn));
-    ASSERT_DBG_FATAL(WN_operator(wn) == OPR_NAMELIST,
-                     (DIAG_W2F_UNEXPECTED_OPC, "WN2F_namelist_stmt"));
-   if (ST_is_external(WN_st(wn)))
-    {
-      ;
-     } else {
-       xos << std::endl;
-       xos << "NAMELIST /";
-       Append_Token_String(xos, st_name);
-       xos << " /";
-
-       for(k=0;k< WN_kid_count(wn);k++ )
-
-       { st_name = W2CF_Symtab_Nameof_St(WN_st(WN_kid(wn,k)));
-        Set_BE_ST_w2fc_referenced(WN_st(WN_kid(wn,k)));
-        if (k==0)
-           ;
-        else
-          xos << ",";
-          Append_Token_String(xos,st_name);
-
-       }
-   }
-
-   return EMPTY_WN2F_STATUS;
+  const char *st_name =  W2CF_Symtab_Nameof_St(WN_st(wn));
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_NAMELIST,
+		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_namelist_stmt"));
+  if (ST_is_external(WN_st(wn))) {
+    ;
+  } else {
+    xos << "NAMELIST /" << st_name << " /";
+    int k ;
+    for(k=0;k< WN_kid_count(wn);k++ ) {
+      st_name = W2CF_Symtab_Nameof_St(WN_st(WN_kid(wn,k)));
+      Set_BE_ST_w2fc_referenced(WN_st(WN_kid(wn,k)));
+      if (k==0)
+	;
+      else
+	xos << ",";
+      xos << st_name;
+    }
+  }
+  
+  return EMPTY_WN2F_STATUS;
 } //WN2F_namelist_stmt
 
 
-//**********************************************
 WN2F_STATUS
 WN2F_implicit_bnd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  xos << " ";
+  xos << "[+-+]";
   return EMPTY_WN2F_STATUS;
 }
 
 // OPC_SWITCH only appears in very high level whirl
-
 WN2F_STATUS
 WN2F_switch(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   WN *stmt;
   WN *kid1wn;
   
-  //Append_F77_Indented_Newline(xos, 1/*empty-lines*/, NULL/*label*/);
-  //  xos << "SELECT CASE (";
-  //(void)TranslateWN(xos, WN_condbr_cond(wn), ctxt);
-  // xos << ")";
+  xos << "SELECT CASE (";
+  TranslateWN(xos, WN_condbr_cond(wn), ctxt);
+  xos << ")";
   
   kid1wn = WN_kid1(wn);
   
-  for (stmt = WN_first(kid1wn); stmt != NULL; stmt = WN_next(stmt))
-    {
-      if (!WN2F_Skip_Stmt(stmt))
-	{
-	  if (WN_operator(stmt) == OPR_CASEGOTO)
-	    WN_st_idx(stmt) = WN_st_idx(WN_kid0(wn));
-	}
+  for (stmt = WN_first(kid1wn); stmt != NULL; stmt = WN_next(stmt)) {
+    if (!WN2F_Skip_Stmt(stmt)) {
+      if (WN_operator(stmt) == OPR_CASEGOTO)
+	WN_st_idx(stmt) = WN_st_idx(WN_kid0(wn));
     }
+  }
   
-  (void)TranslateWN(xos, WN_kid1(wn), ctxt);
+  TranslateWN(xos, WN_kid1(wn), ctxt);
   if (WN_kid_count(wn) == 3)
-    (void)TranslateWN(xos, WN_kid2(wn), ctxt);
-  //  Append_F77_Indented_Newline(xos, 1/*empty-lines*/, NULL/*label*/);
-  //  xos << "END SELECT ";
+    TranslateWN(xos, WN_kid2(wn), ctxt);
+  xos << "END SELECT ";
   
   return EMPTY_WN2F_STATUS;
 }
@@ -1425,28 +983,23 @@ WN2F_casegoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 }
 
 
-//**********************************************
 WN2F_STATUS
 WN2F_nullify_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  int k ;
-  
+  int k ;  
   const char *st_name;
   
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_NULLIFY,
 		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_nullify_stmt"));
 
-  xos << std::endl;
   xos << "NULLIFY (";
   
   for(k=0;k< WN_kid_count(wn);k++ ) {
     st_name = W2CF_Symtab_Nameof_St(WN_st(WN_kid(wn,k)));
     Set_BE_ST_w2fc_referenced(WN_st(WN_kid(wn,k)));
-    if (k==0)
-      ;
-    else
+    if (k!=0)
       xos << ",";
-    Append_Token_String(xos,st_name);
+    xos << st_name;
     
   }
   xos << ")";
@@ -1454,7 +1007,7 @@ WN2F_nullify_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return EMPTY_WN2F_STATUS;
 } //WN2F_namelist_stmt
 
-//**********************************************
+
 WN2F_STATUS
 WN2F_interface_blk(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
@@ -1648,43 +1201,34 @@ static const char unnamed_interface[] = "unnamed interface";
 WN2F_STATUS
 WN2F_ar_construct(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  INT kid;
+  xos << "(/";
+  for (INT kid = 0; kid < WN_kid_count(wn); kid++) {
+    TranslateWN(xos,WN_kid(wn,kid), ctxt);
+    if (kid < WN_kid_count(wn)-1)
+      xos << ",";
+  }
+  xos << "/)";
   
-   xos << "(";
-   xos << "/";
-   for (kid = 0; kid < WN_kid_count(wn); kid++) {
-
-      (void)TranslateWN(xos,WN_kid(wn,kid), ctxt);
-      if (kid < WN_kid_count(wn)-1)
-         xos << ",";
-    }
-
-
-   xos << "/";
-   xos << ")";
-
-   return EMPTY_WN2F_STATUS;
- 
+  return EMPTY_WN2F_STATUS;
 }
 
 WN2F_STATUS
 WN2F_noio_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   INT kid;
-   INT numkids = 5;
-   xos << "(";
-   (void)TranslateWN(xos,WN_kid0(wn),ctxt);
-   xos << ",";
-   (void)TranslateWN(xos,WN_kid1(wn),ctxt);
-   xos << "=";
-   
-   for (kid = 2;kid<numkids; kid++) {
-      (void)TranslateWN(xos,WN_kid(wn,kid),ctxt);
-     if (kid < numkids-1)
-       xos << ",";
-    }
-
-   xos << ")";
-   return EMPTY_WN2F_STATUS;
+  xos << "(";
+  TranslateWN(xos,WN_kid0(wn),ctxt);
+  xos << ",";
+  TranslateWN(xos,WN_kid1(wn),ctxt);
+  xos << "=";
+  
+  INT numkids = 5;
+  for (INT kid = 2;kid<numkids; kid++) {
+    TranslateWN(xos,WN_kid(wn,kid),ctxt);
+    if (kid < numkids-1)
+      xos << ",";
+  }
+  
+  xos << ")";
+  return EMPTY_WN2F_STATUS;
 }
 

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.6 2003/05/20 23:28:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.7 2003/05/21 18:21:38 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -65,8 +65,6 @@
 #include "file_util.h"      /* For Last_Pathname_Component */
 #include "flags.h"          /* for OPTION_GROUP */
 #include "timing.h"         /* Start/Stop Timer */
-
-#include "const.h"          /* For FOR_ALL_CONSTANTS */
 
 //*************************** User Include Files ****************************
 
@@ -346,39 +344,6 @@ DumpTranslationHeaderComment(xml::ostream& xos)
 // 
 //***************************************************************************
 
-/* =================================================================
- *                 EXPORTED LOW-LEVEL W2F INTERFACE
- *                 --------------------------------
- *
- * See comments in header
- *
- * =================================================================
- */
-
-BOOL
-W2F_Should_Emit_Nested_PUs(void)
-{
-  return W2F_Emit_Nested_PUs;
-}
-
-
-void
-W2F_Init_Options()
-{
-  /* The processing of the FLIST group was moved out to the back-end.
-   * Instead of directly using the Current_FLIST, we initiate
-   * whirl2f specific variables to hold the values.
-   */
-  W2F_Enabled = FLIST_enabled;
-  W2F_Verbose = FLIST_verbose;
-  W2F_No_Pragmas = FLIST_no_pragmas;
-  W2F_Emit_Prefetch = FLIST_emit_prefetch;
-  W2F_Emit_Linedirs = FLIST_emit_linedirs;
-  W2F_Emit_All_Regions = FLIST_emit_all_regions;
-  W2F_Emit_Nested_PUs = TRUE;
-}
-
-
 void
 W2F_Init(void)
 {
@@ -391,7 +356,17 @@ W2F_Init(void)
   }
 
   Diag_Set_Phase("WHIRL to XAIF: Init");
-  W2F_Init_Options();  
+  /* The processing of the FLIST group was moved out to the back-end.
+   * Instead of directly using the Current_FLIST, we initiate
+   * whirl2f specific variables to hold the values.
+   */
+  W2F_Enabled = FLIST_enabled;
+  W2F_Verbose = FLIST_verbose;
+  W2F_No_Pragmas = FLIST_no_pragmas;
+  W2F_Emit_Prefetch = FLIST_emit_prefetch;
+  W2F_Emit_Linedirs = FLIST_emit_linedirs;
+  W2F_Emit_All_Regions = FLIST_emit_all_regions;
+  W2F_Emit_Nested_PUs = TRUE;
   
   // Create a pool to hold the parent map for every PU, one at a time.
   MEM_POOL_Initialize(&W2F_Parent_Pool, "W2f_Parent_Pool", FALSE);
@@ -418,6 +393,36 @@ W2F_Init(void)
 }
 
 
+void
+W2F_Fini(void)
+{
+  Clear_w2fc_flags(); // FIXME
+  
+  if (!Check_Initialized("W2F_Fini"))
+    return;
+
+  PUinfo_finalize();
+  WN2F_finalize();
+  W2CF_Symtab_Terminate();
+  Stab_finalize_flags();
+    
+  /* Reset all global variables */  
+  W2F_Initialized = FALSE;
+  W2F_Enabled = TRUE;          /* Invoke W2F */
+  W2F_Verbose = TRUE;          /* Show translation information */
+  W2F_No_Pragmas = FALSE;      /* By default, emit pragmas */
+  W2F_Emit_Prefetch = FALSE;   /* Emit comments for prefetches */
+  W2F_Emit_All_Regions = FALSE;/* Emit cmplr-generated regions */
+  W2F_Emit_Linedirs = FALSE;   /* Emit preproc line-directives */
+  W2F_Emit_Nested_PUs = TRUE;  
+  
+  W2F_Only_Mark_Loads = FALSE;
+  
+  MEM_POOL_Pop(&W2F_Parent_Pool);
+  MEM_POOL_Delete(&W2F_Parent_Pool);
+} /* W2F_Fini */
+
+
 void 
 W2F_Push_PU(WN *pu, WN *body_part_of_interest)
 {
@@ -436,8 +441,7 @@ W2F_Push_PU(WN *pu, WN *body_part_of_interest)
   W2CF_Parentize(pu);
     
   /* See if the body_part_of_interest has any part to be skipped
-   * by the w2f translator.
-   */
+   * by the w2f translator. */
   if (WN_opc_operator(body_part_of_interest) == OPR_BLOCK) {
     Remove_Skips(body_part_of_interest, Skip, &Next_Skip_Item,
 		 W2F_MAX_SKIP_ITEMS, FALSE /*Not C*/);
@@ -471,18 +475,6 @@ W2F_Pop_PU(void)
   W2F_Frequency_Map = WN_MAP_UNDEFINED;
 }
 
-
-void
-W2F_Mark_Loads(void)
-{
-  W2F_Only_Mark_Loads = TRUE;
-}
-
-void
-W2F_Nomark_Loads(void)
-{
-  W2F_Only_Mark_Loads = FALSE;
-}
 
 void
 W2F_def_ST(FILE *outfile, ST *st)
@@ -556,37 +548,6 @@ W2F_Translate_Wn_Str(char *strbuf, UINT bufsize, WN *wn)
    Diag_Set_Phase(caller_err_phase);
 #endif
 } /* W2F_Translate_Wn_Str */
-
-
-void
-W2F_Fini(void)
-{
-  Clear_w2fc_flags(); // FIXME
-  
-  if (!Check_Initialized("W2F_Fini"))
-    return;
-
-  PUinfo_finalize();
-  WN2F_finalize();
-  W2CF_Symtab_Terminate();
-  Stab_finalize_flags();
-  
-  
-  /* Reset all global variables */  
-  W2F_Initialized = FALSE;
-  W2F_Enabled = TRUE;          /* Invoke W2F */
-  W2F_Verbose = TRUE;          /* Show translation information */
-  W2F_No_Pragmas = FALSE;      /* By default, emit pragmas */
-  W2F_Emit_Prefetch = FALSE;   /* Emit comments for prefetches */
-  W2F_Emit_All_Regions = FALSE;/* Emit cmplr-generated regions */
-  W2F_Emit_Linedirs = FALSE;   /* Emit preproc line-directives */
-  W2F_Emit_Nested_PUs = TRUE;  
-  
-  W2F_Only_Mark_Loads = FALSE;
-  
-  MEM_POOL_Pop(&W2F_Parent_Pool);
-  MEM_POOL_Delete(&W2F_Parent_Pool);
-} /* W2F_Fini */
 
 
 /* ====================================================================

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.3 2003/05/20 22:48:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.4 2003/05/21 18:21:38 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -63,7 +63,6 @@
 #include "config_list.h"	    /* for List_Enabled, etc. */
 #include "err_host.tab"		    /* load all the error messages */
 //REMOVE #include "erauxdesc.h"	    /* for BE error messages */
-#include "mempool.h"		    /* for MEM_Initialze()  */
 
 #include "phase.h"		    /* for PHASE_CG */
 #include "be_util.h"       /* for Reset_Current_PU_Count(), etc */
@@ -422,6 +421,7 @@ PrepareIR(PU_Info* pu_forest)
     Create_Slink_Symbol(); // FIXME: do we need?
     Lower_Init(); // Open64 Lowerer
     
+    // RETURN_VAL (for C)
     //wn_pu = WN_Lower(wn_pu, LOWER_CALL, NULL, "Lowering CALLS");
     //wn_pu = WN_Lower(wn_pu, LOWER_IO_STATEMENT, NULL, "Lowering IO");
     
