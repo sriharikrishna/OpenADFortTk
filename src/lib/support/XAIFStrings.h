@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.17 2004/04/08 13:51:58 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.18 2004/04/29 21:28:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -160,6 +160,8 @@ public:
     
     TAG_StmtGoto,  // Tags a goto statement
     TAG_StmtLabel, // Tags a label statement
+    
+    TAG_IntrinsicKey, // Tags an intrinsic to disambiguate translation
     
     TAG_End,      // End of tag information
     
@@ -382,6 +384,9 @@ public:
   
   const char* tag_StmtLabel() const   { return c_strTbl[TAG_StmtLabel]; }
   XMLCh*      tag_StmtLabel_x() const { return x_strTbl[TAG_StmtLabel]; }
+  
+  const char* tag_IntrinsicKey() const   { return c_strTbl[TAG_IntrinsicKey]; }
+  XMLCh*      tag_IntrinsicKey_x() const { return x_strTbl[TAG_IntrinsicKey]; }
   
   const char* tag_End() const { return c_strTbl[TAG_End]; }
   XMLCh*      tag_End_x() const { return x_strTbl[TAG_End]; }

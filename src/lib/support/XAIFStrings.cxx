@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.17 2004/04/08 13:51:58 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.18 2004/04/29 21:28:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -160,7 +160,9 @@ const char* XAIFStringRepository::c_strTbl[] = {
   
   "{StmtGoto#",
   "{StmtLabel#",
-  
+
+  "{IntrinsicKey#",
+
   "}"
 };
 
