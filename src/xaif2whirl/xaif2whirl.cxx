@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.20 2004/02/11 18:05:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.21 2004/02/17 18:54:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -245,7 +245,6 @@ TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
   TranslateCFG(wn_pu, cfgElem, ctxt);
   
 #if 0
-  IR_set_dump_order(TRUE); /* dump parent before children*/
   fprintf(stderr, "\n----------------------------------------------------\n");
   fdump_tree(stderr, wn_pu);
 #endif
