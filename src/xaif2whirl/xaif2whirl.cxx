@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.44 2004/05/06 21:53:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.45 2004/05/07 20:05:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -70,11 +70,12 @@ using namespace xaif2whirl;
 IntrinsicXlationTable xaif2whirl::IntrinsicTable(IntrinsicXlationTable::X2W);
 
 // FIXME
+extern xaif2whirl::ModeType      opt_mode;
 extern xaif2whirl::AlgorithmType opt_algorithm;
 
-// FIXME_CHANGE_TYPES_IN_WHIRL
-TY_IDX ActiveTypeTyIdx;            // OpenAD active pseudo type
-TY_IDX ActiveTypeInitializedTyIdx; // OpenAD active pseudo type
+// FIXME
+static TY_IDX ActiveTypeTyIdx;            // OpenAD active pseudo type
+static TY_IDX ActiveTypeInitializedTyIdx; // OpenAD active pseudo type
 
 //*************************** Forward Declarations ***************************
 
@@ -178,6 +179,9 @@ DeclareActiveTypes();
 static void 
 ConvertToActiveType(ST* st);
 
+
+static FLD_HANDLE
+My_FLD_get_to_field(TY_IDX struct_ty_idx, UINT64 ofst); // FIXME
 
 // FIXME (Note: TYPE_ID and TY_IDX are typedef'd to the same type, so
 // overloading is not possible!)
@@ -357,8 +361,6 @@ xlate_CFG_BasicBlock(WN *wn_pu, MyDGNode* curBB, XlationContext& ctxt,
 static void
 TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
 {
-  // XXX change argument
-  
   // -------------------------------------------------------
   // 1. Create auxiliary data structures
   // -------------------------------------------------------
@@ -372,6 +374,38 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   ctxt.SetWNToIdMap(wnmaps.first);
   ctxt.SetIdToWNMap(wnmaps.second);
 
+  // -------------------------------------------------------
+  // 2. Reverse mode: change any arguments that are active to
+  // pass-by-reference
+  // -------------------------------------------------------
+#if 0
+  if (opt_mode == MODE_REVERSE) {
+    DOMElement* arglst = 
+      GetChildElement(cfgElem, XAIFStrings.elem_ArgList()_x());
+    DOMElement* arg = (arglst) ? 
+      GetChildElement(arglst, XAIFStrings.elem_ArgSymRef()_x()) : NULL;
+    for ( ; arg; arg = GetNextSiblingElement(arg)) {
+      // find corresponding WN
+      WNId id = GetWNId(stmt);
+      WN* parmWN = ctxt.FindWN(id, true /* mustFind */);
+
+      Symbol* sym = GetSymbol(elem, ctxt); // is active ???
+      bool active = GetActiveAttr(arg);    // ???
+
+      const XMLCh* intentX = elem->getAttribute(XAIFStrings.attr_intent_x());
+      XercesStrX intent = XercesStrX(intentX);
+
+      if (active) {
+	WN_Set_Parm_By_Reference(parmWN);
+      }
+    }
+  }
+#endif
+  
+  // -------------------------------------------------------
+  // 3. Translate each XAIF CFG into WHIRL
+  // -------------------------------------------------------
+  
   // Collect the list of CFGs we need to translate.  
   list<DOMElement*> cfglist;
   if (XAIF_CFGElemFilter::IsReplaceList(cfgElem)) {
@@ -384,10 +418,8 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   else {
     cfglist.push_back(const_cast<DOMElement*>(cfgElem));
   }
-  
-  // -------------------------------------------------------
-  // 2. Translate each XAIF CFG into WHIRL
-  // -------------------------------------------------------
+
+  // Translate
   WN* newstmtblkWN = WN_CreateBlock();
   for (list<DOMElement*>::iterator it = cfglist.begin(); 
        it != cfglist.end(); ++it) {
@@ -421,7 +453,7 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   }
   
   // -------------------------------------------------------
-  // 3. Replace old WHIRL code with newly translated WHIRL
+  // 4. Replace old WHIRL code with newly translated WHIRL
   // -------------------------------------------------------
   if (opt_algorithm != ALG_BB_PATCHING) { 
     // Delete old WHIRL
@@ -443,7 +475,7 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   }
   
   // -------------------------------------------------------
-  // 4. Cleanup
+  // 5. Cleanup
   // -------------------------------------------------------
   delete wnmaps.first;
   delete wnmaps.second;
@@ -2062,13 +2094,16 @@ DeclareActiveTypes()
 static void 
 ConvertToActiveType(ST* st)
 {
-  // Find the type that will be modified
+  // -------------------------------------------------------
+  // 1. Setup
+  // -------------------------------------------------------
+  // Find the type that will be replaced
   TY_IDX ty = ST_type(st);
   if (TY_kind(ty) == KIND_POINTER) { // only have one level of indirection
     ty = TY_pointed(ty);
   }
 
-  // Get the type that will do the modifying
+  // Get the replacement type
   TY_IDX newBaseTy = ActiveTypeTyIdx;
   if (ST_is_initialized(st)) {
     INITO_IDX inito = Find_INITO_For_Symbol(st);
@@ -2076,7 +2111,10 @@ ConvertToActiveType(ST* st)
       newBaseTy = ActiveTypeInitializedTyIdx;
     }
   }
-  
+
+  // -------------------------------------------------------
+  // 2. Change the type of this symbol
+  // -------------------------------------------------------
   if (TY_kind(ty) == KIND_SCALAR) {
     Set_ST_type(*st, newBaseTy);
   }
@@ -2088,6 +2126,39 @@ ConvertToActiveType(ST* st)
   else {
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "ConvertToActiveType!"));
   }
+  
+  // -------------------------------------------------------
+  // 3. If this symbol is part of a common block, patch up types in
+  // the common block fields.  Note that we only need to change
+  // scalars -- arrays have been effectively changed above
+  // -------------------------------------------------------
+  if (TY_kind(ty) == KIND_SCALAR 
+      && Stab_Is_Based_At_Common_Or_Equivalence(st)) {
+    TY_IDX base_ty = ST_type(ST_base(st));
+    mUINT64 offset = ST_ofst(st); // offset into base symbol
+    
+    // find field with correct offset or symbol
+    FLD_HANDLE fld = My_FLD_get_to_field(base_ty, offset);
+    Set_FLD_type(fld, newBaseTy);
+  }
+}
+
+
+// FIXME: cf. extern FLD_HANDLE FLD_get_to_field(...)
+// FIXME: this is very inefficient; also we could abstract this out. 
+static FLD_HANDLE 
+My_FLD_get_to_field(TY_IDX struct_ty_idx, UINT64 ofst)
+{
+  FLD_ITER fld_iter = Make_fld_iter(TY_fld(struct_ty_idx));
+  do {
+    FLD_HANDLE fld(fld_iter);
+    UINT64 cur_ofst = FLD_ofst(fld);
+    if (cur_ofst == ofst) {
+      return fld;
+    }
+  } while (!FLD_last_field(fld_iter++));
+  
+  return FLD_HANDLE();
 }
 
 
