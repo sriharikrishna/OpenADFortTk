@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.23 2003/10/01 16:32:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.24 2003/10/10 17:46:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -535,7 +535,9 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   const char* opr_str = OPERATOR_name(opr);
   switch (opr) {
     
-    // In OA, loop nodes represent the *condition* (not the body)
+    // In OA, loop nodes represent the *condition* (not the body).
+    // For a DO_LOOP, it additionally represents the initialization
+    // and update statements.
   case OPR_DO_LOOP:
     xos << Comment(opr_str);
     xlate_LoopInitialization(xos, WN_start(wn), ctxt);
@@ -585,7 +587,7 @@ GetCFGVertexType(CFG* cfg, CFG::Node* n)
   }
 
   // FIXME: we do not need to iterate over all statements since
-  // control flow statements contructs will be in thier own xaif:BB.
+  // control flow statements contructs will be in their own xaif:BB.
   CFG::NodeStatementsIterator stmtIt(n);
   for (bool inLoop = true; ((bool)stmtIt && inLoop); ++stmtIt) {
     WN* wstmt = (WN *)((StmtHandle)stmtIt);
@@ -924,6 +926,11 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
 
   TY_IDX base_ty = TY_pointed(baseptr_ty); 
 
+
+  // -------------------------------------------------------
+  // 
+  // -------------------------------------------------------
+
   /* Do the symbol translation from the base of BASED symbols */
   if (Stab_Is_Based_At_Common_Or_Equivalence(base_st)) {
     offset += ST_ofst(base_st); /* offset of based symbol */
@@ -950,7 +957,22 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
     baseptr_ty = Stab_Pointer_To(base_ty);
   }
   
+  // -------------------------------------------------------
+  // If we are not already within xaif:VariableReference... (FIXME: abstract)
+  // -------------------------------------------------------
+  bool newContext = false;
+  if (ST_class(base_st) != CLASS_CONST && !ctxt.IsVarRef()) {
+    xos << BegElem(XAIFStrings.elem_VarRef())
+	<< Attr("vertex_id", ctxt.GetNewVId());
+    ctxt.CreateContext(XlationContext::VARREF); // FIXME: do we need wn?
+    newContext = true; 
+  }
+
   
+  // -------------------------------------------------------
+  //
+  // -------------------------------------------------------
+
   /* Select variable-reference translation function */
   const BOOL deref_val = ctxt.IsDerefAddr();
   void (*translate_var_ref)(xml::ostream&, ST*, XlationContext&);
@@ -964,18 +986,6 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
     /* A direct reference or an implicit dereference */
     translate_var_ref = &TranslateSTUse;
   }
-  
-  // If we are not already within xaif:VariableReference... (FIXME: abstract)
-  bool newContext = false;
-  if (ST_class(base_st) != CLASS_CONST && !ctxt.IsVarRef()) {
-    xos << BegElem("xaif:VariableReference")
-	<< Attr("vertex_id", ctxt.GetNewVId());
-    ctxt.CreateContext(XlationContext::VARREF); // FIXME: do we need wn?
-    newContext = true; 
-  }
-  
-
-
 
   
   // FIXME: for now, make sure this is only used for data refs 
@@ -987,15 +997,14 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
     xos << "+ " << Num2Str(offset, "%lld");
   }
   
-  
   if (IsScalarRef(base_ty, ref_ty)) {
-
+    
     // 1. Reference to a scalar symbol (==> offset into 'base_st' is zero)
     // FIXME: what about FUNCTIONS?
     ASSERT_WARN(offset == 0, (DIAG_W2F_UNEXPEXTED_OFFSET, offset, 
 			      "xlate_SymRef"));
     translate_var_ref(xos, base_st, ctxt);
-
+    
   } else if (TY_Is_Array(base_ty)) {
 
     // 2. Array reference (non-scalar) 
@@ -1075,7 +1084,7 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
 
   if (newContext) {
     ctxt.DeleteContext();
-    xos << EndElem /* xaif:VariableReference */;
+    xos << EndElem /* elem_VarRef() */;
   }
   
   return EMPTY_WN2F_STATUS;
@@ -1118,17 +1127,26 @@ WN2F_Offset_Memref(xml::ostream& xos,
   TY_IDX base_ty = TY_pointed(addr_ty);
   const BOOL deref_fld = ctxt.IsDerefAddr();
   
-  // FIXME: for now, make sure this is only used for data refs 
-  if (TY_kind(base_ty) == KIND_FUNCTION) {
-    assert(false && "memref FIXME");
-  }
-
-  bool newContext = false;
-  if (!ctxt.IsVarRef()) { // FIXME: could be a xaif:Constant
-    xos << BegElem("xaif:VariableReference")
+  
+  // -------------------------------------------------------
+  //
+  // -------------------------------------------------------
+  bool newContext = false; 
+  if (!ctxt.IsVarRef()) { // FIXME: xaif:Constant
+    xos << BegElem(XAIFStrings.elem_VarRef())
 	<< Attr("vertex_id", ctxt.GetNewVId());
     ctxt.CreateContext(XlationContext::VARREF); // FIXME: do we need wn?
     newContext = true; 
+  }
+
+
+  // -------------------------------------------------------
+  //
+  // -------------------------------------------------------
+  
+  // FIXME: for now, make sure this is only used for data refs 
+  if (TY_kind(base_ty) == KIND_FUNCTION) {
+    assert(false && "memref FIXME");
   }
 
 
@@ -1237,7 +1255,7 @@ WN2F_Offset_Memref(xml::ostream& xos,
 
   if (newContext) {
     ctxt.DeleteContext();
-    xos << EndElem /* xaif:VariableReference */;
+    xos << EndElem /* elem_VarRef() */;
   }
 
   return EMPTY_WN2F_STATUS;
@@ -1383,7 +1401,8 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
 	if (ty == STRUCT_TWOWAY_CONDITIONAL 
 	    || ty == USTRUCT_TWOWAY_CONDITIONAL_T
 	    || ty == USTRUCT_TWOWAY_CONDITIONAL_F) {
-	  cfg->splitBlock(n, stmt);
+	  CFG::Node* newblock = cfg->splitBlock(n, stmt);
+	  cfg->connect(n, newblock, CFG::FALLTHROUGH_EDGE);
 	  break;
 	}
       }

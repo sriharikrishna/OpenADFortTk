@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.13 2003/10/01 16:32:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.14 2003/10/10 17:46:21 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -199,18 +199,18 @@ static const FNAME_PARTIALMAP Fname_Map[] =
   {OPC_U8F4RND, "F_KNINT"},
   {OPC_U8FQRND, "F_KIQNNT"},
   {OPC_U8F8RND, "F_KIDNNT"},
-  {OPC_I4F4TRUNC, "F_JINT"},
-  {OPC_I4FQTRUNC, "F_JIQINT"},
-  {OPC_I4F8TRUNC, "F_JIDINT"},
-  {OPC_U4F4TRUNC, "F_JINT"},
-  {OPC_U4FQTRUNC, "F_JIQINT"},
-  {OPC_U4F8TRUNC, "F_JIDINT"},
-  {OPC_I8F4TRUNC, "F_KINT"},
-  {OPC_I8FQTRUNC, "F_KIQINT"},
-  {OPC_I8F8TRUNC, "F_KIDINT"},
-  {OPC_U8F4TRUNC, "F_KINT"},
-  {OPC_U8FQTRUNC, "F_KIQINT"},
-  {OPC_U8F8TRUNC, "F_KIDINT"},
+  {OPC_I4F4TRUNC, "F_myINT"},
+  {OPC_I4FQTRUNC, "F_myINT"},
+  {OPC_I4F8TRUNC, "F_myINT"},
+  {OPC_U4F4TRUNC, "F_myINT"},
+  {OPC_U4FQTRUNC, "F_myINT"},
+  {OPC_U4F8TRUNC, "F_myINT"},
+  {OPC_I8F4TRUNC, "F_myINT"},
+  {OPC_I8FQTRUNC, "F_myINT"},
+  {OPC_I8F8TRUNC, "F_myINT"},
+  {OPC_U8F4TRUNC, "F_myINT"},
+  {OPC_U8FQTRUNC, "F_myINT"},
+  {OPC_U8F8TRUNC, "F_myINT"},
   {OPC_I4F4CEIL, "F_CEILING"},
   {OPC_I4FQCEIL, "F_CEILING"},
   {OPC_I4F8CEIL, "F_CEILING"},
