@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.39 2004/04/14 21:27:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.40 2004/04/29 21:29:58 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -188,7 +188,7 @@ XAIFTyToWHIRLTy(const char* type); // FIXME: temporary
 unsigned int MyDGNode::nextId = 1;
 
 // sort_CondVal: Used to sort operands of (arguments to) an expression
-// by the "position" attribute
+// by the "condition_value" attribute
 struct sort_CondVal
 {
   sort_CondVal(bool ascending_ = true) : ascending(ascending_) { }
@@ -229,6 +229,7 @@ void
 xaif2whirl::TranslateIR(PU_Info* pu_forest, const DOMDocument* doc)
 {
   Diag_Set_Phase("XAIF to WHIRL: translate IR");
+  //IntrinsicTable.DDump();
   
   if (!pu_forest) { return; }
   
@@ -574,8 +575,15 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
         WN* ifWN = WN_CreateIf(condWN, childblksWN[0], childblksWN[1]);
 	WN_INSERT_BlockLast(blkWN, ifWN);
       } else {
-        ASSERT_FATAL(false, (DIAG_A_STRING, "Unimplemented.")); // switch
 
+	for (int i = 0; i < outedges.size(); ++i) {
+	  DOMElement* elemEdge = outedges[i]->GetElem();
+	  XercesDumpNode(elemEdge);
+	}
+
+	ASSERT_FATAL(blkWN, (DIAG_A_STRING, "Unimplemented."));
+
+#if 0
 	// find default --
 	unsigned lastlbl = nodeToLblMap[nextNode];
 
@@ -593,13 +601,14 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
 	// Create casegoto for each block
 	WN* casegotoBlkWN = WN_CreateBlock();
 	for (int i = 0; i < outedges.size(); ++i) {
+	  DOMElement* elemEdge = outedges[i]->GetElem();
 	  MyDGNode* n = dynamic_cast<MyDGNode*>(outedges[i]->sink());
-	  INT64 caseval = 0; // FIXME
+	  
+	  INT64 caseval = GetCondAttr(elemEdge);
 	  WN* wn = WN_CreateCasegoto(caseval, nodeToLblMap[n]);
 	  WN_INSERT_BlockLast(casegotoBlkWN, wn);
 	}
-	
-#if 0	
+
 	// create switch
 	WN* switchWN = WN_CreateSwitch(INT32 num_entries, // num cases in casegotoblk
 			    condWN, // switch expression
@@ -1606,6 +1615,27 @@ bool
 xaif2whirl::IsTagPresent(const char* annotstr, const char* tag)
 {
   return (strstr(annotstr, tag) != NULL);
+}
+
+
+std::string
+xaif2whirl::GetIntrinsicKey(const DOMElement* elem)
+{
+  const XMLCh* annot = (elem) ? elem->getAttribute(XAIFStrings.attr_annot_x())
+    : NULL;
+  XercesStrX annotStr = XercesStrX(annot);
+  
+  std::string key;
+  char *start = NULL, *end = NULL;
+  start = strstr(annotStr.c_str(), XAIFStrings.tag_IntrinsicKey());
+  if (start) {
+    end = strstr(start, XAIFStrings.tag_End());
+  }
+  if (start && end) {
+    for (char* p = start; p && p <= end; ++p) { key += *p; }
+  }
+  
+  return key;
 }
 
 
