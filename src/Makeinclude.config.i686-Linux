@@ -1,11 +1,11 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makeinclude.config.sparc-SunOS,v 1.3 2003/07/24 20:31:06 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makeinclude.config.i686-Linux,v 1.2 2003/07/24 20:31:06 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
 
 #############################################################################
-# $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makeinclude.config.sparc-SunOS,v $
+# $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makeinclude.config.i686-Linux,v $
 #############################################################################
 
 #############################################################################
@@ -17,49 +17,38 @@
 #-----------------------------------------------------------------
 
 #  Paths
-BIN_53 = /usr/site/SUNWspro-7.2/bin
-GCC_BIN = /usr/site/gcc-3.0.4/bin
+GCC_BIN_304 = /scratch/gcc-3.0.4/inst/bin
 
-BIN = $(BIN_53)
-
-#  ANSI C++ compiler
-CXX = CC
-  # Note: use default template handling: -instances=extern
-
-#CXX = g++
+#  C++ compiler
+CXX = g++ -fPIC -D__GNU_BUG_WORKAROUND
   # Note: use default template handling (use 3.0.4 or later)
 
 #  ANSI C compiler
-CC = cc
-#CC = gcc
+CC = gcc -fPIC -D__GNU_BUG_WORKAROUND
 
 #  Archiver
-AR = $(CXX) -xar -o       # Sun CC
-#AR = /usr/ccs/bin/ar -rv # g++
+AR = /usr/bin/ar -rv  # GCC
 
 #-----------------------------------------------------------------
 #  Compiling and linking flags 
 #-----------------------------------------------------------------
 
+COMMON_FLAGS = -D_LINUX_LINUX -D_SGI_SOURCE -D_SVR4_SOURCE \
+	-DTARG_IA64 -DCOMPILE_UPC -D_NEW_SYMTAB -D_MIPSEL \
+	-D_LONGLONG -D_MIPS_SZINT=32 -D_MIPS_SZPTR=32 -D_MIPS_SZLONG=32 \
+	-D__MIPS_AND_IA64_ELF_H
+
 # C/C++ Flags
-
-COMMON_FLAGS = -D_SOLARIS_SOLARIS -D_SOLARIS -D_SGI_SOURCE -D_SVR4_SOURCE \
-	-DTARG_SOLARIS -DCOMPILE_UPC -D_NEW_SYMTAB \
-	-D_LONGLONG -Dlonglong \
-	-D_LIBELF_XTND_64 -KPIC
-
-# remove: -DIR_TOOLS
-
 ifdef RELEASE
-  USER_CXXFLAGS = -O $(COMMON_FLAGS)
-  USER_CFLAGS   = -O $(COMMON_FLAGS)
+  USER_CXXFLAGS = -O -D_LANGUAGE_C $(COMMON_FLAGS)
+  USER_CFLAGS   = -O -D_LANGUAGE_C $(COMMON_FLAGS)
 else 
-  USER_CXXFLAGS = -g $(COMMON_FLAGS)
-  USER_CFLAGS   = -g $(COMMON_FLAGS)
+  USER_CXXFLAGS = -g -D_LANGUAGE_C_PLUS_PLUS -D_DEBUG $(COMMON_FLAGS)
+  USER_CFLAGS   = -g -D_LANGUAGE_C_PLUS_PLUS -D_DEBUG $(COMMON_FLAGS)
 endif
 
 USER_C_IFLAGS  =
-USER_C_LDFLAGS =
+USER_C_LDFLAGS = 
 
 # comment out this line to use an automatic repository
 #SPECIFY_CXX_TREPOSITORY = 1
@@ -74,9 +63,6 @@ ARFLAGS =
 
 # Purify
 
-PURE_LDFLAGS = -Bstatic
-PURIFY = /usr/site/purify-4.5.1/purify -windows=yes -best-effort
+PURE_LDFLAGS = 
 
-QUANTIFY = /DSystem/ExternalSoftware/purehome/quantify/quantify -best-effort
-QUANTIFY_LDFLAGS =
-
+PURIFY = 
