@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.30 2004/05/28 15:18:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.31 2004/06/01 22:22:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -360,15 +360,17 @@ whirl2xaif::xlate_NonScalarSymTab(xml::ostream& xos, NonScalarSymTab* symtab,
 				  XlationContext& ctxt)
 {
 #if 0
+  if (!symtab) { return; }
+  
   // *** may be active and non active non-scalar syms
   for (NonScalarSymTabIterator it(*symtab); it.IsValid(); ++it) {
     WN* wn = it.CurrentSrc();
     NonScalarSym* sym = it.CurrentTarg();
     
     xos << BegElem("xaif:Symbol") << Attr("symbol_id", sym->GetName())
-	<< Attr("kind", "variable") << Attr("type", "***???")
-	<< Attr("shape", "***???") << Attr("active", "***???") << EndElem;
-  }  
+	<< Attr("kind", "variable") << Attr("type", "nonscalar-***???")
+	<< Attr("shape", "nonscalar-***???") << Attr("active", "***???") << EndElem;
+  }
 #endif
 }
 
