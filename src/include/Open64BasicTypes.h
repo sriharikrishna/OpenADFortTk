@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/include/Open64BasicTypes.h,v 1.5 2003/07/24 14:36:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/include/Open64BasicTypes.h,v 1.6 2003/07/24 20:06:59 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -28,26 +28,26 @@
 
 //************************** Open64 Include Files ***************************
 
-#include "defs.h"          /* Basic types, such as INT32 */
+#include "defs.h"          // Basic types, such as INT32
 #include "config.h"
-#include "errors.h"	   /* Set_Error_Tables(), etc. */
-#include "erglob.h"        /* For errors.h and EC definitions */
-#include "glob.h"          /* Irb_File_Name... */
+#include "errors.h"	   // Set_Error_Tables(), etc.
+#include "erglob.h"        // For errors.h and EC definitions
+#include "glob.h"          // Irb_File_Name...
 
-#include "mempool.h"	   /* MEM_Initialze(), MEM_POOL_*, etc.  */
-#include "cxx_memory.h"	   /* CXX_NEW */
+#include "mempool.h"	   // MEM_Initialze(), MEM_POOL_*, etc. 
+#include "cxx_memory.h"	   // CXX_NEW
 
-#include "pu_info.h"	   /* for PU_Info */
-#include "wn.h"            /* WN nodes */
-#include "wn_util.h"       /* WN walk, insert and copy routines */
-#include "wn_tree_util.h"  /* WN_TREE_ITER, WN_TREE_CONTAINER */
-#include "wio.h"           /* WHIRL I/O */
-#include "wutil.h"         /* WHIRL intrinsic utilities */
-#include "intrn_info.h"    /* WHIRL INTR macros */     
+#include "pu_info.h"	   // for PU_Info
+#include "wn.h"            // WN nodes
+#include "wn_util.h"       // WN walk, insert and copy routines
+#include "wn_tree_util.h"  // WN_TREE_ITER, WN_TREE_CONTAINER
+#include "wio.h"           // WHIRL I/O
+#include "wutil.h"         // WHIRL intrinsic utilities
+#include "intrn_info.h"    // WHIRL INTR macros     
 
-#include "symtab.h"        /* TY and ST nodes */
-#include "be_symtab.h"     /* BE_ST flags */
-#include "const.h"         /* For FOR_ALL_CONSTANTS */
+#include "symtab.h"        // TY and ST nodes
+#include "be_symtab.h"     // BE_ST flags
+#include "const.h"         // FOR_ALL_CONSTANTS
 
 //*************************** User Include Files ****************************
 
@@ -59,5 +59,3 @@ typedef TYPE_ID MTYPE;      // cf. be/whirl2c/stab_attr.h
 //***************************************************************************
 
 #endif
-
-
