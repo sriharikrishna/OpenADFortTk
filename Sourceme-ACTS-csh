@@ -1,6 +1,6 @@
 # -*-Mode: sh;-*-
 # For csh or tcsh
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.14 2004/03/03 16:30:30 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.15 2004/03/04 16:57:16 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
@@ -138,7 +138,8 @@ endif
 alias xboostread "${xbase}/system/test/t -c ${ii_xaif}"
 alias xboost_l "${xbase}/algorithms/Linearization/test/t -c ${ii_xaif}"
 alias xboost_bb "${xbase}/algorithms/BasicBlockPreaccumulation/test/t -c ${ii_xaif}"
-alias xboost_bb_r "${xbase}/algorithms/BasicBlockPreaccumulationReverse/test/t -c ${ii_xaif}"
+alias xboost_bbr "${xbase}/algorithms/BasicBlockPreaccumulationReverse/test/t -c ${ii_xaif}"
+alias xboost_cfr "${xbase}/algorithms/ControlFlowReversal/test/t -c ${ii_xaif}"
 
 unset xbase
 unset ii_xaif
