@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.7 2003/05/23 18:33:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.8 2003/07/09 19:44:52 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -121,17 +121,21 @@ DumpExprEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid, UINT pos);
  * a whirl2f special symbol to be applied like a function.  It will
  * be implemented in a library made available to be linked in with 
  * compiled whirl2f code.
+ * -- FIXME: this is outdated now --
  */
-#define WN2F_IS_ALPHABETIC(opc) \
-   ((Opc_Fname[opc][0]>='a' && Opc_Fname[opc][0]<='z') || \
-    (Opc_Fname[opc][0]>='A' && Opc_Fname[opc][0]<='Z') || \
-    (Opc_Fname[opc][0]=='_'))
+
+#define WN2F_IS_INFIX_PRE(opc)   (Opc_Fname[opc][0] == 'I')
+#define WN2F_IS_FUNCALL_PRE(opc) (Opc_Fname[opc][0] == 'F')
 
 #define WN2F_IS_INFIX_OP(opc) \
-   (Opc_Fname[opc]!=NULL && !WN2F_IS_ALPHABETIC(opc))
+   (Opc_Fname[opc]!=NULL && WN2F_IS_INFIX_PRE(opc))
 
 #define WN2F_IS_FUNCALL_OP(opc) \
-   (Opc_Fname[opc]!=NULL && WN2F_IS_ALPHABETIC(opc))
+   (Opc_Fname[opc]!=NULL && WN2F_IS_FUNCALL_PRE(opc))
+
+// Return the name minus the identifying prefix
+#define GET_OPC_FNAME(opc) ((const char*)&(Opc_Fname[opcode][2]))
+
 
 
 /* Mapping from opcodes to Fortran names for arithmetic/logical 
@@ -162,265 +166,265 @@ typedef struct Fname_PartialMap
 static const FNAME_PARTIALMAP Fname_Map[] =
 {
   // Unary Operator
-  {OPC_U8NEG, ".UnaryMinus"},
-  {OPC_FQNEG, ".UnaryMinus"},
-  {OPC_I8NEG, ".UnaryMinus"},
-  {OPC_U4NEG, ".UnaryMinus"},
-  {OPC_CQNEG, ".UnaryMinus"},
-  {OPC_F8NEG, ".UnaryMinus"},
-  {OPC_C8NEG, ".UnaryMinus"},
-  {OPC_I4NEG, ".UnaryMinus"},
-  {OPC_F4NEG, ".UnaryMinus"},
-  {OPC_C4NEG, ".UnaryMinus"},
+  {OPC_U8NEG, "I_UnaryMinus"},
+  {OPC_FQNEG, "I_UnaryMinus"},
+  {OPC_I8NEG, "I_UnaryMinus"},
+  {OPC_U4NEG, "I_UnaryMinus"},
+  {OPC_CQNEG, "I_UnaryMinus"},
+  {OPC_F8NEG, "I_UnaryMinus"},
+  {OPC_C8NEG, "I_UnaryMinus"},
+  {OPC_I4NEG, "I_UnaryMinus"},
+  {OPC_F4NEG, "I_UnaryMinus"},
+  {OPC_C4NEG, "I_UnaryMinus"},
 
-  {OPC_I4ABS, "ABS"},
-  {OPC_F4ABS, "ABS"},
-  {OPC_FQABS, "ABS"},
-  {OPC_I8ABS, "ABS"},
-  {OPC_F8ABS, "ABS"},
-  {OPC_F4SQRT, "SQRT"},
-  {OPC_C4SQRT, "SQRT"},
-  {OPC_FQSQRT, "SQRT"},
-  {OPC_CQSQRT, "SQRT"},
-  {OPC_F8SQRT, "SQRT"},
-  {OPC_C8SQRT, "SQRT"},
-  {OPC_I4F4RND, "JNINT"},
-  {OPC_I4FQRND, "JIQNNT"},
-  {OPC_I4F8RND, "JIDNNT"},
-  {OPC_U4F4RND, "JNINT"},
-  {OPC_U4FQRND, "JIQNNT"},
-  {OPC_U4F8RND, "JIDNNT"},
-  {OPC_I8F4RND, "KNINT"},
-  {OPC_I8FQRND, "KIQNNT"},
-  {OPC_I8F8RND, "KIDNNT"},
-  {OPC_U8F4RND, "KNINT"},
-  {OPC_U8FQRND, "KIQNNT"},
-  {OPC_U8F8RND, "KIDNNT"},
-  {OPC_I4F4TRUNC, "JINT"},
-  {OPC_I4FQTRUNC, "JIQINT"},
-  {OPC_I4F8TRUNC, "JIDINT"},
-  {OPC_U4F4TRUNC, "JINT"},
-  {OPC_U4FQTRUNC, "JIQINT"},
-  {OPC_U4F8TRUNC, "JIDINT"},
-  {OPC_I8F4TRUNC, "KINT"},
-  {OPC_I8FQTRUNC, "KIQINT"},
-  {OPC_I8F8TRUNC, "KIDINT"},
-  {OPC_U8F4TRUNC, "KINT"},
-  {OPC_U8FQTRUNC, "KIQINT"},
-  {OPC_U8F8TRUNC, "KIDINT"},
-  {OPC_I4F4CEIL, "CEILING"},
-  {OPC_I4FQCEIL, "CEILING"},
-  {OPC_I4F8CEIL, "CEILING"},
-  {OPC_I8F4CEIL, "CEILING"},
-  {OPC_I8FQCEIL, "CEILING"},
-  {OPC_I8F8CEIL, "CEILING"},
-  {OPC_I4F4FLOOR, "FLOOR"},
-  {OPC_I4FQFLOOR, "FLOOR"},
-  {OPC_I4F8FLOOR, "FLOOR"},
-  {OPC_I8F4FLOOR, "FLOOR"},
-  {OPC_I8FQFLOOR, "FLOOR"},
-  {OPC_I8F8FLOOR, "FLOOR"},
-  {OPC_I4BNOT, "NOT"},
-  {OPC_U8BNOT, "NOT"},
-  {OPC_I8BNOT, "NOT"},
-  {OPC_U4BNOT, "NOT"},
+  {OPC_I4ABS, "F_ABS"},
+  {OPC_F4ABS, "F_ABS"},
+  {OPC_FQABS, "F_ABS"},
+  {OPC_I8ABS, "F_ABS"},
+  {OPC_F8ABS, "F_ABS"},
+  {OPC_F4SQRT, "F_SQRT"},
+  {OPC_C4SQRT, "F_SQRT"},
+  {OPC_FQSQRT, "F_SQRT"},
+  {OPC_CQSQRT, "F_SQRT"},
+  {OPC_F8SQRT, "F_SQRT"},
+  {OPC_C8SQRT, "F_SQRT"},
+  {OPC_I4F4RND, "F_JNINT"},
+  {OPC_I4FQRND, "F_JIQNNT"},
+  {OPC_I4F8RND, "F_JIDNNT"},
+  {OPC_U4F4RND, "F_JNINT"},
+  {OPC_U4FQRND, "F_JIQNNT"},
+  {OPC_U4F8RND, "F_JIDNNT"},
+  {OPC_I8F4RND, "F_KNINT"},
+  {OPC_I8FQRND, "F_KIQNNT"},
+  {OPC_I8F8RND, "F_KIDNNT"},
+  {OPC_U8F4RND, "F_KNINT"},
+  {OPC_U8FQRND, "F_KIQNNT"},
+  {OPC_U8F8RND, "F_KIDNNT"},
+  {OPC_I4F4TRUNC, "F_JINT"},
+  {OPC_I4FQTRUNC, "F_JIQINT"},
+  {OPC_I4F8TRUNC, "F_JIDINT"},
+  {OPC_U4F4TRUNC, "F_JINT"},
+  {OPC_U4FQTRUNC, "F_JIQINT"},
+  {OPC_U4F8TRUNC, "F_JIDINT"},
+  {OPC_I8F4TRUNC, "F_KINT"},
+  {OPC_I8FQTRUNC, "F_KIQINT"},
+  {OPC_I8F8TRUNC, "F_KIDINT"},
+  {OPC_U8F4TRUNC, "F_KINT"},
+  {OPC_U8FQTRUNC, "F_KIQINT"},
+  {OPC_U8F8TRUNC, "F_KIDINT"},
+  {OPC_I4F4CEIL, "F_CEILING"},
+  {OPC_I4FQCEIL, "F_CEILING"},
+  {OPC_I4F8CEIL, "F_CEILING"},
+  {OPC_I8F4CEIL, "F_CEILING"},
+  {OPC_I8FQCEIL, "F_CEILING"},
+  {OPC_I8F8CEIL, "F_CEILING"},
+  {OPC_I4F4FLOOR, "F_FLOOR"},
+  {OPC_I4FQFLOOR, "F_FLOOR"},
+  {OPC_I4F8FLOOR, "F_FLOOR"},
+  {OPC_I8F4FLOOR, "F_FLOOR"},
+  {OPC_I8FQFLOOR, "F_FLOOR"},
+  {OPC_I8F8FLOOR, "F_FLOOR"},
+  {OPC_I4BNOT, "F_NOT"},
+  {OPC_U8BNOT, "F_NOT"},
+  {OPC_I8BNOT, "F_NOT"},
+  {OPC_U4BNOT, "F_NOT"},
 // >> WHIRL 0.30: replace OPC_LNOT by OPC_B and OPC_I4 variant
 // TODO WHIRL 0.30: get rid of OPC_I4 variant
-  {OPC_BLNOT, ".Not"},
-  {OPC_I4LNOT, ".Not"},
+  {OPC_BLNOT, "I_Not"},
+  {OPC_I4LNOT, "I_Not"},
 // << WHIRL 0.30: replace OPC_LNOT by OPC_B and OPC_I4 variant
-  {OPC_U8ADD, ".Add"}, // xaif binary op
-  {OPC_FQADD, ".Add"}, // xaif binary op
-  {OPC_I8ADD, ".Add"}, // xaif binary op
-  {OPC_U4ADD, ".Add"}, // xaif binary op
-  {OPC_CQADD, ".Add"}, // xaif binary op
-  {OPC_F8ADD, ".Add"}, // xaif binary op
-  {OPC_C8ADD, ".Add"}, // xaif binary op
-  {OPC_I4ADD, ".Add"}, // xaif binary op
-  {OPC_F4ADD, ".Add"}, // xaif binary op
-  {OPC_C4ADD, ".Add"}, // xaif binary op
-  {OPC_U8SUB, ".Subtract"}, // xaif binary op
-  {OPC_FQSUB, ".Subtract"}, // xaif binary op
-  {OPC_I8SUB, ".Subtract"}, // xaif binary op
-  {OPC_U4SUB, ".Subtract"}, // xaif binary op
-  {OPC_CQSUB, ".Subtract"}, // xaif binary op
-  {OPC_F8SUB, ".Subtract"}, // xaif binary op
-  {OPC_C8SUB, ".Subtract"}, // xaif binary op
-  {OPC_I4SUB, ".Subtract"}, // xaif binary op
-  {OPC_F4SUB, ".Subtract"}, // xaif binary op
-  {OPC_C4SUB, ".Subtract"}, // xaif binary op
-  {OPC_U8MPY, ".Multiply"}, // xaif binary op
-  {OPC_FQMPY, ".Multiply"}, // xaif binary op
-  {OPC_I8MPY, ".Multiply"}, // xaif binary op
-  {OPC_U4MPY, ".Multiply"}, // xaif binary op
-  {OPC_CQMPY, ".Multiply"}, // xaif binary op
-  {OPC_F8MPY, ".Multiply"}, // xaif binary op
-  {OPC_C8MPY, ".Multiply"}, // xaif binary op
-  {OPC_I4MPY, ".Multiply"}, // xaif binary op
-  {OPC_F4MPY, ".Multiply"}, // xaif binary op
-  {OPC_C4MPY, ".Multiply"}, // xaif binary op
-  {OPC_U8DIV, ".Divide"},
-  {OPC_FQDIV, ".Divide"},
-  {OPC_I8DIV, ".Divide"},
-  {OPC_U4DIV, ".Divide"},
-  {OPC_CQDIV, ".Divide"},
-  {OPC_F8DIV, ".Divide"},
-  {OPC_C8DIV, ".Divide"},
-  {OPC_I4DIV, ".Divide"},
-  {OPC_F4DIV, ".Divide"},
-  {OPC_C4DIV, ".Divide"},
-  {OPC_I4MOD, "MOD"},
-  {OPC_U8MOD, "MOD"},
-  {OPC_I8MOD, "MOD"},
-  {OPC_U8MOD, "MOD"},
-  {OPC_U4MOD, "MOD"},
-  {OPC_I4REM, "MOD"},
-  {OPC_U8REM, "MOD"},
-  {OPC_I8REM, "MOD"},
-  {OPC_U4REM, "MOD"},
-  {OPC_I4MAX, "MAX"},
-  {OPC_U8MAX, "MAX"},
-  {OPC_F4MAX, "MAX"},
-  {OPC_FQMAX, "MAX"},
-  {OPC_I8MAX, "MAX"},
-  {OPC_U4MAX, "MAX"},
-  {OPC_F8MAX, "MAX"},
-  {OPC_I4MIN, "MIN"},
-  {OPC_U8MIN, "MIN"},
-  {OPC_F4MIN, "MIN"},
-  {OPC_FQMIN, "MIN"},
-  {OPC_I8MIN, "MIN"},
-  {OPC_U4MIN, "MIN"},
-  {OPC_F8MIN, "MIN"},
-  {OPC_I4BAND, ".IAnd"},
-  {OPC_U8BAND, ".IAnd"},
-  {OPC_I8BAND, ".IAnd"},
-  {OPC_U4BAND, ".IAnd"},
-  {OPC_I4BIOR, ".IOr"},
-  {OPC_U8BIOR, ".IOr"},
-  {OPC_I8BIOR, ".IOr"},
-  {OPC_U4BIOR, ".IOr"},
-  {OPC_I4BXOR, "IEOR"},
-  {OPC_U8BXOR, "IEOR"},
-  {OPC_I8BXOR, "IEOR"},
-  {OPC_U4BXOR, "IEOR"},
+  {OPC_U8ADD, "I_add_scal_scal"}, // xaif binary op
+  {OPC_FQADD, "I_add_scal_scal"}, // xaif binary op
+  {OPC_I8ADD, "I_add_scal_scal"}, // xaif binary op
+  {OPC_U4ADD, "I_add_scal_scal"}, // xaif binary op
+  {OPC_CQADD, "I_add_scal_scal"}, // xaif binary op
+  {OPC_F8ADD, "I_add_scal_scal"}, // xaif binary op
+  {OPC_C8ADD, "I_add_scal_scal"}, // xaif binary op
+  {OPC_I4ADD, "I_add_scal_scal"}, // xaif binary op
+  {OPC_F4ADD, "I_add_scal_scal"}, // xaif binary op
+  {OPC_C4ADD, "I_add_scal_scal"}, // xaif binary op
+  {OPC_U8SUB, "I_sub_scal_scal"}, // xaif binary op
+  {OPC_FQSUB, "I_sub_scal_scal"}, // xaif binary op
+  {OPC_I8SUB, "I_sub_scal_scal"}, // xaif binary op
+  {OPC_U4SUB, "I_sub_scal_scal"}, // xaif binary op
+  {OPC_CQSUB, "I_sub_scal_scal"}, // xaif binary op
+  {OPC_F8SUB, "I_sub_scal_scal"}, // xaif binary op
+  {OPC_C8SUB, "I_sub_scal_scal"}, // xaif binary op
+  {OPC_I4SUB, "I_sub_scal_scal"}, // xaif binary op
+  {OPC_F4SUB, "I_sub_scal_scal"}, // xaif binary op
+  {OPC_C4SUB, "I_sub_scal_scal"}, // xaif binary op
+  {OPC_U8MPY, "I_mul_scal_scal"}, // xaif binary op
+  {OPC_FQMPY, "I_mul_scal_scal"}, // xaif binary op
+  {OPC_I8MPY, "I_mul_scal_scal"}, // xaif binary op
+  {OPC_U4MPY, "I_mul_scal_scal"}, // xaif binary op
+  {OPC_CQMPY, "I_mul_scal_scal"}, // xaif binary op
+  {OPC_F8MPY, "I_mul_scal_scal"}, // xaif binary op
+  {OPC_C8MPY, "I_mul_scal_scal"}, // xaif binary op
+  {OPC_I4MPY, "I_mul_scal_scal"}, // xaif binary op
+  {OPC_F4MPY, "I_mul_scal_scal"}, // xaif binary op
+  {OPC_C4MPY, "I_mul_scal_scal"}, // xaif binary op
+  {OPC_U8DIV, "I_div_scal_scal"},
+  {OPC_FQDIV, "I_div_scal_scal"},
+  {OPC_I8DIV, "I_div_scal_scal"},
+  {OPC_U4DIV, "I_div_scal_scal"},
+  {OPC_CQDIV, "I_div_scal_scal"},
+  {OPC_F8DIV, "I_div_scal_scal"},
+  {OPC_C8DIV, "I_div_scal_scal"},
+  {OPC_I4DIV, "I_div_scal_scal"},
+  {OPC_F4DIV, "I_div_scal_scal"},
+  {OPC_C4DIV, "I_div_scal_scal"},
+  {OPC_I4MOD, "F_MOD"},
+  {OPC_U8MOD, "F_MOD"},
+  {OPC_I8MOD, "F_MOD"},
+  {OPC_U8MOD, "F_MOD"},
+  {OPC_U4MOD, "F_MOD"},
+  {OPC_I4REM, "F_MOD"},
+  {OPC_U8REM, "F_MOD"},
+  {OPC_I8REM, "F_MOD"},
+  {OPC_U4REM, "F_MOD"},
+  {OPC_I4MAX, "F_MAX"},
+  {OPC_U8MAX, "F_MAX"},
+  {OPC_F4MAX, "F_MAX"},
+  {OPC_FQMAX, "F_MAX"},
+  {OPC_I8MAX, "F_MAX"},
+  {OPC_U4MAX, "F_MAX"},
+  {OPC_F8MAX, "F_MAX"},
+  {OPC_I4MIN, "F_MIN"},
+  {OPC_U8MIN, "F_MIN"},
+  {OPC_F4MIN, "F_MIN"},
+  {OPC_FQMIN, "F_MIN"},
+  {OPC_I8MIN, "F_MIN"},
+  {OPC_U4MIN, "F_MIN"},
+  {OPC_F8MIN, "F_MIN"},
+  {OPC_I4BAND, "I_IAnd"},
+  {OPC_U8BAND, "I_IAnd"},
+  {OPC_I8BAND, "I_IAnd"},
+  {OPC_U4BAND, "I_IAnd"},
+  {OPC_I4BIOR, "I_IOr"},
+  {OPC_U8BIOR, "I_IOr"},
+  {OPC_I8BIOR, "I_IOr"},
+  {OPC_U4BIOR, "I_IOr"},
+  {OPC_I4BXOR, "F_IEOR"},
+  {OPC_U8BXOR, "F_IEOR"},
+  {OPC_I8BXOR, "F_IEOR"},
+  {OPC_U4BXOR, "F_IEOR"},
 // >> WHIRL 0.30: replaced OPC_{LAND,LIOR,CAND,CIOR} by OPC_B and OPC_I4 variants
 // TODO WHIRL 0.30: get rid of OPC_I4 variants
-  {OPC_BLAND, ".And"},
-  {OPC_I4LAND, ".And"},
-  {OPC_BLIOR, ".Or"},
-  {OPC_I4LIOR, ".Or"},
-  {OPC_BCAND, ".And"},
-  {OPC_I4CAND, ".And"},
-  {OPC_BCIOR, ".Or"},
-  {OPC_I4CIOR, ".Or"},
+  {OPC_BLAND, "I_And"},
+  {OPC_I4LAND, "I_And"},
+  {OPC_BLIOR, "I_Or"},
+  {OPC_I4LIOR, "I_Or"},
+  {OPC_BCAND, "I_And"},
+  {OPC_I4CAND, "I_And"},
+  {OPC_BCIOR, "I_Or"},
+  {OPC_I4CIOR, "I_Or"},
 // << WHIRL 0.30: replaced OPC_{LAND,LIOR,CAND,CIOR} by OPC_B and OPC_I4 variants
-  {OPC_I4SHL, "ISHIFT"},
-  {OPC_U8SHL, "ISHIFT"},
-  {OPC_I8SHL, "ISHIFT"},
-  {OPC_U4SHL, "ISHIFT"},
-  {OPC_I4ASHR, "IASHR"},
-  {OPC_U8ASHR, "IASHR"},
-  {OPC_I8ASHR, "IASHR"},
-  {OPC_U4ASHR, "IASHR"},
+  {OPC_I4SHL, "F_ISHIFT"},
+  {OPC_U8SHL, "F_ISHIFT"},
+  {OPC_I8SHL, "F_ISHIFT"},
+  {OPC_U4SHL, "F_ISHIFT"},
+  {OPC_I4ASHR, "F_IASHR"},
+  {OPC_U8ASHR, "F_IASHR"},
+  {OPC_I8ASHR, "F_IASHR"},
+  {OPC_U4ASHR, "F_IASHR"},
 // >> WHIRL 0.30: replaced OPC_T1{EQ,NE,GT,GE,LT,LE} by OPC_B and OPC_I4 variants
 // TODO WHIRL 0.30: get rid of OPC_I4 variants
-  {OPC_BU8EQ, ".Equal"},
-  {OPC_BFQEQ, ".Equal"},
-  {OPC_BI8EQ, ".Equal"},
-  {OPC_BU4EQ, ".Equal"},
-  {OPC_BCQEQ, ".Equal"},
-  {OPC_BF8EQ, ".Equal"},
-  {OPC_BC8EQ, ".Equal"},
-  {OPC_BI4EQ, ".Equal"},
-  {OPC_BF4EQ, ".Equal"},
-  {OPC_BC4EQ, ".Equal"},
-  {OPC_BU8NE, ".NotEqual"},
-  {OPC_BFQNE, ".NotEqual"},
-  {OPC_BI8NE, ".NotEqual"},
-  {OPC_BU4NE, ".NotEqual"},
-  {OPC_BCQNE, ".NotEqual"},
-  {OPC_BF8NE, ".NotEqual"},
-  {OPC_BC8NE, ".NotEqual"},
-  {OPC_BI4NE, ".NotEqual"},
-  {OPC_BF4NE, ".NotEqual"},
-  {OPC_BC4NE, ".NotEqual"},
-  {OPC_BI4GT, ".GreaterThan"},
-  {OPC_BU8GT, ".GreaterThan"},
-  {OPC_BF4GT, ".GreaterThan"},
-  {OPC_BFQGT, ".GreaterThan"},
-  {OPC_BI8GT, ".GreaterThan"},
-  {OPC_BU4GT, ".GreaterThan"},
-  {OPC_BF8GT, ".GreaterThan"},
-  {OPC_BI4GE, ".GreaterOrEqual"},
-  {OPC_BU8GE, ".GreaterOrEqual"},
-  {OPC_BF4GE, ".GreaterOrEqual"},
-  {OPC_BFQGE, ".GreaterOrEqual"},
-  {OPC_BI8GE, ".GreaterOrEqual"},
-  {OPC_BU4GE, ".GreaterOrEqual"},
-  {OPC_BF8GE, ".GreaterOrEqual"},
-  {OPC_BI4LT, ".LessThan"},
-  {OPC_BU8LT, ".LessThan"},
-  {OPC_BF4LT, ".LessThan"},
-  {OPC_BFQLT, ".LessThan"},
-  {OPC_BI8LT, ".LessThan"},
-  {OPC_BU4LT, ".LessThan"},
-  {OPC_BF8LT, ".LessThan"},
-  {OPC_BI4LE, ".LessOrEqual"},
-  {OPC_BU8LE, ".LessOrEqual"},
-  {OPC_BF4LE, ".LessOrEqual"},
-  {OPC_BFQLE, ".LessOrEqual"},
-  {OPC_BI8LE, ".LessOrEqual"},
-  {OPC_BU4LE, ".LessOrEqual"},
-  {OPC_BF8LE, ".LessOrEqual"},
-  {OPC_I4U8EQ, ".Equal"},
-  {OPC_I4FQEQ, ".Equal"},
-  {OPC_I4I8EQ, ".Equal"},
-  {OPC_I4U4EQ, ".Equal"},
-  {OPC_I4CQEQ, ".Equal"},
-  {OPC_I4F8EQ, ".Equal"},
-  {OPC_I4C8EQ, ".Equal"},
-  {OPC_I4I4EQ, ".Equal"},
-  {OPC_I4F4EQ, ".Equal"},
-  {OPC_I4C4EQ, ".Equal"},
-  {OPC_I4U8NE, ".NotEqual"},
-  {OPC_I4FQNE, ".NotEqual"},
-  {OPC_I4I8NE, ".NotEqual"},
-  {OPC_I4U4NE, ".NotEqual"},
-  {OPC_I4CQNE, ".NotEqual"},
-  {OPC_I4F8NE, ".NotEqual"},
-  {OPC_I4C8NE, ".NotEqual"},
-  {OPC_I4I4NE, ".NotEqual"},
-  {OPC_I4F4NE, ".NotEqual"},
-  {OPC_I4C4NE, ".NotEqual"},
-  {OPC_I4I4GT, ".GreaterThan"},
-  {OPC_I4U8GT, ".GreaterThan"},
-  {OPC_I4F4GT, ".GreaterThan"},
-  {OPC_I4FQGT, ".GreaterThan"},
-  {OPC_I4I8GT, ".GreaterThan"},
-  {OPC_I4U4GT, ".GreaterThan"},
-  {OPC_I4F8GT, ".GreaterThan"},
-  {OPC_I4I4GE, ".GreaterOrEqual"},
-  {OPC_I4U8GE, ".GreaterOrEqual"},
-  {OPC_I4F4GE, ".GreaterOrEqual"},
-  {OPC_I4FQGE, ".GreaterOrEqual"},
-  {OPC_I4I8GE, ".GreaterOrEqual"},
-  {OPC_I4U4GE, ".GreaterOrEqual"},
-  {OPC_I4F8GE, ".GreaterOrEqual"},
-  {OPC_I4I4LT, ".LessThan"},
-  {OPC_I4U8LT, ".LessThan"},
-  {OPC_I4F4LT, ".LessThan"},
-  {OPC_I4FQLT, ".LessThan"},
-  {OPC_I4I8LT, ".LessThan"},
-  {OPC_I4U4LT, ".LessThan"},
-  {OPC_I4F8LT, ".LessThan"},
-  {OPC_I4I4LE, ".LessOrEqual"},
-  {OPC_I4U8LE, ".LessOrEqual"},
-  {OPC_I4F4LE, ".LessOrEqual"}, 
-  {OPC_I4FQLE, ".LessOrEqual"},
-  {OPC_I4I8LE, ".LessOrEqual"},
-  {OPC_I4U4LE, ".LessOrEqual"},
-  {OPC_I4F8LE, ".LessOrEqual"}
+  {OPC_BU8EQ, "I_Equal"},
+  {OPC_BFQEQ, "I_Equal"},
+  {OPC_BI8EQ, "I_Equal"},
+  {OPC_BU4EQ, "I_Equal"},
+  {OPC_BCQEQ, "I_Equal"},
+  {OPC_BF8EQ, "I_Equal"},
+  {OPC_BC8EQ, "I_Equal"},
+  {OPC_BI4EQ, "I_Equal"},
+  {OPC_BF4EQ, "I_Equal"},
+  {OPC_BC4EQ, "I_Equal"},
+  {OPC_BU8NE, "I_NotEqual"},
+  {OPC_BFQNE, "I_NotEqual"},
+  {OPC_BI8NE, "I_NotEqual"},
+  {OPC_BU4NE, "I_NotEqual"},
+  {OPC_BCQNE, "I_NotEqual"},
+  {OPC_BF8NE, "I_NotEqual"},
+  {OPC_BC8NE, "I_NotEqual"},
+  {OPC_BI4NE, "I_NotEqual"},
+  {OPC_BF4NE, "I_NotEqual"},
+  {OPC_BC4NE, "I_NotEqual"},
+  {OPC_BI4GT, "I_GreaterThan"},
+  {OPC_BU8GT, "I_GreaterThan"},
+  {OPC_BF4GT, "I_GreaterThan"},
+  {OPC_BFQGT, "I_GreaterThan"},
+  {OPC_BI8GT, "I_GreaterThan"},
+  {OPC_BU4GT, "I_GreaterThan"},
+  {OPC_BF8GT, "I_GreaterThan"},
+  {OPC_BI4GE, "I_GreaterOrEqual"},
+  {OPC_BU8GE, "I_GreaterOrEqual"},
+  {OPC_BF4GE, "I_GreaterOrEqual"},
+  {OPC_BFQGE, "I_GreaterOrEqual"},
+  {OPC_BI8GE, "I_GreaterOrEqual"},
+  {OPC_BU4GE, "I_GreaterOrEqual"},
+  {OPC_BF8GE, "I_GreaterOrEqual"},
+  {OPC_BI4LT, "I_LessThan"},
+  {OPC_BU8LT, "I_LessThan"},
+  {OPC_BF4LT, "I_LessThan"},
+  {OPC_BFQLT, "I_LessThan"},
+  {OPC_BI8LT, "I_LessThan"},
+  {OPC_BU4LT, "I_LessThan"},
+  {OPC_BF8LT, "I_LessThan"},
+  {OPC_BI4LE, "I_LessOrEqual"},
+  {OPC_BU8LE, "I_LessOrEqual"},
+  {OPC_BF4LE, "I_LessOrEqual"},
+  {OPC_BFQLE, "I_LessOrEqual"},
+  {OPC_BI8LE, "I_LessOrEqual"},
+  {OPC_BU4LE, "I_LessOrEqual"},
+  {OPC_BF8LE, "I_LessOrEqual"},
+  {OPC_I4U8EQ, "I_Equal"},
+  {OPC_I4FQEQ, "I_Equal"},
+  {OPC_I4I8EQ, "I_Equal"},
+  {OPC_I4U4EQ, "I_Equal"},
+  {OPC_I4CQEQ, "I_Equal"},
+  {OPC_I4F8EQ, "I_Equal"},
+  {OPC_I4C8EQ, "I_Equal"},
+  {OPC_I4I4EQ, "I_Equal"},
+  {OPC_I4F4EQ, "I_Equal"},
+  {OPC_I4C4EQ, "I_Equal"},
+  {OPC_I4U8NE, "I_NotEqual"},
+  {OPC_I4FQNE, "I_NotEqual"},
+  {OPC_I4I8NE, "I_NotEqual"},
+  {OPC_I4U4NE, "I_NotEqual"},
+  {OPC_I4CQNE, "I_NotEqual"},
+  {OPC_I4F8NE, "I_NotEqual"},
+  {OPC_I4C8NE, "I_NotEqual"},
+  {OPC_I4I4NE, "I_NotEqual"},
+  {OPC_I4F4NE, "I_NotEqual"},
+  {OPC_I4C4NE, "I_NotEqual"},
+  {OPC_I4I4GT, "I_GreaterThan"},
+  {OPC_I4U8GT, "I_GreaterThan"},
+  {OPC_I4F4GT, "I_GreaterThan"},
+  {OPC_I4FQGT, "I_GreaterThan"},
+  {OPC_I4I8GT, "I_GreaterThan"},
+  {OPC_I4U4GT, "I_GreaterThan"},
+  {OPC_I4F8GT, "I_GreaterThan"},
+  {OPC_I4I4GE, "I_GreaterOrEqual"},
+  {OPC_I4U8GE, "I_GreaterOrEqual"},
+  {OPC_I4F4GE, "I_GreaterOrEqual"},
+  {OPC_I4FQGE, "I_GreaterOrEqual"},
+  {OPC_I4I8GE, "I_GreaterOrEqual"},
+  {OPC_I4U4GE, "I_GreaterOrEqual"},
+  {OPC_I4F8GE, "I_GreaterOrEqual"},
+  {OPC_I4I4LT, "I_LessThan"},
+  {OPC_I4U8LT, "I_LessThan"},
+  {OPC_I4F4LT, "I_LessThan"},
+  {OPC_I4FQLT, "I_LessThan"},
+  {OPC_I4I8LT, "I_LessThan"},
+  {OPC_I4U4LT, "I_LessThan"},
+  {OPC_I4F8LT, "I_LessThan"},
+  {OPC_I4I4LE, "I_LessOrEqual"},
+  {OPC_I4U8LE, "I_LessOrEqual"},
+  {OPC_I4F4LE, "I_LessOrEqual"}, 
+  {OPC_I4FQLE, "I_LessOrEqual"},
+  {OPC_I4I8LE, "I_LessOrEqual"},
+  {OPC_I4U4LE, "I_LessOrEqual"},
+  {OPC_I4F8LE, "I_LessOrEqual"}
 // << WHIRL 0.30: replaced OPC_T1{EQ,NE,GT,GE,LT,LE} by OPC_B and OPC_I4 variants
 }; /* Fname_Map */
 
@@ -450,107 +454,107 @@ static const CONV_OP Conv_Op_Map[] =
    /* Only consider conversion to ptr sized unsigned numbers 
     * valid in Fortran.
     */
-   {MTYPE_I1, MTYPE_U4, "JZEXT"},
-   {MTYPE_I2, MTYPE_U4, "JZEXT"},
-   {MTYPE_I4, MTYPE_U4, "JZEXT"},
-   {MTYPE_I8, MTYPE_U4, "JZEXT"},
+   {MTYPE_I1, MTYPE_U4, "C_JZEXT"},
+   {MTYPE_I2, MTYPE_U4, "C_JZEXT"},
+   {MTYPE_I4, MTYPE_U4, "C_JZEXT"},
+   {MTYPE_I8, MTYPE_U4, "C_JZEXT"},
    /*{MTYPE_U1, MTYPE_U4, ""},*/
    /*{MTYPE_U2, MTYPE_U4, ""},*/
    /*{MTYPE_U4, MTYPE_U4, ""},*/
-   {MTYPE_U8, MTYPE_U4, "JZEXT"},
+   {MTYPE_U8, MTYPE_U4, "C_JZEXT"},
 
-   {MTYPE_I1, MTYPE_U8, "KZEXT"},
-   {MTYPE_I2, MTYPE_U8, "KZEXT"},
-   {MTYPE_I4, MTYPE_U8, "KZEXT"},
-   {MTYPE_I8, MTYPE_U8, "KZEXT"},
+   {MTYPE_I1, MTYPE_U8, "C_KZEXT"},
+   {MTYPE_I2, MTYPE_U8, "C_KZEXT"},
+   {MTYPE_I4, MTYPE_U8, "C_KZEXT"},
+   {MTYPE_I8, MTYPE_U8, "C_KZEXT"},
    /*{MTYPE_U1, MTYPE_U8, ""},*/
    /*{MTYPE_U2, MTYPE_U8, ""},*/
    /*{MTYPE_U4, MTYPE_U8, ""},*/
    /*{MTYPE_U8, MTYPE_U8, ""},*/
 
    /*{MTYPE_I1, MTYPE_I1, ""},*/
-   {MTYPE_I2, MTYPE_I1, "INT1"},
-   {MTYPE_I4, MTYPE_I1, "INT1"},
-   {MTYPE_I8, MTYPE_I1, "INT1"},
+   {MTYPE_I2, MTYPE_I1, "C_INT1"},
+   {MTYPE_I4, MTYPE_I1, "C_INT1"},
+   {MTYPE_I8, MTYPE_I1, "C_INT1"},
    /*{MTYPE_U1, MTYPE_I1, ""},*/
-   {MTYPE_U2, MTYPE_I1, "INT1"},
-   {MTYPE_U4, MTYPE_I1, "INT1"},
-   {MTYPE_U8, MTYPE_I1, "INT1"},
-   {MTYPE_F4, MTYPE_I1, "INT1"},
-   {MTYPE_F8, MTYPE_I1, "INT1"},
-   {MTYPE_FQ, MTYPE_I1, "INT1"},
+   {MTYPE_U2, MTYPE_I1, "C_INT1"},
+   {MTYPE_U4, MTYPE_I1, "C_INT1"},
+   {MTYPE_U8, MTYPE_I1, "C_INT1"},
+   {MTYPE_F4, MTYPE_I1, "C_INT1"},
+   {MTYPE_F8, MTYPE_I1, "C_INT1"},
+   {MTYPE_FQ, MTYPE_I1, "C_INT1"},
 
-   {MTYPE_I1, MTYPE_I2, "INT2"},
+   {MTYPE_I1, MTYPE_I2, "C_INT2"},
    /*{MTYPE_I2, MTYPE_I2, ""},*/
-   {MTYPE_I4, MTYPE_I2, "INT2"},
-   {MTYPE_I8, MTYPE_I2, "INT2"},
-   {MTYPE_U1, MTYPE_I2, "INT2"},
+   {MTYPE_I4, MTYPE_I2, "C_INT2"},
+   {MTYPE_I8, MTYPE_I2, "C_INT2"},
+   {MTYPE_U1, MTYPE_I2, "C_INT2"},
    /*{MTYPE_U2, MTYPE_I2, ""},*/
-   {MTYPE_U4, MTYPE_I2, "INT2"},
-   {MTYPE_U8, MTYPE_I2, "INT2"},
-   {MTYPE_F4, MTYPE_I2, "INT2"},
-   {MTYPE_F8, MTYPE_I2, "INT2"},
-   {MTYPE_FQ, MTYPE_I2, "INT2"},
+   {MTYPE_U4, MTYPE_I2, "C_INT2"},
+   {MTYPE_U8, MTYPE_I2, "C_INT2"},
+   {MTYPE_F4, MTYPE_I2, "C_INT2"},
+   {MTYPE_F8, MTYPE_I2, "C_INT2"},
+   {MTYPE_FQ, MTYPE_I2, "C_INT2"},
 
-   {MTYPE_I1, MTYPE_I4, "INT"},
-   {MTYPE_I2, MTYPE_I4, "INT"},
+   {MTYPE_I1, MTYPE_I4, "C_INT"},
+   {MTYPE_I2, MTYPE_I4, "C_INT"},
    /*{MTYPE_I4, MTYPE_I4, ""},*/
-   {MTYPE_I8, MTYPE_I4, "INT"},
-   {MTYPE_U1, MTYPE_I4, "INT"},
-   {MTYPE_U2, MTYPE_I4, "INT"},
+   {MTYPE_I8, MTYPE_I4, "C_INT"},
+   {MTYPE_U1, MTYPE_I4, "C_INT"},
+   {MTYPE_U2, MTYPE_I4, "C_INT"},
    /*{MTYPE_U4, MTYPE_I4, ""},*/
-   {MTYPE_U8, MTYPE_I4, "INT"},
-   {MTYPE_F4, MTYPE_I4, "INT"},
-   {MTYPE_F8, MTYPE_I4, "INT"},
-   {MTYPE_FQ, MTYPE_I4, "INT"},
+   {MTYPE_U8, MTYPE_I4, "C_INT"},
+   {MTYPE_F4, MTYPE_I4, "C_INT"},
+   {MTYPE_F8, MTYPE_I4, "C_INT"},
+   {MTYPE_FQ, MTYPE_I4, "C_INT"},
 
 
-   {MTYPE_I1, MTYPE_I8, "INT"},
-   {MTYPE_I2, MTYPE_I8, "INT"},
-   {MTYPE_I4, MTYPE_I8, "INT"},
+   {MTYPE_I1, MTYPE_I8, "C_INT"},
+   {MTYPE_I2, MTYPE_I8, "C_INT"},
+   {MTYPE_I4, MTYPE_I8, "C_INT"},
    /*{MTYPE_I8, MTYPE_I8, ""},*/
-   {MTYPE_U1, MTYPE_I8, "INT"},
-   {MTYPE_U2, MTYPE_I8, "INT"},
-   {MTYPE_U4, MTYPE_I8, "INT"},
+   {MTYPE_U1, MTYPE_I8, "C_INT"},
+   {MTYPE_U2, MTYPE_I8, "C_INT"},
+   {MTYPE_U4, MTYPE_I8, "C_INT"},
    /*{MTYPE_U8, MTYPE_I8, ""},*/
-   {MTYPE_F4, MTYPE_I8, "INT"},
-   {MTYPE_F8, MTYPE_I8, "INT"},
-   {MTYPE_FQ, MTYPE_I8, "INT"},
+   {MTYPE_F4, MTYPE_I8, "C_INT"},
+   {MTYPE_F8, MTYPE_I8, "C_INT"},
+   {MTYPE_FQ, MTYPE_I8, "C_INT"},
 
-   {MTYPE_I1, MTYPE_F4, "REAL"},
-   {MTYPE_I2, MTYPE_F4, "REAL"},
-   {MTYPE_I4, MTYPE_F4, "REAL"},
-   {MTYPE_I8, MTYPE_F4, "REAL"},
-   {MTYPE_U1, MTYPE_F4, "REAL"},
-   {MTYPE_U2, MTYPE_F4, "REAL"},
-   {MTYPE_U4, MTYPE_F4, "REAL"},
-   {MTYPE_U8, MTYPE_F4, "REAL"},
+   {MTYPE_I1, MTYPE_F4, "C_REAL"},
+   {MTYPE_I2, MTYPE_F4, "C_REAL"},
+   {MTYPE_I4, MTYPE_F4, "C_REAL"},
+   {MTYPE_I8, MTYPE_F4, "C_REAL"},
+   {MTYPE_U1, MTYPE_F4, "C_REAL"},
+   {MTYPE_U2, MTYPE_F4, "C_REAL"},
+   {MTYPE_U4, MTYPE_F4, "C_REAL"},
+   {MTYPE_U8, MTYPE_F4, "C_REAL"},
    /*{MTYPE_F4, MTYPE_F4, ""},*/
-   {MTYPE_F8, MTYPE_F4, "REAL"},
-   {MTYPE_FQ, MTYPE_F4, "REAL"},
+   {MTYPE_F8, MTYPE_F4, "C_REAL"},
+   {MTYPE_FQ, MTYPE_F4, "C_REAL"},
 
-   {MTYPE_I1, MTYPE_F8, "DBLE"},
-   {MTYPE_I2, MTYPE_F8, "DBLE"},
-   {MTYPE_I4, MTYPE_F8, "DBLE"},
-   {MTYPE_I8, MTYPE_F8, "DBLE"},
-   {MTYPE_U1, MTYPE_F8, "DBLE"},
-   {MTYPE_U2, MTYPE_F8, "DBLE"},
-   {MTYPE_U4, MTYPE_F8, "DBLE"},
-   {MTYPE_U8, MTYPE_F8, "DBLE"},
-   {MTYPE_F4, MTYPE_F8, "DBLE"},
+   {MTYPE_I1, MTYPE_F8, "C_DBLE"},
+   {MTYPE_I2, MTYPE_F8, "C_DBLE"},
+   {MTYPE_I4, MTYPE_F8, "C_DBLE"},
+   {MTYPE_I8, MTYPE_F8, "C_DBLE"},
+   {MTYPE_U1, MTYPE_F8, "C_DBLE"},
+   {MTYPE_U2, MTYPE_F8, "C_DBLE"},
+   {MTYPE_U4, MTYPE_F8, "C_DBLE"},
+   {MTYPE_U8, MTYPE_F8, "C_DBLE"},
+   {MTYPE_F4, MTYPE_F8, "C_DBLE"},
    /*{MTYPE_F8, MTYPE_F8, ""},*/
-   {MTYPE_FQ, MTYPE_F8, "DBLE"},
+   {MTYPE_FQ, MTYPE_F8, "C_DBLE"},
 
-   {MTYPE_I1, MTYPE_FQ, "QREAL"},
-   {MTYPE_I2, MTYPE_FQ, "QREAL"},
-   {MTYPE_I4, MTYPE_FQ, "QREAL"},
-   {MTYPE_I8, MTYPE_FQ, "QREAL"},
-   {MTYPE_U1, MTYPE_FQ, "QREAL"},
-   {MTYPE_U2, MTYPE_FQ, "QREAL"},
-   {MTYPE_U4, MTYPE_FQ, "QREAL"},
-   {MTYPE_U8, MTYPE_FQ, "QREAL"},
-   {MTYPE_F4, MTYPE_FQ, "QREAL"},
-   {MTYPE_F8, MTYPE_FQ, "QREAL"}
+   {MTYPE_I1, MTYPE_FQ, "C_QREAL"},
+   {MTYPE_I2, MTYPE_FQ, "C_QREAL"},
+   {MTYPE_I4, MTYPE_FQ, "C_QREAL"},
+   {MTYPE_I8, MTYPE_FQ, "C_QREAL"},
+   {MTYPE_U1, MTYPE_FQ, "C_QREAL"},
+   {MTYPE_U2, MTYPE_FQ, "C_QREAL"},
+   {MTYPE_U4, MTYPE_FQ, "C_QREAL"},
+   {MTYPE_U8, MTYPE_FQ, "C_QREAL"},
+   {MTYPE_F4, MTYPE_FQ, "C_QREAL"},
+   {MTYPE_F8, MTYPE_FQ, "C_QREAL"}
    /*{MTYPE_FQ, MTYPE_FQ, ""}*/
 }; /* Conv_Op_Map */
 
@@ -1602,7 +1606,7 @@ xlate_BinaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
   // Operation
   targid = ctxt.GetNewVId();
   xos << BegElem("xaif:Intrinsic") << Attr("vertex_id", targid)
-      << Attr("name", Opc_Fname[opcode]) << Attr("type", "***") << EndElem;
+      << Attr("name", GET_OPC_FNAME(opcode)) << Attr("type", "***") << EndElem;
   
   // First operand
   srcid0 = ctxt.PeekVId();
@@ -1642,7 +1646,7 @@ xlate_OpToIntrinsic(xml::ostream& xos, OPCODE opcode, WN *wn0, WN *wn1,
   // Operation
   xos << Comment("OpToIntrinsic (was FuncCall -- FIXME)");
   xos << BegElem("xaif:Intrinsic") << Attr("vertex_id", ctxt.GetNewVId())
-      << Attr("name", Opc_Fname[opcode]);
+      << Attr("name", GET_OPC_FNAME(opcode));
   
   /* No need to parenthesize subexpressions */ // FIXME
   set_XlationContext_no_parenthesis(ctxt);
