@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.3 2003/05/20 22:50:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.4 2003/05/20 23:28:35 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -86,8 +86,8 @@
 #include "whirl2f_common.h"
 #include "PUinfo.h"
 #include "wn2xaif.h"
-#include "st2f.h"
-#include "ty2f.h"
+#include "st2xaif.h"
+#include "ty2xaif.h"
 #include "tcon2f.h"
 #include "wn2xaif_io.h"
 #include "wn2xaif_mem.h"

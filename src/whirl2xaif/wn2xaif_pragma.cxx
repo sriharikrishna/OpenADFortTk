@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.3 2003/05/16 13:21:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.4 2003/05/20 23:28:34 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -79,8 +79,8 @@
 #include "w2cf_parentize.h"  /* For W2CF_Get_Parent */
 #include "PUinfo.h"
 #include "wn2xaif.h"
-#include "st2f.h"
-#include "ty2f.h"
+#include "st2xaif.h"
+#include "ty2xaif.h"
 #include "tcon2f.h"
 #include "wn2f_pragma.h"
 
