@@ -6,7 +6,7 @@
 #& eval 'exec perl -S $0 $argv:q'
 #if 0;
 
-## $Id: normalize,v 1.1 2004/02/11 14:44:23 eraxxon Exp $
+## $Id: normalize,v 1.2 2004/03/23 21:52:48 eraxxon Exp $
 ## * BeginRiceCopyright *****************************************************
 ## ******************************************************* EndRiceCopyright *
 
@@ -98,19 +98,37 @@ sub printVersionAndExit
 # returns: 
 # effect: 
 # assumes: The file is readable.
-sub normalize
 {
-    my($file) = @_;
-  
-    # ----------------------------------------------------------
-    # normalize timestamp references
-    # ----------------------------------------------------------
-    my $w2x_ts_RE = 'XAIF file translated from WHIRL at .+ --';
-    my $w2x_ts    = 'XAIF file translated from WHIRL at XXX --';
+    my ($w2x_ts_RE, $w2x_ts);
+    my ($w2f_ts_RE, $w2f_ts);
+    my $w2f_ext;
 
-    normalizeTimestamps($file, $w2x_ts_RE, $w2x_ts);
-    
-    return 0;
+    sub normalize
+    {
+	my($file) = @_;
+	
+	# ----------------------------------------------------------
+	# normalize timestamp references
+	# ----------------------------------------------------------
+	my ($ts_RE, $ts);
+	if ($file =~ /$w2f_ext$/) {
+	    ($ts_RE, $ts) = ($w2f_ts_RE, $w2f_ts);
+	} 
+	else {
+	    ($ts_RE, $ts) = ($w2x_ts_RE, $w2x_ts);
+	}
+	
+	normalizeTimestamps($file, $ts_RE, $ts);
+	return 0;
+    }
+
+    BEGIN { 
+	$w2x_ts_RE = 'XAIF file translated from WHIRL at .+ --';
+	$w2x_ts    = 'XAIF file translated from WHIRL at XXX --';
+	$w2f_ts_RE = 'Fortran file translated from WHIRL .+';
+	$w2f_ts    = 'Fortran file translated from WHIRL XXX';
+	$w2f_ext   = '.w2f.f';
+    }
 }
 
 
