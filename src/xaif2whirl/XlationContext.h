@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.h,v 1.4 2003/10/01 16:32:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.h,v 1.5 2003/10/10 17:57:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -40,6 +40,7 @@
 // XlationContext
 //***************************************************************************
 
+// FIXME: add an elegant method for propagating flags up and down a context stack.  Also, abstract out teh context stack into its own class.  
 class XlationContext
 {
 public: 
@@ -56,17 +57,20 @@ public:
   private:
   };
 
+  // Flags can be inherited up or down the context stack
   enum Flags {
     NOFLAG           = 0x00000000,
 
-    // Active entities; value and deriv portion of active varrefs (inherited)
-    ACTIVE           = 0x00000001, // entity is active (inherited)
+    // Active entities
+    ACTIVE           = 0x00000001, // contains an active symref (inheritU)
+    // value and deriv portion of active varrefs (inheritD)
     ACTIVE_V         = 0x00000002, // N.B.: ACTIVE must also be set; V and D
     ACTIVE_D         = 0x00000004, //   are mutually exclusive!
-
-    VARREF           = 0x00000010, // within variable reference; inherited
-    LVALUE           = 0x00000020, // var ref should be an lvalue (inherited)
-    ARRAY            = 0x00000040, // accessing an array (inherited)
+    
+    VARREF           = 0x00000010, // within variable reference; inheritD
+    LVALUE           = 0x00000020, // var ref should be an lvalue (inheritD)
+    ARRAY            = 0x00000040, // an array reference (inheritD)
+    ARRAYIDX         = 0x00000080, // an array index expr (inheritD)
   };
 
 public:
@@ -120,10 +124,15 @@ public:
   void SetLValue()      { CurContext().SetFlags(LVALUE); }
   void ResetLValue()    { CurContext().ResetFlags(LVALUE); }
 
-  // Within an active entity (inherited)
+  // An array reference (inherited)
   bool IsArray() const { return CurContext().AreFlags(ARRAY); }
   void SetArray()      { CurContext().SetFlags(ARRAY); }
   void ResetArray()    { CurContext().ResetFlags(ARRAY); }
+
+  // An array index expression (inherited)
+  bool IsArrayIdx() const { return CurContext().AreFlags(ARRAYIDX); }
+  void SetArrayIdx()      { CurContext().SetFlags(ARRAYIDX); }
+  void ResetArrayIdx()    { CurContext().ResetFlags(ARRAYIDX); }
 
   // -------------------------------------------------------
   // Id maps
@@ -149,10 +158,10 @@ public:
   WNIdToWNMap* GetIdToWNMap() const { return id2wnMap; }
   void SetIdToWNMap(WNIdToWNMap* x) { id2wnMap = x; }
   
-  // XAIFSym -> WhirlSym map: (We do not assume ownership of the map)
-  ST* FindSym(const char* scopeid, const char* symid);
-  XAIFSymToWhirlSymMap* GetXAIFSymToWhirlSymMap() const { return xsym2wsymMap; }
-  void SetXAIFSymToWhirlSymMap(XAIFSymToWhirlSymMap* x) { xsym2wsymMap = x; }
+  // XAIFSym -> Symbol* map: (We do not assume ownership of the map)
+  Symbol* FindSym(const char* scopeid, const char* symid);
+  XAIFSymToSymbolMap* GetXAIFSymToSymbolMap() const { return xsym2wsymMap; }
+  void SetXAIFSymToSymbolMap(XAIFSymToSymbolMap* x) { xsym2wsymMap = x; }
   
   // -------------------------------------------------------
   // Misc
@@ -182,7 +191,7 @@ private:
   PUIdToPUMap* id2puMap;
   WNToWNIdMap* wn2idMap;
   WNIdToWNMap* id2wnMap;
-  XAIFSymToWhirlSymMap* xsym2wsymMap;
+  XAIFSymToSymbolMap* xsym2wsymMap;
 
   CtxtStack ctxtstack;
 };

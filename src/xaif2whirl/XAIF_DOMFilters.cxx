@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.9 2003/09/18 19:18:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.10 2003/10/10 17:57:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -396,7 +396,8 @@ short
 XAIF_DerivPropStmt::acceptNode(const DOMNode *node) const
 {
   if ( (node->getNodeType() == DOMNode::ELEMENT_NODE) 
-       && (IsSetDeriv(node) || IsSax(node) || IsSaxpy(node)) ) {
+       && (IsSetDeriv(node) || IsSax(node) || IsSaxpy(node) 
+	   || IsZeroDeriv(node)) ) {
     return FILTER_ACCEPT;
   }
   return FILTER_SKIP;
@@ -421,6 +422,13 @@ XAIF_DerivPropStmt::IsSaxpy(const DOMNode *node)
 {
   const XMLCh* name = node->getNodeName();
   return (XMLString::equals(name, XAIFStrings.elem_Saxpy_x()));
+}
+
+bool 
+XAIF_DerivPropStmt::IsZeroDeriv(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_ZeroDeriv_x()));
 }
 
 //****************************************************************************

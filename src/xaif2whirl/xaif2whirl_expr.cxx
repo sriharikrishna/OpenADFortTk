@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.3 2003/10/01 16:32:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.4 2003/10/10 17:57:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -132,11 +132,23 @@ static WN*
 CreateDerivSelector(WN* wn);
 
 
-UINT
+static TYPE_ID
+GetRType(WN* wn);
+
+static TYPE_ID
+GetRTypeFromOpands(TYPE_ID ty1, TYPE_ID ty2);
+
+static TYPE_ID
+GetMType(unsigned int cl, unsigned int bytesz);
+
+static UINT
 GetIntrinsicOperandNum(const char* name);
 
-OPERATOR
+static OPERATOR
 GetIntrinsicOperator(const char* name);
+
+static OPCODE
+GetIntrinsicOpcode(OPERATOR opr, std::vector<WN*>& opands);
 
 //****************************************************************************
 
@@ -206,10 +218,11 @@ xlate_VarRef(const DOMElement* elem, XlationContext& ctxt)
   if (!elem) { 
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
   }
-
+  
+  // VariableReferenceType
   bool deriv = GetDerivAttr(elem);
   uint32_t flg = (deriv) ? XlationContext::ACTIVE_D : XlationContext::ACTIVE_V;
-
+  
   // skip the xaif:VariableReference node
   DOMElement* varref = GetFirstChildElement(elem); 
   
@@ -241,14 +254,15 @@ xaif2whirl::TranslateVarRef(const DOMElement* elem, XlationContext& ctxt)
   ctxt.DeleteContext();
   delete g;
   
-  // If we are not already within another VarRef and we are within an
-  // active reference, select the appropriate portion (value, deriv)
+  // If we are not already within another VarRef and we translated an
+  // active symbol, select the appropriate portion of the active type
   if (!ctxt.IsVarRef()) {
     if (ctxt.IsActive_V()) {
-      wn = CreateValueSelector(wn);
+      wn = CreateValueSelector(wn); // active
     } else if (ctxt.IsActive_D()) {
-      wn = CreateDerivSelector(wn);
+      wn = CreateDerivSelector(wn); // deriv
     }
+    ctxt.ResetActive(); // halt up-inheritance
   }  
   
   return wn;
@@ -302,48 +316,67 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
   if ((strcmp(type.c_str(), "real") == 0) ||
       (strcmp(type.c_str(), "double") == 0)) {
 
+    // Floating point constant
     double val = strtod(value.c_str(), (char **)NULL);
     TCON tcon = Host_To_Targ_Float(MTYPE_F8, val);
     wn = Make_Const(tcon);
 
   } else if (strcmp(type.c_str(), "integer") == 0) {
-
-    unsigned int val = strtol(value.c_str(), (char **)NULL, 10);
-
-    TCON tcon = Host_To_Targ_Float(MTYPE_F8, (double)val);
-    wn = Make_Const(tcon); // requires float or complex
-    //wn = WN_Type_Conversion(wn, MTYPE_I8);
-
-    //wn = WN_CreateIntconst(OPC_I8INTCONST, (INT64)val); FIXME
-
+    
+    // Integer constant: Integer constants that are used in non-index
+    // expressions typically need to have an associated symbol
+    // (ST*). Consequently we typically represent this as an
+    // OPR_CONST, not OPR_INTCONST.
+    INT64 val = strtol(value.c_str(), (char **)NULL, 10);
+    if (ctxt.IsArrayIdx()) {
+      wn = WN_CreateIntconst(OPC_I4INTCONST, val);
+    } else {
+      TCON tcon = Host_To_Targ(MTYPE_I8, val);
+      wn = Make_Const(tcon); 
+    }
+    
   } else if (strcmp(type.c_str(), "bool") == 0) {
     
-    unsigned int val = (strcmp(value.c_str(), "false") == 0) ? 0 : 1;
-    wn = WN_CreateIntconst(OPC_I4INTCONST, (INT64)val); // OPC_BINTCONST
+    // Boolean constant: boolean values can be true/false or 1/0
+    // We use OPR_CONST instead of OPR_INTCONST so that we can set the
+    // boolean flag for a TY.
+    unsigned int val = 1;
+    const char* v = value.c_str();    
+    if ((strcmp(v, "false") == 0) || (strcmp(v, "0") == 0)) {
+      val = 0;
+    }
+    
+    // Note: We use a boolean mtype for the new ST so that it is safe
+    // to set the associated TY's 'is_logical' flag. Because an
+    // OPR_CONST WN cannot have the boolean mtype, we do not use
+    // 'CreateConst'.
+    TCON tcon = Host_To_Targ(MTYPE_B, val); // use boolean mtype here
+    ST* st = New_Const_Sym(Enter_tcon(tcon), MTYPE_To_TY(TCON_ty(tcon)));
+    Set_TY_is_logical(ST_type(st));
+    wn = WN_CreateConst(OPC_I4CONST, st);
     
   } else if (strcmp(type.c_str(), "char") == 0) {
-    // an intconst: cwh_stmt.cxx:349
+
+    // Character constant. Cf. cwh_stmt.cxx:349
+    // wn = WN_CreateIntconst(OPC_I4INTCONST, (INT64)val);
     assert(false); // FIXME
+
   } else if (strcmp(type.c_str(), "string") == 0) {
 
-    // U4U1ILOAD 0 T<43,.character.,1> T<175,anon_ptr.,8>
-    //   U8LDA 0 <1,596,(1_bytes)_"S"> T<127,anon_ptr.,8>
-
-    // cf. fei_pattern_con
-    TY_IDX ty = Be_Type_Tbl(MTYPE_STRING);
+    // String constant. A string constant reference to "S" looks like:
+    //   U4U1ILOAD 0 T<43,.character.,1> T<175,anon_ptr.,8>
+    //     U8LDA 0 <1,596,(1_bytes)_"S"> T<127,anon_ptr.,8>
+    // cf. fei_pattern_con(..) in cwh_stab.cxx
+    TY_IDX ty = MTYPE_To_TY(MTYPE_STRING);
     TY_IDX ty_ptr = Stab_Pointer_To(ty);
     UINT32 len = strlen(value.c_str());
     TCON tcon = Host_To_Targ_String(MTYPE_STRING, (char*)value.c_str(), len);
     ST* st = Gen_String_Sym(&tcon, ty, FALSE);
 
-    WN* lda = WN_CreateLda(OPR_LDA, Pointer_Mtype, MTYPE_V, 0, ty_ptr, st, 0);
+    TYPE_ID rty = TY_mtype(ty_ptr); // Pointer_Mtype
+    WN* lda = WN_CreateLda(OPR_LDA, rty, MTYPE_V, 0, ty_ptr, st, 0);
     wn = WN_CreateIload(OPR_ILOAD, MTYPE_U4, MTYPE_U1, 0, ty, ty_ptr, lda, 0);
     
-#if 0
-    ST* csym = New_Const_Sym(Enter_tcon(tcon), Be_Type_Tbl(TCON_ty(tcon)));
-    wn = WN_CreateConst(opc, csym);
-   // wn = Make_Const(tcon); FIXME only handles floats
-#endif
   }
 
   return wn;
@@ -384,15 +417,17 @@ xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
     opnd_wn[i] = xlate_Expression(g, opnd[i], ctxt);
   }
   
-  // 3. Create a WHIRL expression tree for the operator and operands
-  // FIXME: we need to verify the return type
+  // 3. Find the opcode for the expression
+  OPCODE opc = GetIntrinsicOpcode(op, opnd_wn);
+  
+  // 4. Create a WHIRL expression tree for the operator and operands
   switch (opnd_num) {
   case 1: // unary
-    return WN_Unary(op, MTYPE_F8, opnd_wn[0]);
+    return WN_CreateExp1(opc, opnd_wn[0]);
   case 2: // binary
-    return WN_Binary(op, MTYPE_F8, opnd_wn[0], opnd_wn[1]);
+    return WN_CreateExp2(opc, opnd_wn[0], opnd_wn[1]);
   case 3: // ternary
-    return WN_Ternary(op, MTYPE_F8, opnd_wn[0], opnd_wn[1], opnd_wn[2]);
+    return WN_CreateExp3(opc, opnd_wn[0], opnd_wn[1], opnd_wn[2]);
   default:
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
   } 
@@ -434,12 +469,17 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
   }
 
   WN* wn = NULL;
-  ST* st = GetST(elem, ctxt);
+  Symbol* sym = GetSymbol(elem, ctxt);
+  ST* st = sym->GetST();
   TY_IDX ty = ST_type(st);
   TYPE_ID rty, dty;
+  
+  if (sym->IsActive()) {
+    ctxt.SetActive(); // N.B. inherited up the ctxt stack
+  }
 
   // -------------------------------------------------------
-  // 
+  // 1. Determine which type of load to use
   // -------------------------------------------------------
   bool create_lda = false;
   
@@ -454,7 +494,7 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
   } 
 
   // -------------------------------------------------------
-  // (FIXME)
+  // 2. Create the reference
   // -------------------------------------------------------
   if (create_lda) {
     // OPR_LDA
@@ -462,7 +502,7 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
     rty = TY_mtype(ty_ptr); // Pointer_Mtype
     wn = WN_CreateLda(OPR_LDA, rty, MTYPE_V, 0, ty_ptr, st, 0);
   } else {
-
+    
     // OPR_LDID
     rty = dty = TY_mtype(ty);
     if (TY_kind(ty) == KIND_ARRAY) { // FIXME more special cases?
@@ -476,7 +516,7 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
     }
 
     wn = WN_CreateLdid(OPR_LDID, rty, dty, 0, st, ty, 0);
-
+    
   } 
   return wn;
 }
@@ -504,8 +544,11 @@ xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 		 (DIAG_A_STRING, "Programming error."));
     
     DOMElement* indexExpr = GetFirstChildElement(dim);
+
+    ctxt.CreateContext(XlationContext::ARRAYIDX);
     WN* indexExprWN = TranslateExpression(indexExpr, ctxt);
-    
+    ctxt.DeleteContext();
+
     // Ensure an integer 4 type for the index expression
     indices[i] = WN_Type_Conversion(indexExprWN, MTYPE_I4);
   }
@@ -721,34 +764,121 @@ xaif2whirl::PatchWNExpr(WN* parent, INT kidno, XlationContext& ctxt)
 
 // CreateValueSelector: Select the value portion of 'wn', by wrapping
 // a dummy intrinsic call around it
+// N.B.: This creates a OPR_CALL node, which is not an expression.
 static WN*
 CreateValueSelector(WN* wn)
 {
-  WN* callWN = CreateIntrinsicCall(MTYPE_F8, "__value__", 1);
+  TYPE_ID rty = GetRType(wn);
+  WN* callWN = CreateIntrinsicCall(rty, "__value__", 1);
   WN_actual(callWN, 0) = CreateParm(wn, WN_PARM_BY_VALUE);
   return callWN;
 }
 
 // CreateDerivSelector: Select the deriv portion of 'wn', by wrapping
 // a dummy intrinsic call around it
+// N.B.: This creates a OPR_CALL node, which is not an expression.
 static WN*
 CreateDerivSelector(WN* wn)
 {
-  WN* callWN = CreateIntrinsicCall(MTYPE_F8, "__deriv__", 1);
+  TYPE_ID rty = GetRType(wn);
+  WN* callWN = CreateIntrinsicCall(rty, "__deriv__", 1);
   WN_actual(callWN, 0) = CreateParm(wn, WN_PARM_BY_VALUE);
   return callWN;
 }
 
 //****************************************************************************
 
+static TYPE_ID
+GetRType(WN* wn)
+{
+  TY_IDX ty_idx = WN_Tree_Type(wn);
+  
+  TYPE_ID rty = MTYPE_UNKNOWN;
+  if (TY_kind(ty_idx) == KIND_ARRAY || TY_kind(ty_idx) == KIND_STRUCT) {
+    rty = MTYPE_M;
+  } else {
+    rty = TY_mtype(ty_idx);
+  }
+
+  // FIXME: pointer types?
+  assert(rty != MTYPE_UNKNOWN);
+  
+  return rty;
+}
+
+static TYPE_ID
+GetRTypeFromOpands(TYPE_ID ty1, TYPE_ID ty2)
+{
+  // -------------------------------------------------------
+  // 1. If both types are same, the answer is easy
+  // -------------------------------------------------------
+  if (ty1 == ty2) {
+    return ty1;
+  } 
+  
+  // -------------------------------------------------------
+  // 2. We have different types.
+  // -------------------------------------------------------
+
+  // 2a. If we have different, but compatible classes --> class promotion
+  unsigned int cl1 = MTYPE_type_class(ty1);
+  unsigned int cl2 = MTYPE_type_class(ty2);
+  unsigned int cl = 0; // the new class
+  
+  if (cl1 == cl2) {
+    cl = cl1;
+  }
+  
+  // (u)int, float --> float
+  if ( ((cl1 == MTYPE_CLASS_INTEGER || cl1 == MTYPE_CLASS_UNSIGNED_INTEGER) 
+	&& (cl2 == MTYPE_CLASS_FLOAT))
+       ||
+       ((cl2 == MTYPE_CLASS_INTEGER || cl2 == MTYPE_CLASS_UNSIGNED_INTEGER)
+	&& (cl1 == MTYPE_CLASS_FLOAT)) ) {
+    cl = MTYPE_CLASS_FLOAT;
+  }
+  
+  // int, uint --> [error]
+  // !complex_float, complex_float --> [error]
+  // !str, str --> [error]
+  if (cl == 0) {
+    return ty1; // FIXME: what to do here?
+  }
+
+  // 2b. If we have different sizes --> size promotion (choose larger)
+  unsigned int sz1 = MTYPE_byte_size(ty1);
+  unsigned int sz2 = MTYPE_byte_size(ty2);
+  unsigned int sz = MAX(sz1, sz2); // the new size
+  
+  // 2c. Combine class and size information. 
+  TYPE_ID ty = GetMType(cl, sz);
+  return ty;
+}
+
+// GetMType: Scan Machine_Types table for the right type.
+static TYPE_ID
+GetMType(unsigned int cl, unsigned int bytesz)
+{
+  TYPE_ID ty = MTYPE_UNKNOWN;
+  for (TYPE_ID i = MTYPE_FIRST; i <= MTYPE_LAST; ++i) {
+    if ((MTYPE_type_class(i) == cl) && (MTYPE_byte_size(i) == bytesz)) {
+      ty = i;
+      break;
+    }
+  }
+  return ty;
+}
+
+
 // FIXME: create tables for these
-UINT 
+static UINT 
 GetIntrinsicOperandNum(const char* name)
 {
   if (!name) { return 0; }
   
   if ((strcmp(name, "minus_scal") == 0) ||
-      (strcmp(name, "sqr_scal") == 0)) {
+      (strcmp(name, "sqr_scal") == 0) ||
+      (strcmp(name, "myINT") == 0)) { // FIXME
     return 1;
   } else if ((strcmp(name, "add_scal_scal") == 0) ||
 	     (strcmp(name, "sub_scal_scal") == 0) ||
@@ -761,7 +891,7 @@ GetIntrinsicOperandNum(const char* name)
   }
 }
 
-OPERATOR 
+static OPERATOR 
 GetIntrinsicOperator(const char* name)
 {
   if (!name) { return OPERATOR_UNKNOWN; }
@@ -770,6 +900,8 @@ GetIntrinsicOperator(const char* name)
     return OPR_NEG;
   } else if (strcmp(name, "sqr_scal") == 0) {
     return OPR_SQRT;
+  } else if (strcmp(name, "myINT") == 0) { // FIXME
+    return OPR_TRUNC;
   } else if (strcmp(name, "add_scal_scal") == 0) {
     return OPR_ADD;
   } else if (strcmp(name, "sub_scal_scal") == 0) {
@@ -782,6 +914,50 @@ GetIntrinsicOperator(const char* name)
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Bad Intrinsic."));
     return OPERATOR_UNKNOWN;
   }
+}
+
+static OPCODE
+GetIntrinsicOpcode(OPERATOR opr, std::vector<WN*>& opands)
+{
+  int opands_num = opands.size();
+  ASSERT_FATAL(opands_num > 0, (DIAG_A_STRING, "Programming error."));
+  
+  // 1. Gather types for operands
+  std::vector<TY_IDX> opands_ty(opands_num);
+  std::vector<TYPE_ID> opands_mty(opands_num);
+  for (int i = 0; i < opands_num; ++i) {
+    // FIXME: change WN_Tree_Type to accept the CALL node
+    //TY_IDX ty = WN_Tree_Type(opands[i]); // TYPE_ID 
+    // opands_ty[i] = ty;
+    opands_mty[i] = WN_rtype(opands[i]); // TY_mtype(ty); // FIXME
+  }
+
+  // 2. Find an appropriate mtype for operands
+  TYPE_ID mty = opands_mty[0];
+  for (int i = 1; i < opands_num; ++i) {
+    mty = GetRTypeFromOpands(mty, opands_mty[i]);
+  }
+
+  // 3. Find a dtype (operator dependent) FIXME
+  TYPE_ID dty = MTYPE_V; // typical dtype for intrinsics
+  if (opr == OPR_TRUNC) {
+    dty = mty;
+  } 
+  
+  // 4. Find a rtype (operator dependent)
+  // FIXME: we need a better way; do we need a cvt? FIXME
+  // Is_Valid_Opcode, Is_Valid_Opcode_Parts
+  TYPE_ID rty = mty;
+  if (opr == OPR_SQRT && MTYPE_is_integral(rty)) {
+    // sqrt: f, z
+    rty = GetMType(MTYPE_CLASS_FLOAT, MTYPE_byte_size(rty));
+  } else if (opr == OPR_TRUNC) {
+    // trunc: i
+    rty = GetMType(MTYPE_CLASS_INTEGER, MTYPE_byte_size(rty));
+  }
+  
+  OPCODE opc = OPCODE_make_op(opr, rty, dty);
+  return opc;
 }
 
 //****************************************************************************

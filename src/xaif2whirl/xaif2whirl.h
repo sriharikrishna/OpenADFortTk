@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.5 2003/10/01 16:32:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.6 2003/10/10 17:57:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -49,8 +49,8 @@ namespace xaif2whirl {
 void
 TranslateIR(PU_Info* pu_forest, const DOMDocument* doc);
 
-ST*
-GetST(const DOMElement* elem, XlationContext& ctxt);
+Symbol*
+GetSymbol(const DOMElement* elem, XlationContext& ctxt);
  
 }; /* namespace xaif2whirl */
 

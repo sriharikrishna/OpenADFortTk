@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.12 2003/10/01 16:32:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.13 2003/10/10 17:57:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -62,7 +62,7 @@ static void
 TranslateCallGraph(PU_Info* pu_forest, const DOMDocument* doc, 
 		   XlationContext& ctxt);
 
-static XAIFSymToWhirlSymMap*
+static XAIFSymToSymbolMap*
 TranslateScopeHierarchy(const DOMDocument* doc, XlationContext& ctxt);
 
 static void
@@ -110,16 +110,16 @@ RemoveFromWhirlIdMaps(WN* wn, WNToWNIdMap* wn2idmap, WNIdToWNMap* id2wnmap);
 //****************************************************************************
 
 static void
-xlate_Scope(const DOMElement* elem, XAIFSymToWhirlSymMap* symMap, 
+xlate_Scope(const DOMElement* elem, XAIFSymToSymbolMap* symMap, 
 	    XlationContext& ctxt);
 
 static void
 xlate_SymbolTable(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
-		  XAIFSymToWhirlSymMap* symMap);
+		  XAIFSymToSymbolMap* symMap);
 
 static void
 xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
-	     XAIFSymToWhirlSymMap* symMap);
+	     XAIFSymToSymbolMap* symMap);
 
 //****************************************************************************
 
@@ -127,7 +127,7 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
 void
 xaif2whirl::TranslateIR(PU_Info* pu_forest, const DOMDocument* doc)
 {
-  Diag_Set_Phase("WHIRL to XAIF: translate IR");
+  Diag_Set_Phase("XAIF to WHIRL: translate IR");
   
   if (!pu_forest) { return; }
   
@@ -159,8 +159,8 @@ TranslateCallGraph(PU_Info* pu_forest, const DOMDocument* doc,
 		   XlationContext& ctxt)
 {
   // FIXME: Do something about the ScopeHeirarchy
-  XAIFSymToWhirlSymMap* symmap = TranslateScopeHierarchy(doc, ctxt);
-  ctxt.SetXAIFSymToWhirlSymMap(symmap);
+  XAIFSymToSymbolMap* symmap = TranslateScopeHierarchy(doc, ctxt);
+  ctxt.SetXAIFSymToSymbolMap(symmap);
   
   // -------------------------------------------------------
   // Translate each ControlFlowGraph in the CallGraph
@@ -181,10 +181,10 @@ TranslateCallGraph(PU_Info* pu_forest, const DOMDocument* doc,
 
 
 // TranslateScopeHierarchy: 
-static XAIFSymToWhirlSymMap*
+static XAIFSymToSymbolMap*
 TranslateScopeHierarchy(const DOMDocument* doc, XlationContext& ctxt)
 {
-  XAIFSymToWhirlSymMap* symMap = new XAIFSymToWhirlSymMap;
+  XAIFSymToSymbolMap* symMap = new XAIFSymToSymbolMap;
 
   // -------------------------------------------------------
   // Enter symbols for all Scopes in the ScopeHierarchy
@@ -215,7 +215,8 @@ TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
   PU_Info* pu = ctxt.FindPU(puid);
   if (!pu) { return; }
   
-  ST* st = GetST(cfgElem, ctxt);
+  Symbol* sym = GetSymbol(cfgElem, ctxt);
+  ST* st = sym->GetST();
   cout << XercesStrX(cfgElem->getNodeName()) << ": " << ST_name(st) << endl;
   
   // If we found the PU, translate
@@ -671,8 +672,8 @@ RemoveFromWhirlIdMaps(WN* wn, WNToWNIdMap* wn2idmap, WNIdToWNMap* id2wnmap)
 
 //****************************************************************************
 
-ST*
-xaif2whirl::GetST(const DOMElement* elem, XlationContext& ctxt)
+Symbol*
+xaif2whirl::GetSymbol(const DOMElement* elem, XlationContext& ctxt)
 {
   const XMLCh* scopeIdX = elem->getAttribute(XAIFStrings.attr_scopeId_x());
   const XMLCh* symIdX = elem->getAttribute(XAIFStrings.attr_symId_x());
@@ -687,7 +688,7 @@ xaif2whirl::GetST(const DOMElement* elem, XlationContext& ctxt)
 }
 
 static void
-xlate_Scope(const DOMElement* elem, XAIFSymToWhirlSymMap* symMap, 
+xlate_Scope(const DOMElement* elem, XAIFSymToSymbolMap* symMap, 
 	    XlationContext& ctxt)
 {
   // Find the corresponding WHIRL symbol table (ST_TAB)
@@ -706,7 +707,7 @@ xlate_Scope(const DOMElement* elem, XAIFSymToWhirlSymMap* symMap,
 
 static void
 xlate_SymbolTable(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
-		  XAIFSymToWhirlSymMap* symMap)
+		  XAIFSymToSymbolMap* symMap)
 {
   // For all xaif:Symbol in the xaif:SymbolTable
   DOMDocument* doc = elem->getOwnerDocument();
@@ -724,7 +725,7 @@ xlate_SymbolTable(const DOMElement* elem, const char* scopeId, PU_Info* pu,
 // scope; IOW, there are no block scopes.
 static void
 xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
-	     XAIFSymToWhirlSymMap* symMap)
+	     XAIFSymToSymbolMap* symMap)
 {
   // 1. Initialize
   SYMTAB_IDX level = GLOBAL_SYMTAB; // Default: assume a global symbol
@@ -735,22 +736,22 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
   }
   
   SymId symId = GetSymId(elem);
+  bool active = GetActiveAttr(elem);
 
   const XMLCh* symNmX = elem->getAttribute(XAIFStrings.attr_symId_x());
   XercesStrX symNm = XercesStrX(symNmX);
 
-  // 2. Find or Create symbol
+  // 2. Find or Create WHIRL symbol
   ST* st = NULL;
   if (symId == 0) {
 
-    // FIXME: temporaries will have a tag marking them as such.  We
-    // should check this.
+    active = true; // FIXME: for now we force all temps to be active
     
     // Create the symbol
     const XMLCh* kindX = elem->getAttribute(XAIFStrings.attr_kind_x());
     const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
-    const XMLCh* shapeX = elem->getAttribute(XAIFStrings.attr_shape_x());
-    
+    const XMLCh* shapeX = elem->getAttribute(XAIFStrings.attr_shape_x());    
+
     XercesStrX kind = XercesStrX(kindX);
     XercesStrX type = XercesStrX(typeX);
     XercesStrX shape = XercesStrX(shapeX);
@@ -768,10 +769,13 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
     st = &(Scope_tab[level].st_tab->Entry(symId));
   }
   
-  // 3. Add the symbol to the map
-  symMap->Insert(scopeId, symNm.c_str(), st);
+  // 3. Create our own symbol structure
+  Symbol* sym = new Symbol(st, active);
   
-  // 4. Finalize
+  // 4. Add the symbol to the map
+  symMap->Insert(scopeId, symNm.c_str(), sym);
+  
+  // 5. Finalize
   if (pu) {
     SaveOpen64PUGlobalVars(pu);
   }
@@ -812,6 +816,7 @@ GetBoolAttr(const DOMElement* elem, XMLCh* attr, bool default_val)
   const XMLCh* aX = elem->getAttribute(attr);
   XercesStrX a = XercesStrX(aX);
   
+  // boolean values can be true/false or 1/0
   bool a_bool = default_val;
   if (strlen(a.c_str()) > 0) { // if attribute exists
     if (a.c_str()[0] == '0' || (strcmp(a.c_str(), "false") == 0)) {
@@ -952,5 +957,6 @@ CreateIntrinsicCall(TYPE_ID rtype, const char* fname, unsigned int argc)
   
   return callWN;
 }
+
 
 //****************************************************************************

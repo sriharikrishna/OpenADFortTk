@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.cxx,v 1.4 2003/10/01 16:32:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.cxx,v 1.5 2003/10/10 17:57:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -78,23 +78,35 @@ XlationContext::Ctor(uint32_t flags_)
   ctxtstack.push_front(Ctxt());
   CurContext().SetFlags(flags_);
 
-  // Set inherited flags from enclosing context
+  // Down inheritance: Set flags that inherit from enclosing context
   Ctxt& curCtxt = CurContext();
-  if (enclCtxt->AreFlags(ACTIVE)) { curCtxt.SetFlags(ACTIVE); }
   if (enclCtxt->AreFlags(ACTIVE_V)) { curCtxt.SetFlags(ACTIVE_V); }
   if (enclCtxt->AreFlags(ACTIVE_D)) { curCtxt.SetFlags(ACTIVE_D); }
   if (enclCtxt->AreFlags(VARREF)) { curCtxt.SetFlags(VARREF); }
   if (enclCtxt->AreFlags(LVALUE)) { curCtxt.SetFlags(LVALUE); }
   if (enclCtxt->AreFlags(ARRAY)) { curCtxt.SetFlags(ARRAY); }
+  if (enclCtxt->AreFlags(ARRAYIDX)) { curCtxt.SetFlags(ARRAYIDX); }
 
   return (*this);
 }
 
+// DeleteContext: Delete the context, maintaining invariant that there
+// is at least one context
 XlationContext&
 XlationContext::DeleteContext()
 {
   if (ctxtstack.size() > 1) {
-    // maintain invariant that there is at least one context
+    // There are at least 2 items on the stack.
+    
+    // Get the current and parent contexts.
+    CtxtStackIt it = ctxtstack.begin();
+    Ctxt& curCtxt = (*it); // CurContext() or ctxtstack.front()
+    Ctxt& parCtxt = (*(++it));
+    
+    // Up inheritance: Set flags that inherit from descending context
+    if (curCtxt.AreFlags(ACTIVE)) { parCtxt.SetFlags(ACTIVE); }
+    
+    // Delete the current context
     ctxtstack.pop_front();
   }
   return (*this);
@@ -136,10 +148,10 @@ XlationContext::FindWN(WNId wnid, bool mustFind)
   return NULL;
 }
 
-ST*
+Symbol*
 XlationContext::FindSym(const char* scopeid, const char* symid)
 {
-  XAIFSymToWhirlSymMap* map = GetXAIFSymToWhirlSymMap();
+  XAIFSymToSymbolMap* map = GetXAIFSymToSymbolMap();
   if (map) { return (map->Find(scopeid, symid)); }
   return NULL;
 }

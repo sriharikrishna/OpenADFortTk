@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.9 2003/09/18 19:18:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.10 2003/10/10 17:57:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -200,7 +200,8 @@ public:
   static bool IsSetDeriv(const DOMNode *node);
   static bool IsSax(const DOMNode *node);
   static bool IsSaxpy(const DOMNode *node);
-  
+  static bool IsZeroDeriv(const DOMNode *node);  
+
 private:
 };
 
