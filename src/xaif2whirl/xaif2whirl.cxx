@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.40 2004/04/29 21:29:58 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.41 2004/04/30 14:26:37 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -1623,16 +1623,18 @@ xaif2whirl::GetIntrinsicKey(const DOMElement* elem)
 {
   const XMLCh* annot = (elem) ? elem->getAttribute(XAIFStrings.attr_annot_x())
     : NULL;
-  XercesStrX annotStr = XercesStrX(annot);
-  
+  XercesStrX annotStr_x = XercesStrX(annot);
+  const char* annotStr = annotStr_x.c_str();
+
   std::string key;
   char *start = NULL, *end = NULL;
-  start = strstr(annotStr.c_str(), XAIFStrings.tag_IntrinsicKey());
+  start = strstr(annotStr, XAIFStrings.tag_IntrinsicKey());
   if (start) {
+    start = start + strlen(annotStr);
     end = strstr(start, XAIFStrings.tag_End());
   }
   if (start && end) {
-    for (char* p = start; p && p <= end; ++p) { key += *p; }
+    for (char* p = start; p < end; ++p) { key += *p; }
   }
   
   return key;
