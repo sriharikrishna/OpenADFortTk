@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.13 2003/12/29 20:44:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.14 2004/04/14 21:25:48 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -70,7 +70,9 @@
 //***************************************************************************
 
 XlationContext::XlationContext()
-  : flags(0), stab2idMap(NULL), pu2idMap(NULL)
+  : flags(0), 
+    wnParentMap(NULL), stab2idMap(NULL), pu2idMap(NULL), wn2idMap(NULL),
+    wn2vnMap(NULL), nssymtab(NULL)
 {
   ctxtstack.push_front(Ctxt());
 }
@@ -80,6 +82,7 @@ XlationContext::~XlationContext()
   ctxtstack.clear(); // clear the stack
 }
 
+
 // -------------------------------------------------------
 // Context manipulation (Create, Delete...)
 // -------------------------------------------------------
@@ -87,31 +90,23 @@ XlationContext::~XlationContext()
 XlationContext&
 XlationContext::CreateContext()
 {
-  return Ctor(NOFLAG, NULL, NULL, NULL);
+  return Ctor(NOFLAG, NULL);
 }
 
 XlationContext&
 XlationContext::CreateContext(uint32_t flags_)
 {
-  return Ctor(flags_, NULL, NULL, NULL);
-}
-
-XlationContext&
-XlationContext::CreateContext(uint32_t flags_, 
-			      NonScalarSymTab* symtab_, WNToWNIdMap* wnmap_)
-{
-  return Ctor(flags_, NULL, symtab_, wnmap_);
+  return Ctor(flags_, NULL);
 }
 
 XlationContext&
 XlationContext::CreateContext(uint32_t flags_, WN* wn_)
 {
-  return Ctor(flags_, wn_, NULL, NULL);
+  return Ctor(flags_, wn_);
 }
 
 XlationContext&
-XlationContext::Ctor(uint32_t flags_, WN* wn_, 
-		     NonScalarSymTab* symtab_, WNToWNIdMap* wnmap_)
+XlationContext::Ctor(uint32_t flags_, WN* wn_)
 {
   // If available, get enclosing context
   const Ctxt* enclCtxt = NULL;
@@ -123,9 +118,6 @@ XlationContext::Ctor(uint32_t flags_, WN* wn_,
   ctxtstack.push_front(Ctxt());
   CurContext().SetFlags(flags_);
   CurContext().SetWN(wn_);
-
-  CurContext().SetSymTab(symtab_);
-  CurContext().SetWNMap(wnmap_);
 
   // Set inherited flags from enclosing context
   Ctxt& curCtxt = CurContext();
@@ -145,59 +137,10 @@ XlationContext::DeleteContext()
   return (*this);
 }
 
-// -------------------------------------------------------
-// Id maps
-// -------------------------------------------------------
-
-SymTabId
-XlationContext::FindSymTabId(ST_TAB* stab)
-{
-  SymTabToSymTabIdMap* map = GetSymTabToIdMap();
-  if (map) { return (map->Find(stab)); }
-  return 0;
-}
-
-PUId
-XlationContext::FindPUId(PU_Info* pu)
-{
-  PUToPUIdMap* map = GetPUToIdMap();
-  if (map) { return (map->Find(pu)); }
-  return 0;
-}
-
-WNId
-XlationContext::FindWNId(WN* wn)
-{
-  for (XlationContextIterator it(*this); it.IsValid(); ++it) {
-    Ctxt* ctxt = it.Current();
-    WNToWNIdMap* wnmap = ctxt->GetWNMap();
-    if (wnmap) {
-      // We found a symbol table. Query it.
-      WNId id = wnmap->Find(wn);
-      if (id != 0) { return id; }
-    }
-  }
-  return 0;
-}
 
 // -------------------------------------------------------
-// Misc
+// 
 // -------------------------------------------------------
-
-VN
-XlationContext::FindVN(WN* wnexpr)
-{
-  for (XlationContextIterator it(*this); it.IsValid(); ++it) {
-    Ctxt* ctxt = it.Current();
-    UJNumbers* vnmap = ctxt->GetValNum();
-    if (vnmap) {
-      // We found a ValueNumber map. Query it.
-      VN vn = vnmap->Find((ExprHandle)wnexpr);
-      if (vn != 0) { return vn; }
-    }
-  }
-  return 0;
-}
 
 WN* 
 XlationContext::GetWN_MR()
@@ -211,20 +154,63 @@ XlationContext::GetWN_MR()
 }
 
 
+// -------------------------------------------------------
+// Procedure-level maps/data
+// -------------------------------------------------------
+
+WN*
+XlationContext::FindParentWN(WN* wn)
+{
+  if (wnParentMap) { return (wnParentMap->Find(wn)); }
+  return NULL;
+}
+
+WN*
+XlationContext::FindParentBlockWN(WN* wn)
+{
+  if (wnParentMap) { return (wnParentMap->FindBlock(wn)); }
+  return NULL;
+}
+
+SymTabId
+XlationContext::FindSymTabId(ST_TAB* stab)
+{
+  if (stab2idMap) { return (stab2idMap->Find(stab)); }
+  return 0;
+}
+
+PUId
+XlationContext::FindPUId(PU_Info* pu)
+{
+  if (pu2idMap) { return (pu2idMap->Find(pu)); }
+  return 0;
+}
+
+WNId
+XlationContext::FindWNId(WN* wn)
+{
+  if (wn2idMap) { return wn2idMap->Find(wn); }
+  return 0;
+}
+
+VN
+XlationContext::FindVN(WN* wnexpr)
+{
+  if (wn2vnMap) { return wn2vnMap->Find((ExprHandle)wnexpr); }
+  return 0;
+}
+
 NonScalarSym* 
 XlationContext::FindNonScalarSym(WN* wn)
 {
-  for (XlationContextIterator it(*this); it.IsValid(); ++it) {
-    Ctxt* ctxt = it.Current();
-    NonScalarSymTab* symtab = ctxt->GetSymTab();
-    if (symtab) {
-      // We found a symbol table. Query it.
-      NonScalarSym* sym = symtab->Find(wn);
-      if (sym) { return sym; }
-    }
-  }
+  if (nssymtab) { return nssymtab->Find(wn); }
   return NULL;
 }
+
+
+// -------------------------------------------------------
+// Misc
+// -------------------------------------------------------
 
 void 
 XlationContext::Dump(std::ostream& o, const char* pre) const
@@ -233,13 +219,10 @@ XlationContext::Dump(std::ostream& o, const char* pre) const
 
   // FIXME: convert to member functions
   if (IsDerefAddr())                           o << " deref";
-  if (XlationContext_no_newline(*this))        o << " no_newline";
   if (XlationContext_has_logical_arg(*this))   o << " logical_arg";
-  if (XlationContext_no_parenthesis(*this))    o << " no_paren";
   if (XlationContext_io_stmt(*this))           o << " in_io";
   if (XlationContext_deref_io_item(*this))     o << " deref_io";
   if (XlationContext_origfmt_ioctrl(*this))    o << " varfmt";
-  if (XlationContext_explicit_region(*this))   o << " region_pragma";
   if (XlationContext_fmt_io(*this))            o << " formatted io";
   if (XlationContext_cray_io(*this))           o << " craylib";
   o << ")\n";
@@ -258,12 +241,13 @@ XlationContext::DDump() const
   Dump(std::cerr);
 }
 
+
 //***************************************************************************
 // XlationContext::Ctxt
 //***************************************************************************
 
 XlationContext::Ctxt::Ctxt()
-  : wn(NULL), nextVId(0), nextEId(0), symtab(NULL), wnmap(NULL), vnmap(NULL)
+  : wn(NULL), nextVId(0), nextEId(0)
 {
 }
 
@@ -283,6 +267,7 @@ XlationContext::Ctxt::DDump() const
 {
   Dump(std::cerr);
 }
+
 
 //***************************************************************************
 // XlationContextIterator

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.15 2003/12/29 20:44:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.16 2004/04/14 21:25:48 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -70,6 +70,7 @@
 //*************************** User Include Files ****************************
 
 #include <lib/support/XlationCtxt.h>
+#include <lib/support/WhirlParentize.h>
 #include <lib/support/WhirlIDMaps.h>
 #include <lib/support/SymTab.h>
 
@@ -81,21 +82,28 @@
 // XlationContext
 //***************************************************************************
 
-// XlationContext: maintains an internal stack of translation
-//   contexts, allowing users to 1) create new child contexts (push), 2)
-//   destroy and return to parent contexts (pop) and 3) query the
-//   current context.  The current translation context provides
-//   information about how to interpret the present WHIRL data.  There 
-//   should always be at least one context on the stack.
-
-// For whirl2xaif: A translation context for an XAIF construct
+// XlationContext for whirl2xaif: Represents information about a
+// WHIRL->XAIF translation context.  Designed to convey information
+// about a parent context to children contexts.
+// 
+// XlationContext maintains an internal stack of translation contexts,
+// allowing users to 1) create new child contexts (push), 2) destroy
+// and return to parent contexts (pop) and 3) query the current
+// context.  The current translation context provides information
+// about the containing WHIRL context.  There should always be at
+// least one context on the stack.  (Upon creation, one context exists
+// on the stack.)  Because this class is designed to represent
+// information about one procedure (WHIRL PU) at a time, information
+// that applies for a whole PU is located outside instead of inside
+// the stack.
+//
+// For whirl2xaif, a translation context for an XAIF construct
 // corresponds to its parent construct.  Thus there will be one
 // translation context on the stack for every 'indendation' level.
 // Context flags indicate significant facts about the parent construct
 // and will typically correspond to XAIF concepts (as opposed to
 // WHIRL).
-
-// Upon creation, one context exists on the stack.
+//
 // FIXME: put in whirl2xaif namespace?
 class XlationContext
 {
@@ -106,19 +114,6 @@ public:
   public: 
     Ctxt();
     virtual ~Ctxt();
-
-    // FIXME: move according to notes below
-    // Non Scalar Symbol table for context (this class does not assume
-    // ownership of symbol tables)
-    NonScalarSymTab* GetSymTab() const { return symtab; }
-    void SetSymTab(NonScalarSymTab* x) { symtab = x; }
-
-    WNToWNIdMap* GetWNMap() const { return wnmap; }
-    void SetWNMap(WNToWNIdMap* x) { wnmap = x; }
-    
-    UJNumbers* GetValNum() const { return vnmap; }
-    void SetValNum(UJNumbers* x) { vnmap = x; }
-
     
     // WHIRL node for context (this class does not assume ownership of WN*)
     WN*  GetWN() const { return wn; }
@@ -138,18 +133,34 @@ public:
     virtual void DDump() const;
     
   private:
-    WN*     wn;
-
+    WN* wn;
     UINT nextVId; // next unique vertex id for this context
     UINT nextEId; // next unique edge id for this context
-    
-    // FIXME: Move into a specialized derived class such as CtxtX (extended)
-    NonScalarSymTab* symtab;
-    WNToWNIdMap* wnmap; 
-    UJNumbers* vnmap;
   };
   
-  
+  enum Flags {
+    NOFLAG           = 0x00000000,
+    ASSIGN           = 0x00000001, // within xaif:Assignment; inherited
+    VARREF           = 0x00000002, // within xaif:VariableReference; inherited
+    DEREF_ADDR       = 0x00000004
+  };
+
+  // FIXME: these refer to the current context; they support the
+  // crusty old implementation of W2F_CONTEXT
+  uint32_t flags;
+    
+#define XlationContext_HAS_LOGICAL_ARG         0x00000200
+#define XlationContext_IS_LOGICAL_ARG          0x00000400
+#define XlationContext_IS_LOGICAL_OPERATION    0x00000800
+
+#define XlationContext_IO_STMT                 0x00004000
+#define XlationContext_DEREF_IO_ITEM           0x00008000
+#define XlationContext_ORIGFMT_IOCTRL          0x00010000
+#define XlationContext_FMT_IO                  0x00020000
+#define XlationContext_CRAY_IO                 0x00040000
+
+#define XlationContext_HAS_NO_ARR_ELMT         0x00200000
+    
 public:
   XlationContext();
   virtual ~XlationContext();
@@ -157,139 +168,46 @@ public:
   // -------------------------------------------------------
   // Context manipulation (Create, Delete...)
   // -------------------------------------------------------
-
+  
   // Create a new child context and make it the current context.  One
   // can pass flags that should apply to the new context.  Note that
   // that these flags *do not* override any inherited flags.
   XlationContext& CreateContext();
   XlationContext& CreateContext(uint32_t flags_);
-  XlationContext& CreateContext(uint32_t flags_, 
-				NonScalarSymTab* symtab_, WNToWNIdMap* wnmap_);
   XlationContext& CreateContext(uint32_t flags_, WN* wn_);
-
+  
   // Delete the current context and make its parent the current
   // context.  Everything (including memory) associated with the old
   // context will be deleted.
   XlationContext& DeleteContext();
-
+  
   // Returns the current context
   Ctxt& CurContext() const { return const_cast<Ctxt&>(ctxtstack.front()); }
-
-  // -------------------------------------------------------
-  // Id generation
-  // -------------------------------------------------------
-
-  // GetNewId: Ids for vertices and edges within the translated
-  // graphs.  Returns a new id (id > 0), guaranteed to be unique
-  // within the context.
-  UINT GetNewVId() { return CurContext().GetNewVId(); }
-  UINT GetVId() const { return CurContext().GetVId(); } // FIXME
-  UINT PeekVId() const { return CurContext().PeekVId(); }
-
-  UINT GetNewEId() { return CurContext().GetNewEId(); }
-  UINT GetEId() const { return CurContext().GetEId(); } // FIXME
-  UINT PeekEId() const { return CurContext().PeekEId(); }
-
-  // -------------------------------------------------------
-  // Id maps
-  // -------------------------------------------------------
-
-  // ST_TAB* -> SymTabId map: (We do not assume ownership of the map)
-  SymTabId FindSymTabId(ST_TAB* stab);
-  SymTabToSymTabIdMap* GetSymTabToIdMap() const { return stab2idMap; }
-  void SetSymTabToIdMap(SymTabToSymTabIdMap* x) { stab2idMap = x; }
   
-  // PU_Info* -> PUId map: (We do not assume ownership of the map)
-  PUId FindPUId(PU_Info* pu);
-  PUToPUIdMap* GetPUToIdMap() const { return pu2idMap; }
-  void SetPUToIdMap(PUToPUIdMap* x) { pu2idMap = x; }
-
-  // WN* -> WNId map
-  WNId FindWNId(WN* wn);
-
-  // -------------------------------------------------------
-  // Misc
-  // -------------------------------------------------------
-
-  // VN map: returns 0 if not found
-  VN FindVN(WN* wnexpr);
-
-  // Searches for symbol tables and queries them for 'wn'.  The symbol
-  // table search begins at the current context and continues to
-  // parents.
-  NonScalarSym* FindNonScalarSym(WN* wn);
-
-  // Get WN* from the current context; Get WN* the most recent non-NULL WN.
-  WN* GetWN() { return CurContext().GetWN(); }
-  WN* GetWN_MR();
-
-  virtual void Dump(std::ostream& o = std::cerr, const char* pre = "") const;
-  virtual void DDump() const;
-
-  friend class XlationContextIterator;
-
-public:
-  // FIXME: these refer to the current context; they support the
-  // crusty old implementation of W2F_CONTEXT
-  uint32_t flags;
-  
-  enum Flags {
-    NOFLAG           = 0x00000000,
-    ASSIGN           = 0x00000001, // within xaif:Assignment; inherited
-    VARREF           = 0x00000002, // within xaif:VariableReference; inherited
-    DEREF_ADDR       = 0x00000004,
-
-#define XlationContext_NO_NEWLINE              0x00000100
-#define XlationContext_HAS_LOGICAL_ARG         0x00000200
-#define XlationContext_IS_LOGICAL_ARG          0x00000400
-#define XlationContext_IS_LOGICAL_OPERATION    0x00000800
-#define XlationContext_NO_PARENTHESIS          0x00001000
-
-#define XlationContext_IO_STMT                 0x00004000
-#define XlationContext_DEREF_IO_ITEM           0x00008000
-#define XlationContext_ORIGFMT_IOCTRL          0x00010000
-#define XlationContext_FMT_IO                  0x00020000
-#define XlationContext_CRAY_IO                 0x00040000
-#define XlationContext_ISSUE_IOC_UNIT_ASTERISK 0x00080000
-
-#define XlationContext_EXPLICIT_REGION         0x00100000
-#define XlationContext_HAS_NO_ARR_ELMT         0x00200000
-    
-  };
-
   // -------------------------------------------------------
   // Flags
   // -------------------------------------------------------
-
-#define reset_XlationContext(c) ((c).flags = 0U)
   
   // Indicates that we expect to dereference an address expression.
   // LDA or ARRAY nodes should not be translated unless this flag has
   // been set, other than when we can use an "address of" operator
   // in Fortran.
-  BOOL IsDerefAddr() const { return (flags & DEREF_ADDR); }
+  bool IsDerefAddr() const { return (flags & DEREF_ADDR); }
   void SetDerefAddr()      { flags = flags | DEREF_ADDR; }
   void ResetDerefAddr()    { flags = flags & ~DEREF_ADDR; } // Clear
-
-
+  
   // Within a xaif:Assignment (inherited)
-  BOOL IsAssign() const { return CurContext().AreFlags(ASSIGN); }
+  bool IsAssign() const { return CurContext().AreFlags(ASSIGN); }
   void SetAssign()      { CurContext().SetFlags(ASSIGN); }
   void ResetAssign()    { CurContext().ResetFlags(ASSIGN); }
   
   // Within a xaif:VariableReference (inherited)
-  BOOL IsVarRef() const { return CurContext().AreFlags(VARREF); }
+  bool IsVarRef() const { return CurContext().AreFlags(VARREF); }
   void SetVarRef()      { CurContext().SetFlags(VARREF); }
   void ResetVarRef()    { CurContext().ResetFlags(VARREF); }
 
-  // Indicates that we should not start the next statement on a new
-  // line.  This only needs to be taken into account for statement
-  // types where it is an issue.
-#define XlationContext_no_newline(c) ((c).flags & XlationContext_NO_NEWLINE)
-#define set_XlationContext_no_newline(c)\
-   ((c).flags = (c).flags | XlationContext_NO_NEWLINE)
-#define reset_XlationContext_no_newline(c)\
-   ((c).flags = (c).flags & ~XlationContext_NO_NEWLINE)
+  // FIXME: remove this junk
+#define reset_XlationContext(c) ((c).flags = 0U)
 
   // This flag indicates that we are in a context where we expect the
   // arguments to the current expression to evaluate to logically typed
@@ -318,17 +236,6 @@ public:
    ((c).flags = (c).flags | XlationContext_IS_LOGICAL_OPERATION)
 #define reset_XlationContext_is_logical_operation(c)\
    ((c).flags = (c).flags & ~XlationContext_IS_LOGICAL_OPERATION)
-
-  // This flag indicates that we are in a context where we need not
-  // enclose a Fortran expression in parenthesis (subexpressions may
-  // still be enclosed in parenthesis.
-#define XlationContext_no_parenthesis(c)\
-   ((c).flags & XlationContext_NO_PARENTHESIS)
-#define set_XlationContext_no_parenthesis(c)\
-   ((c).flags = (c).flags | XlationContext_NO_PARENTHESIS)
-#define reset_XlationContext_no_parenthesis(c)\
-   ((c).flags = (c).flags & ~XlationContext_NO_PARENTHESIS)
-
 
   // This flag indicates whether or not we are inside a Fortran IO statement.
 #define XlationContext_io_stmt(c)\
@@ -372,29 +279,6 @@ public:
    ((c).flags = (c).flags | XlationContext_CRAY_IO)
 #define reset_XlationContext_cray_io(c)\
    ((c).flags = (c).flags & ~XlationContext_CRAY_IO)
-  
-  // add a flag to see if we need issue default UNIT in io stmts
-  // in READ/WRITE/PRINT stmts,must have UNIT=*
-  // but in other stmt such as INQUIRE if there already
-  // is FILE,issue UNIT=* will cause problems
-#define XlationContext_issue_ioc_asterisk(c)\
-   ((c).flags & XlationContext_ISSUE_IOC_UNIT_ASTERISK)
-#define set_XlationContext_issue_ioc_asterisk(c)\
-   ((c).flags = (c).flags | XlationContext_ISSUE_IOC_UNIT_ASTERISK)
-#define reset_XlationContext_issue_ioc_asterisk(c)\
-   ((c).flags = (c).flags & ~XlationContext_ISSUE_IOC_UNIT_ASTERISK)
-
-
-  // This flag indicates whether or not a pragma directive can apply
-  // to an explicit region.  A pragma directive that can only apply
-  // to an explicit region in source-code must be ignored if the 
-  // region to which it belongs is not emitted.
-#define XlationContext_explicit_region(c)\
-   ((c).flags & XlationContext_EXPLICIT_REGION)
-#define set_XlationContext_explicit_region(c)\
-   ((c).flags = (c).flags | XlationContext_EXPLICIT_REGION)
-#define reset_XlationContext_explicit_region(c)\
-   ((c).flags = (c).flags & ~XlationContext_EXPLICIT_REGION)
 
 #define XlationContext_has_no_arr_elmt(c)\
    ((c).flags & XlationContext_HAS_NO_ARR_ELMT)
@@ -403,13 +287,79 @@ public:
 #define reset_XlationContext_has_no_arr_elmt(c)\
    ((c).flags = (c).flags & ~XlationContext_HAS_NO_ARR_ELMT)
 
+  // -------------------------------------------------------
+  // XAIF Vertex/Edge Id generation
+  // -------------------------------------------------------
+
+  // GetNewId: Ids for vertices and edges within the translated
+  // graphs.  Returns a new id (id > 0), guaranteed to be unique
+  // within the context.
+  UINT GetNewVId() { return CurContext().GetNewVId(); }
+  UINT GetVId() const { return CurContext().GetVId(); }
+  UINT PeekVId() const { return CurContext().PeekVId(); }
+
+  UINT GetNewEId() { return CurContext().GetNewEId(); }
+  UINT GetEId() const { return CurContext().GetEId(); }
+  UINT PeekEId() const { return CurContext().PeekEId(); }
+
+  // -------------------------------------------------------
+  // 
+  // -------------------------------------------------------
+
+  // Get WN* from the current context; Get WN* the most recent non-NULL WN.
+  WN* GetWN() { return CurContext().GetWN(); }
+  WN* GetWN_MR();
+
+  // -------------------------------------------------------
+  // Procedure-level maps/data
+  // -------------------------------------------------------
+
+  // WHIRL parent map
+  WN* FindParentWN(WN*);
+  WN* FindParentBlockWN(WN*);
+  WhirlParentMap* GetWNParentMap() const { return wnParentMap; }
+  void SetWNParentMap(WhirlParentMap* x) { wnParentMap = x; }
+  
+  // ST_TAB* -> SymTabId map: (We do not assume ownership of the map)
+  SymTabId FindSymTabId(ST_TAB* stab);
+  SymTabToSymTabIdMap* GetSymTabToIdMap() const { return stab2idMap; }
+  void SetSymTabToIdMap(SymTabToSymTabIdMap* x) { stab2idMap = x; }
+  
+  // PU_Info* -> PUId map: (We do not assume ownership of the map)
+  PUId FindPUId(PU_Info* pu);
+  PUToPUIdMap* GetPUToIdMap() const { return pu2idMap; }
+  void SetPUToIdMap(PUToPUIdMap* x) { pu2idMap = x; }
+
+  // WN* -> WNId map: (We do not assume ownership of the map)
+  WNId FindWNId(WN* wn);
+  WNToWNIdMap* GetWNToIdMap() const { return wn2idMap; }
+  void SetWNToIdMap(WNToWNIdMap* x) { wn2idMap = x; }
+
+  // WN* -> ValNum: (We do not assume ownership of the map)
+  VN FindVN(WN* wnexpr);
+  UJNumbers* GetWNToValNum() const { return wn2vnMap; }
+  void SetWNToValNum(UJNumbers* x) { wn2vnMap = x; }
+
+  // NonScalarSymTab: (We do not assume ownership of the table)
+  NonScalarSym* FindNonScalarSym(WN* wn);
+  NonScalarSymTab* GetNonScalarSymTab() const { return nssymtab; }
+  void SetNonScalarSymTab(NonScalarSymTab* x) { nssymtab = x; }
+  
+  // -------------------------------------------------------
+  // Misc
+  // -------------------------------------------------------
+
+  virtual void Dump(std::ostream& o = std::cerr, const char* pre = "") const;
+  virtual void DDump() const;
+
+  friend class XlationContextIterator;
+
 private: 
   // Disable for now
   XlationContext(const XlationContext& x) { }
   XlationContext& operator=(const XlationContext& x) { return *this; }
   
-  XlationContext& Ctor(uint32_t flags_, WN* wn_,
-		       NonScalarSymTab* symtab_, WNToWNIdMap* wnmap_);
+  XlationContext& Ctor(uint32_t flags_, WN* wn_);
   
   // Use a list instead a stack so that we can easily examine
   // contents.  The top of the stack will be the *front* of the
@@ -419,8 +369,12 @@ private:
   typedef CtxtStack::const_iterator CtxtStackItC;
 
 private:
+  WhirlParentMap* wnParentMap;
   SymTabToSymTabIdMap* stab2idMap;
   PUToPUIdMap* pu2idMap;
+  WNToWNIdMap* wn2idMap;
+  UJNumbers* wn2vnMap;
+  NonScalarSymTab* nssymtab;
 
   CtxtStack ctxtstack;
 };
