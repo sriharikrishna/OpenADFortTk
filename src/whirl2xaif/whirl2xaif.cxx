@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.50 2005/03/30 22:33:28 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.51 2005/04/05 18:42:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -283,14 +283,37 @@ static void
 TranslateAnalMaps(xml::ostream& xos, PU_Info* pu_forest, XlationContext& ctxt)
 {
   // -------------------------------------------------------
-  // AliasSetList
+  // AliasSetList: The first element has to be there
   // -------------------------------------------------------
   xos << BegElem("xaif:AliasSetList");
-
   xos << BegElem("xaif:AliasSet") << Attr("key", 0);
   xos << BegElem("xaif:AliasRange") << Attr("from_virtual_address", 1) << Attr("to_virtual_address", 1) << EndElem;
   xos << EndElem; // xaif:AliasSet
-
+  Open64IRProcIterator procIt(pu_forest);
+  // iterate over processed units
+  for (int procCnt = 1; procIt.isValid(); ++procIt, ++procCnt) {
+    PU_Info* pu = (PU_Info*)procIt.current().hval();
+    
+    OAAnalInfo* oaAnal = OAAnalMap.Find(pu);
+    WNToWNIdMap* wnmap = WNToWNIdTableMap.Find(pu);
+    
+    OA::OA_ptr<OA::XAIF::AliasMapXAIF> aliasSets = oaAnal->GetAliasXAIF();
+    OA::OA_ptr<OA::XAIF::IdIterator> aliasSetIdsIter = aliasSets->getIdIterator();
+    // iterate over alias sets
+    for ( ; aliasSetIdsIter->isValid(); ++(*aliasSetIdsIter)) {
+      xos << BegElem("xaif:AliasSet") << Attr("key", aliasSetIdsIter->current());
+      OA::OA_ptr<OA::XAIF::LocTupleIterator> aLocTupleIter = aliasSets->getLocIterator(aliasSetIdsIter->current()); 
+      // iterate over alias ranges
+      for ( ; aLocTupleIter->isValid(); ++(*aLocTupleIter) ) {
+	xos << BegElem("xaif:AliasRange");
+	xos << Attr("from_virtual_address", aLocTupleIter->current().getLocRange().getStart());
+	xos << Attr("to_virtual_address", aLocTupleIter->current().getLocRange().getEnd());
+	xos << Attr("partial", !(aLocTupleIter->current().isFull()));
+	xos << EndElem;
+      }
+      xos << EndElem; // xaif:AliasSet
+    }
+  }
   xos << EndElem; // xaif:AliasSetList
   xos << std::endl;
   
@@ -298,7 +321,7 @@ TranslateAnalMaps(xml::ostream& xos, PU_Info* pu_forest, XlationContext& ctxt)
   // DUUDSetList: The first two elements are the *same* for each procedure.
   // -------------------------------------------------------
   xos << BegElem("xaif:DUUDSetList");
-  Open64IRProcIterator procIt(pu_forest);
+  procIt.reset();
   for (int procCnt = 1; procIt.isValid(); ++procIt, ++procCnt) {
     PU_Info* pu = (PU_Info*)procIt.current().hval();
     
