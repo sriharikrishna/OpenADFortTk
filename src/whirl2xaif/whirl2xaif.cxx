@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.34 2004/02/20 21:11:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.35 2004/02/24 20:44:50 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -334,36 +334,30 @@ TranslateWNPU(xml::ostream& xos, WN *wn_pu, XlationContext& ctxt)
 static void
 MassageOACallGraphIntoXAIFCallGraph(CallGraph* cg)
 {
-  // FIXME: for now we eliminate nodes without a definition.  Note
-  // that the iteration *can* be broken so we have to start over each
-  // time! Yuck!
+  // For now we eliminate nodes without a definition.  
   
-  bool needToRemoveANode = true;
-  while (needToRemoveANode) {
-    
-    bool deletedANode = false;
-    for (CallGraph::NodesIterator it(*cg); (bool)it; ++it) {
-      CallGraph::Node* n = dynamic_cast<CallGraph::Node*>((DGraph::Node*)it);
-      if (!n->GetDef()) {
-	IFDBG(2) {
-	  IRInterface& ir = cg->GetIRInterface();
-	  const char* nm = ir.GetSymNameFromSymHandle(n->GetSym());
-	  std::cout << "* Removing '" << nm << "' from CallGraph\n";
-	}
-	cg->remove(n);
-	delete n;
-	deletedANode = true;
-	break; // break because deletion can mess up iteration!
+  DGraphNodeList toRemove; // holds basic blocks made empty
+  
+  for (CallGraph::NodesIterator it(*cg); (bool)it; ++it) {
+    CallGraph::Node* n = dynamic_cast<CallGraph::Node*>((DGraph::Node*)it);
+    if (!n->GetDef()) {
+      IFDBG(2) {
+	IRInterface& ir = cg->GetIRInterface();
+	const char* nm = ir.GetSymNameFromSymHandle(n->GetSym());
+	std::cout << "* Removing '" << nm << "' from CallGraph\n";
       }
-    }
-    
-    if (deletedANode) {
-      // restart iteration and look for more node to delete
-    } else {
-      // no more nodes need to be removed
-      needToRemoveANode = false;      
+      toRemove.push_back(n);
     }
   }
+  
+  // Remove empty basic blocks
+  for (DGraphNodeList::iterator it = toRemove.begin(); 
+       it != toRemove.end(); ++it) {
+    DGraph::Node* n = (*it);
+    cg->remove(n);
+    delete n;
+  }
+  toRemove.clear();
 }
 
 
