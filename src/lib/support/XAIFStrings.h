@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.20 2004/05/07 20:04:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.21 2004/07/28 19:04:07 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -167,6 +167,7 @@ public:
     TAG_StmtReturn, // Tags a return statement
     
     TAG_IntrinsicKey, // Tags an intrinsic to disambiguate translation
+    TAG_PregId,       // Tags a SymbolReference to a preg
     
     TAG_End,      // End of tag information
     
@@ -402,6 +403,9 @@ public:
   
   const char* tag_IntrinsicKey() const   { return c_strTbl[TAG_IntrinsicKey]; }
   XMLCh*      tag_IntrinsicKey_x() const { return x_strTbl[TAG_IntrinsicKey]; }
+
+  const char* tag_PregId() const   { return c_strTbl[TAG_PregId]; }
+  XMLCh*      tag_PregId_x() const { return x_strTbl[TAG_PregId]; }
   
   const char* tag_End() const { return c_strTbl[TAG_End]; }
   XMLCh*      tag_End_x() const { return x_strTbl[TAG_End]; }
