@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.5 2003/08/13 22:58:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.6 2003/08/25 13:58:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -157,7 +157,7 @@ TranslateCallGraph(PU_Info* pu_forest, DOMDocument* doc, XlationContext& ctxt)
   ctxt.SetXAIFSymToWhirlSymMap(symmap);
   
   // -------------------------------------------------------
-  // Translate each ControlFlowGraph in the CallGraph
+  // Translate each ControlFlowGraph in the CalGraph
   // -------------------------------------------------------
   DOMNodeIterator* it = 
     doc->createNodeIterator(doc, DOMNodeFilter::SHOW_ALL, 
@@ -253,9 +253,11 @@ TranslateCFG(WN *wn_pu, DOMElement* cfgElem, XlationContext& ctxt)
   }
   it->release();
 
+#if 0
   IR_set_dump_order(TRUE); /* dump parent before children*/
   fprintf(stderr, "\n----------------------------------------------------\n");
   fdump_tree(stderr, wn_pu);
+#endif
 
   delete wnmaps.first;
   delete wnmaps.second;
@@ -280,10 +282,8 @@ TranslateBB(WN *wn_pu, DOMElement* bbElem, XlationContext& ctxt)
     WN* ipWN = FindSafeInsertionPoint(blckWN, firstWN);
     
     // 2. Delete all statements in the interval
-    for (WN* stmtWN = firstWN; 
-	 (stmtWN); 
-	 stmtWN = (stmtWN == lastWN) ? NULL : WN_next(stmtWN)) {
-      WN_DELETE_FromBlock(blckWN, stmtWN);
+    for (WN* wn = firstWN; (wn); wn = (wn == lastWN) ? NULL : WN_next(wn)) {
+      WN_DELETE_FromBlock(blckWN, wn);
     }
     
     // 3. For each new statement, create a WHIRL node and insert it
@@ -294,11 +294,16 @@ TranslateBB(WN *wn_pu, DOMElement* bbElem, XlationContext& ctxt)
     for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
       DOMElement* stmtXAIF = dynamic_cast<DOMElement*>(node);
       
-      WN* stmtWN = TranslateStmt(stmtXAIF, ctxt);
-      if (stmtWN) {
-	WN_INSERT_BlockAfter(blckWN, ipWN, stmtWN);
-	ipWN = stmtWN; // update the insertion point
-      }
+      WN* wn = TranslateStmt(stmtXAIF, ctxt);
+      if (!wn) { continue; }
+
+      // Find the soon-to-be new insertion point      
+      WN* newIP = (WN_operator(wn) == OPR_BLOCK) ? WN_last(wn) : wn;
+
+      // If 'wn' is a OPR_BLOCK, the block is automatically deleted
+      WN_INSERT_BlockAfter(blckWN, ipWN, wn); 
+      ipWN = newIP;
+      
     }
     it->release();
   }
@@ -537,14 +542,22 @@ GetWNIdList(const char* idstr)
 static WN* 
 xlate_Assignment(DOMElement* elem, XlationContext& ctxt);
 
-static WN* 
-xlate_SubroutineCall(DOMElement* elem, XlationContext& ctxt);
-
 static WN*
 xlate_AssignmentLHS(DOMElement* elem, XlationContext& ctxt);
 
 static WN*
 xlate_AssignmentRHS(DOMElement* elem, XlationContext& ctxt);
+
+
+static WN* 
+xlate_SubroutineCall(DOMElement* elem, XlationContext& ctxt);
+
+
+static WN* 
+xlate_DerivativeAccumulator(DOMElement* elem, XlationContext& ctxt);
+
+static WN* 
+xlate_Derivative(DOMElement* elem, XlationContext& ctxt);
 
 
 static WN*
@@ -560,13 +573,15 @@ static WN*
 xlate_Constant(DOMElement* elem, XlationContext& ctxt);
 
 
-
 static ST*
 GetST(DOMElement* elem, XlationContext& ctxt);
 
-DGraph* 
-CreateExpressionGraph(DOMNode* node);
+static WN*
+CreateParm(WN *arg, UINT32 flag);
 
+
+static DGraph* 
+CreateExpressionGraph(DOMNode* node);
 
 
 static WN* 
@@ -581,6 +596,8 @@ TranslateStmt(DOMElement* stmt, XlationContext& ctxt)
     wn = xlate_SubroutineCall(stmt, ctxt);
   } else if (XMLString::equals(name, XAIFStrings.elem_Nop_x())) {
     // nothing
+  } else if (XMLString::equals(name, XAIFStrings.elem_DerivAccum_x())) {
+    wn = xlate_DerivativeAccumulator(stmt, ctxt);
   } else {
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
   }
@@ -597,16 +614,10 @@ xlate_Assignment(DOMElement* elem, XlationContext& ctxt)
 
   // FIXME: ISTORE: should we try to select btwn STID and ISTORE, etc?
   // FIXME: first argument is bogus // WN_Tree_Type(rhs)
-  WN* wn = WN_Istore(MTYPE_F8, 0, MTYPE_To_TY(MTYPE_F8), lhs, rhs, 0);
+  TY_IDX ty = Make_Pointer_Type(MTYPE_To_TY(MTYPE_F8));
+  WN* wn = WN_Istore(MTYPE_F8, 0, ty, lhs, rhs, 0);
 
   //WN* wn = WN_CreateAssert(0, WN_CreateIntconst(OPC_I4INTCONST, (INT64)1));
-  return wn;
-}
-
-static WN* 
-xlate_SubroutineCall(DOMElement* elem, XlationContext& ctxt)
-{
-  WN* wn = WN_CreateAssert(0, WN_CreateIntconst(OPC_I4INTCONST, (INT64)1));
   return wn;
 }
 
@@ -625,6 +636,81 @@ xlate_AssignmentRHS(DOMElement* elem, XlationContext& ctxt)
   WN* wn = TranslateExpression(GetFirstChildElement(elem), ctxt);
   return wn;
 }
+
+
+static WN* 
+xlate_SubroutineCall(DOMElement* elem, XlationContext& ctxt)
+{
+  WN* wn = WN_CreateAssert(0, WN_CreateIntconst(OPC_I4INTCONST, (INT64)1));
+  return wn;
+}
+
+
+// Must not return an empty block
+static WN* 
+xlate_DerivativeAccumulator(DOMElement* elem, XlationContext& ctxt)
+{
+  WN* blckWN = WN_CreateBlock();
+
+  // Accumulate saxpy calls and add to block
+  DOMDocument* doc = elem->getOwnerDocument();
+  DOMNodeIterator* it = 
+    doc->createNodeIterator(elem, DOMNodeFilter::SHOW_ALL, 
+			    new XAIF_Derivative(), true);
+  for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
+    DOMElement* deriv = dynamic_cast<DOMElement*>(node);
+    
+    WN* wn = xlate_Derivative(deriv, ctxt);
+    WN_INSERT_BlockLast(blckWN, wn);
+  }
+  it->release();
+  
+  // Do not return an empty block
+  if (WN_first(blckWN) == NULL)  {
+    WN_Delete(blckWN);
+    blckWN = NULL;
+  }
+  
+  return blckWN;
+}
+
+
+static WN* 
+xlate_Derivative(DOMElement* elem, XlationContext& ctxt)
+{
+  // subroutine saxpy_a_a(y,x,dydx) 
+  DOMElement* dep = GetChildElement(elem, XAIFStrings.elem_Dependent_x());
+  DOMElement* ind = GetChildElement(elem, XAIFStrings.elem_Independent_x());
+  DOMElement* partial = GetChildElement(elem, XAIFStrings.elem_PDeriv_x());
+
+  WN* depWN = xlate_VarRef(dep, ctxt, false);
+  WN* indWN = xlate_VarRef(ind, ctxt, false);
+  WN* partialWN = TranslateExpression(GetFirstChildElement(partial), ctxt);
+
+  // ------------------------------------------- // FIXME
+  // WN *call = Gen_Call_Shell(name, rtype, 3); // wn_instrument.cxx
+
+  TY_IDX ty = Make_Function_Type(MTYPE_To_TY(MTYPE_V));
+  ST* st = Gen_Intrinsic_Function(ty, "saxpy_a_a"); // create if non-existant
+
+  Clear_PU_no_side_effects(Pu_Table[ST_pu(st)]); // FIXME
+  Clear_PU_is_pure(Pu_Table[ST_pu(st)]);
+  Set_PU_no_delete(Pu_Table[ST_pu(st)]);
+
+
+  WN* callWN = WN_Call(MTYPE_V, MTYPE_V, 3, st);
+
+  WN_Set_Call_Default_Flags(callWN);
+  WN_Set_Call_Parm_Mod(callWN);
+  // ---------------------------------------------
+  
+  WN_actual(callWN, 0) = CreateParm(depWN, WN_PARM_BY_REFERENCE);
+  WN_actual(callWN, 1) = CreateParm(indWN, WN_PARM_BY_VALUE);
+  WN_actual(callWN, 2) = CreateParm(partialWN, WN_PARM_BY_VALUE);
+  
+  return callWN;
+}
+
 
 // TranslateExpression: Given the first node in an expression graph... 
 static WN*
@@ -759,7 +845,18 @@ xlate_VarRef(DOMElement* elem, XlationContext& ctxt, bool lvalue)
     wn = WN_CreateLdid(OPC_F8F8LDID, 0, st, MTYPE_To_TY(MTYPE_F8));
   }
 
-  return wn;
+  // ------------------------------------------- // FIXME
+  // wrap a fcall around this...
+  TY_IDX fty = Make_Function_Type(MTYPE_To_TY(MTYPE_F8));
+  ST* fst = Gen_Intrinsic_Function(fty, "__value__"); // create if non-existant
+
+  WN* callWN = WN_Call(MTYPE_F8, MTYPE_V, 1, fst);
+  WN_Set_Call_Default_Flags(callWN);
+  
+  WN_actual(callWN, 0) = CreateParm(wn, WN_PARM_BY_VALUE);
+  // ---------------------------------------------
+
+  return callWN;
 }
 
 
@@ -797,22 +894,40 @@ GetST(DOMElement* elem, XlationContext& ctxt)
   return ctxt.FindSym(scopeId.c_str(), symId.c_str());
 }
 
+static WN*
+CreateParm(WN *arg, UINT32 flag)
+{
+  TYPE_ID rtype = WN_rtype(arg);
+  return WN_CreateParm(rtype, arg, MTYPE_To_TY(rtype), flag);
+}
+
+// Gen_Call_Shell
+
 //****************************************************************************
 
 
 // CreateExpressionGraph: Given the first element in an XAIF
 // expression graph, returns a DGraph where where graph nodes point to
 // nodes in the DOM tree.  When walking from root to children, one
-// descends incoming edges.
-DGraph* 
+// descends incoming edges.  E.g.:
+//
+//     mult    <==   x * (y + z)
+//     ^ ^
+//    /   \
+//   x   plus
+//       ^ ^
+//      /   \
+//     y     z
+
+static DGraph* 
 CreateExpressionGraph(DOMNode* node)
 {
   DGraph* g = new DGraph;
   IdToNodeMap m;
   
-  // FIXME: for now we assume the root node is the FIRST node
-  // Root: no outgoing vertices
-
+  // -------------------------------------------------------
+  // Create the graph
+  // -------------------------------------------------------
   DOMNode* n = node; 
   do {
     // Only examine element node
@@ -829,7 +944,8 @@ CreateExpressionGraph(DOMNode* node)
       const XMLCh* targX = e->getAttribute(XAIFStrings.attr_target_x());
       XercesStrX src = XercesStrX(srcX);
       XercesStrX targ = XercesStrX(targX);
-      // FIXME: how best to deal with 'position' 
+
+      // FIXME: how best to deal with 'position'?
       // we need to sort the edges by position
 
       MyDGNode* gn1 = NULL, *gn2 = NULL; // src and targ
@@ -853,6 +969,7 @@ CreateExpressionGraph(DOMNode* node)
       // Add a vertex to the graph
       const XMLCh* vidX = e->getAttribute(XAIFStrings.attr_Vid_x());
       XercesStrX vid = XercesStrX(vidX);
+      assert(strcmp(vid.c_str(), "") != 0); // FIXME: ints for now
       
       MyDGNode* gn = new MyDGNode(e);
       g->add(gn);
@@ -860,6 +977,26 @@ CreateExpressionGraph(DOMNode* node)
     }
     
   } while ( (n = n->getNextSibling()) );
+
+  
+  // -------------------------------------------------------
+  // Find the root node
+  // -------------------------------------------------------
+  
+  // Since the graph is connected, the root node is the first (only)
+  // node without outgoing edges.
+  DGraph::Node* root = NULL;
+  DGraph::NodesIterator nIt = DGraph::NodesIterator(*g);
+  for ( ; (bool)nIt; ++nIt) {
+    DGraph::Node* node = (DGraph::Node*)nIt;
+    if (node->num_outgoing() == 0) {
+      root = node;
+      break;
+    }
+  }
+  
+  assert(root);
+  g->set_root(root);
   
   return g;
 }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.4 2003/08/13 22:58:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.5 2003/08/25 13:58:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -85,7 +85,7 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "xaif:Assignment",
   "xaif:SubroutineCall",
   "xaif:Nop",
-
+  
   // Expressions
   "xaif:VariableReference",
   "xaif:Constant",
@@ -100,8 +100,15 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "name",
   "value",
   
+  // DerivativeAccumulator
+  "xaif:DerivativeAccumulator", // stmt
+  "xaif:Derivative",
+  "xaif:PartialDerivative",
+  "xaif:Independent",
+  "xaif:Dependent",
+  
   // -----------------------------------------------------
-
+  
   // Special tags
   "[WHIRLIDS]"
 };

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.3 2003/08/08 20:04:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.4 2003/08/25 13:58:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -94,6 +94,7 @@ ProcessCommandLine(int argc, char **argv);
 std::string ProgramName;
 std::string WHIRL_filename;
 std::string XAIF_filename;
+std::string WHIRL_out_filename;
 
 //****************************************************************************
 
@@ -165,15 +166,12 @@ real_main(INT argc, char **argv)
   // -------------------------------------------------------  
 
   cerr << ProgramName << " translates (" << WHIRL_filename << ", "
-       << XAIF_filename << ") into " << WHIRL_filename << std::endl;
+       << XAIF_filename << ") into " << WHIRL_out_filename << std::endl;
 
   main_DOM(pu_forest, XAIF_filename.c_str()); // FIXME check return
   //ret = main_SAX(xmlFile);
 
-
-  std::string new_WHIRL_file = WHIRL_filename;
-  new_WHIRL_file += ".new.B";
-  WriteIR(new_WHIRL_file.c_str(), pu_forest);
+  WriteIR(WHIRL_out_filename.c_str(), pu_forest);
   //FreeIR(pu_forest);
   
   // -------------------------------------------------------
@@ -414,5 +412,7 @@ ProcessCommandLine(int argc, char **argv)
   }
   
   Irb_File_Name = (char*)WHIRL_filename.c_str(); // make Open64 happy
+
+  WHIRL_out_filename = New_Extension(XAIF_filename.c_str(), ".x2w.B");
 }
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.3 2003/08/11 14:24:23 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.4 2003/08/25 13:58:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -123,6 +123,23 @@ GetLastChildElement(DOMNode* n)
   return NULL;
 }
 
+DOMElement*
+GetChildElement(DOMNode* n, XMLCh* name)
+{
+  DOMNodeList* children = n->getChildNodes();
+  if (children) {
+    for (XMLSize_t i = 0; i < children->getLength(); ++i) {
+      DOMNode* child = children->item(i);
+      if (child->getNodeType() == DOMNode::ELEMENT_NODE
+	  && XMLString::equals(name, child->getNodeName())) {
+	return dynamic_cast<DOMElement*>(child);
+      }
+    }
+  }
+  return NULL;
+}
+
+
 //****************************************************************************
 
 short
@@ -204,7 +221,8 @@ XAIF_BBStmtElemFilter::IsStmt(const DOMNode *node)
   const XMLCh* name = node->getNodeName();
   return (XMLString::equals(name, XAIFStrings.elem_Assign_x())
 	  || XMLString::equals(name, XAIFStrings.elem_SubCall_x())
-	  || XMLString::equals(name, XAIFStrings.elem_Nop_x()));
+	  || XMLString::equals(name, XAIFStrings.elem_Nop_x())
+	  || XMLString::equals(name, XAIFStrings.elem_DerivAccum_x()));
 }
 
 
@@ -215,6 +233,29 @@ XAIF_BBStmtElemFilter::IsNop(const DOMNode *node)
   return (XMLString::equals(name, XAIFStrings.elem_Nop_x()));
 }
 
+bool 
+XAIF_BBStmtElemFilter::IsDerivAccum(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_DerivAccum_x()));
+}
 
 //****************************************************************************
 
+short
+XAIF_Derivative::acceptNode(const DOMNode *node) const
+{
+  if ( (node->getNodeType() == DOMNode::ELEMENT_NODE) && IsDeriv(node) ) {
+    return FILTER_ACCEPT;
+  }
+  return FILTER_SKIP;
+}
+
+bool 
+XAIF_Derivative::IsDeriv(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_Deriv_x()));
+}
+
+//****************************************************************************

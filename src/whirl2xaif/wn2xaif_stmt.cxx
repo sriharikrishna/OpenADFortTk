@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.13 2003/08/08 19:51:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.14 2003/08/25 13:58:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -93,7 +93,7 @@
 #include "wn2xaif_stmt.h"
 #include "wn2xaif_mem.h"
 #include "wn2xaif_io.h"
-#include "wn2f_pragma.h"
+#include "wn2xaif_pragma.h"
 #include "init2f.h"
 
 //************************** Forward Declarations ***************************
@@ -593,8 +593,7 @@ xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       xos << BegElem("xaif:SubroutineCall")
 	  << Attr("statement_id", ctxt.GetNewVId())
 	  << Attr("scope_id", scopeid)
-	  << Attr("symbol_id", (UINT)ST_index(st))
-	  << WhirlIDAnnotation(ctxt.FindWNId(wn));
+	  << Attr("symbol_id", (UINT)ST_index(st));
     }
   }
 

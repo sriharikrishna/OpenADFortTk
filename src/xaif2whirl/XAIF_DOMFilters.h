@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.3 2003/08/11 14:24:23 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.4 2003/08/25 13:58:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -45,6 +45,9 @@ GetFirstChildElement(DOMNode* n);
 
 DOMElement*
 GetLastChildElement(DOMNode* n);
+
+DOMElement*
+GetChildElement(DOMNode* n, XMLCh* name);
 
 //****************************************************************************
 
@@ -124,6 +127,7 @@ private:
 };
 
 
+// Accepts: basic block statements and DerivativeAccumulator
 class XAIF_BBStmtElemFilter : public DOMNodeFilter
 {
 public:
@@ -140,6 +144,27 @@ public:
 
   static bool IsStmt(const DOMNode *node);
   static bool IsNop(const DOMNode *node);
+  static bool IsDerivAccum(const DOMNode *node);
+
+private:
+};
+
+
+class XAIF_Derivative : public DOMNodeFilter
+{
+public:
+  // -----------------------------------------------------------------------
+  //  Constructors and Destructor
+  // -----------------------------------------------------------------------
+  XAIF_Derivative() { }
+  ~XAIF_Derivative() { }
+  
+  // -----------------------------------------------------------------------
+  //  Implementation of the filter interface
+  // -----------------------------------------------------------------------
+  short acceptNode(const DOMNode *node) const;
+
+  static bool IsDeriv(const DOMNode *node);
 
 private:
 };

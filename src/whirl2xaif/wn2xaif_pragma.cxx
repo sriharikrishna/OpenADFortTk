@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.10 2003/08/01 16:00:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.cxx,v 1.11 2003/08/25 13:58:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -80,7 +80,7 @@
 #include "st2xaif.h"
 #include "ty2xaif.h"
 #include "tcon2f.h"
-#include "wn2f_pragma.h"
+#include "wn2xaif_pragma.h"
 
 //************************** Forward Declarations ***************************
 

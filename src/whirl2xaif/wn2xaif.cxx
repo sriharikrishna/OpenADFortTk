@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.16 2003/08/11 14:24:23 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.17 2003/08/25 13:58:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -93,7 +93,7 @@
 #include "wn2xaif_expr.h"
 #include "wn2xaif_mem.h"
 #include "wn2xaif_io.h"
-#include "wn2f_pragma.h"
+#include "wn2xaif_pragma.h"
 
 #include "st2xaif.h"
 #include "ty2xaif.h"
@@ -139,6 +139,10 @@ xlate_LoopUpdate(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 static std::string
 GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt);
+
+
+static void
+MassageOACFGIntoXAIFCFG(CFG* cfg);
 
 //***************************************************************************
 
@@ -382,7 +386,9 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   Pro64IRInterface irInterface;
   Pro64IRStmtIterator irStmtIter(fbody);
   CFG cfg(irInterface, &irStmtIter, (SymHandle)WN_st(wn), true);
-    
+  
+  MassageOACFGIntoXAIFCFG(&cfg);
+
   // Dump CFG vertices (basic blocks)
   for (CFG::NodesIterator nodeIt(cfg); (bool)nodeIt; ++nodeIt) {
     CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
@@ -1378,6 +1384,73 @@ WN2F_End_Routine_Strings(xml::ostream& xos, INT32 func_id)
     xos << "END !" << PUINFO_FUNC_NAME << std::endl << std::endl;
   }
 }
+
+//***************************************************************************
+
+// MassageOACFGIntoXAIFCFG: Convert an OpenAnalysis CFG into a valid XAIF CFG
+// 
+// 1. OpenAnalysis creates basic blocks with labels at the beginning
+// and branches at the end.  E.g. for TWOWAY_CONDITIONAL statements
+// OpenAnalysis may generate BBs such as:
+//
+// Code:                   | BBs:
+//   x = 5                 |          x = 5
+//   if (x .eq. 5) then    |          if (x .eq. 5)
+//     x = 6               |       _______/\_________
+//   else                  |      /                  \
+//     x = 7               |  x = 6                  x = 7
+//   ...                   |      \-------  ---------/
+//                         |              \/
+//                         |            ......
+// 
+// While OA creates correct BBs, in order to create valid XAIF, the
+// first BB must be split so that the if condition can be placed
+// within xaif:If.  We create a new BB here so that the translation
+// into XAIF is easy:
+// 
+//   <xaif:BasicBlock>
+//     <xaif:Assignment...
+//     </xaif:Asignment>
+//   </xaif:BasicBlock>
+// 
+//   <xaif:If>
+//     <xaif:Condition...
+//     </xaif:Condition>
+//   </xaif:If>
+// 
+
+static void
+MassageOACFGIntoXAIFCFG(CFG* cfg)
+{
+  IRInterface& irInterface = cfg->GetIRInterface();
+
+  // -------------------------------------------------------
+  // 1. Find BBs with conditionals and split them
+  // -------------------------------------------------------
+  
+  // Iterate over BB nodes.  For each node with more than one
+  // statement, examine the statements.  If a conditional is found at
+  // the end of the BB, split it.  (The CFG iterator should handle the
+  // creation of new nodes in the middle of iteration.)
+  for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
+    CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
+    
+    if (n->size() > 1) {
+      for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
+	StmtHandle stmt = (StmtHandle)stmtIt;
+	
+	IRStmtType ty = irInterface.GetStmtType(stmt);
+	if (ty == STRUCT_TWOWAY_CONDITIONAL 
+	    || ty == USTRUCT_TWOWAY_CONDITIONAL_T
+	    || ty == USTRUCT_TWOWAY_CONDITIONAL_F) {
+	  cfg->splitBlock(n, stmt);
+	}
+      }
+    }
+  }
+}
+
+//***************************************************************************
 
 
 /////////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.4 2003/08/13 22:58:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.5 2003/08/25 13:58:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -84,7 +84,7 @@ public:
     ELEM_Assign,
     ELEM_SubCall,
     ELEM_Nop,
-    
+
     // Expressions
     ELEM_VarRef,
     ELEM_Constant,
@@ -99,11 +99,20 @@ public:
     ATTR_name,
     ATTR_value,
 
+    // DerivativeAccumulator
+    ELEM_DerivAccum,  // stmt
+    ELEM_Deriv,       // expr
+    ELEM_PDeriv,      // expr
+    ELEM_Independent, // expr
+    ELEM_Dependent,   // expr
+
     // -----------------------------------------------------
 
     // Special tags
     TAG_IRIds,  // Tags a colon-separated list of IR ids
     
+    // -----------------------------------------------------
+
     NUM_STRINGS // Not a valid string!
   };
 
@@ -196,7 +205,14 @@ public:
   XMLCh*      elem_ExprEdge_x() const { return x_strTbl[ELEM_ExprEdge]; }
 
   XMLCh*      attr_name_x() const { return x_strTbl[ATTR_name]; }
-  XMLCh*      attr_value_x() const { return x_strTbl[ATTR_value]; }  
+  XMLCh*      attr_value_x() const { return x_strTbl[ATTR_value]; }
+
+  // DerivativeAccumulator
+  XMLCh*      elem_DerivAccum_x() const { return x_strTbl[ELEM_DerivAccum]; }
+  XMLCh*      elem_Deriv_x() const { return x_strTbl[ELEM_Deriv]; }
+  XMLCh*      elem_PDeriv_x() const { return x_strTbl[ELEM_PDeriv]; }
+  XMLCh*      elem_Independent_x() const { return x_strTbl[ELEM_Independent]; }
+  XMLCh*      elem_Dependent_x() const { return x_strTbl[ELEM_Dependent]; }
 
   // -----------------------------------------------------
   
