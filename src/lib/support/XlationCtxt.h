@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XlationCtxt.h,v 1.1 2003/09/17 19:45:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XlationCtxt.h,v 1.2 2003/10/01 16:31:45 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -43,9 +43,17 @@ class CtxtFlags {
 public: 
   CtxtFlags();
   virtual ~CtxtFlags();
-  
+
+  // -------------------------------------------------------
   // Flags for context
-  bool AreFlags(uint32_t f) const { return (flags & f); }
+  // -------------------------------------------------------
+
+  // Tests to see if *all* of the specified flags are set
+  bool AreFlags(uint32_t f) const { return ((flags & f) == f); }
+  
+  // Tests to see if *any* of the specified flags are set
+  bool IsAnyFlag(uint32_t f) const { return (flags & f); }
+
   void SetFlags(uint32_t f)       { flags = flags | f; }
   void ResetFlags(uint32_t f)     { flags = flags & ~f; }
   
