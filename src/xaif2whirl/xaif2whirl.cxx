@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.15 2003/11/26 14:49:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.16 2004/01/14 16:57:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -122,6 +122,9 @@ xlate_SymbolTable(const DOMElement* elem, const char* scopeId, PU_Info* pu,
 static void
 xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
 	     XAIFSymToSymbolMap* symMap);
+
+static ST* 
+CreateST(SYMTAB_IDX level, const char* nm, const DOMElement* elem);
 
 //****************************************************************************
 
@@ -746,42 +749,70 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
   // 2. Find or Create WHIRL symbol
   ST* st = NULL;
   if (symId == 0) {
-
-    active = true; // FIXME: for now we force all temps to be active
-    
     // Create the symbol
-    const XMLCh* kindX = elem->getAttribute(XAIFStrings.attr_kind_x());
-    const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
-    const XMLCh* shapeX = elem->getAttribute(XAIFStrings.attr_shape_x());    
-
-    XercesStrX kind = XercesStrX(kindX);
-    XercesStrX type = XercesStrX(typeX);
-    XercesStrX shape = XercesStrX(shapeX);
-    
-    assert( strcmp(kind.c_str(), "variable" ) == 0 ); // FIXME: assume only
-    assert( strcmp(type.c_str(), "real" ) == 0 );     // scalar, reals
-    assert( strcmp(shape.c_str(), "scalar" ) == 0 );
-    
-    st = New_ST(level);
-    ST_Init(st, Save_Str(symNm.c_str()), CLASS_VAR, SCLASS_AUTO, EXPORT_LOCAL,
-	    MTYPE_To_TY(MTYPE_F8));
-    
+    st = CreateST(level, symNm.c_str(), elem);
+    active = true; // FIXME: for now we force all temps to be active
   } else {
     // Find the symbol
     st = &(Scope_tab[level].st_tab->Entry(symId));
   }
   
-  // 3. Create our own symbol structure
+  // 3. Create our own symbol structure and add to the map
   Symbol* sym = new Symbol(st, active);
-  
-  // 4. Add the symbol to the map
   symMap->Insert(scopeId, symNm.c_str(), sym);
   
-  // 5. Finalize
+  // 4. Finalize
   if (pu) {
     SaveOpen64PUGlobalVars(pu);
   }
 } 
+
+// CreateST: Creates and returns a WHIRL ST* at level 'level' with
+// name 'nm' using 'elem' to gather ST shape and storage class info.
+static ST* 
+CreateST(SYMTAB_IDX level, const char* nm, const DOMElement* elem)
+{
+  const XMLCh* kindX = elem->getAttribute(XAIFStrings.attr_kind_x());
+  const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
+  const XMLCh* shapeX = elem->getAttribute(XAIFStrings.attr_shape_x());    
+  
+  XercesStrX kind = XercesStrX(kindX);
+  XercesStrX type = XercesStrX(typeX);
+  XercesStrX shape = XercesStrX(shapeX);
+  
+  assert( strcmp(kind.c_str(), "variable" ) == 0 ); // FIXME: assume only
+  assert( strcmp(type.c_str(), "real" ) == 0 );     // real variables
+    
+  // 1. Find correct type according to the shape
+  TY_IDX ty;
+  if (strcmp(shape.c_str(), "scalar") == 0) {
+    ty = MTYPE_To_TY(MTYPE_F8); // FIXME: assume only reals
+  } else { 
+    
+    // Note: cf. be/com/wn_instrument.cxx:1253 for example creating vector
+    INT32 ndim = 0;
+    INT64 len = 1000; // FIXME: this is fixed size!!
+    if (strcmp(shape.c_str(), "vector") == 0) {
+      ndim = 1;
+    } else {
+      // FIXME: add tensors
+      ASSERT_FATAL(false, (DIAG_A_STRING, "Programming error."));
+    }
+    ty = Make_Array_Type(MTYPE_F8, ndim, len);
+  }
+  
+  // 2. Find storage class
+  ST_SCLASS sclass = SCLASS_AUTO; // default: auto implies local storage
+  if (level == GLOBAL_SYMTAB) {
+    //sclass = SCLASS_UGLOBAL; // FIXME
+  }
+  
+  // 3. Create the new symbol
+  ST* st = New_ST(level);
+  ST_Init(st, Save_Str(nm), CLASS_VAR, sclass, EXPORT_LOCAL, ty);
+  
+  return st;
+}
 
 //****************************************************************************
 
