@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.15 2004/08/05 18:35:04 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.16 2004/12/20 15:17:58 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -44,9 +44,11 @@ OBJS = \
 	wn_attr.o \
 	\
 	sexpostream.o \
+	SexpTags.o \
 	xmlostream.o \
-	CmdLineParser.o \
 	XAIFStrings.o \
+	\
+	CmdLineParser.o \
 	\
 	Exception.o \
 	XlationCtxt.o \
