@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.20 2003/12/11 20:59:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.21 2004/01/13 21:10:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -144,6 +144,9 @@ static void
 TranslateWNPU(xml::ostream& xos, WN* pu, XlationContext& ctxt);
 
 
+static void
+MassageOACallGraphIntoXAIFCallGraph(CallGraph* cg);
+
 static void 
 DumpTranslationHeaderComment(xml::ostream& xos);
 
@@ -176,10 +179,13 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   ctxt.SetPUToIdMap(pumaps.first);
   delete pumaps.second;
   
-  // 2. Create CallGraph
+  // 2. Create CallGraph (massage OA version into XAIF version)
   Pro64IRProcIterator irProcIter(pu_forest);
   ST* st = ST_ptr(PU_Info_proc_sym(pu_forest));
   CallGraph cgraph(irInterface, &irProcIter, (SymHandle)st);
+
+  MassageOACallGraphIntoXAIFCallGraph(&cgraph);
+
   //cgraph->dump(cerr);
   
   xos << BegElem("xaif:CallGraph")
@@ -282,25 +288,11 @@ static void
 TranslatePU(xml::ostream& xos, CallGraph::Node* n, UINT32 vertexId,
 	    XlationContext& ctxt)
 {
-  if (n->GetDef()) {
-    TranslatePU(xos, (PU_Info*)n->GetDef(), n->getID(), ctxt);
-  } else {
-    // FIXME: 
-    // These should be part of the global symbol table
-    ST* st = (ST*)n->GetSym();
-    ST_TAB* sttab = Scope_tab[GLOBAL_SYMTAB].st_tab;
-    SymTabId scopeId = ctxt.FindSymTabId(sttab);
+  // FIXME: A more general test will be needed
+  ASSERT_FATAL(n->GetDef(), (DIAG_UNIMPLEMENTED, "Should be defined."));
+
+  TranslatePU(xos, (PU_Info*)n->GetDef(), n->getID(), ctxt);
     
-    xos << BegElem("xaif:ControlFlowGraph") << Attr("vertex_id", vertexId)
-	<< Attr("scope_id", scopeId);
-    if (st) {
-      xos << AttrSymId(st);
-    } else {
-      xos << Attr("symbol_id", "NoValueForThisIntrinsicCall");
-    }
-    xos << EndElem; 
-  }
-  
   xos << std::endl;
   xos.flush();
 }
@@ -369,6 +361,28 @@ TranslateWNPU(xml::ostream& xos, WN *wn_pu, XlationContext& ctxt)
   Stop_Timer(T_W2F_CU);
   Diag_Set_Phase(caller_err_phase);
 }
+
+//***************************************************************************
+
+// MassageOACallGraphIntoXAIFCallGraph: Process CallGraph to eliminate
+// synthetic edges.
+//   - eliminate special Open64 functions and inlinable intrinsics
+//   - need to figure out what to do with non-inlinable intrinsics
+//  
+static void
+MassageOACallGraphIntoXAIFCallGraph(CallGraph* cg)
+{
+  // FIXME: for now we eliminate nodes without a definition.  The
+  // iteration should not be broken during this operation.
+  for (CallGraph::NodesIterator nodeIt(*cg); (bool)nodeIt; ++nodeIt) {
+    CallGraph::Node* n = dynamic_cast<CallGraph::Node*>((DGraph::Node*)nodeIt);
+    if (!n->GetDef()) {
+      cg->remove(n);
+      delete n;
+    }
+  }
+}
+
 
 //***************************************************************************
 
