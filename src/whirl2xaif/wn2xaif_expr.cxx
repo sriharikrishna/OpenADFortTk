@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.11 2003/08/25 13:58:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.12 2003/09/05 21:41:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -76,7 +76,6 @@
 #include "whirl2f_common.h"
 
 #include "PUinfo.h"
-#include "tcon2f.h"
 #include "wn2xaif.h"
 #include "ty2xaif.h"
 #include "st2xaif.h"
@@ -166,16 +165,16 @@ typedef struct Fname_PartialMap
 static const FNAME_PARTIALMAP Fname_Map[] =
 {
   // Unary Operator
-  {OPC_U8NEG, "I_UnaryMinus"},
-  {OPC_FQNEG, "I_UnaryMinus"},
-  {OPC_I8NEG, "I_UnaryMinus"},
-  {OPC_U4NEG, "I_UnaryMinus"},
-  {OPC_CQNEG, "I_UnaryMinus"},
-  {OPC_F8NEG, "I_UnaryMinus"},
-  {OPC_C8NEG, "I_UnaryMinus"},
-  {OPC_I4NEG, "I_UnaryMinus"},
-  {OPC_F4NEG, "I_UnaryMinus"},
-  {OPC_C4NEG, "I_UnaryMinus"},
+  {OPC_U8NEG, "I_minus_scal"},
+  {OPC_FQNEG, "I_minus_scal"},
+  {OPC_I8NEG, "I_minus_scal"},
+  {OPC_U4NEG, "I_minus_scal"},
+  {OPC_CQNEG, "I_minus_scal"},
+  {OPC_F8NEG, "I_minus_scal"},
+  {OPC_C8NEG, "I_minus_scal"},
+  {OPC_I4NEG, "I_minus_scal"},
+  {OPC_F4NEG, "I_minus_scal"},
+  {OPC_C4NEG, "I_minus_scal"},
 
   {OPC_I4ABS, "F_ABS"},
   {OPC_F4ABS, "F_ABS"},
@@ -1015,28 +1014,35 @@ WN2F_floor(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 } /* WN2F_floor */
 
 WN2F_STATUS 
-WN2F_recip(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_RECIP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
-   
    ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_RECIP, 
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_recip"));
+		    (DIAG_W2F_UNEXPECTED_OPC, "xlate_RECIP"));
 
-   xos << "(";
-   if (TY_mtype(result_ty) == MTYPE_FQ || TY_mtype(result_ty) == MTYPE_CQ)
-      xos << "1Q00";
-   else if (TY_mtype(result_ty) == MTYPE_F8 || TY_mtype(result_ty) == MTYPE_C8)
-      xos << "1D00";
-   else
-      xos << "1E00";
+   const TY_IDX result_ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
+   
+   // Translate using a temporary DIV expression [1 / kid0(wn)]
+   TYPE_ID rty = TY_mtype(result_ty);
+   OPCODE opc = OPCODE_make_op(OPR_DIV, rty, MTYPE_V);
 
-   xos << "/";
-   xlate_Operand(xos, WN_kid(wn,0), result_ty,
-		 !TY_Is_Character_Reference(result_ty), ctxt);
-   xos << ")";
-
+   TCON tcon;
+   if (MTYPE_is_integral(rty)) {
+     tcon = Host_To_Targ(rty, 1);
+   } else if (MTYPE_is_float(rty)) {
+     tcon = Host_To_Targ_Float(rty, 1.0);
+   } else if (MTYPE_is_complex(rty)) { 
+     tcon = Host_To_Targ_Complex(rty, 1, 0);
+   } else {
+     ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
+   }
+   WN* wn_one = Make_Const(tcon);
+   
+   xlate_BinaryOpToIntrinsic(xos, opc, result_ty, wn_one, WN_kid0(wn), ctxt);
+   
+   WN_DELETE_Tree(wn_one);
+   
    return EMPTY_WN2F_STATUS;
-} /* WN2F_recip */
+}
 
 WN2F_STATUS 
 WN2F_rsqrt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
@@ -1046,16 +1052,11 @@ WN2F_rsqrt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_RSQRT, 
 		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_rsqrt"));
 
-   xos << "(";
-   xos << "1.0";
-   xos << "/";
-   xos << "SQRT";
-   xos << "(";
+   xos << "(1.0/SQRT(";
    set_XlationContext_no_parenthesis(ctxt);
    xlate_Operand(xos, WN_kid(wn,0), result_ty,
 		 !TY_Is_Character_Reference(result_ty), ctxt);
-   xos << ")";
-   xos << ")";
+   xos << "))";
 
    return EMPTY_WN2F_STATUS;
 } /* WN2F_rsqrt */
@@ -1618,14 +1619,18 @@ xlate_BinaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
 }
 
 // xlate_OpToIntrinsic: Translate a WHIRL unary or binary operator to a
-// XAIF function call.  'wn1' should be NULL for a WHIRL unary operator.
+// XAIF function call.  'wn1' should be NULL for a WHIRL unary operator. 
+//
+// FIXME: right now, this is essentially the same as
+// xlate_BinaryOpToIntrinsic.
+//
 // FIXME: Only string argument are passed by reference; all other
 // argument types are passed by value.
 static WN2F_STATUS
 xlate_OpToIntrinsic(xml::ostream& xos, OPCODE opcode, WN *wn0, WN *wn1, 
 		    XlationContext& ctxt)
 {
-  const BOOL binary_op = (wn1 != NULL);
+  const BOOL is_binary_op = (wn1 != NULL);
   
   TY_IDX rty = Stab_Mtype_To_Ty(OPCODE_rtype(opcode));
   TY_IDX dty = Stab_Mtype_To_Ty(OPCODE_desc(opcode));
@@ -1634,26 +1639,28 @@ xlate_OpToIntrinsic(xml::ostream& xos, OPCODE opcode, WN *wn0, WN *wn1,
   // of the same type as the result.  The assumed type of the argument
   // will be the dty.
   if (TY_kind(dty) == KIND_VOID) { dty = rty; }
+
+  UINT targid, srcid0, srcid1;
   
   // Operation
-  xos << Comment("OpToIntrinsic (was FuncCall -- FIXME)");
-  xos << BegElem("xaif:Intrinsic") << Attr("vertex_id", ctxt.GetNewVId())
-      << Attr("name", GET_OPC_FNAME(opcode));
-  
-  /* No need to parenthesize subexpressions */ // FIXME
-  set_XlationContext_no_parenthesis(ctxt);
+  targid = ctxt.GetNewVId();
+  xos << Comment("OpToIntrinsic (FIXME: FuncCall)");
+  xos << BegElem("xaif:Intrinsic") << Attr("vertex_id", targid)
+      << Attr("name", GET_OPC_FNAME(opcode)) << EndElem;
   
   // First operand, or only operand for unary operation
-  xos << "{--" << std::endl;
+  srcid0 = ctxt.PeekVId();
   xlate_Operand(xos, wn0, dty, TRUE/*call-by-value*/, ctxt);
-  xos << "--}" << std::endl;
   
-  // Second operand
-  if (binary_op) {
-    xos << "{--" << std::endl;
+  // Second operand (only for binary op)
+  if (is_binary_op) {
+    srcid1 = ctxt.PeekVId();
     xlate_Operand(xos, wn1, dty, TRUE/*call-by-value*/, ctxt);
-    xos << "--}" << std::endl;
   }
+
+  // Edges
+  DumpExprEdge(xos, ctxt.GetNewEId(), srcid0, targid, 1);
+  if (is_binary_op) { DumpExprEdge(xos, ctxt.GetNewEId(), srcid1, targid, 2); }
   
   return EMPTY_WN2F_STATUS;
 }

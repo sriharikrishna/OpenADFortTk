@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.15 2003/09/02 15:02:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.16 2003/09/05 21:41:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -301,9 +301,8 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
 
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
     SymTabId scopeId = ctxt.FindSymTabId(sttab);
-    const char* st_name = ST_name(st);
 
-    xos << Attr("scope_id", scopeId) << Attr("symbol_id", st_name)
+    xos << Attr("scope_id", scopeId) << AttrSymId(st)
 	<< PUIdAnnot(puId) << EndAttrs;
     TranslateWNPU(xos, wn_pu, ctxt);
     xos << EndElem;

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.15 2003/09/02 15:02:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.16 2003/09/05 21:41:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -108,7 +108,6 @@
 
 #include "whirl2f_common.h"
 #include "PUinfo.h"
-#include "tcon2f.h"
 #include "wn2xaif.h"
 #include "ty2xaif.h"
 #include "st2xaif.h"
@@ -162,6 +161,136 @@ static void
 xlate_STUse_CONST(xml::ostream& xos, ST *st, XlationContext& ctxt);
 static void 
 xlate_STUse_BLOCK(xml::ostream& xos, ST *st, XlationContext& ctxt);
+
+//***************************************************************************
+
+#include <alloca.h>
+#include <sstream> //FIXME
+
+std::string
+TCON2F_hollerith(TCON tvalue)
+{
+  /* Translates the given Hollerith constant into Fortran representation.
+   * A hollerith constant cannot be split into substrings.
+   */
+  const char *strbase;
+  char       *str;
+  INT32       strlen;
+  
+  ASSERT_DBG_WARN(TCON_ty(tvalue) == MTYPE_STR,
+		  (DIAG_W2F_UNEXPECTED_BTYPE, 
+		   MTYPE_name(TCON_ty(tvalue)), "TCON2F_hollerith"));
+  
+  strlen = Targ_String_Length(tvalue);
+  strbase = Targ_String_Address(tvalue);
+  str = (char *) alloca(strlen + 16);
+  sprintf(str, "%dH%s", strlen, strbase);
+  
+  return std::string(str);
+} /* TCON2F_hollerith */
+
+   
+std::string
+TCON2F_translate(TCON tvalue, BOOL is_logical, TY_IDX object_ty)
+{
+  // FIXME: double check // use stream operators
+
+  /* Translates the given TCON to a Fortran representation.  Since
+   * the tcon itself does not tell us, we must rely on the context
+   * to inform us whether or not a integer constant is a logical
+   * value or not.
+   */
+  const char  *strbase;
+  char        *str;
+
+  // FIXME: for now we use this hack to return a string
+  std::ostringstream sstr;
+  
+  if (is_logical && MTYPE_type_class(TCON_ty(tvalue)) & MTYPE_CLASS_INTEGER) {
+    // Treat it as regular integral constant, unless it has value 0 or 1.
+    if (Targ_To_Host(tvalue) == 0LL)
+      sstr << "false";
+    else if  (Targ_To_Host(tvalue) == 1LL)
+      sstr << "true";
+    else
+      is_logical = FALSE;
+  } else { /* Only integral values can be treated as boolean */
+    is_logical = FALSE; 
+  }
+  
+  if (!is_logical) {
+    switch (TCON_ty(tvalue)) {
+
+    case MTYPE_STR: {
+      // To be entirely safe, we do not assume the string contains
+      // NULL terminator.
+      INT32 len = Targ_String_Length(tvalue);
+      const char* str = Targ_String_Address(tvalue);      
+      for (int i = 0; i < len; ++i)
+	sstr << str[i];
+    }
+    break;
+      
+    case MTYPE_I1:
+    case MTYPE_I2:
+    case MTYPE_I4:
+      sstr << Targ_Print("%1d", tvalue);
+      break;
+      
+    case MTYPE_I8:
+      sstr << Targ_Print("%1lld", tvalue);
+      break;
+      
+    case MTYPE_U1:
+    case MTYPE_U2:
+    case MTYPE_U4:
+      sstr << Targ_Print("%1u", tvalue);
+      break;
+      
+    case MTYPE_U8:
+      sstr << Targ_Print("%1llu", tvalue);
+      break;
+      
+    case MTYPE_F4:
+      sstr << Targ_Print("%.10e", tvalue);
+      break;
+      
+    case MTYPE_F8:
+      sstr << Targ_Print("%.20e", tvalue);
+      break;
+      
+    case MTYPE_FQ:
+      sstr << Targ_Print(NULL, tvalue);
+      break;
+      
+    case MTYPE_C4:
+    case MTYPE_C8:
+    case MTYPE_CQ:
+      sstr << '(' << TCON2F_translate(Extract_Complex_Real(tvalue), FALSE)
+	   << ',' << TCON2F_translate(Extract_Complex_Imag(tvalue), FALSE)
+	   << ')';
+      break;
+      
+    default:
+      /* Only expression nodes should be handled here */
+      ASSERT_DBG_WARN(FALSE, (DIAG_W2F_UNEXPECTED_BTYPE, 
+			      MTYPE_name(TCON_ty(tvalue)),
+			      "TCON2F_translate"));
+      sstr << "<TCON>";
+      break;
+    }
+  }
+  
+  return sstr.str();
+
+} /* TCON2F_translate */
+
+std::string
+TCON2F_translate(TCON tvalue, BOOL is_logical)
+{
+  return TCON2F_translate(tvalue, is_logical, (TY_IDX)NULL);
+} 
+
 
 //***************************************************************************
 
@@ -447,7 +576,7 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
     if (!shape_str) { shape_str = "***"; }
 
     SymId st_id = (SymId)ST_index(st);
-    xos << BegElem("xaif:Symbol") << Attr("symbol_id", st_name) 
+    xos << BegElem("xaif:Symbol") << AttrSymId(st)
 	<< Attr("kind", "variable") << Attr("type", ty_str)
 	<< Attr("shape", shape_str) << SymIdAnnot(st_id) << EndElem;
   }
@@ -560,10 +689,8 @@ xlate_STDecl_FUNC(xml::ostream& xos, ST* st, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
 		    ST_sym_class(st), "xlate_STDecl_FUNC"));
 
-  const char* st_name = ST_name(st); // W2CF_Symtab_Nameof_St(st);
   SymId st_id = (SymId)ST_index(st);
-
-  xos << BegElem("xaif:Symbol") << Attr("symbol_id", st_name) 
+  xos << BegElem("xaif:Symbol") << AttrSymId(st)
       << Attr("kind", "subroutine") << Attr("type", "void")
       << SymIdAnnot(st_id) << EndElem;
 
@@ -670,12 +797,10 @@ xlate_STUse_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
     // FIXME: abstract
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
     SymTabId scopeid = ctxt.FindSymTabId(sttab);
-    const char* st_name = ST_name(st);
 
     xos << BegElem("xaif:SymbolReference") 
 	<< Attr("vertex_id", ctxt.GetNewVId())
-	<< Attr("scope_id", scopeid)
-	<< Attr("symbol_id", st_name) << EndElem;
+	<< Attr("scope_id", scopeid) << AttrSymId(st) << EndElem;
   }
 }
 
@@ -781,11 +906,10 @@ whirl2xaif::xlate_Params(xml::ostream& xos, WN* wn, ST* st, ST** params,
       ST* st = params[param];
       ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
       SymTabId scopeid = ctxt.FindSymTabId(sttab);
-      const char* st_name = ST_name(st);
 
       xos << BegElem("xaif:ArgumentSymbolReference") 
-	  << Attr("position", position) << Attr("scope_id", scopeid)
-	  << Attr("symbol_id", st_name) << EndElem;
+	  << Attr("position", position) 
+	  << Attr("scope_id", scopeid) << AttrSymId(st) << EndElem;
       
       position++;
     }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.h,v 1.4 2003/07/24 14:36:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.h,v 1.5 2003/09/05 21:41:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -131,7 +131,7 @@ extern WN2F_STATUS
    WN2F_bnor(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
-   WN2F_recip(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+   xlate_RECIP(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
 extern WN2F_STATUS 
    WN2F_rsqrt(xml::ostream& xos, WN *wn, XlationContext& ctxt);

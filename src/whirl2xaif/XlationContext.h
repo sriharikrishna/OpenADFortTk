@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.10 2003/09/02 15:02:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.11 2003/09/05 21:41:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -154,7 +154,9 @@ public:
   // Context manipulation (Create, Delete...)
   // -------------------------------------------------------
 
-  // Create a new child context and make it the current context
+  // Create a new child context and make it the current context.  One
+  // can pass flags that should apply to the new context.  Note that
+  // that these flags *do not* override any inherited flags.
   XlationContext& CreateContext();
   XlationContext& CreateContext(mUINT32 flags_);
   XlationContext& CreateContext(mUINT32 flags_, 
@@ -257,7 +259,7 @@ public:
   // Within a xaif:VariableReference (inherited)
   BOOL IsVarRef() const { return CurContext().AreFlags(VARREF); }
   void SetVarRef()      { CurContext().SetFlags(VARREF); }
-  //void ResetVarRef() { CurContext().ResetFlags(VARREF); }
+  void ResetVarRef()    { CurContext().ResetFlags(VARREF); }
 
   // Indicates that we should not start the next statement on a new
   // line.  This only needs to be taken into account for statement

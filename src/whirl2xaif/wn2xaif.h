@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.10 2003/09/02 15:02:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.11 2003/09/05 21:41:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -166,6 +166,39 @@ xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 //***************************************************************************
 // Some helpful utility xml::ostream operators
 //***************************************************************************
+
+// ---------------------------------------------------------
+// AttrSymId
+// ---------------------------------------------------------
+
+struct AttrSymTab_ {
+  const ST* st;
+};
+
+inline ostream&
+operator<<(std::ostream& os, const AttrSymTab_& x) 
+{
+  xml::ostream& xos = dynamic_cast<xml::ostream&>(os); // FIXME
+
+  const char* st_name = ST_name(x.st); // W2CF_Symtab_Nameof_St(st);
+  SymId st_id = (SymId)ST_index(x.st);
+  
+  xos << xml::BegAttr(XAIFStrings.attr_symId())
+      << st_name << "_" << st_id
+      << xml::EndAttr;
+
+  return xos;
+}
+
+// AttrAnnot: Given a tag and a value, generate a complete annotiation
+// attribute
+inline AttrSymTab_
+AttrSymId(ST* st_)
+{
+  AttrSymTab_ x;
+  x.st = st_;
+  return x;
+}
 
 // ---------------------------------------------------------
 // AttrAnnot, AttrAnnotVal

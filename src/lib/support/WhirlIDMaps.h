@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.4 2003/09/02 15:02:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.5 2003/09/05 21:41:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -52,7 +52,8 @@ public:
   // Returns 0 if not found
   T Find(T id) 
   {
-    for (std::list<T>::iterator it = this->begin(); it != this->end(); ++it) {
+    typename std::list<T>::iterator it;
+    for (it = this->begin(); it != this->end(); ++it) {
       T val = *it;
       if (id == val) { return val; }
     }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.18 2003/09/02 15:02:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.19 2003/09/05 21:41:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -94,10 +94,8 @@
 #include "wn2xaif_mem.h"
 #include "wn2xaif_io.h"
 #include "wn2xaif_pragma.h"
-
 #include "st2xaif.h"
 #include "ty2xaif.h"
-#include "tcon2f.h"
 
 #include <lib/support/Pro64IRInterface.h>
 #include <OpenAnalysis/CFG/CFG.h>
@@ -247,7 +245,7 @@ static const WN2F_OPR_HANDLER WN2F_Opr_Handler_List[] = {
   {OPR_ASHR, &WN2F_ashr},
   {OPR_LSHR, &WN2F_lshr},
   {OPR_COMPLEX, &WN2F_complex},
-  {OPR_RECIP, &WN2F_recip},
+  {OPR_RECIP, &xlate_RECIP},
   {OPR_RSQRT, &WN2F_rsqrt},
   {OPR_MADD, &WN2F_madd},
   {OPR_MSUB, &WN2F_msub},
@@ -1422,12 +1420,16 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
   // 1. Find BBs with conditionals and split them
   // -------------------------------------------------------
   
+  int print = 0; // FIXME
+
   // Iterate over BB nodes.  For each node with more than one
   // statement, examine the statements.  If a conditional is found at
   // the end of the BB, split it.  (The CFG iterator should handle the
   // creation of new nodes in the middle of iteration.)
   for (CFG::NodesIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
     CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
+
+    if (print) { n->longdump(cfg); }
     
     if (n->size() > 1) {
       for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
@@ -1438,6 +1440,7 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
 	    || ty == USTRUCT_TWOWAY_CONDITIONAL_T
 	    || ty == USTRUCT_TWOWAY_CONDITIONAL_F) {
 	  cfg->splitBlock(n, stmt);
+	  break;
 	}
       }
     }

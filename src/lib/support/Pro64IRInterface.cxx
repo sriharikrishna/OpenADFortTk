@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.5 2003/08/01 15:57:54 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.6 2003/09/05 21:41:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -770,6 +770,64 @@ Pro64IRInterface::GetDefs (StmtHandle h)
   return new Pro64IRUseDefIterator (wn, IRUseDefIterator::Defs);
 }
 
+
+// FIXME: temporary implementation
+
+#include <OpenAnalysis/ValueNumbers/ExprTree.h>
+
+ExprTree::Node*
+BuildExprTreeForWN(ExprTree* tree, WN* wn);
+
+
+// Given an ExprHandle, return an ExprTree*
+// Returns new'd memory!
+ExprTree* 
+GetExprTreeForExprHandle(ExprHandle h)
+{
+  WN *wn = (WN *) h;
+  
+  ExprTree* exprTree = new ExprTree;
+  BuildExprTreeForWN(exprTree, wn);
+  return exprTree;
+}
+
+// Builds a tree for wn, adds to the 'tree' container and returns the
+// root of the tree
+ExprTree::Node*
+BuildExprTreeForWN(ExprTree* tree, WN* wn)
+{
+  ExprTree::Node* root = NULL;
+  if (!wn) { return root; }
+
+  // 1. Sanity checking
+  OPCODE opcode = WN_opcode(wn);
+  if (!OPCODE_is_expression(opcode)) { return root; }
+
+  // 2. Create a parent tree node for the curent WN
+  root = new ExprTree::Node(OPCODE_name(opcode));
+  tree->add(root);
+
+  // FIXME: check this out
+  if (OPCODE_has_sym(opcode)) {
+    root->setSymHandle((SymHandle)WN_st(wn));
+  }
+  // FIXME: if constant add special handle
+
+  // 3. Create sub trees for each child and link them to the parent
+  // parent node (we know this will never be OPR_BLOCK)
+  if (!OPCODE_is_leaf(opcode)) {
+    for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
+      WN* kid_wn = WN_kid(wn, kidno);
+      
+      ExprTree::Node* child = BuildExprTreeForWN(tree, kid_wn);
+      tree->connect(root, child);
+    }
+  }    
+  
+  return root;
+}
+
+
 //-----------------------------------------------------------------------------
 // Symbol Handles
 //-----------------------------------------------------------------------------
@@ -796,7 +854,6 @@ Pro64IRInterface::Dump (StmtHandle stmt, ostream& os)
   WN *wn = (WN *) stmt;
   dump_wn_subtree (wn, os);
 }
-
 
 //-----------------------------------------------------------------------------
 // A private method to visualize Whirl expressions in a compact way.

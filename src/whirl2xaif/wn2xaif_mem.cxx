@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.12 2003/08/25 13:58:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.13 2003/09/05 21:41:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -82,7 +82,6 @@
 #include "wn2xaif.h"
 #include "st2xaif.h"
 #include "ty2xaif.h"
-#include "tcon2f.h"
 
 //************************** Forward Declarations ***************************
 
@@ -1215,7 +1214,8 @@ xlate_ArrayIndices(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       << Attr("vertex_id", ctxt.GetNewVId());
   for (INT32 dim = array_dim - 1; dim >= 0; --dim) {
     xos << BegElem("xaif:Index");
-    ctxt.CreateContext();
+    ctxt.CreateContext(); 
+    ctxt.ResetVarRef(); // xaif:Index contains ExpressionType
     TranslateWN(xos, WN_array_index(wn, dim), ctxt);
     ctxt.DeleteContext();
     xos << EndElem;

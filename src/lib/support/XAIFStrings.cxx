@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.6 2003/09/02 15:02:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.7 2003/09/05 21:41:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -86,6 +86,9 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "xaif:SubroutineCall",
   "xaif:Nop",
   
+  "xaif:AssignmentLHS",
+  "xaif:AssignmentRHS",
+
   // Expressions
   "xaif:VariableReference",
   "xaif:Constant",

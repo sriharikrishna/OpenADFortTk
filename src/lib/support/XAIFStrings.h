@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.6 2003/09/02 15:02:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.7 2003/09/05 21:41:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -85,6 +85,9 @@ public:
     ELEM_SubCall,
     ELEM_Marker,
 
+    ELEM_AssignLHS,
+    ELEM_AssignRHS,
+
     // Expressions
     ELEM_VarRef,
     ELEM_Constant,
@@ -165,7 +168,9 @@ public:
   XMLCh*      attr_annot_x() const { return x_strTbl[ATTR_annot]; }
   XMLCh*      attr_Vid_x() const { return x_strTbl[ATTR_Vid]; }
   XMLCh*      attr_Eid_x() const { return x_strTbl[ATTR_Eid]; }
+  const char* attr_scopeId() const { return c_strTbl[ATTR_scopeId]; }
   XMLCh*      attr_scopeId_x() const { return x_strTbl[ATTR_scopeId]; }
+  const char* attr_symId() const { return c_strTbl[ATTR_symId]; }
   XMLCh*      attr_symId_x() const { return x_strTbl[ATTR_symId]; }
   XMLCh*      attr_source_x() const { return x_strTbl[ATTR_source]; }
   XMLCh*      attr_target_x() const { return x_strTbl[ATTR_target]; }
@@ -205,7 +210,10 @@ public:
   XMLCh*      elem_Assign_x() const { return x_strTbl[ELEM_Assign]; }
   XMLCh*      elem_SubCall_x() const { return x_strTbl[ELEM_SubCall]; }
   XMLCh*      elem_Marker_x() const { return x_strTbl[ELEM_Marker]; }
-  
+
+  XMLCh*      elem_AssignLHS_x() const { return x_strTbl[ELEM_AssignLHS]; }
+  XMLCh*      elem_AssignRHS_x() const { return x_strTbl[ELEM_AssignRHS]; }
+
   // Expressions
   XMLCh*      elem_VarRef_x() const { return x_strTbl[ELEM_VarRef]; }
   XMLCh*      elem_Constant_x() const { return x_strTbl[ELEM_Constant]; }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.5 2003/09/02 15:02:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.6 2003/09/05 21:41:54 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -37,8 +37,21 @@ XERCES_CPP_NAMESPACE_USE
 //****************************************************************************
 
 // FIXME: this could be moved to a better place
+
+// Dumps only this node
 void 
 XercesDumpNode(DOMNode* n);
+
+// Dumps the tree rooted at 'n'
+void 
+XercesDumpTree(DOMNode* n);
+
+void 
+XercesDumpNode(void* n); // For *(#% debuggers
+
+void 
+XercesDumpTree(void* n); // For *(#% debuggers
+
 
 DOMElement*
 GetFirstChildElement(DOMNode* n);

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.5 2003/07/24 20:30:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.6 2003/09/05 21:41:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -108,6 +108,18 @@
 class NonScalarSymTab;
 
 //***************************************************************************
+
+
+#include <string>
+
+extern std::string TCON2F_hollerith(TCON tvalue);
+
+extern std::string TCON2F_translate(TCON tvalue, BOOL is_logical,
+				    TY_IDX object_ty);
+
+extern std::string TCON2F_translate(TCON tvalue, BOOL is_logical);
+
+
 
 namespace whirl2xaif {
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.9 2003/09/02 15:02:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.10 2003/09/05 21:41:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -86,7 +86,6 @@
 #include "wn2xaif.h"
 #include "st2xaif.h"
 #include "ty2xaif.h"
-#include "tcon2f.h"
 #include "wn2xaif_io.h"
 #include "wn2xaif_mem.h"
 
@@ -1170,11 +1169,16 @@ WN2F_ios_write(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    * sequence of IOCs and a sequence of IOLs.  Use keywords only
    * when the IOC list is non-empty.
    */
+#if 0 // FIXME: comment out for now
   xos << BegElem("xaif:SubroutineCall") 
       << Attr("statement_id", ctxt.GetNewVId())
-      << Attr("symbol_id", "WRITE****")
-      << WhirlIdAnnot(ctxt.FindWNId(wn));
+      << Attr("symbol_id", "WRITE***");
+#endif
+  xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
+      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << " [WRITE***]" << EndAttr;
   
+#if 0 // FIXME: comment out for now
   set_XlationContext_issue_ioc_asterisk(ctxt);
   
   INT  iol_kid;
@@ -1184,15 +1188,14 @@ WN2F_ios_write(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   /* Get the IOU, IOF, and IOC items */
   xlate_IOControlList(xos, wn,
-		      0,           /* from kid */
-		      iol_kid-1,   /* to kid */
-		      ctxt);
+		      0 /* from kid */,  iol_kid-1 /* to kid */, ctxt);
   
   /* Get the io_list */
   if (iol_kid < WN_kid_count(wn))
     xlate_IOList(xos, wn, iol_kid, ctxt);
   
   reset_XlationContext_issue_ioc_asterisk(ctxt);
+#endif
   xos << EndElem;
   
 } /* WN2F_ios_write */
@@ -1221,12 +1224,17 @@ WN2F_ios_cr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   if (WN_IOSTMT(wn) == IOS_CR_FRF || WN_IOSTMT(wn) == IOS_CR_FRU) {
     io_op = "READ***" ;
   }
-  
+
+#if 0 // FIXME: comment out for now  
   xos << BegElem("xaif:SubroutineCall") 
       << Attr("statement_id", ctxt.GetNewVId())
-      << Attr("symbol_id", io_op)
-      << WhirlIdAnnot(ctxt.FindWNId(wn));
-  
+      << Attr("symbol_id", io_op);
+#endif  
+  xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
+      << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+      << " [" << io_op << "]" << EndAttr;
+
+#if 0 // FIXME: comment out for now
   /* count items in control list */
   INT iol_kid;
   for (iol_kid = 0; 
@@ -1242,6 +1250,7 @@ WN2F_ios_cr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     xlate_IOList(xos, wn, iol_kid, ctxt);
   
   reset_XlationContext_issue_ioc_asterisk(ctxt);
+#endif
   
   xos << EndElem;
 } /* WN2F_ios_cr */

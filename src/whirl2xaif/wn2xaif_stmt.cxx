@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.15 2003/09/02 15:02:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.16 2003/09/05 21:41:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -89,7 +89,6 @@
 #include "wn2xaif.h"
 #include "st2xaif.h"
 #include "ty2xaif.h"
-#include "tcon2f.h"
 #include "wn2xaif_stmt.h"
 #include "wn2xaif_mem.h"
 #include "wn2xaif_io.h"
@@ -458,14 +457,16 @@ WN2F_intrinsic_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
    case INTRN_STOP:
    case INTRN_STOP_F90:
-      xos << std::endl;
       // Since this could be either the F90 stop or the F77 stop
       // output the STOP explicitly
-      xos << "STOP";
 
+      xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
+	  << BegAttr("annotation") << WhirlIdAnnotVal(ctxt.FindWNId(wn))
+	  << " [stop]" << EndAttr << EndElem;
+
+#if 0 // FIXME
       /* Get the string argument type, where the second argument is
-       * expected to be the string-length.
-       */
+       * expected to be the string-length. */
       arg_ty = WN_Tree_Type(WN_kid0(wn));
       arg_expr = WN_Skip_Parm(WN_kid1(wn));
       ASSERT_DBG_WARN(WN_operator(arg_expr) == OPR_INTCONST , 
@@ -482,11 +483,11 @@ WN2F_intrinsic_call(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 			    0,                  /* offset from address */
 			    ctxt);
       }
+#endif
       break;
      
    default:
       regular_call = TRUE;
-      xos << std::endl;
       xlate_CALL(xos, wn, ctxt);
       break;
    }
@@ -577,21 +578,17 @@ xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
     SymTabId scopeid = ctxt.FindSymTabId(sttab);
     ASSERT_FATAL(scopeid != 0, (DIAG_UNIMPLEMENTED, 0, "xlate_CALL"));
-
-    xos << BegComment << "sym = " << W2CF_Symtab_Nameof_St(st) << EndComment;
-
+    
     if (return_ty != (TY_IDX)0 && TY_kind(return_ty) != KIND_VOID) {
       // A function call
       xos << BegElem("xaif:FunctionCall") 
 	  << Attr("vertex_id", ctxt.GetNewVId())
-	  << Attr("scope_id", scopeid)
-	  << Attr("symbol_id", (UINT)ST_index(st));
+	  << Attr("scope_id", scopeid) << AttrSymId(st);
     } else {
       // A subroutine (FIXME)
       xos << BegElem("xaif:SubroutineCall")
 	  << Attr("statement_id", ctxt.GetNewVId())
-	  << Attr("scope_id", scopeid)
-	  << Attr("symbol_id", (UINT)ST_index(st));
+	  << Attr("scope_id", scopeid) << AttrSymId(st);
     }
   }
 

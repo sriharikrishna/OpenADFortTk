@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.6 2003/08/01 15:57:54 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.7 2003/09/05 21:41:52 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -55,6 +55,12 @@
 //   SymHandle  - ST*
 
 //*************************** Forward Declarations ***************************
+
+// FIXME: Temporary
+class ExprTree;
+
+ExprTree* 
+GetExprTreeForExprHandle(ExprHandle h);
 
 //***************************************************************************
 
@@ -255,6 +261,8 @@ public:
     ST *st = (ST *) sh;
     return ((st) ? (char *)ST_name(st) : "<no-symbol>"); 
   }
+
+  const char *GetConstNameFromConstHandle(ConstHandle sh) { assert(0); return NULL; }
 
   //--------------------------------------------------------
   // Debugging

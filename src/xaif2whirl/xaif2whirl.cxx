@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.7 2003/09/02 15:02:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.8 2003/09/05 21:41:54 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -579,15 +579,19 @@ TranslateStmt(DOMElement* stmt, XlationContext& ctxt)
 static WN* 
 xlate_Assignment(DOMElement* elem, XlationContext& ctxt)
 {
-  WN* lhs = xlate_AssignmentLHS(GetFirstChildElement(elem), ctxt);
-  WN* rhs = xlate_AssignmentRHS(GetLastChildElement(elem), ctxt);
-
-  // FIXME: ISTORE: should we try to select btwn STID and ISTORE, etc?
+  DOMElement* lhs_elem = GetChildElement(elem, XAIFStrings.elem_AssignLHS_x());
+  DOMElement* rhs_elem = GetChildElement(elem, XAIFStrings.elem_AssignRHS_x());
+  
+  WN* lhs = xlate_AssignmentLHS(lhs_elem, ctxt);
+  WN* rhs = xlate_AssignmentRHS(rhs_elem, ctxt);
+  
+  // We always use ISTORE (instead of e.g. STID) for generality.  This
+  // will not be an issue because the intension is for this WHIRL to
+  // be translated to source code.
   // FIXME: first argument is bogus // WN_Tree_Type(rhs)
   TY_IDX ty = Make_Pointer_Type(MTYPE_To_TY(MTYPE_F8));
   WN* wn = WN_Istore(MTYPE_F8, 0, ty, lhs, rhs, 0);
 
-  //WN* wn = WN_CreateAssert(0, WN_CreateIntconst(OPC_I4INTCONST, (INT64)1));
   return wn;
 }
 
@@ -595,7 +599,8 @@ static WN*
 xlate_AssignmentLHS(DOMElement* elem, XlationContext& ctxt)
 {
   // VariableReferenceType
-  WN* wn = xlate_VarRef(GetFirstChildElement(elem), ctxt, true);
+  DOMElement* child = GetFirstChildElement(elem);
+  WN* wn = xlate_VarRef(child, ctxt, true);
   return wn;
 }
 
@@ -603,7 +608,8 @@ static WN*
 xlate_AssignmentRHS(DOMElement* elem, XlationContext& ctxt)
 {
   // ExpressionType
-  WN* wn = TranslateExpression(GetFirstChildElement(elem), ctxt);
+  DOMElement* child = GetFirstChildElement(elem);
+  WN* wn = TranslateExpression(child, ctxt);
   return wn;
 }
 
@@ -703,6 +709,10 @@ xlate_Saxpy(DOMElement* elem, XlationContext& ctxt, bool saxpy)
 static WN*
 TranslateExpression(DOMElement* elem, XlationContext& ctxt)
 {
+  if (!elem) {
+    assert(false); // FIXME
+  }
+  
   // Slurp expression into a graph (DAG)
   DGraph* g = CreateExpressionGraph(elem);
   
@@ -746,43 +756,37 @@ xlate_Expression(DGraph* g, MyDGNode* n, XlationContext& ctxt)
     const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
     XercesStrX nm = XercesStrX(nmX);
     
-    UINT opand = GetIntrinsicOperandNum(nm.c_str());
-    OPERATOR opor = GetIntrinsicOperator(nm.c_str());
+    UINT opnd_num = GetIntrinsicOperandNum(nm.c_str());
+    OPERATOR op = GetIntrinsicOperator(nm.c_str());
     
-    switch (opand) {
-      // unary
-    case 1: {
-      // WN *WN_Unary(OPERATOR opr,TYPE_ID rtype,WN *l);
-      assert(false); 
-      return NULL;
-    }
-      
-      // binary
-    case 2: {
-      assert(n->num_incoming() == 2); // FIXME
+    // Gather operands for intrinsic 
+    // (FIXME: this needs to be sorted by position)
+    assert(n->num_incoming() == opnd_num); // FIXME
+    std::vector<MyDGNode*> opnd(opnd_num); 
 
-      MyDGNode* nexpr[2]; 
-      DGraph::IncomingEdgesIterator it = DGraph::IncomingEdgesIterator(n);
-      for (int i = 0; (bool)it; ++it, ++i) {
-	DGraph::Edge* edge = (DGraph::Edge*)it;
-	nexpr[i] = dynamic_cast<MyDGNode*>(edge->source());
-      }
-      
-      WN* e1 = xlate_Expression(g, nexpr[0], ctxt);
-      WN* e2 = xlate_Expression(g, nexpr[1], ctxt);
-      return WN_Binary(opor, MTYPE_F8, e1, e2);
-      // FIXME is this the correct return type
+    DGraph::IncomingEdgesIterator it = DGraph::IncomingEdgesIterator(n);
+    for (int i = 0; (bool)it; ++it, ++i) {
+      DGraph::Edge* edge = (DGraph::Edge*)it;
+      opnd[i] = dynamic_cast<MyDGNode*>(edge->source());
     }
-      
-      // ternary
-    case 3: {
-      // WN *WN_Ternary(OPERATOR opr, TYPE_ID rtype,WN *kid0,WN *kid1,WN *kid2)
-      assert(false); 
-      return NULL;
+
+    // Translate each operand into a WHIRL expression tree
+    std::vector<WN*> opnd_wn(opnd_num); 
+    for (int i = 0; i < opnd_num; ++i) {
+      opnd_wn[i] = xlate_Expression(g, opnd[i], ctxt);
     }
-      
+
+    // Create a WHIRL expression tree for the operator and operands
+    // FIXME: we need to verify the return type
+    switch (opnd_num) {
+    case 1: // unary
+      return WN_Unary(op, MTYPE_F8, opnd_wn[0]);
+    case 2: // binary
+      return WN_Binary(op, MTYPE_F8, opnd_wn[0], opnd_wn[1]);
+    case 3: // ternary
+      return WN_Ternary(op, MTYPE_F8, opnd_wn[0], opnd_wn[1], opnd_wn[2]);
     default:
-      assert(false);
+      assert(false && "Programming Error");
     } 
 
   } else if (XMLString::equals(nameX, XAIFStrings.elem_FuncCall_x())) {
@@ -856,11 +860,25 @@ xlate_Constant(DOMElement* elem, XlationContext& ctxt)
   XercesStrX type = XercesStrX(typeX);
   XercesStrX value = XercesStrX(valX);
   
-  assert(strcmp(type.c_str(), "integer") == 0); // FIXME: ints for now
-  
-  UINT val = strtol(value.c_str(), (char **)NULL, 10);
-  
-  WN* wn = WN_CreateIntconst(OPC_I4INTCONST, (INT64)val); // int4?
+  WN* wn = NULL;
+  if ((strcmp(type.c_str(), "real") == 0) ||
+      (strcmp(type.c_str(), "double") == 0)) {
+    double val = strtod(value.c_str(), (char **)NULL);
+    TCON tcon = Host_To_Targ_Float(MTYPE_F8, val);
+    wn = Make_Const(tcon);
+  } else if (strcmp(type.c_str(), "integer") == 0) {
+    UINT val = strtol(value.c_str(), (char **)NULL, 10);
+    wn = WN_CreateIntconst(OPC_I8INTCONST, (INT64)val);
+  } else if (strcmp(type.c_str(), "bool") == 0) {
+    assert(false); // FIXME
+  } else if (strcmp(type.c_str(), "char") == 0) {
+    assert(false); // FIXME
+  } else if (strcmp(type.c_str(), "string") == 0) {
+    UINT32 len = strlen(value.c_str());
+    TCON tcon = Host_To_Targ_String(MTYPE_STR, (char*)value.c_str(), len);
+    wn = Make_Const(tcon);
+  }
+
   return wn;
 }
 
@@ -960,7 +978,8 @@ CreateExpressionGraph(DOMNode* node)
       
       MyDGNode* gn = new MyDGNode(e);
       g->add(gn);
-      m.insert(make_pair(std::string(vid.c_str()), gn));
+      m.insert(make_pair(std::string(vid.c_str()), 
+			 dynamic_cast<DGraph::Node*>(gn)));
     }
     
   } while ( (n = n->getNextSibling()) );
@@ -1089,19 +1108,23 @@ xlate_Symbol(DOMElement* elem, const char* scopeId, PU_Info* pu,
 
 //****************************************************************************
 
-// FIXME: move to another place
+// FIXME: move to another place and create tables for these
 
 UINT 
 GetIntrinsicOperandNum(const char* name)
 {
   if (!name) { return 0; }
   
-  if (strcmp(name, "mul_scal_scal") == 0) {
-    return 2;
-  } else if (strcmp(name, "add_scal_scal") == 0) {
+  if ((strcmp(name, "minus_scal") == 0) ||
+      (strcmp(name, "sqr_scal") == 0)) {
+    return 1;
+  } else if ((strcmp(name, "add_scal_scal") == 0) ||
+	     (strcmp(name, "sub_scal_scal") == 0) ||
+	     (strcmp(name, "mul_scal_scal") == 0) ||
+	     (strcmp(name, "div_scal_scal") == 0)) {
     return 2;
   } else {
-    assert(0); //FIXME
+    assert(false && "Bad Intrinsic"); //FIXME
     return 0;
   }
 }
@@ -1111,12 +1134,20 @@ GetIntrinsicOperator(const char* name)
 {
   if (!name) { return OPERATOR_UNKNOWN; }
   
-  if (strcmp(name, "mul_scal_scal") == 0) {
-    return OPR_MPY;
+  if (strcmp(name, "minus_scal") == 0) {
+    return OPR_NEG;
+  } else if (strcmp(name, "sqr_scal") == 0) {
+    return OPR_SQRT;
   } else if (strcmp(name, "add_scal_scal") == 0) {
     return OPR_ADD;
+  } else if (strcmp(name, "sub_scal_scal") == 0) {
+    return OPR_SUB;
+  } else if (strcmp(name, "mul_scal_scal") == 0) {
+    return OPR_MPY;
+  } else if (strcmp(name, "div_scal_scal") == 0) {
+    return OPR_DIV;
   } else {
-    assert(0); //FIXME
+    assert(false && "Bad Intrinsic"); //FIXME
     return OPERATOR_UNKNOWN;
   }
   // OPR_SUB, OPR_MPY, OPR_DIV

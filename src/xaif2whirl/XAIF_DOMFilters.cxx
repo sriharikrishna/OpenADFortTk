@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.5 2003/09/02 15:02:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.6 2003/09/05 21:41:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -48,16 +48,41 @@ using std::endl;
 
 //****************************************************************************
 
-void 
+static void 
 XercesDumpNode(DOMNode* n, int iter);
+
+static void 
+XercesDumpTree(DOMNode* n, int ilevel);
+
 
 void 
 XercesDumpNode(DOMNode* n)
 {
+  // Iteration count starts at 0
   XercesDumpNode(n, 0);
 }
 
 void 
+XercesDumpTree(DOMNode* n)
+{
+  // Indentation level starts at 0
+  XercesDumpTree(n, 0);
+}
+
+void 
+XercesDumpNode(void* n) // For *(#% debuggers
+{
+  XercesDumpNode((DOMNode*)n);
+}
+
+void 
+XercesDumpTree(void* n) // For *(#% debuggers
+{
+  XercesDumpTree((DOMNode*)n);
+}
+
+
+static void 
 XercesDumpNode(DOMNode* n, int iter)
 {
   if (!n) { return; }
@@ -89,6 +114,28 @@ XercesDumpNode(DOMNode* n, int iter)
   // End the line, if necessary
   if (iter == 0) { 
     std::cout << ">" << endl;
+  }
+}
+
+
+static void 
+XercesDumpTree(DOMNode* n, int ilevel)
+{
+  if (!n) { return; }
+
+  // Dump the current node with indentation
+  for (int i = ilevel; i > 0; --i) { std::cout << "  "; }
+  XercesDumpNode(n);
+
+  // Dump all children at the next indentation level
+  DOMNodeList* children = n->getChildNodes();
+  if (children) {
+    for (XMLSize_t i = 0; i < children->getLength(); ++i) {
+      DOMNode* child = children->item(i);
+      if (child->getNodeType() == DOMNode::ELEMENT_NODE) { 
+	XercesDumpTree(child, ilevel + 1);
+      }
+    }
   }
 }
 
