@@ -1,0 +1,67 @@
+# -*-Mode: makefile;-*-
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makeinclude.config.i686-Cygwin,v 1.1 2003/10/29 01:53:43 eraxxon Exp $
+
+## * BeginCopyright *********************************************************
+## *********************************************************** EndCopyright *
+
+#############################################################################
+# $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makeinclude.config.i686-Cygwin,v $
+#############################################################################
+
+#############################################################################
+# Site/machine/architecture dependent configuration 
+#############################################################################
+
+DSOext = dll
+
+#-----------------------------------------------------------------
+#  Compilers and building tools
+#-----------------------------------------------------------------
+
+# C++ compiler
+CXX = g++ -fPIC -D__GNU_BUG_WORKAROUND
+  # Note: use default template handling (use 3.0.4 or later)
+
+# ANSI C compiler
+CC = gcc -fPIC -D__GNU_BUG_WORKAROUND
+
+# Archiver
+AR = /usr/bin/ar -rv  # GCC
+
+#-----------------------------------------------------------------
+#  Compiling and linking flags 
+#-----------------------------------------------------------------
+
+COMMON_FLAGS = -D_LINUX_LINUX -D_SGI_SOURCE -D_SVR4_SOURCE \
+	-DTARG_IA64 -DCOMPILE_UPC -D_NEW_SYMTAB -D_MIPSEL \
+	-D_LONGLONG -D_MIPS_SZINT=32 -D_MIPS_SZPTR=32 -D_MIPS_SZLONG=32 \
+	-D__MIPS_AND_IA64_ELF_H
+
+# C/C++ Flags
+ifdef RELEASE
+  USER_CXXFLAGS = -O -D_LANGUAGE_C $(COMMON_FLAGS)
+  USER_CFLAGS   = -O -D_LANGUAGE_C $(COMMON_FLAGS)
+else 
+  USER_CXXFLAGS = -g -D_LANGUAGE_C_PLUS_PLUS -D_DEBUG $(COMMON_FLAGS)
+  USER_CFLAGS   = -g -D_LANGUAGE_C_PLUS_PLUS -D_DEBUG $(COMMON_FLAGS)
+endif
+
+USER_C_IFLAGS  =
+USER_C_LDFLAGS = 
+
+# comment out this line to use an automatic repository
+#SPECIFY_CXX_TREPOSITORY = 1
+#CXX_TREPOSITORY_ARG =
+
+# Archiving flags
+ARFLAGS =
+
+#-----------------------------------------------------------------
+#  Other development tools 
+#-----------------------------------------------------------------
+
+# Purify
+
+PURE_LDFLAGS = 
+
+PURIFY = 
