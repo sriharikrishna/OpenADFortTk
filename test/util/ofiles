@@ -1,0 +1,144 @@
+#! /usr/bin/env perl
+# -*-Mode: perl;-*-
+
+# make sure we execute perl
+#eval '(exit $?0)' && eval 'exec perl -S $0 ${1+"$@"}'
+#& eval 'exec perl -S $0 $argv:q'
+#if 0;
+
+#############################################################################
+##
+##   Nathan Tallent.
+##
+#############################################################################
+
+use strict;
+use warnings;
+use IO::File;
+use Getopt::Std;
+
+STDOUT->autoflush(1); 
+
+my $usage = 
+"usage: ofiles [-m | -d] [-n] [-h]
+
+Modes:
+  -m: Move an output file f to f-good
+  -d: Diff the output file with f-good
+
+Options:
+  -n: dry run -- don't execute command
+  -h: print help
+\n";
+
+#############################################################################
+
+my @fromToExt = ( [ '.xb.xaif', '.xb.xaif-good' ],
+		  [ '.xb.x2w.B', '.xb.x2w.B-good'],
+		  [ '.xb.x2w.w2f.f', '.xb.x2w.w2f.f-good'],
+		  );
+
+#############################################################################
+## main/driver
+#############################################################################
+
+my $program = $0;
+my $options = 'mdnh';
+my $opt_dryrun = undef;
+my $driver_mode = undef;
+
+# ----------------------------------------------------------
+# Parse the command line
+# ----------------------------------------------------------
+
+# Get options
+my %opts;
+getopts($options, \%opts);
+
+# Make sure called with minimum number of arguments
+my $numArgs = scalar(@ARGV);
+if ($numArgs != 0) { die $usage; }
+
+if (defined($opts{m})) {
+    $driver_mode = 'move';
+}
+if (defined($opts{d})) {
+    $driver_mode = 'diff';
+}
+if (defined($opts{n})) {
+    $opt_dryrun = 1;
+}
+
+if (defined($opts{h})) {
+    printUsageAndExit($program);
+} 
+
+if (!defined($driver_mode)) {
+    printUsageAndExit($program);
+}
+
+# ----------------------------------------------------------
+# Install
+# ----------------------------------------------------------
+
+if ($driver_mode eq 'move') {
+    DoSomething("mv", \@fromToExt);
+} 
+elsif ($driver_mode eq 'diff') {
+    my $toFromExtRef = CreateReversedExtList(\@fromToExt);
+    DoSomething("diff", $toFromExtRef);
+}
+
+#############################################################################
+## Subroutines
+#############################################################################
+
+# printUsageAndExit
+sub printUsageAndExit 
+{
+    my ($command) = @_; # not used now
+    print STDOUT ${usage};
+    exit(-1);
+}
+
+# 
+sub DoSomething 
+{
+  my($basecmd, $extlistRef) = @_;
+
+  for my $extpair (@{$extlistRef}) {
+    my ($srcext, $destext) = @{$extpair};
+      
+    print STDOUT "*** SRC: ${srcext}  DEST: ${destext} ***\n";
+	
+    opendir(CURRENT_DIR, ".");
+    my $pat = "${srcext}" . "\$";
+    my @srcfiles = grep(/$pat/, readdir(CURRENT_DIR));
+    closedir(CURRENT_DIR);
+
+    for my $srcfile (@srcfiles) {
+      my $destfile = $srcfile;
+      $destfile =~ s/$srcext/$destext/;
+      my $cmd = "${basecmd} ${srcfile} ${destfile}";
+      print STDOUT "cmd: ${cmd}\n";
+      if (!$opt_dryrun) {
+	system($cmd) == 0 
+	    or die "*** system '$cmd' failed: $? ***";
+      }
+    }
+  }
+}
+
+# return a new, reversed extension list
+sub CreateReversedExtList
+{
+  my($extlistRef) = @_;
+  my $newlistRef = [ ];
+
+  for my $extpair (@{$extlistRef}) {
+    my ($srcext, $destext) = @{$extpair};
+    push @{$newlistRef}, [ $destext, $srcext ];
+  }
+  
+  return $newlistRef;
+}

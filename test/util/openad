@@ -1,0 +1,223 @@
+#! /usr/bin/env perl
+# -*-Mode: perl;-*-
+
+# make sure we execute perl
+#eval '(exit $?0)' && eval 'exec perl -S $0 ${1+"$@"}'
+#& eval 'exec perl -S $0 $argv:q'
+#if 0;
+
+#############################################################################
+##
+##   Nathan Tallent.
+##
+#############################################################################
+
+use strict;
+use warnings;
+use File::Spec;
+use IO::File;
+use Getopt::Std;
+
+STDOUT->autoflush(1); 
+
+my $usage = 
+"usage: openad [...] [-h] <fortran-file>
+
+Modes:
+  -a, --for-bb [NOT IMPLEMENTED]
+  -b, --for-stmt
+  -c, --rev-bb
+
+Options:
+  -v: verbose
+  -h: print help
+\n";
+
+#############################################################################
+
+#############################################################################
+## main/driver
+#############################################################################
+
+my $program = $0;
+my $options = 'abcvh';
+my $opt_verbose = 0;
+my $openad_mode = undef;
+my $openad_input = undef;
+
+# ----------------------------------------------------------
+# Parse the command line
+# ----------------------------------------------------------
+
+# Get optional arguments
+my %opts;
+getopts($options, \%opts);
+
+if (defined($opts{v})) {
+  $opt_verbose = 1;
+} 
+if (defined($opts{h})) {
+  printUsageAndExit($program);
+} 
+
+$openad_mode = 'forward';
+if (!defined($openad_mode)) {
+  printUsageAndExit($program);
+}
+
+# Get required arguments
+my $numArgs = scalar(@ARGV);
+if ($numArgs != 1) { printUsageAndExit($program); }
+
+$openad_input = $ARGV[0];
+
+# ----------------------------------------------------------
+# Run
+# ----------------------------------------------------------
+
+RunOpenADPipeline($openad_input);
+
+#############################################################################
+## Subroutines
+#############################################################################
+
+# printUsageAndExit
+sub printUsageAndExit 
+{
+  my ($command) = @_; # not used now
+  print STDOUT ${usage};
+  exit(-1);
+}
+
+# printUsageAndExit
+sub undefEnvVarErr 
+{
+  my ($var) = @_;
+  print STDOUT "Undefined environment variable '${var}'\n";
+  exit(-1);
+}
+
+
+#############################################################################
+## Subroutines
+#############################################################################
+
+{
+  my $configured = undef;
+  my ($MFEF90, $WHIRL2F) = (undef, undef);
+  my ($W2X, $X2W, $NORM, $PP) = (undef, undef, undef, undef);
+  my ($XB_BB) = (undef);
+  
+  my ($WHIRL2XAIF, $WHIRL2XAIF_PLATFORM, $WHIRL2XAIF_OPEN64) 
+      = (undef, undef, undef);
+  my $XAIFBOOSTERROOT = undef;
+  my $XAIFSCHEMAROOT = undef;
+  
+  sub ConfigPipelineUtils 
+  {
+    $WHIRL2XAIF = $ENV{WHIRL2XAIF};
+    $WHIRL2XAIF_OPEN64 = $ENV{WHIRL2XAIF_OPEN64};
+    $WHIRL2XAIF_PLATFORM = $ENV{WHIRL2XAIF_PLATFORM};
+    $XAIFBOOSTERROOT = $ENV{XAIFBOOSTERROOT};
+    $XAIFSCHEMAROOT = $ENV{XAIFSCHEMAROOT};
+    
+    if (!defined($WHIRL2XAIF)) { undefEnvVarErr('WHIRL2XAIF'); }
+    if (!defined($WHIRL2XAIF_OPEN64)) { undefEnvVarErr('WHIRL2XAIF_OPEN64'); }
+    if (!defined($WHIRL2XAIF_PLATFORM)) { undefEnvVarErr('WHIRL2XAIF_PLATFORM'); }
+    if (!defined($XAIFBOOSTERROOT)) { undefEnvVarErr('XAIFBOOSTERROOT'); }
+    if (!defined($XAIFSCHEMAROOT)) { undefEnvVarErr('XAIFSCHEMAROOT'); }
+    
+    my $XB_alg = "${XAIFBOOSTERROOT}/xaifBooster/algorithms";
+    my $XAIF_ii = "${XAIFSCHEMAROOT}/schema/examples/inlinable_intrinsics.xaif";
+    
+    $MFEF90  = "${WHIRL2XAIF_OPEN64}/crayf90/sgi/mfef90";
+    $WHIRL2F = "${WHIRL2XAIF_OPEN64}/whirl2f/whirl2f";
+    
+    $W2X  = "${WHIRL2XAIF}/obj/${WHIRL2XAIF_PLATFORM}/obj/whirl2xaif";
+    $X2W  = "${WHIRL2XAIF}/obj/${WHIRL2XAIF_PLATFORM}/obj/xaif2whirl";
+    $NORM = "${WHIRL2XAIF}/test/util/normalize";
+    $PP   = "perl ${WHIRL2XAIF}/postprocess/pp.pl";
+    
+    $XB_BB = "${XB_alg}/BasicBlockPreaccumulation/test/t -c ${XAIF_ii}";
+    
+    ConfigSchema();
+
+    $configured = 1;
+  }
+
+  sub ConfigSchema 
+  {
+    # Check if files already exist
+    my @schemafiles = glob("xaif*.xsd");
+    if (scalar(@schemafiles) > 0) {
+      return;
+    }
+    
+    # Link files
+    @schemafiles = glob("${XAIFSCHEMAROOT}/schema/xaif*.xsd");
+    for my $path (@schemafiles) {
+      my ($vol,$dir,$file) = File::Spec->splitpath($path);
+      if (${WHIRL2XAIF_PLATFORM} eq "i686-Cygwin") {
+	link($path, "./$file") or die "Error: could not link $path";
+      } else {
+	symlink($path, "./$file") or die "Error: could not link $path"
+      }
+    }
+  }
+
+  sub RunOpenADPipeline 
+  {
+    my($fortranfile) = @_;
+    
+    # Intentionally use this instead of a BEGIN block in case we want to
+    # play with options.
+    if (!defined($configured)) {
+      ConfigPipelineUtils();
+    }
+    
+    my $base = $fortranfile;
+    my $num = ($base =~ s/.f90//); # test to make sure subst ocurred
+    
+    if ($opt_verbose >= 1) {
+      print STDOUT "OpenAD: ${fortranfile} --> ${base}.xb.x2w.w2f.pp.f\n";
+    }
+    
+    RunCmd("$MFEF90   ${base}.f90");
+    RunCmd("$W2X      ${base}.B -o ${base}.xaif");
+    RunCmd("$NORM     ${base}.xaif");
+    RunCmd("$XB_BB -i ${base}.xaif -o ${base}.xb.xaif");
+    RunCmd("$X2W      ${base}.B ${base}.xb.xaif -o ${base}.xb.x2w.B");
+    RunCmd("$WHIRL2F  ${base}.xb.x2w.B");
+    RunCmd("$NORM     ${base}.xb.x2w.w2f.f");
+    RunCmd("$PP       ${base}.xb.x2w.w2f.f");
+  }
+
+  sub RunCmd
+  {
+    my($cmd) = @_;
+    
+    my $outfile = "./OpenAD-out.tmp~";
+    $cmd .= " > ${outfile} 2>&1";
+
+    if ($opt_verbose >= 2) {
+      print STDOUT "OpenAD: Running '${cmd}'\n";
+    }
+    if (system($cmd) != 0) {
+      my $exit_value  = $? >> 8;
+      my $signal_num  = $? & 127;
+      my $dumped_core = $? & 128;  
+      print STDERR "*** OpenAD failure (exit: $exit_value) ***\n";
+      print STDERR "$cmd\n";
+      system("cat ${outfile}");
+      exit(-1);
+    } else {
+      unlink($outfile);
+    }
+  }
+}
+
+#############################################################################
+
+# Local Variables:
+# perl-indent-level: 2
+# End:
