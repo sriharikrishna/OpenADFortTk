@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.1 2003/08/01 16:41:13 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.2 2003/08/05 20:03:54 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -104,11 +104,15 @@ TranslatePU(PU_Info* pu_forest, DOMElement* cfgElem)
 
   cout << XercesStrX(cfgElem->getNodeName()) << ": " << nameStr 
        << " // " << scopeIdStr << ", " << symIdStr << endl;
-  
+
+  // -------------------------------------------------------
+  // Try to find the matching PU; if so, translate XAIF->WHIRL.
+  // -------------------------------------------------------
   PU_Info* pu = FindPUForCFG(pu_forest, nameStr.c_str(), scopeIdStr.c_str(),
 			     symIdStr.c_str());
   if (!pu) { return; }
-  
+
+
   // If we found the PU, translate
   RestoreOpen64PUGlobalVars(pu);
 
@@ -124,6 +128,9 @@ TranslateWNPU(WN *wn_pu, DOMElement* cfgElem)
   pair<WNIdToWNMap*, WNToWNIdMap*> wnmaps = CreateWhirlIDMaps(wn_pu);
   WNIdToWNMap* id2wnmap = wnmaps.first;
 
+  // -------------------------------------------------------
+  // Examine each basic block in the CFG
+  // -------------------------------------------------------
   DOMDocument* doc = cfgElem->getOwnerDocument();
   DOMNodeIterator* it = 
     doc->createNodeIterator(cfgElem, DOMNodeFilter::SHOW_ALL, 

@@ -1,4 +1,4 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.2 2003/06/24 18:33:47 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.3 2003/08/05 20:04:18 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
@@ -116,3 +116,17 @@ Tar for whirl2xaif (gnutar):
 Tar for OA (gnutar):
   tar cvf OpenAnalysis.tar --exclude="*.a" OpenAnalysis
 
+=============================================================================
+
+Extra notes for now: 
+
+Whirl2xaif Notes: 
+  - generally assume that we enter with the proper context.
+  - generally assume we enter with the stream the way it should be (do
+    not need extra new lines or spaces).
+  - the context generally represents the XAIF (the translated content)
+    not the past WHIRL content.
+
+Symbol table notes in st2xaif.cxx
+
+[add emails to Mike here]
