@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.cxx,v 1.4 2005/01/17 15:22:50 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.cxx,v 1.5 2005/01/18 20:23:25 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -302,7 +302,7 @@ sexp::ostream::EscapeString(const char* str)
 {
   for (int i = 0; i < strlen(str); ++i) {
     char c = str[i];
-    if (c == '\\' || c == '"') {
+    if (c == '\\' || c == '"') { // what about: \n
       (*this) << '\\';
     }
     (*this) << c;    
