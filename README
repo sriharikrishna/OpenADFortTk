@@ -1,4 +1,4 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.8 2003/11/13 16:11:26 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.9 2003/11/25 16:18:12 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
@@ -11,7 +11,6 @@ Contents:
   0. Obtaining
   1. Building
   2. Using
-  3. Brief comments on whirl2xaif sources
 
 =============================================================================
 
@@ -130,6 +129,9 @@ The whole pipeline:
   whirl2f file.boost.x2w.B --> file.boost.x2w.w2f.f
   perl pp.pl file.boost.x2w.w2f.f --> file.boost.x2w.w2f.pp.f
 
+
+=============================================================================
+=============================================================================
 =============================================================================
 
 3. Brief comments on whirl2xaif sources
@@ -141,8 +143,8 @@ that will go.
 
 Some files you may be interested in:
 
-main.cxx        : the driver
-whirl2xaif.cxx  : interface for WHIRL->XAIF translater; translation driver
+main.cxx         : the driver
+whirl2xaif.cxx   : interface for WHIRL->XAIF translater; translation driver
 
 wn2xaif.cxx      : top-level routines for translating WHIRL nodes
 wn2xiaf_stmt.cxx : routines for translating WHIRL statements
@@ -152,29 +154,26 @@ wn2xaif_mem.cxx  : routines for translating WHIRL memory refs
 st2xaif.cxx      : routines for translating WHIRL symbol table entries
 ty2xaif.cxx      : routines for translating WHIRL types
 
+----
+
 Pro64IRInterface.cxx/h : OpenAnalysis interface for Open64's IR
 xmlostream.cxx/h       : xml::ostream class
 
 =============================================================================
 
-=============================================================================
+4. Misc
+--------------------
 
-Extra notes for now: 
+Originaly based on whirl2f, whirl2xaif has been changed significantly:
+  * removed dependency on some whirl2c files
+  * removed several files: init.cxx, w2f_driver.cxx, ty2c.h,
+    w2c_driver.h, etc.
+  * replaced token_buffer (token_buffer.cxx/h) with xml::ostream
+  * significantly cleaned up code
 
-Currently the binary -- whirl2xaif -- is just stored with the build
-files in ${WHIRL2XAIF}/obj/${WHIRL2XAIF_PLATFORM}.  This directory was
+Currently the binaries are just stored with the build files in
+${WHIRL2XAIF}/obj/${WHIRL2XAIF_PLATFORM}.  This directory is
 automatically created during the build.
 
-Whirl2xaif Notes: 
-  - generally assume that we enter with the proper context.
-  - generally assume we enter with the stream the way it should be (do
-    not need extra new lines or spaces).
-  - the context generally represents the XAIF (the translated content)
-    not the past WHIRL content.
-
-Symbol table notes in st2xaif.cxx
-
-[add emails to Mike here]
-
-   [whirl2xaif links with be.so. Building whirl2f will ensure the 
-   correct -Ddefines/symbols are included in be.so.)
+[whirl2xaif links with be.so. Building whirl2f will ensure the 
+correct -Ddefines/symbols are included in be.so.]
