@@ -1,6 +1,6 @@
 # -*-Mode: sh;-*-
 # For csh or tcsh
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.5 2003/11/13 14:55:12 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.6 2003/11/13 16:10:53 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
@@ -68,7 +68,7 @@ switch ($PLATFORM)
     breaksw
 endsw
 
-set OPEN64TARG="${OPEN64ROOT}/osprey1.0/${o64targ}"
+setenv OPEN64TARG "${OPEN64ROOT}/osprey1.0/${o64targ}"
 
 # reset XERCESCROOT
 setenv XERCESCROOT "${XERCESCROOT}/${PLATFORM}"
@@ -126,14 +126,13 @@ set xbase="${XAIFBOOSTERROOT}/xaifBooster"
 set ii_xaif="${XAIFSCHEMA}/schema/examples/inlinable_intrinsics.xaif"
 
 alias xboostread "${xbase}/system/test/t -c ${ii_xaif}"
-alias xboostl "${xbase}/algorithms/Linearization/test/t -c ${ii_xaif}"
-alias xboostbb "${xbase}/algorithms/BasicBlockPreaccumulation/test/t -c ${ii_xaif}"
+alias xboost_l "${xbase}/algorithms/Linearization/test/t -c ${ii_xaif}"
+alias xboost_bb "${xbase}/algorithms/BasicBlockPreaccumulation/test/t -c ${ii_xaif}"
 
 unset xbase
 unset ii_xaif
 
 #############################################################################
 
-unset OPEN64TARG
 unset XAIFSCHEMA
 unset PLATFORM
