@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makeinclude.config.i686-Linux,v 1.4 2003/10/29 01:52:50 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makeinclude.config.i686-Linux,v 1.5 2004/05/27 15:51:56 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -33,7 +33,7 @@ AR = /usr/bin/ar -rv  # GCC
 #-----------------------------------------------------------------
 
 COMMON_FLAGS = -D_LINUX_LINUX -D_SGI_SOURCE -D_SVR4_SOURCE \
-	-DTARG_IA64 -DCOMPILE_UPC -D_NEW_SYMTAB -D_MIPSEL \
+	-DTARG_IA64 -DCOMPILE_UPC -D_MIPSEL \
 	-D_LONGLONG -D_MIPS_SZINT=32 -D_MIPS_SZPTR=32 -D_MIPS_SZLONG=32 \
 	-D__MIPS_AND_IA64_ELF_H
 
