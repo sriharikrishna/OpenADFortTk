@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.22 2005/01/12 20:01:25 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.23 2005/01/17 19:35:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -247,12 +247,6 @@ ReadXAIF_DOM(const char* xaiffilenm)
   try {
     parser->parse(xaiffilenm);
   }
-  
-  catch (const XMLException& e) {
-    cerr << "An error occurred during parsing\n   Message: "
-         << XercesStrX(e.getMessage()) << endl;
-    errorsOccured = true;
-  }
   catch (const DOMException& e) {
     const unsigned int maxChars = 2047;
     XMLCh errText[maxChars + 1];
@@ -265,11 +259,17 @@ ReadXAIF_DOM(const char* xaiffilenm)
     
     errorsOccured = true;
   }
+  catch (const XMLException& e) {
+    cerr << "An error occurred during parsing\n   Message: "
+         << XercesStrX(e.getMessage()) << endl;
+    errorsOccured = true;
+  }
   catch (...) {
     cerr << "An error occurred during parsing\n " << endl;
     errorsOccured = true;
   }
-  
+  FORTTK_ASSERT(!errorsOccured, "Parse Error.");
+
   return parser;
 }
 
