@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.2 2003/05/14 01:10:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.3 2003/05/20 22:48:12 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -89,6 +89,7 @@
 
 //*************************** User Include Files ****************************
 
+#include "whirl2f_common.h"
 #include "whirl2xaif.h"
 #include "xmlostream.h"
 
@@ -97,26 +98,41 @@
 
 //************************** Forward Declarations ***************************
 
-static INT real_main(INT argc, char **argv);
+static INT 
+real_main(INT argc, char **argv);
 
-static void Process_Command_Line (INT, char **);
-static void Open_File(std::ofstream& fs, const char* filename);
-static void Close_File(std::ofstream& fs);
+static void 
+OpenFile(std::ofstream& fs, const char* filename);
+static void 
+CloseFile(std::ofstream& fs);
+static void 
+Process_Command_Line (INT, char **);
 
-static PU_Info* PrepareIR();
-static void UnprepareIR(PU_Info *pu_forest);
+static PU_Info* 
+LoadIR();
+static void 
+FreeIR(PU_Info *pu_forest);
+
+static void 
+PrepareIR(PU_Info *pu_forest);
+
+static void 
+DumpIR(PU_Info *pu_forest);
 
 //************************** Forward Declarations ***************************
-
-extern BOOL   Whirl2f_loaded; /* Defined in cleanup.c */ /* REMOVE */
-
-static OPTIONS_STACK *Options_Stack; // for PU and region level pragmas
 
 // Options (FIXME)
 // Src_File_Name, Irb_File_Name, Obj_File_Name
 const char* ProgramName = NULL;
 char WHIRL_filename[PATH_MAX+1] = "";
 char XAIF_filename[PATH_MAX+1] = "";
+
+bool opt_dumpIR = false;
+
+//************************** Forward Declarations ***************************
+
+// REMOVE
+static OPTIONS_STACK *Options_Stack; // for PU and region level pragmas
 
 //***************************************************************************
 
@@ -144,8 +160,8 @@ main(INT argc, char **argv)
 static INT
 real_main(INT argc, char **argv)
 {
-  Run_w2f = TRUE; // FIXME
-  Whirl2f_loaded = TRUE; // FIXME
+  //REMOVE Run_w2f = TRUE; // FIXME
+  //REMOVE Whirl2f_loaded = TRUE; // FIXME
 
   // -------------------------------------------------------
   // 1. Initialize Open64 
@@ -162,46 +178,56 @@ real_main(INT argc, char **argv)
     MEM_Tracing_Enable();
   }
 #endif
-
+  
+  Diag_Init(); // non-Open64
+  Diag_Set_Max_Diags(100); /* Maximum 100 warnings by default */
+  Diag_Set_Phase("WHIRL to XAIF: driver");
+  
   // -------------------------------------------------------
   // 2. Get options
   // -------------------------------------------------------
   Preconfigure(); // REMOVE config.cxx
   Process_Command_Line(argc, argv);
-  //Configure(); //REMOVE config.cxx
-  //Configure_Source(NULL); REMOVE config.cxx //Most config variables set here
+  Configure(); //REMOVE --need for WN_lower-- config.cxx
+  Configure_Source(NULL); //REMOVE config.cxx //Most config variables set here
   
   Init_Operator_To_Opcode_Table(); // FIXME
-
+  
   std::ofstream ofs;
-  Open_File(ofs, XAIF_filename); // FIXME: errors
+  OpenFile(ofs, XAIF_filename); // FIXME: errors
   
   // -------------------------------------------------------
   // 3. Load WHIRL IR and translate
   // -------------------------------------------------------
   PU_Info* pu_forest = NULL;
-  pu_forest = PrepareIR();
-
+  pu_forest = LoadIR();
+  
   // if verbose and if translating to file
   cerr << ProgramName << " translates " << WHIRL_filename << " into "
        << XAIF_filename << " based on source " << Src_File_Name << std::endl;
-
+  
+  PrepareIR(pu_forest); // FIXME (should this be part of translate?)
+  
+  if (opt_dumpIR) { DumpIR(pu_forest); }
   whirl2xaif::TranslateIR(ofs, pu_forest);
   
-  UnprepareIR(pu_forest);
+  FreeIR(pu_forest);
   
   // -------------------------------------------------------
   // 4. 
   // -------------------------------------------------------
+  CloseFile(ofs);
+
   // If we've seen errors, note them and terminate
-  Close_File(ofs);
   INT local_ecount, local_wcount;
   if ( Get_Error_Count ( &local_ecount, &local_wcount ) ) {
     Terminate(Had_Internal_Error() ? RC_INTERNAL_ERROR : 
 	      RC_NORECOVER_USER_ERROR);
   }
-  
-  //Cleanup_Files(TRUE, FALSE); // FIXME segfaults calling W2F_Cleanup
+  Cleanup_Files(TRUE, FALSE); // Open64
+
+  Diag_Exit(); // non-Open64
+
   return RC_OKAY;
 }
 
@@ -209,12 +235,14 @@ real_main(INT argc, char **argv)
 // 
 //***************************************************************************
 
-static void LoadPU(PU_Info *current_pu);
-static void FreePU(PU_Info *current_pu);
+static void LoadPU(PU_Info* pu);
+static void FreePU(PU_Info* pu);
 
 static PU_Info*
-PrepareIR()
+LoadIR()
 {
+  Diag_Set_Phase("WHIRL to XAIF: Load IR");
+
   MEM_POOL_Push(&MEM_src_pool);
   MEM_POOL_Push(&MEM_src_nz_pool);
   Set_Error_Source (Src_File_Name);
@@ -262,40 +290,23 @@ PrepareIR()
   // -------------------------------------------------------
   // 2. Read PUs and local symbol tables (FIXME: may not need to do this)
   // -------------------------------------------------------
-  for (PU_Info *current_pu = pu_forest; 
-       current_pu != NULL;
-       current_pu = PU_Info_next(current_pu)) {
-    LoadPU(current_pu);
-
-#if 0
-    // FIXME: this can affect CFGs (removing duplicate RETURNs)
-    // (causes a problem on simple7.f90)
-    if (WHIRL_Return_Val_On || WHIRL_Mldid_Mstid_On) {
-      Is_True(WHIRL_Return_Val_On && WHIRL_Mldid_Mstid_On,
-	     ("Both -INTERNAL:return_val & -INTERNAL:mldid_mstid must be on"));
-      pu = WN_Lower(pu, LOWER_RETURN_VAL | LOWER_MLDID_MSTID, NULL,
-		    "RETURN_VAL & MLDID/MSTID lowering");
-      // what about: LOWER_MP for nested PUs
-    }
-    Verify_SYMTAB(CURRENT_SYMTAB);
-#endif
-
-    Advance_Current_PU_Count();
+  for (PU_Info *pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
+    LoadPU(pu);
   }
 
   return pu_forest;
 }
 
 static void
-UnprepareIR(PU_Info *pu_forest)
+FreeIR(PU_Info *pu_forest)
 {
+  Diag_Set_Phase("WHIRL to XAIF: Free IR");
+  
   // -------------------------------------------------------
   // 1. Free PUs and local symbol tables (FIXME: may not need to do this)
   // -------------------------------------------------------
-  for (PU_Info *current_pu = pu_forest;
-       current_pu != NULL;
-       current_pu = PU_Info_next(current_pu)) {
-    FreePU(current_pu);
+  for (PU_Info *pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
+    FreePU(pu);
   }
   
   // -------------------------------------------------------
@@ -339,28 +350,30 @@ void
 LoadPU(PU_Info *pu)
 {
   Current_PU_Info = pu;
-
+  
   // Read program unit (Reads the PUs (WHIRL trees), symbol tables;
   // sets CURRENT_SYMTAB and Scope_tab[]).
   Read_Local_Info(MEM_pu_nz_pool_ptr, pu);
-
+  
 #if 0 // FIXME: Be_scope_tab needs to be changed when another PU is read
   BE_symtab_alloc_scope_level(CURRENT_SYMTAB);
   Scope_tab[CURRENT_SYMTAB].st_tab->
     Register(*Be_scope_tab[CURRENT_SYMTAB].be_st_tab);
 #endif
 
-  // NOTE: 'wn_pu' is not defined until this point, since the actual
-  // (WN *) is calculated by Read_Local_Info().
-  WN *wn_pu = PU_Info_tree_ptr(pu);
+  WN *wn_pu = PU_Info_tree_ptr(pu); // made possible by Read_Local_Info()
   
-  Set_Current_PU_For_Trace(ST_name(PU_Info_proc_sym(pu)), Current_PU_Count());
+  //REMOVE Set_Current_PU_For_Trace(ST_name(PU_Info_proc_sym(pu)), Current_PU_Count());
 
   /* Always create region pool because there are many places where
    * they can be introduced. Needed for PUs with no regions also */
   /* NOTE: part of what REGION_initialize does can be moved
    * to when the .B file is read in.  (FIXME) */
   REGION_Initialize(wn_pu, PU_has_region(Get_Current_PU()));
+
+  // WN_Lower
+  
+  Advance_Current_PU_Count();
 
   // Now recursively process the child PU's.
   for (PU_Info *child = PU_Info_child(pu); child != NULL;
@@ -396,37 +409,66 @@ FreePU(PU_Info* pu) // FIXME: unload
 
 //***************************************************************************
 
-#if 0 // REMOVE
-static char *
-Get_Orig_PU_Name(PU_Info * current_pu)
+static void 
+PrepareIR(PU_Info* pu_forest)
 {
-  DST_IDX dst;
-  DST_INFO *info;
-  DST_SUBPROGRAM *PU_attr;
-  
-  dst = PU_Info_pu_dst(current_pu);
-  
-  if (DST_IS_NULL (dst)) {
-    return ST_name(PU_Info_proc_sym(current_pu));
-  }
-  
-  info = DST_INFO_IDX_TO_PTR (dst);
-  
-  if ( (DST_INFO_tag(info) != DW_TAG_subprogram)
-       || DST_IS_declaration(DST_INFO_flag(info)) ) {
-    return ST_name(PU_Info_proc_sym(current_pu));
-  }
-  PU_attr = DST_ATTR_IDX_TO_PTR(DST_INFO_attributes(info), DST_SUBPROGRAM);
-  if (PU_attr->def.name.byte_idx < 0) {
-    return NULL;
-    /* Why not the following line instead? -- RK 960808
-     * return ST_name(PU_Info_proc_sym(current_pu));
-     */
-  }
-  return DST_STR_IDX_TO_PTR(DST_SUBPROGRAM_def_name(PU_attr));
-}
-#endif
+  Diag_Set_Phase("WHIRL to XAIF: Prepare IR");
 
+  Pro64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.IsValid(); ++procIt) { 
+    PU_Info* pu = (PU_Info*)procIt.Current();
+    WN* wn_pu = PU_Info_tree_ptr(pu);
+    
+    Create_Slink_Symbol(); // FIXME: do we need?
+    Lower_Init(); // Open64 Lowerer
+    
+    //wn_pu = WN_Lower(wn_pu, LOWER_CALL, NULL, "Lowering CALLS");
+    //wn_pu = WN_Lower(wn_pu, LOWER_IO_STATEMENT, NULL, "Lowering IO");
+    
+#if 0
+    // FIXME: this can affect CFGs (removing duplicate RETURNs)
+    // (causes a problem on simple7.f90)
+    if (WHIRL_Return_Val_On || WHIRL_Mldid_Mstid_On) {
+      Is_True(WHIRL_Return_Val_On && WHIRL_Mldid_Mstid_On, ("FIXME"));
+      wn_pu = WN_Lower(wn_pu, LOWER_RETURN_VAL | LOWER_MLDID_MSTID, NULL,
+		       "RETURN_VAL & MLDID/MSTID lowering");
+      // what about: LOWER_MP for nested PUs
+    }
+    Verify_SYMTAB(CURRENT_SYMTAB);
+#endif
+    
+    Lowering_Finalize();
+  }
+}
+
+//***************************************************************************
+// 
+//***************************************************************************
+
+static void 
+DumpIR(PU_Info* pu_forest)
+{
+  bool dumpST = false;
+  IR_set_dump_order(TRUE); // Preorder dump
+
+  if (dumpST) {
+    // Global 
+    Print_global_symtab(stdout);
+  }
+
+  Pro64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.IsValid(); ++procIt) { 
+    PU_Info* pu = (PU_Info*)procIt.Current();  
+    WN* wn_pu = PU_Info_tree_ptr(pu);
+    
+    //IR_put_func(wn_pu, NULL);
+    fdump_tree(stderr, wn_pu); // FIXME
+    
+    if (dumpST) {
+      Print_local_symtab(stdout, Scope_tab[CURRENT_SYMTAB]);
+    }
+  }
+}
 
 //***************************************************************************
 // from be/be/driver_util.c
@@ -449,7 +491,7 @@ Process_Command_Line (INT argc, char **argv)
 
   /* Check the command line flags: */
   BOOL dashdash_flag = FALSE;
-  char *cp;
+  char* opt;
   
   for (INT16 i = 1; i < argc; i++) {
     if (argv[i] != NULL && (strcmp(argv[i], "--") == 0)) {
@@ -458,11 +500,12 @@ Process_Command_Line (INT argc, char **argv)
     }
     
     if ( !dashdash_flag && argv[i] != NULL && *(argv[i]) == '-' ) {
-      cp = argv[i]+1;	    /* Pointer to next flag character */
+      opt = argv[i]+1;	    /* Pointer to next flag character */
       
-      /* process as command-line option group */
-      if (Process_Command_Line_Group (cp, Common_Option_Groups)) //FIXME
+      if (strcmp(opt, "d") == 0) { 
+	opt_dumpIR = true;
 	continue;
+      }
       
     } else if (argv[i] != NULL) {
       dashdash_flag = FALSE;
@@ -486,25 +529,15 @@ Process_Command_Line (INT argc, char **argv)
 
   strncpy(WHIRL_filename, Irb_File_Name, PATH_MAX);
   strncpy(XAIF_filename, fname, PATH_MAX);
+  Irb_File_Name = WHIRL_filename; // FIXME: make Open64 happy
 }
-
-/* perform initialization of the lowerer for lowering High WHIRL */
-static void
-Lowering_Initialize (void)
-{
-  Create_Slink_Symbol();
-  
-  // lowering specific initialization
-  Lower_Init();
-}
-
 
 //***************************************************************************
 // 
 //***************************************************************************
 
 /* ====================================================================
- *
+ * FIXME: 
  * Open_Read_File()
  *    Opens the file with the given name and path for reading.
  *
@@ -518,29 +551,11 @@ Lowering_Initialize (void)
  *
  *    Same as Open_Append_File(), but a new file is always created,
  *    possibly overwriting an existing file.
- *
- * Close_File()
- *
- *    Closes the given file if different from NULL and not stdout or
- *    stderr.
- *
- * Open_W2f_Output_File()
- *
- *    Assuming that Process_Filename_Options() has been called, open
- *    the given kind of output file.  No effect if the file is already
- *    open, and the output will be appended to the output file if the
- *    file has already been created by this process.
- *
- * Close_W2f_Output_File()
- *
- *    If the file-pointer is non-NULL, we assume the file is open and
- *    close it.  Otherwise, this operation has no effect.
- *
  * ====================================================================
  */
 
 static void 
-Open_File(std::ofstream& fs, const char* filename)
+OpenFile(std::ofstream& fs, const char* filename)
 {
   using namespace std;
 
@@ -557,7 +572,7 @@ Open_File(std::ofstream& fs, const char* filename)
 }
 
 static void
-Close_File(std::ofstream& fs)
+CloseFile(std::ofstream& fs)
 {
   fs.close();
 }
