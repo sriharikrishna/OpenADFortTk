@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.21 2004/02/26 14:24:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.22 2004/04/28 15:24:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -653,7 +653,6 @@ TY2F_Equivalence_List(xml::ostream& xos,
     * the tmpvar, or a similar equivalence group (ie: TY) will 
     * get the same temp.
     */
-
    equiv_ty = Stab_Array_Of(Stab_Mtype_To_Ty(MTYPE_I1), TY_size(struct_ty));
    equiv_var_idx = Stab_Lock_Tmpvar(equiv_ty, &ST2F_Declare_Tempvar);
 
@@ -1457,25 +1456,28 @@ TranslateTYToSymType(TY_IDX ty_idx)
   const char* str = NULL;
 
   if (TY_kind(ty) == KIND_SCALAR) {
- 
     MTYPE mt = TY_mtype(ty);
     if (TY_is_character(ty)) {
       str = "char"; 
-    } else if (TY_is_logical(ty)) {
+    } 
+    else if (TY_is_logical(ty)) {
       str = "bool"; 
-    } else if (MTYPE_is_integral(mt)) {
+    } 
+    else if (MTYPE_is_integral(mt)) {
       str = "integer"; 
-    } else if (MTYPE_is_float(mt)) { 
-      str = "real"; 
-    } else if (MTYPE_is_complex(mt)) { 
+    } 
+    else if (MTYPE_is_complex(mt)) { /* must come before 'float' */
       str = "complex";
+    } 
+    else if (MTYPE_is_float(mt)) { 
+      str = "real"; 
     }
-
-  } else if (TY_kind(ty) == KIND_ARRAY) {
-
+  } 
+  else if (TY_kind(ty) == KIND_ARRAY) {
     if (TY_is_character(ty)) { 
       str = "string"; 
-    } else {
+    } 
+    else {
       // Do not permit pointers as elements of arrays, so just use
       // the corresponding integral type instead.  We do not expect
       // such pointers to be dereferenced anywhere. (FIXME)
@@ -1485,8 +1487,8 @@ TranslateTYToSymType(TY_IDX ty_idx)
       } 
       str = TranslateTYToSymType(ety_idx);
     }
-    
-  } else if (TY_kind(ty) == KIND_FUNCTION) {
+  } 
+  else if (TY_kind(ty) == KIND_FUNCTION) {
     str = "void";
   } 
   
