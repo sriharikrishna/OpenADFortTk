@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.12 2004/05/04 23:52:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.13 2004/05/28 15:50:27 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -490,7 +490,8 @@ PatchWN_IO_cray(WN* wn, XlationContext& ctxt)
 {
   IOSTATEMENT iostmt = WN_io_statement(wn);
   ASSERT_WARN(iostmt == IOS_CR_FWF || iostmt == IOS_CR_FWU 
-	      || iostmt == IOS_CR_FRF || iostmt == IOS_CR_FRU,
+	      || iostmt == IOS_CR_FRF || iostmt == IOS_CR_FRU
+	      || iostmt == IOS_CR_OPEN || iostmt == IOS_CR_CLOSE,
 	      (DIAG_W2F_UNEXPECTED_IOS, IOSTATEMENT_name(iostmt), 
 	       "PatchWN_IO_cray"));
   
