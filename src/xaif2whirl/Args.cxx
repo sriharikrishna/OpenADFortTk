@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.cxx,v 1.8 2004/05/07 20:04:58 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.cxx,v 1.9 2004/12/15 17:54:21 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -18,10 +18,12 @@
 
 //************************* System Include Files ****************************
 
-//*************************** User Include Files ****************************
+//************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h> // FIXME 
 #include "file_util.h"      // New_Extension, Last_Pathname_Component
+
+//*************************** User Include Files ****************************
 
 #include "Args.h"
 
