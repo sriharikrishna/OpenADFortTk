@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.17 2004/07/28 20:01:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.18 2004/07/29 18:52:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -46,7 +46,8 @@
 #include <lib/support/Pro64IRInterface.h>
 #include <lib/support/SymTab.h> // for XAIFSymToWhirlSymMap
 #include <lib/support/WhirlIDMaps.h>
-#include <lib/support/wn_attr.h> // for WN_Tree_Type
+#include <lib/support/wn_attr.h>   // for WN_Tree_Type
+#include <lib/support/stab_attr.h> // for TY_Is_*
 #include <lib/support/XAIFStrings.h>
 #include <lib/support/diagnostics.h>
 
@@ -229,6 +230,8 @@ xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
   // translate them into a WHIRL expression tree.
   // -------------------------------------------------------
   unsigned int numArgs = GetChildElementCount(elem);
+  unsigned int numiArgs = 0; // implicit args
+  
   std::vector<WN*> args_wn(numArgs, NULL);
   for (DOMElement* arg = GetFirstChildElement(elem); (arg); 
        arg = GetNextSiblingElement(arg) ) {
@@ -251,15 +254,31 @@ xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
     WN* argExprWN = TranslateVarRef(argExpr, ctxt);
     ctxt.DeleteContext();
     args_wn[pos - 1] = argExprWN;
+
+    // Determine whether WHIRL needs an implicit argument
+    // (cf. WN2F_call() in wn2f_stmt.cxx)
+    TY_IDX ty = WN_Tree_Type(argExprWN);
+    if (TY_Is_Character_Reference(ty) || TY_Is_Chararray_Reference(ty)) {
+      numiArgs++;
+    }
   }
   
   // -------------------------------------------------------
-  // 2. Create function call
+  // 2. Gather WHIRL implicit arguments (e.g., for strings)
+  // -------------------------------------------------------
+  std::vector<WN*> iargs_wn(numiArgs, NULL);  
+  for (int i = 0; i < numiArgs; ++i) {
+    // Create bogus values, knowing that we only want to unparse the WHIRL
+    iargs_wn[i] = WN_CreateIntconst(OPC_I4INTCONST, 0); // a white lie
+  }
+  
+  // -------------------------------------------------------
+  // 3. Create function call
   // -------------------------------------------------------
   TYPE_ID rtype = MTYPE_V; // void type for subroutine call
   Symbol* sym = GetSymbol(elem, ctxt);
   
-  WN* callWN = WN_Call(rtype, MTYPE_V, numArgs, sym->GetST());
+  WN* callWN = WN_Call(rtype, MTYPE_V, numArgs + numiArgs, sym->GetST());
   WN_Set_Call_Default_Flags(callWN); // set conservative assumptions
   
   for (int i = 0; i < numArgs; ++i) {
@@ -267,6 +286,10 @@ xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
       // conservatively assume pass by reference
       WN_actual(callWN, i) = CreateParm(args_wn[i], WN_PARM_BY_REFERENCE);
     }
+  }
+  
+  for (int i = 0, j = numArgs; i < numiArgs; ++i, ++j) {
+    WN_actual(callWN, j) = CreateParm(iargs_wn[i], WN_PARM_BY_VALUE);
   }
   
   return callWN;
