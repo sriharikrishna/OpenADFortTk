@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.21 2004/05/06 21:53:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.22 2004/05/07 17:11:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -864,14 +864,12 @@ GetRType(WN* wn)
   TY_IDX ty_idx = WN_Tree_Type(wn);
   
   TYPE_ID rty = MTYPE_UNKNOWN;
-  //  if (TY_kind(ty_idx) == KIND_ARRAY || TY_kind(ty_idx) == KIND_STRUCT) {
-  //    rty = MTYPE_M;
-  //  } else {
+  if (TY_kind(ty_idx) == KIND_ARRAY || TY_kind(ty_idx) == KIND_STRUCT) {
+    rty = MTYPE_M;
+  } else {
     rty = TY_mtype(ty_idx);
-  //  }
-  
-  // FIXME: pointer types?
-  assert(rty != MTYPE_UNKNOWN);
+  }
+  assert(rty != MTYPE_UNKNOWN); // FIXME: pointer types
   
   return rty;
 }
