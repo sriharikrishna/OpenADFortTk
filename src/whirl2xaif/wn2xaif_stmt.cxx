@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.24 2004/02/17 22:40:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.25 2004/02/18 18:41:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -49,26 +49,6 @@
 // Based on Open64 be/whirl2f/wn2f_stmt.cxx
 //
 //***************************************************************************
-
-/* ====================================================================
- * ====================================================================
- *
- * Description: FIXME
- *
- *   Translate a WN statement subtree to Fortran by means of an inorder 
- *   recursive descent traversal of the WHIRL IR.  Note that the routines
- *   handle expressions and loads/stores are in separate source files.
- *   Recursive translation of WN nodes should only use WN2F_Translate()!
- *
- *   Conventions:
- *
- *       + Newline characters or comments are prepended to a stmt in
- *         the translation of that stmt.
- *
- *
- * ====================================================================
- * ====================================================================
- */
 
 //************************** System Include Files ***************************
 
@@ -239,6 +219,26 @@ whirl2xaif::WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   return whirl2xaif::good;
 } /* WN2F_implied_do */
+
+whirl2xaif::status
+whirl2xaif::WN2F_noio_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+{
+  xos << "(";
+  TranslateWN(xos,WN_kid0(wn),ctxt);
+  xos << ",";
+  TranslateWN(xos,WN_kid1(wn),ctxt);
+  xos << "=";
+  
+  INT numkids = 5;
+  for (INT kid = 2;kid<numkids; kid++) {
+    TranslateWN(xos,WN_kid(wn,kid),ctxt);
+    if (kid < numkids-1)
+      xos << ",";
+  }
+  
+  xos << ")";
+  return whirl2xaif::good;
+}
 
 whirl2xaif::status 
 whirl2xaif::xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
@@ -719,7 +719,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	
 	first_nonemptyarg = TRUE;
 	srcid = ctxt.PeekVId(); // used for intrinsics
-	WN2F_Offset_Memref(xos, 
+	xlate_MemRef(xos, 
 			   WN_kid(wn, arg_idx), /* address expression */
 			   arg_ty,              /* address type */
 			   TY_pointed(arg_ty),  /* object type */
@@ -898,6 +898,28 @@ whirl2xaif::xlate_COMMENT(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   return whirl2xaif::good;
 }
+
+whirl2xaif::status 
+whirl2xaif::WN2F_dealloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+{
+  INT16 n,i;
+  
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_DEALLOCA, 
+		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_dealloca"));
+  
+  n = WN_kid_count(wn);
+  
+  xos << std::endl << "CALL OPR_DEALLOCA(";
+  i = 0 ;
+  while (i < n) {
+    TranslateWN(xos,WN_kid(wn,i),ctxt);
+    if (++i < n)
+      xos << ",";
+  }
+  xos << ")";
+   
+  return whirl2xaif::good;
+} /* WN2F_dealloca */
 
 
 whirl2xaif::status
@@ -1176,26 +1198,6 @@ whirl2xaif::WN2F_ar_construct(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   }
   xos << "/)";
   
-  return whirl2xaif::good;
-}
-
-whirl2xaif::status
-whirl2xaif::WN2F_noio_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-  xos << "(";
-  TranslateWN(xos,WN_kid0(wn),ctxt);
-  xos << ",";
-  TranslateWN(xos,WN_kid1(wn),ctxt);
-  xos << "=";
-  
-  INT numkids = 5;
-  for (INT kid = 2;kid<numkids; kid++) {
-    TranslateWN(xos,WN_kid(wn,kid),ctxt);
-    if (kid < numkids-1)
-      xos << ",";
-  }
-  
-  xos << ")";
   return whirl2xaif::good;
 }
 

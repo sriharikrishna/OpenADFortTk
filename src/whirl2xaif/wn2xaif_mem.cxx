@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.22 2004/02/17 22:40:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.23 2004/02/18 18:41:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -425,7 +425,7 @@ whirl2xaif::xlate_ILOAD(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   if (WN_operator(baseptr) == OPR_LDA || WN_operator(baseptr) == OPR_LDID)
     set_XlationContext_has_no_arr_elmt(ctxt); // FIXME
   
-  WN2F_Offset_Memref(xos, baseptr, baseptr_ty, ref_ty,
+  xlate_MemRef(xos, baseptr, baseptr_ty, ref_ty,
 		     WN_load_offset(wn), ctxt);
 
   reset_XlationContext_has_no_arr_elmt(ctxt);
@@ -434,7 +434,7 @@ whirl2xaif::xlate_ILOAD(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 }
 
 whirl2xaif::status 
-xlate_ILOADX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::xlate_ILOADX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_WARN(FALSE, (DIAG_UNIMPLEMENTED, "xlate_ILOADX"));
   xos << WN_opc_name(wn);  
@@ -443,7 +443,7 @@ xlate_ILOADX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status 
-WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // This should only appear the as the rhs of an ISTORE.  Treat
   // it just like an ILOAD.
@@ -457,7 +457,7 @@ WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     base_ty = WN_ty(wn);
   
   /* Get the object to be loaded */
-  WN2F_Offset_Memref(xos, WN_kid0(wn), /* base-symbol */
+  xlate_MemRef(xos, WN_kid0(wn), /* base-symbol */
 		     base_ty, /* base-type */
 		     TY_pointed(WN_ty(wn)), /* object-type */
 		     WN_load_offset(wn), /* object-ofst */ ctxt);
@@ -494,8 +494,6 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   // LHS of assignment
   WN* lhs = wn; // OPR_STID represents the LHS of the assignment
-  // Change alias to du_ud MWF
-  // ----------------------------
   xos << BegElem(XAIFStrings.elem_AssignLHS()) 
       << Attr("du_ud", ctxt.FindVN(lhs)) << EndAttrs;
   ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for LHS
@@ -551,8 +549,6 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   }
   
   // LHS of assignment (dereference address)
-  // Change alias to du_ud MWF
-  // ----------------------------
   WN* lhs = baseptr;
   xos << BegElem(XAIFStrings.elem_AssignLHS()) 
       << Attr("du_ud", ctxt.FindVN(lhs)) << EndAttrs;
@@ -561,7 +557,7 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   if (WN_operator(baseptr) == OPR_LDA || WN_operator(baseptr) == OPR_LDID) {
     set_XlationContext_has_no_arr_elmt(ctxt);
   }
-  WN2F_Offset_Memref(xos, baseptr, baseptr_ty, ref_ty, WN_store_offset(wn),
+  xlate_MemRef(xos, baseptr, baseptr_ty, ref_ty, WN_store_offset(wn),
 		     ctxt);
   reset_XlationContext_has_no_arr_elmt(ctxt); 
 
@@ -583,7 +579,7 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 }
 
 whirl2xaif::status 
-xlate_ISTOREX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::xlate_ISTOREX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_WARN(FALSE, (DIAG_UNIMPLEMENTED, "xlate_ISTOREX"));
   xos << std::endl << WN_opc_name(wn);
@@ -592,7 +588,7 @@ xlate_ISTOREX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status 
-WN2F_mstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_mstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   /* Note that we make the assumption that this is just like an 
    * ISTORE, and handle it as though it were.  We do not handle
@@ -618,7 +614,7 @@ WN2F_mstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   /* Get the lhs of the assignment (dereference address) */
   xos << std::endl; 
-  WN2F_Offset_Memref(xos, WN_kid1(wn), /* base-symbol */
+  xlate_MemRef(xos, WN_kid1(wn), /* base-symbol */
 		     base_ty, /* base-type */ 
 		     TY_pointed(WN_ty(wn)), /* object-type */
 		     WN_store_offset(wn),   /* object-ofst */ ctxt);
@@ -634,7 +630,7 @@ WN2F_mstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status
-WN2F_pstid(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_pstid(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
    ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PSTID,
                     (DIAG_W2F_UNEXPECTED_OPC, "WN2F_pstid"));
@@ -677,7 +673,7 @@ WN2F_pstid(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status
-WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
    TY_IDX        base_ty;
    ASSERT_DBG_FATAL(WN_operator(wn) == OPR_PSTORE,
@@ -692,7 +688,7 @@ WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    xos << std::endl;
    set_XlationContext_has_no_arr_elmt(ctxt);
    
-   WN2F_Offset_Memref(xos,
+   xlate_MemRef(xos,
 		      WN_kid1(wn),           /* base-symbol */
 		      base_ty,               /* base-type */
 		      TY_pointed(WN_ty(wn)), /* object-type */
@@ -716,11 +712,11 @@ WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 } /* WN2F_pstore */
 
 //***************************************************************************
-// 
+// Array Operators (N-ary Operations)
 //***************************************************************************
 
 whirl2xaif::status
-xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   /* Note that array indices have been normalized to assume the
    * array is based at index zero.  Since a base at index 1 is
@@ -806,112 +802,6 @@ xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 } /* xlate_ARRAY */
 
 
-whirl2xaif::status
-WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-   /* Note that array indices have been normalized to assume the
-    * array is based at index zero.  Since a base at index 1 is
-    * the default for Fortran, we denormalize to base 1 here.
-    */
-   BOOL  deref = ctxt.IsDerefAddr();
-   WN    * kid;
-   TY_IDX ptr_ty;
-   TY_IDX array_ty;
-
-
-   // FIXME: this was ARRAY not ARRSECTION
-   //ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ARRAY,
-   //                 (DIAG_W2F_UNEXPECTED_OPC, "xlate_ARRAY"));
-   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ARRSECTION,
-                    (DIAG_W2F_UNEXPECTED_OPC, "xlate_ARRSECTION"));
-
-
-   /* Only allow taking the address of an array element for F90!
-    *
-    */
-#if 0
-   ASSERT_DBG_WARN(deref, (DIAG_UNIMPLEMENTED,
-			   "taking the address of an array element"));
-#endif
-
-   /* Get the array or, for ptr-as-array types, the element type */
-   kid    = WN_kid0(wn);
-   ptr_ty = WN_Tree_Type(kid);
-
-   if (WN2F_Is_Address_Preg(kid,ptr_ty)) {
-     /* a preg or sym has been used as an address, usually after
-	optimization don't know base type, or anything else so use
-	OPR_ARRAY to generate bounds */
-
-     TranslateWN(xos, kid, ctxt);
-     WN2F_Arrsection_Slots(xos,wn,ctxt,TRUE);
-   }
-   else {
-     array_ty = TY_pointed(ptr_ty); // base of OPR_ARRAY
-    
-     if (WN_operator(kid) == OPR_LDID       &&
-
-         ST_sclass(WN_st(kid)) == SCLASS_FORMAL &&
-         !ST_is_value_parm(WN_st(kid))          &&
-         WN_element_size(wn) == TY_size(array_ty)       &&
-         WN_num_dim(wn) == 1                            &&
-         WN_operator(WN_array_index(wn, 0)) == OPR_INTCONST &&
-         WN_const_val(WN_array_index(wn, 0)) == 0       &&
-         !TY_ptr_as_array(Ty_Table[WN_ty(kid)])           &&
-         (!TY_Is_Array(array_ty) ||
-          TY_size(TY_AR_etype(array_ty)) < TY_size(array_ty))) {
-         /* This array access is just a weird representation for an implicit
-          * reference parameter dereference.  Ignore the array indexing.
-          */
-
-       TranslateWN(xos, kid, ctxt);
-     }
-     else if (!TY_ptr_as_array(Ty_Table[ptr_ty]) 
-	      && TY_Is_Character_String(array_ty)) {
-         /* We assume that substring accesses are treated in the handling
-          * of intrinsic functions, except when the substrings are to be
-          * handled as integral types and thus are encountered here.
-          */
-       WN2F_String_Argument(xos, wn, WN2F_INTCONST_ONE, ctxt);
-     }
-     else { /* A regular array access */
-       /* Get the base of the object to be indexed into, still using
-	* ctxt.IsDerefAddr().
-	*/
-       TranslateWN(xos, kid, ctxt);
-       ctxt.ResetDerefAddr();
-       
-       if ( XlationContext_has_no_arr_elmt(ctxt))
-	 ;
-       else
-	 WN2F_arrsection_bounds(xos,wn,array_ty,ctxt);
-     }
-   }
-   return whirl2xaif::good;
-} /* WN2F_arrsection */
-
-
-whirl2xaif::status
-WN2F_where(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-  xos << "WHERE(";
-  TranslateWN(xos, WN_kid0(wn), ctxt);
-  xos << ")";
-  TranslateWN(xos, WN_kid1(wn), ctxt);
-  xos << "END WHERE";
-  TranslateWN(xos, WN_kid2(wn), ctxt);
-  return whirl2xaif::good;
-}
-
-
-whirl2xaif::status
-WN2F_arrayexp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-  TranslateWN(xos, WN_kid0(wn), ctxt);
-  return whirl2xaif::good;
-}
-
-
 /*
 |*                                                                           *|
 |* for array section triplet node,kid0 is lower bound,it should plus 1LL for *|
@@ -922,9 +812,8 @@ WN2F_arrayexp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 |* kid2 evaluates to the number of values in the progression       	     *|
 |*                                                                           *|
 */
- 
 whirl2xaif::status
-WN2F_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   WN      *kid0;
   WN      *kid1;
@@ -1076,7 +965,7 @@ WN2F_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status
-WN2F_src_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_src_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   WN      *kid0;
   WN      *kid1;
@@ -1098,6 +987,113 @@ WN2F_src_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   return whirl2xaif::good;  
 }
+
+
+whirl2xaif::status
+whirl2xaif::WN2F_arrayexp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+{
+  TranslateWN(xos, WN_kid0(wn), ctxt);
+  return whirl2xaif::good;
+}
+
+
+whirl2xaif::status
+whirl2xaif::WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+{
+   /* Note that array indices have been normalized to assume the
+    * array is based at index zero.  Since a base at index 1 is
+    * the default for Fortran, we denormalize to base 1 here.
+    */
+   BOOL  deref = ctxt.IsDerefAddr();
+   WN    * kid;
+   TY_IDX ptr_ty;
+   TY_IDX array_ty;
+
+
+   // FIXME: this was ARRAY not ARRSECTION
+   //ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ARRAY,
+   //                 (DIAG_W2F_UNEXPECTED_OPC, "xlate_ARRAY"));
+   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ARRSECTION,
+                    (DIAG_W2F_UNEXPECTED_OPC, "xlate_ARRSECTION"));
+
+
+   /* Only allow taking the address of an array element for F90!
+    *
+    */
+#if 0
+   ASSERT_DBG_WARN(deref, (DIAG_UNIMPLEMENTED,
+			   "taking the address of an array element"));
+#endif
+
+   /* Get the array or, for ptr-as-array types, the element type */
+   kid    = WN_kid0(wn);
+   ptr_ty = WN_Tree_Type(kid);
+
+   if (WN2F_Is_Address_Preg(kid,ptr_ty)) {
+     /* a preg or sym has been used as an address, usually after
+	optimization don't know base type, or anything else so use
+	OPR_ARRAY to generate bounds */
+
+     TranslateWN(xos, kid, ctxt);
+     WN2F_Arrsection_Slots(xos,wn,ctxt,TRUE);
+   }
+   else {
+     array_ty = TY_pointed(ptr_ty); // base of OPR_ARRAY
+    
+     if (WN_operator(kid) == OPR_LDID       &&
+
+         ST_sclass(WN_st(kid)) == SCLASS_FORMAL &&
+         !ST_is_value_parm(WN_st(kid))          &&
+         WN_element_size(wn) == TY_size(array_ty)       &&
+         WN_num_dim(wn) == 1                            &&
+         WN_operator(WN_array_index(wn, 0)) == OPR_INTCONST &&
+         WN_const_val(WN_array_index(wn, 0)) == 0       &&
+         !TY_ptr_as_array(Ty_Table[WN_ty(kid)])           &&
+         (!TY_Is_Array(array_ty) ||
+          TY_size(TY_AR_etype(array_ty)) < TY_size(array_ty))) {
+         /* This array access is just a weird representation for an implicit
+          * reference parameter dereference.  Ignore the array indexing.
+          */
+
+       TranslateWN(xos, kid, ctxt);
+     }
+     else if (!TY_ptr_as_array(Ty_Table[ptr_ty]) 
+	      && TY_Is_Character_String(array_ty)) {
+         /* We assume that substring accesses are treated in the handling
+          * of intrinsic functions, except when the substrings are to be
+          * handled as integral types and thus are encountered here.
+          */
+       WN2F_String_Argument(xos, wn, WN2F_INTCONST_ONE, ctxt);
+     }
+     else { /* A regular array access */
+       /* Get the base of the object to be indexed into, still using
+	* ctxt.IsDerefAddr().
+	*/
+       TranslateWN(xos, kid, ctxt);
+       ctxt.ResetDerefAddr();
+       
+       if ( XlationContext_has_no_arr_elmt(ctxt))
+	 ;
+       else
+	 WN2F_arrsection_bounds(xos,wn,array_ty,ctxt);
+     }
+   }
+   return whirl2xaif::good;
+} /* WN2F_arrsection */
+
+
+whirl2xaif::status
+whirl2xaif::WN2F_where(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+{
+  xos << "WHERE(";
+  TranslateWN(xos, WN_kid0(wn), ctxt);
+  xos << ")";
+  TranslateWN(xos, WN_kid1(wn), ctxt);
+  xos << "END WHERE";
+  TranslateWN(xos, WN_kid2(wn), ctxt);
+  return whirl2xaif::good;
+}
+
 
 void
 WN2F_Arrsection_Slots(xml::ostream& xos, WN *wn, XlationContext& ctxt, BOOL parens)
@@ -1289,6 +1285,8 @@ WN2F_arrsection_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,XlationContext
   
 }
 
+//***************************************************************************
+
 /*----------- Character String Manipulation Translation ---------------*/
 /*---------------------------------------------------------------------*/
 
@@ -1387,7 +1385,7 @@ WN2F_String_Argument(xml::ostream& xos, WN* base_parm, WN* length,
       
       /* call memref for FLD offset, otherwise the ADD is */
       /* just another binary op                           */
-      WN2F_Offset_Memref(xos, WN_kid0(base), WN_Tree_Type(base),
+      xlate_MemRef(xos, WN_kid0(base), WN_Tree_Type(base),
 			 FLD_type(fld), 0, ctxt);
     } else {
       str_length = TY_size(str_ty);

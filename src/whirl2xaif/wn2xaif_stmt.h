@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.10 2004/02/17 22:24:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.11 2004/02/18 18:41:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -53,6 +53,21 @@
 #ifndef wn2xaif_stmt_INCLUDED
 #define wn2xaif_stmt_INCLUDED
 
+//************************** System Include Files ***************************
+
+//************************** Open64 Include Files ***************************
+
+#include <include/Open64BasicTypes.h>
+
+//*************************** User Include Files ****************************
+
+#include "whirl2xaif.i"
+#include "XlationContext.h"
+
+//************************** Forward Declarations ***************************
+
+//***************************************************************************
+
 //***************************************************************************
 // Structured Control Flow Statements
 //***************************************************************************
@@ -88,6 +103,9 @@ namespace whirl2xaif {
 
   extern whirl2xaif::status 
   WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+  extern whirl2xaif::status
+  WN2F_noio_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt);
   
   extern whirl2xaif::status 
   xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt);
@@ -151,30 +169,29 @@ namespace whirl2xaif {
   
   extern whirl2xaif::status 
   xlate_COMMENT(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-  
 
-  // FIXME: ordering?
+  extern whirl2xaif::status 
+  WN2F_dealloca(xml::ostream& xos, WN *wn, XlationContext& ctxt) ;
+  
+  
   extern whirl2xaif::status
   xlate_USE(xml::ostream& xos, WN *wn, XlationContext& ctxt);  
+
+  extern whirl2xaif::status
+  WN2F_namelist_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt);  
   
   extern whirl2xaif::status
   WN2F_implicit_bnd(xml::ostream& xos, WN *wn, XlationContext& ctxt); 
   
   extern whirl2xaif::status
-  WN2F_namelist_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt);  
-  
+  WN2F_nullify_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
   extern whirl2xaif::status
   WN2F_interface_blk(xml::ostream& xos, WN *wn, XlationContext& ctxt);
   
   extern whirl2xaif::status
-  WN2F_nullify_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-  
-  extern whirl2xaif::status
   WN2F_ar_construct(xml::ostream& xos, WN *wn, XlationContext& ctxt);
   
-  extern whirl2xaif::status
-  WN2F_noio_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
 }; /* namespace whirl2xaif */
 
 //***************************************************************************

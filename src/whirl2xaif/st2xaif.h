@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.6 2003/09/05 21:41:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.7 2004/02/18 18:41:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -109,53 +109,56 @@ class NonScalarSymTab;
 
 //***************************************************************************
 
-
-#include <string>
-
-extern std::string TCON2F_hollerith(TCON tvalue);
-
-extern std::string TCON2F_translate(TCON tvalue, BOOL is_logical,
-				    TY_IDX object_ty);
-
-extern std::string TCON2F_translate(TCON tvalue, BOOL is_logical);
-
-
+//***************************************************************************
+// 
+//***************************************************************************
 
 namespace whirl2xaif {
 
-extern void 
-xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
-		   NonScalarSymTab* nonscalarsymtab, 
-		   XlationContext& ctxt);
+  extern void 
+  xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
+		     NonScalarSymTab* nonscalarsymtab, 
+		     XlationContext& ctxt);
+  
+  extern void 
+  xlate_SYMTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
+	       XlationContext& ctxt);
+  
+  extern void 
+  xlate_NonScalarSymTab(xml::ostream& xos, NonScalarSymTab* symtab, 
+			XlationContext& ctxt);
+  
+  extern void
+  xlate_Params(xml::ostream& xos, WN* wn,
+	       ST* st,           /* Function ST entry     */
+  	       ST** params,      /* Array of  parameters  */
+	       INT32 num_params, /* # of parms in array   */
+	       XlationContext& ctxt);
 
-extern void 
-xlate_SYMTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
-	     XlationContext& ctxt);
-
-extern void 
-xlate_NonScalarSymTab(xml::ostream& xos, NonScalarSymTab* symtab, 
-		      XlationContext& ctxt);
-
-extern void
-xlate_Params(xml::ostream& xos, WN* wn,
-	     ST* st,           /* Function ST entry     */
-	     ST** params,      /* Array of  parameters  */
-	     INT32 num_params, /* # of parms in array   */
-	     XlationContext& ctxt);
-
-extern void 
-TranslateSTDecl(xml::ostream& xos, ST* st, XlationContext& ctxt);
-
-extern void 
-TranslateSTUse(xml::ostream& xos, ST* st, XlationContext& ctxt);
-
+  extern void 
+  TranslateSTDecl(xml::ostream& xos, ST* st, XlationContext& ctxt);
+  
+  extern void 
+  TranslateSTUse(xml::ostream& xos, ST* st, XlationContext& ctxt);
+  
 }; /* namespace whirl2xaif */
+
+
+#include <string>
+
+// FIXME/REMOVE
+extern std::string 
+TCON2F_hollerith(TCON tvalue);
+
+extern std::string 
+TCON2F_translate(TCON tvalue, BOOL is_logical, TY_IDX object_ty);
+
+extern std::string 
+TCON2F_translate(TCON tvalue, BOOL is_logical);
 
 
 extern void 
 ST2F_deref_translate(xml::ostream& xos, ST* st, XlationContext& ctxt);
-
-
 
 extern void 
 ST2F_func_header(xml::ostream& xos,

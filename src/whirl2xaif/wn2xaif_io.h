@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.h,v 1.4 2004/02/17 22:24:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.h,v 1.5 2004/02/18 18:41:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -52,23 +52,26 @@
 
 #ifndef wn2xaif_io_INCLUDED
 #define wn2xaif_io_INCLUDED
-/* ====================================================================
- * ====================================================================
- *
- * Description:
- *
- *    Utilities for translation an IOS node or an IO item within
- *    an IOS.  Note that WN2F_io_prefix_tokens will only return a
- *    valid token buffer once XlationContext_io_stmt(context) is set.
- *
- * ====================================================================
- * ====================================================================
- */
+
+//************************** System Include Files ***************************
+
+//************************** Open64 Include Files ***************************
+
+#include <include/Open64BasicTypes.h>
+
+//*************************** User Include Files ****************************
+
+#include "whirl2xaif.i"
+#include "XlationContext.h"
+
+//************************** Forward Declarations ***************************
+
+//***************************************************************************
 
 extern void WN2F_Io_initialize(void);
 extern void WN2F_Io_finalize(void);
 
-namespace whirl2xaif { /* FIXME */
+namespace whirl2xaif {
 
   extern whirl2xaif::status 
   xlate_IO(xml::ostream& xos, WN *wn, XlationContext& context);
@@ -77,6 +80,8 @@ namespace whirl2xaif { /* FIXME */
   xlate_IO_ITEM(xml::ostream& xos, WN *wn, XlationContext& context);
 
 }; /* namespace whirl2xaif */
+
+//***************************************************************************
 
 #endif /* wn2xaif_io_INCLUDED */
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.h,v 1.7 2003/10/01 16:32:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/wn2xaif_pragma.h,v 1.8 2004/02/18 18:41:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -53,22 +53,22 @@
 #ifndef wn2xaif_pragma_INCLUDED
 #define wn2xaif_pragma_INCLUDED
 
-/* ====================================================================
- * ====================================================================
- *
- * Description:
- *
- *    xlate_PRAGMA:
- *       Translates a pragma present in a body of statements.
- *
- * ====================================================================
- * ====================================================================
- */
+//************************** System Include Files ***************************
+
+//************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
 
-#include <lib/support/xmlostream.h>
+//*************************** User Include Files ****************************
 
+#include "whirl2xaif.i"
+#include "XlationContext.h"
+
+//************************** Forward Declarations ***************************
+
+//***************************************************************************
+
+//***************************************************************************
 
 #endif /* wn2xaif_pragma_INCLUDED */
 

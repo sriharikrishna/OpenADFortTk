@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.16 2004/02/17 22:40:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.17 2004/02/18 18:41:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -50,51 +50,8 @@
 //
 //***************************************************************************
 
-#ifndef wn2xaif_INCLUDED
-#define wn2xaif_INCLUDED
-/* ====================================================================
- * ====================================================================
- *
- * Description:
- *
- *   WN2F_Can_Assign_Types:
- *           This determines whether or not a value of type t1 can
- *           be used anywhere we expect a value of type t2.  When
- *           this condition is TRUE, yet t1 is different from t2,
- *           we expect the implicit Fortran type coersion to transform
- *           an object of one type to the other.
- *
- *   WN2F_Address_Of:
- *           Generates an expression to explicitly take the address 
- *           of the lvalue constituted by the tokens in the given
- *           token-buffer.
- *
- *   xlate_SymRef:
- *           Generate code to access the memory location denoted by
- *           the object type, based on the base-symbol, its given
- *           address type and the offset from the base of the symbol.
- *
- *   WN2F_Offset_Memref:
- *           Generate code to access the memory location denoted by
- *           the object type, based on the base-address expression,
- *           its given type and the offset from the base-address.
- *
- *   WN2F_initialize: This initializes any WN to Fortran translation
- *           and must always be called prior to any TranslateWN()
- *           call.
- *
- *   WN2F_finalize: This finalizes any WN to Fortran translation
- *           and should be called after all processing related
- *           to a whirl2f translation is complete.
- *
- *   TranslateWN:  Translates a WN subtree into a sequence of Fortran
- *           tokens, which are added to the given xml::ostream&.
- *
- *   WN2F_Sum_Offsets:  Sums any ADD nodes encountered in an address tree
- *
- * ====================================================================
- * ====================================================================
- */
+#ifndef wn2xaif_h
+#define wn2xaif_h
 
 //************************** System Include Files ***************************
 
@@ -112,54 +69,45 @@
 //************************** Forward Declarations ***************************
 
 //***************************************************************************
-// 
+// Commonly used WHIRL translation functions
 //***************************************************************************
 
 namespace whirl2xaif {
-
-  extern IntrinsicXlationTable IntrinsicTable;
-
-  extern void 
-  WN2F_initialize(void);
-
-  extern void 
-  WN2F_finalize(void);
   
+  extern IntrinsicXlationTable IntrinsicTable;
+  
+  // TranslateWN: Given a translation context, translates the given
+  // WHIRL node, emitting output to 'xos'.
   extern whirl2xaif::status 
   TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+  // xlate_SymRef: Given a base symbol 'base_st' and an offset 'offset'
+  // within it, generate an XAIF expression to reference an object of
+  // 'ref_ty' at this location.  The base symbol 'base_st' has an
+  // address of type 'baseptr_ty'.
+  extern whirl2xaif::status
+  xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty, 
+	       TY_IDX ref_ty, STAB_OFFSET offset, XlationContext& ctxt);
+  
+  // xlate_MemRef: 
+  extern whirl2xaif::status 
+  xlate_MemRef(xml::ostream& xos, WN* addr, TY_IDX addr_ty, TY_IDX object_ty,
+	       STAB_OFFSET addr_offset, XlationContext& ctxt);
   
 }; /* namespace whirl2xaif */
+
+
+// REMOVE/FIXME
+// WN2F_Sum_Offsets:  Sums any ADD nodes encountered in an address tree
+// WN2F_Address_Of: Generates an expression to explicitly take the
+// address of the lvalue constituted by the tokens in the given
+// token-buffer.
+extern void WN2F_Address_Of(xml::ostream& xos);
+extern WN_OFFSET WN2F_Sum_Offsets(WN *addr);
 
 
 //***************************************************************************
-
-// Declarations of top-level handler-functions for translation from
-// WHIRL to XIAF. 
-namespace whirl2xaif {
-
-  extern whirl2xaif::status
-  xlate_SymRef(xml::ostream& xos,
-	       ST          *base_st,    /* base symbol */
-  	       TY_IDX       baseptr_ty, /* type of base symbol ptr */
-	       TY_IDX       ref_ty,     /* type of referenced object */
-	       STAB_OFFSET  offset,     /* offset from base */
-	       XlationContext& ctxt);
-  
-  extern whirl2xaif::status 
-  xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-  
-  extern whirl2xaif::status 
-  xlate_ALTENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-  
-  extern whirl2xaif::status 
-  xlate_ignore(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-  
-  extern whirl2xaif::status 
-  xlate_unknown(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-  
-}; /* namespace whirl2xaif */
-
-
+// 
 //***************************************************************************
 
 // FIXME: 
@@ -201,29 +149,7 @@ private:
 void 
 ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op);
 
+
 //***************************************************************************
 
-
-    /* ---- Utilities to aid in WN to Fortran translation ---- */
-    /* ------------------------------------------------------- */
-
-// FIXME: convert to operation (from opcode)
-#define WN2F_expr_has_boolean_arg(opc) \
-   ((opc) == OPC_BLNOT || (opc) == OPC_BLAND || (opc) == OPC_BLIOR || \
-    (opc) == OPC_I4LNOT || (opc) == OPC_I4LAND || (opc) == OPC_I4LIOR)
-
-
-extern void WN2F_Address_Of(xml::ostream& xos);
-
-extern whirl2xaif::status 
-WN2F_Offset_Memref(xml::ostream& xos,
-		   WN          *addr,        /* Base address */
-		   TY_IDX       addr_ty,     /* type of base-address */
-		   TY_IDX       object_ty,   /* type of object referenced */
-		   STAB_OFFSET  addr_offset, /* offset from base */
-		   XlationContext& ctxt);
-
-
-extern WN_OFFSET WN2F_Sum_Offsets(WN *addr);
-
-#endif /* wn2xaif_INCLUDED */
+#endif /* wn2xaif_h */

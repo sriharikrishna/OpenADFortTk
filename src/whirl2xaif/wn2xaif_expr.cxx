@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.18 2004/02/17 22:40:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.19 2004/02/18 18:41:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -49,20 +49,6 @@
 // Based on Open64 be/whirl2f/wn2f_expr.cxx
 //
 //***************************************************************************
-
-/* ====================================================================
- * ====================================================================
- *
- * Description:
- *
- *   Translate a WN expression subtree to Fortran by means of an inorder 
- *   recursive descent traversal of the WHIRL IR.  Note that the routines
- *   to handle statements and loads/stores are in separate source files.
- *   Recursive translation of WN nodes should only use WN2F_Translate()!
- *
- * ====================================================================
- * ====================================================================
- */
 
 //************************** System Include Files ***************************
 
@@ -265,9 +251,9 @@ WN2F_Convert(xml::ostream& xos, MTYPE from_mtype, MTYPE to_mtype)
 void WN2F_Expr_initialize(void)
 {
   /* Initialize the Conv_Op array (default value is NULL) */
-  for (INT map = 0; map < NUMBER_OF_CONV_OPS; map++) {
-    Conv_Op[Conv_Op_Map[map].from][Conv_Op_Map[map].to] = 
-      Conv_Op_Map[map].name;
+  for (INT i = 0; i < NUMBER_OF_CONV_OPS; i++) {
+    Conv_Op[Conv_Op_Map[i].from][Conv_Op_Map[i].to] = 
+      Conv_Op_Map[i].name;
   }
 }
 
@@ -277,11 +263,11 @@ void WN2F_Expr_finalize(void)
 }
 
 //***************************************************************************
-// Type Conversions
+// Type Conversion
 //***************************************************************************
 
 whirl2xaif::status 
-WN2F_cvt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_cvt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
    ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_CVT, 
 		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_cvt"));
@@ -297,7 +283,7 @@ WN2F_cvt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 }
 
 whirl2xaif::status 
-WN2F_cvtl(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_cvtl(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   TY_IDX  rtype, dtype;
   
@@ -318,7 +304,7 @@ WN2F_cvtl(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 }
 
 whirl2xaif::status 
-WN2F_tas(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_tas(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_TAS, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_tas"));
@@ -326,6 +312,53 @@ WN2F_tas(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // Just ignore TAS operators for now.  TODO: make sure this
   // is always ok.
   return TranslateWN(xos, WN_kid0(wn), ctxt);
+}
+
+
+//***************************************************************************
+// Leaf (Other)
+//***************************************************************************
+
+// xlate_INTCONST: Translate a WHIRL integer constant into an XAIF
+// constant.
+whirl2xaif::status 
+whirl2xaif::xlate_INTCONST(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+{
+  ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_INTCONST, 
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_INTCONST"));
+  
+  // FIXME: use xlate_CONST
+  TCON tval = Host_To_Targ(WN_opc_rtype(wn), WN_const_val(wn));
+  bool logical = XlationContext_is_logical_arg(ctxt);
+  std::string val = TCON2F_translate(tval, logical);  
+  const char* ty_str = (logical) ? "bool" : "integer";
+  
+  xos << BegElem("xaif:Constant") << Attr("vertex_id", ctxt.GetNewVId()) 
+      << Attr("type", ty_str) << Attr("value", val) << EndElem;
+  
+  return whirl2xaif::good;
+}
+
+// xlate_CONST: Translate a WHIRL constant (string, floating point,
+// etc.) into an XAIF constant.
+whirl2xaif::status 
+whirl2xaif::xlate_CONST(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+{
+  ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_CONST, 
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_CONST"));
+
+  TY_IDX ty_idx = ST_type(WN_st(wn));
+  
+  BOOL logical = (TY_is_logical(ty_idx) || XlationContext_is_logical_arg(ctxt));
+  std::string val = TCON2F_translate(STC_val(WN_st(wn)), logical);
+
+  const char* ty_str = TranslateTYToSymType(ty_idx); // FIXME: logical
+  if (!ty_str) { ty_str = "***"; }  
+
+  xos << BegElem("xaif:Constant") << Attr("vertex_id", ctxt.GetNewVId())
+      << Attr("type", ty_str) << Attr("value", val) << EndElem;
+  
+  return whirl2xaif::good;
 }
 
 
@@ -352,7 +385,25 @@ whirl2xaif::xlate_UnaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status 
-WN2F_realpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_rsqrt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+{
+   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
+   
+   ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_RSQRT, 
+		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_rsqrt"));
+
+   xos << "(1.0/SQRT(";
+   set_XlationContext_no_parenthesis(ctxt);
+   xlate_Operand(xos, WN_kid(wn,0), result_ty,
+		 !TY_Is_Character_Reference(result_ty), ctxt);
+   xos << "))";
+
+   return whirl2xaif::good;
+} /* WN2F_rsqrt */
+
+
+whirl2xaif::status 
+whirl2xaif::WN2F_realpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
    ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_REALPART, 
 		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_realpart"));
@@ -386,7 +437,7 @@ WN2F_realpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status 
-WN2F_imagpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_imagpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
    ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_IMAGPART, 
 		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_imagpart"));
@@ -459,25 +510,7 @@ whirl2xaif::xlate_RECIP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status 
-WN2F_rsqrt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
-   
-   ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_RSQRT, 
-		    (DIAG_W2F_UNEXPECTED_OPC, "WN2F_rsqrt"));
-
-   xos << "(1.0/SQRT(";
-   set_XlationContext_no_parenthesis(ctxt);
-   xlate_Operand(xos, WN_kid(wn,0), result_ty,
-		 !TY_Is_Character_Reference(result_ty), ctxt);
-   xos << "))";
-
-   return whirl2xaif::good;
-} /* WN2F_rsqrt */
-
-
-whirl2xaif::status 
-WN2F_parm(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_parm(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   /* TODO: handle opcode parms properly, i.e. take some advantage
    * of the information provided in this packaging of argument 
@@ -498,7 +531,7 @@ WN2F_parm(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status 
-WN2F_alloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_alloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_ALLOCA, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_alloca"));
@@ -509,29 +542,6 @@ WN2F_alloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   return whirl2xaif::good;
 } /* WN2F_alloca */
-
-
-whirl2xaif::status 
-WN2F_dealloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-  INT16 n,i;
-  
-  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_DEALLOCA, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_dealloca"));
-  
-  n = WN_kid_count(wn);
-  
-  xos << std::endl << "CALL OPR_DEALLOCA(";
-  i = 0 ;
-  while (i < n) {
-    TranslateWN(xos,WN_kid(wn,i),ctxt);
-    if (++i < n)
-      xos << ",";
-  }
-  xos << ")";
-   
-  return whirl2xaif::good;
-} /* WN2F_dealloca */
 
 
 //***************************************************************************
@@ -557,8 +567,9 @@ whirl2xaif::xlate_BinaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return whirl2xaif::good;
 }
 
+
 whirl2xaif::status 
-WN2F_complex(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_complex(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_COMPLEX, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_complex"));
@@ -593,30 +604,7 @@ WN2F_complex(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status 
-WN2F_lshr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-  TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
-  
-  ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_LSHR, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_lshr"));
-  
-  /* No need to parenthesize subexpressions */
-  set_XlationContext_no_parenthesis(ctxt);
-  
-  xos << "ISHIFT(";
-  xlate_Operand(xos, WN_kid(wn,0), result_ty,
-		!TY_Is_Character_Reference(result_ty), ctxt);
-  xos << ",-(";
-  xlate_Operand(xos, WN_kid(wn,1), result_ty,
-		!TY_Is_Character_Reference(result_ty), ctxt);
-  xos << "))";
-  
-  return  whirl2xaif::good;
-} /* WN2F_lshr */
-
-
-whirl2xaif::status 
-WN2F_bnor(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_bnor(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
   
@@ -638,12 +626,35 @@ WN2F_bnor(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 } /* WN2F_bnor */
 
 
+whirl2xaif::status 
+whirl2xaif::WN2F_lshr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+{
+  TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
+  
+  ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_LSHR, 
+		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_lshr"));
+  
+  /* No need to parenthesize subexpressions */
+  set_XlationContext_no_parenthesis(ctxt);
+  
+  xos << "ISHIFT(";
+  xlate_Operand(xos, WN_kid(wn,0), result_ty,
+		!TY_Is_Character_Reference(result_ty), ctxt);
+  xos << ",-(";
+  xlate_Operand(xos, WN_kid(wn,1), result_ty,
+		!TY_Is_Character_Reference(result_ty), ctxt);
+  xos << "))";
+  
+  return  whirl2xaif::good;
+} /* WN2F_lshr */
+
+
 //***************************************************************************
 // Expression Operators: Ternary Operations; N-ary Operations
 //***************************************************************************
 
 whirl2xaif::status 
-WN2F_select(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_select(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   /* SELECT is almost the same as the F90 MERGE intrinsic, 
      so I will output it that way for now */
@@ -662,8 +673,9 @@ WN2F_select(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return whirl2xaif::good;
 } /* WN2F_select */
 
+
 whirl2xaif::status 
-WN2F_madd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_madd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
   
@@ -686,7 +698,7 @@ WN2F_madd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status 
-WN2F_msub(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_msub(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
   
@@ -709,7 +721,7 @@ WN2F_msub(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status 
-WN2F_nmadd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_nmadd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
   
@@ -732,7 +744,7 @@ WN2F_nmadd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status 
-WN2F_nmsub(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_nmsub(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
   
@@ -754,13 +766,17 @@ WN2F_nmsub(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 } /* WN2F_nmsub */
 
 
+//***************************************************************************
+// Expression Operators: N-ary Operations
+//***************************************************************************
+
 static whirl2xaif::status 
 WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
 		  INT begArgIdx, INT endArgIdx, BOOL callByValue, 
 		  XlationContext& ctxt);
 
 whirl2xaif::status 
-xlate_INTRINSIC_OP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::xlate_INTRINSIC_OP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
   // An intrinsic operator expression (function call). This call is
   // not related to the call-info generated by PUinfo.  Note that
@@ -892,53 +908,6 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
 
 
 //***************************************************************************
-// Leaf Operators (Other)
-//***************************************************************************
-
-// xlate_INTCONST: Translate a WHIRL integer constant into an XAIF
-// constant.
-whirl2xaif::status 
-whirl2xaif::xlate_INTCONST(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-  ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_INTCONST, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_INTCONST"));
-  
-  // FIXME: use xlate_CONST
-  TCON tval = Host_To_Targ(WN_opc_rtype(wn), WN_const_val(wn));
-  bool logical = XlationContext_is_logical_arg(ctxt);
-  std::string val = TCON2F_translate(tval, logical);  
-  const char* ty_str = (logical) ? "bool" : "integer";
-  
-  xos << BegElem("xaif:Constant") << Attr("vertex_id", ctxt.GetNewVId()) 
-      << Attr("type", ty_str) << Attr("value", val) << EndElem;
-  
-  return whirl2xaif::good;
-}
-
-// xlate_CONST: Translate a WHIRL constant (string, floating point,
-// etc.) into an XAIF constant.
-whirl2xaif::status 
-whirl2xaif::xlate_CONST(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-  ASSERT_DBG_FATAL(WN_opc_operator(wn) == OPR_CONST, 
-		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_CONST"));
-
-  TY_IDX ty_idx = ST_type(WN_st(wn));
-  
-  BOOL logical = (TY_is_logical(ty_idx) || XlationContext_is_logical_arg(ctxt));
-  std::string val = TCON2F_translate(STC_val(WN_st(wn)), logical);
-
-  const char* ty_str = TranslateTYToSymType(ty_idx); // FIXME: logical
-  if (!ty_str) { ty_str = "***"; }  
-
-  xos << BegElem("xaif:Constant") << Attr("vertex_id", ctxt.GetNewVId())
-      << Attr("type", ty_str) << Attr("value", val) << EndElem;
-  
-  return whirl2xaif::good;
-}
-
-
-//***************************************************************************
 // Helpers
 //***************************************************************************
 
@@ -1012,7 +981,7 @@ xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty,
 		  (DIAG_W2F_UNEXPECTED_SUBSTRING_REF, "xlate_Operand()"));
   
   if (!callByValue) {
-    WN2F_Offset_Memref(xos, 
+    xlate_MemRef(xos, 
 		       opnd,                   /* address expression */
 		       assumed_ty,             /* address type */
 		       TY_pointed(assumed_ty), /* object type */

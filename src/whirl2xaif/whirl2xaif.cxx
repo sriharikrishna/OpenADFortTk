@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.30 2004/02/17 22:40:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.31 2004/02/18 18:41:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -412,6 +412,9 @@ DumpTranslationHeaderComment(xml::ostream& xos)
 // 
 //***************************************************************************
 
+#include "wn2xaif_expr.h" // REMOVE: for WN2F_Expr_initialize
+#include "wn2xaif_io.h"   // REMOVE: for WN2F_Io_initialize
+
 void
 W2F_Init(void)
 {
@@ -426,7 +429,9 @@ W2F_Init(void)
   W2CF_Symtab_Push(); /* Push global (i.e. first ) symbol table */
   W2F_Enter_Global_Symbols();
   
-  WN2F_initialize(); // Initiate the various W2F modules. (REMOVE)
+  // Initiate the various W2F modules. (REMOVE/FIXME)
+  WN2F_Expr_initialize();
+  WN2F_Io_initialize();
   
   Diag_Set_Phase(caller_err_phase);
 }
@@ -435,7 +440,11 @@ W2F_Init(void)
 void
 W2F_Fini(void)
 {
-  WN2F_finalize();
+  // Finalize W2F modules (REMOVE/FIXME)
+  WN2F_Expr_finalize();
+  WN2F_Io_finalize();
+  Stab_Free_Tmpvars();
+
   W2CF_Symtab_Terminate();
   
   MEM_POOL_Pop(&W2F_Parent_Pool);

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.h,v 1.6 2004/02/17 22:24:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.h,v 1.7 2004/02/18 18:41:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -53,10 +53,28 @@
 #ifndef wn2xaif_mem_INCLUDED
 #define wn2xaif_mem_INCLUDED
 
-#include "wn2xaif.h"
+//************************** System Include Files ***************************
 
-namespace whirl2xaif { // FIXME
+//************************** Open64 Include Files ***************************
 
+#include <include/Open64BasicTypes.h>
+
+//*************************** User Include Files ****************************
+
+#include "whirl2xaif.i"
+#include "XlationContext.h"
+
+//************************** Forward Declarations ***************************
+
+//***************************************************************************
+
+//***************************************************************************
+// Memory Access (or assignment and variable references)
+//***************************************************************************
+
+namespace whirl2xaif {
+
+  // Loads (variable reference)
   extern whirl2xaif::status 
   xlate_LDA(xml::ostream& xos, WN *wn, XlationContext& ctxt);
   
@@ -65,71 +83,81 @@ namespace whirl2xaif { // FIXME
   
   extern whirl2xaif::status 
   xlate_ILOAD(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+  extern whirl2xaif::status 
+  xlate_ILOADX(xml::ostream& xos, WN *wn, XlationContext& ctxt);
   
+  extern whirl2xaif::status 
+  WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  
+  
+  // Stores (assignment)
   extern whirl2xaif::status 
   xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt);
   
   extern whirl2xaif::status 
   xlate_ISTORE(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+  extern whirl2xaif::status
+  xlate_ISTOREX(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+  extern whirl2xaif::status 
+  WN2F_mstore(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+  
+  extern whirl2xaif::status
+  WN2F_pstid(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+
+  extern whirl2xaif::status
+  WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt);
   
 }; /* namespace whirl2xaif */
 
 
-extern whirl2xaif::status
-xlate_ISTOREX(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+//***************************************************************************
+// Array Operators (N-ary Operations)
+//***************************************************************************
 
-extern whirl2xaif::status
-WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+namespace whirl2xaif {
+  
+  extern whirl2xaif::status
+  xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-extern whirl2xaif::status 
-WN2F_mstore(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  extern whirl2xaif::status
+  WN2F_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  
+  extern whirl2xaif::status
+  WN2F_src_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-extern whirl2xaif::status
-WN2F_pstid(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  extern whirl2xaif::status
+  WN2F_arrayexp(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
+  extern whirl2xaif::status
+  WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
-extern whirl2xaif::status 
-xlate_ILOADX(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  extern whirl2xaif::status
+  WN2F_where(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+  
+}; /* namespace whirl2xaif */
 
-extern whirl2xaif::status 
-WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+//***************************************************************************
 
+// FIXME
+extern void 
+WN2F_array_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,
+		  XlationContext& ctxt);
+extern void 
+WN2F_arrsection_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,
+		       XlationContext& ctxt);
 
-extern whirl2xaif::status
-xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+extern void 
+WN2F_String_Argument(xml::ostream&  tokens, WN *base, WN *length,
+		     XlationContext& ctxt);
 
-extern whirl2xaif::status
-WN2F_arrayexp(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+extern BOOL 
+WN2F_Is_Address_Preg(WN * wn ,TY_IDX ptr_ty) ;
 
-extern whirl2xaif::status
-WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-extern whirl2xaif::status
-WN2F_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-extern whirl2xaif::status
-WN2F_src_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-extern whirl2xaif::status
-WN2F_where(xml::ostream& xos, WN *wn, XlationContext& ctxt);
-
-
-extern void WN2F_array_bounds(xml::ostream& xos, 
-			      WN *wn, 
-			      TY_IDX array_ty,
-			      XlationContext& ctxt) ;
-extern void WN2F_arrsection_bounds(xml::ostream& xos,
-				   WN *wn,
-				   TY_IDX array_ty,
-				   XlationContext& ctxt) ;
-
-extern void WN2F_String_Argument(xml::ostream&  tokens,
-				 WN           *base,
-				 WN           *length,
-				 XlationContext& ctxt);
-
-
-extern BOOL WN2F_Is_Address_Preg(WN * wn ,TY_IDX ptr_ty) ;
+//***************************************************************************
 
 #endif /* wn2xaif_mem_INCLUDED */
 
