@@ -12,7 +12,6 @@ end module globals
 
 
 subroutine compute(x, y)
-  use globals
   double precision, intent(inout) :: x, y
 
   x = x / y
@@ -21,7 +20,6 @@ end subroutine
 
 
 subroutine myloop(x, y)
-  use globals
   double precision, intent(inout) :: x, y
   
   do while (x > 0)
@@ -43,7 +41,6 @@ end subroutine
 
 program scopingtest
   use globals
-  double precision :: x, y
 
   x = 2
   y = 8
