@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.12 2004/10/06 22:10:29 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.13 2005/01/19 22:54:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -244,8 +244,11 @@ IsRefSimpleScalar(const WN* wn)
     return (IsRefScalar(baseobj_ty, refobj_ty));
   }
     
+  default: 
+    break; // fall through
+
   } // switch
-    
+  
   return false;
 }
 
@@ -279,6 +282,9 @@ IsRefSimpleArrayElem(const WN* wn)
   
   case OPR_ARRAY:
     return true;
+
+  default: 
+    break; // fall through
     
   } // switch
 
@@ -305,6 +311,9 @@ IsRefSimpleArray(const WN* wn)
   case OPR_ARRSECTION: // FIXME: can we do arrsection?
   case OPR_ARRAYEXP:
     return true;
+
+  default: 
+    break; // fall through
     
   } // switch
   
@@ -334,6 +343,9 @@ IsRefScalarizable(const WN* wn)
     TY_IDX refobj_ty = WN_GetRefObjType(wn);
     return (TY_Is_Scalar(refobj_ty) && !IsRefScalar(baseobj_ty, refobj_ty));
   }
+
+  default: 
+    break; // fall through
     
   } // switch
 
