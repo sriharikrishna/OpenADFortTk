@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexputil.h,v 1.3 2005/01/12 20:00:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexputil.h,v 1.4 2005/02/01 21:52:05 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -172,7 +172,11 @@ get_next(sexp_t* sx)
   return sx->next; 
 }
 
+}; /* namespace sexp */
+
 //***************************************************************************
+
+namespace sexp {
 
 // routines specific to S-expression WHIRL
 
