@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.16 2004/07/15 18:29:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.17 2004/07/28 20:01:36 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -103,7 +103,7 @@ static WN*
 CreateAssignment(WN* lhs, WN* rhs);
 
 static WN*
-CreateAssignment(ST* lhs, WN* rhs);
+CreateAssignment(ST* lhs, WN_OFFSET oset, WN* rhs);
 
 static WN*
 CreateZeroConst(TYPE_ID ty);
@@ -157,13 +157,15 @@ xaif2whirl::TranslateAssignmentSimple(const DOMElement* elem,
   DOMElement* rhs_elem = GetChildElement(elem, XAIFStrings.elem_AssignRHS_x());
   DOMElement* lhsref = GetFirstChildElement(lhs_elem);
   
-  ST* lhs = TranslateVarRefSimple(lhsref, ctxt);
+  std::pair<ST*, WN_OFFSET> lhspair = TranslateVarRefSimple(lhsref, ctxt);
+  ST* lhsst = lhspair.first;
+  WN_OFFSET lhsoset = lhspair.second;
   
   ctxt.CreateContext(XlationContext::EXPRSIMPLE);
   WN* rhs = xlate_AssignmentRHS(rhs_elem, ctxt);
   ctxt.DeleteContext();
   
-  WN* wn = CreateAssignment(lhs, rhs);
+  WN* wn = CreateAssignment(lhsst, lhsoset, rhs);
   return wn;
 }
 
@@ -182,7 +184,7 @@ xlate_Assignment(const DOMElement* elem, XlationContext& ctxt)
   // Special case to handle PREGS
   WN* wn = NULL;
   if (WN_operator(lhs) == OPR_LDID && ST_class(WN_st(lhs)) == CLASS_PREG) {
-    wn = CreateAssignment(WN_st(lhs), rhs);
+    wn = CreateAssignment(WN_st(lhs), WN_load_offset(lhs), rhs);
     WN_Delete(lhs); // not recursive
   } else {    
     wn = CreateAssignment(lhs, rhs);
@@ -577,12 +579,12 @@ CreateAssignment(WN* lhs, WN* rhs)
 
 
 static WN*
-CreateAssignment(ST* lhs, WN* rhs)
+CreateAssignment(ST* lhs, WN_OFFSET oset, WN* rhs)
 {
   // A special version of the above for situations in which WHIRL
   // requires STID assignments (e.g. loop initialization and updates).
   TY_IDX ty = WN_Tree_Type(rhs); // referenced-obj = base-obj
-  WN* wn = WN_Stid(TY_mtype(ty), 0, lhs, ty, rhs, 0);
+  WN* wn = WN_Stid(TY_mtype(ty), oset, lhs, ty, rhs, 0);
   return wn;
 }
 
