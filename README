@@ -1,4 +1,4 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.4 2003/10/10 20:49:27 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.5 2003/10/14 19:26:53 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
@@ -52,26 +52,25 @@ with
 
 1. Prepare env. 
    
-   See Sourceme-ACTS-csh...
+   See Sourceme-ACTS-csh (or Sourceme-ACTS-sh)
 
-2. Build Open64's be.so and mfef90.  (Building whirl2f will ensure the 
-   correct -Ddefines/symbols are included in be.so.)
-
+2. Build Open64's mfef90 (Open64 front end) and whirl2f (Open64 backend).
    Ensure the correct compiler is in your path.
 
    E.g., for i686-Linux:
-     cd ${WHIRL2XAIF_OPEN64}/targ_ia32_ia64_linux/whirl2f 
-     make MAKE="make"
-  
      cd ${WHIRL2XAIF_OPEN64}/targ_ia32_ia64_linux/crayf90/sgi
      make MAKE="make"
+
+     cd ${WHIRL2XAIF_OPEN64}/targ_ia32_ia64_linux/whirl2f 
+     make MAKE="make"
+
    
 3. Build OA.
 
    cd OpenAnalysis
    make CXX="<C++ compiler>" CXXFLAGS="<options such as -g or -O>"
 
-4. Build XercesC [if necessary]:
+4. Build XercesC++ [if necessary]:
 
    cd xercesc
    make CXX="<C++ compiler>" CC="<C compiler>"
@@ -151,3 +150,6 @@ Whirl2xaif Notes:
 Symbol table notes in st2xaif.cxx
 
 [add emails to Mike here]
+
+   [whirl2xaif links with be.so. Building whirl2f will ensure the 
+   correct -Ddefines/symbols are included in be.so.)
