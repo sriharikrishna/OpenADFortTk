@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.12 2004/03/29 23:41:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.13 2004/04/07 14:59:40 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -101,6 +101,11 @@ xlate_FunctionCall(DGraph* g, MyDGNode* n, XlationContext& ctxt);
 static WN*
 xlate_BooleanOperation(DGraph* g, MyDGNode* n, XlationContext& ctxt);
 
+static WN*
+xlate_ExprOpUsingIntrinsicTable(IntrinsicXlationTable::XAIFOpr xopr, 
+				const char* xoprNm,
+				DGraph* g, MyDGNode* n, XlationContext& ctxt);
+
 
 static WN*
 xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt);
@@ -143,6 +148,7 @@ static INTRINSIC
 GetWNIntrinsic(const char* intrnNm, vector<WN*>& opands, TYPE_ID* dtype);
 
 //****************************************************************************
+
 
 // TranslateExpression: Given the first node in an expression graph... 
 WN*
@@ -391,27 +397,70 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
 }
 
 
-// xlate_Intrinsic: An XAIF intrinsic becomes either a special WHIRL
-// node or a WHIRL call.
 static WN*
 xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 {
   if (!g || !n) {
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
   }
-
+  
   DOMElement* elem = n->GetElem();
-
   const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
   XercesStrX nm = XercesStrX(nmX);
-
+  
   IntrinsicXlationTable::XAIFOpr xopr = IntrinsicXlationTable::XAIFIntrin;
-  IntrinsicXlationTable::WHIRLInfo* info
-    = IntrinsicTable.FindWHIRLInfo(xopr, nm.c_str());
+  WN* wn = xlate_ExprOpUsingIntrinsicTable(xopr, nm.c_str(), g, n, ctxt);
+  return wn;
+}
+
+
+static WN*
+xlate_FunctionCall(DGraph* g, MyDGNode* n, XlationContext& ctxt)
+{
+  if (!g || !n) { 
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+  }
+  
+  DOMElement* elem = n->GetElem();
+  
+  // FIXME: children are expr; find num of args (use Intrinsic function above)
+  assert(false && "implement"); 
+  return NULL;
+}
+
+
+static WN*
+xlate_BooleanOperation(DGraph* g, MyDGNode* n, XlationContext& ctxt)
+{
+  if (!g || !n) { 
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+  }
+
+  DOMElement* elem = n->GetElem();
+  const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
+  XercesStrX nm = XercesStrX(nmX);
+  
+  IntrinsicXlationTable::XAIFOpr xopr = IntrinsicXlationTable::XAIFBoolOp;
+  WN* wn = xlate_ExprOpUsingIntrinsicTable(xopr, nm.c_str(), g, n, ctxt);
+  return wn;
+}
+
+
+// xlate_ExprOpUsingIntrinsicTable: abstract similarities betweeen
+// translation of XAIF Intrinsic, FunctionCall, BooleanOperation.  The
+// XAIF operator will become either a special WHIRL node or some type
+// of WHIRL call.
+static WN*
+xlate_ExprOpUsingIntrinsicTable(IntrinsicXlationTable::XAIFOpr xopr, 
+				const char* xoprNm,
+				DGraph* g, MyDGNode* n, XlationContext& ctxt)
+{
+  IntrinsicXlationTable::WHIRLInfo* info = 
+    IntrinsicTable.FindWHIRLInfo(xopr, xoprNm);
   if (!info) {
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Bad Intrinsic."));
   }
-
+  
   // 1. Gather the operands, sorted by the "position" attribute
   ASSERT_FATAL(n->num_incoming() == info->numop, 
 	       (DIAG_A_STRING, "Programming error."));
@@ -428,7 +477,7 @@ xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
     MyDGNode* opnd = dynamic_cast<MyDGNode*>(opnd_edge[i]->source());
     opnd_wn[i] = xlate_Expression(g, opnd, ctxt);
   }
-
+  
   // 3. Translate into either WHIRL OPR_CALL or a WHIRL expression operator
   WN* wn = NULL;
   switch (info->oprcl) {
@@ -463,40 +512,10 @@ xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
     break;
   }
   default:
-    ASSERT_FATAL(false, (DIAG_A_STRING, "Invalid comparison"));
+    ASSERT_FATAL(false, (DIAG_A_STRING, "Invalid operator class"));
   }
   
   return wn;
-}
-
-
-static WN*
-xlate_FunctionCall(DGraph* g, MyDGNode* n, XlationContext& ctxt)
-{
-  if (!g || !n) { 
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
-  }
-  
-  DOMElement* elem = n->GetElem();
-  
-  // FIXME: children are expr; find num of args (use Intrinsic function above)
-  assert(false && "implement"); 
-  return NULL;
-}
-
-
-static WN*
-xlate_BooleanOperation(DGraph* g, MyDGNode* n, XlationContext& ctxt)
-{
-  if (!g || !n) { 
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
-  }
-
-  DOMElement* elem = n->GetElem();
-  
-  // FIXME: children are expressions
-  assert(false && "implement");
-  return NULL;
 }
 
 
