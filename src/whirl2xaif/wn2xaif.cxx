@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.49 2004/03/19 16:54:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.50 2004/03/29 23:40:30 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -260,11 +260,18 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // code that will not be found with a DFS.  A simple example of this
   // is that WHIRL often has two OPR_RETURNs at the end of a
   // procedure.
+#if 0 // FIXME
   DGraphNodeVec* nodes = SortDGraphNodes(&cfg);
   for (DGraphNodeVec::iterator nodeIt = nodes->begin(); 
        nodeIt != nodes->end(); ++nodeIt) {
-    
-    CFG::Node* n = dynamic_cast<CFG::Node*>(*nodeIt);
+#endif
+  
+  // try a BFS iterator.  too bad for dead code. (actually DFS-- BFS
+  // not yet implmented)
+  std::set<DGraph::Node*> usedNodes;
+  for (DGraph::DFSIterator nodeIt(cfg); (bool)nodeIt; ++nodeIt) {
+    CFG::Node* n = dynamic_cast<CFG::Node*>((DGraph::Node*)nodeIt);
+    usedNodes.insert(n);
     // n->longdump(&cfg, std::cerr); std::cerr << endl;
     
     const char* vtype = GetCFGVertexType(&cfg, n);    
@@ -289,14 +296,21 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     // 3. BB element end tag
     xos << EndElem << std::endl;
   }
+#if 0
   delete nodes;
+#endif
   
-  // Dump CFG edges
+  // Dump CFG edges (only those within the XAIF graph)
   DGraphEdgeVec* edges = SortDGraphEdges(&cfg);
   for (DGraphEdgeVec::iterator edgeIt = edges->begin(); 
        edgeIt != edges->end(); ++edgeIt) {
     CFG::Edge* e = dynamic_cast<CFG::Edge*>(*edgeIt);
-    DumpCFGraphEdge(xos, ctxt.GetNewEId(), e);
+    DGraph::Node* src = e->source();
+    DGraph::Node* snk = e->sink();
+    if (usedNodes.find(src) != usedNodes.end() && 
+	usedNodes.find(snk) != usedNodes.end()) {
+      DumpCFGraphEdge(xos, ctxt.GetNewEId(), e);
+    }
   }
   delete edges;
   
