@@ -1,5 +1,5 @@
 # -*-Mode: sh;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Sourceme-sh,v 1.2 2003/08/05 18:13:14 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Sourceme-sh,v 1.3 2003/10/29 01:55:21 eraxxon Exp $
 
 #############################################################################
 
@@ -13,14 +13,7 @@ fi
 # Set platform variables
 #############################################################################
 
-export WHIRL2XAIF_ARCH=`uname -p`
-if test "${WHIRL2XAIF_ARCH}" = "unknown" ; then
-  export WHIRL2XAIF_ARCH=`uname -m`
-fi
-
-export WHIRL2XAIF_OS=`uname -s`
-
-export WHIRL2XAIF_PLATFORM="${WHIRL2XAIF_ARCH}-${WHIRL2XAIF_OS}"
+export WHIRL2XAIF_PLATFORM=`cd ${WHIRL2XAIF}/src/config; ./hpcplatform`
 
 #############################################################################
 # Set other variables

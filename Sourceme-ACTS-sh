@@ -1,25 +1,22 @@
 # -*-Mode: sh;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.2 2003/10/13 14:18:41 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.3 2003/10/29 01:55:21 eraxxon Exp $
 
 #############################################################################
 # Set platform variables (duplicated in whirl2xaif Sourceme-sh)
 #############################################################################
 
-export WHIRL2XAIF_ARCH=`uname -p`
-if test "${WHIRL2XAIF_ARCH}" = "unknown" ; then
-  export WHIRL2XAIF_ARCH=`uname -m`
-fi
+# FIXME: For now I've put this here
+export WHIRL2XAIF="/cygdrive/c/Tmp/ACTS/whirl2xaif"
 
-export WHIRL2XAIF_OS=`uname -s`
-
-export WHIRL2XAIF_PLATFORM="${WHIRL2XAIF_ARCH}-${WHIRL2XAIF_OS}"
+export WHIRL2XAIF_PLATFORM=`cd ${WHIRL2XAIF}/src/config; ./hpcplatform`
 
 #############################################################################
 # System dependent
 #############################################################################
 
 # i686-Linux
-myscratch="/scratch/eraxxon"
+myscratch="/cygdrive/c/Tmp/ACTS"
+mywinscratch="c:/Tmp/ACTS"
 o64targ="targ_ia32_ia64_linux"
 
 #############################################################################
@@ -39,21 +36,28 @@ alias ir_size="${open64}/osprey1.0/${o64targ}/ir_tools/ir_size"
 #############################################################################
 
 ## OpenAnalysis
-openanal="${HOME}/Develop/OpenAnalysis"
+openanal="${myscratch}/OpenAnalysis"
 
 ## Xerces C++
-xercesc="${HOME}/Develop/xercesc/${WHIRL2XAIF_PLATFORM}"
-if test -z "${LD_LIBRARY_PATH}" ; then
+#xercesc="${HOME}/Develop/xercesc/${WHIRL2XAIF_PLATFORM}"
+xercesc="/usr/include/xercesc"
+if [ -z "${LD_LIBRARY_PATH}" ]; then
   export LD_LIBRARY_PATH="${xercesc}/lib"
 else
   export LD_LIBRARY_PATH="${xercesc}/lib:${LD_LIBRARY_PATH}"
+fi
+
+# For cygwin, DLLs are in the PATH variable (and cannot be found via
+# symlinks!)
+# FIXMEcygwin
+if [ "${WHIRL2XAIF_PLATFORM}" = "i686-Cygwin" ]; then 
+  export PATH="${open64}/osprey1.0/${o64targ}/be:${open64}/osprey1.0/${o64targ}/whirl2f:${PATH}"
 fi
 
 #############################################################################
 # whirl2xaif
 #############################################################################
 
-export WHIRL2XAIF="${HOME}/Develop/whirl2xaif"
 source ${WHIRL2XAIF}/Sourceme-sh
 
 export WHIRL2XAIF_OPEN64="${open64}/osprey1.0"
@@ -67,7 +71,7 @@ export WHIRL2XAIF_XERCESC="${xercesc}"
 # boost: http://www.boost.org/libs/graph/doc/
 # angel: sourceforge 
 
-acts="${myscratch}/ACTS"
+acts="${myscratch}"
 
 export XERCESCROOT="${xercesc}"
 export XAIFBOOSTERROOT="${acts}/ALL/xaifbooster"
@@ -78,8 +82,7 @@ export BOOST_DIR="${acts}/boost_1_29_0"
 export ANGELROOT="${acts}/angel"
 export ANGEL_DIR="${acts}/angel"
 
-xaif_bk="${myscratch}/ACTS/xaif-1.0/schema"
-xaif="${myscratch}/ACTS/ALL/xaif_1.0"
+xaif="${mywinscratch}/ALL/xaif_1.0"
 ii="inlinable_intrinsics.xaif"
 
 alias xboostread="${XAIF_DIR}/system/tests/t -c ${xaif}/${ii}"
@@ -94,6 +97,7 @@ alias xboost="${XAIF_DIR}/angel_interface/test/t -c ${xaif}/${ii}"
 #############################################################################
 
 unset myscratch
+unset mywinscratch
 unset open64
 unset o64targ
 unset openanal
