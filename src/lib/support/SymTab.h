@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.7 2003/09/17 19:43:26 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.8 2003/10/10 17:21:37 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -51,76 +51,80 @@ bool
 WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2);
 
 
-
 //***************************************************************************
-// XAIFSymToWhirlSymMap (FIXME)
+// XAIFSymToSymbolMap (FIXME)
 //***************************************************************************
 
-class XAIFSymToWhirlSymMap 
+class Symbol;
+
+class XAIFSymToSymbolMap 
 {
 public:
   // Constructor allocates an empty data structure
-  XAIFSymToWhirlSymMap();
-  virtual ~XAIFSymToWhirlSymMap();
+  XAIFSymToSymbolMap();
+  virtual ~XAIFSymToSymbolMap();
   
   // Find: Returns NULL if not found
-  ST* Find(const char* scopeid, const char* symid) const;
+  Symbol* Find(const char* scopeid, const char* symid) const;
   
   // Insert: insert <'scopeid'+'symid', ST*> pair in the map and
   // return true; if the key already exists, the operation fails and
   // returns false.
-  bool Insert(const char* scopeid, const char* symid, const ST* st);
+  bool Insert(const char* scopeid, const char* symid, const Symbol* sym);
   
   // Return number of entries
-  unsigned int GetSize() const { return strToSTMap.size(); }
+  unsigned int GetSize() const { return strToSymMap.size(); }
 
   static std::string MakeKey(const char* scopeid, const char* symid);
   
 private:
-  typedef std::map<std::string, ST*>    StringToSTMap;
-  typedef StringToSTMap::iterator       StringToSTMapIt;
-  typedef StringToSTMap::const_iterator StringToSTMapItC;
-  typedef StringToSTMap::value_type     StringToSTMapVal;
+  typedef std::map<std::string, Symbol*> StringToSymMap;
+  typedef StringToSymMap::iterator       StringToSymMapIt;
+  typedef StringToSymMap::const_iterator StringToSymMapItC;
+  typedef StringToSymMap::value_type     StringToSymMapVal;
 
 private:
-  StringToSTMap strToSTMap;
+  StringToSymMap strToSymMap;
 };
 
-
 //***************************************************************************
-// NonScalarSym
+// Symbol
 //***************************************************************************
 
-class NonScalarSym {
+class Symbol {
 public:
-  NonScalarSym();
-  virtual ~NonScalarSym();
+  Symbol();
+  Symbol(const ST* st, bool act);
+  virtual ~Symbol();
 
-  // Return a globally unique dummy symbol name
-  std::string& GetName() { return name; }
+  // Return the WHIRL symbol
+  ST* GetST() const { return st; }
+  ST* SetST(const ST* st_) { st = const_cast<ST*>(st_); }
 
-  // Return an id, globally unique across instances of this class
-  UINT GetId() const { return id; }
-
+  // Is the symbol active in the AD sense
+  bool IsActive() const { return active; }
+  bool SetActive(bool act) { active = act; }
+  
   virtual void Dump(std::ostream& o = std::cerr) const;
   virtual void DDump() const;
 
 private:
   // These could make sense, but I just haven't implemented them yet
-  NonScalarSym(const NonScalarSym& x) { }
-  NonScalarSym& operator=(const NonScalarSym& x) { return *this; }
+  Symbol(const Symbol& x) { }
+  Symbol& operator=(const Symbol& x) { return *this; }
 
 private:
-  std::string name; // FIXME:
-  UINT id; 
-  
-  static UINT nextId; // for globally uniqe id numbers
+  ST* st;
+  bool active;
 };
+
 
 
 //***************************************************************************
 // NonScalarSymTab
 //***************************************************************************
+
+class NonScalarSym;
 
 // 'NonScalarSymTab' is a special symbol table for non scalar WHIRL
 // references (e.g. array and record accesses).
@@ -172,6 +176,37 @@ private:
 
   static UINT nextId; // for globally uniqe id numbers
 };
+
+//***************************************************************************
+// NonScalarSym
+//***************************************************************************
+
+class NonScalarSym {
+public:
+  NonScalarSym();
+  virtual ~NonScalarSym();
+
+  // Return a globally unique dummy symbol name
+  std::string& GetName() { return name; }
+
+  // Return an id, globally unique across instances of this class
+  UINT GetId() const { return id; }
+
+  virtual void Dump(std::ostream& o = std::cerr) const;
+  virtual void DDump() const;
+
+private:
+  // These could make sense, but I just haven't implemented them yet
+  NonScalarSym(const NonScalarSym& x) { }
+  NonScalarSym& operator=(const NonScalarSym& x) { return *this; }
+
+private:
+  std::string name; // FIXME:
+  UINT id; 
+  
+  static UINT nextId; // for globally uniqe id numbers
+};
+
 
 //***************************************************************************
 // NonScalarSymTabIterator

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.cxx,v 1.7 2003/09/17 19:43:26 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.cxx,v 1.8 2003/10/10 17:21:37 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -195,43 +195,49 @@ WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2)
   return (simple || special);
 }
 
+
 //***************************************************************************
-// XAIFSymToWhirlSymMap
+// XAIFSymToSymbolMap
 //***************************************************************************
 
-XAIFSymToWhirlSymMap::XAIFSymToWhirlSymMap()
+XAIFSymToSymbolMap::XAIFSymToSymbolMap()
 {
 }
 
-XAIFSymToWhirlSymMap::~XAIFSymToWhirlSymMap()
+XAIFSymToSymbolMap::~XAIFSymToSymbolMap()
 {
-  strToSTMap.clear();
+  // Clear table
+  StringToSymMapIt it = strToSymMap.begin();
+  for ( ; it != strToSymMap.end(); ++it) {
+    delete (*it).second; // Symbol*
+  }
+  strToSymMap.clear();
 }
 
-ST*
-XAIFSymToWhirlSymMap::Find(const char* scopeid, const char* symid) const
+Symbol*
+XAIFSymToSymbolMap::Find(const char* scopeid, const char* symid) const
 {
   std::string key = MakeKey(scopeid, symid);
-
-  StringToSTMapItC it = strToSTMap.find(key);
-  ST* st = (it == strToSTMap.end()) ? NULL : (*it).second;
-  return st;
+  
+  StringToSymMapItC it = strToSymMap.find(key);
+  Symbol* sym = (it == strToSymMap.end()) ? NULL : (*it).second;
+  return sym;
 }
 
 bool
-XAIFSymToWhirlSymMap::Insert(const char* scopeid, const char* symid, 
-			     const ST* st_)
+XAIFSymToSymbolMap::Insert(const char* scopeid, const char* symid, 
+			   const Symbol* sym_)
 {
   std::string key = MakeKey(scopeid, symid);
-  ST* st = const_cast<ST*>(st_); // the map uses non const types
+  Symbol* sym = const_cast<Symbol*>(sym_); // the map uses non const types
   
-  StringToSTMapVal val = StringToSTMapVal(key, st);
-  pair<StringToSTMapIt, bool> p = strToSTMap.insert(val);
+  StringToSymMapVal val = StringToSymMapVal(key, sym);
+  pair<StringToSymMapIt, bool> p = strToSymMap.insert(val);
   return p.second;
 }
 
 std::string 
-XAIFSymToWhirlSymMap::MakeKey(const char* scopeid, const char* symid)
+XAIFSymToSymbolMap::MakeKey(const char* scopeid, const char* symid)
 {
   // Reserve enough space for null terminators and concatination char
   std::string key;
@@ -244,32 +250,36 @@ XAIFSymToWhirlSymMap::MakeKey(const char* scopeid, const char* symid)
 }
 
 //***************************************************************************
-// NonScalarSym
+// Symbol
 //***************************************************************************
 
-UINT NonScalarSym::nextId = 0; // static member
-
-NonScalarSym::NonScalarSym()
-{
-  id = nextId++;
-  name = cat("*nonscalarsym*", id);  
-}
-
-NonScalarSym::~NonScalarSym()
+Symbol::Symbol()
+  : st(NULL), active(false)
 {
 }
 
-void 
-NonScalarSym::Dump(std::ostream& o) const
+Symbol::Symbol(const ST* st, bool act)
 {
-  o << name;
+  SetST(st);
+  SetActive(act);
+}
+
+Symbol::~Symbol()
+{
 }
 
 void 
-NonScalarSym::DDump() const
+Symbol::Dump(std::ostream& o) const
+{
+  o << "Symbol\n";
+}
+
+void 
+Symbol::DDump() const
 {
   Dump(std::cerr);
 }
+
 
 //***************************************************************************
 // NonScalarSymTab
@@ -334,6 +344,34 @@ NonScalarSymTab::Dump(std::ostream& o, const char* pre) const
 
 void
 NonScalarSymTab::DDump() const
+{
+  Dump(std::cerr);
+}
+
+//***************************************************************************
+// NonScalarSym
+//***************************************************************************
+
+UINT NonScalarSym::nextId = 0; // static member
+
+NonScalarSym::NonScalarSym()
+{
+  id = nextId++;
+  name = cat("*nonscalarsym*", id);  
+}
+
+NonScalarSym::~NonScalarSym()
+{
+}
+
+void 
+NonScalarSym::Dump(std::ostream& o) const
+{
+  o << name;
+}
+
+void 
+NonScalarSym::DDump() const
 {
   Dump(std::cerr);
 }
