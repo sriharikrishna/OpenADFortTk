@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.20 2004/07/31 19:47:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.21 2005/01/19 22:06:46 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -269,7 +269,7 @@ xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
   // 2. Gather WHIRL implicit arguments (e.g., for strings)
   // -------------------------------------------------------
   std::vector<WN*> iargs_wn(numiArgs, NULL);  
-  for (int i = 0; i < numiArgs; ++i) {
+  for (unsigned i = 0; i < numiArgs; ++i) {
     // Create bogus values, knowing that we only want to unparse the WHIRL
     iargs_wn[i] = WN_CreateIntconst(OPC_I4INTCONST, 0); // a white lie
   }
@@ -283,14 +283,14 @@ xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
   WN* callWN = WN_Call(rtype, MTYPE_V, numArgs + numiArgs, sym->GetST());
   WN_Set_Call_Default_Flags(callWN); // set conservative assumptions
   
-  for (int i = 0; i < numArgs; ++i) {
+  for (unsigned i = 0; i < numArgs; ++i) {
     if (args_wn[i]) { 
       // conservatively assume pass by reference
       WN_actual(callWN, i) = CreateParm(args_wn[i], WN_PARM_BY_REFERENCE);
     }
   }
   
-  for (int i = 0, j = numArgs; i < numiArgs; ++i, ++j) {
+  for (unsigned i = 0, j = numArgs; i < numiArgs; ++i, ++j) {
     WN_actual(callWN, j) = CreateParm(iargs_wn[i], WN_PARM_BY_VALUE);
   }
   
@@ -630,8 +630,6 @@ CreateZeroConst(TYPE_ID ty)
 static WN*
 CreateOpenADInline(const char* fname, std::vector<WN*>& args)
 {
-  static char buf[10];
-  
   // $OpenAD$ INLINE subname(argpos1, argpos2..)
   std::string com = "$OpenAD$ INLINE ";
   com.reserve(128);
