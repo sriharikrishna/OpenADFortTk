@@ -1,4 +1,4 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.6 2003/10/14 19:45:29 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.7 2003/10/29 16:13:24 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
@@ -23,7 +23,7 @@ Open64
 
 OpenAnalysis
   cvs co -r ValNum-init OpenAnalysis
-  cvs update -j HEAD
+  cd OpenAnalysis ; cvs update -j HEAD
 
 xercesc [if necessary]
   cvs co xercesc
@@ -31,8 +31,12 @@ xercesc [if necessary]
 whirl2xaif
   cvs co whirl2xaif
 
-xaifbooster
-  
+xaifbooster, angel, boost
+  [Argonne cvs]
+
+xaif_1.0
+  [Argonne cvs]
+
 =============================================================================
 
 1. Building on i686-Linux or sparc-SunOS
@@ -50,9 +54,12 @@ with
   export VARIABLE="value"
 
 
-1. Prepare env. 
+1. Prepare env using whirl2xaif/Sourceme-ACTS-csh.
    
-   See Sourceme-ACTS-csh (or Sourceme-ACTS-sh)
+   Open and make sure paths are correct. 
+
+   source whirl2xaif/Sourceme-ACTS-csh
+
 
 2. Build Open64's mfef90 (Open64 front end) and whirl2f (Open64 backend).
    Ensure the correct compiler is in your path.
@@ -64,16 +71,23 @@ with
      cd ${WHIRL2XAIF_OPEN64}/targ_ia32_ia64_linux/whirl2f 
      make MAKE="make"
 
+   To build ir_b2a on i686-Linux:
+
+     cd ${WHIRL2XAIF_OPEN64}/targ_ia32_ia64_linux/ir_tools
+     make MAKE="make"
    
+
 3. Build OA.
 
-   cd OpenAnalysis
+   cd ${WHIRL2XAIF_OA}
    make CXX="<C++ compiler>" CXXFLAGS="<options such as -g or -O>"
+
 
 4. Build XercesC++ [if necessary]:
 
-   cd xercesc
+   cd ${WHIRL2XAIF_XERCESC}
    make CXX="<C++ compiler>" CC="<C compiler>"
+
 
 5. Build whirl2xaif:
 
@@ -83,16 +97,23 @@ with
    cd ${WHIRL2XAIF}/src
    make 
 
-6. xaifbooster...
+
+6. xaifbooster
+ 
+   cd ${XAIFBOOSTERROOT}
+   make
+
+   cd ${ANGELROOT}
+   make
+
+   cd ${XAIFBOOSTERROOT}
+   make test
+
 
 =============================================================================
 
 2. Using
 --------------------
-
-Currently the binary -- whirl2xaif -- is just stored with the build
-files in ${WHIRL2XAIF}/obj/${WHIRL2XAIF_PLATFORM}.  This directory was
-automatically created during the build.
 
 If you are using a csh-variant, execute a 'rehash' command to ensure
 that your path is fully searched.  On the other hand, bash should find
@@ -100,10 +121,13 @@ the binary with no problem.
 
 The whole pipeline:
 
-  mfef90 file.f --> file.B
+  mfef90 file.f90 --> file.B
   whirl2xaif file.B --> file.xaif
   
-  xaifbooster --> file.boost.xaif
+  xboost -i file.xaif -o file.boost.xaif
+
+    Note: Add following line to top of output file:
+    <?xml version="1.0" encoding="UTF-8"?>
   
   xaif2whirl file.B file.boost.xaif --> file.boost.x2w.B
   whirl2f file.boost.x2w.B --> file.boost.x2w.w2f.f
@@ -139,6 +163,10 @@ xmlostream.cxx/h       : xml::ostream class
 =============================================================================
 
 Extra notes for now: 
+
+Currently the binary -- whirl2xaif -- is just stored with the build
+files in ${WHIRL2XAIF}/obj/${WHIRL2XAIF_PLATFORM}.  This directory was
+automatically created during the build.
 
 Whirl2xaif Notes: 
   - generally assume that we enter with the proper context.
