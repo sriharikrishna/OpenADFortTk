@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.16 2004/06/29 18:40:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.17 2004/06/29 21:28:56 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -134,7 +134,12 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
                         { XAIFIntrin, "abs_scal", "0_ABS", 1 } },
   { { WNCall, OPR_CALL, "ABS", 1 },
                         { XAIFIntrin, "abs_scal", "1_ABS", 1 } },
-  
+  { { WNCall, OPR_CALL, "IABS", 1 },
+                        { XAIFIntrin, "iabs_scal", "0_IABS", 1 } },
+
+  { { WNCall, OPR_CALL, "SIGN", 2 },
+                        { XAIFIntrin, "sign_scal_scal", "0_SIGN", 2 } },
+
   { { WNExpr, OPR_RND, NULL, 1 },
                         { XAIFIntrin, "bogus_round_scal", NULL, 1 } },
   { { WNExpr, OPR_TRUNC, NULL, 1 },
