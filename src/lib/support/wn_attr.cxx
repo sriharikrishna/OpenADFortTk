@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.4 2003/07/24 20:30:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.5 2003/08/19 13:40:18 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -65,7 +65,7 @@
 #include <include/Open64BasicTypes.h>
 
 #include "wn_attr.h"
-#include "whirl2f_common.h"
+#include "stab_attr.h"
 
 
 /* INTRN_c_name() is only implemented when defined(BUILD_WHIRL2C), while
@@ -387,6 +387,8 @@ WN_Get_PtrAdd_Intconst(WN    *wn0,
    return intconst;
 } /* WN_Get_PtrAdd_Intconst */
 
+
+
 TY_IDX
 WN_Tree_Type(const WN *wn)
 {
@@ -399,12 +401,12 @@ WN_Tree_Type(const WN *wn)
    * Pointer types may be created as a result of a call to this routine.
    */
   
-  TY_IDX ty = Stab_Mtype_To_Ty(MTYPE_V); /* return value, default = void */
+  TY_IDX ty = MTYPE_To_TY(MTYPE_V); /* return value, default = void */
   if (wn == NULL)
     return ty;
  
   if (OPCODE_is_expression(WN_opcode(wn))) {
-    switch (WN_opc_operator(wn)) {
+    switch (WN_operator(wn)) {
       
     case OPR_ILOAD:
     case OPR_ILOADX:
@@ -422,7 +424,7 @@ WN_Tree_Type(const WN *wn)
       
     case OPR_MLOAD:
       /* There is not much we can do about this case */
-      if (WN_opc_operator(WN_kid1(wn)) == OPR_INTCONST &&
+      if (WN_operator(WN_kid1(wn)) == OPR_INTCONST &&
 	  TY_Is_Structured(TY_pointed(WN_ty(wn)))) {
 
 	/* WEI: for field accesses, get the type of the field */
@@ -464,7 +466,7 @@ WN_Tree_Type(const WN *wn)
 	 * as the base-type of this OPC_ARRAY.  This must be handled
 	 * very carefully in WN2C_array().
 	 */
-	ty = Stab_Pointer_To(Stab_Array_Of(Stab_Mtype_To_Ty(MTYPE_U1),
+	ty = Stab_Pointer_To(Stab_Array_Of(MTYPE_To_TY(MTYPE_U1),
 					   WN_element_size(wn)));
       }
       else if (!TY_ptr_as_array(Ty_Table[ty]) && TY_Is_Array(TY_pointed(ty))) {
@@ -485,10 +487,10 @@ WN_Tree_Type(const WN *wn)
 	if (!TY_Is_Pointer(ty)) {
 	  ty = WN_Tree_Type(WN_kid1(wn));
 	  if (!TY_Is_Pointer(ty))
-	    ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
+	    ty = MTYPE_To_TY(WN_opc_rtype(wn));
 	}
       } else
-	ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
+	ty = MTYPE_To_TY(WN_opc_rtype(wn));
       break;	    
       
     case OPR_CVTL:
@@ -510,7 +512,7 @@ WN_Tree_Type(const WN *wn)
 	if (!TY_Is_Pointer(ty)) {
 	  ty = WN_Tree_Type(WN_kid1(wn));
 	  if (!TY_Is_Pointer(ty))
-	    ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
+	    ty = MTYPE_To_TY(WN_opc_rtype(wn));
 	}
 	
 #ifdef _BUILD_WHIRL2C
@@ -519,11 +521,11 @@ WN_Tree_Type(const WN *wn)
 	    WN_Get_PtrAdd_Intconst(WN_kid0(wn), 
 				   WN_kid1(wn),
 				   TY_pointed(ty)) == NULL) {
-	  ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
+	  ty = MTYPE_To_TY(WN_opc_rtype(wn));
 	}
 #endif /* _BUILD_WHIRL2C */
       } else
-	ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
+	ty = MTYPE_To_TY(WN_opc_rtype(wn));
       break;
       
     case OPR_INTRINSIC_OP:
@@ -599,7 +601,7 @@ WN_Tree_Type(const WN *wn)
     case OPR_HIGHPART:
     case OPR_LOWPART:
     case OPR_HIGHMPY:
-      ty = Stab_Mtype_To_Ty(WN_opc_rtype(wn));
+      ty = MTYPE_To_TY(WN_opc_rtype(wn));
       break;
       
     case OPR_PARM:
@@ -626,6 +628,8 @@ WN_Tree_Type(const WN *wn)
    
   return ty;
 } /* WN_Tree_Type */
+
+
 
 
 void

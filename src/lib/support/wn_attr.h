@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.3 2003/07/24 20:30:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.4 2003/08/19 13:40:18 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -243,6 +243,7 @@ extern BOOL WN_intrinsic_return_to_param(TY_IDX return_ty);
 extern WN *WN_Get_PtrAdd_Intconst(WN    *wn0, 
 				  WN    *wn1, 
 				  TY_IDX pointed_ty);
+
 extern TY_IDX WN_Tree_Type(const WN *wn);
 
 
