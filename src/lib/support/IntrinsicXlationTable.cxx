@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.7 2004/04/27 19:38:54 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.8 2004/04/29 21:28:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -56,110 +56,119 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
 
   // Common mathematical functions
   { { WNExpr, OPR_NEG, NULL, 1 },
-                        { XAIFIntrin, "minus_scal", 1 } },
+                        { XAIFIntrin, "minus_scal", NULL, 1 } },
   { { WNExpr, OPR_ADD, NULL, 2 },
-                        { XAIFIntrin, "add_scal_scal", 2 } },
+                        { XAIFIntrin, "add_scal_scal", NULL, 2 } },
   { { WNExpr, OPR_SUB, NULL, 2 },
-                        { XAIFIntrin, "sub_scal_scal", 2 } },
+                        { XAIFIntrin, "sub_scal_scal", NULL, 2 } },
   { { WNExpr, OPR_MPY, NULL, 2 },
-                        { XAIFIntrin, "mul_scal_scal", 2 } },
+                        { XAIFIntrin, "mul_scal_scal", NULL, 2 } },
   { { WNExpr, OPR_DIV, NULL, 2 },
-                        { XAIFIntrin, "div_scal_scal", 2 } },
+                        { XAIFIntrin, "div_scal_scal", NULL, 2 } },
+
   { { WNCall, OPR_CALL, "SQRT", 1 },
-                        { XAIFIntrin, "sqrt_scal", 1 } },
-#if 0
+                        { XAIFIntrin, "sqrt_scal", "0_SQRT", 1 } },
+  { { WNCall, OPR_CALL, "DSQRT", 1 },
+                        { XAIFIntrin, "sqrt_scal", "1_DSQRT", 1 } },
   { { WNExpr, OPR_SQRT, NULL, 1 },
-                        { XAIFIntrin, "sqrt_scal", 1 } },
-#endif
+                        { XAIFIntrin, "sqrt_scal", "2_SQRT", 1 } },
 
   { { WNExpr, OPR_MOD, NULL, 2 },
-                        { XAIFIntrin, "bogus_mod_scal_scal", 2 } },
+                        { XAIFIntrin, "bogus_mod_scal_scal", NULL, 2 } },
   { { WNExpr, OPR_REM, NULL, 2 },
-                        { XAIFIntrin, "bogus_rem_scal_scal", 2 } },
+                        { XAIFIntrin, "bogus_rem_scal_scal", NULL, 2 } },
 
   { { WNCall, OPR_CALL, "SIN", 1 },
-                        { XAIFIntrin, "sin_scal", 1 } },
+                        { XAIFIntrin, "sin_scal", "0_SIN", 1 } },
+  { { WNCall, OPR_CALL, "DSIN", 1 },
+                        { XAIFIntrin, "sin_scal", "1_DSIN", 1 } },
   { { WNCall, OPR_CALL, "COS", 1 },
-                        { XAIFIntrin, "cos_scal", 1 } },
+                        { XAIFIntrin, "cos_scal", "0_COS", 1 } },
+  { { WNCall, OPR_CALL, "DCOS", 1 },
+                        { XAIFIntrin, "cos_scal", "1_DCOS", 1 } },
   { { WNCall, OPR_CALL, "EXP", 1 },
-                        { XAIFIntrin, "exp_scal", 1 } },
+                        { XAIFIntrin, "exp_scal", "0_EXP", 1 } },
+  { { WNCall, OPR_CALL, "DEXP", 1 },
+                        { XAIFIntrin, "exp_scal", "1_DEXP", 1 } },
   { { WNCall, OPR_CALL, "LOG", 1 },
-                        { XAIFIntrin, "ln_scal", 1 } },
+                        { XAIFIntrin, "ln_scal", "0_LOG", 1 } },
+  { { WNCall, OPR_CALL, "DLOG", 1 },
+                        { XAIFIntrin, "ln_scal", "1_DLOG", 1 } }, 
 
   // Intrinsics: The WHIRL string is the INTRINSIC_basename()
   // (cf. wintrinsic.h, wutil.cxx)
   { { WNIntrinOp, OPR_INTRINSIC_OP, "EXPEXPR", 2 }, 
-                        { XAIFIntrin, "pow_scal_scal", 2 } },
+                        { XAIFIntrin, "pow_scal_scal", NULL, 2 } },
 
   { { WNIntrinOp, OPR_INTRINSIC_OP, "CEQEXPR", 2 }, 
-                        { XAIFIntrin, "bogus_string_eq_scal_scal", 2 } },
+                        { XAIFIntrin, "bogus_string_eq_scal_scal", NULL, 2 } },
   { { WNIntrinOp, OPR_INTRINSIC_OP, "CNEEXPR", 2 }, 
-                        { XAIFIntrin, "bogus_string_ne_scal_scal", 2 } },
+                        { XAIFIntrin, "bogus_string_ne_scal_scal", NULL, 2 } },
   { { WNIntrinOp, OPR_INTRINSIC_OP, "CGEEXPR", 2 }, 
-                        { XAIFIntrin, "bogus_string_ge_scal_scal", 2 } },
+                        { XAIFIntrin, "bogus_string_ge_scal_scal", NULL, 2 } },
   { { WNIntrinOp, OPR_INTRINSIC_OP, "CGTEXPR", 2 }, 
-                        { XAIFIntrin, "bogus_string_gt_scal_scal", 2 } },
+                        { XAIFIntrin, "bogus_string_gt_scal_scal", NULL, 2 } },
   { { WNIntrinOp, OPR_INTRINSIC_OP, "CLEEXPR", 2 }, 
-                        { XAIFIntrin, "bogus_string_le_scal_scal", 2 } },
+                        { XAIFIntrin, "bogus_string_le_scal_scal", NULL, 2 } },
   { { WNIntrinOp, OPR_INTRINSIC_OP, "CLTEXPR", 2 }, 
-                        { XAIFIntrin, "bogus_string_lt_scal_scal", 2 } },
+                        { XAIFIntrin, "bogus_string_lt_scal_scal", NULL, 2 } },
   
   // Rounding, conversion
   { { WNExpr, OPR_ABS, NULL, 1 },
-                        { XAIFIntrin, "bogus_abs_scal", 1 } },
+                        { XAIFIntrin, "bogus_abs_scal", NULL, 1 } },
   { { WNExpr, OPR_RND, NULL, 1 },
-                        { XAIFIntrin, "bogus_round_scal", 1 } },
+                        { XAIFIntrin, "bogus_round_scal", NULL, 1 } },
   { { WNExpr, OPR_TRUNC, NULL, 1 },
-                        { XAIFIntrin, "bogus_trunc_scal", 1 } },
+                        { XAIFIntrin, "bogus_trunc_scal", NULL, 1 } },
   { { WNExpr, OPR_CEIL, NULL, 1 },
-                        { XAIFIntrin, "bogus_ceil_scal", 1 } },
+                        { XAIFIntrin, "bogus_ceil_scal", NULL, 1 } },
   { { WNExpr, OPR_FLOOR, NULL, 1 },
-                        { XAIFIntrin, "bogus_floor_scal", 1 } },
+                        { XAIFIntrin, "bogus_floor_scal", NULL, 1 } },
 
   { { WNCall, OPR_CALL, "DBLE", 1 },
-                        { XAIFIntrin, "bogus_dble_scal", 1 } },
+                        { XAIFIntrin, "bogus_dble_scal", NULL, 1 } },
 
   // Logical operations
   { { WNExpr, OPR_BNOT, NULL, 1 },
-                        { XAIFBoolOp, "not", 1 } },
+                        { XAIFBoolOp, "not", NULL, 1 } },
   { { WNExpr, OPR_BAND, NULL, 2 },
-                        { XAIFBoolOp, "and", 2 } },
+                        { XAIFBoolOp, "and", NULL, 2 } },
   { { WNExpr, OPR_BIOR, NULL, 2 },
-                        { XAIFBoolOp, "or", 2 } },
+                        { XAIFBoolOp, "or", NULL, 2 } },
   { { WNExpr, OPR_BXOR, NULL, 2 },
-                        { XAIFBoolOp, "xor", 2 } },
+                        { XAIFBoolOp, "xor", NULL, 2 } },
   { { WNExpr, OPR_EQ, NULL, 2 },
-                        { XAIFBoolOp, "equal", 2 } },
+                        { XAIFBoolOp, "equal", NULL, 2 } },
   { { WNExpr, OPR_NE, NULL, 2 },
-                        { XAIFBoolOp, "not_equal", 2 } },
+                        { XAIFBoolOp, "not_equal", NULL, 2 } },
   { { WNExpr, OPR_GT, NULL, 2 },
-                        { XAIFBoolOp, "greater_than", 2 } },
+                        { XAIFBoolOp, "greater_than", NULL, 2 } },
   { { WNExpr, OPR_GE, NULL, 2 },
-                        { XAIFBoolOp, "greater_or_equal", 2 } },
+                        { XAIFBoolOp, "greater_or_equal", NULL, 2 } },
   { { WNExpr, OPR_LT, NULL, 2 },
-                        { XAIFBoolOp, "less_than", 2 } },
+                        { XAIFBoolOp, "less_than", NULL, 2 } },
   { { WNExpr, OPR_LE, NULL, 2 },
-                        { XAIFBoolOp, "less_or_equal", 2 } },
+                        { XAIFBoolOp, "less_or_equal", NULL, 2 } },
 
   { { WNExpr, OPR_LAND, NULL, 2 },
-                        { XAIFIntrin, "bogus_land_scal_scal", 2 } },
+                        { XAIFIntrin, "bogus_land_scal_scal", NULL, 2 } },
   { { WNExpr, OPR_LIOR, NULL, 2 },
-                        { XAIFIntrin, "bogus_lor_scal_scal", 2 } },
+                        { XAIFIntrin, "bogus_lor_scal_scal", NULL, 2 } },
   { { WNExpr, OPR_CAND, NULL, 2 },
-                        { XAIFIntrin, "bogus_cand_scal_scal", 2 } },
+                        { XAIFIntrin, "bogus_cand_scal_scal", NULL, 2 } },
   { { WNExpr, OPR_CIOR, NULL, 2 },
-                        { XAIFIntrin, "bogus_cor_scal_scal", 2 } },
+                        { XAIFIntrin, "bogus_cor_scal_scal", NULL, 2 } },
 
   // Misc.
   { { WNExpr, OPR_SHL, NULL, 2 },
-                        { XAIFIntrin, "bogus_shl_scal_scal", 2 } },
+                        { XAIFIntrin, "bogus_shl_scal_scal", NULL, 2 } },
   { { WNExpr, OPR_ASHR, NULL, 2 },
-                        { XAIFIntrin, "bogus_ashr_scal_scal", 2 } },
+                        { XAIFIntrin, "bogus_ashr_scal_scal", NULL, 2 } },
 
   { { WNExpr, OPR_MAX, NULL, 2 },
-                        { XAIFIntrin, "bogus_max_scal_scal", 2 } },
+                        { XAIFIntrin, "bogus_max_scal_scal", NULL, 2 } },
   { { WNExpr, OPR_MIN, NULL, 2 },
-                        { XAIFIntrin, "bogus_min_scal_scal", 2 } }
+                        { XAIFIntrin, "bogus_min_scal_scal", NULL, 2 } }
   
 };
 
@@ -215,7 +224,7 @@ IntrinsicXlationTable::WHIRLInfo::Dump(std::ostream& os) const
   os << "{ " 
      << ToString(oprcl) << ", " 
      << OPERATOR_name(opr) << ", "
-     << ((name) ? name : "<null>") 
+     << ((name) ? name : "<null>") << ", "
      << numop 
      << " }";
 }
@@ -232,6 +241,7 @@ IntrinsicXlationTable::XAIFInfo::Dump(std::ostream& os) const
   os << "{ " 
      << ToString(opr) << ", " 
      << ((name) ? name : "<null>") << ", " 
+     << ((key) ? key : "<null>") << ", " 
      << numop 
      << " }";
 }
@@ -249,7 +259,6 @@ IntrinsicXlationTable::lt_SortedTable::
 operator()(const Entry* e1, const Entry* e2) const
 {
   if (tt == W2X) {
-    
     // 1. whirl_info.opr is the primary sorting key
     if (e1->whirl_info.opr == e2->whirl_info.opr) {
       
@@ -270,23 +279,34 @@ operator()(const Entry* e1, const Entry* e2) const
       default:
 	ASSERT_FATAL(false, (DIAG_A_STRING, "Invalid comparison"));
       }
-
-    } else {
+    } 
+    else {
       return (e1->whirl_info.opr < e2->whirl_info.opr);
     }
-    
-  } else if (tt == X2W) {
-    
+  } 
+  else if (tt == X2W) {
     // 1. xaif_info.opr is the primary sorting key
     if (e1->xaif_info.opr == e2->xaif_info.opr) {
-      
       // 2. xaif_info.name is the secondary sorting key
-      return (strcmp(e1->xaif_info.name, e2->xaif_info.name) < 0);
-      
-    } else {
+      int cmp = (strcmp(e1->xaif_info.name, e2->xaif_info.name));
+      if (!ignoreXaifKey && cmp == 0) {
+	// 3. xaif_info.key, if available, is the tertiary sorting key
+	if (e1->xaif_info.key && e2->xaif_info.key) {
+	  return (strcmp(e1->xaif_info.key, e2->xaif_info.key) < 0);
+	}
+	else if (e1->xaif_info.key) /* && !e2->xaif_info.key */ {
+	  return false; // e1 > e2
+	}
+	else if (e2->xaif_info.key) /* && !e1->xaif_info.key */ {
+	  return true; // e1 < e2
+	}
+	// fall-through
+      } 
+      return (cmp < 0);
+    } 
+    else {
       return (e1->xaif_info.opr < e2->xaif_info.opr);
     }
-    
   } else {
     ASSERT_FATAL(false, (DIAG_A_STRING, "Error!"));
   }
@@ -349,13 +369,12 @@ IntrinsicXlationTable::FindXAIFInfo(OPERATOR opr, const char* name)
   toFind.whirl_info.oprcl = WNOprClass_UNKNOWN;
   toFind.whirl_info.opr = opr;
   toFind.whirl_info.name = name;
-
-  bool found = std::binary_search(sortedTable.begin(), sortedTable.end(),
-				  toFind, lt_SortedTable(tableType));
-  if (found) {
-    SortedTableIt it = std::lower_bound(sortedTable.begin(), sortedTable.end(),
-					toFind, lt_SortedTable(tableType));
-    Entry* foundItem = *it;
+  
+  lt_SortedTable lt(tableType);
+  SortedTableIt it = std::lower_bound(sortedTable.begin(), sortedTable.end(),
+				      toFind, lt);
+  if (it != sortedTable.end() && !lt(*it, toFind) && !lt(toFind, *it)) {
+    Entry* foundItem = *it; // should only be one match
     return &(foundItem->xaif_info);
   } else {
     return NULL;
@@ -363,21 +382,22 @@ IntrinsicXlationTable::FindXAIFInfo(OPERATOR opr, const char* name)
 }
 
 IntrinsicXlationTable::WHIRLInfo* 
-IntrinsicXlationTable::FindWHIRLInfo(XAIFOpr opr, const char* name)
+IntrinsicXlationTable::FindWHIRLInfo(XAIFOpr opr, const char* name, 
+				     const char* key)
 {
   if (tableType != X2W) { return NULL; }
   
-  static Entry toFind;
-  
+  static Entry toFind;  
   toFind.xaif_info.opr = opr;
   toFind.xaif_info.name = name;
+  toFind.xaif_info.key = (key && key[0] == '\0') ? NULL : key;
+  bool ignoreKey = (toFind.xaif_info.key == NULL);
   
-  bool found = std::binary_search(sortedTable.begin(), sortedTable.end(),
-				  toFind, lt_SortedTable(tableType));
-  if (found) {
-    SortedTableIt it = std::lower_bound(sortedTable.begin(), sortedTable.end(),
-					toFind, lt_SortedTable(tableType));
-    Entry* foundItem = *it;
+  lt_SortedTable lt(tableType, ignoreKey);
+  SortedTableIt it = std::lower_bound(sortedTable.begin(), sortedTable.end(), 
+				      toFind, lt);
+  if (it != sortedTable.end() && !lt(*it, toFind) && !lt(toFind, *it)) {
+    Entry* foundItem = *it; // may be multiple matches if key is NULL
     return &(foundItem->whirl_info);
   } else {
     return NULL;

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.h,v 1.5 2004/04/07 14:58:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.h,v 1.6 2004/04/29 21:28:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -113,8 +113,18 @@ public:
   };
   
   struct XAIFInfo {
+    // N.B.: 'key' serves two purposes at the moment.  First it
+    // disambiguates multiple WHIRL constructs that translate into the
+    // same XAIF intrinsic (e.g. calls to SIN or DSIN); during
+    // WHIRL->XAIF, the key will be placed in the xaif:Intrinsic's
+    // annotation attribute.  Second, during XAIF->WHIRL if an
+    // ambiguous xaif:Intrinsic is found (e.g. sin_scal without its
+    // annotation attribute), the key assigns a priority (based on
+    // strcmp()) that defines the default WHIRL construct to use.
+    
     XAIFOpr opr;        // the XAIF 'operator'
-    const char* name;   // intrinsic name (if applicable)
+    const char* name;   // intrinsic name
+    const char* key;    // disambiguates otherwise identical xaif intrinsics
     unsigned int numop; // number of operands to intrinsic
 
     //XAIFInfo();
@@ -132,7 +142,7 @@ public:
   ~IntrinsicXlationTable();
 
   XAIFInfo* FindXAIFInfo(OPERATOR opr, const char* name);
-  WHIRLInfo* FindWHIRLInfo(XAIFOpr opr, const char* name);
+  WHIRLInfo* FindWHIRLInfo(XAIFOpr opr, const char* name, const char* key);
 
   void Dump(std::ostream& os = std::cerr) const;
   void DDump() const;
@@ -146,7 +156,10 @@ private:
 
   class lt_SortedTable {
   public:
-    lt_SortedTable(TableType tt_) : tt(tt_) { }
+    lt_SortedTable(TableType tt_) 
+      : tt(tt_), ignoreXaifKey(false) { }
+    lt_SortedTable(TableType tt_, bool ignoreXaifKey_) 
+      : tt(tt_), ignoreXaifKey(ignoreXaifKey_) { }
     ~lt_SortedTable() { }
 
     // return true if e1 < e2; false otherwise
@@ -178,6 +191,7 @@ private:
     
   private:
     TableType tt; // sorting type
+    bool ignoreXaifKey; // only meaningful in X2W mode
   };
   
   typedef std::vector<Entry*>     SortedTable;
