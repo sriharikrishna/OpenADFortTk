@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.18 2004/06/30 16:33:39 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.19 2004/06/30 20:10:26 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -77,14 +77,19 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
                         { XAIFIntrin, "sqrt_scal", "2_SQRT", 1 } },
 
   { { WNExpr, OPR_MOD, NULL, 2 },
-                        { XAIFIntrin, "bogus_mod_scal_scal", "0_MOD_WN", 2 } },
-  { { WNIntrinOp, OPR_INTRINSIC_OP, "AMOD", 2 }, 
-                        { XAIFIntrin, "bogus_mod_scal_scal", "1_AMOD", 2 } },
-  { { WNIntrinOp, OPR_INTRINSIC_OP, "DMOD", 2 }, 
-                        { XAIFIntrin, "bogus_mod_scal_scal", "2_DMOD", 2 } },
+                        { XAIFIntrin, "bogus_modulo_scal_scal", "0_MODULO", 2 } },
+
+  /* is a call to MODULE semantically teh same as OPR_MOD? */
+  { { WNCall, OPR_CALL, "MODULO", 2 },
+                        { XAIFIntrin, "bogus_modulo_scal_scal", "1_MODULO", 1 } },
+
 
   { { WNExpr, OPR_REM, NULL, 2 },
-                        { XAIFIntrin, "bogus_rem_scal_scal", NULL, 2 } },
+                        { XAIFIntrin, "mod_scal_scal", "0_MOD", 2 } },
+  { { WNIntrinOp, OPR_INTRINSIC_OP, "AMOD", 2 }, 
+                        { XAIFIntrin, "mod_scal_scal", "1_AMOD", 2 } },
+  { { WNIntrinOp, OPR_INTRINSIC_OP, "DMOD", 2 }, 
+                        { XAIFIntrin, "mod_scal_scal", "2_DMOD", 2 } },
 
   { { WNCall, OPR_CALL, "SIN", 1 },
                         { XAIFIntrin, "sin_scal", "0_SIN", 1 } },
@@ -117,7 +122,7 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
                         { XAIFIntrin, "pow_scal_scal", NULL, 2 } },
 
   { { WNIntrinOp, OPR_INTRINSIC_OP, "CEQEXPR", 2 }, 
-                        { XAIFIntrin, "bogus_string_eq_scal_scal", NULL, 2 } },
+                        { XAIFIntrin, "string_eq_scal_scal", NULL, 2 } },
   { { WNIntrinOp, OPR_INTRINSIC_OP, "CNEEXPR", 2 }, 
                         { XAIFIntrin, "bogus_string_ne_scal_scal", NULL, 2 } },
   { { WNIntrinOp, OPR_INTRINSIC_OP, "CGEEXPR", 2 }, 
@@ -143,7 +148,7 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
   { { WNExpr, OPR_RND, NULL, 1 },
                         { XAIFIntrin, "bogus_round_scal", NULL, 1 } },
   { { WNExpr, OPR_TRUNC, NULL, 1 },
-                        { XAIFIntrin, "bogus_trunc_scal", NULL, 1 } },
+                        { XAIFIntrin, "int_scal", NULL, 1 } },
   { { WNExpr, OPR_CEIL, NULL, 1 },
                         { XAIFIntrin, "bogus_ceil_scal", NULL, 1 } },
   { { WNExpr, OPR_FLOOR, NULL, 1 },
