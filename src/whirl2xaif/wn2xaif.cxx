@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.14 2003/08/01 16:00:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.15 2003/08/08 19:51:47 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -798,7 +798,7 @@ ForAllNonScalarRefs(const WN* wn, ForAllNonScalarRefsOp& op)
   } else if (!OPERATOR_is_leaf(opr)) {
     
     // General recursive case
-    if (WN_opcode(wn) == OPC_BLOCK) {
+    if (WN_operator(wn) == OPR_BLOCK) {
       WN *kid = WN_first(wn);
       while (kid) {
 	ForAllNonScalarRefs(kid, op);

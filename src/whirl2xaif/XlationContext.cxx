@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.6 2003/08/01 16:00:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.7 2003/08/08 19:51:47 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -156,7 +156,7 @@ XlationContext::FindNonScalarSym(WN* wn)
   return NULL;
 }
 
-UINT 
+WNId
 XlationContext::FindWNId(WN* wn)
 {
   for (XlationContextIterator it(*this); it.IsValid(); ++it) {

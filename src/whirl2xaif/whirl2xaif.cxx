@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.13 2003/08/01 16:00:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.14 2003/08/08 19:51:47 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -171,8 +171,7 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
       << Attr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
       << Attr("xmlns:xaif", "http://www.mcs.anl.gov/XAIF")
       << Attr("xsi:schemaLocation", "http://www.mcs.anl.gov/XAIF xaif.xsd")
-      << Attr("program_name", "FIXME")
-      << Attr("toplevel_routine_name", "head"); // FIXME
+      << Attr("program_name", "***");
   
   TranslateScopeHierarchy(xos, pu_forest, ctxt);
 
@@ -293,9 +292,9 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
     UINT scopeid = map.Find(sttab);
 
-    xos << Attr("subroutine_name", ST_name(st)) // W2CF_Symtab_Nameof_St(st)
-	<< Attr("scope_id", scopeid)
-	<< Attr("symbol_id", (UINT)ST_index(st)) << EndAttrs;
+    xos << Attr("scope_id", scopeid) << Attr("symbol_id", (UINT)ST_index(st))
+	<< Attr("annotation", ST_name(st)) << EndAttrs; // FIXME
+
     TranslateWNPU(xos, wn_pu, ctxt);
     xos << EndElem;
     

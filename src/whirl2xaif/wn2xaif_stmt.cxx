@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.12 2003/08/01 16:00:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.13 2003/08/08 19:51:48 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -680,7 +680,7 @@ xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	arg_ty = PU_prototype (Pu_Table[ST_pu(WN_st(kidofparm))]);
             
       xos << BegElem("xaif:Argument") << Attr("position", position++);
-      ctxt.CreateContext();
+      ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for Argument
 
       // FIXME
       if (WN_operator(wn) == OPR_INTRINSIC_CALL &&
