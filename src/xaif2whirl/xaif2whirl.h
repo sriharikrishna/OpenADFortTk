@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.12 2004/03/29 23:41:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.13 2004/04/05 20:59:39 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -52,6 +52,13 @@ XERCES_CPP_NAMESPACE_USE
 
 namespace xaif2whirl {
 
+  enum AlgorithmType {
+    ALG_NULL,
+    ALG_STRUCTURED_CF,   // special case
+    ALG_UNSTRUCTURED_CF, // most general
+    ALG_BB_PATCHING      // temporary
+  };
+  
   extern IntrinsicXlationTable IntrinsicTable;
 
   void
