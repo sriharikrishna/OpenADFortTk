@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.4 2003/12/03 16:03:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.5 2003/12/03 20:43:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -45,7 +45,8 @@ static int
 TestIR_OA_ForEachWNPU(std::ostream& os, WN* wn_pu);
 
 static void
-TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn, ValueNumbers& vnmap);
+TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn, 
+			Pro64IRInterface& ir, ValueNumbers& vnmap);
 
 //****************************************************************************
 
@@ -108,11 +109,12 @@ TestIR_OA_ForEachWNPU(std::ostream& os, WN* wn_pu)
   }
   
   ValueNumbers vnmap(cfg, params);
-  TestIR_OA_ForEachVarRef(os, wn_pu, vnmap);
+  TestIR_OA_ForEachVarRef(os, wn_pu, irInterface, vnmap);
 }
 
 static void
-TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn, ValueNumbers& vnmap)
+TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn, 
+			Pro64IRInterface& ir, ValueNumbers& vnmap)
 {
   if (wn == NULL) {
     // Base case
@@ -125,7 +127,7 @@ TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn, ValueNumbers& vnmap)
     VN vn = vnmap.Find((ExprHandle)wn);
     
     os << "VN = " << vn << endl;
-    ExprTree* tree = GetExprTreeForExprHandle((ExprHandle)wn);
+    ExprTree* tree = ir.GetExprTreeForExprHandle((ExprHandle)wn);
     tree->dump(os);
     delete tree;
 
@@ -135,13 +137,13 @@ TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn, ValueNumbers& vnmap)
     if (WN_operator(wn) == OPR_BLOCK) {
       WN *kid = WN_first(wn);
       while (kid) {
-	TestIR_OA_ForEachVarRef(os, kid, vnmap);
+	TestIR_OA_ForEachVarRef(os, kid, ir, vnmap);
 	kid = WN_next(kid);
       }
     } else {
       for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
 	WN* kid = WN_kid(wn, kidno);
-	TestIR_OA_ForEachVarRef(os, kid, vnmap);
+	TestIR_OA_ForEachVarRef(os, kid, ir, vnmap);
       }
     }
   }
@@ -246,9 +248,11 @@ RecursiveFnWN(std::ostream& os, WN* wn)
 static int
 DumpExprTree(std::ostream& os, WN* wn)
 {
+  Pro64IRInterface ir;
+
   OPERATOR opr = WN_operator(wn);
   if (OPERATOR_is_expression(opr)) {
-    ExprTree* tree = GetExprTreeForExprHandle((ExprHandle)wn);
+    ExprTree* tree = ir.GetExprTreeForExprHandle((ExprHandle)wn);
     tree->dump(os);
     delete tree;
   }

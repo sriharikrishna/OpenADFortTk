@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.8 2003/12/03 01:32:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.9 2003/12/03 20:43:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -44,6 +44,7 @@
 //*************************** User Include Files ****************************
 
 #include <OpenAnalysis/Utils/DGraph.h>
+#include <OpenAnalysis/ValueNumbers/ExprTree.h>
 #include <OpenAnalysis/Interface/IRInterface.h>
 
 // IRInterface types: Use OA_IRHANDLETYPE_VOIDPTR
@@ -55,12 +56,6 @@
 //   SymHandle  - ST*
 
 //*************************** Forward Declarations ***************************
-
-// FIXME: Temporary
-class ExprTree;
-
-ExprTree* 
-GetExprTreeForExprHandle(ExprHandle h);
 
 //***************************************************************************
 
@@ -239,6 +234,11 @@ public:
   StmtLabel GetUMultiTargetLabel (StmtHandle h, int targetIndex);
   StmtLabel GetUMultiCatchallLabel (StmtHandle h);
   ExprHandle GetUMultiCondition (StmtHandle h, int targetIndex);
+
+  //--------------------------------------------------------
+  // 
+  //--------------------------------------------------------
+  ExprTree* GetExprTreeForExprHandle(ExprHandle h);
 
   //--------------------------------------------------------
   // Obtain uses and defs

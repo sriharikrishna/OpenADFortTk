@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.7 2003/12/03 01:32:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.8 2003/12/03 20:43:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -38,6 +38,9 @@
 #include "Pro64IRInterface.h"
 
 //*************************** Forward Declarations ***************************
+
+ExprTree::Node*
+BuildExprTreeForWN(ExprTree* tree, WN* wn);
 
 //****************************************************************************
 
@@ -186,6 +189,7 @@ Pro64IRUseDefIterator::Pro64IRUseDefIterator (WN *subtree, int uses_or_defs)
 void
 Pro64IRUseDefIterator::build_use_def_lists (WN *t, int flags)
 {
+  // FIXME: var refs used in callsites are assumed to be definitions
   enum { OuterMost_OPR_ARRAY = 1 };
   OPERATOR opr = WN_operator (t);
   switch (opr) {
@@ -845,38 +849,17 @@ Pro64IRInterface::GetCallsiteParams(ExprHandle h)
   return new Pro64IRCallsiteParamIterator(wn);
 }
 
+
 //-----------------------------------------------------------------------------
-// Obtain uses and defs
+// 
 //-----------------------------------------------------------------------------
-
-IRUseDefIterator*
-Pro64IRInterface::GetUses (StmtHandle h)
-{
-  WN *wn = (WN *) h;
-  return new Pro64IRUseDefIterator (wn, IRUseDefIterator::Uses);
-}
-
-IRUseDefIterator*
-Pro64IRInterface::GetDefs (StmtHandle h)
-{
-  WN *wn = (WN *) h;
-  return new Pro64IRUseDefIterator (wn, IRUseDefIterator::Defs);
-}
-
-
-// FIXME: temporary implementation
-
-#include <OpenAnalysis/ValueNumbers/ExprTree.h>
-
-ExprTree::Node*
-BuildExprTreeForWN(ExprTree* tree, WN* wn);
-
 
 // Given an ExprHandle, return an ExprTree*
 // Returns new'd memory!
 ExprTree* 
-GetExprTreeForExprHandle(ExprHandle h)
+Pro64IRInterface::GetExprTreeForExprHandle(ExprHandle h)
 {
+  // FIXME: temporary implementation
   WN *wn = (WN *) h;
   
   ExprTree* exprTree = new ExprTree;
@@ -920,6 +903,23 @@ BuildExprTreeForWN(ExprTree* tree, WN* wn)
   return root;
 }
 
+//-----------------------------------------------------------------------------
+// Obtain uses and defs
+//-----------------------------------------------------------------------------
+
+IRUseDefIterator*
+Pro64IRInterface::GetUses (StmtHandle h)
+{
+  WN *wn = (WN *) h;
+  return new Pro64IRUseDefIterator (wn, IRUseDefIterator::Uses);
+}
+
+IRUseDefIterator*
+Pro64IRInterface::GetDefs (StmtHandle h)
+{
+  WN *wn = (WN *) h;
+  return new Pro64IRUseDefIterator (wn, IRUseDefIterator::Defs);
+}
 
 //-----------------------------------------------------------------------------
 // Symbol Handles
