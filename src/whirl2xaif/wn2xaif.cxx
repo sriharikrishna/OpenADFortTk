@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.44 2004/02/26 14:24:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.45 2004/03/03 16:31:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -147,6 +147,8 @@ AddStructuredCFEndTags(WN* wn);
 static void
 MassageOACFGIntoXAIFCFG(CFG* cfg);
 
+static void
+DumpCFGraphEdge(xml::ostream& xos, UINT eid, CFG::Edge* edge);
 
 //***************************************************************************
 // 
@@ -292,9 +294,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   for (DGraphEdgeVec::iterator edgeIt = edges->begin(); 
        edgeIt != edges->end(); ++edgeIt) {
     CFG::Edge* e = dynamic_cast<CFG::Edge*>(*edgeIt);
-    CFG::Node* n1 = dynamic_cast<CFG::Node*>(e->source());
-    CFG::Node* n2 = dynamic_cast<CFG::Node*>(e->sink());
-    DumpCFGraphEdge(xos, ctxt.GetNewEId(), n1->getId(), n2->getId());
+    DumpCFGraphEdge(xos, ctxt.GetNewEId(), e);
   }
   delete edges;
   
@@ -915,11 +915,40 @@ DumpGraphEdge(xml::ostream& xos, const char* nm,
 {
   xos << BegElem(nm) 
       << Attr("edge_id", eid) 
-      << Attr("source", srcid)  << Attr("target", targid);
+      << Attr("source", srcid) << Attr("target", targid);
   if (pos >= 1) {
     xos << Attr("position", pos);
   }
   xos << EndElem;
+}
+
+
+// DumpCFGraphEdge: Dump a CFG edge
+static void
+DumpCFGraphEdge(xml::ostream& xos, UINT eid, CFG::Edge* edge)
+{
+  CFG::Node* n1 = dynamic_cast<CFG::Node*>(edge->source());
+  CFG::Node* n2 = dynamic_cast<CFG::Node*>(edge->sink());
+
+  CFG::EdgeType ety = edge->getType();
+  WN* eexpr = (Pro64ExprHandle)edge->getExpr();
+  
+  bool xaifCondVal = false;
+  if (ety == CFG::TRUE_EDGE || (ety == CFG::MULTIWAY_EDGE && eexpr)) {
+    xaifCondVal = true;
+  } 
+  
+  xos << BegElem("xaif:ControlFlowEdge") 
+      << Attr("edge_id", eid) 
+      << Attr("source", n1->getId()) << Attr("target", n2->getId());
+  if (xaifCondVal) {
+    xos << Attr("has_condition_value", "true");
+    if (eexpr) {
+      xos << Attr("condition_value", "FIXME");
+    }
+  }
+  xos << EndElem;
+
 }
 
 //***************************************************************************
@@ -1060,7 +1089,7 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	   vty == XAIFStrings.elem_BBPreLoop()) {
     xlate_CFCondition(xos, WN_while_test(wn), ctxt);
   }
-  else if (vty == XAIFStrings.elem_BBIf()) {
+  else if (vty == XAIFStrings.elem_BBBranch()) {
     if (opr == OPR_TRUEBR || opr == OPR_FALSEBR) {
       xos << BegComment << opr_str << " label=" << WN_label_number(wn)
 	  << EndComment;
@@ -1078,7 +1107,7 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 // GetCFGVertexType: A CFG vertex is either an Entry, Exit,
-// BasicBlock, or a special structured control flow vertex (e.g., If,
+// BasicBlock, or a special structured control flow vertex (e.g., Branch,
 // ForLoop, PreLoop, PostLoop).  The string returned is from
 // 'XAIFStrings' which means users can compare on pointer value
 // (instead of using strcmp()).
@@ -1104,8 +1133,7 @@ GetCFGVertexType(CFG* cfg, CFG::Node* n)
   
   // FIXME: we do not need to iterate over all statements since
   // control flow statements contructs will be in their own xaif:BB.
-  CFG::NodeStatementsIterator stmtIt(n);
-  for (bool inLoop = true; ((bool)stmtIt && inLoop); ++stmtIt) {
+  for (CFG::NodeStatementsIterator stmtIt(n); (bool)stmtIt; ++stmtIt) {
     WN* wstmt = (WN *)((StmtHandle)stmtIt);
     const char* vty = GetStructuredCFGVertexType(wstmt);
     if (vty) { 
@@ -1140,7 +1168,7 @@ GetStructuredCFGVertexType(WN* wstmt)
   case OPR_IF: 
   case OPR_TRUEBR:
   case OPR_FALSEBR:
-    return XAIFStrings.elem_BBIf();
+    return XAIFStrings.elem_BBBranch();
     
     // Currently we use special comments to denote EndBranch and EndLoop
   case OPR_COMMENT: 
@@ -1259,11 +1287,12 @@ AddStructuredCFEndTags(WN* wn)
       WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndLoop());
       WN_INSERT_BlockLast(blkWN, newWN);
     }
-    else if (vty == XAIFStrings.elem_BBIf()) {
-      //     if (...) { ... }
-      //     else { ... }
-      //     endif
-      // --> EndBranch
+    else if (vty == XAIFStrings.elem_BBBranch()) {
+      //     if (...) { ... }  OR    switch (FIXME)
+      //     else { ... }              x: ...
+      //     endif                     default: ...
+      // --> EndBranch               endswitch
+      //                         --> EndBranch
       WN* blkWN = FindParentWNBlock(wn, curWN);
       WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndBranch());
       WN_INSERT_BlockAfter(blkWN, curWN, newWN); // 'newWN' after 'curWN'

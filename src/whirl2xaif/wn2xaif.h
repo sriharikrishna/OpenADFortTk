@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.21 2004/02/24 20:45:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.22 2004/03/03 16:31:41 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -159,12 +159,7 @@ DumpCallGraphEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid)
   DumpGraphEdge(xos, "xaif:CallGraphEdge", eid, srcid, targid, 0);
 }
 
-// DumpCFGraphEdge: Dumps a xaif:ControlFlowEdge
-inline void 
-DumpCFGraphEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid)
-{
-  DumpGraphEdge(xos, "xaif:ControlFlowEdge", eid, srcid, targid, 0);
-}
+// DumpCFGraphEdge: Dumps a xaif:ControlFlowEdge (special requirements)
 
 // DumpExprGraphEdge: Dumps a xaif:ExpressionEdge
 inline void 
