@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.38 2004/04/29 21:33:20 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.39 2004/05/11 19:09:03 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -283,6 +283,8 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
   PUId puId = ctxt.FindPUId(pu);
   ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
   SymTabId scopeId = ctxt.FindSymTabId(sttab);
+
+  SymTabId puScopeId = ctxt.FindSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
   
   // Generate the CFG
   xos << Comment(whirl2xaif_divider_comment);
@@ -290,7 +292,9 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
   
   xos << BegElem("xaif:ControlFlowGraph") 
       << Attr("vertex_id", vertexId) << Attr("scope_id", scopeId)
-      << AttrSymId(st) << PUIdAnnot(puId) << EndAttrs;
+      << AttrSymId(st) << PUIdAnnot(puId)
+      << Attr("controlflowgraph_scope_id", puScopeId)
+      << EndAttrs;
   TranslateWNPU(xos, wn_pu, ctxt);
   xos << EndElem; // xaif:ControlFlowGraph
 }
