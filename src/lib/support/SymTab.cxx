@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.cxx,v 1.8 2003/10/10 17:21:37 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.cxx,v 1.9 2003/10/14 20:26:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -29,6 +29,7 @@
 
 #include "stab_attr.h"
 #include "wn_attr.h"
+#include "diagnostics.h"
 
 //************************** Forward Declarations ***************************
 
@@ -82,7 +83,7 @@ IsVarRefTranslatableToXAIF(const WN* wn)
   case OPR_ILOAD: { // memref
     TY_IDX baseobj_ty = TY_pointed(WN_load_addr_ty(wn));
     TY_IDX baseobj_ty1 = TY_pointed(WN_Tree_Type(WN_kid0(wn))); // FIXME
-    assert(baseobj_ty = baseobj_ty1); // FIXME
+    ASSERT_FATAL(baseobj_ty = baseobj_ty1, (DIAG_A_STRING, "Error!")); //FIXME
     TY_IDX refobj_ty = WN_ty(wn);
     return (IsScalarRef(baseobj_ty, refobj_ty));
   }
@@ -152,7 +153,7 @@ IsNonScalarRef(const WN* wn)
   case OPR_ILOAD: { // memref
     TY_IDX baseobj_ty = TY_pointed(WN_load_addr_ty(wn));
     TY_IDX baseobj_ty1 = TY_pointed(WN_Tree_Type(WN_kid0(wn))); // FIXME
-    assert(baseobj_ty = baseobj_ty1); // FIXME
+    ASSERT_FATAL(baseobj_ty = baseobj_ty1, (DIAG_A_STRING, "Error!")); //FIXME
     TY_IDX refobj_ty = WN_ty(wn);
     return (IsNonScalarRef(baseobj_ty, refobj_ty));
   }
@@ -171,7 +172,8 @@ IsNonScalarRef(const WN* wn)
     // being referenced or defined. Kids 1..n are dimensions; Kids
     // n+1..2n are the index expressions.
     WN* base = WN_kid0(wn);
-    assert(WN_operator(base) == OPR_LDA || WN_operator(base) == OPR_LDID);
+    ASSERT_FATAL(WN_operator(base) == OPR_LDA || WN_operator(base) == OPR_LDID,
+		 (DIAG_A_STRING, "Error!"));
     return true;
   }
 

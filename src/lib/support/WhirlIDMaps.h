@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.6 2003/09/16 14:30:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.7 2003/10/14 20:26:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -32,6 +32,8 @@
 #include <include/Open64BasicTypes.h>
 
 //*************************** User Include Files ****************************
+
+#include "diagnostics.h"
 
 //************************** Forward Declarations ***************************
 
@@ -211,7 +213,7 @@ public:
     }
     
     if (mustFind && result == 0) {
-      assert(false && "Could not find entry!");
+      ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Could not find entry!"));
     }
 
     return result;
@@ -243,7 +245,7 @@ public:
     }
     
     if (mustFind && result == NULL) {
-      assert(false && "Could not find entry!");
+      ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Could not find entry!"));
     }
 
     return result;
@@ -287,7 +289,7 @@ public:
     }
     
     if (mustFind && result == 0) {
-      assert(false && "Could not find entry!");
+      ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Could not find entry!"));
     }
     
     return result;
@@ -319,7 +321,7 @@ public:
     }
     
     if (mustFind && result == NULL) {
-      assert(false && "Could not find entry!");
+      ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Could not find entry!"));
     }
     
     return result;
