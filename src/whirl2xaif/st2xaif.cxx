@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.27 2004/03/19 16:54:29 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.28 2004/04/28 15:24:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -153,8 +153,6 @@ xlate_STUse_error(xml::ostream& xos, ST *st, XlationContext& ctxt);
 static void 
 xlate_STUse_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt);
 static void 
-xlate_STUse_FUNC(xml::ostream& xos, ST *st, XlationContext& ctxt);
-static void 
 xlate_STUse_CONST(xml::ostream& xos, ST *st, XlationContext& ctxt);
 static void 
 xlate_STUse_BLOCK(xml::ostream& xos, ST *st, XlationContext& ctxt);
@@ -305,13 +303,18 @@ whirl2xaif::xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
 			       NonScalarSymTab* nonscalarsymtab, 
 			       XlationContext& ctxt)
 {
-  //xlate_SYMTAB(xos, CURRENT_SYMTAB, ctxt);
-  xlate_NonScalarSymTab(xos, nonscalarsymtab, ctxt);
+  xos << BegElem("xaif:SymbolTable") << EndAttrs;
+  
+  xlate_SYMTAB(xos, symtab_lvl, ctxt);
+  //xlate_PREGTAB(xos, symtab_lvl, ctxt); // REMOVE
+  //xlate_NonScalarSymTab(xos, nonscalarsymtab, ctxt);
+  
+  xos << EndElem;
 }
+
 
 // FIXME: move to xlateSYMTAB.cxx
 class xlate_ST_TAB {
-  
 public:
   xlate_ST_TAB(xml::ostream& xos_, SYMTAB_IDX symtab_, XlationContext& ctxt_) 
     : xos(xos_), symtab(symtab_), ctxt(ctxt_)
@@ -320,41 +323,14 @@ public:
   // A function object applied to every entry of a ST_TAB
   void operator()(UINT32 idx, ST* st) const 
   { 
-    
-#if 0 //FIXME
-    const char* stname = ST_name(st);
-    
-    BOOL dop = (ST_sclass(st) != SCLASS_FORMAL
-		&& ST_sclass(st) != SCLASS_FORMAL_REF);
-    dop &= ((ST_sym_class(st) == CLASS_VAR  && !ST_is_namelist(st)) 
-	    || (ST_sym_class(st) == CLASS_FUNC));
-
-    if ((ST_sclass(stbase) == SCLASS_DGLOBAL) && ST_is_initialized(st)
-	&& !Stab_No_Linkage(st) 
-	&& (!TY_Is_Structured(ST_type(st)) 
-	    || Stab_Is_Equivalence_Block(st))) {
-      INITO_IDX inito = Find_INITO_For_Symbol(st);
-      if (inito != (INITO_IDX) 0) {
-	INITO2F_translate(xos, inito); // FIXME: was Data_Stmt_Tokens
-	xos << std::endl;	
-	return;
-      }
-    } else if (dop) {
-      TranslateSTDecl(xos, st, ctxt);
-      return;
-    } 
-#endif
-    
     TranslateSTDecl(xos, st, ctxt);
   }
   
 private:
   xml::ostream&   xos;
   SYMTAB_IDX      symtab;
-  XlationContext& ctxt;
-  
+  XlationContext& ctxt;  
 };
-
 
 
 // FIXME: move to xlateSYMTAB.cxx
@@ -365,15 +341,40 @@ void
 whirl2xaif::xlate_SYMTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
 			 XlationContext& ctxt)
 {
-  xos << BegElem("xaif:SymbolTable") << EndAttrs;
-
-  // Note: 'For_all' applies the object's 'operator()' to every entry
-  // of the respective table.
-  // ST_TAB: Symbol Table: 
+  // 'For_all' applies 'operator()' to every entry of St_Table.
   For_all(St_Table, symtab_lvl, xlate_ST_TAB(xos, symtab_lvl, ctxt));
-  
-  xos << EndElem;
 }
+
+#if 0
+
+class xlate_PREG_TAB {
+public:
+  xlate_PREG_TAB(xml::ostream& xos_, SYMTAB_IDX symtab_, XlationContext& ctxt_)
+    : xos(xos_), symtab(symtab_), ctxt(ctxt_)
+  { } 
+
+  // A function object applied to every entry of a ST_TAB
+  void operator()(UINT32, PREG* preg) const 
+  { 
+    TranslateSTDecl(xos, preg, ctxt);
+  }
+  
+private:
+  xml::ostream&   xos;
+  SYMTAB_IDX      symtab;
+  XlationContext& ctxt;  
+};
+
+void 
+whirl2xaif::xlate_PREGTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
+			  XlationContext& ctxt)
+{
+  // 'For_all' applies 'operator()' to every entry of Preg_Table.
+  For_all(Preg_Table, symtab_lvl, xlate_PREG_TAB(xos, symtab_lvl, ctxt));
+}
+
+#endif
+
 
 void
 whirl2xaif::xlate_NonScalarSymTab(xml::ostream& xos, NonScalarSymTab* symtab, 
@@ -446,7 +447,7 @@ static const XlateSTHandlerFunc XlateSTUse_HandlerTable[CLASS_COUNT] =
 {
   &xlate_ST_ignore,     /* CLASS_UNK   == 0 */
   &xlate_STUse_VAR,     /* CLASS_VAR   == 1 */
-  &xlate_STUse_FUNC,    /* CLASS_FUNC  == 2 */
+  &xlate_STUse_error,   /* CLASS_FUNC  == 2 */
   &xlate_STUse_CONST,   /* CLASS_CONST == 3 */
   &xlate_STUse_error,   /* CLASS_PREG  == 4 */
   &xlate_STUse_BLOCK,   /* CLASS_BLOCK == 5 */
@@ -470,28 +471,6 @@ whirl2xaif::TranslateSTUse(xml::ostream& xos, ST* st, XlationContext& ctxt)
   XlateSTUse_HandlerTable[ST_sym_class(st)](xos, st, ctxt);
 }
 
-
-/*----------- hidden routines to handle ST declarations ---------------*/
-/*---------------------------------------------------------------------*/
-static void
-ST2F_Define_Preg(const char *name, TY_IDX ty)
-{
-#if 0//FIXME
-  /* Declare a preg of the given type, name and offset as a local
-   * (register) variable in the current context.
-   */
-  xml::ostream decl_tokens = New_Token_Buffer();
-  UINT         current_indent = Current_Indentation();
-  
-  Append_F77_Indented_Newline(PUinfo_local_decls, 1, NULL/*label*/);
-  Append_Token_String(decl_tokens, name);
-  TY2F_translate(decl_tokens, ty);
-  Append_And_Reclaim_Token_List(PUinfo_local_decls, &decl_tokens);
-  Set_Current_Indentation(current_indent);
-#endif
-}
-
-
 static void 
 xlate_ST_ignore(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
@@ -511,13 +490,6 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
 		    ST_sym_class(st), "xlate_STDecl_VAR"));
 
-#if 0 // REMOVE  
-  if (Current_scope > GLOBAL_SYMTAB) {
-    ASSERT_DBG_FATAL(!PUINFO_RETURN_TO_PARAM || st != PUINFO_RETURN_PARAM, 
-		     (DIAG_W2F_DECLARE_RETURN_PARAM, "xlate_STDecl_VAR"));
-  }
-#endif
-  
   const char* st_name = ST_name(st);
   ST* base = ST_base(st);
   TY_IDX ty = ST_type(st);
@@ -566,7 +538,6 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
 #if 0 // FIXME
   /* Declare the variable */
   
-
   if (Stab_Is_Common_Block(st)) {
     TY2F_Translate_Common(xos, st_name, ty); 
   } else if (Stab_Is_Equivalence_Block(st)) {
@@ -685,13 +656,23 @@ xlate_STDecl_FUNC(xml::ostream& xos, ST* st, XlationContext& ctxt)
 static void 
 xlate_STDecl_CONST(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
-  //xos << BegComment << "const id=" << (UINT)ST_index(st) << EndComment; 
+  //xos << BegComment << "const id=" << (UINT)ST_index(st) << EndComment;
 }
 
 static void 
 xlate_STDecl_PREG(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
-  //xos << BegComment << "preg id=" << (UINT)ST_index(st) << EndComment;
+  TY_IDX ty = ST_type(st);
+  const char* ty_str = TranslateTYToSymType(ty);
+  if (!ty_str) { 
+    return; // skip [FIXME -- better hope this is not used!]
+  }
+  
+  SymId st_id = (SymId)ST_index(st);
+  xos << BegElem("xaif:Symbol") << AttrSymId(st)
+      << Attr("kind", "variable") << Attr("type", ty_str)
+      << Attr("shape", "scalar") << SymIdAnnot(st_id)
+      << Attr("active", 0) << EndElem;
 }
 
 static void 
@@ -715,12 +696,6 @@ xlate_STDecl_TYPE(xml::ostream& xos, ST *st, XlationContext& ctxt)
 
   const char  *st_name = ST_name(st);
   TY_IDX       ty_rt = ST_type(st);
-
-#if 0 // REMOVE
-  if (Current_scope > GLOBAL_SYMTAB) 
-    ASSERT_DBG_FATAL(!PUINFO_RETURN_TO_PARAM || st != PUINFO_RETURN_PARAM, 
-		     (DIAG_W2F_DECLARE_RETURN_PARAM, "xlate_STDecl_TYPE"));
-#endif 
  
 #if 0 // FIXME 
   xos << BegComment << "type id=" << (UINT)ST_index(st) << EndComment; 
@@ -776,20 +751,6 @@ xlate_STUse_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
 
 
 static void 
-xlate_STUse_FUNC(xml::ostream& xos, ST *st, XlationContext& ctxt)
-{
-  ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_FUNC, 
-		   (DIAG_W2F_UNEXPECTED_SYMCLASS, 
-		    ST_sym_class(st), "xlate_STUse_FUNC"));
-  
-  xos << BegElem("***use_func") << Attr("id", ctxt.GetNewVId())
-      << Attr("_type", -1) << Attr("value", ST_name(st)) 
-      << EndElem;
-  
-  //REMOVE Set_BE_ST_w2fc_referenced(st);
-}
-
-static void 
 xlate_STUse_CONST(xml::ostream& xos, ST *st, XlationContext& ctxt)
 {
   ASSERT_DBG_FATAL(ST_sym_class(st)==CLASS_CONST,
@@ -797,17 +758,16 @@ xlate_STUse_CONST(xml::ostream& xos, ST *st, XlationContext& ctxt)
 		    ST_sym_class(st), "xlate_STUse_CONST"));
   
   // A CLASS_CONST symbol never has a name, so just emit the value.
-  // FIXME
   TY_IDX ty_idx = ST_type(st);
   TY& ty = Ty_Table[ty_idx];
-    
+  
   std::string val;
   if (TY_mtype(ty) == MTYPE_STR && TY_align(ty_idx) > 1) {
     val = TCON2F_hollerith(STC_val(st)); // must be a hollerith constant
   } else {
     val = TCON2F_translate(STC_val(st), TY_is_logical(ty));
   }
-
+  
   const char* ty_str = TranslateTYToSymType(ty_idx);
   if (!ty_str) { ty_str = "***"; }  
 
@@ -847,7 +807,6 @@ ST2F_deref_translate(xml::ostream& xos, ST *st, XlationContext& ctxt)
   
   /* reference to the pointer value; cf. W2CF_Symtab_Nameof_St_Pointee */
   xos << "{deref***} " << "deref_" << ST_name(st);
-  //REMOVE Set_BE_ST_w2fc_referenced(st);
 }
 
 
@@ -1112,37 +1071,12 @@ ST2F_func_header(xml::ostream& xos, WN* wn,
 	  //xos << std::endl;
 	}
       }
-    }    
+    }
   }
 #endif
 
 } /* ST2F_func_header */
 
-void
-ST2F_Use_Preg(xml::ostream& xos,
-	      TY_IDX       preg_ty,
-	      PREG_IDX     preg_idx)
-{
-  /* Append the name of the preg to the token-list and declare the
-   * preg in the current PU context unless it is already declared.
-   */
-#if 0
-  preg_ty = PUinfo_Preg_Type(preg_ty, preg_idx);
-  
-  /* Declare the preg, if it has not already been declared */
-  if (!PUinfo_Is_Preg_Declared(preg_ty, preg_idx)) {
-    ST2F_Define_Preg(preg_name, preg_ty);
-    PUinfo_Set_Preg_Declared(preg_ty, preg_idx);
-  }
-#endif
-  
-  if (preg_idx > Last_Dedicated_Preg_Offset) {
-    xos << Preg_Name(preg_idx);
-  } else {
-    xos << "reg" << preg_idx;
-  }
-  
-} /* ST2F_Use_Preg */
 
 void 
 ST2F_Declare_Tempvar(TY_IDX ty, UINT idx)

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.53 2004/04/20 13:14:54 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.54 2004/04/28 15:24:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -442,6 +442,35 @@ public:
   
   void WN2F_Find_And_Mark_Nested_Address(WN * addr);
 };
+
+
+// xlate_PregRef: [FIXME: can we abstract witih xlate_SymRef]
+whirl2xaif::status
+whirl2xaif::xlate_PregRef(xml::ostream& xos, ST* st, TY_IDX preg_ty, 
+			  PREG_IDX preg_idx, XlationContext& ctxt)
+{
+  bool closeVarRef = false;
+  if (!ctxt.IsVarRef()) {
+    xos << BegElem(XAIFStrings.elem_VarRef())
+	<< Attr("vertex_id", ctxt.GetNewVId())
+	<< Attr("du_ud", ctxt.FindVN(ctxt.GetWN_MR()));
+    closeVarRef = true; 
+  }
+
+  ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
+  SymTabId scopeid = ctxt.FindSymTabId(sttab);
+
+  xos << BegElem("xaif:SymbolReference") 
+      << Attr("vertex_id", ctxt.GetNewVId())
+      << Attr("scope_id", scopeid) << AttrSymId(st) << EndElem;
+  
+  if (closeVarRef) {
+    xos << EndElem /* elem_VarRef() */;
+  }
+  
+  return whirl2xaif::good;
+}
+
 
 // xlate_SymRef: see header.
 whirl2xaif::status

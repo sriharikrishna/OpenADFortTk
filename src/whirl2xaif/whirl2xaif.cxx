@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.36 2004/02/26 14:24:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.37 2004/04/28 15:24:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -203,7 +203,7 @@ TranslateScopeHierarchy(xml::ostream& xos, PU_Info* pu_forest,
   
   xos << BegElem("xaif:Scope") << Attr("vertex_id", scopeId)
       << SymTabIdAnnot(scopeId) << EndAttrs;
-  xlate_SYMTAB(xos, GLOBAL_SYMTAB, ctxt);
+  xlate_SymbolTables(xos, GLOBAL_SYMTAB, NULL, ctxt);
   xos << EndElem << std::endl;
 
   // Translate each PU, descending into children first
@@ -227,7 +227,7 @@ TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId,
   
   xos << BegElem("xaif:Scope") << Attr("vertex_id", scopeId) 
       << SymTabIdAnnot(scopeId) << EndAttrs;
-  xlate_SYMTAB(xos, CURRENT_SYMTAB, ctxt);
+  xlate_SymbolTables(xos, CURRENT_SYMTAB, NULL, ctxt);
   xos << EndElem << std::endl;
   
   // Generate an edge to parent

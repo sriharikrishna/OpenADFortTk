@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.24 2004/04/20 13:14:54 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.25 2004/04/28 15:24:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -85,6 +85,11 @@ namespace whirl2xaif {
   extern whirl2xaif::status 
   TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt);
 
+  // xlate_PregRef: (essentially a special version of xlate_SymRef for PREGs)
+  whirl2xaif::status
+  whirl2xaif::xlate_PregRef(xml::ostream& xos, ST* st, TY_IDX preg_ty, 
+			    PREG_IDX preg_idx, XlationContext& ctxt);
+  
   // xlate_SymRef: Given a base symbol 'base_st' and an offset 'offset'
   // within it, generate an XAIF expression to reference an object of
   // 'ref_ty' at this location.  The base symbol 'base_st' has an

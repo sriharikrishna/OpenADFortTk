@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.29 2004/04/14 21:26:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.30 2004/04/28 15:24:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -341,7 +341,8 @@ whirl2xaif::xlate_LDID(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   TY_IDX ref_ty = WN_GetRefObjType(wn);
   
   if (ST_class(WN_st(wn)) == CLASS_PREG) {
-    ST2F_Use_Preg(xos, base_ty, WN_load_offset(wn)); // FIXME if WN_load_offset(wn) == -1
+    ctxt.CurContext().SetWN(wn);
+    xlate_PregRef(xos, WN_st(wn), base_ty, WN_load_offset(wn), ctxt); // FIXME if WN_load_offset(wn) == -1
   } else {
 
     // FIXME: Stab_Pointer_To, et. al. create types!!!
@@ -487,7 +488,7 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for LHS
   
   if (ST_class(base_st) == CLASS_PREG) { // FIXME
-    ST2F_Use_Preg(xos, base_ty, WN_store_offset(wn));
+    xlate_PregRef(xos, base_st, base_ty, WN_store_offset(wn), ctxt);
   } else {
     xlate_SymRef(xos, base_st, baseptr_ty, ref_ty, WN_store_offset(wn), ctxt);
   }
@@ -621,17 +622,10 @@ whirl2xaif::WN2F_pstid(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    /* Get the lhs of the assignment */
    xos << std::endl;
    if (ST_class(WN_st(wn)) == CLASS_PREG) {
-     ST2F_Use_Preg(xos, ST_type(WN_st(wn)), WN_store_offset(wn));
-   } else if (ST_sym_class(WN_st(wn))==CLASS_VAR 
-	      && ST_is_not_used(WN_st(wn))) {
-     /* This is a redundant assignment statement, so determined
-      * by IPA, so just assign it to a temporary variable
-      * instead.
-      */
-     UINT tmp_idx = Stab_Lock_Tmpvar(WN_ty(wn), &ST2F_Declare_Tempvar);
-     xos << "tmp" << tmp_idx;
-     Stab_Unlock_Tmpvar(tmp_idx);
-   } else {
+     xlate_PregRef(xos, WN_st(wn), ST_type(WN_st(wn)), WN_store_offset(wn), 
+		   ctxt);
+   } 
+   else {
      xlate_SymRef(xos,
 		  WN_st(wn),                        /* base-symbol */
 		  Stab_Pointer_To(ST_type(WN_st(wn))),/* base-type */

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.8 2004/03/19 16:54:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.9 2004/04/28 15:24:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -72,7 +72,7 @@
  *       that the resultant token buffer will not have appended a 
  *       newline after the function header.
  *
- *    ST2F_Use_Preg:
+ *    xlate_PregRef:
  *       Given an ST_type(), a preg offset, and a context, this function 
  *       appends the name of the preg to the given xml::ostream&.  The 
  *       preg will be declared as a side-effect of this call if it has 
@@ -168,9 +168,6 @@ ST2F_func_header(xml::ostream& xos,
 		 INT32  num_parms,    /* # of parms in params */
 		 BOOL   is_altentry, /* Alternate entry */
 		 XlationContext& ctxt);
-
-extern void 
-ST2F_Use_Preg(xml::ostream& xos, TY_IDX preg_ty, PREG_IDX preg_idx);
 
 extern void 
 ST2F_Declare_Tempvar(TY_IDX ty, UINT idx);
