@@ -208,7 +208,6 @@
     <xaif:Exit vertex_id="8" annotation="{WHIRL_Id#}"/>
 
     <xaif:Branch vertex_id="9" annotation="{WHIRL_Id#121}">
-      <!-- OPR_TRUEBR label=2 -->
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_lt_scal_scal" type="***"/>
         <xaif:VariableReference vertex_id="2" du_ud="5">

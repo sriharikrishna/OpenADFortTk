@@ -79,6 +79,8 @@
       </xaif:Update>
     </xaif:ForLoop>
 
+    <xaif:BasicBlock vertex_id="4" scope_id="2" annotation="{WHIRL_Id#}"/>
+
     <xaif:ForLoop vertex_id="5" annotation="{WHIRL_Id#18}">
       <xaif:Initialization>
         <xaif:AssignmentLHS du_ud="7">
@@ -161,15 +163,16 @@
 
     <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
     <xaif:ControlFlowEdge edge_id="2" source="2" target="3"/>
-    <xaif:ControlFlowEdge edge_id="3" source="3" target="5"/>
+    <xaif:ControlFlowEdge edge_id="3" source="3" target="4" has_condition_value="true"/>
     <xaif:ControlFlowEdge edge_id="4" source="3" target="10"/>
-    <xaif:ControlFlowEdge edge_id="5" source="5" target="6" has_condition_value="true"/>
-    <xaif:ControlFlowEdge edge_id="6" source="5" target="8"/>
-    <xaif:ControlFlowEdge edge_id="7" source="6" target="12"/>
-    <xaif:ControlFlowEdge edge_id="8" source="8" target="13"/>
-    <xaif:ControlFlowEdge edge_id="9" source="10" target="11"/>
-    <xaif:ControlFlowEdge edge_id="10" source="12" target="5"/>
-    <xaif:ControlFlowEdge edge_id="11" source="13" target="3"/>
+    <xaif:ControlFlowEdge edge_id="5" source="4" target="5"/>
+    <xaif:ControlFlowEdge edge_id="6" source="5" target="6" has_condition_value="true"/>
+    <xaif:ControlFlowEdge edge_id="7" source="5" target="8"/>
+    <xaif:ControlFlowEdge edge_id="8" source="6" target="12"/>
+    <xaif:ControlFlowEdge edge_id="9" source="8" target="13"/>
+    <xaif:ControlFlowEdge edge_id="10" source="10" target="11"/>
+    <xaif:ControlFlowEdge edge_id="11" source="12" target="5"/>
+    <xaif:ControlFlowEdge edge_id="12" source="13" target="3"/>
   </xaif:ControlFlowGraph>
 
   <!-- ******************************************************************** -->

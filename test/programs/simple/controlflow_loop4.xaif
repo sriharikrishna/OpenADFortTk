@@ -295,7 +295,6 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
     <xaif:Exit vertex_id="15" annotation="{WHIRL_Id#}"/>
 
     <xaif:Branch vertex_id="16" annotation="{WHIRL_Id#63}">
-      <!-- OPR_TRUEBR label=5 -->
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_land_scal_scal" type="***"/>
         <xaif:Intrinsic vertex_id="2" name="bogus_gt_scal_scal" type="***"/>
@@ -318,7 +317,6 @@ doloop_stride          <xaif:ExpressionEdge edge_id="1" source="2" target="1" po
     </xaif:Branch>
 
     <xaif:Branch vertex_id="17" annotation="{WHIRL_Id#74}">
-      <!-- OPR_TRUEBR label=2 -->
       <xaif:Condition>
         <xaif:Intrinsic vertex_id="1" name="bogus_land_scal_scal" type="***"/>
         <xaif:Intrinsic vertex_id="2" name="bogus_gt_scal_scal" type="***"/>
