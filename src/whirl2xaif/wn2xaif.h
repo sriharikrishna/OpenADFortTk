@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.18 2004/02/19 22:02:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.19 2004/02/20 21:11:43 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -107,7 +107,7 @@ extern WN_OFFSET WN2F_Sum_Offsets(WN *addr);
 
 
 //***************************************************************************
-// 
+// Graph utilities
 //***************************************************************************
 
 class DGraph;
@@ -126,6 +126,44 @@ SortDGraphNodes(DGraph* g);
 // object.
 extern DGraphEdgeVec*
 SortDGraphEdges(DGraph* g);
+
+
+// DumpGraphEdge: Generic edge dumper.  Given an edge name 'nm', id,
+// source id, target id and position, dumps the edge in XAIF.  If
+// 'pos' is 0 it will not be output.
+void 
+DumpGraphEdge(xml::ostream& xos, const char* nm, 
+	      UINT eid, UINT srcid, UINT targid, UINT pos);
+
+// DumpScopeGraphEdge: Dumps a xaif:ScopeEdge
+inline void 
+DumpScopeGraphEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid)
+{
+  DumpGraphEdge(xos, "xaif:ScopeEdge", eid, srcid, targid, 0);
+}
+
+// DumpCallGraphEdge: Dumps a xaif:CallGraphEdge
+inline void 
+DumpCallGraphEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid)
+{
+  DumpGraphEdge(xos, "xaif:CallGraphEdge", eid, srcid, targid, 0);
+}
+
+// DumpCFGraphEdge: Dumps a xaif:ControlFlowEdge
+inline void 
+DumpCFGraphEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid)
+{
+  DumpGraphEdge(xos, "xaif:ControlFlowEdge", eid, srcid, targid, 0);
+}
+
+// DumpExprGraphEdge: Dumps a xaif:ExpressionEdge
+inline void 
+DumpExprGraphEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid,
+		  UINT pos)
+{
+  DumpGraphEdge(xos, "xaif:ExpressionEdge", eid, srcid, targid, pos);
+}
+
 
 //***************************************************************************
 // 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.27 2004/02/20 19:30:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.28 2004/02/20 21:11:44 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -743,12 +743,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	xos << EndElem; // End Argument
       } else {
 	// Intrinsic: create an edge
-	// FIXME: use DumpExprEdge
-	UINT eid = ctxt.GetNewEId();
-	UINT pos = position;
-	xos << BegElem("xaif:ExpressionEdge") << Attr("edge_id", eid)
-	    << Attr("source", srcid) << Attr("target", targid)
-	    << Attr("position", pos) << EndElem;
+	DumpExprGraphEdge(xos, ctxt.GetNewEId(), srcid, targid, position);
       }
       
     }

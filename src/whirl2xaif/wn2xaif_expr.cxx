@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.22 2004/02/20 19:30:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.23 2004/02/20 21:11:43 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -83,9 +83,6 @@ xlate_BinaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
 static whirl2xaif::status 
 xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty, BOOL callByValue,
 	      XlationContext& ctxt);
-
-static whirl2xaif::status 
-DumpExprEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid, UINT pos);
 
 //***************************************************************************
 
@@ -870,7 +867,7 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
       } else {
 	xlate_Operand(xos, WN_kid(wn, argIdx), opnd_type, callByValue, ctxt);
       }
-      DumpExprEdge(xos, ctxt.GetNewEId(), srcid, targid, position);
+      DumpExprGraphEdge(xos, ctxt.GetNewEId(), srcid, targid, position);
     }
     
     set_XlationContext_has_logical_arg(ctxt);
@@ -878,7 +875,7 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
     srcid = ctxt.PeekVId();
     xlate_Operand(xos, WN_kid(wn, endArgIdx), opnd_type, callByValue, ctxt);
     reset_XlationContext_has_logical_arg(ctxt);
-    DumpExprEdge(xos, ctxt.GetNewEId(), srcid, targid, position);
+    DumpExprGraphEdge(xos, ctxt.GetNewEId(), srcid, targid, position);
     break;
   }
   default: {
@@ -898,7 +895,7 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
       } else {
 	xlate_Operand(xos, WN_kid(wn, argIdx), opnd_type, callByValue, ctxt);
       }
-      DumpExprEdge(xos, ctxt.GetNewEId(), srcid, targid, position);
+      DumpExprGraphEdge(xos, ctxt.GetNewEId(), srcid, targid, position);
 
     }
     break;
@@ -959,8 +956,10 @@ xlate_BinaryOpToIntrinsic(xml::ostream& xos, OPCODE opcode, TY_IDX result_ty,
   }
 
   // Edges
-  DumpExprEdge(xos, ctxt.GetNewEId(), srcid0, targid, 1);
-  if (is_binary_op) { DumpExprEdge(xos, ctxt.GetNewEId(), srcid1, targid, 2); }
+  DumpExprGraphEdge(xos, ctxt.GetNewEId(), srcid0, targid, 1);
+  if (is_binary_op) { 
+    DumpExprGraphEdge(xos, ctxt.GetNewEId(), srcid1, targid, 2); 
+  }
   
   return whirl2xaif::good;
 }
@@ -996,12 +995,3 @@ xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty,
   return whirl2xaif::good;
 }
 
-
-static whirl2xaif::status 
-DumpExprEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid, UINT pos)
-{
-  xos << BegElem("xaif:ExpressionEdge") << Attr("edge_id", eid) 
-      << Attr("source", srcid) << Attr("target", targid)
-      << Attr("position", pos) << EndElem;
-  return whirl2xaif::good;
-}

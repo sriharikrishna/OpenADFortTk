@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.33 2004/02/20 18:57:41 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.34 2004/02/20 21:11:43 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -183,10 +183,7 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
     CallGraph::Edge* e = dynamic_cast<CallGraph::Edge*>(*edgeIt);
     CallGraph::Node* n1 = dynamic_cast<CallGraph::Node*>(e->source());
     CallGraph::Node* n2 = dynamic_cast<CallGraph::Node*>(e->sink());
-    
-    xos << BegElem("xaif:CallGraphEdge") << Attr("edge_id", ctxt.GetNewEId())
-	<< Attr("source", n1->getId())
-	<< Attr("target", n2->getId()) << EndElem; // FIXME: DumpGraphEdge
+    DumpCallGraphEdge(xos, ctxt.GetNewEId(), n1->getId(), n2->getId());
   }
   delete edges;
   
@@ -242,10 +239,9 @@ TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId,
   xlate_SYMTAB(xos, CURRENT_SYMTAB, ctxt);
   xos << EndElem << std::endl;
   
-  // Generate an edge to parent // FIXME: use DumpGraphEdge
-  xos << BegElem("xaif:ScopeEdge") << Attr("edge_id", ctxt.GetNewEId())
-      << Attr("source", scopeId) 
-      << Attr("target", parentId) << EndElem << std::endl;
+  // Generate an edge to parent
+  DumpScopeGraphEdge(xos, ctxt.GetNewEId(), scopeId, parentId);
+  xos << std::endl;
   
   // Recursively translate all children
   for (PU_Info *child = PU_Info_child(pu); child != NULL;
@@ -276,34 +272,33 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
 	    XlationContext& ctxt)
 {
   if (!pu) { return; }
-
+  
   PU_SetGlobalState(pu);
   
-  xos << Comment(whirl2xaif_divider_comment);
-  
-  if (PU_is_mainpu(PU_Info_pu(pu))) {
-    xos << Comment("*** This is the PROGRAM routine ***");
-  }
-  xos << BegElem("xaif:ControlFlowGraph") << Attr("vertex_id", vertexId);
-  
+  bool isCompilerGen = ((Language == LANG_F90) && 
+			(CURRENT_SYMTAB == GLOBAL_SYMTAB + 2) && 
+			Is_Set_PU_Info_flags(pu, PU_IS_COMPILER_GENERATED));
+  Is_True(!isCompilerGen, ("Compiler generated PU!")); // FIXME
+
+  // FIXME: how is PU_f90_lang() different from (Language == LANG_F90)?
+  PU& real_pu = PU_Info_pu(pu); 
+  WN2F_F90_pu = (PU_f90_lang(real_pu) != 0); // FIXME: set F90 flag
+  bool isProgram = PU_is_mainpu(real_pu);
+
   ST* st = ST_ptr(PU_Info_proc_sym(pu));
   WN *wn_pu = PU_Info_tree_ptr(pu);
-  // fdump_tree(stderr, wn_pu);
-
-#if 0 // FIXME  
-  BOOL is_user_visible_pu = 
-    (CURRENT_SYMTAB == GLOBAL_SYMTAB + 1) 
-    || ((Language == LANG_F90) && (CURRENT_SYMTAB == GLOBAL_SYMTAB + 2)
-	&& (!Is_Set_PU_Info_flags(pu, PU_IS_COMPILER_GENERATED)));
-#endif
   
   PUId puId = ctxt.FindPUId(pu);
-  
   ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
   SymTabId scopeId = ctxt.FindSymTabId(sttab);
   
-  xos << Attr("scope_id", scopeId) << AttrSymId(st)
-      << PUIdAnnot(puId) << EndAttrs;
+  // Generate the CFG
+  xos << Comment(whirl2xaif_divider_comment);
+  if (isProgram) { xos << Comment("*** This is the PROGRAM routine ***"); }
+  
+  xos << BegElem("xaif:ControlFlowGraph") 
+      << Attr("vertex_id", vertexId) << Attr("scope_id", scopeId)
+      << AttrSymId(st) << PUIdAnnot(puId) << EndAttrs;
   TranslateWNPU(xos, wn_pu, ctxt);
   xos << EndElem; // xaif:ControlFlowGraph
 }
@@ -314,22 +309,15 @@ TranslateWNPU(xml::ostream& xos, WN *wn_pu, XlationContext& ctxt)
 {
   const char* const caller_err_phase = Get_Error_Phase();
   Diag_Set_Phase("WHIRL to XAIF: translate PU");
-  Start_Timer(T_W2F_CU);
   
-  Is_True(WN_opcode(wn_pu) == OPC_FUNC_ENTRY, 
-	  ("Invalid opcode for TranslateWNPU()"));
+  Is_True(WN_opcode(wn_pu) == OPC_FUNC_ENTRY, ("Invalid opcode"));
   
-  Stab_initialize();                      // FIXME/REMOVE
-  PU& pu = Pu_Table[ST_pu(WN_st(wn_pu))]; // FIXME: set F90 flag
-  WN2F_F90_pu = (PU_f90_lang(pu) != 0);
-  
+  // fdump_tree(stderr, wn_pu);
   TranslateWN(xos, wn_pu, ctxt);
   
-  Stab_finalize();     // FIXME/REMOVE
-  Stab_Free_Tmpvars(); // undo possible side-effect on incoming WHIRL tree
-  Stab_Free_Namebufs();
+  Stab_Free_Tmpvars();  // FIXME: it would be nice to eventually 
+  Stab_Free_Namebufs(); // remove this stuff
   
-  Stop_Timer(T_W2F_CU);
   Diag_Set_Phase(caller_err_phase);
 }
 
@@ -410,7 +398,17 @@ FindCallToInlinedFn(const char* callee_nm, WN* wn);
 void 
 InlineTest(PU_Info* pu_forest)
 {
-  // Note: can only inline subroutines; and only with variables are args
+  // Given a PU forest 'pu_forest'
+  //   * searches for the first pu named 'inline_*'.  This is
+  //     assumed to be the subroutine for inlining.
+  //   * searches the program pu for the first call of this subroutine.
+  //   * inlines the subroutine into the main pu
+  // 
+  // Limitations: can only inline subroutines that
+  //   - have one return statement (or none)
+  //   - are called with variables as actual parameters (as opposed to
+  //     an expression like sin(x)).
+  //
   // Note: if we create entirely new functions, we will need to update
   //   pu->sym_tab map.
   
@@ -570,15 +568,15 @@ InlineTest(PU_Info* pu_forest)
   // IPO_INLINE::Post_Process_Caller(...)
   if (WN_first (inlinedBodyWn) != NULL) {
     // Replace callsite with body of inlined function
-    WN_next (WN_prev (callsiteWN)) = WN_first (inlinedBodyWn);
-    WN_prev (WN_first (inlinedBodyWn)) = WN_prev (callsiteWN);
+    WN_next(WN_prev(callsiteWN)) = WN_first(inlinedBodyWn);
+    WN_prev(WN_first(inlinedBodyWn)) = WN_prev(callsiteWN);
     
-    WN_next (WN_last (inlinedBodyWn)) = WN_next (callsiteWN);
-    WN_prev (WN_next (callsiteWN)) = WN_last (inlinedBodyWn);
+    WN_next(WN_last(inlinedBodyWn)) = WN_next(callsiteWN);
+    WN_prev(WN_next(callsiteWN)) = WN_last(inlinedBodyWn);
   } else {
     // Replace callsite with (empty) body of inlined function
-    WN_next (WN_prev (callsiteWN)) = WN_next (callsiteWN);
-    WN_prev (WN_next (callsiteWN)) = WN_prev (callsiteWN);
+    WN_next(WN_prev(callsiteWN)) = WN_next(callsiteWN);
+    WN_prev(WN_next(callsiteWN)) = WN_prev(callsiteWN);
   }
 
 #if 0  

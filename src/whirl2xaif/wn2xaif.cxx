@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.38 2004/02/20 19:30:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.39 2004/02/20 21:11:43 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -266,10 +266,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     CFG::Edge* e = dynamic_cast<CFG::Edge*>(*edgeIt);
     CFG::Node* n1 = dynamic_cast<CFG::Node*>(e->source());
     CFG::Node* n2 = dynamic_cast<CFG::Node*>(e->sink());
-    
-    xos << BegElem("xaif:ControlFlowEdge") << Attr("edge_id", ctxt.GetNewEId())
-	<< Attr("source", n1->getId()) 
-	<< Attr("target", n2->getId()) << EndElem; // FIXME: DumpGraphEdge
+    DumpCFGraphEdge(xos, ctxt.GetNewEId(), n1->getId(), n2->getId());
   }
   delete edges;
   
@@ -879,6 +876,20 @@ SortDGraphEdges(DGraph* g)
   return vec;
 }
 
+
+// DumpGraphEdge: see header.
+void 
+DumpGraphEdge(xml::ostream& xos, const char* nm, 
+	      UINT eid, UINT srcid, UINT targid, UINT pos)
+{
+  xos << BegElem(nm) 
+      << Attr("edge_id", eid) 
+      << Attr("source", srcid)  << Attr("target", targid);
+  if (pos >= 1) {
+    xos << Attr("position", pos);
+  }
+  xos << EndElem;
+}
 
 //***************************************************************************
 //
