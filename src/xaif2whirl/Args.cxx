@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.cxx,v 1.6 2004/04/07 14:59:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.cxx,v 1.7 2004/05/06 21:53:47 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -49,8 +49,6 @@ static const char* usage_details =
 "  --bb-patching     TEMPORARY: use basic-block patch algorithm\n"
 "\n"
 "Options:\n"
-"      --types         change 'active' type within WHIRL\n"
-"\n"
 "  -o, --output <file> send output to <file> instead of default file\n"
 "  -V, --version       print version information\n"
 "  -h, --help          print this help\n"
@@ -93,7 +91,6 @@ void
 Args::Ctor()
 {
   algorithm = xaif2whirl::ALG_UNSTRUCTURED_CF;
-  changeActiveTyInWHIRL = false;
   debug = 0;      // default: 0 (off)
 }
 
@@ -173,9 +170,6 @@ Args::Parse(int argc, const char* const argv[])
     }
 
     // Check for other options    
-    if (parser.IsOpt("types")) { 
-      changeActiveTyInWHIRL = true;
-    }
     if (parser.IsOpt("output")) { 
       outWhirlFileNm = parser.GetOptArg("output");
     }

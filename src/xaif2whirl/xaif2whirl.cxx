@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.43 2004/05/04 23:51:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.44 2004/05/06 21:53:47 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -71,8 +71,10 @@ IntrinsicXlationTable xaif2whirl::IntrinsicTable(IntrinsicXlationTable::X2W);
 
 // FIXME
 extern xaif2whirl::AlgorithmType opt_algorithm;
-extern bool opt_typeChangeInWHIRL;
-TY_IDX ActiveTypeTyIdx; // FIXME: just for temporary testing
+
+// FIXME_CHANGE_TYPES_IN_WHIRL
+TY_IDX ActiveTypeTyIdx;            // OpenAD active pseudo type
+TY_IDX ActiveTypeInitializedTyIdx; // OpenAD active pseudo type
 
 //*************************** Forward Declarations ***************************
 
@@ -171,7 +173,11 @@ static ST*
 ConvertIntoGlobalST(ST* st);
 
 static void 
-DeclareActiveModule();
+DeclareActiveTypes();
+
+static void 
+ConvertToActiveType(ST* st);
+
 
 // FIXME (Note: TYPE_ID and TY_IDX are typedef'd to the same type, so
 // overloading is not possible!)
@@ -260,10 +266,7 @@ static void
 TranslateCallGraph(PU_Info* pu_forest, const DOMDocument* doc,
                    XlationContext& ctxt)
 {
-  // FIXME: test: add active module type
-  if (opt_typeChangeInWHIRL) {
-    DeclareActiveModule();
-  }
+  DeclareActiveTypes();
   
   // FIXME: Do something about the ScopeHeirarchy
   XAIFSymToSymbolMap* symmap = TranslateScopeHierarchy(doc, ctxt);
@@ -354,6 +357,8 @@ xlate_CFG_BasicBlock(WN *wn_pu, MyDGNode* curBB, XlationContext& ctxt,
 static void
 TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
 {
+  // XXX change argument
+  
   // -------------------------------------------------------
   // 1. Create auxiliary data structures
   // -------------------------------------------------------
@@ -1516,20 +1521,11 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
   if (symId == 0) {
     // Create the symbol
     st = CreateST(elem, level, symNm.c_str());
-    
-    // FIXME: for now we force all real temps to be active
-    const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
-    XercesStrX type = XercesStrX(typeX);
-    if (!opt_typeChangeInWHIRL && strcmp(type.c_str(), "real") == 0) {
-      active = true;
-    }
   } else {
     // Find the symbol and change type if necessary
     st = &(Scope_tab[level].st_tab->Entry(symId));
-    if (opt_typeChangeInWHIRL) { // FIXME
-      if (active && ST_class(st) == CLASS_VAR) {
-        Set_ST_type(*st, ActiveTypeTyIdx);
-      }
+    if (active && ST_class(st) == CLASS_VAR) {
+      ConvertToActiveType(st);
     }
   }
   
@@ -1890,11 +1886,9 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
     
   // 1. Find basic type according to 'type' and 'active'
   TY_IDX basicTy = XAIFTyToWHIRLTy(type.c_str());
-  if (opt_typeChangeInWHIRL) {
-    if (active) {
-      basicTy = ActiveTypeTyIdx;
-    } 
-  }
+  if (active) {
+    basicTy = ActiveTypeTyIdx;
+  } 
   
   // 2. Modify basic type according to the (non-scalar) shapes
   TY_IDX ty;
@@ -1985,8 +1979,29 @@ ConvertIntoGlobalST(ST* st)
 
 
 static void 
-DeclareActiveModule()
+DeclareActiveTypes()
 {
+  // We create pseudo active types aliased to F8
+  static const char* psTypeNames[] = 
+    { "OpenADTy_active", "OpenADTy_active_init" };
+  static unsigned psTypeNamesSZ = sizeof(psTypeNames) / sizeof(char*);
+  
+  static TY_IDX* psTyIdx[] = 
+    { &ActiveTypeTyIdx, &ActiveTypeInitializedTyIdx };
+  static unsigned psTyIdxSZ = psTypeNamesSZ;
+  
+  for (unsigned i = 0; i < psTypeNamesSZ; ++i) {
+    TY_IDX ty_idx;
+    TY& ty = New_TY(ty_idx); // sets 'ty_idx'
+    TY_Init(ty, 8, KIND_SCALAR, MTYPE_F8, Save_Str(psTypeNames[i]));
+    Set_TY_align(ty_idx, 8);
+    Set_TY_is_external(ty);
+    *(psTyIdx[i]) = ty_idx;
+  }
+  
+#if 0
+  // Creating a structure type
+  
   // Cf. dra_ec.cxx / DRA_EC_Declare_Types()
   // type active
   //   sequence
@@ -2008,20 +2023,71 @@ DeclareActiveModule()
   TY_IDX activeTyIdx;
   TY& activeTy = New_TY(activeTyIdx); // sets 'activeTyIdx'
   INT64 activeSz = 2 * MTYPE_byte_size(valTyIdx);
-  TY_Init (activeTy, activeSz, KIND_STRUCT, MTYPE_M, Save_Str("active"));
+  TY_Init(activeTy, activeSz, KIND_STRUCT, MTYPE_M, Save_Str("active"));
   Set_TY_fld(activeTy, valFld); // location of first field
   Set_TY_align(activeTyIdx, 8);
   Set_TY_is_sequence(activeTy);
   Set_TY_is_external(activeTy);
   
-#if 0  
-  // FIXME // declare type to be "external" in the SYM_TAB
-  ST* stHandleType = New_ST(GLOBAL_SYMTAB);
-  ST_Init(stHandleType, Save_Str("active"), CLASS_TYPE,
-          SCLASS_UNKNOWN, EXPORT_LOCAL, activeTyIdx); 
-#endif
   
-  ActiveTypeTyIdx = activeTyIdx;
+  // Creating structure references in WHIRL
+  // wn = reference that needs %d added
+  WN* retWN = wn;
+  // LDID: update the offset field
+  // ILOAD: update the offset field
+  OPERATOR opr = WN_operator(wn);
+  if (opr == OPR_LDA) {
+    STAB_OFFSET offset = WN_lda_offset(wn) + 8;
+    WN_lda_offset(wn) = offset;
+  } 
+  else if (opr == OPR_LDID || opr == OPR_ILOAD) {
+    STAB_OFFSET offset = WN_load_offset(wn) + 8;
+    WN_load_offset(wn) = offset;
+  } 
+  else if (opr == OPR_ARRAY) {
+    // ARRAY: Place an ADD around the ARRAY with the offset
+    WN* offsetWN = WN_CreateIntconst(OPC_U8INTCONST, 8);
+    retWN = WN_CreateExp2(OPC_U8ADD, wn, offsetWN);
+  } 
+  else {
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+  }
+  return retWN;
+#endif  
+
+}
+
+
+// ConvertToActiveTypes: Given a symbol, convert it to active type
+static void 
+ConvertToActiveType(ST* st)
+{
+  // Find the type that will be modified
+  TY_IDX ty = ST_type(st);
+  if (TY_kind(ty) == KIND_POINTER) { // only have one level of indirection
+    ty = TY_pointed(ty);
+  }
+
+  // Get the type that will do the modifying
+  TY_IDX newBaseTy = ActiveTypeTyIdx;
+  if (ST_is_initialized(st)) {
+    INITO_IDX inito = Find_INITO_For_Symbol(st);
+    if (inito != (INITO_IDX)0) {
+      newBaseTy = ActiveTypeInitializedTyIdx;
+    }
+  }
+  
+  if (TY_kind(ty) == KIND_SCALAR) {
+    Set_ST_type(*st, newBaseTy);
+  }
+  else if (TY_kind(ty) == KIND_ARRAY) {
+    // just change the element type
+    Set_TY_etype(ty, newBaseTy);
+    // alignment, etc. should be ok
+  } 
+  else {
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "ConvertToActiveType!"));
+  }
 }
 
 
@@ -2032,6 +2098,8 @@ MY_Make_Array_Type1 (TYPE_ID elem_ty, INT32 ndim, INT64 len)
   return MY_Make_Array_Type(MTYPE_To_TY (elem_ty), ndim, len);
 }
 
+
+// FIXME: Available in symtab_utils.h / symtab.cxx
 
 static TY_IDX
 MY_Make_Array_Type (TY_IDX elem_ty, INT32 ndim, INT64 len)

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.h,v 1.4 2004/04/05 20:56:09 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.h,v 1.5 2004/05/06 21:53:47 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -60,7 +60,6 @@ public:
   
   // Parsed Data: optional arguments
   xaif2whirl::AlgorithmType algorithm; // default: ALG_UNSTRUCTURED_CF
-  bool changeActiveTyInWHIRL; // default: false
   int debug;                  // default: 0 (off)
   
   // Parsed Data: arguments
