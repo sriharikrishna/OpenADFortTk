@@ -1,6 +1,6 @@
 # -*-Mode: sh;-*-
 # For csh or tcsh
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.8 2003/12/02 13:20:14 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.9 2003/12/02 13:44:08 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
@@ -65,11 +65,6 @@ switch ($PLATFORM)
     breaksw
 endsw
 
-if ( "${PLATFORM}" == "i686-Cygwin" ) then 
-  # convert to Windows path for XercesC
-  set XAIFSCHEMA=`cygpath -w ${XAIFSCHEMA}`
-endif
-
 # Installations of the respective components
 setenv OPEN64ROOT "${OPEN64_BASE}/osprey1.0/${o64targ}"
 setenv OPENANALYSISROOT "${OPENANALYSIS_BASE}/${PLATFORM}"
@@ -132,6 +127,12 @@ setenv BOOST_DIR "${BOOSTROOT}"
 
 set xbase="${XAIFBOOSTERROOT}/xaifBooster"
 set ii_xaif="${XAIFSCHEMA}/schema/examples/inlinable_intrinsics.xaif"
+
+if ( "${PLATFORM}" == "i686-Cygwin" ) then 
+  # convert to Windows path for XercesC
+  set ii_xaif=`cygpath -w ${ii_xaif}`
+endif
+
 
 alias xboostread "${xbase}/system/test/t -c ${ii_xaif}"
 alias xboost_l "${xbase}/algorithms/Linearization/test/t -c ${ii_xaif}"
