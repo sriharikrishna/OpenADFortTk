@@ -119,7 +119,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="sqrt_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="sqrt_scal" type="***" annotation="{IntrinsicKey#0_SQRT}"/>
           <xaif:VariableReference vertex_id="2" du_ud="4">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_3"/>
           </xaif:VariableReference>
@@ -131,7 +131,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="YY_4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="sqrt_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="sqrt_scal" type="***" annotation="{IntrinsicKey#0_SQRT}"/>
           <xaif:VariableReference vertex_id="2" du_ud="6">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="YY_4"/>
           </xaif:VariableReference>
@@ -143,7 +143,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="sin_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="sin_scal" type="***" annotation="{IntrinsicKey#0_SIN}"/>
           <xaif:VariableReference vertex_id="2" du_ud="5">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_3"/>
           </xaif:VariableReference>
@@ -155,7 +155,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="YY_4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="sin_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="sin_scal" type="***" annotation="{IntrinsicKey#0_SIN}"/>
           <xaif:VariableReference vertex_id="2" du_ud="7">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="YY_4"/>
           </xaif:VariableReference>
@@ -167,7 +167,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="ZZZ_5"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="sin_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="sin_scal" type="***" annotation="{IntrinsicKey#0_SIN}"/>
           <xaif:VariableReference vertex_id="2" du_ud="10">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="ZZZ_5"/>
           </xaif:VariableReference>
@@ -179,7 +179,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="cos_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="cos_scal" type="***" annotation="{IntrinsicKey#0_COS}"/>
           <xaif:VariableReference vertex_id="2" du_ud="8">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_3"/>
           </xaif:VariableReference>
@@ -191,7 +191,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="YY_4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="cos_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="cos_scal" type="***" annotation="{IntrinsicKey#0_COS}"/>
           <xaif:VariableReference vertex_id="2" du_ud="9">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="YY_4"/>
           </xaif:VariableReference>
@@ -203,7 +203,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="ZZZ_5"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="cos_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="cos_scal" type="***" annotation="{IntrinsicKey#0_COS}"/>
           <xaif:VariableReference vertex_id="2" du_ud="11">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="ZZZ_5"/>
           </xaif:VariableReference>
@@ -215,7 +215,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="exp_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="exp_scal" type="***" annotation="{IntrinsicKey#0_EXP}"/>
           <xaif:VariableReference vertex_id="2" du_ud="12">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_3"/>
           </xaif:VariableReference>
@@ -227,7 +227,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="YY_4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="exp_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="exp_scal" type="***" annotation="{IntrinsicKey#0_EXP}"/>
           <xaif:VariableReference vertex_id="2" du_ud="13">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="YY_4"/>
           </xaif:VariableReference>
@@ -239,7 +239,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="ZZZ_5"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="exp_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="exp_scal" type="***" annotation="{IntrinsicKey#0_EXP}"/>
           <xaif:VariableReference vertex_id="2" du_ud="14">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="ZZZ_5"/>
           </xaif:VariableReference>
@@ -251,7 +251,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_3"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="ln_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="ln_scal" type="***" annotation="{IntrinsicKey#0_LOG}"/>
           <xaif:VariableReference vertex_id="2" du_ud="15">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="X_3"/>
           </xaif:VariableReference>
@@ -263,7 +263,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="YY_4"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="ln_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="ln_scal" type="***" annotation="{IntrinsicKey#0_LOG}"/>
           <xaif:VariableReference vertex_id="2" du_ud="16">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="YY_4"/>
           </xaif:VariableReference>
@@ -275,7 +275,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="ZZZ_5"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="ln_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="ln_scal" type="***" annotation="{IntrinsicKey#0_LOG}"/>
           <xaif:VariableReference vertex_id="2" du_ud="17">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="ZZZ_5"/>
           </xaif:VariableReference>

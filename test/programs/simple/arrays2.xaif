@@ -366,7 +366,7 @@
             </xaif:ArrayElementReference>
             <xaif:VariableReferenceEdge edge_id="1" source="1" target="2"/>
           </xaif:VariableReference>
-          <xaif:Intrinsic vertex_id="7" name="sqrt_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="7" name="sqrt_scal" type="***" annotation="{IntrinsicKey#0_SQRT}"/>
           <xaif:VariableReference vertex_id="8" du_ud="0">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="C_3"/>
             <xaif:ArrayElementReference vertex_id="2">
@@ -490,7 +490,7 @@
 (            <xaif:Constant vertex_id="2" type="integer" value="1"/>
 :            <xaif:Constant vertex_id="3" type="integer" value="20"/>
 )          </xaif:VariableReference>
-          <xaif:Intrinsic vertex_id="7" name="sqrt_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="7" name="sqrt_scal" type="***" annotation="{IntrinsicKey#0_SQRT}"/>
           <xaif:VariableReference vertex_id="8" du_ud="0">
             <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="C_3"/>
           </xaif:VariableReference>

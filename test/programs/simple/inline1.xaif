@@ -72,7 +72,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="A_1"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="cos_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="cos_scal" type="***" annotation="{IntrinsicKey#0_COS}"/>
           <xaif:VariableReference vertex_id="2" du_ud="1">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="A_1"/>
           </xaif:VariableReference>
@@ -84,7 +84,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="B_2"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="sin_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="sin_scal" type="***" annotation="{IntrinsicKey#0_SIN}"/>
           <xaif:VariableReference vertex_id="2" du_ud="3">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="B_2"/>
           </xaif:VariableReference>

@@ -61,12 +61,12 @@
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="mul_scal_scal" type="***"/>
-          <xaif:Intrinsic vertex_id="2" name="sin_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="2" name="sin_scal" type="***" annotation="{IntrinsicKey#0_SIN}"/>
           <xaif:VariableReference vertex_id="3" du_ud="1">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X1_1"/>
           </xaif:VariableReference>
           <xaif:ExpressionEdge edge_id="1" source="3" target="2" position="1"/>
-          <xaif:Intrinsic vertex_id="4" name="cos_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="4" name="cos_scal" type="***" annotation="{IntrinsicKey#0_COS}"/>
           <xaif:VariableReference vertex_id="5" du_ud="2">
             <xaif:SymbolReference vertex_id="1" scope_id="2" symbol_id="X2_2"/>
           </xaif:VariableReference>

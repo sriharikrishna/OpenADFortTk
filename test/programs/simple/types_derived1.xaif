@@ -96,7 +96,7 @@
           <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="R_1"/>
         </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
-          <xaif:Intrinsic vertex_id="1" name="sqrt_scal" type="***"/>
+          <xaif:Intrinsic vertex_id="1" name="sqrt_scal" type="***" annotation="{IntrinsicKey#0_SQRT}"/>
           <xaif:Intrinsic vertex_id="2" name="add_scal_scal" type="***"/>
           <xaif:Intrinsic vertex_id="3" name="pow_scal_scal" type="***"/>
           <xaif:VariableReference vertex_id="4" du_ud="1">
