@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.28 2003/12/06 00:21:37 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.29 2003/12/29 20:44:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -396,7 +396,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   // 4. OpenAnalysis Uwe numbers
   set<SymHandle>* params = GetParamSymHandleSet(wn);
-  ValueNumbers vnmap(cfg, *params);
+  UJNumbers vnmap(cfg, *params);
   delete params;
 
   // 5. Massage CFG (wait until after Uwe numbers have been computed)

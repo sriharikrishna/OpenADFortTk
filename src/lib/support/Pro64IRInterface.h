@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.9 2003/12/03 20:43:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.h,v 1.10 2003/12/29 20:44:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -44,16 +44,16 @@
 //*************************** User Include Files ****************************
 
 #include <OpenAnalysis/Utils/DGraph.h>
-#include <OpenAnalysis/ValueNumbers/ExprTree.h>
 #include <OpenAnalysis/Interface/IRInterface.h>
 
 // IRInterface types: Use OA_IRHANDLETYPE_VOIDPTR
-//   ProcHandle - PU_Info*
-//   StmtHandle - WN*
-//   ExprHandle - WN*
-//   LeafHandle - WN*
-//   StmtLabel  - INT32
-//   SymHandle  - ST*
+//   ProcHandle  - PU_Info*
+//   StmtHandle  - WN*
+//   ExprHandle  - WN*
+//   LeafHandle  - WN*
+//   StmtLabel   - INT32
+//   SymHandle   - ST*
+//   ConstHandle - 
 
 //*************************** Forward Declarations ***************************
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.10 2003/12/05 13:41:54 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.11 2003/12/29 20:44:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -32,6 +32,10 @@
 //************************* System Include Files ****************************
 
 //************************** Open64 Include Files ***************************
+
+//************************ OpenAnalysis Include Files ***********************
+
+#include <OpenAnalysis/ValueNumbers/ExprTree.h>
 
 //*************************** User Include Files ****************************
 

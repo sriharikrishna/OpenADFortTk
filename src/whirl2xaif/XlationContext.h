@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.14 2003/12/06 00:21:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.15 2003/12/29 20:44:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -116,8 +116,8 @@ public:
     WNToWNIdMap* GetWNMap() const { return wnmap; }
     void SetWNMap(WNToWNIdMap* x) { wnmap = x; }
     
-    ValueNumbers* GetValNum() const { return vnmap; }
-    void SetValNum(ValueNumbers* x) { vnmap = x; }
+    UJNumbers* GetValNum() const { return vnmap; }
+    void SetValNum(UJNumbers* x) { vnmap = x; }
 
     
     // WHIRL node for context (this class does not assume ownership of WN*)
@@ -146,7 +146,7 @@ public:
     // FIXME: Move into a specialized derived class such as CtxtX (extended)
     NonScalarSymTab* symtab;
     WNToWNIdMap* wnmap; 
-    ValueNumbers* vnmap;
+    UJNumbers* vnmap;
   };
   
   

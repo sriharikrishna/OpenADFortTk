@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.7 2003/12/08 14:52:09 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.8 2003/12/29 20:44:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -24,14 +24,15 @@
 
 #include <iostream>
 
-//*************************** User Include Files ****************************
-
-#include "tester.h"
-
-#include <lib/support/Pro64IRInterface.h>
+//************************ OpenAnalysis Include Files ***********************
 
 #include <OpenAnalysis/ValueNumbers/ValueNumbers.h>
 #include <OpenAnalysis/ValueNumbers/ExprTree.h>
+#include <lib/support/Pro64IRInterface.h>
+
+//*************************** User Include Files ****************************
+
+#include "tester.h"
 
 #include <lib/support/SymTab.h>
 #include <lib/support/diagnostics.h>
@@ -46,7 +47,7 @@ TestIR_OA_ForEachWNPU(std::ostream& os, WN* wn_pu);
 
 static void
 TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn, 
-			Pro64IRInterface& ir, ValueNumbers& vnmap);
+			Pro64IRInterface& ir, UJNumbers& vnmap);
 
 //****************************************************************************
 
@@ -108,13 +109,13 @@ TestIR_OA_ForEachWNPU(std::ostream& os, WN* wn_pu)
     params.insert((SymHandle)st);
   }
   
-  ValueNumbers vnmap(cfg, params);
+  UJNumbers vnmap(cfg, params);
   TestIR_OA_ForEachVarRef(os, wn_pu, irInterface, vnmap);
 }
 
 static void
 TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn, 
-			Pro64IRInterface& ir, ValueNumbers& vnmap)
+			Pro64IRInterface& ir, UJNumbers& vnmap)
 {
   if (wn == NULL) {
     // Base case

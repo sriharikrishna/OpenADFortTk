@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.12 2003/12/06 00:21:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.13 2003/12/29 20:44:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -189,7 +189,7 @@ XlationContext::FindVN(WN* wnexpr)
 {
   for (XlationContextIterator it(*this); it.IsValid(); ++it) {
     Ctxt* ctxt = it.Current();
-    ValueNumbers* vnmap = ctxt->GetValNum();
+    UJNumbers* vnmap = ctxt->GetValNum();
     if (vnmap) {
       // We found a ValueNumber map. Query it.
       VN vn = vnmap->Find((ExprHandle)wnexpr);
