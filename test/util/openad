@@ -33,6 +33,11 @@ Mode:
   --linear          Linearization
   --memopstradeoff  MemOpsTradeoffPreaccumulation
 
+xaif2whirl [Temporary options]
+  --x2w-structured    Use structured-CFG algorithm
+  --x2w-unstructured  Use unstructured CFG algorithm
+  --x2w-bb            Use BB patching algorithm (only for forward mode!)
+  
 Options:
   -i, --interactive  
     prompt user to authorize each step in pipeline
@@ -45,14 +50,19 @@ Options:
 
 #############################################################################
 
-my ($alg_BasicBlockPreaccumulationReverse,
-    $alg_BasicBlockPreaccumulationTapeAdjoint,
-    $alg_BasicBlockPreaccumulationTape,
-    $alg_BasicBlockPreaccumulation,
-    $alg_ControlFlowReversal,
-    $alg_Linearization,
-    $alg_MemOpsTradeoffPreaccumulation) =
+my ($mode_BBReverse,
+    $mode_BBTapeAdjoint,
+    $mode_BBTape,
+    $mode_BB,
+    $mode_CFR,
+    $mode_Linearization,
+    $mode_MemOpsTradeoff) =
     (1, 2, 3, 4, 5, 6, 7);
+
+my ($mode_x2w_structured,
+    $mode_x2w_unstructured,
+    $mode_x2w_bb) =
+    (1, 2, 3);
 
 #############################################################################
 ## main/driver
@@ -65,6 +75,10 @@ my @options = ('bb-rev',
 	       'cfr',
 	       'linear',
 	       'memopstradeoff',
+
+	       'x2w-structured',
+	       'x2w-unstructured',
+	       'x2w-bb',
 	       
 	       'interactive|i',
 	       'verbose|v:i',
@@ -74,6 +88,7 @@ my $opt_interactive = undef;
 my $opt_verbose = 0;
 #my $opt_debug = 0;
 my $openad_mode = undef;
+my $openad_x2w_mode = undef;
 my $openad_input = undef;
 
 # ----------------------------------------------------------
@@ -97,31 +112,43 @@ if (defined($opts{'help'})) {
 } 
 
 # Get required argument: OpenAD Mode
-$openad_mode = $alg_BasicBlockPreaccumulationReverse;
+$openad_mode = $mode_BBReverse;
 if (defined($opts{'bb-rev'})) {
-  $openad_mode = $alg_BasicBlockPreaccumulationReverse;
+  $openad_mode = $mode_BBReverse;
 } 
 if (defined($opts{'bb-tapeadj'})) {
-  $openad_mode = $alg_BasicBlockPreaccumulationTapeAdjoint;
+  $openad_mode = $mode_BBTapeAdjoint;
 } 
 if (defined($opts{'bb-tape'})) {
-  $openad_mode = $alg_BasicBlockPreaccumulationTape;
+  $openad_mode = $mode_BBTape;
 } 
 if (defined($opts{'bb'})) {
-  $openad_mode = $alg_BasicBlockPreaccumulation;
+  $openad_mode = $mode_BB;
 } 
 if (defined($opts{'cfr'})) {
-  $openad_mode = $alg_ControlFlowReversal;
+  $openad_mode = $mode_CFR;
 } 
 if (defined($opts{'linear'})) {
-  $openad_mode = $alg_Linearization;
+  $openad_mode = $mode_Linearization;
 } 
 if (defined($opts{'memopstradeoff'})) {
-  $openad_mode = $alg_MemOpsTradeoffPreaccumulation;
+  $openad_mode = $mode_MemOpsTradeoff;
 } 
 if (!defined($openad_mode)) {
   printUsageAndExit($the_program);
 }
+
+# Get optional arguments: OpenAD xaif2whirl mode
+$openad_x2w_mode = $mode_x2w_structured;
+if (defined($opts{'x2w-structured'})) {
+  $openad_x2w_mode = $mode_x2w_structured;
+} 
+if (defined($opts{'x2w-unstructured'})) {
+  $openad_x2w_mode = $mode_x2w_unstructured;
+} 
+if (defined($opts{'x2w-bb'})) {
+  $openad_x2w_mode = $mode_x2w_bb;
+} 
 
 # Get optional arguments: interactive
 if (defined($opts{'interactive'})) {
@@ -210,21 +237,33 @@ sub undefEnvVarErr
       print STDOUT "Unknown file type: ${fortranfile}\n";
       exit(-1);
     }
+
+    #print STDOUT "$XB\n";
+    # Will have to do this after some preprocessing...
+    my $x2w_opt = "";
+    if ($openad_x2w_mode == $mode_x2w_structured) {
+      $x2w_opt .= "--structured";
+    } 
+    elsif ($openad_x2w_mode == $mode_x2w_unstructured) {
+      $x2w_opt .= "--unstructured";
+    } 
+    elsif ($openad_x2w_mode == $mode_x2w_bb) {
+      $x2w_opt .= "--bb";
+    }
     
     if ($opt_verbose >= 1) {
       print STDOUT "OpenAD: ${fortranfile} --> ${base}.xb.x2w.w2f.pp.f\n";
     }
-    #print STDOUT "$XB\n";
 
     my $cmdsRef = 
-	["$MFEF90  ${fortranfile}",
-	 "$W2X     ${base}.B -o ${base}.xaif",
-	 "$NORM    ${base}.xaif",
-	 "$XB   -i ${base}.xaif -o ${base}.xb.xaif",
-	 "$X2W --st ${base}.B ${base}.xb.xaif -o ${base}.xb.x2w.B",
-	 "$WHIRL2F ${base}.xb.x2w.B",
-	 "$NORM    ${base}.xb.x2w.w2f.f",
-	 "$PP      ${base}.xb.x2w.w2f.f"];
+	["$MFEF90       ${fortranfile}",
+	 "$W2X          ${base}.B -o ${base}.xaif",
+	 "$NORM         ${base}.xaif",
+	 "$XB        -i ${base}.xaif -o ${base}.xb.xaif",
+	 "$X2W $x2w_opt ${base}.B ${base}.xb.xaif -o ${base}.xb.x2w.B",
+	 "$WHIRL2F      ${base}.xb.x2w.B",
+	 "$NORM         ${base}.xb.x2w.w2f.f",
+	 "$PP           ${base}.xb.x2w.w2f.f"];
     
     RunCmds($cmdsRef, $opt_verbose, $opt_interactive);
   }
@@ -258,25 +297,25 @@ sub undefEnvVarErr
     
     my $XB_alg_path = "${XAIFBOOSTERROOT}/xaifBooster/algorithms";
     my $XB_alg = undef;
-    if ($mode == $alg_BasicBlockPreaccumulationReverse) {
+    if ($mode == $mode_BBReverse) {
       $XB_alg = "${XB_alg_path}/BasicBlockPreaccumulationReverse/test/t";
     } 
-    elsif ($mode == $alg_BasicBlockPreaccumulationTapeAdjoint) {
+    elsif ($mode == $mode_BBTapeAdjoint) {
       $XB_alg = "${XB_alg_path}/BasicBlockPreaccumulationTapeAdjoint/test/t";
     } 
-    elsif ($mode == $alg_BasicBlockPreaccumulationTape) {
+    elsif ($mode == $mode_BBTape) {
       $XB_alg = "${XB_alg_path}/BasicBlockPreaccumulationTape/test/t";
     }
-    elsif ($mode == $alg_BasicBlockPreaccumulation) {
+    elsif ($mode == $mode_BB) {
       $XB_alg = "${XB_alg_path}/BasicBlockPreaccumulation/test/t";
     }
-    elsif ($mode == $alg_ControlFlowReversal) {
+    elsif ($mode == $mode_CFR) {
       $XB_alg = "${XB_alg_path}/ControlFlowReversal/test/t";
     }
-    elsif ($mode == $alg_Linearization) {
+    elsif ($mode == $mode_Linearization) {
       $XB_alg = "${XB_alg_path}/Linearization/test/t";
     }
-    elsif ($mode == $alg_MemOpsTradeoffPreaccumulation) {
+    elsif ($mode == $mode_MemOpsTradeoff) {
       $XB_alg = "${XB_alg_path}/MemOpsTradeoffPreaccumulation/test/t";
     } 
     else {
