@@ -1,8 +1,9 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Sourceme-sh,v 1.1.1.1 2003/05/13 21:54:08 eraxxon Exp $
+# -*-Mode: sh;-*-
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Sourceme-sh,v 1.2 2003/08/05 18:13:14 eraxxon Exp $
 
 #############################################################################
 
-if test -z "${HPCTOOLKIT}" ; then
+if test -z "${WHIRL2XAIF}" ; then
   echo "You must set your WHIRL2XAIF environment variable before sourcing"
   echo "this file."
   return 1
