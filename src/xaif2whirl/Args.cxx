@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.cxx,v 1.4 2004/03/29 23:40:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.cxx,v 1.5 2004/04/05 20:56:09 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -43,8 +43,12 @@ static const char* usage_details =
 "By default, the output is sent to the filename formed by replacing the\n"
 "extension of <xaif-file> with 'x2w.B'.\n"
 "\n"
+"Algorithms:\n"
+"  --structured-cf   Generate structured control-flow [Default]\n"
+"  --unstructured-cf Generate unstructured control-flow\n"
+"  --bb-patching     TEMPORARY: use basic-block patch algorithm\n"
+"\n"
 "Options:\n"
-"      --bb-patching   TEMPORARY: use basic-block patch algorithm\n"
 "      --types         change 'active' type within WHIRL\n"
 "\n"
 "  -o, --output <file> send output to <file> instead of default file\n"
@@ -57,7 +61,9 @@ static const char* usage_details =
 
 CmdLineParser::OptArgDesc Args::optArgs[] = {
   // Options
-  {  0 , "bb-patching", CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
+  {  0 , "structured-cf",   CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
+  {  0 , "unstructured-cf", CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
+  {  0 , "bb-patching",     CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "types",    CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 'o', "output",   CLP::ARG_REQ , CLP::DUPOPT_ERR,  NULL },
   { 'V', "version",  CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
@@ -86,7 +92,7 @@ Args::Args(int argc, const char* const argv[])
 void
 Args::Ctor()
 {
-  algBBPatching = false;
+  algorithm = xaif2whirl::ALG_STRUCTURED_CF; // FIXME
   changeActiveTyInWHIRL = false;
   debug = 0;      // default: 0 (off)
 }
@@ -155,10 +161,18 @@ Args::Parse(int argc, const char* const argv[])
       exit(1);
     }
     
-    // Check for other options
-    if (parser.IsOpt("bb-patching")) { 
-      algBBPatching = true;
+    // Check for algorithm options
+    if (parser.IsOpt("structured-cf")) { 
+      algorithm = xaif2whirl::ALG_STRUCTURED_CF;
     }
+    if (parser.IsOpt("unstructured-cf")) { 
+      algorithm = xaif2whirl::ALG_UNSTRUCTURED_CF;
+    }
+    if (parser.IsOpt("bb-patching")) { 
+      algorithm = xaif2whirl::ALG_BB_PATCHING;
+    }
+
+    // Check for other options    
     if (parser.IsOpt("types")) { 
       changeActiveTyInWHIRL = true;
     }

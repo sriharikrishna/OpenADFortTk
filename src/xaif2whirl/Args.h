@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.h,v 1.3 2004/03/29 23:40:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.h,v 1.4 2004/04/05 20:56:09 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -27,6 +27,7 @@
 //*************************** User Include Files ****************************
 
 #include <lib/support/CmdLineParser.h>
+#include "xaif2whirl.h"
 
 //*************************** Forward Declarations ***************************
 
@@ -58,7 +59,7 @@ public:
   const std::string& GetCmd() const { return parser.GetCmd(); }
   
   // Parsed Data: optional arguments
-  bool algBBPatching;         // default: false
+  xaif2whirl::AlgorithmType algorithm; // default: ALG_UNSTRUCTURED_CF
   bool changeActiveTyInWHIRL; // default: false
   int debug;                  // default: 0 (off)
   
