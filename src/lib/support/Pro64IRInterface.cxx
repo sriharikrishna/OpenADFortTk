@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.19 2004/04/16 18:35:00 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.20 2004/05/24 13:28:24 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -267,6 +267,8 @@ Pro64IRCallsiteIterator::Pro64IRCallsiteIterator(WN *wn)
 void 
 Pro64IRCallsiteIterator::build_func_call_list(WN *wn)
 {
+  if (!wn) { return; }
+  
   OPERATOR opr = WN_operator(wn);
 
   // Add calls to call list
