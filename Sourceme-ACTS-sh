@@ -1,57 +1,69 @@
 # -*-Mode: sh;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.4 2003/10/29 16:14:00 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.5 2003/11/07 21:01:37 eraxxon Exp $
 
 #############################################################################
-# Set platform variables (duplicated in whirl2xaif Sourceme-sh)
+# These variables should be set by the user
 #############################################################################
 
-# FIXME: For now I've put this here
-export WHIRL2XAIF="/cygdrive/c/Tmp/ACTS/whirl2xaif"
+base="/cygdrive/c/Tmp/ACTS"
+basewin="c:/Tmp/ACTS" # xerces for cygwin wants windows paths! yuck.
 
-export WHIRL2XAIF_PLATFORM=`cd ${WHIRL2XAIF}/src/config; ./hpcplatform`
+export WHIRL2XAIF="${base}/whirl2xaif"
+
+export OPEN64ROOT="${base}/Open64"
+
+export OPENANALYSISROOT="${base}/OpenAnalysis"
+export XERCESCROOT="${base}/xercesc"
+
+export XAIFBOOSTERROOT="${base}/xaifbooster"
+export BOOSTROOT="${base}/boost_1_29_0"
+export ANGELROOT="${base}/angel"
+
+
+if [ "${PLATFORM}" = "i686-Cygwin" ]; then 
+  XAIFSCHEMA="${basewin}/xaif_1.0"
+else 
+  XAIFSCHEMA="${base}/xaif_1.0"
+fi
+
+unset base
+unset basewin
 
 #############################################################################
 # System dependent
 #############################################################################
 
-basecyg="/cygdrive/c/Tmp/ACTS"
-basewin="c:/Tmp/ACTS"
-o64targ="targ_ia32_ia64_linux"
+PLATFORM=`cd ${WHIRL2XAIF}/src/config; ./hpcplatform`
+
+case $PLATFORM in
+  i686-Linux | i686-Cygwin) 
+    o64targ="targ_ia32_ia64_linux" ;;
+  ia64-Linux)
+    o64targ="targ_ia64_ia64_linux" ;;
+  mips-IRIX64)
+    o64targ="targ_mips_irix" ;;
+  sparc-SunOS)
+    o64targ="targ_sparc_solaris" ;;
+  *)   
+    echo "$PLATFORM '$$PLATFORM' is unknown..." ;;
+esac
+
+OPEN64TARG="${OPEN64ROOT}/osprey1.0/${o64targ}"
+
+# reset XERCESCROOT
+export XERCESCROOT="${XERCESCROOT}/${PLATFORM}"
+
+unset o64targ
 
 #############################################################################
 # Open64
 #############################################################################
 
-open64="${basecyg}/Open64"
-
-alias mfef90="${open64}/osprey1.0/${o64targ}/crayf90/sgi/mfef90"
-alias whirl2f="${open64}/osprey1.0/${o64targ}/whirl2f/whirl2f"
-alias whirl2f90="${open64}/osprey1.0/${o64targ}/whirl2f/whirl2f90"
-alias ir_b2a="${open64}/osprey1.0/${o64targ}/ir_tools/ir_b2a"
-alias ir_size="${open64}/osprey1.0/${o64targ}/ir_tools/ir_size"
-
-#############################################################################
-# whirl2xaif helpers
-#############################################################################
-
-## OpenAnalysis
-openanal="${basecyg}/OpenAnalysis"
-
-## Xerces C++
-#xercesc="${HOME}/Develop/xercesc/${WHIRL2XAIF_PLATFORM}"
-xercesc="/usr/include/xercesc"
-if [ -z "${LD_LIBRARY_PATH}" ]; then
-  export LD_LIBRARY_PATH="${xercesc}/lib"
-else
-  export LD_LIBRARY_PATH="${xercesc}/lib:${LD_LIBRARY_PATH}"
-fi
-
-# For cygwin, DLLs are in the PATH variable (and cannot be found via
-# symlinks!)
-# FIXMEcygwin
-if [ "${WHIRL2XAIF_PLATFORM}" = "i686-Cygwin" ]; then 
-  export PATH="${open64}/osprey1.0/${o64targ}/be:${open64}/osprey1.0/${o64targ}/whirl2f:${PATH}"
-fi
+alias mfef90="${OPEN64TARG}/crayf90/sgi/mfef90"
+alias whirl2f="${OPEN64TARG}/whirl2f/whirl2f"
+alias whirl2f90="${OPEN64TARG}/whirl2f/whirl2f90"
+alias ir_b2a="${OPEN64TARG}/ir_tools/ir_b2a"
+alias ir_size="${OPEN64TARG}/ir_tools/ir_size"
 
 #############################################################################
 # whirl2xaif
@@ -59,45 +71,44 @@ fi
 
 source ${WHIRL2XAIF}/Sourceme-sh
 
-export WHIRL2XAIF_OPEN64="${open64}/osprey1.0"
-export WHIRL2XAIF_OA="${openanal}"
-export WHIRL2XAIF_XERCESC="${xercesc}"
+export WHIRL2XAIF_OPEN64="${OPEN64ROOT}/osprey1.0"
+export WHIRL2XAIF_OA="${OPENANALYSISROOT}"
+export WHIRL2XAIF_XERCESC="${XERCESCROOT}"
+
+#############################################################################
+# Paths
+#############################################################################
+
+if [ "${PLATFORM}" = "i686-Cygwin" ]; then 
+
+  # For cygwin, DLLs must be PATH variable (and cannot be found via symlinks!)
+  export PATH="${XERCESCROOT}/bin:${XERCESCROOT}/lib:${OPEN64TARG}/be:${OPEN64TARG}/whirl2f:${PATH}"
+
+else
+
+  if [ -z "${LD_LIBRARY_PATH}" ]; then
+    export LD_LIBRARY_PATH="${XERCESCROOT}/lib"
+  else
+    export LD_LIBRARY_PATH="${XERCESCROOT}/lib:${LD_LIBRARY_PATH}"
+  fi
+
+fi
 
 #############################################################################
 # xaifbooster
 #############################################################################
 
-# boost: http://www.boost.org/libs/graph/doc/
-# angel: sourceforge 
+# To be deprecated
+export XAIF_DIR="${XAIFBOOSTERROOT}"
+export BOOST_ROOT="${BOOSTROOT}"
+export BOOST_DIR="${BOOSTROOT}"
+export ANGEL_DIR="${ANGELROOT}"
 
-export XERCESCROOT="${xercesc}"
-export XAIFBOOSTERROOT="${basecyg}/xaifbooster"
-export XAIF_DIR="${basecyg}/xaifbooster"
-export BOOSTROOT="${basecyg}/boost_1_29_0"
-export BOOST_ROOT="${basecyg}/boost_1_29_0"
-export BOOST_DIR="${basecyg}/boost_1_29_0"
-export ANGELROOT="${basecyg}/angel"
-export ANGEL_DIR="${basecyg}/angel"
-
-xaif="${basewin}/xaif_1.0"
-ii="inlinable_intrinsics.xaif"
-
-alias xboostread="${XAIF_DIR}/system/tests/t -c ${xaif}/${ii}"
-alias xboost="${XAIF_DIR}/angel_interface/test/t -c ${xaif}/${ii}"
-
-# will be consolidated into:
-# XERCESCROOT=/sandbox/xerces-c-src2_2_0 # as above
-# ANGELROOT=/sandbox/CVS/angel
-# BOOSTROOT=/sandbox/boost_1_29_0
-# XAIFBOOSTERROOT=/sandbox/CVS/ALL/xaifbooster
+alias xboostread="${XAIFBOOSTERROOT}/system/tests/t -c ${XAIFSCHEMA}/inlinable_intrinsics.xaif"
+alias xboost="${XAIFBOOSTERROOT}/angel_interface/test/t -c ${XAIFSCHEMA}/inlinable_intrinsics.xaif"
 
 #############################################################################
 
-unset basecyg
-unset basewin
-unset open64
-unset o64targ
-unset openanal
-unset xercesc
-unset xaif
-unset ii
+unset OPEN64TARG
+unset XAIFSCHEMA
+unset PLATFORM

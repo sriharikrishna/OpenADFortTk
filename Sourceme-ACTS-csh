@@ -1,138 +1,132 @@
 # -*-Mode: sh;-*-
 # For csh or tcsh
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.2 2003/10/13 14:18:41 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.3 2003/11/07 21:01:37 eraxxon Exp $
 
 #############################################################################
-# Set platform variables (duplicated in whirl2xaif Sourceme-csh)
+# These variables should be set by the user
 #############################################################################
 
-setenv WHIRL2XAIF_ARCH `uname -p`
-if ( ${WHIRL2XAIF_ARCH} == "unknown" ) then
-  setenv WHIRL2XAIF_ARCH `uname -m`
-endif
+setenv WHIRL2XAIF "${HOME}/Develop/whirl2xaif"
 
-setenv WHIRL2XAIF_OS `uname -s`
+set PLATFORM=`cd ${WHIRL2XAIF}/src/config; ./hpcplatform`
+switch ($PLATFORM)
+case i686-Cygwin:
+  set base="/cygdrive/c/Tmp/ACTS"
+case i686-Linux:
+case ia64-Linux:
+  set base="/scratch/eraxxon"
+  breaksw
+case mips-IRIX64:
+case sparc-SunOS:
+  set base="/net/basuri4/eraxxon"
+  breaksw
+default:
+  # alpha-OSF1 -> /import/basuri4/eraxxon/HPCToolkit/obj/alpha
+  # alpha-OSF1.net -> /net/basuri4/eraxxon/HPCToolkit/obj/alpha
+  echo "$PLATFORM '$$PLATFORM' is unknown..."
+  breaksw
+endsw
 
-setenv WHIRL2XAIF_PLATFORM "${WHIRL2XAIF_ARCH}-${WHIRL2XAIF_OS}"
+
+setenv OPEN64ROOT "${base}/Open64"
+
+setenv OPENANALYSISROOT "${HOME}/Develop/OpenAnalysis"
+setenv XERCESCROOT "${HOME}/Develop/xercesc"
+
+setenv XAIFBOOSTERROOT "${base}/ACTS/ALL/xaifbooster"
+setenv BOOSTROOT "${base}/ACTS/boost_1_29_0"
+setenv ANGELROOT "${base}/ACTS/angel"
+
+set XAIFSCHEMA="${base}/ACTS/ALL/xaif_1.0"
+
+unset base
 
 #############################################################################
 # System dependent
 #############################################################################
 
-switch ($WHIRL2XAIF_PLATFORM)
-case alpha-OSF1:
-  set myscratch="/bogus/path"
-  set o64targ="bogus_targ"
-  breaksw
-case i686-Linux:
-  set myscratch="/scratch/eraxxon"
-  set o64targ="targ_ia32_ia64_linux"
-  breaksw
-case ia64-Linux:
-  set myscratch="/scratch/eraxxon"
-  set o64targ="targ_ia64_ia64_linux"
-  breaksw
-case mips-IRIX64:
-  set myscratch="/net/basuri4/eraxxon"
-  set o64targ="targ_mips_irix"
-  breaksw
-case sparc-SunOS:
-  set myscratch="/net/basuri4/eraxxon"
-  set o64targ="targ_sparc_solaris"
-  breaksw
-default:
-  echo "OSTYPE '$OSTYPE' is unknown..."
-  breaksw
+set PLATFORM=`cd ${WHIRL2XAIF}/src/config; ./hpcplatform`
+
+switch ($PLATFORM)
+  case i686-Linux:
+  case i686-Cygwin:
+    set o64targ="targ_ia32_ia64_linux"
+    breaksw
+  case ia64-Linux:
+    set o64targ="targ_ia64_ia64_linux"
+    breaksw
+  case mips-IRIX64:
+    set o64targ="targ_mips_irix"
+    breaksw
+  case sparc-SunOS:
+    set o64targ="targ_sparc_solaris"
+    breaksw
+  default:
+    echo "$PLATFORM '$$PLATFORM' is unknown..."
+    breaksw
 endsw
 
-# alpha-OSF1 -> /import/basuri4/eraxxon/HPCToolkit/obj/alpha
-# alpha-OSF1.net -> /net/basuri4/eraxxon/HPCToolkit/obj/alpha
-# mips-IRIX64 -> /net/basuri4/eraxxon/HPCToolkit/obj/mips
-# sparc-SunOS -> /net/basuri4/eraxxon/HPCToolkit/obj/sparc
+set OPEN64TARG="${OPEN64ROOT}/osprey1.0/${o64targ}"
+
+# reset XERCESCROOT
+setenv XERCESCROOT "${XERCESCROOT}/${PLATFORM}"
+
+unset o64targ
 
 #############################################################################
 # Open64
 #############################################################################
 
-set open64="${myscratch}/Open64"
-
-alias mfef90  ${open64}/osprey1.0/${o64targ}/crayf90/sgi/mfef90
-alias whirl2f ${open64}/osprey1.0/${o64targ}/whirl2f/whirl2f
-alias whirl2f90 ${open64}/osprey1.0/${o64targ}/whirl2f/whirl2f90
-alias ir_b2a  ${open64}/osprey1.0/${o64targ}/ir_tools/ir_b2a
-alias ir_size ${open64}/osprey1.0/${o64targ}/ir_tools/ir_size
-
-#############################################################################
-# whirl2xaif helpers
-#############################################################################
-
-## OpenAnalysis
-set openanal="${HOME}/Develop/OpenAnalysis"
-
-## Xerces C++
-set xercesc="${HOME}/Develop/xercesc/${WHIRL2XAIF_PLATFORM}"
-if ( ! $?LD_LIBRARY_PATH ) then
-  setenv LD_LIBRARY_PATH "${xercesc}/lib"
-else
-  setenv LD_LIBRARY_PATH "${xercesc}/lib:${LD_LIBRARY_PATH}"
-endif
+alias mfef90  ${OPEN64TARG}/crayf90/sgi/mfef90
+alias whirl2f ${OPEN64TARG}/whirl2f/whirl2f
+alias whirl2f90 ${OPEN64TARG}/whirl2f/whirl2f90
+alias ir_b2a  ${OPEN64TARG}/ir_tools/ir_b2a
+alias ir_size ${OPEN64TARG}/ir_tools/ir_size
 
 #############################################################################
 # whirl2xaif
 #############################################################################
 
-setenv WHIRL2XAIF "${HOME}/Develop/whirl2xaif"
 source ${WHIRL2XAIF}/Sourceme-csh
 
-setenv WHIRL2XAIF_OPEN64  "${open64}/osprey1.0"
-setenv WHIRL2XAIF_OA      "${openanal}"
-setenv WHIRL2XAIF_XERCESC "${xercesc}"
+setenv WHIRL2XAIF_OPEN64  "${OPEN64ROOT}/osprey1.0"
+setenv WHIRL2XAIF_OA      "${OPENANALYSISROOT}"
+setenv WHIRL2XAIF_XERCESC "${XERCESCROOT}"
+
+#############################################################################
+# Paths
+#############################################################################
+
+if ( "${PLATFORM}" == "i686-Cygwin" ) then 
+
+  setenv PATH "${XERCESCROOT}/bin:${XERCESCROOT}/lib:${OPEN64TARG}/be:${OPEN64TARG}/whirl2f:${PATH}"
+
+else 
+
+  if ( ! $?LD_LIBRARY_PATH ) then
+    setenv LD_LIBRARY_PATH "${xercesc}/lib"
+  else
+    setenv LD_LIBRARY_PATH "${xercesc}/lib:${LD_LIBRARY_PATH}"
+  endif
+
+endif
+
 
 #############################################################################
 # xaifbooster
 #############################################################################
 
-# boost: http://www.boost.org/libs/graph/doc/
-# angel: sourceforge 
+# To be deprecated
+setenv XAIF_DIR "${XAIFBOOSTERROOT}"
+setenv BOOST_ROOT "${BOOSTROOT}"
+setenv BOOST_DIR "${BOOSTROOT}"
+setenv ANGEL_DIR "${ANGELROOT}"
 
-set acts="${myscratch}/ACTS"
-
-setenv XERCESCROOT "${xercesc}"
-setenv XAIFBOOSTERROOT "${acts}/ALL/xaifbooster"
-setenv XAIF_DIR "${acts}/ALL/xaifbooster"
-setenv BOOSTROOT "${acts}/boost_1_29_0"
-setenv BOOST_ROOT "${acts}/boost_1_29_0"
-setenv BOOST_DIR "${acts}/boost_1_29_0"
-setenv ANGELROOT "${acts}/angel"
-setenv ANGEL_DIR "${acts}/angel"
-
-set xaif_bk="${myscratch}/ACTS/xaif-1.0/schema"
-set xaif="${myscratch}/ACTS/ALL/xaif_1.0"
-set ii="inlinable_intrinsics.xaif"
-
-alias xboostread "${XAIF_DIR}/system/tests/t -c ${xaif}/${ii}"
-alias xboost "${XAIF_DIR}/angel_interface/test/t -c ${xaif}/${ii}"
-
-# will be consolidated into:
-# XERCESCROOT=/sandbox/xerces-c-src2_2_0 # as above
-# ANGELROOT=/sandbox/CVS/angel
-# BOOSTROOT=/sandbox/boost_1_29_0
-# XAIFBOOSTERROOT=/sandbox/CVS/ALL/xaifbooster
-
-# until we have a different spot we will keep it in
-# Uwe's CVS directory in where
-# reps are: ALL/xaifbooster ALL/xaif_1.0 ALL/xaifbooster_talk
-# CVS_RSH=
-# CVSROOT=/home/naumann/CVSHOME
+alias xboostread "${XAIFBOOSTERROOT}/system/tests/t -c ${XAIFSCHEMA}/inlinable_intrinsics.xaif"
+alias xboost "${XAIFBOOSTERROOT}/angel_interface/test/t -c ${XAIFSCHEMA}/inlinable_intrinsics.xaif"
 
 #############################################################################
 
-unset myscratch
-unset open64
-unset o64targ
-unset openanal
-unset xercesc
-unset acts
-unset xaif_bk
-unset xaif
-unset ii
+unset OPEN64TARG
+unset XAIFSCHEMA
+unset PLATFORM
