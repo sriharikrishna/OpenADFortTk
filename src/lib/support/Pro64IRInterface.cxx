@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.16 2004/02/11 18:05:02 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.17 2004/02/13 20:19:09 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -136,6 +136,7 @@ Pro64IRUseDefIterator::Pro64IRUseDefIterator (WN *subtree, int uses_or_defs)
 void
 Pro64IRUseDefIterator::build_use_def_lists (WN *wn, int flags)
 {
+#define TURN_OFF_PASS_BY_REF_TEST
   enum { 
     NoFlag              = 0x00000000,
     OuterMost_OPR_ARRAY = 0x00000001,
@@ -232,7 +233,9 @@ Pro64IRUseDefIterator::build_use_def_lists (WN *wn, int flags)
   // Test for pass by reference on the first level children of PARMs
   // FIXME: What about PARM(ILOAD(...))
   if ((opr == OPR_PARM) && (WN_Parm_By_Reference(wn) || WN_Parm_Out(wn))) {
+#ifndef TURN_OFF_PASS_BY_REF_TEST
     flags |= PARM_ByRef;
+#endif
   } else {
     flags &= ~PARM_ByRef; // reset
   }
