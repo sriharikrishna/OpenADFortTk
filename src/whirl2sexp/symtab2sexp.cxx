@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.10 2005/01/18 20:23:09 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.11 2005/02/01 00:42:51 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -154,9 +154,11 @@ whirl2sexp::xlate_FILE_INFO(sexp::ostream& sos)
   
   // gp_group
   UINT gp = (UINT)FILE_INFO_gp_group(File_info);
-
+  sos << Atom(gp);
+  
   // flags
-  sos << Atom(gp) << GenBeginFlgList(File_info.flags) << EndList;
+  const char* flg_str = FILE_INFO_FLAGS_To_Str(File_info.flags);
+  sos << GenSexpFlg(flg_str);
   
   sos << EndList;
 }
@@ -382,11 +384,11 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ST* st)
   // type/pu/blk
   if (stclass == CLASS_FUNC) {
     PU_IDX stpu = ST_pu(st);
-    sos << Atom(stpu); // FIXME
+    sos << Atom(stpu); // FIXME add tag?
   }
   else if (stclass == CLASS_BLOCK) {
     BLK_IDX stblk = ST_blk(st);
-    sos << Atom(stblk); // FIXME
+    sos << Atom(stblk); // FIXME add tag?
   }
   else {
     TY_IDX sttype = ST_type(st);
@@ -445,12 +447,12 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TY* typ)
   // etype/pointed/pu_flags: ARRAY, POINTER, FUNCTION (respectively)
   sos << BegList;
   if (knd == KIND_ARRAY) {
-    ARB_HANDLE arb = TY_arb(ty); // FIXME more info
+    ARB_HANDLE arb = TY_arb(ty); // FIXME add arb tag?
     TY_IDX ety = TY_etype(ty);
     sos << Atom(arb.Idx()) << GenSexpTy(ety);
   }
   else if (knd == KIND_STRUCT) {
-    FLD_HANDLE fld = TY_fld(ty); // FIXME more info
+    FLD_HANDLE fld = TY_fld(ty); // FIXME add tag?
     sos << Atom(fld.Idx());
   }
   else if (knd == KIND_POINTER) {
@@ -459,8 +461,8 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TY* typ)
   } 
   else if (knd == KIND_FUNCTION) {
     TYLIST_IDX tyl = TY_tylist(ty);
-    PU_IDX flg = ty.Pu_flags();
-    sos << Atom(tyl) << GenBeginFlgList(flg) << EndList;
+    const char* pu_flg_str = TY_PU_FLAGS_To_Str(ty.Pu_flags());
+    sos << Atom(tyl) << GenSexpFlg(pu_flg_str);
   }
   sos << EndList;
   
@@ -528,7 +530,8 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, FLD* fld)
   
   // flags
   UINT16 flg = FLD_flags(fldh);
-  sos << GenBeginFlgList(flg) << EndList;
+  const char* flg_str = FLD_FLAGS_To_Str(flg);
+  sos << GenSexpFlg(flg_str);
   
   // st
   ST_IDX st_idx = FLD_st(fldh);
@@ -549,9 +552,10 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ARB* arb)
   
   // flags, dimension, co_dimension
   UINT16 flg = ARB_flags(arbh);
+  const char* flg_str = ARB_FLAGS_To_Str(flg);
   UINT16 dim = ARB_dimension(arbh);
   UINT16 codim = ARB_co_dimension(arbh);
-  sos << GenBeginFlgList(flg) << EndList << Atom(dim) << Atom(codim);
+  sos << GenSexpFlg(flg_str) << Atom(dim) << Atom(codim);
   
   // lbnd_val/(lbnd_var, lbnd_unused)
   if (ARB_const_lbnd(arbh)) {
@@ -617,9 +621,10 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, TCON* tcon)
 
   // flags
   UINT32 flg = tcon->flags;
-  sos << GenBeginFlgList(flg) << EndList;
+  const char* flg_str = TCONFlags_To_Str(flg);
+  sos << GenSexpFlg(flg_str);
   
-  // vals [quad]
+  // vals [quad] (FIXME: abstract these values from the union)
   FortTk::assign(qd, tcon->vals.qval);
   sos << BegList << Atom(A_HEX, qd.hi) << Atom(A_HEX, qd.lo) << EndList;
   
@@ -657,8 +662,9 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, INITV* initv)
   sos << Atom(initv->next);
 
   // kind
-  sos << Atom(initv->kind); // FIXME: make symbolic
-
+  const char* initvknd_nm = InitvKind_Name(initv->kind);
+  sos << Atom(initvknd_nm);
+  
   // repeat1
   sos << Atom(initv->repeat1);
   
@@ -684,8 +690,9 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, BLK* blk)
   sos << Atom(blk->Align());
 
   // flags
-  sos << GenBeginFlgList(blk->Flags()) << EndList;
-
+  const char* flgext_str = BLK_FLAGS_To_Str(blk->Flags());
+  sos << GenSexpFlg(flgext_str);
+  
   // section_idx
   sos << Atom(blk->Section_idx());
 
@@ -707,7 +714,8 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ST_ATTR* sta)
   
   // kind
   ST_ATTR_KIND knd = ST_ATTR_kind(*sta);
-  sos << Atom(knd);  // FIXME: make symbolic
+  const char* knd_nm = ST_ATTR_Kind_Name(knd);
+  sos << Atom(knd_nm);
   
   // reg_id/section_name
   PREG_NUM val = ST_ATTR_reg_id(*sta);
@@ -730,12 +738,14 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, LABEL* lbl)
   sos << BegList << Atom(A_DQUOTE, nm) << Atom(nmidx) << EndList;
     
   // kind
-  LABEL_KIND knd = LABEL_kind(*lbl); // FIXME: make symbolic
-  sos << Atom(knd);
+  LABEL_KIND knd = LABEL_kind(*lbl);
+  const char* knd_nm = LABEL_Kind_Name(knd);
+  sos << Atom(knd_nm);
   
   // flags
   UINT32 flg = (UINT32)lbl->flags;
-  sos << GenBeginFlgList(flg) << EndList;
+  const char* flg_str = LABEL_FLAGS_To_Str(flg);
+  sos << GenSexpFlg(flg_str);
   
   sos << EndList;
 }

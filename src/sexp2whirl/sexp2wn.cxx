@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.6 2005/01/18 20:23:09 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.7 2005/02/01 00:42:51 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -257,26 +257,28 @@ sexp2whirl::GetWhirlFlg(sexp_t* sx)
   return flg;
 }
 
-sexp_t*
-sexp2whirl::GetBeginFlgList(sexp_t* sx)
+
+// GetWhirlOpaqueFlg
+UINT64
+sexp2whirl::GetWhirlOpaqueFlg(sexp_t* sx)
 {
   using namespace sexp;
   
   // Sanity check
-  FORTTK_ASSERT(is_list(sx), FORTTK_UNEXPECTED_INPUT);  
+  FORTTK_ASSERT(is_list(sx), FORTTK_UNEXPECTED_INPUT);
   
   sexp_t* tag_sx = get_elem0(sx);
   const char* tagstr = get_value(tag_sx);
-  FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::FLG) == 0,
+  FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::OFLG) == 0,
 		FORTTK_UNEXPECTED_INPUT);
-
-  // Get the first flag
-  sexp_t* flg1_sx = get_elem1(sx);
-  FORTTK_ASSERT(flg1_sx, FORTTK_UNEXPECTED_INPUT);
   
-  return flg1_sx;
+  // Get the flag string
+  sexp_t* flg_sx = get_elem1(sx);
+  FORTTK_ASSERT(flg_sx, FORTTK_UNEXPECTED_INPUT);
+  
+  UINT64 flg = get_value_ui64(flg_sx);
+  return flg;
 }
-
 
 
 //***************************************************************************
@@ -364,8 +366,7 @@ sexp2whirl::xlate_structured_cf(sexp_t* sx)
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   if (opr == OPR_IF) {
     sexp_t* flags_sx = get_elem0(attrs_sx); 
-    sexp_t* flg_sx = GetBeginFlgList(flags_sx);
-    UINT32 flg = get_value_ui32(flg_sx); // FIXME: flag parsing
+    UINT32 flg = (UINT32)GetWhirlOpaqueFlg(flags_sx);
     WN_if_flag(wn) = flg;
   }
   
@@ -415,9 +416,8 @@ sexp2whirl::xlate_GOTOx_LABEL(sexp_t* sx)
   }
   else if (opr == OPR_LABEL) {
     sexp_t* flags_sx = get_elem1(attrs_sx); 
-    sexp_t* flg_sx = GetBeginFlgList(flags_sx);
-    UINT32 flg = get_value_ui32(flg_sx); // FIXME: flag parsing
-
+    UINT32 flg = (UINT32)GetWhirlOpaqueFlg(flags_sx);
+    
     WN* kidWN = TranslateWN(get_wnast_kid0(sx)); // KID 0
 
     wn = WN_CreateLabel(lbl, flg, kidWN);
@@ -586,8 +586,7 @@ sexp2whirl::xlate_xCALL(sexp_t* sx)
   }
   if (opr != OPR_VFCALL) {
     sexp_t* flags_sx = get_elem1(attrs_sx); 
-    sexp_t* flg_sx = GetBeginFlgList(flags_sx);
-    UINT32 flg = get_value_ui32(flg_sx); // FIXME: flag parsing
+    UINT32 flg = (UINT32)GetWhirlOpaqueFlg(flags_sx);
     WN_call_flag(wn) = flg;
   }
 
@@ -610,8 +609,7 @@ sexp2whirl::xlate_IO(sexp_t* sx)
   IOSTATEMENT ios = Name_To_IOSTATEMENT(ios_nm);
 
   sexp_t* flags_sx = get_elem1(attrs_sx);
-  sexp_t* flg_sx = GetBeginFlgList(flags_sx);
-  UINT32 flg = get_value_ui32(flg_sx); // FIXME: flag parsing
+  UINT32 flg = (UINT32)GetWhirlOpaqueFlg(flags_sx);
 
   std::vector<WN*> kids = TranslateWNChildren(sx); // KIDs
   WN* wn = WN_CreateIo(ios, kids.size());
@@ -693,8 +691,7 @@ sexp2whirl::xlate_misc_stmt(sexp_t* sx)
     cur_sx = get_next(cur_sx);
   }
   if (OPERATOR_has_flags(opr)) {
-    sexp_t* flg_sx = GetBeginFlgList(cur_sx);
-    UINT32 flg = get_value_ui32(flg_sx); // FIXME: flag parsing
+    UINT32 flg = (UINT32)GetWhirlOpaqueFlg(cur_sx);
     WN_set_flag(wn, flg);
     cur_sx = get_next(cur_sx);
   }
@@ -723,8 +720,7 @@ sexp2whirl::xlate_xPRAGMA(sexp_t* sx)
   ST_IDX st_idx = GetWhirlSymRef(st_idx_sx);
   
   sexp_t* flags_sx = get_elem2(attrs_sx);
-  sexp_t* flg_sx = GetBeginFlgList(flags_sx);
-  UINT16 flg = (UINT16)get_value_ui32(flg_sx); // FIXME: flag parsing
+  UINT16 flg = (UINT16)GetWhirlOpaqueFlg(flags_sx);
 
   WN* wn = NULL;
   if (opr == OPR_PRAGMA) {
@@ -1061,8 +1057,7 @@ sexp2whirl::xlate_PARM(sexp_t* sx)
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* flags_sx = get_elem0(attrs_sx); 
-  sexp_t* flg_sx = GetBeginFlgList(flags_sx);
-  UINT32 flg = get_value_ui32(flg_sx); // FIXME: flag parsing
+  UINT32 flg = (UINT32)GetWhirlOpaqueFlg(flags_sx);
 
   sexp_t* ty_idx_sx = get_elem1(attrs_sx);
   TY_IDX ty_idx = GetWhirlTyUse(ty_idx_sx);

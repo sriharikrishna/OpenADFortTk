@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.h,v 1.6 2005/01/18 20:23:09 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.h,v 1.7 2005/02/01 00:42:51 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -116,9 +116,8 @@ struct GenSexpTyUseInfo_ {
 struct GenSexpFlgInfo_ {
   const char* val;
 };
-template <class T>
-struct GenBeginFlgListInfoX_ {
-  T val;
+struct GenSexpOpaqueFlgInfo_ {
+  UINT64 val;
 };
 
 
@@ -207,28 +206,14 @@ GenSexpFlg(const char* val)
 }
 
 
-// FIXME: remove
-template <class T>
+// Cf. GenSexpOpaqueFlg
 sexp::ostream&
-operator<<(std::ostream& os, const GenBeginFlgListInfoX_<T>& x)
-{
-  sexp::ostream& sos = dynamic_cast<sexp::ostream&>(os);
-  
-  T val = x.val;
-  
-  using namespace sexp;
-  using namespace sexp::IOFlags;
-  sos << BegList << Atom(SexpTags::FLG) << Atom(A_HEX, val); // FIXME
-  // Do not end the list!
-  
-  return sos;
-}
+operator<<(std::ostream& os, const GenSexpOpaqueFlgInfo_& x);
 
-template <class T>
-inline GenBeginFlgListInfoX_<T> 
-GenBeginFlgList(T val)
+inline GenSexpOpaqueFlgInfo_
+GenSexpOpaqueFlg(UINT64 val)
 {
-  GenBeginFlgListInfoX_<T> x;
+  GenSexpOpaqueFlgInfo_ x;
   x.val = val;
   return x;
 }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SexpTags.cxx,v 1.3 2005/01/07 19:00:17 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SexpTags.cxx,v 1.4 2005/02/01 00:42:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -57,6 +57,7 @@ namespace SexpTags {
   const char* ST          = "st";
   const char* TY          = "ty";
   const char* FLG         = "flg";
+  const char* OFLG        = "oflg";
   
 };
 

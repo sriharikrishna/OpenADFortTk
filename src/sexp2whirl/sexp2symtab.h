@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.h,v 1.6 2005/01/17 15:23:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.h,v 1.7 2005/02/01 00:42:51 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -174,55 +174,55 @@ namespace sexp2whirl {
   // Specializations of xlate_SYMTAB_entry
   template <> 
   inline ST* 
-  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_ST_TAB_entry(sx); }
+  xlate_SYMTAB_entry<ST>(sexp_t* sx) { return xlate_ST_TAB_entry(sx); }
   
   template <>
   inline TY* 
-  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_TY_TAB_entry(sx); }
+  xlate_SYMTAB_entry<TY>(sexp_t* sx) { return xlate_TY_TAB_entry(sx); }
   
   template <>
   inline PU* 
-  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_PU_TAB_entry(sx); }
+  xlate_SYMTAB_entry<PU>(sexp_t* sx) { return xlate_PU_TAB_entry(sx); }
   
   template <>
   inline FLD* 
-  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_FLD_TAB_entry(sx); }
+  xlate_SYMTAB_entry<FLD>(sexp_t* sx) { return xlate_FLD_TAB_entry(sx); }
   
   template <>
   inline ARB* 
-  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_ARB_TAB_entry(sx); }
+  xlate_SYMTAB_entry<ARB>(sexp_t* sx) { return xlate_ARB_TAB_entry(sx); }
   
   template <>
   inline TYLIST* 
-  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_TYLIST_TAB_entry(sx); }
+  xlate_SYMTAB_entry<TYLIST>(sexp_t* sx) { return xlate_TYLIST_TAB_entry(sx); }
   
   template <>
   inline TCON* 
-  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_TCON_TAB_entry(sx); }
+  xlate_SYMTAB_entry<TCON>(sexp_t* sx) { return xlate_TCON_TAB_entry(sx); }
   
   template <>
   inline INITO* 
-  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_INITO_TAB_entry(sx); }
+  xlate_SYMTAB_entry<INITO>(sexp_t* sx) { return xlate_INITO_TAB_entry(sx); }
   
   template <>
   inline INITV* 
-  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_INITV_TAB_entry(sx); }
+  xlate_SYMTAB_entry<INITV>(sexp_t* sx) { return xlate_INITV_TAB_entry(sx); }
   
   template <>
   inline BLK* 
-  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_BLK_TAB_entry(sx); }
+  xlate_SYMTAB_entry<BLK>(sexp_t* sx) { return xlate_BLK_TAB_entry(sx); }
   
   template <>
   inline ST_ATTR* 
-  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_ST_ATTR_TAB_entry(sx); }
+  xlate_SYMTAB_entry<ST_ATTR>(sexp_t* sx) { return xlate_ST_ATTR_TAB_entry(sx); }
   
   template <>
   inline LABEL* 
-  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_LABEL_TAB_entry(sx); }
+  xlate_SYMTAB_entry<LABEL>(sexp_t* sx) { return xlate_LABEL_TAB_entry(sx); }
   
   template <>
   inline PREG* 
-  xlate_SYMTAB_entry(sexp_t* sx) { return xlate_PREG_TAB_entry(sx); }
+  xlate_SYMTAB_entry<PREG>(sexp_t* sx) { return xlate_PREG_TAB_entry(sx); }
   
 }; /* namespace sexp2whirl */
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.cxx,v 1.6 2005/01/05 20:51:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.cxx,v 1.7 2005/02/01 00:42:51 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -140,12 +140,14 @@ GenHeader(sexp::ostream& sos)
   sos << Comment("");
 
   sos << Comment("*** Symbol Table Details ***")
-      << Comment("GBL_SYMTAB ::= (gbl_symtab FILE_INFO ST_TAB PU_TAB")
+      << Comment("GBL_SYMTAB ::= (gbl_symtab FILE_INFO")
+      << Comment("                           ST_TAB")
+      << Comment("                           PU_TAB")
       << Comment("                  TY_TAB FLD_TAB TYLIST_TAB ARB_TAB")
       << Comment("                  BLK_TAB TCON_TAB INITO_TAB ST_ATTR_TAB")
       << Comment("                  STR_TAB)")
       << Comment("PU_SYMTAB  ::= (pu_symtab ST_TAB INITO_TAB ST_ATTR_TAB")
-      << Comment("                  PREG_TAB LABEL_TAB")
+      << Comment("                  PREG_TAB LABEL_TAB)")
       << Comment("")
       << Comment("FILE_INFO   ::= (file_info ...)")
       << Comment("ST_TAB      ::= (st_tab ST_TAB_NTRY*) !! also a PU_SYMTAB")

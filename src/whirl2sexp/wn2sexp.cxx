@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.10 2005/01/18 20:23:09 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.11 2005/02/01 00:42:51 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -236,6 +236,21 @@ operator<<(std::ostream& os, const GenSexpFlgInfo_& x)
 }
 
 
+// Cf. GenSexpOpaqueFlg
+sexp::ostream&
+operator<<(std::ostream& os, const GenSexpOpaqueFlgInfo_& x)
+{
+  sexp::ostream& sos = dynamic_cast<sexp::ostream&>(os);
+  
+  UINT64 val = x.val;
+
+  using namespace sexp::IOFlags;
+  sos << BegList << Atom(SexpTags::OFLG) << Atom(A_HEX, val) << EndList;
+  
+  return sos;
+}
+
+
 //***************************************************************************
 // Structured Control Flow Statements: translation of these is
 //   superceded by construction of the control flow graph.
@@ -315,7 +330,7 @@ whirl2sexp::xlate_structured_cf(sexp::ostream& sos, WN* wn)
   sos << BegList;                       // WN_ATTRS
   if (opr == OPR_IF) {
     UINT32 flg = WN_if_flag(wn);
-    sos << GenBeginFlgList(flg) << EndList;
+    sos << GenSexpOpaqueFlg(flg);
   }
   sos << EndList << EndLine; 
   TranslateWNChildren(sos, wn);         // KIDs
@@ -356,7 +371,7 @@ whirl2sexp::xlate_GOTOx_LABEL(sexp::ostream& sos, WN* wn)
   }
   else if (opr == OPR_LABEL) {
     UINT32 flg = WN_label_flag(wn);
-    sos << GenBeginFlgList(flg) << EndList;
+    sos << GenSexpOpaqueFlg(flg);
   }
   sos << EndList;
   if (opr == OPR_LABEL) {             // KID 0
@@ -498,7 +513,7 @@ whirl2sexp::xlate_xCALL(sexp::ostream& sos, WN* wn)
     sos << Atom(nm);
   }
   if (opr != OPR_VFCALL) {
-    sos << GenBeginFlgList(flg) << EndList;
+    sos << GenSexpOpaqueFlg(flg);
   }
   sos << EndList;
   if (WN_kid_count(wn) > 0) {
@@ -524,7 +539,7 @@ whirl2sexp::xlate_IO(sexp::ostream& sos, WN* wn)
   using namespace sexp::IOFlags;
   sos << BegList << GenSexpWNOpr(wn); // WN_OPR
   sos << BegList                      // WN_ATTRS
-      << Atom(nm) << GenBeginFlgList(flg) << EndList
+      << Atom(nm) << GenSexpOpaqueFlg(flg)
       << EndList << EndLine;
   TranslateWNChildren(sos, wn);       // KIDs
   sos << EndList;
@@ -607,7 +622,7 @@ whirl2sexp::xlate_misc_stmt(sexp::ostream& sos, WN* wn)
   }
   if (OPERATOR_has_flags(opr)) {
     UINT32 flg = WN_flag(wn);
-    sos << GenBeginFlgList(flg) << EndList;
+    sos << GenSexpOpaqueFlg(flg);
   }
   sos << EndList;
 
@@ -634,7 +649,7 @@ whirl2sexp::xlate_xPRAGMA(sexp::ostream& sos, WN* wn)
   
   sos << BegList << GenSexpWNOpr(wn); // WN_OPR
   sos << BegList << Atom(prag) << GenSexpSymRef(st_idx) // WN_ATTRS
-      << GenBeginFlgList(flg) << EndList;
+      << GenSexpOpaqueFlg(flg);
   
   if (opr == OPR_PRAGMA) {
     INT64 cval = WN_const_val(wn);
@@ -909,8 +924,8 @@ whirl2sexp::xlate_PARM(sexp::ostream& sos, WN* wn)
 
   sos << BegList << GenSexpWNOpr(wn);     // WN_OPR
   sos << BegList                          // WN_ATTRS
-      << GenBeginFlgList(flg) << EndList
-      << GenSexpTyUse(ty_idx) << EndList << EndLine; 
+      << GenSexpOpaqueFlg(flg) << GenSexpTyUse(ty_idx)
+      << EndList << EndLine; 
   TranslateWN(sos, WN_kid0(wn));          // KID 0
   sos << EndList;
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.cxx,v 1.7 2005/01/18 20:23:09 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.cxx,v 1.8 2005/02/01 00:42:51 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -272,9 +272,8 @@ sexp2whirl::xlate_FILE_INFO(sexp_t* file_info)
 
   // flags
   sexp_t* flags_sx = get_next(gp_sx);
-  sexp_t* flag1_sx = GetBeginFlgList(flags_sx);
-  mUINT32 flags = get_value_ui32(flag1_sx);
-  File_info.flags = flags; // FIXME: flag parsing
+  const char* flags_str = GetWhirlFlg(flags_sx);
+  File_info.flags = (UINT32)Str_To_FILE_INFO_FLAGS(flags_str);
 }
 
 
@@ -548,10 +547,9 @@ sexp2whirl::xlate_TY_TAB_entry(sexp_t* sx)
     TYLIST_IDX tyl = get_value_ui32(tyl_sx);
     Set_TY_tylist(*ty, tyl);
     
-    sexp_t* flgs_sx = get_elem1(olist_sx);
-    sexp_t* flg1_sx = GetBeginFlgList(flgs_sx);
-    PU_IDX flg = get_value_ui32(flg1_sx);
-    ty->u2.pu_flags = flg;
+    sexp_t* pu_flg_sx = get_elem1(olist_sx);
+    const char* pu_flg_str = GetWhirlFlg(pu_flg_sx);
+    ty->u2.pu_flags = (PU_IDX)Str_To_TY_PU_FLAGS(pu_flg_str);
   }
   
   return ty;
@@ -636,9 +634,9 @@ sexp2whirl::xlate_FLD_TAB_entry(sexp_t* sx)
   
   // flags
   sexp_t* flags_sx = get_next(bofst_sx);
-  sexp_t* flag1_sx = GetBeginFlgList(flags_sx);
-  fld->flags = (UINT16)get_value_ui32(flag1_sx);
-
+  const char* flags_str = GetWhirlFlg(flags_sx);
+  fld->flags = (UINT16)Str_To_FLD_FLAGS(flags_str);
+  
   // st
   sexp_t* st_sx = get_next(flags_sx);
   ST_IDX st = GetWhirlSym(st_sx);
@@ -661,8 +659,8 @@ sexp2whirl::xlate_ARB_TAB_entry(sexp_t* sx)
   
   // flags, dimension, co_dimension
   sexp_t* flags_sx = get_elem1(sx);
-  sexp_t* flag1_sx = GetBeginFlgList(flags_sx);
-  arb->flags = (UINT16)get_value_ui32(flag1_sx);
+  const char* flags_str = GetWhirlFlg(flags_sx);
+  arb->flags = (UINT16)Str_To_ARB_FLAGS(flags_str);
   
   sexp_t* dim_sx = get_next(flags_sx);
   UINT16 dim = (UINT16)get_value_ui32(dim_sx);
@@ -745,9 +743,8 @@ sexp2whirl::xlate_TCON_TAB_entry(sexp_t* sx)
   
   // flags
   sexp_t* flags_sx = get_next(mty_sx);
-  sexp_t* flag1_sx = GetBeginFlgList(flags_sx);
-  UINT32 flg = get_value_ui32(flag1_sx); // FIXME: flag parsing
-  tcon->flags = flg;
+  const char* flags_str = GetWhirlFlg(flags_sx);
+  tcon->flags = (UINT32)Str_To_TCONFlags(flags_str);
   
   // vals [quad]
   sexp_t* vals_sx = get_next(flags_sx);
@@ -802,7 +799,8 @@ sexp2whirl::xlate_INITV_TAB_entry(sexp_t* sx)
 
   // kind
   sexp_t* kind_sx = get_next(next_sx);
-  INITVKIND kind = (INITVKIND)get_value_i32(kind_sx);
+  const char* kind_nm = get_value(kind_sx);
+  INITVKIND kind = Name_To_InitvKind(kind_nm);
   initv->kind = kind;
   
   // repeat1
@@ -843,8 +841,8 @@ sexp2whirl::xlate_BLK_TAB_entry(sexp_t* sx)
 
   // flags
   sexp_t* flags_sx = get_next(align_sx);
-  sexp_t* flag1_sx = GetBeginFlgList(flags_sx);
-  UINT16 flags = (UINT16)get_value_ui32(flag1_sx);
+  const char* flags_str = GetWhirlFlg(flags_sx);
+  UINT16 flags = (UINT16)Str_To_BLK_FLAGS(flags_str);
   blk->Set_flags(flags);
 
   // section_idx
@@ -875,7 +873,8 @@ sexp2whirl::xlate_ST_ATTR_TAB_entry(sexp_t* sx)
   
   // kind
   sexp_t* knd_sx = get_next(st_idx_sx);
-  ST_ATTR_KIND knd = (ST_ATTR_KIND)get_value_i32(knd_sx);
+  const char* knd_nm = get_value(knd_sx);
+  ST_ATTR_KIND knd = Name_To_ST_ATTR_Kind(knd_nm);
   st_attr->kind = knd;
   
   // reg_id/section_name
@@ -902,14 +901,14 @@ sexp2whirl::xlate_LABEL_TAB_entry(sexp_t* sx)
   
   // kind
   sexp_t* knd_sx = get_next(name_idx_sx);
-  LABEL_KIND knd = (LABEL_KIND)get_value_i32(knd_sx);
+  const char* knd_nm = get_value(knd_sx);
+  LABEL_KIND knd = Name_To_LABEL_Kind(knd_nm);
   Set_LABEL_KIND(*label, knd);
 
   // flags
   sexp_t* flags_sx = get_next(knd_sx);
-  sexp_t* flag1_sx = GetBeginFlgList(flags_sx);
-  UINT32 flg = get_value_ui32(flag1_sx);
-  label->flags = flg;
+  const char* flags_str = GetWhirlFlg(flags_sx);
+  label->flags = (UINT32)Str_To_LABEL_FLAGS(flags_str);
   
   return label;
 }
@@ -964,14 +963,11 @@ sexp2whirl::xlate_TCON_STR_TAB_entry(sexp_t* sx, std::string& buf)
   buf.append(prefix, plen);
   buf.append(str, len); // include terminator
   
-  //UINT32 idx1 = Save_StrN(str, len); FIXME
-  
   // sanity check
   sexp_t* idxorig_sx = get_elem0(sx);
   UINT32 idxorig = get_value_ui32(idxorig_sx);
   FORTTK_ASSERT(idx == idxorig, "TCON_STR_TAB indices are inconsistent");
-  //FORTTK_ASSERT(idx1 == idxorig, "TCON_STR_TAB error");
-  
+
   return idx;
 }
 
@@ -988,8 +984,6 @@ sexp2whirl::xlate_STR_TAB_entry(sexp_t* sx, std::string& buf)
   // Add to STR_TAB buffer (cf. xlate_STR_TAB)
   UINT32 idx = buf.size(); // idx of first byte of 'str'
   buf.append(str, strlen(str) + 1); // include terminator
-  
-  // STR_IDX idx1 = Save_Str(str); FIXME
   
   // sanity check
   sexp_t* idxorig_sx = get_elem0(sx);
