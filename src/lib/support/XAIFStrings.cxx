@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.14 2004/03/12 18:22:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.15 2004/03/24 13:32:33 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -75,6 +75,8 @@ const char* XAIFStringRepository::c_strTbl[] = {
   
   // xaif:ControlFlowGraph
   "xaif:ControlFlowGraph",
+  
+  "xaif:ControlFlowEdge",
   
   // xaif:BasicBlock
   "xaif:BasicBlock",

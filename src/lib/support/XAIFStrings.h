@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.14 2004/03/12 18:22:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.15 2004/03/24 13:32:33 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -74,6 +74,8 @@ public:
 
     // xaif:ControlFlowGraph
     ELEM_CFG,
+
+    ELEM_CFGEdge,
     
     // xaif:BasicBlock
     ELEM_BB,
@@ -234,6 +236,9 @@ public:
   const char* elem_CFG() const { return c_strTbl[ELEM_CFG]; }
   XMLCh*      elem_CFG_x() const { return x_strTbl[ELEM_CFG]; }
   
+  const char* elem_CFGEdge() const { return c_strTbl[ELEM_CFGEdge]; }
+  XMLCh*      elem_CFGEdge_x() const { return x_strTbl[ELEM_CFGEdge]; }
+
   // xaif:BasicBlock
   const char* elem_BB() const { return c_strTbl[ELEM_BB]; }
   XMLCh*      elem_BB_x() const { return x_strTbl[ELEM_BB]; }
