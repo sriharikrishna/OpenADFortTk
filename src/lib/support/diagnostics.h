@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.9 2004/07/30 17:50:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.10 2004/08/09 14:35:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -236,7 +236,7 @@ FortTk_TheMostVisitedBreakpointInHistory(const char* filenm = NULL,
 // (Equivalent to FORTTK_DIE.) Based on Jean Utke's code in xaifBooster.
 #define FORTTK_THROW(streamArgs)                                      \
   { std::ostringstream WeIrDnAmE;                                     \
-    WeIrDnAmE << streamArgs << std::ends;                             \
+    WeIrDnAmE << streamArgs;                                          \
     throw FortTk::FatalException(WeIrDnAmE.str(), __FILE__, __LINE__); }
 
 #endif

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.h,v 1.2 2004/08/06 17:29:33 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.h,v 1.3 2004/08/09 14:35:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -392,8 +392,9 @@ BegAtom(ostream& sos)
 
 template<class T> 
 struct AtomInfo_ {
+  AtomInfo_(int f, const T& v) : flags(f), val(v) { }
   int flags;
-  const T* val;
+  const T& val;
 };
 
 template<class T> 
@@ -401,7 +402,7 @@ ostream&
 operator<<(std::ostream& os, const AtomInfo_<T>& x)
 {
   ostream& sos = dynamic_cast<ostream&>(os); // FIXME
-  sos.Atom(x.flags, *x.val);
+  sos.Atom(x.flags, x.val);
   return sos;
 }
 
@@ -409,9 +410,7 @@ template<class T>
 AtomInfo_<T>
 Atom(int aflags, const T& val)
 {
-  AtomInfo_<T> x;
-  x.flags = aflags;
-  x.val = &val;
+  AtomInfo_<T> x(aflags, val);
   return x;
 }
 
@@ -419,9 +418,7 @@ template<class T>
 AtomInfo_<T>
 Atom(const T& val)
 {
-  AtomInfo_<T> x;
-  x.flags = IOFlags::NONE;
-  x.val = &val;
+  AtomInfo_<T> x(IOFlags::NONE, val);
   return x;
 }
 
