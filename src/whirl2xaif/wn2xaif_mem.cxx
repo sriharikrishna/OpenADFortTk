@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.16 2003/12/06 00:21:37 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.17 2004/01/19 21:41:57 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -493,7 +493,9 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   }
   
   // LHS of assignment
-  xos << BegElem(XAIFStrings.elem_AssignLHS()) << EndAttrs;
+  WN* lhs = wn; // OPR_STID represents the LHS of the assignment
+  xos << BegElem(XAIFStrings.elem_AssignLHS()) 
+      << Attr("alias", ctxt.FindVN(lhs)) << EndAttrs;
   ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for LHS
   
   if (ST_class(base_st) == CLASS_PREG) { // FIXME
@@ -547,14 +549,16 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   }
   
   // LHS of assignment (dereference address)
-  xos << BegElem(XAIFStrings.elem_AssignLHS()) << EndAttrs;
+  WN* lhs = baseptr;
+  xos << BegElem(XAIFStrings.elem_AssignLHS()) 
+      << Attr("alias", ctxt.FindVN(lhs)) << EndAttrs;
   ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for LHS
-
+  
   if (WN_operator(baseptr) == OPR_LDA || WN_operator(baseptr) == OPR_LDID) {
     set_XlationContext_has_no_arr_elmt(ctxt);
   }
-  WN2F_Offset_Memref(xos, baseptr, baseptr_ty, ref_ty,
-		     WN_store_offset(wn), ctxt);
+  WN2F_Offset_Memref(xos, baseptr, baseptr_ty, ref_ty, WN_store_offset(wn),
+		     ctxt);
   reset_XlationContext_has_no_arr_elmt(ctxt); 
 
   ctxt.DeleteContext();
