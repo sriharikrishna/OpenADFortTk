@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.37 2004/04/28 15:24:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.38 2004/04/29 21:33:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -116,7 +116,8 @@ void
 whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
 {
   Diag_Set_Phase("WHIRL to XAIF: translate IR");
-
+  //IntrinsicTable.DDump();
+  
   if (!pu_forest) { return; }
 
   // 1. Initialization
