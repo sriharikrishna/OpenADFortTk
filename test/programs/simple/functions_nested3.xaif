@@ -75,52 +75,6 @@
 
   <!-- ******************************************************************** -->
   <xaif:ControlFlowGraph vertex_id="2" scope_id="1" symbol_id="FACTORIAL_20" annotation="{PU_Id#2}" controlflowgraph_scope_id="3">
-    <xaif:ArgumentList>
-      <xaif:ArgumentSymbolReference position="1" scope_id="3" symbol_id="N_2" intent="inout" annotation="{WHIRL_Id#14}"/>
-    </xaif:ArgumentList>
-
-    <xaif:Entry vertex_id="1" annotation="{WHIRL_Id#}"/>
-
-    <xaif:BasicBlock vertex_id="2" scope_id="3" annotation="{WHIRL_Id#18}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#18} [passive: OPR_PRAGMA]"/>
-    </xaif:BasicBlock>
-
-    <xaif:Branch vertex_id="7" annotation="{WHIRL_Id#19}">
-      <xaif:Condition>
-        <xaif:BooleanOperation vertex_id="1" name="equal"/>
-        <xaif:VariableReference vertex_id="2" du_ud="1">
-          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="N_2"/>
-        </xaif:VariableReference>
-        <xaif:Constant vertex_id="3" type="integer" value="1"/>
-        <xaif:ExpressionEdge edge_id="1" source="2" target="1" position="1"/>
-        <xaif:ExpressionEdge edge_id="2" source="3" target="1" position="2"/>
-      </xaif:Condition>
-    </xaif:Branch>
-
-    <xaif:BasicBlock vertex_id="3" scope_id="3" annotation="{WHIRL_Id#24}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#24} [passive: OPR_STID]"/>
-    </xaif:BasicBlock>
-
-    <xaif:EndBranch vertex_id="5" annotation="{WHIRL_Id#}"/>
-
-    <xaif:BasicBlock vertex_id="8" scope_id="3" annotation="{WHIRL_Id#35}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#35} [passive: OPR_RETURN_VAL]"/>
-    </xaif:BasicBlock>
-
-    <xaif:Exit vertex_id="6" annotation="{WHIRL_Id#}"/>
-
-    <xaif:BasicBlock vertex_id="4" scope_id="3" annotation="{WHIRL_Id#27}">
-      <xaif:Marker statement_id="1" annotation="{WHIRL_Id#27} [passive: OPR_STID]"/>
-    </xaif:BasicBlock>
-
-    <xaif:ControlFlowEdge edge_id="1" source="1" target="2"/>
-    <xaif:ControlFlowEdge edge_id="2" source="2" target="7"/>
-    <xaif:ControlFlowEdge edge_id="3" source="3" target="5"/>
-    <xaif:ControlFlowEdge edge_id="4" source="4" target="5"/>
-    <xaif:ControlFlowEdge edge_id="5" source="5" target="8"/>
-    <xaif:ControlFlowEdge edge_id="6" source="7" target="3" has_condition_value="true" condition_value="1"/>
-    <xaif:ControlFlowEdge edge_id="7" source="7" target="4"/>
-    <xaif:ControlFlowEdge edge_id="8" source="8" target="6"/>
   </xaif:ControlFlowGraph>
 
   <xaif:CallGraphEdge edge_id="1" source="1" target="2"/>
