@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.23 2004/05/28 15:17:33 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.24 2004/05/28 22:34:59 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -59,6 +59,10 @@ using std::cerr;
 using std::endl;
 
 using namespace xaif2whirl;
+
+extern TY_IDX ActiveTypeTyIdx;            // FIXME
+extern TY_IDX ActiveTypeInitializedTyIdx; // FIXME
+
 
 // sort_Position: Used to sort operands of (arguments to) an expression
 // by the "position" attribute
@@ -480,9 +484,32 @@ xlate_ExprOpUsingIntrinsicTable(IntrinsicXlationTable::XAIFOpr xopr,
   for (int i = 0; i < info->numop; ++i) {
     MyDGNode* opnd = dynamic_cast<MyDGNode*>(opnd_edge[i]->source());
     opnd_wn[i] = xlate_Expression(g, opnd, ctxt);
+  }       
+  
+  
+  // Here promote all arguments up to 8 bytes; we assume canonicalized
+  // argument forms
+  // FIXME: for now we promote reals to 8; demote ints to 4; we could
+  // selectively do this...
+  for (int i = 0; i < opnd_wn.size(); ++i) {
+    // FIXME: could use rtype for operator
+    TY_IDX ty = WN_Tree_Type(opnd_wn[i]);
+    TYPE_ID rty = TY_mtype(ty);      
+    
+    TYPE_ID newrty = MTYPE_UNKNOWN;
+    if (MTYPE_is_integral(rty)) {
+      newrty = GetMType(MTYPE_CLASS_INTEGER, 4);
+    }
+    else if (MTYPE_is_float(rty)) {
+      newrty = GetMType(MTYPE_CLASS_FLOAT, 8);
+    }
+    
+    // WN_set_rtype(opnd_wn[i], newrty);
+    if (newrty != MTYPE_UNKNOWN && newrty != rty) {
+      opnd_wn[i] = WN_Cvt(rty, newrty, opnd_wn[i]);
+    }
   }
   
-  // FIXME:: Here promote all arguments up to 8 bytes
   
   // 3. Translate into either WHIRL OPR_CALL or a WHIRL expression operator
   WN* wn = NULL;
@@ -493,7 +520,7 @@ xlate_ExprOpUsingIntrinsicTable(IntrinsicXlationTable::XAIFOpr xopr,
     break;
   }
   case IntrinsicXlationTable::WNIntrinCall:
-  case IntrinsicXlationTable::WNIntrinOp: {
+  case IntrinsicXlationTable::WNIntrinOp: {          
     TYPE_ID rtype = MTYPE_F8; // FIXME
     TYPE_ID dtype = MTYPE_V;  // FIXME
     INTRINSIC intrn = GetWNIntrinsic(info->name, opnd_wn, NULL);
@@ -809,15 +836,17 @@ xaif2whirl::PatchWNExpr(WN* parent, INT kidno, XlationContext& ctxt)
   
   // Base case: a variable reference
   if (IsVarRefTranslatableToXAIF(wn)) {
-
-    // FIXME: only patch floating point references?
-    TY_IDX ty = WN_Tree_Type(wn);
-    if (MTYPE_is_float(TY_mtype(ty))) {
+    TY_IDX ty = WN_GetBaseObjType(wn);
+    if (TY_kind(ty) == KIND_ARRAY) {
+      ty = TY_etype(ty);
+    }
+    
+    if (ty == ActiveTypeTyIdx || ty == ActiveTypeInitializedTyIdx) {
       WN* newwn = CreateValueSelector(wn);
       WN_kid(parent, kidno) = newwn;
     }
-    
-  } else {
+  }
+  else {
     // Recursive case
     for (INT i = 0; i < WN_kid_count(wn); ++i) {
       PatchWNExpr(wn, i /* kid */, ctxt);
@@ -988,8 +1017,8 @@ GetWNExprOpcode(OPERATOR opr, vector<WN*>& opands)
     // sqrt: f, z
     rty = GetMType(MTYPE_CLASS_FLOAT, MTYPE_byte_size(rty));
   } 
-  else if (opr == OPR_TRUNC || opr == OPR_MOD) {
-    // trunc, mod: i
+  else if (opr == OPR_TRUNC || opr == OPR_MOD || opr == OPR_REM) {
+    // trunc, mod, rem: i
     rty = GetMType(MTYPE_CLASS_INTEGER, MTYPE_byte_size(rty));
   } 
   else if (opr == OPR_EQ || opr == OPR_NE || opr == OPR_GT || opr == OPR_GE ||
@@ -1008,14 +1037,16 @@ GetWNIntrinsic(const char* intrnNm, vector<WN*>& opands, TYPE_ID* dtype)
   // 1. Find dtype suggested from operands
   TYPE_ID mty = GetRTypeFromOpands(opands);
   
-  // FIXME 
+  // FIXME *** make part of an intrinsic table ***
+  // intrn_info.cxx, wutil.cxx
   INTRINSIC intrn = INTRINSIC_INVALID;
   if (strcmp(intrnNm, "EXPEXPR") == 0) {
     intrn = INTRN_F8EXPEXPR; // FIXME
+    if (dtype) { *dtype = MTYPE_F8; }
   }
-  
-  if (dtype) {
-    *dtype = MTYPE_F8; // FIXME
+  else if (strcmp(intrnNm, "AMOD") == 0) {
+    intrn = INTRN_F4MOD; // FIXME
+    if (dtype) { *dtype = MTYPE_F4; }
   }
 
   ASSERT_FATAL(intrn != INTRINSIC_INVALID, 
