@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.2 2004/02/11 14:41:31 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.3 2004/02/17 14:17:18 eraxxon Exp $
 # -*-makefile-*-
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -24,6 +24,7 @@ F90_MASTERS = $(shell ls *.f90)
 F90_MASTERS := $(filter-out $(F90_EXCEPTIONS), $(F90_MASTERS))
 
 MFEF90 = $(WHIRL2XAIF_OPEN64)/crayf90/sgi/mfef90
+W2F = $(WHIRL2XAIF_OPEN64)/whirl2f/whirl2f
 W2X = whirl2xaif
 NORM = $(WHIRL2XAIF)/test/util/normalize
 
@@ -43,6 +44,12 @@ run_tests:
 	  $(MFEF90) $${f} ; \
 	  $(W2X) $${f_B} ; \
 	  $(NORM) $${f_xaif} ; \
+	done
+
+run_w2f:
+	for f in $(F90_MASTERS) ; do \
+	  f_B=`echo $${f} | sed s@.f90@.B@` ; \
+	  $(W2F) $${f_B} ; \
 	done
 
 post_tests:
