@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.8 2004/03/23 21:51:15 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.9 2004/03/30 20:54:33 eraxxon Exp $
 # -*-makefile-*-
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -37,12 +37,14 @@ F90_MASTERS1 := $(filter-out $(F90_EXCEPTIONS1), $(F90_MASTERS1))
 # Pipeline
 MFEF90  = $(WHIRL2XAIF_OPEN64)/crayf90/sgi/mfef90
 WHIRL2F = $(WHIRL2XAIF_OPEN64)/whirl2f/whirl2f
-XB_BB   = $(XAIFBOOSTERROOT)/xaifBooster/algorithms/BasicBlockPreaccumulation/test/t -c ${XAIFSCHEMAROOT}/schema/examples/inlinable_intrinsics.xaif
+XB_BB   = $(XAIFBOOSTERROOT)/xaifBooster/algorithms/BasicBlockPreaccumulation/test/t -c $(XAIFSCHEMAROOT)/schema/examples/inlinable_intrinsics.xaif
 W2X     = $(WHIRL2XAIF)/obj/$(WHIRL2XAIF_PLATFORM)/obj/whirl2xaif
 X2W     = $(WHIRL2XAIF)/obj/$(WHIRL2XAIF_PLATFORM)/obj/xaif2whirl
 PP      = perl $(WHIRL2XAIF)/postprocess/pp.pl
 
 NORM    = $(WHIRL2XAIF)/test/util/normalize
+
+OPENAD  = $(WHIRL2XAIF)/test/util/openad
 
 #############################################################################
 # Building Rules for bloop tests:
@@ -73,16 +75,8 @@ tests_pipeline:
 	@echo "****** PIPELINE TESTS ******"
 	@echo "*** exceptions: $(F90_EXCEPTIONS1) ***"
 	@for f in $(F90_MASTERS1) ; do \
-	  fbase=`echo $${f} | sed s@.f90@@` ; \
-	  echo "  *** $${f}..." ; \
-	  $(MFEF90)   $${f} ; \
-	  $(W2X)      $${fbase}.B    -o $${fbase}.xaif ; \
-	  $(NORM)     $${fbase}.xaif ; \
-	  $(XB_BB) -i $${fbase}.xaif -o $${fbase}.xb.xaif ; \
-	  $(X2W)      $${fbase}.B $${fbase}.xb.xaif -o $${fbase}.xb.x2w.B ; \
-	  $(WHIRL2F)  $${fbase}.xb.x2w.B ; \
-	  $(NORM)     $${fbase}.xb.x2w.w2f.f ; \
-	  $(PP)       $${fbase}.xb.x2w.w2f.f ; \
+	  printf "  " ; \
+	  $(OPENAD) -v $${f} ; \
 	done
 
 tests_post:
