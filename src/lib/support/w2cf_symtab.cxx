@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.cxx,v 1.4 2003/08/01 16:00:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.cxx,v 1.5 2003/08/19 14:05:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -87,8 +87,8 @@
 #include <ctype.h>
 #include <string.h> // ANSI: cstring
 
-#include "whirl2f_common.h"
 #include "w2cf_symtab.h"
+#include "stab_attr.h"
 
 #define W2FC_Valid_Name(x,b) WHIRL2F_make_valid_name(x,b)
 

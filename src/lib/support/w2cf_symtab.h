@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.h,v 1.3 2003/08/01 16:00:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.h,v 1.4 2003/08/19 14:05:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -112,6 +112,9 @@
  */
 
 
+#include <include/Open64BasicTypes.h>
+
+
 void W2CF_Symtab_Push(void);
 void W2CF_Symtab_Pop(void);
 
@@ -139,6 +142,72 @@ UINT32 W2CF_Symtab_Unique_Label(void);
 
 void W2CF_Symtab_Free(void);
 void W2CF_Symtab_Terminate(void);
+
+
+/* ====================================================================
+ * ====================================================================
+ *
+ * Description:
+ *
+ * This file is to be included in all major translating modules
+ * belonging to whirl2f.  It includes all files that these modules
+ * will depend on and defines some utilities that are generally
+ * useful.
+ *
+ *    Identifier Naming
+ *    -----------------
+ *       We provide some utilities for creating identifier names.  For
+ *       names that are generated or altered by whirl2f, these utilities
+ *       can be used to prepend a reserved whirl2f prefix (e.g. "w2f$").
+ *       While this moves names outside of the user's name-space, it
+ *       does not prevent prefixed names from being overloaded.
+ *
+ *       Note that this is all fine and dandy for local names, while
+ *       some extra work is required by the caller of these routines
+ *       for external names.  An external name ending in '_' should
+ *       be converted into a name without the '_', while an external
+ *       name not ending in a '_' should be suffixed by a '$'.  This
+ *       will be left to the users of the routines provided here, since
+ *       we do not know whether or not a name is external in this
+ *       module.
+ *
+ *       WHIRL2F_number_as_name: Converts the given number into
+ *          a valid Fortran identifier (prefixed by WHIRL2F_prefix).
+ *
+ *       WHIRL2F_ptr_as_name: Converts the given pointer value
+ *           into a valid Fortran identifier.  Note that the number
+ *           may be a 32 or 64 bits value, depending on the pointer
+ *           representation and will be prefixed by WHIRL2F_prefix.
+ *
+ *       WHIRL2F_make_valid_name: If the given name is already a
+ *          valid Fortran name, then it is simply returned.  If the name
+ *          is NULL, then return NULL.  Otherwise, construct a valid
+ *          Fortran identifier by removing invalid characters, thus
+ *          returning a non-NULL name.
+ *
+ * ====================================================================
+ * ====================================================================
+ */
+
+   /* Error checking during type accesses */
+   /*-------------------------------------*/
+
+#define W2F_TY_pointed(ty, msg) \
+   (ASSERT_DBG_FATAL(TY_Is_Pointer(ty), (DIAG_W2F_EXPECTED_PTR, (msg))), \
+    TY_pointed(ty))
+
+                     /* Identifier naming */
+                     /*-------------------*/
+
+#define WHIRL2F_number_as_name(number) Num2Str(number, "%lld")
+   
+#define WHIRL2F_ptr_as_name(ptr) Ptr_as_String(ptr)
+
+extern const char * WHIRL2F_make_valid_name(const char *name, BOOL allow_dot);
+
+/* This variable is TRUE for Fortran 90 program units */
+extern BOOL WN2F_F90_pu;
+
 
 
 #endif /* w2cf_symtab */
