@@ -42,8 +42,8 @@ General options:
   -v [lvl], --verbose [lvl]
     Set verbosity level.  If no level is supplied, defaults to 2.
     0: Play the silent game
-    1: Print only a terse message
-    2: Print standard activity notes [Default]
+    1: Pouty (terse message)
+    2: Sanguine (standard activity messages) [Default]
     3: Chatty
     4: Talk your ear off
   -h, --help         print help
