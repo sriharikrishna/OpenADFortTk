@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Args.cxx,v 1.2 2004/02/28 16:41:09 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Args.cxx,v 1.3 2004/03/03 21:44:03 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -150,7 +150,7 @@ Args::Parse(int argc, const char* const argv[])
     
     // Check for required arguments
     if (parser.GetNumArgs() != 1) {
-      PrintError(std::cerr, "Missing a required argument!");
+      PrintError(std::cerr, "Invalid number of arguments!");
       exit(1);
     }
     whirlFileNm = parser.GetArg(0);
