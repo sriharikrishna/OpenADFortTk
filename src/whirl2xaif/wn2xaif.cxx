@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.45 2004/03/03 16:31:41 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.46 2004/03/03 21:45:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -232,7 +232,8 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   Pro64IRStmtIterator irStmtIter(fbody);
   CFG::resetIds();
   CFG cfg(irInterface, &irStmtIter, (SymHandle)WN_st(wn), true);
-  
+  if (0) { cfg.dump(); }
+
   // 4. OpenAnalysis UJ numbers
   set<SymHandle>* params = GetParamSymHandleSet(wn);
   UJNumbers vnmap(cfg, *params);
@@ -240,7 +241,8 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
   // 5. Massage CFG (wait until after Uwe numbers have been computed)
   MassageOACFGIntoXAIFCFG(&cfg);
-  
+  if (0) { cfg.dump(); }
+
   // -------------------------------------------------------
   // Translate the function header
   // -------------------------------------------------------
@@ -1090,11 +1092,14 @@ xlate_BBStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     xlate_CFCondition(xos, WN_while_test(wn), ctxt);
   }
   else if (vty == XAIFStrings.elem_BBBranch()) {
-    if (opr == OPR_TRUEBR || opr == OPR_FALSEBR) {
-      xos << BegComment << opr_str << " label=" << WN_label_number(wn)
-	  << EndComment;
+    WN* condWN = NULL; 
+    if (opr == OPR_IF || opr == OPR_TRUEBR || opr == OPR_FALSEBR) {
+      condWN = WN_if_test(wn);
+    } else if (opr == OPR_SWITCH || opr == OPR_COMPGOTO) {
+      condWN = WN_switch_test(wn);
     }
-    xlate_CFCondition(xos, WN_if_test(wn), ctxt);
+    ASSERT_FATAL(condWN, (DIAG_W2F_UNEXPECTED_OPC, "xlate_BBStmt"));
+    xlate_CFCondition(xos, condWN, ctxt);
   } 
   else if (vty == XAIFStrings.elem_BBEndBranch() ||
 	   vty == XAIFStrings.elem_BBEndLoop()) {
@@ -1166,8 +1171,11 @@ GetStructuredCFGVertexType(WN* wstmt)
 
     // In OA, IF and BR nodes represent the *condition* (not the body)
   case OPR_IF: 
-  case OPR_TRUEBR:
-  case OPR_FALSEBR:
+  case OPR_TRUEBR:   // FIXME: UNSTRUCTURED
+  case OPR_FALSEBR:  // FIXME: UNSTRUCTURED
+    return XAIFStrings.elem_BBBranch();
+  case OPR_SWITCH:   // FIXME: UNSTRUCTURED
+  case OPR_COMPGOTO: // FIXME: UNSTRUCTURED
     return XAIFStrings.elem_BBBranch();
     
     // Currently we use special comments to denote EndBranch and EndLoop
@@ -1287,12 +1295,11 @@ AddStructuredCFEndTags(WN* wn)
       WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndLoop());
       WN_INSERT_BlockLast(blkWN, newWN);
     }
-    else if (vty == XAIFStrings.elem_BBBranch()) {
-      //     if (...) { ... }  OR    switch (FIXME)
-      //     else { ... }              x: ...
-      //     endif                     default: ...
-      // --> EndBranch               endswitch
-      //                         --> EndBranch
+    else if (opr == OPR_IF /*vty == XAIFStrings.elem_BBBranch()*/) {
+      //     if (...) { ... }
+      //     else { ... }
+      //     endif
+      // --> EndBranch
       WN* blkWN = FindParentWNBlock(wn, curWN);
       WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndBranch());
       WN_INSERT_BlockAfter(blkWN, curWN, newWN); // 'newWN' after 'curWN'
@@ -1305,8 +1312,9 @@ AddStructuredCFEndTags(WN* wn)
 // XAIF CFG.  
 // 
 // 1. OpenAnalysis creates basic blocks with labels at the beginning
-// and branches at the end.  E.g. for TWOWAY_CONDITIONAL statements
-// OpenAnalysis may generate BBs such as:
+// and branches at the end.  E.g. for TWOWAY_CONDITIONAL and
+// MULTIWAY_CONDITIONAL statements OpenAnalysis may generate BBs such
+// as:
 //
 // Code:                   | BBs:
 //   x = 5                 |          x = 5
@@ -1384,9 +1392,11 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
 	StmtHandle stmt = (StmtHandle)stmtIt;
 	
 	IRStmtType ty = irInterface.GetStmtType(stmt);
-	if (ty == STRUCT_TWOWAY_CONDITIONAL 
+	if (ty == STRUCT_TWOWAY_CONDITIONAL
 	    || ty == USTRUCT_TWOWAY_CONDITIONAL_T
-	    || ty == USTRUCT_TWOWAY_CONDITIONAL_F) {
+	    || ty == USTRUCT_TWOWAY_CONDITIONAL_F
+	    || ty == STRUCT_MULTIWAY_CONDITIONAL
+	    || ty == USTRUCT_MULTIWAY_CONDITIONAL) {
 	  CFG::Node* newblock = cfg->splitBlock(n, stmt);
 	  cfg->connect(n, newblock, CFG::FALLTHROUGH_EDGE);
 	  break;
@@ -1440,6 +1450,7 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
   }
 
   // Remove empty basic blocks
+#if 0 // FIXME: This can mess up important edge information
   for (DGraphNodeList::iterator it = toRemove.begin(); 
        it != toRemove.end(); ++it) {
     DGraph::Node* n = (*it);
@@ -1462,6 +1473,7 @@ MassageOACFGIntoXAIFCFG(CFG* cfg)
     cfg->remove(n); // removes all outgoing and incoming edges
     delete n;
   }
+#endif
   toRemove.clear();
 
   
@@ -1533,7 +1545,7 @@ WNXlationTable::InitEntry WNXlationTable::initTable[] = {
   // Other control flow
   { OPR_IMPLIED_DO,           &WN2F_noio_implied_do },
   { OPR_GOTO,                 &xlate_GOTO },
-  { OPR_SWITCH,               &WN2F_switch },
+  { OPR_SWITCH,               &xlate_SWITCH },
   { OPR_CASEGOTO,             &WN2F_casegoto },
   { OPR_COMPGOTO,             &WN2F_compgoto },
   { OPR_AGOTO,                &WN2F_agoto },

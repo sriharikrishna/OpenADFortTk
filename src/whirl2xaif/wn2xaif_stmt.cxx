@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.31 2004/02/26 14:24:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.32 2004/03/03 21:45:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -95,6 +95,7 @@ whirl2xaif::xlate_BLOCK(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return whirl2xaif::good;
 }
 
+
 whirl2xaif::status 
 whirl2xaif::WN2F_region(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
@@ -119,6 +120,7 @@ whirl2xaif::WN2F_region(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return whirl2xaif::good;
 } /* WN2F_region */
 
+
 whirl2xaif::status 
 whirl2xaif::xlate_DO_LOOP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
@@ -129,6 +131,7 @@ whirl2xaif::xlate_DO_LOOP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   return whirl2xaif::good;
 }
+
 
 whirl2xaif::status 
 whirl2xaif::xlate_DO_WHILE(xml::ostream& xos, WN *wn, XlationContext& ctxt)
@@ -141,6 +144,7 @@ whirl2xaif::xlate_DO_WHILE(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return whirl2xaif::good;
 }
 
+
 whirl2xaif::status 
 whirl2xaif::xlate_WHILE_DO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
@@ -151,6 +155,7 @@ whirl2xaif::xlate_WHILE_DO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   return whirl2xaif::good;
 }
+
 
 whirl2xaif::status 
 whirl2xaif::xlate_IF(xml::ostream& xos, WN *wn, XlationContext& ctxt)
@@ -215,6 +220,7 @@ whirl2xaif::WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return whirl2xaif::good;
 } /* WN2F_implied_do */
 
+
 whirl2xaif::status
 whirl2xaif::WN2F_noio_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
@@ -235,6 +241,7 @@ whirl2xaif::WN2F_noio_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt
   return whirl2xaif::good;
 }
 
+
 whirl2xaif::status 
 whirl2xaif::xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
@@ -251,34 +258,18 @@ whirl2xaif::xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return whirl2xaif::good;
 }
 
-// OPC_SWITCH only appears in very high level whirl
+
 whirl2xaif::status
-whirl2xaif::WN2F_switch(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::xlate_SWITCH(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
-  // REMOVE
-  WN *stmt;
-  WN *kid1wn;
-  
-  xos << "SELECT CASE (";
-  TranslateWN(xos, WN_condbr_cond(wn), ctxt);
-  xos << ")";
-  
-  kid1wn = WN_kid1(wn);
-  
-  for (stmt = WN_first(kid1wn); stmt != NULL; stmt = WN_next(stmt)) {
-    if (!WN2F_Skip_Stmt(stmt)) {
-      if (WN_operator(stmt) == OPR_CASEGOTO)
-	WN_st_idx(stmt) = WN_st_idx(WN_kid0(wn));
-    }
-  }
-  
-  TranslateWN(xos, WN_kid1(wn), ctxt);
-  if (WN_kid_count(wn) == 3)
-    TranslateWN(xos, WN_kid2(wn), ctxt);
-  xos << "END SELECT ";
+  ASSERT_DBG_FATAL(WN_operator(wn) == OPR_SWITCH,
+		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_SWITCH"));
+
+  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
   
   return whirl2xaif::good;
 }
+
 
 whirl2xaif::status
 whirl2xaif::WN2F_casegoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
@@ -296,6 +287,7 @@ whirl2xaif::WN2F_casegoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << " .EQ. " << val << ')' << " GO TO " << WN_label_number(wn);
   return whirl2xaif::good;
 }
+
 
 whirl2xaif::status 
 whirl2xaif::WN2F_compgoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
@@ -338,6 +330,7 @@ whirl2xaif::WN2F_compgoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return whirl2xaif::good;
 } /* WN2F_compgoto */
 
+
 whirl2xaif::status 
 whirl2xaif::WN2F_agoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
@@ -370,6 +363,7 @@ whirl2xaif::xlate_condBR(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return whirl2xaif::good;
 }
 
+
 whirl2xaif::status 
 whirl2xaif::xlate_RETURN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
@@ -385,6 +379,7 @@ whirl2xaif::xlate_RETURN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   return whirl2xaif::good;
 }
 
+
 whirl2xaif::status 
 whirl2xaif::xlate_RETURN_VAL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 {
@@ -399,6 +394,7 @@ whirl2xaif::xlate_RETURN_VAL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   
   return whirl2xaif::good;
 }
+
 
 whirl2xaif::status 
 whirl2xaif::xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt)

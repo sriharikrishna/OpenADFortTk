@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.11 2004/02/18 18:41:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.h,v 1.12 2004/03/03 21:45:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -111,10 +111,10 @@ namespace whirl2xaif {
   xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt);
   
   extern whirl2xaif::status
-  WN2F_switch(xml::ostream& xos, WN *wn, XlationContext& ctxt);  
+  xlate_SWITCH(xml::ostream& xos, WN *wn, XlationContext& ctxt);
   
   extern whirl2xaif::status
-  WN2F_casegoto(xml::ostream& xos, WN *wn, XlationContext& ctxt);  
+  WN2F_casegoto(xml::ostream& xos, WN *wn, XlationContext& ctxt);
   
   extern whirl2xaif::status 
   WN2F_compgoto(xml::ostream& xos, WN *wn, XlationContext& ctxt);
