@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.48 2004/03/04 16:54:27 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.49 2004/03/19 16:54:46 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1268,6 +1268,7 @@ GetIDsForStmtsInBB(CFG::Node* node, XlationContext& ctxt)
 
 // AddControlFlowEndTags: Add control flow end tags
 // FIXME: assumes fully structured control flow???
+// FIXME: no not use FindParentWNBlock()
 static void
 AddControlFlowEndTags(WN* wn)
 {
@@ -1277,7 +1278,8 @@ AddControlFlowEndTags(WN* wn)
     WN* curWN = it.Wn();
     OPERATOR opr = WN_operator(curWN);
 
-    // Find structured control flow and insert placehoder statement
+    // Find structured (and some unstructured) control flow and insert
+    // placehoder statement.
     const char* vty = GetCFGControlFlowVertexType(curWN);
     if (vty == XAIFStrings.elem_BBForLoop() || 
 	vty == XAIFStrings.elem_BBPostLoop() ||
@@ -1296,13 +1298,35 @@ AddControlFlowEndTags(WN* wn)
       WN_INSERT_BlockLast(blkWN, newWN);
     }
     else if (vty == XAIFStrings.elem_BBBranch()) {
-      //   if (...) { ... } OR   if (...) goto77 OR  switch(...)
-      //   else { ... }        * EndBranch           ...
-      //   endif                                     end
-      // * EndBranch                               * EndBranch
-      WN* blkWN = FindParentWNBlock(wn, curWN);
-      WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndBranch());
-      WN_INSERT_BlockAfter(blkWN, curWN, newWN); // 'newWN' after 'curWN'
+      WN* ipWN = NULL;
+      if (opr == OPR_SWITCH) {
+	//   switch(...) [unstructured]
+	//     casegoto L2
+	//     casegoto L3
+	//   end
+	//   L2 ... L3 ...
+	//   L1 (beginning of code after switch)
+	// * EndBranch
+	INT32 lbl = WN_last_label(curWN);
+	for (WN* x = WN_next(curWN); x; x = WN_next(x)) {
+	  if (WN_operator(x) == OPR_LABEL && WN_label_number(x) == lbl) {
+	    ipWN = x;
+	    break;
+	  }
+	}
+      } 
+      else {
+	//   if (...) { ... }  OR   if (...) goto77 [unstructured]
+	//   else { ... }         * EndBranch      
+	//   endif                                
+	// * EndBranch
+	ipWN = curWN;
+      }
+      if (ipWN) {
+	WN* blkWN = FindParentWNBlock(wn, ipWN);
+	WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndBranch());
+	WN_INSERT_BlockAfter(blkWN, ipWN, newWN); // 'newWN' after 'ipWN'
+      }
     }
   }
 }
