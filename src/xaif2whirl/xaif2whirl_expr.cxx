@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.6 2003/11/26 14:49:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.7 2004/01/25 02:44:18 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -56,6 +56,9 @@
 #include <OpenAnalysis/Utils/DGraph.h>
 
 //*************************** Forward Declarations ***************************
+
+//#define FIXME_CHANGE_TYPES_IN_WHIRL
+extern TY_IDX ActiveTypeTyIdx; 
 
 using std::cerr;
 using std::endl;
@@ -537,6 +540,9 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
     rty = dty = TY_mtype(ty);
     if (TY_kind(ty) == KIND_ARRAY) { // FIXME more special cases?
       rty = dty = TY_mtype(TY_etype(ty));
+    } else if (TY_kind(ty) == KIND_STRUCT && ty == ActiveTypeTyIdx) {
+      // FIXME: FIXME_CHANGE_TYPES_IN_WHIRL
+      rty = dty = MTYPE_F8;
     }
     
     // FIXME: take care of small integer types
@@ -798,10 +804,14 @@ xaif2whirl::PatchWNExpr(WN* parent, INT kidno, XlationContext& ctxt)
 static WN*
 CreateValueSelector(WN* wn)
 {
+#ifndef FIXME_CHANGE_TYPES_IN_WHIRL
   TYPE_ID rty = GetRType(wn);
   WN* callWN = CreateCallToIntrin(rty, "__value__", 1);
   WN_actual(callWN, 0) = CreateParm(wn, WN_PARM_BY_VALUE);
   return callWN;
+#else
+  return wn;
+#endif
 }
 
 // CreateDerivSelector: Select the deriv portion of 'wn', by wrapping
@@ -810,10 +820,31 @@ CreateValueSelector(WN* wn)
 static WN*
 CreateDerivSelector(WN* wn)
 {
+#ifndef FIXME_CHANGE_TYPES_IN_WHIRL
   TYPE_ID rty = GetRType(wn);
   WN* callWN = CreateCallToIntrin(rty, "__deriv__", 1);
   WN_actual(callWN, 0) = CreateParm(wn, WN_PARM_BY_VALUE);
   return callWN;
+#else
+  WN* retWN = wn;
+  // LDID: update the offset field
+  // ILOAD: update the offset field
+  OPERATOR opr = WN_operator(wn);
+  if (opr == OPR_LDA) {
+    STAB_OFFSET offset = WN_lda_offset(wn) + 8;
+    WN_lda_offset(wn) = offset;
+  } else if (opr == OPR_LDID || opr == OPR_ILOAD) {
+    STAB_OFFSET offset = WN_load_offset(wn) + 8;
+    WN_load_offset(wn) = offset;
+  } else if (opr == OPR_ARRAY) {
+    // ARRAY: Place an ADD around the ARRAY with the offset
+    WN* offsetWN = WN_CreateIntconst(OPC_U8INTCONST, 8);
+    retWN = WN_CreateExp2(OPC_U8ADD, wn, offsetWN);
+  } else {
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+  }
+  return retWN;
+#endif
 }
 
 //****************************************************************************
