@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.20 2004/04/08 13:52:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.21 2004/04/20 13:18:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -157,6 +157,7 @@ real_main(int argc, char **argv)
   
   Args args(argc, argv);
   std::ostream* os = InitOutputStream(args);
+  DBG_LVL_PUB = args.debug;
   
   // -------------------------------------------------------
   // 3. Read WHIRL IR

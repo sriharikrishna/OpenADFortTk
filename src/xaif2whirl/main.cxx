@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.14 2004/04/05 20:58:24 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.15 2004/04/20 13:18:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -157,8 +157,8 @@ real_main(int argc, char **argv)
   Args args(argc, argv);
   opt_algorithm = args.algorithm; // FIXME
   opt_typeChangeInWHIRL = args.changeActiveTyInWHIRL; // FIXME
-
-
+  DBG_LVL_PUB = args.debug;
+  
   // -------------------------------------------------------
   // 3. Read WHIRL IR as basis for translation
   // -------------------------------------------------------
