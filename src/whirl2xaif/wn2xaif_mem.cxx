@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.18 2004/02/11 14:44:43 mfagan Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.19 2004/02/17 18:53:48 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -866,25 +866,13 @@ WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
        TranslateWN(xos, kid, ctxt);
      }
-     else if (!TY_ptr_as_array(Ty_Table[ptr_ty]) && TY_Is_Character_String(array_ty))
-     {
+     else if (!TY_ptr_as_array(Ty_Table[ptr_ty]) 
+	      && TY_Is_Character_String(array_ty)) {
          /* We assume that substring accesses are treated in the handling
           * of intrinsic functions, except when the substrings are to be
           * handled as integral types and thus are encountered here.
           */
-#if 0
-       if (!WN2F_F90_pu) {
-         xos << "ichar";
-         xos << "(";
-       }
-# endif 
-
        WN2F_String_Argument(xos, wn, WN2F_INTCONST_ONE, ctxt);
-# if 0
-       if (!WN2F_F90_pu)
-         xos << ")";
-# endif
-
      }
      else { /* A regular array access */
        /* Get the base of the object to be indexed into, still using

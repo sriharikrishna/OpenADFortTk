@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.14 2003/12/11 20:58:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.15 2004/02/17 18:53:48 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -84,6 +84,8 @@ using namespace whirl2xaif;
 using namespace xml; // for xml::ostream, etc
 
 //************************** Forward Declarations ***************************
+
+extern BOOL WN2F_F90_pu; // FIXME
 
 extern WN* PU_Body;
 extern BOOL Array_Bnd_Temp_Var;
@@ -681,11 +683,7 @@ TY2F_Translate_Structure(xml::ostream& xos, TY_IDX ty)
   xos << std::endl;
   
   /* Emit structure header */
-  if (WN2F_F90_pu) {
-    xos << "TYPE " << W2CF_Symtab_Nameof_Ty(ty);
-  } else {
-    xos << "STRUCTURE /" << W2CF_Symtab_Nameof_Ty(ty) << "/";
-  }
+  xos << "TYPE " << W2CF_Symtab_Nameof_Ty(ty);
   
   if (TY_is_sequence(ty_rt)) {
     xos << std::endl << "SEQUENCE ";
@@ -736,11 +734,7 @@ TY2F_Translate_Structure(xml::ostream& xos, TY_IDX ty)
   
   /* Emit structure tail */
   xos << std::endl;
-  if (WN2F_F90_pu) {
-    xos << "END TYPE" << std::endl;
-  } else {
-    xos << "END STRUCTURE" << std::endl;
-  }
+  xos << "END TYPE" << std::endl;
 }
 
 
@@ -1105,17 +1099,15 @@ TY2F_struct(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt)
   ASSERT_DBG_FATAL(TY_kind(ty_rt) == KIND_STRUCT, 
 		   (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
 		    TY_kind(ty_rt), "TY2F_struct"));
-
-  if (!WN2F_F90_pu) {
-    xos << "/" << W2CF_Symtab_Nameof_Ty(ty) << "/" << "RECORD";
-  } else {
-    xos << "(" << W2CF_Symtab_Nameof_Ty(ty) << ")" << "TYPE";
-  }      
   
+  xos << "(" << W2CF_Symtab_Nameof_Ty(ty) << ")" << "TYPE";
+  
+#if 0 // see Open64 stab_attr.cxx; if needed simulate thru XlationContext
   if (!TY_is_translated_to_c(ty)) {
     TY2F_Translate_Structure(xos, ty);
     Set_TY_is_translated_to_c(ty); /* Really, translated to Fortran, not C */
   }
+#endif
 }
 
 
@@ -1133,48 +1125,38 @@ TY2F_2_struct(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt)
 		   (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
 		    TY_kind(ty_rt), "TY2F_struct"));
 
+#if 0 // see Open64 stab_attr.cxx; if needed simulate thru XlationContext
   if (!TY_is_translated_to_c(ty)) {
     TY2F_Translate_Structure(xos, ty);
     Set_TY_is_translated_to_c(ty); /* Really, translated to Fortran, not C */
   }
+#endif
 }
 
 
 static void
 TY2F_pointer(xml::ostream& xos, TY_IDX ty, XlationContext& ctxt)
 {
-  if (!WN2F_F90_pu) {
-    /* Pointer types in Fortran can only occur in a Pointer specification
-     * statement.  We do not expect this routine to be called, since we
-     * expect pointer types to be handled by ST2F_decl_var().
-     */
-    ASSERT_DBG_WARN(FALSE, (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-			    TY_kind(ty), "TY2F_pointer"));
-
-    xos << "POINTER()";
+  /* Is a dope vector base address? Put out an integer large enough */
+  /* to hold an address for now. Don't really want POINTER because  */
+  /* implies cray/f90 pointer instead of address slot               */
+  
+  if (TY2F_Pointer_To_Dope(ty)) {
+#if 0
+    Prepend_Token_String(xos,",POINTER ::");
+#endif
+    TY2F_translate(xos,Be_Type_Tbl(Pointer_Mtype), ctxt);
   } else {
-    
-    /* Is a dope vector base address? Put out an integer large enough */
-    /* to hold an address for now. Don't really want POINTER because  */
-    /* implies cray/f90 pointer instead of address slot               */
-    
-    if (TY2F_Pointer_To_Dope(ty)) {
+    /* avoid recursive type declarations */
+    if (TY_kind(TY_pointed(ty)) == KIND_STRUCT) {
 #if 0
       Prepend_Token_String(xos,",POINTER ::");
+      Prepend_Token_String(xos,W2CF_Symtab_Nameof_Ty(TY_pointed(ty)));
 #endif
       TY2F_translate(xos,Be_Type_Tbl(Pointer_Mtype), ctxt);
-    } else {
-      /* avoid recursive type declarations */
-      if (TY_kind(TY_pointed(ty)) == KIND_STRUCT) {
-#if 0
-	Prepend_Token_String(xos,",POINTER ::");
-	Prepend_Token_String(xos,W2CF_Symtab_Nameof_Ty(TY_pointed(ty)));
-#endif
-	TY2F_translate(xos,Be_Type_Tbl(Pointer_Mtype), ctxt);
-	
-      } else
-	TY2F_translate(xos,TY_pointed(ty), ctxt);
-    }
+      
+    } else
+      TY2F_translate(xos,TY_pointed(ty), ctxt);
   }
 } /* TY2F_pointer */
 
@@ -1411,10 +1393,7 @@ extern void
 TY2F_Fld_Separator(xml::ostream& xos)
 {
   /* puts out the appropriate structure component separator*/
-  char p = '.';
-  if (WN2F_F90_pu) 
-    p =  '%';
-  xos << p;
+  xos << '%';
 }
 
 extern FLD_HANDLE

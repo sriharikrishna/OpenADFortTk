@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.h,v 1.4 2003/08/19 14:05:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.h,v 1.5 2004/02/17 18:53:48 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -111,9 +111,7 @@
  * ====================================================================
  */
 
-
 #include <include/Open64BasicTypes.h>
-
 
 void W2CF_Symtab_Push(void);
 void W2CF_Symtab_Pop(void);
@@ -124,18 +122,7 @@ const char * W2CF_Symtab_Nameof_Ty(TY_IDX ty);
 const char * W2CF_Symtab_Nameof_Fld(FLD_HANDLE fld);
 const char * W2CF_Symtab_Nameof_Fld_Pointee(FLD_HANDLE fld);
 const char * W2CF_Symtab_Nameof_Tempvar(INT32 tempvar_id);
-
-/* Solaris CC workaround
- * See Forte C++ Documentation
- * This is a feature in Solaris CC compiler's name mangling,
- * "const" parameter and general parameter has different name mangling
- * on the function name
- */
-#if defined(_SOLARIS_SOLARIS) && !defined(__GNUC__)
 const char * W2CF_Symtab_Nameof_Preg(const TY_IDX preg_ty, PREG_NUM preg_num);
-#else
-const char * W2CF_Symtab_Nameof_Preg(TY_IDX preg_ty, PREG_NUM preg_num);
-#endif
 
 const char * W2CF_Symtab_Unique_Name(const char *name);
 UINT32 W2CF_Symtab_Unique_Label(void);
@@ -143,6 +130,7 @@ UINT32 W2CF_Symtab_Unique_Label(void);
 void W2CF_Symtab_Free(void);
 void W2CF_Symtab_Terminate(void);
 
+// cf. Ptr_as_String(ptr)
 
 /* ====================================================================
  * ====================================================================
@@ -171,14 +159,6 @@ void W2CF_Symtab_Terminate(void);
  *       we do not know whether or not a name is external in this
  *       module.
  *
- *       WHIRL2F_number_as_name: Converts the given number into
- *          a valid Fortran identifier (prefixed by WHIRL2F_prefix).
- *
- *       WHIRL2F_ptr_as_name: Converts the given pointer value
- *           into a valid Fortran identifier.  Note that the number
- *           may be a 32 or 64 bits value, depending on the pointer
- *           representation and will be prefixed by WHIRL2F_prefix.
- *
  *       WHIRL2F_make_valid_name: If the given name is already a
  *          valid Fortran name, then it is simply returned.  If the name
  *          is NULL, then return NULL.  Otherwise, construct a valid
@@ -199,15 +179,6 @@ void W2CF_Symtab_Terminate(void);
                      /* Identifier naming */
                      /*-------------------*/
 
-#define WHIRL2F_number_as_name(number) Num2Str(number, "%lld")
-   
-#define WHIRL2F_ptr_as_name(ptr) Ptr_as_String(ptr)
-
 extern const char * WHIRL2F_make_valid_name(const char *name, BOOL allow_dot);
-
-/* This variable is TRUE for Fortran 90 program units */
-extern BOOL WN2F_F90_pu;
-
-
 
 #endif /* w2cf_symtab */

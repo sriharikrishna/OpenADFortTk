@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.cxx,v 1.8 2003/10/20 12:39:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.cxx,v 1.9 2004/02/17 18:53:48 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1171,22 +1171,20 @@ INITVKIND_const(xml::ostream& xos,
 {
 #if 0//FIXME
   const char *p = tbl[0];
-
+  
   xml::ostream val_tokens;
-
+  
   if (TY_is_logical(Ty_Table[ty])) 
     p = tbl[1];
   else {
-
-    if (WN2F_F90_pu) {
-      switch (TY_mtype(ty)) {
-      case MTYPE_I1:  p = tbl[2]; break;
-      case MTYPE_I2:  p = tbl[3]; break;
-      case MTYPE_I4:  p = tbl[4]; break;
-      case MTYPE_I8:  p = tbl[5]; break;
-      }
+    switch (TY_mtype(ty)) {
+    case MTYPE_I1:  p = tbl[2]; break;
+    case MTYPE_I2:  p = tbl[3]; break;
+    case MTYPE_I4:  p = tbl[4]; break;
+    case MTYPE_I8:  p = tbl[5]; break;
     }
   }
+  
   Append_Token_String(val_tokens,p);
   INIT2F_Append_Initializer(tokens, &val_tokens, repeat);
 #endif
@@ -1341,15 +1339,6 @@ INIT2F_Get_Array_Segment(INITV_IDX   *initv_array, /* in */
       if (INIT2F_is_string_initv(ini,aseg.etype))
       {
 	 /* Special case for F90 - it creates unsigned words for DATA */
-
-         if (!WN2F_F90_pu) 
-         {
-		 ASSERT_DBG_WARN(FALSE, 
-			 (DIAG_W2F_UNEXPECTED_INITV,
-			  TCON_ty(INITV_tc_val(ini)),
-			  "[character string exceeds size of element type] "
-			  "INIT2F_Get_Array_Segment"));
-         }
 	 *object_ofst += Targ_String_Length(INITV_tc_val(ini));
       }
       else if (TY_is_character(Ty_Table[aseg.etype]) && 

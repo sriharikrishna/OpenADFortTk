@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlGlobalStateUtils.h,v 1.2 2004/02/11 18:05:55 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlGlobalStateUtils.h,v 1.3 2004/02/17 18:53:47 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -73,6 +73,7 @@ extern PUToScopedSymTabMap PUToScopeTabMap;
 // function may be called as many times as neceessary. 
 //   - Current_Map_Tab
 //   - Current_pu
+//   - Current_PU_Info
 //   - CURRENT_SYMTAB
 //   - Scope_tab
 void

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.cxx,v 1.5 2003/08/19 14:05:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/w2cf_symtab.cxx,v 1.6 2004/02/17 18:53:47 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -304,7 +304,7 @@ W2CF_Get_Basename(const char *original_name, char *basename, INT32 *sym_id)
     */
 #define MAX_NUMERIC_SUFFIX_SIZE 8 /* fits into a UINT32 */
 
-   const char *valid_name = W2FC_Valid_Name(original_name,WN2F_F90_pu);
+   const char *valid_name = W2FC_Valid_Name(original_name, TRUE);
    INT32       name_size, suffix_size;
    UINT32      numeric_suffix = 0;
    UINT32      suffix_exponent;
@@ -376,11 +376,6 @@ W2CF_Get_Ftn_St_Name(const ST *st, const char *original_name)
 	    name_ptr[-1] = '\0';
 	 else
 	    name_ptr[0] = '\0';
-      }
-      else if (!WN2F_F90_pu)
-      {
-	 name_ptr[1] = '$';
-	 name_ptr[2] = '\0';
       }
    }
    else /* Not an external variable */
@@ -872,7 +867,7 @@ W2CF_Symtab_Nameof_St(const ST *st)
     */
    
    if (ST_sym_class(st) != CLASS_CONST) 
-     valid_name = W2FC_Valid_Name(ST_name(st),WN2F_F90_pu && !ST_is_temp_var(st));
+     valid_name = W2FC_Valid_Name(ST_name(st), !ST_is_temp_var(st));
 
    if (valid_name == NULL || valid_name[0] == '\0') {
      valid_name = W2CF_Anonymous_St;
@@ -1145,7 +1140,7 @@ W2CF_Symtab_Unique_Name(const char *name)
     * suffix (symid).  Create a name-buffer large enough to hold the
     * name appended to the suffix (hence the "+32").
     */
-   valid_name = W2FC_Valid_Name(name,WN2F_F90_pu);
+   valid_name = W2FC_Valid_Name(name, TRUE);
    if (valid_name == NULL || valid_name[0] == '\0')
       valid_name = W2CF_Anonymous_St;
    unique_name = Get_Name_Buf_Slot(strlen(valid_name) + 32);

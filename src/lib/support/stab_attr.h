@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.4 2003/08/19 13:52:08 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.5 2004/02/17 18:53:47 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -67,21 +67,6 @@
  *    FILE_SCOPE_ID:
  *       The scope_id given to TY and ST entries that are declared
  *       with file-scope.
- *
- * Reserved names
- * --------------
- *
- *    Stab_Reserved_Ty:
- *       TRUE when the given type is from a system file which will
- *       be included anyway (e.g. through whirl2c.h).  Do not declare
- *       symbols for which this condition is TRUE, since this will
- *       lead to non-compilable whirl2c/whirl2f output!
- *
- *    Stab_Reserved_St:
- *       TRUE when the given symbol is from a system file which will
- *       be included anyway (e.g. through whirl2c.h).  Do not declare
- *       symbols for which this condition is TRUE, since this will
- *       lead to non-compilable whirl2c/whirl2f output!
  *
  * Flag indicating referenced symbols
  * ----------------------------------
@@ -257,16 +242,6 @@
  */
 
 #include <include/Open64BasicTypes.h>
-
-
-// FIXME: new stuff
-// W2FC flag accessors..
-extern void Set_TY_is_translated_to_c(const TY_IDX ty);
-extern void Reset_TY_is_translated_to_c(const TY_IDX ty);
-extern BOOL TY_is_translated_to_c(const TY_IDX ty);
-
-extern void Clear_w2fc_flags(void);
-
 
 /* Some general utility routines for memory allocation.  Include
  * "mempool.h" when using these!
@@ -558,13 +533,6 @@ inline BOOL STAB_IS_POINTER_REF_PARAM(const ST *st)
 	  !ST_is_value_parm(st));
 }
 
-
-                  /*----- Reserved Names Information -----*/
-                  /*--------------------------------------*/
-
-extern BOOL Stab_Reserved_Ty(TY_IDX ty);
-extern BOOL Stab_Reserved_St(const ST *st);
-
                   /*------- Referenced Information -------*/
                   /*--------------------------------------*/
 
@@ -600,9 +568,6 @@ extern TY_IDX Stab_Array_Of(TY_IDX etype, mINT64 num_elts) ;
 
 extern void Stab_initialize(void);
 extern void Stab_finalize(void);
-extern void Stab_initialize_flags(void) ;
-extern void Stab_finalize_flags(void) ;
-
 
                  /*------ Name manipulation ------*/
                  /*-------------------------------*/

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.21 2004/01/25 02:41:28 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.22 2004/02/17 18:53:48 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -298,8 +298,7 @@ whirl2xaif::WN2F_casegoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TranslateSTUse(xos, st, ctxt);
   std::string val = TCON2F_translate(Host_To_Targ(MTYPE_I4,WN_const_val(wn)),
 				     FALSE);
-  xos << " .EQ. " << val << ')' 
-      << " GO TO " << WHIRL2F_number_as_name(WN_label_number(wn));
+  xos << " .EQ. " << val << ')' << " GO TO " << WN_label_number(wn);
   return EMPTY_WN2F_STATUS;
 }
 
@@ -323,8 +322,7 @@ whirl2xaif::WN2F_compgoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	 goto_entry++) {
       ASSERT_DBG_FATAL(WN_operator(goto_stmt) == OPR_GOTO,
 		       (DIAG_W2F_UNEXPECTED_OPC, "COMPGOTO entry"));
-      const char* label_num = WHIRL2F_number_as_name(WN_label_number(goto_stmt));
-      xos << label_num;
+      xos << WN_label_number(goto_stmt);
       if (goto_entry+1 < WN_compgoto_num_cases(wn))
 	xos << ',';
       goto_stmt = WN_next(goto_stmt);

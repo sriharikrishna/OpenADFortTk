@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.6 2003/11/26 14:49:28 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.7 2004/02/17 18:53:48 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -151,16 +151,6 @@
  *      and of the given size, provided the size is known statically;
  *      otherwise we return the base-type.
  *
- * Functions modifying a WN subtree
- * --------------------------------
- *
- *   Remove_Skips:
- *      Removes any sequences of statements marked to be skipped by
- *      whirl2f or whirl2c (FLIST_SKIP_BEGIN/CLIST_SKIP_BEGIN).
- *
- *   Restore_Skips:
- *      Restores the modifications done in a call to Remove_Skips.
- *
  * ====================================================================
  * ====================================================================
  */
@@ -257,22 +247,5 @@ extern WN *WN_Get_PtrAdd_Intconst(WN    *wn0,
 
 extern TY_IDX WN_Tree_Type(const WN *wn);
 
-
-typedef struct
-{
-   WN   *parent; /* Block node containing an xLIST_SKIP_BEGIN pragma */
-   WN   *first;  /* First node to be skipped */
-   WN   *last;   /* Last node to be skipped */
-} W2CF_SKIP_ITEM;
-
-extern void Remove_Skips(WN             *ablock,
-                         W2CF_SKIP_ITEM *skip_info,
-                         INT            *next_info_idx,
-                         INT             max_info_idx,
-                         BOOL            clist);
-
-extern void Restore_Skips(const W2CF_SKIP_ITEM *skip_info,
-                          INT                   number_of_items,
-                          BOOL                  clist);
 
 #endif /* wn_attr_INCLUDED */

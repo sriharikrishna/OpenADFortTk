@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.20 2003/11/26 14:49:28 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.21 2004/02/17 18:53:48 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1137,16 +1137,17 @@ ST2F_Use_Preg(xml::ostream& xos,
   /* Append the name of the preg to the token-list and declare the
    * preg in the current PU context unless it is already declared.
    */
-  const char *preg_name;
-  
+  const char *preg_name = W2CF_Symtab_Nameof_Preg(preg_ty, preg_idx);
+
+#if 0
   preg_ty = PUinfo_Preg_Type(preg_ty, preg_idx);
-  preg_name = W2CF_Symtab_Nameof_Preg(preg_ty, preg_idx);
   
   /* Declare the preg, if it has not already been declared */
   if (!PUinfo_Is_Preg_Declared(preg_ty, preg_idx)) {
     ST2F_Define_Preg(preg_name, preg_ty);
     PUinfo_Set_Preg_Declared(preg_ty, preg_idx);
   }
+#endif
   
   xos << preg_name;
 } /* ST2F_Use_Preg */

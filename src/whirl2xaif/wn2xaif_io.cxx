@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.12 2003/10/01 16:32:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.cxx,v 1.13 2004/02/17 18:53:48 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -537,7 +537,7 @@ xlate_IO_ITEM_control(xml::ostream& xos, WN* item, XlationContext& ctxt)
     xos << IOITEM_name(item_kind);
     ASSERT_DBG_WARN((WN_opc_operator(WN_kid0(item)) == OPR_GOTO),
 		    (DIAG_W2F_UNEXPECTED_OPC,WN_opc_operator(item),"ERR/END/EOR="));
-    xos << WHIRL2F_number_as_name(WN_label_number(WN_kid0(item)));
+    xos << WN_label_number(WN_kid0(item));
     break;
     
   case IOC_CR_FLFLAG:

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.28 2004/02/13 20:18:55 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.29 2004/02/17 18:53:48 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -90,43 +90,23 @@ using namespace xml; // for xml::ostream, etc
 
 //***************************************************************************
 
-// REMOVE
-// statements that can be skipped in w2f translation
-#define W2F_MAX_SKIP_ITEMS 128
-static W2CF_SKIP_ITEM Skip[W2F_MAX_SKIP_ITEMS+1];
-static INT Next_Skip_Item = 0;
+static MEM_POOL W2F_Parent_Pool; // FIXME/REMOVE
 
-/* W2F status information */
-static BOOL         W2F_Initialized = FALSE;
-static MEM_POOL     W2F_Parent_Pool;
+BOOL WN2F_F90_pu = FALSE; /* Global variable indicating F90 or F77: REMOVE */
 
-/* External data set through -FLIST command-line options */
-// Set in W2F_Init_Options(..)
-BOOL W2F_Enabled = TRUE;          /* Invoke W2F */
-BOOL W2F_Verbose = TRUE;          /* Show translation information */
-BOOL W2F_No_Pragmas = FALSE;      /* By default, emit pragmas */
-BOOL W2F_Emit_Prefetch = FALSE;   /* Emit comments for prefetches */
-BOOL W2F_Emit_All_Regions = FALSE;/* Emit cmplr-generated regions */
-BOOL W2F_Emit_Linedirs = FALSE;   /* Emit preproc line-directives */
-BOOL W2F_Emit_Nested_PUs = TRUE;  /* Emit code for nested PUs (FALSE) */
+void W2F_Init(void);
+void W2F_Fini(void);
+void W2F_Push_PU(WN *pu, WN *body_part_of_interest);
+void W2F_Pop_PU(void);
 
-/* External data set through the API or otherwise */
-BOOL W2F_Only_Mark_Loads = FALSE; /* Only mark, do not translate loads */
-BOOL WN2F_F90_pu = FALSE;         /* Global variable indicating F90 or F77 */
-
-WN_MAP *W2F_Construct_Map = NULL;    /* Construct id mapping for prompf */
-WN_MAP  W2F_Frequency_Map = WN_MAP_UNDEFINED; /* Frequency mapping */
-
-//***************************************************************************
+void W2F_Translate_Wn(FILE *outfile, WN *wn);
+void W2F_Translate_Wn_Str(char *strbuf, UINT bufsize, WN *wn);
 
 static void W2F_Enter_Global_Symbols(void);
-
 static void W2F_Undo_Whirl_Side_Effects(void);
-
-static BOOL Check_Initialized(const char *caller_name);
 static BOOL Check_PU_Pushed(const char *caller_name);
 
-
+//***************************************************************************
 
 static void 
 TranslateScopeHierarchy(xml::ostream& xos, PU_Info* pu_forest, 
@@ -320,7 +300,7 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
   
   ST* st = ST_ptr(PU_Info_proc_sym(pu));
   WN *wn_pu = PU_Info_tree_ptr(pu);
-  //IR_set_dump_order(TRUE /*pre*/); fdump_tree(stderr, wn_pu);
+  // fdump_tree(stderr, wn_pu);
 
 #if 0 // FIXME  
   BOOL is_user_visible_pu = 
@@ -436,47 +416,18 @@ void
 W2F_Init(void)
 {
   const char * const caller_err_phase = Get_Error_Phase();
-  
-  /* Initialize the various whirl2c subcomponents, unless they
-   * are already initialized. */
-  if (W2F_Initialized) {
-    return; /* Already initialized */
-  }
 
   Diag_Set_Phase("WHIRL to XAIF: Init");
-  /* The processing of the FLIST group was moved out to the back-end.
-   * Instead of directly using the Current_FLIST, we initiate
-   * whirl2f specific variables to hold the values.
-   */
-  W2F_Enabled = FLIST_enabled;
-  W2F_Verbose = FLIST_verbose;
-  W2F_No_Pragmas = FLIST_no_pragmas;
-  W2F_Emit_Prefetch = FLIST_emit_prefetch;
-  W2F_Emit_Linedirs = FLIST_emit_linedirs;
-  W2F_Emit_All_Regions = FLIST_emit_all_regions;
-  W2F_Emit_Nested_PUs = TRUE;
   
   // Create a pool to hold the parent map for every PU, one at a time.
   MEM_POOL_Initialize(&W2F_Parent_Pool, "W2f_Parent_Pool", FALSE);
   MEM_POOL_Push(&W2F_Parent_Pool);   
   
-  /* Enter the global symbols into the symbol table, since that
-   * ensures these get the first priority at keeping their names 
-   * unchanged (note that a w2f invented name-suffix is added to 
-   * disambiguate names).  Note that we can only emit 
-   * declarations locally to PUs for Fortran, but we can still 
-   * keep a global symbol-table for naming purposes.
-   */
-  Stab_initialize_flags();
-  
   W2CF_Symtab_Push(); /* Push global (i.e. first ) symbol table */
   W2F_Enter_Global_Symbols();
   
-  // Initiate the various W2F modules.
-  PUinfo_initialize();
-  WN2F_initialize();
+  WN2F_initialize(); // Initiate the various W2F modules. (REMOVE)
   
-  W2F_Initialized = TRUE;
   Diag_Set_Phase(caller_err_phase);
 }
 
@@ -484,27 +435,8 @@ W2F_Init(void)
 void
 W2F_Fini(void)
 {
-  Clear_w2fc_flags(); // FIXME
-  
-  if (!Check_Initialized("W2F_Fini"))
-    return;
-
-  PUinfo_finalize();
   WN2F_finalize();
   W2CF_Symtab_Terminate();
-  Stab_finalize_flags();
-    
-  /* Reset all global variables */  
-  W2F_Initialized = FALSE;
-  W2F_Enabled = TRUE;          /* Invoke W2F */
-  W2F_Verbose = TRUE;          /* Show translation information */
-  W2F_No_Pragmas = FALSE;      /* By default, emit pragmas */
-  W2F_Emit_Prefetch = FALSE;   /* Emit comments for prefetches */
-  W2F_Emit_All_Regions = FALSE;/* Emit cmplr-generated regions */
-  W2F_Emit_Linedirs = FALSE;   /* Emit preproc line-directives */
-  W2F_Emit_Nested_PUs = TRUE;  
-  
-  W2F_Only_Mark_Loads = FALSE;
   
   MEM_POOL_Pop(&W2F_Parent_Pool);
   MEM_POOL_Delete(&W2F_Parent_Pool);
@@ -514,27 +446,16 @@ W2F_Fini(void)
 void 
 W2F_Push_PU(WN *pu, WN *body_part_of_interest)
 {
-  if (!Check_Initialized("W2F_Push_PU"))
-    return;
-  
   Is_True(WN_opcode(pu) == OPC_FUNC_ENTRY, 
 	  ("Invalid opcode for W2F_Push_PU()"));
   
   Stab_initialize();
-  Clear_w2fc_flags();
   
   // Set up the parent mapping
   MEM_POOL_Push(&W2F_Parent_Pool);
   W2CF_Parent_Map = WN_MAP_Create(&W2F_Parent_Pool);
   W2CF_Parentize(pu);
     
-  /* See if the body_part_of_interest has any part to be skipped
-   * by the w2f translator. */
-  if (WN_opc_operator(body_part_of_interest) == OPR_BLOCK) {
-    Remove_Skips(body_part_of_interest, Skip, &Next_Skip_Item,
-		 W2F_MAX_SKIP_ITEMS, FALSE /*Not C*/);
-  }
-  
   // Get the current PU name and ST.
   PUinfo_init_pu(pu, body_part_of_interest);
 }
@@ -543,48 +464,14 @@ W2F_Push_PU(WN *pu, WN *body_part_of_interest)
 void 
 W2F_Pop_PU(void)
 {
-  if (!Check_Initialized("W2F_Pop_PU") || !Check_PU_Pushed("W2F_Pop_PU"))
-    return;
-  
   PUinfo_exit_pu();
-  
-  // Restore any removed statement sequence
-  if (Next_Skip_Item > 0) {
-    Restore_Skips(Skip, Next_Skip_Item, FALSE /*Not C*/);
-    Next_Skip_Item = 0;
-  }
-  
   Stab_finalize();
   
   WN_MAP_Delete(W2CF_Parent_Map);
   W2CF_Parent_Map = WN_MAP_UNDEFINED;
   MEM_POOL_Pop(&W2F_Parent_Pool);
-  
-  W2F_Frequency_Map = WN_MAP_UNDEFINED;
 }
 
-
-void
-W2F_def_ST(FILE *outfile, ST *st)
-{
-#if 0//REMOVE
-  xml::ostream& xos;
-  
-  if (!Check_Initialized("W2F_def_ST"))
-    return;
-  
-  tokens = New_Token_Buffer();
-  TranslateSTDecl(tokens, st);
-  Write_And_Reclaim_Tokens(outfile, W2F_File[W2F_LOC_FILE], &tokens);
-  W2F_Undo_Whirl_Side_Effects();
-#endif
-}
-
-const char * 
-W2F_Object_Name(ST *func_st)
-{
-  return W2CF_Symtab_Nameof_St(func_st);
-}
 
 void 
 W2F_Translate_Wn(FILE *outfile, WN *wn)
@@ -594,8 +481,7 @@ W2F_Translate_Wn(FILE *outfile, WN *wn)
    XlationContext       context;
    const char * const caller_err_phase = Get_Error_Phase ();
 
-   if (!Check_Initialized("W2F_Translate_Wn") ||
-       !Check_PU_Pushed("W2F_Translate_Wn"))
+   if (!Check_PU_Pushed("W2F_Translate_Wn"))
       return;
 
    Start_Timer(T_W2F_CU);
@@ -620,8 +506,7 @@ W2F_Translate_Wn_Str(char *strbuf, UINT bufsize, WN *wn)
    XlationContext       context;
    const char * const caller_err_phase = Get_Error_Phase ();
 
-   if (!Check_Initialized("W2F_Translate_Wn_Str") ||
-       !Check_PU_Pushed("W2F_Translate_Wn_Str"))
+   if (!Check_PU_Pushed("W2F_Translate_Wn_Str"))
       return;
 
    Start_Timer (T_W2F_CU);
@@ -748,15 +633,6 @@ W2F_Enter_Global_Symbols(void)
  * Routines for checking correct calling order of exported routines
  * =================================================================
  */
-
-static BOOL
-Check_Initialized(const char *caller_name)
-{
-  if (!W2F_Initialized)
-    fprintf(stderr, "NOTE: Ignored call to %s(); call W2F_Init() first!\n",
-	    caller_name);
-  return W2F_Initialized;
-}
 
 static BOOL
 Check_PU_Pushed(const char *caller_name)
@@ -950,7 +826,6 @@ InlineTest(PU_Info* pu_forest)
   }
 
 #if 0  
-  IR_set_dump_order(TRUE); // Preorder dump
   WN* callerWN = PU_Info_tree_ptr(callerPU);
   dump_tree(callerWN);
 #endif  
