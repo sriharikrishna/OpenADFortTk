@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.10 2004/03/19 16:54:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.11 2004/03/23 18:08:20 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -175,16 +175,9 @@ WN_Tree_Type(const WN* wn)
     case OPR_LDMA:
     case OPR_LDID:
     case OPR_LDBITS:
-      ty = WN_GetRefObjType(wn);
-      break;
     case OPR_ILOAD:
-    case OPR_ILOADX:
-      ty = WN_ty(wn); // type of referenced object
-      if (TY_kind(ty) == KIND_STRUCT && WN_field_id(wn) > 0) {
-	ASSERT_FATAL(false, (DIAG_A_STRING, "Test me!")); // FIXME
-	//WEI: for field accesses we return the type of the field
-	ty = TY_pointed(WN_load_addr_ty(wn));
-      }
+    case OPR_ILOADX: // type of referenced object
+      ty = WN_GetRefObjType(wn);
       break;
       
     case OPR_MLOAD: // type of referenced object
@@ -415,18 +408,17 @@ WN_GetRefObjType(const WN* wn)
   switch (opr) {
     case OPR_LDA:     // type of referenced (returned) address
     case OPR_LDMA:
-      ty = WN_ty(wn); 
+      ty = WN_ty(wn);
       break;
     
     case OPR_LDID:    // type of referenced object
     case OPR_LDBITS:
-      ty = WN_ty(wn); 
+      ty = WN_ty(wn);
       break;
       
     case OPR_ILOAD:   // type of referenced object
     case OPR_ILOADX:
-      ty = WN_ty(wn);
-      WN_Tree_Type(wn); // FIXME: cf. WN_Tree_Type and structs
+      ty = TY_pointed(WN_load_addr_ty(wn));
       break;
     
     // STOREs represent the left-hand-side expression
@@ -472,13 +464,10 @@ WN_GetBaseObjType(const WN* wn)
       break;
       
     case OPR_ILOAD:
-    case OPR_ILOADX: {
-      // WN* baseptr = WN_kid0(wn); // address expression as WN
-      TY_IDX baseptr_ty = WN_load_addr_ty(wn); // == WN_Tree_Type(baseptr)
-      ty = TY_pointed(baseptr_ty); 
+    case OPR_ILOADX:
+      ty = WN_ty(wn);
       break;
-    }
-    
+      
     // STOREs represent the left-hand-side expression
     case OPR_STID: 
     case OPR_STBITS:
