@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.47 2004/05/28 15:17:46 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.48 2004/05/28 22:35:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -74,8 +74,10 @@ extern xaif2whirl::ModeType      opt_mode;
 extern xaif2whirl::AlgorithmType opt_algorithm;
 
 // FIXME
-static TY_IDX ActiveTypeTyIdx;            // OpenAD active pseudo type
-static TY_IDX ActiveTypeInitializedTyIdx; // OpenAD active pseudo type
+extern TY_IDX ActiveTypeTyIdx;            // OpenAD active pseudo type
+extern TY_IDX ActiveTypeInitializedTyIdx; // OpenAD active pseudo type
+TY_IDX ActiveTypeTyIdx;            
+TY_IDX ActiveTypeInitializedTyIdx;
 
 //*************************** Forward Declarations ***************************
 
@@ -2095,7 +2097,7 @@ DeclareActiveTypes()
 }
 
 
-// ConvertToActiveTypes: Given a symbol, convert it to active type
+// ConvertToActiveType: Given a symbol, convert it to active type
 static void 
 ConvertToActiveType(ST* st)
 {
