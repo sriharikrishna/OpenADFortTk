@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.9 2003/09/17 19:42:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.10 2003/10/01 16:31:27 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -51,6 +51,10 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "edge_id",
   "scope_id",
   "symbol_id",
+  
+  "active",
+  "deriv",
+  
   "source",
   "target",
   
@@ -86,7 +90,7 @@ const char* XAIFStringRepository::c_strTbl[] = {
   // Statements
   "xaif:Assignment",
   "xaif:SubroutineCall",
-  "xaif:Nop",
+  "xaif:Marker",
   
   "xaif:AssignmentLHS",
   "xaif:AssignmentRHS",

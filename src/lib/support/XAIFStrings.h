@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.9 2003/09/17 19:42:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.10 2003/10/01 16:31:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -50,6 +50,10 @@ public:
     ATTR_Eid,       // edge_id
     ATTR_scopeId,   // scope_id
     ATTR_symId,     // symbol_id
+
+    ATTR_active,    // active
+    ATTR_deriv,     // deriv
+
     ATTR_source,    // source
     ATTR_target,    // target
     
@@ -173,83 +177,123 @@ public:
   // Quick access to strings
   // -------------------------------------------------------
   
-  // FIXME: add c string version
   // Common attributes
   const char* attr_annot() const   { return c_strTbl[ATTR_annot]; }
   XMLCh*      attr_annot_x() const { return x_strTbl[ATTR_annot]; }
+  const char* attr_Vid() const { return c_strTbl[ATTR_Vid]; }
   XMLCh*      attr_Vid_x() const { return x_strTbl[ATTR_Vid]; }
+  const char* attr_Eid() const { return c_strTbl[ATTR_Eid]; }
   XMLCh*      attr_Eid_x() const { return x_strTbl[ATTR_Eid]; }
   const char* attr_scopeId() const { return c_strTbl[ATTR_scopeId]; }
   XMLCh*      attr_scopeId_x() const { return x_strTbl[ATTR_scopeId]; }
   const char* attr_symId() const { return c_strTbl[ATTR_symId]; }
   XMLCh*      attr_symId_x() const { return x_strTbl[ATTR_symId]; }
+  
+  const char* attr_active() const { return c_strTbl[ATTR_active]; }
+  XMLCh*      attr_active_x() const { return x_strTbl[ATTR_active]; }
+  const char* attr_deriv() const { return c_strTbl[ATTR_deriv]; }
+  XMLCh*      attr_deriv_x() const { return x_strTbl[ATTR_deriv]; }
+
+  const char* attr_source() const { return c_strTbl[ATTR_source]; }
   XMLCh*      attr_source_x() const { return x_strTbl[ATTR_source]; }
+  const char* attr_target() const { return c_strTbl[ATTR_target]; }
   XMLCh*      attr_target_x() const { return x_strTbl[ATTR_target]; }
   
   // -----------------------------------------------------
   
   // xaif:ScopeHierarchy, xaif:Scope, xaif:SymbolTable
+  const char* elem_ScopeHierarchy() const { return c_strTbl[ELEM_ScopeHierarchy]; }
   XMLCh*      elem_ScopeHierarchy_x() const { return x_strTbl[ELEM_ScopeHierarchy]; }
+  const char* elem_Scope() const { return c_strTbl[ELEM_Scope]; }
   XMLCh*      elem_Scope_x() const { return x_strTbl[ELEM_Scope]; }
+  const char* elem_SymTab() const { return c_strTbl[ELEM_SymTab]; }
   XMLCh*      elem_SymTab_x() const { return x_strTbl[ELEM_SymTab]; }
     
   // xaif:Symbol
+  const char* elem_Symbol() const { return c_strTbl[ELEM_Symbol]; }
   XMLCh*      elem_Symbol_x() const { return x_strTbl[ELEM_Symbol]; }
   
   const char* attr_kind() const { return c_strTbl[ATTR_kind]; }
-  const char* attr_type() const { return c_strTbl[ATTR_type]; }
-  const char* attr_shape() const { return c_strTbl[ATTR_shape]; }
   XMLCh*      attr_kind_x() const { return x_strTbl[ATTR_kind]; }
+  const char* attr_type() const { return c_strTbl[ATTR_type]; }
   XMLCh*      attr_type_x() const { return x_strTbl[ATTR_type]; }
+  const char* attr_shape() const { return c_strTbl[ATTR_shape]; }
   XMLCh*      attr_shape_x() const { return x_strTbl[ATTR_shape]; }
   
   // -----------------------------------------------------
   
   // xaif:ControlFlowGraph
+  const char* elem_CFG() const { return c_strTbl[ELEM_CFG]; }
   XMLCh*      elem_CFG_x() const { return x_strTbl[ELEM_CFG]; }
   
   // xaif:BasicBlock
+  const char* elem_BB() const { return c_strTbl[ELEM_BB]; }
   XMLCh*      elem_BB_x() const { return x_strTbl[ELEM_BB]; }
+  const char* elem_BBEntry() const { return c_strTbl[ELEM_BBEntry]; }
   XMLCh*      elem_BBEntry_x() const { return x_strTbl[ELEM_BBEntry]; }
+  const char* elem_BBExit() const { return c_strTbl[ELEM_BBExit]; }
   XMLCh*      elem_BBExit_x() const { return x_strTbl[ELEM_BBExit]; }
+  const char* elem_BBIf() const { return c_strTbl[ELEM_BBIf]; }
   XMLCh*      elem_BBIf_x() const { return x_strTbl[ELEM_BBIf]; }
+  const char* elem_BBForLoop() const { return c_strTbl[ELEM_BBForLoop]; }
   XMLCh*      elem_BBForLoop_x() const { return x_strTbl[ELEM_BBForLoop]; }
+  const char* elem_BBPreLoop() const { return c_strTbl[ELEM_BBPreLoop]; }
   XMLCh*      elem_BBPreLoop_x() const { return x_strTbl[ELEM_BBPreLoop]; }
+  const char* elem_BBPostLoop() const { return c_strTbl[ELEM_BBPostLoop]; }
   XMLCh*      elem_BBPostLoop_x() const { return x_strTbl[ELEM_BBPostLoop]; }
 
+  const char* elem_Condition() const { return c_strTbl[ELEM_Condition]; }
   XMLCh*      elem_Condition_x() const { return x_strTbl[ELEM_Condition]; }
 
   // Statements
+  const char* elem_Assign() const { return c_strTbl[ELEM_Assign]; }
   XMLCh*      elem_Assign_x() const { return x_strTbl[ELEM_Assign]; }
+  const char* elem_SubCall() const { return c_strTbl[ELEM_SubCall]; }
   XMLCh*      elem_SubCall_x() const { return x_strTbl[ELEM_SubCall]; }
+  const char* elem_Marker() const { return c_strTbl[ELEM_Marker]; }
   XMLCh*      elem_Marker_x() const { return x_strTbl[ELEM_Marker]; }
 
+  const char* elem_AssignLHS() const { return c_strTbl[ELEM_AssignLHS]; }
   XMLCh*      elem_AssignLHS_x() const { return x_strTbl[ELEM_AssignLHS]; }
+  const char* elem_AssignRHS() const { return c_strTbl[ELEM_AssignRHS]; }
   XMLCh*      elem_AssignRHS_x() const { return x_strTbl[ELEM_AssignRHS]; }
 
+  const char* elem_Argument() const { return c_strTbl[ELEM_Argument]; }
   XMLCh*      elem_Argument_x() const { return x_strTbl[ELEM_Argument]; }
 
   // Expressions
+  const char* elem_VarRef() const { return c_strTbl[ELEM_VarRef]; }
   XMLCh*      elem_VarRef_x() const { return x_strTbl[ELEM_VarRef]; }
+  const char* elem_Constant() const { return c_strTbl[ELEM_Constant]; }
   XMLCh*      elem_Constant_x() const { return x_strTbl[ELEM_Constant]; }
+  const char* elem_Intrinsic() const { return c_strTbl[ELEM_Intrinsic]; }
   XMLCh*      elem_Intrinsic_x() const { return x_strTbl[ELEM_Intrinsic]; }
+  const char* elem_FuncCall() const { return c_strTbl[ELEM_FuncCall]; }
   XMLCh*      elem_FuncCall_x() const { return x_strTbl[ELEM_FuncCall]; }
+  const char* elem_BoolOp() const { return c_strTbl[ELEM_BoolOp]; }
   XMLCh*      elem_BoolOp_x() const { return x_strTbl[ELEM_BoolOp]; }
   
+  const char* elem_ExprEdge() const { return c_strTbl[ELEM_ExprEdge]; }
   XMLCh*      elem_ExprEdge_x() const { return x_strTbl[ELEM_ExprEdge]; }
 
+  const char* attr_name() const { return c_strTbl[ATTR_name]; }
   XMLCh*      attr_name_x() const { return x_strTbl[ATTR_name]; }
+  const char* attr_value() const { return c_strTbl[ATTR_value]; }
   XMLCh*      attr_value_x() const { return x_strTbl[ATTR_value]; }
+  const char* attr_position() const { return c_strTbl[ATTR_position]; }
   XMLCh*      attr_position_x() const { return x_strTbl[ATTR_position]; }
 
   // Variable Reference Expressions
+  const char* elem_SymRef() const { return c_strTbl[ELEM_SymRef]; }
   XMLCh*      elem_SymRef_x() const { return x_strTbl[ELEM_SymRef]; }
+  const char* elem_ArrayElemRef() const { return c_strTbl[ELEM_ArrayElemRef]; }
   XMLCh*      elem_ArrayElemRef_x() const { return x_strTbl[ELEM_ArrayElemRef]; }
-
+  
+  const char* elem_Index() const { return c_strTbl[ELEM_Index]; }
   XMLCh*      elem_Index_x() const { return x_strTbl[ELEM_Index]; }
-
+  
+  const char* elem_VarRefEdge() const { return c_strTbl[ELEM_VarRefEdge]; }
   XMLCh*      elem_VarRefEdge_x() const { return x_strTbl[ELEM_VarRefEdge]; }
-
   
   // DerivativePropagator
   XMLCh*      elem_DerivProp_x() const { return x_strTbl[ELEM_DerivProp]; }
