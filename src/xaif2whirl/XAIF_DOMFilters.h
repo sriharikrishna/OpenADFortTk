@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.14 2004/04/05 20:57:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.15 2004/04/13 16:39:46 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -53,6 +53,23 @@ void
 XercesDumpTree(void* n); // For *^#% debuggers
 
 
+// Useful for either finding one element or iterating over all the
+// children of a node.  Much more efficient than the Xerces DOM
+// iterators.
+
+#if 0 
+  // Sample DOMNodeIterator iteration (inspects all nodes in the subtree)
+  DOMDocument* doc = bbElem->getOwnerDocument();
+  DOMNodeIterator* it = 
+    doc->createNodeIterator((DOMNode*)bbElem, DOMNodeFilter::SHOW_ALL, 
+                            new XAIF_BBStmtElemFilter(), true);
+  for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
+    DOMElement* stmt = dynamic_cast<DOMElement*>(node);
+    // ...
+  }
+  it->release();
+#endif
+
 DOMElement*
 GetFirstChildElement(const DOMNode* n);
 
@@ -61,6 +78,9 @@ GetLastChildElement(const DOMNode* n);
 
 DOMElement*
 GetChildElement(const DOMNode* n, const XMLCh* name);
+
+DOMElement*
+GetChildElement(const DOMNode* n, const DOMNodeFilter* filter);
 
 unsigned int
 GetChildElementCount(const DOMNode* n);
@@ -73,6 +93,30 @@ GetNextSiblingElement(const DOMNode* n);
 
 DOMElement*
 GetNextSiblingElement(const DOMNode* n, const XMLCh* name);
+
+DOMElement*
+GetNextSiblingElement(const DOMNode* n, const DOMNodeFilter* filter);
+
+
+//****************************************************************************
+
+class XAIF_ElemFilter : public DOMNodeFilter
+{
+public:
+  // -----------------------------------------------------------------------
+  //  Constructors and Destructor
+  // -----------------------------------------------------------------------
+  XAIF_ElemFilter(const XMLCh* name) : mName(name) { }
+  ~XAIF_ElemFilter() { }
+  
+  // -----------------------------------------------------------------------
+  //  Implementation of the filter interface
+  // -----------------------------------------------------------------------
+  short acceptNode(const DOMNode *node) const;
+
+private:
+  const XMLCh* mName;
+};
 
 //****************************************************************************
 
