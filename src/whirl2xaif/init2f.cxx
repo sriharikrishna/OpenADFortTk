@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.cxx,v 1.7 2003/09/05 21:41:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.cxx,v 1.8 2003/10/20 12:39:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -111,11 +111,609 @@ using namespace xml; // for xml::ostream, etc
 /*--------------------------- Utility Routines -------------------------*/
 /*----------------------------------------------------------------------*/
 
-
 #define OFFSET_IS_IN_FLD(fld, ofst) \
    (FLD_ofst(fld) == ofst || \
     (ofst > FLD_ofst(fld) && (ofst - FLD_ofst(fld) < TY_size(FLD_type(fld)))))
 
+//***************************************************************************
+
+static void
+INIT2F_translate(xml::ostream& lhs_tokens,
+		 xml::ostream& rhs_tokens,
+		 ST          *base_object, /* Top level base-object */
+		 STAB_OFFSET  base_ofst,   /* Offset from top level base */
+		 STAB_OFFSET *object_ofst, /* Offset from base_member */
+		 TY_IDX       object_ty,   /* Base_member type at base_ofst */
+		 INITV_IDX   *initv_array, /* The initv array */
+		 UINT        *initv_idx,   /* next initv for sub-object */
+		 UINT        *initv_times); /* times initv already repeated */
+
+static void
+INIT2F_structured(xml::ostream& lhs_tokens,
+		  xml::ostream& rhs_tokens,
+		  ST          *base_object,
+		  STAB_OFFSET *object_ofst,
+		  TY_IDX       object_ty,
+		  INITV_IDX   *initv_array,
+		  UINT        *initv_idx,
+		  UINT        *initv_times);
+
+static void
+INIT2F_substring(xml::ostream& lhs_tokens,
+		 xml::ostream& rhs_tokens,
+		 ST          *base_object,
+		 STAB_OFFSET  base_ofst,
+		 STAB_OFFSET *object_ofst,
+		 TY_IDX       object_ty,
+		 INITV_IDX   *initv_array,
+		 UINT        *initv_idx,
+		 UINT        *initv_times);
+
+static void
+INIT2F_array(xml::ostream& lhs_tokens,
+	     xml::ostream& rhs_tokens,
+	     ST          *base_object,
+	     STAB_OFFSET  base_ofst,
+	     STAB_OFFSET *object_ofst,
+	     TY_IDX       object_ty,
+	     INITV_IDX   *initv_array,
+	     UINT        *initv_idx,
+	     UINT        *initv_times);
+
+static void
+INIT2F_ptr_or_scalar(xml::ostream& lhs_tokens,
+		     xml::ostream& rhs_tokens,
+		     ST          *base_object,
+		     STAB_OFFSET  base_ofst,
+		     STAB_OFFSET *object_ofst,
+		     TY_IDX       object_ty,
+		     INITV_IDX   *initv_array,
+		     UINT        *initv_idx,
+		     UINT        *initv_times);
+
+/*----------------------------------------------------------------------*/
+
+static void
+Set_Tcon_Value(TCON *tcon, MTYPE mtype, INT typesize, char *bytes);
+
+static void
+INIT2F_Prepend_Equivalence(xml::ostream& xos,
+			   xml::ostream& name1_tokens,
+			   UINT         tmpvar_idx);
+
+static void 
+INIT2F_Append_Initializer(xml::ostream& xos, 
+			  xml::ostream& init_tokens,
+			  INT           repeat);
+
+static UINT16
+INIT2F_choose_repeat(const INITV& initv);
+
+
+static void 
+INIT2F_Append_Initializer(xml::ostream& xos, 
+			  xml::ostream& init_tokens,
+			  INT           repeat);
+
+static UINT16
+INIT2F_choose_repeat(const INITV& initv);
+
+static void 
+INIT2F_Next_Initv(const INITV& initv,
+		  UINT  *initv_idx,
+		  UINT  *initv_times);
+
+static void 
+INIT2F_Skip_Padding(INITV_IDX    *initv_array,
+		    TY_IDX       object_ty,   /* Padding occurs in this type */
+		    STAB_OFFSET *ofst,        /* offset from object_ty base */
+		    UINT        *initv_idx);  /* Index to a padding initv */
+
+static UINT
+INIT2F_Number_Of_Initvs(INITV_IDX initv);
+
+static void
+INIT2F_Collect_Initvs(INITV_IDX *initv_array, UINT *initv_idx, INITV_IDX initv);
+
+static INITV_IDX  *
+INIT2F_Get_Initv_Array(ST *st, INITO_IDX first_inito);
+
+
+static TY_IDX
+INITVKIND_ty(INITV_IDX initv_idx);
+
+static void
+INITVKIND_symoff(xml::ostream& xos,
+		 INT          repeat,
+		 ST          *st,
+		 STAB_OFFSET  ofst,
+		 TY_IDX       object_ty);
+
+static void
+INITVKIND_val(xml::ostream& xos, 
+	      INT          repeat,
+	      TCON        *tcon,
+	      TY_IDX       object_ty);
+
+static void
+INITVKIND_const(xml::ostream& xos, 
+		 INT          repeat,
+		 const char** tbl,   
+		TY_IDX       ty);
+
+static void
+INITVKIND_translate(xml::ostream& xos, 
+		    INITV_IDX    initv_idx,
+		    TY_IDX       object_ty,
+		    UINT         repeat);
+
+
+static void
+INIT2F_Translate_Char_Ref(xml::ostream& xos, /* Append reference here */
+			  ST           *base_object,
+			  TY_IDX        array_etype, /* array element type */
+			  STAB_OFFSET   base_ofst,   /* ofst to array */
+			  STAB_OFFSET   array_ofst,  /* ofst within array */
+			  STAB_OFFSET   string_ofst, /* ofst within string */
+			  UINT          string_size,
+			  XlationContext  context);
+
+/*------------------ Utilities for array initialization ----------------*
+ *----------------------------------------------------------------------*/
+
+typedef struct Array_Segment
+{
+   INITV_IDX   *initv_array;  /* Array of initializers */
+   BOOL        missing_padding; /* Reached unexpected end of initv sequence */
+   UINT        num_initvs;   /* Number of initializing elements */
+   UINT        first_idx;    /* Index of first initializer */
+   UINT        last_idx;     /* Index of last initializer */
+   UINT        first_repeat; /* Times the first initv should be repeated */
+   UINT        last_repeat;  /* Times the last initv should be repeated */
+   STAB_OFFSET start_ofst;   /* Offset to start of initialized array segment */
+   STAB_OFFSET end_ofst;     /* Offset to end of initialized array segment */
+   TY_IDX      atype;        /* Array type */
+   TY_IDX      etype;        /* Array element type */
+} ARRAY_SEGMENT;
+
+static BOOL
+INIT2F_is_string_initv(INITV&  ini, TY_IDX ty);
+
+static ARRAY_SEGMENT
+INIT2F_Get_Array_Segment(INITV_IDX   *initv_array, /* in */
+			 UINT        *initv_idx,   /* in out*/
+			 UINT        *initv_times, /* in out*/
+			 TY_IDX       object_type, /* in */
+			 STAB_OFFSET *object_ofst); /* in out*/
+
+static void
+INIT2F_Translate_Array_Value(xml::ostream& xos,
+			     const ARRAY_SEGMENT *aseg);
+
+static void
+INIT2F_Implied_DoLoop(xml::ostream& xos,        /* Append to this buffer */
+		      xml::ostream& abase_tokens,  /* Array-base reference */
+		      const ARRAY_SEGMENT *aseg);   /* Array segment info */
+
+static void
+INIT2F_Translate_Array_Ref(xml::ostream&         xos, 
+			   ST                  *base_object,
+			   STAB_OFFSET          base_ofst,
+			   const ARRAY_SEGMENT *aseg);
+
+//***************************************************************************
+//***************************************************************************
+
+/*------------------------- Exported Routines --------------------------*/
+/*----------------------------------------------------------------------*/
+
+void
+INITO2F_translate(xml::ostream& xos, INITO_IDX inito)
+{
+#if 0 //FIXME
+   /* Create a DATA statement, followed by a newline character,
+    * provided the object initialized is not a RECORD type (for
+    * which the initializer should be noted on the type, not on
+    * the object).
+    */
+   xml::ostream& lhs_tokens = New_Token_Buffer(); /* memloc initialized */
+   xml::ostream& rhs_tokens = New_Token_Buffer(); /* initializer values */
+   UINT         initv_idx = 0;
+   UINT         initv_times = 0;
+   TY_IDX       object_ty = ST_type(INITO_st(inito));
+   STAB_OFFSET  object_ofst = 0;
+   INITV_IDX    *initv_array;
+
+   ASSERT_DBG_FATAL(!TY_Is_Structured(object_ty)          ||
+		    Stab_Is_Common_Block(INITO_st(inito)) ||
+		    Stab_Is_Equivalence_Block(INITO_st(inito)),
+		    (DIAG_W2F_UNEXPECTED_SYMBOL, "INITO2F_translate"));
+   
+   /* There may be a list of INITO's initializing the same object, so
+    * accumulate the INITV's immediately under this list of INITOs into
+    * a single array of INITV's to aid the following computation.  All
+    * INITVKIND_BLOCK initvs will have been flattened out, so we only
+    * have INITVKIND_VAL, INITVKIND_SYMOFF, and INITVKIND_PAD in this
+    * array.
+    */
+   initv_array = INIT2F_Get_Initv_Array(INITO_st(inito), inito);
+   
+   /* Activate an initialization based on the kind of object to be
+    * initialized.  We expect the INITO list for this object to cover
+    * the entire extent of the object.
+    */
+   INIT2F_translate(lhs_tokens,
+		    rhs_tokens,
+		    INITO_st(inito), /* Top level object */
+		    0,               /* Offset from top level base */
+		    &object_ofst,    /* Offset within object type */
+		    object_ty,       /* Sub-object type at base-offset */
+		    initv_array,     /* The initv array */
+		    &initv_idx,      /* first initv for sub-object */
+		    &initv_times);   /* times initv already repeated */
+
+   /* Combine the lhs and the rhs and free up the initv array.
+    */
+   FREE(initv_array);
+   Append_F77_Indented_Newline(tokens, 1, NULL/*label*/);
+   Append_Token_String(tokens, "DATA");
+   Append_And_Reclaim_Token_List(tokens, &lhs_tokens);
+   Append_Token_Special(tokens, '/');
+   Append_And_Reclaim_Token_List(tokens, &rhs_tokens);
+   Append_Token_Special(tokens, '/');
+#endif
+} /* INITO2F_translate */
+
+//***************************************************************************
+//***************************************************************************
+
+static void
+INIT2F_translate(xml::ostream& lhs_tokens,
+		 xml::ostream& rhs_tokens,
+		 ST          *base_object, /* Top level base-object */
+		 STAB_OFFSET  base_ofst,   /* Offset from top level base */
+		 STAB_OFFSET *object_ofst, /* Offset from base_member */
+		 TY_IDX       object_ty,   /* Base_member type at base_ofst */
+		 INITV_IDX   *initv_array, /* The initv array */
+		 UINT        *initv_idx,   /* next initv for sub-object */
+		 UINT        *initv_times) /* times initv already repeated */
+{
+   if (TY_Is_Structured(object_ty))
+   {
+      INIT2F_structured(lhs_tokens,
+			rhs_tokens,
+			base_object,
+			object_ofst,
+			object_ty,
+			initv_array,
+			initv_idx,
+			initv_times);
+   }
+   else if (TY_Is_Array(object_ty))
+   {
+      if (TY_is_character(Ty_Table[object_ty]))
+
+	 INIT2F_substring(lhs_tokens,
+			  rhs_tokens,
+			  base_object,
+			  base_ofst,
+			  object_ofst,
+			  object_ty,
+			  initv_array,
+			  initv_idx,
+			  initv_times);
+      else
+	 INIT2F_array(lhs_tokens,
+		      rhs_tokens,
+		      base_object,
+		      base_ofst,
+		      object_ofst,
+		      object_ty,
+		      initv_array,
+		      initv_idx,
+		      initv_times);
+   }
+   else if (TY_Is_Pointer_Or_Scalar(object_ty))
+   {
+      INIT2F_ptr_or_scalar(lhs_tokens,
+			   rhs_tokens,
+			   base_object,
+			   base_ofst,
+			   object_ofst,
+			   object_ty,
+			   initv_array,
+			   initv_idx,
+			   initv_times);
+   }
+   else
+      ASSERT_DBG_WARN(FALSE, 
+		      (DIAG_W2F_UNEXPECTED_SYMBOL, "INITV2F_translate"));
+} /* INIT2F_translate */
+
+
+
+/*--------- Routines to handle initialization for various types --------*
+ *----------------------------------------------------------------------*/
+
+static void
+INIT2F_structured(xml::ostream& lhs_tokens,
+		  xml::ostream& rhs_tokens,
+		  ST          *base_object,
+		  STAB_OFFSET *object_ofst,
+		  TY_IDX       object_ty,
+		  INITV_IDX   *initv_array,
+		  UINT        *initv_idx,
+		  UINT        *initv_times)
+{
+   /* Initialization of a structure or a member of a structure.  The
+    * kind of structure may be a common, equivalence, or a RECORD
+    * block.  The initializer will be a sequence of INITVKIND_SYMOFFs,
+    * INITVKIND_VALs and INITVKIND_PADs.
+    */
+   TY_IDX         initv_ty;
+   STAB_OFFSET    fld_ofst;
+   FLD_PATH_INFO *fpath;
+   
+   ASSERT_DBG_FATAL(TY_Is_Structured(object_ty),
+		    (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
+		     TY_kind(object_ty), "INITV2F_structured"));
+   
+   /* Find the initializer for each field that has one, first skipping
+    * past any padding.
+    */
+   INIT2F_Skip_Padding(initv_array, object_ty, object_ofst, initv_idx);
+   while (*object_ofst < TY_size(object_ty))
+   {   
+      /* Determine what type of initializer we have */ 
+      initv_ty = INITVKIND_ty(initv_array[*initv_idx]);
+
+      /* Find the field that best matches this type.  This will be done
+       * at each level of path down nested structures and as such will be
+       * extremely inefficient, but we do not expect more than one level
+       * of nesting for Fortran initializers (Fortran RECORDs may not
+       * occur in DATA statements).
+       */
+      fpath = TY2F_Get_Fld_Path(object_ty, initv_ty, *object_ofst);
+      {
+	FLD_HANDLE fld;
+
+	if (fpath == NULL || fpath->fld.Is_Null ())
+	{
+	    /* Could not find a suitable path so just assume the first field
+	     * that may contain the value.
+	     */
+
+	    FLD_ITER fld_iter = Make_fld_iter (TY_fld(Ty_Table[object_ty]));
+
+	    do 
+	      {
+		fld = FLD_HANDLE (fld_iter);
+	      } while (!FLD_last_field (fld_iter++) && 
+		       !OFFSET_IS_IN_FLD(fld, *object_ofst)) ;
+	} else
+	  fld = fpath->fld; 
+
+	if (fpath != NULL)
+	  TY2F_Free_Fld_Path(fpath);
+	
+	/* Translate the initialization of this field:  We rely on only
+         * one level fields here, so the offset within the found field
+	 * will be the total of [offset - FLD_ofst(fld)].
+	 */
+	fld_ofst = *object_ofst - FLD_ofst(fld);
+	INIT2F_translate(lhs_tokens,
+			 rhs_tokens,
+			 base_object,
+			 FLD_ofst(fld),
+			 &fld_ofst,     /* return ofst from base of field */
+			 FLD_type(fld),
+			 initv_array,
+			 initv_idx,
+			 initv_times);
+	
+	/* Skip padding before initializing remainding fields.
+	  */
+	*object_ofst = FLD_ofst(fld) + fld_ofst;
+	INIT2F_Skip_Padding(initv_array, 
+			    object_ty, 
+			    object_ofst, 
+			    initv_idx);
+      }
+   } /* while */
+} /* INIT2F_structured */
+
+
+static void
+INIT2F_substring(xml::ostream& lhs_tokens,
+		 xml::ostream& rhs_tokens,
+		 ST          *base_object,
+		 STAB_OFFSET  base_ofst,
+		 STAB_OFFSET *object_ofst,
+		 TY_IDX       object_ty,
+		 INITV_IDX   *initv_array,
+		 UINT        *initv_idx,
+		 UINT        *initv_times)
+{
+#if 0//FIXME
+   /* Initialization of an array, which is a character string.
+    * We have a couple of choices as to how to do the initialization,
+    * where options are (in order of preference) initialization of
+    * the whole string, or initialization of a substring.
+    */
+   STAB_OFFSET  substring_size;
+   xml::ostream& substring_tokens;
+   XlationContext& context;
+
+   ASSERT_DBG_FATAL((TY_Is_String(object_ty) || 
+		     TY_Is_Array_Of_Chars(object_ty)),
+		    (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
+		     TY_kind(object_ty), "INITV2F_substring"));
+
+   INIT2F_Skip_Padding(initv_array, 
+		       object_ty,
+		       object_ofst,
+		       initv_idx);
+
+   if (*object_ofst < TY_size(object_ty))
+   {
+      /* Append the substring value to the rhs */
+
+      INITV_IDX initv = initv_array[*initv_idx];
+      INITV&      ini = Initv_Table[initv];
+
+      INITVKIND_translate(rhs_tokens, initv, object_ty, 1);
+
+      /* Append the substring reference to the lhs */
+
+      substring_size = Targ_String_Length(INITV_tc_val(ini));
+      substring_tokens = New_Token_Buffer();
+      INIT2F_Translate_Char_Ref(substring_tokens,
+				base_object,
+				object_ty,        /* character string type */
+				base_ofst,        /* offset to array */
+				0,                /* array element ofst */
+				*object_ofst,     /* string offset */
+				substring_size,  /* string size */
+				context);
+      INIT2F_Append_Initializer(lhs_tokens, &substring_tokens, 1);
+      INIT2F_Next_Initv(ini, initv_idx, initv_times);
+      *object_ofst += substring_size;
+   } /* if */
+#endif
+} /* INIT2F_substring */
+
+
+static void
+INIT2F_array(xml::ostream& lhs_tokens,
+	     xml::ostream& rhs_tokens,
+	     ST          *base_object,
+	     STAB_OFFSET  base_ofst,
+	     STAB_OFFSET *object_ofst,
+	     TY_IDX       object_ty,
+	     INITV_IDX   *initv_array,
+	     UINT        *initv_idx,
+	     UINT        *initv_times)
+{
+   /* Initialization of an array, which is not a character string.
+    * We have several choices as to how to do the initialization,
+    * where options are (in order of preference) initialization of
+    * the whole array, an implied do-loop initialization, or
+    * initialization of individual array elements.
+    */
+
+   ARRAY_SEGMENT a_segment;
+
+   ASSERT_DBG_FATAL(TY_Is_Array(object_ty) && !TY_is_character(object_ty),
+		    (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
+		     TY_kind(object_ty), "INITV2F_array"));
+
+   INIT2F_Skip_Padding(initv_array, 
+		       object_ty, 
+		       object_ofst, 
+		       initv_idx);
+   while (*object_ofst < TY_size(object_ty))
+   {
+      /* Translate each non-padding initializer segment into a sub-array
+       * initialization.
+       */
+
+      INITV&  initv = Initv_Table[initv_array[*initv_idx]];
+
+#if 0      
+      ASSERT_DBG_FATAL(!(TY_Is_Array_Of_Chars(object_ty)    &&
+			 INITV_kind(initv) == INITVKIND_VAL &&
+			 TCON_ty(INITV_tc_val(initv)) == MTYPE_STRING),
+		       (DIAG_W2F_UNEXPECTED_INITV, 
+			INITV_kind(initv), "INITV2F_array"));
+#endif
+      /* Get the last consecutive initv and the array segment-size
+       * implied by this consecutive sequence of initializers.
+       */
+      a_segment = 
+	 INIT2F_Get_Array_Segment(initv_array, 
+				  initv_idx, 
+				  initv_times, 
+				  object_ty, 
+				  object_ofst);
+
+      /* Translate the rhs, i.e. the array-elements of this segment.
+       */
+      INIT2F_Translate_Array_Value(rhs_tokens, &a_segment);
+      
+      /* Translate the lhs, i.e. the array segment being initialized.
+       */
+      INIT2F_Translate_Array_Ref(lhs_tokens, 
+				 base_object,
+				 base_ofst,
+				 &a_segment);
+
+      /* Skip padding before initializing remaining array segments.
+       */
+      INIT2F_Skip_Padding(initv_array, 
+			  object_ty, 
+			  object_ofst, 
+			  initv_idx);
+
+      /* object_ofst denotes the offset from the base of 
+       * this object
+       */
+   } /* while */
+
+} /* INIT2F_array */
+
+
+
+static void
+INIT2F_ptr_or_scalar(xml::ostream& lhs_tokens,
+		     xml::ostream& rhs_tokens,
+		     ST          *base_object,
+		     STAB_OFFSET  base_ofst,
+		     STAB_OFFSET *object_ofst,
+		     TY_IDX       object_ty,
+		     INITV_IDX   *initv_array,
+		     UINT        *initv_idx,
+		     UINT        *initv_times)
+{
+#if 0 //FIXME
+   /* Initialization of a pointer or a scalar object, which means
+    * the INITV must be INITVKIND_SYMOFF or INITVKIND_VAL (not
+    * INITVKIND_PAD or INITVKIND_block).
+    */
+   INITV&       initv = Initv_Table[initv_array[*initv_idx]];
+   XlationContext& context;
+   xml::ostream sym_tokens;
+   
+   ASSERT_DBG_WARN(*object_ofst == 0, 
+		   (DIAG_W2F_UNEXPEXTED_OFFSET, 
+		    *object_ofst, "INITV2F_ptr_or_scalar"));
+
+
+   INITVKIND_translate(rhs_tokens, 
+		       initv_array[*initv_idx],
+		       object_ty,
+                       1) ;
+
+   INIT2F_Next_Initv(initv, initv_idx, initv_times);
+
+   /* Get the lhs of the initializer */
+   sym_tokens = New_Token_Buffer();
+   xlate_SymRef(sym_tokens,
+		      base_object,
+		      Stab_Pointer_To(ST_type(base_object)),
+		      object_ty,
+		      base_ofst,
+		      context);
+   INIT2F_Append_Initializer(lhs_tokens, &sym_tokens, 1);
+
+   /* object_ofst denotes the offset from the base of this object */
+   *object_ofst += TY_size(object_ty);
+
+#endif
+
+} /* INIT2F_ptr_or_scalar */
+
+
+//***************************************************************************
 
 static void
 Set_Tcon_Value(TCON *tcon, MTYPE mtype, INT typesize, char *bytes)
@@ -676,21 +1274,6 @@ INIT2F_Translate_Char_Ref(xml::ostream& xos, /* Append reference here */
 /*------------------ Utilities for array initialization ----------------*
  *----------------------------------------------------------------------*/
 
-typedef struct Array_Segment
-{
-   INITV_IDX   *initv_array;  /* Array of initializers */
-   BOOL        missing_padding; /* Reached unexpected end of initv sequence */
-   UINT        num_initvs;   /* Number of initializing elements */
-   UINT        first_idx;    /* Index of first initializer */
-   UINT        last_idx;     /* Index of last initializer */
-   UINT        first_repeat; /* Times the first initv should be repeated */
-   UINT        last_repeat;  /* Times the last initv should be repeated */
-   STAB_OFFSET start_ofst;   /* Offset to start of initialized array segment */
-   STAB_OFFSET end_ofst;     /* Offset to end of initialized array segment */
-   TY_IDX      atype;        /* Array type */
-   TY_IDX      etype;        /* Array element type */
-} ARRAY_SEGMENT;
-
 
 static BOOL
 INIT2F_is_string_initv(INITV&  ini, TY_IDX ty)
@@ -1064,414 +1647,3 @@ INIT2F_Translate_Array_Ref(xml::ostream&         xos,
 #endif
 } /* INIT2F_Translate_Array_Ref */
 
-/*--------- Routines to handle initialization for various types --------*
- *----------------------------------------------------------------------*/
-
-static void
-INIT2F_translate(xml::ostream& lhs_tokens,
-		 xml::ostream& rhs_tokens,
-		 ST          *base_object, /* Top level object */
-		 STAB_OFFSET  base_ofst,   /* Offset from top level base */
-		 STAB_OFFSET *object_ofst, /* Offset within object type */
-		 TY_IDX       object_ty,   /* Sub-object type at base_ofst */
-		 INITV_IDX   *initv_array, /* The initv array */
-		 UINT        *initv_idx,   /* next initv for sub-object */
-		 UINT        *initv_times); /* times initv already repeated */
-
-static void
-INIT2F_ptr_or_scalar(xml::ostream& lhs_tokens,
-		     xml::ostream& rhs_tokens,
-		     ST          *base_object,
-		     STAB_OFFSET  base_ofst,
-		     STAB_OFFSET *object_ofst,
-		     TY_IDX       object_ty,
-		     INITV_IDX   *initv_array,
-		     UINT        *initv_idx,
-		     UINT        *initv_times)
-{
-#if 0 //FIXME
-   /* Initialization of a pointer or a scalar object, which means
-    * the INITV must be INITVKIND_SYMOFF or INITVKIND_VAL (not
-    * INITVKIND_PAD or INITVKIND_block).
-    */
-   INITV&       initv = Initv_Table[initv_array[*initv_idx]];
-   XlationContext& context;
-   xml::ostream sym_tokens;
-   
-   ASSERT_DBG_WARN(*object_ofst == 0, 
-		   (DIAG_W2F_UNEXPEXTED_OFFSET, 
-		    *object_ofst, "INITV2F_ptr_or_scalar"));
-
-
-   INITVKIND_translate(rhs_tokens, 
-		       initv_array[*initv_idx],
-		       object_ty,
-                       1) ;
-
-   INIT2F_Next_Initv(initv, initv_idx, initv_times);
-
-   /* Get the lhs of the initializer */
-   sym_tokens = New_Token_Buffer();
-   xlate_SymRef(sym_tokens,
-		      base_object,
-		      Stab_Pointer_To(ST_type(base_object)),
-		      object_ty,
-		      base_ofst,
-		      context);
-   INIT2F_Append_Initializer(lhs_tokens, &sym_tokens, 1);
-
-   /* object_ofst denotes the offset from the base of this object */
-   *object_ofst += TY_size(object_ty);
-
-#endif
-
-} /* INIT2F_ptr_or_scalar */
-
-
-static void
-INIT2F_array(xml::ostream& lhs_tokens,
-	     xml::ostream& rhs_tokens,
-	     ST          *base_object,
-	     STAB_OFFSET  base_ofst,
-	     STAB_OFFSET *object_ofst,
-	     TY_IDX       object_ty,
-	     INITV_IDX   *initv_array,
-	     UINT        *initv_idx,
-	     UINT        *initv_times)
-{
-   /* Initialization of an array, which is not a character string.
-    * We have several choices as to how to do the initialization,
-    * where options are (in order of preference) initialization of
-    * the whole array, an implied do-loop initialization, or
-    * initialization of individual array elements.
-    */
-
-   ARRAY_SEGMENT a_segment;
-
-   ASSERT_DBG_FATAL(TY_Is_Array(object_ty) && !TY_is_character(object_ty),
-		    (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-		     TY_kind(object_ty), "INITV2F_array"));
-
-   INIT2F_Skip_Padding(initv_array, 
-		       object_ty, 
-		       object_ofst, 
-		       initv_idx);
-   while (*object_ofst < TY_size(object_ty))
-   {
-      /* Translate each non-padding initializer segment into a sub-array
-       * initialization.
-       */
-
-      INITV&  initv = Initv_Table[initv_array[*initv_idx]];
-
-#if 0      
-      ASSERT_DBG_FATAL(!(TY_Is_Array_Of_Chars(object_ty)    &&
-			 INITV_kind(initv) == INITVKIND_VAL &&
-			 TCON_ty(INITV_tc_val(initv)) == MTYPE_STRING),
-		       (DIAG_W2F_UNEXPECTED_INITV, 
-			INITV_kind(initv), "INITV2F_array"));
-#endif
-      /* Get the last consecutive initv and the array segment-size
-       * implied by this consecutive sequence of initializers.
-       */
-      a_segment = 
-	 INIT2F_Get_Array_Segment(initv_array, 
-				  initv_idx, 
-				  initv_times, 
-				  object_ty, 
-				  object_ofst);
-
-      /* Translate the rhs, i.e. the array-elements of this segment.
-       */
-      INIT2F_Translate_Array_Value(rhs_tokens, &a_segment);
-      
-      /* Translate the lhs, i.e. the array segment being initialized.
-       */
-      INIT2F_Translate_Array_Ref(lhs_tokens, 
-				 base_object,
-				 base_ofst,
-				 &a_segment);
-
-      /* Skip padding before initializing remaining array segments.
-       */
-      INIT2F_Skip_Padding(initv_array, 
-			  object_ty, 
-			  object_ofst, 
-			  initv_idx);
-
-      /* object_ofst denotes the offset from the base of 
-       * this object
-       */
-   } /* while */
-
-} /* INIT2F_array */
-
-static void
-INIT2F_substring(xml::ostream& lhs_tokens,
-		 xml::ostream& rhs_tokens,
-		 ST          *base_object,
-		 STAB_OFFSET  base_ofst,
-		 STAB_OFFSET *object_ofst,
-		 TY_IDX       object_ty,
-		 INITV_IDX   *initv_array,
-		 UINT        *initv_idx,
-		 UINT        *initv_times)
-{
-#if 0//FIXME
-   /* Initialization of an array, which is a character string.
-    * We have a couple of choices as to how to do the initialization,
-    * where options are (in order of preference) initialization of
-    * the whole string, or initialization of a substring.
-    */
-   STAB_OFFSET  substring_size;
-   xml::ostream& substring_tokens;
-   XlationContext& context;
-
-   ASSERT_DBG_FATAL((TY_Is_String(object_ty) || 
-		     TY_Is_Array_Of_Chars(object_ty)),
-		    (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-		     TY_kind(object_ty), "INITV2F_substring"));
-
-   INIT2F_Skip_Padding(initv_array, 
-		       object_ty,
-		       object_ofst,
-		       initv_idx);
-
-   if (*object_ofst < TY_size(object_ty))
-   {
-      /* Append the substring value to the rhs */
-
-      INITV_IDX initv = initv_array[*initv_idx];
-      INITV&      ini = Initv_Table[initv];
-
-      INITVKIND_translate(rhs_tokens, initv, object_ty, 1);
-
-      /* Append the substring reference to the lhs */
-
-      substring_size = Targ_String_Length(INITV_tc_val(ini));
-      substring_tokens = New_Token_Buffer();
-      INIT2F_Translate_Char_Ref(substring_tokens,
-				base_object,
-				object_ty,        /* character string type */
-				base_ofst,        /* offset to array */
-				0,                /* array element ofst */
-				*object_ofst,     /* string offset */
-				substring_size,  /* string size */
-				context);
-      INIT2F_Append_Initializer(lhs_tokens, &substring_tokens, 1);
-      INIT2F_Next_Initv(ini, initv_idx, initv_times);
-      *object_ofst += substring_size;
-   } /* if */
-#endif
-} /* INIT2F_substring */
-
-static void
-INIT2F_structured(xml::ostream& lhs_tokens,
-		  xml::ostream& rhs_tokens,
-		  ST          *base_object,
-		  STAB_OFFSET *object_ofst,
-		  TY_IDX       object_ty,
-		  INITV_IDX   *initv_array,
-		  UINT        *initv_idx,
-		  UINT        *initv_times)
-{
-   /* Initialization of a structure or a member of a structure.  The
-    * kind of structure may be a common, equivalence, or a RECORD
-    * block.  The initializer will be a sequence of INITVKIND_SYMOFFs,
-    * INITVKIND_VALs and INITVKIND_PADs.
-    */
-   TY_IDX         initv_ty;
-   STAB_OFFSET    fld_ofst;
-   FLD_PATH_INFO *fpath;
-   
-   ASSERT_DBG_FATAL(TY_Is_Structured(object_ty),
-		    (DIAG_W2F_UNEXPECTED_TYPE_KIND, 
-		     TY_kind(object_ty), "INITV2F_structured"));
-   
-   /* Find the initializer for each field that has one, first skipping
-    * past any padding.
-    */
-   INIT2F_Skip_Padding(initv_array, object_ty, object_ofst, initv_idx);
-   while (*object_ofst < TY_size(object_ty))
-   {   
-      /* Determine what type of initializer we have */ 
-      initv_ty = INITVKIND_ty(initv_array[*initv_idx]);
-
-      /* Find the field that best matches this type.  This will be done
-       * at each level of path down nested structures and as such will be
-       * extremely inefficient, but we do not expect more than one level
-       * of nesting for Fortran initializers (Fortran RECORDs may not
-       * occur in DATA statements).
-       */
-      fpath = TY2F_Get_Fld_Path(object_ty, initv_ty, *object_ofst);
-      {
-	FLD_HANDLE fld;
-
-	if (fpath == NULL || fpath->fld.Is_Null ())
-	{
-	    /* Could not find a suitable path so just assume the first field
-	     * that may contain the value.
-	     */
-
-	    FLD_ITER fld_iter = Make_fld_iter (TY_fld(Ty_Table[object_ty]));
-
-	    do 
-	      {
-		fld = FLD_HANDLE (fld_iter);
-	      } while (!FLD_last_field (fld_iter++) && 
-		       !OFFSET_IS_IN_FLD(fld, *object_ofst)) ;
-	} else
-	  fld = fpath->fld; 
-
-	if (fpath != NULL)
-	  TY2F_Free_Fld_Path(fpath);
-	
-	/* Translate the initialization of this field:  We rely on only
-         * one level fields here, so the offset within the found field
-	 * will be the total of [offset - FLD_ofst(fld)].
-	 */
-	fld_ofst = *object_ofst - FLD_ofst(fld);
-	INIT2F_translate(lhs_tokens,
-			 rhs_tokens,
-			 base_object,
-			 FLD_ofst(fld),
-			 &fld_ofst,     /* return ofst from base of field */
-			 FLD_type(fld),
-			 initv_array,
-			 initv_idx,
-			 initv_times);
-	
-	/* Skip padding before initializing remainding fields.
-	  */
-	*object_ofst = FLD_ofst(fld) + fld_ofst;
-	INIT2F_Skip_Padding(initv_array, 
-			    object_ty, 
-			    object_ofst, 
-			    initv_idx);
-      }
-   } /* while */
-} /* INIT2F_structured */
-
-static void
-INIT2F_translate(xml::ostream& lhs_tokens,
-		 xml::ostream& rhs_tokens,
-		 ST          *base_object, /* Top level base-object */
-		 STAB_OFFSET  base_ofst,   /* Offset from top level base */
-		 STAB_OFFSET *object_ofst, /* Offset from base_member */
-		 TY_IDX       object_ty,   /* Base_member type at base_ofst */
-		 INITV_IDX   *initv_array, /* The initv array */
-		 UINT        *initv_idx,   /* next initv for sub-object */
-		 UINT        *initv_times) /* times initv already repeated */
-{
-   if (TY_Is_Structured(object_ty))
-   {
-      INIT2F_structured(lhs_tokens,
-			rhs_tokens,
-			base_object,
-			object_ofst,
-			object_ty,
-			initv_array,
-			initv_idx,
-			initv_times);
-   }
-   else if (TY_Is_Array(object_ty))
-   {
-      if (TY_is_character(Ty_Table[object_ty]))
-
-	 INIT2F_substring(lhs_tokens,
-			  rhs_tokens,
-			  base_object,
-			  base_ofst,
-			  object_ofst,
-			  object_ty,
-			  initv_array,
-			  initv_idx,
-			  initv_times);
-      else
-	 INIT2F_array(lhs_tokens,
-		      rhs_tokens,
-		      base_object,
-		      base_ofst,
-		      object_ofst,
-		      object_ty,
-		      initv_array,
-		      initv_idx,
-		      initv_times);
-   }
-   else if (TY_Is_Pointer_Or_Scalar(object_ty))
-   {
-      INIT2F_ptr_or_scalar(lhs_tokens,
-			   rhs_tokens,
-			   base_object,
-			   base_ofst,
-			   object_ofst,
-			   object_ty,
-			   initv_array,
-			   initv_idx,
-			   initv_times);
-   }
-   else
-      ASSERT_DBG_WARN(FALSE, 
-		      (DIAG_W2F_UNEXPECTED_SYMBOL, "INITV2F_translate"));
-} /* INIT2F_translate */
-
-
-/*------------------------- Exported Routines --------------------------*/
-/*----------------------------------------------------------------------*/
-
-void
-INITO2F_translate(xml::ostream& xos, INITO_IDX inito)
-{
-#if 0 //FIXME
-   /* Create a DATA statement, followed by a newline character,
-    * provided the object initialized is not a RECORD type (for
-    * which the initializer should be noted on the type, not on
-    * the object).
-    */
-   xml::ostream& lhs_tokens = New_Token_Buffer(); /* memloc initialized */
-   xml::ostream& rhs_tokens = New_Token_Buffer(); /* initializer values */
-   UINT         initv_idx = 0;
-   UINT         initv_times = 0;
-   TY_IDX       object_ty = ST_type(INITO_st(inito));
-   STAB_OFFSET  object_ofst = 0;
-   INITV_IDX    *initv_array;
-
-   ASSERT_DBG_FATAL(!TY_Is_Structured(object_ty)          ||
-		    Stab_Is_Common_Block(INITO_st(inito)) ||
-		    Stab_Is_Equivalence_Block(INITO_st(inito)),
-		    (DIAG_W2F_UNEXPECTED_SYMBOL, "INITO2F_translate"));
-   
-   /* There may be a list of INITO's initializing the same object, so
-    * accumulate the INITV's immediately under this list of INITOs into
-    * a single array of INITV's to aid the following computation.  All
-    * INITVKIND_BLOCK initvs will have been flattened out, so we only
-    * have INITVKIND_VAL, INITVKIND_SYMOFF, and INITVKIND_PAD in this
-    * array.
-    */
-   initv_array = INIT2F_Get_Initv_Array(INITO_st(inito), inito);
-   
-   /* Activate an initialization based on the kind of object to be
-    * initialized.  We expect the INITO list for this object to cover
-    * the entire extent of the object.
-    */
-   INIT2F_translate(lhs_tokens,
-		    rhs_tokens,
-		    INITO_st(inito), /* Top level object */
-		    0,               /* Offset from top level base */
-		    &object_ofst,    /* Offset within object type */
-		    object_ty,       /* Sub-object type at base-offset */
-		    initv_array,     /* The initv array */
-		    &initv_idx,      /* first initv for sub-object */
-		    &initv_times);   /* times initv already repeated */
-
-   /* Combine the lhs and the rhs and free up the initv array.
-    */
-   FREE(initv_array);
-   Append_F77_Indented_Newline(tokens, 1, NULL/*label*/);
-   Append_Token_String(tokens, "DATA");
-   Append_And_Reclaim_Token_List(tokens, &lhs_tokens);
-   Append_Token_Special(tokens, '/');
-   Append_And_Reclaim_Token_List(tokens, &rhs_tokens);
-   Append_Token_Special(tokens, '/');
-#endif
-} /* INITO2F_translate */
