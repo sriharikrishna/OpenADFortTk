@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.36 2004/04/09 16:03:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.37 2004/04/09 16:26:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -1811,7 +1811,7 @@ CreateOpenADReplacementEnd()
 static WN* 
 CreateIfCondition(WN* condWN)
 {
-  WN* zeroWN = CreateBoolConst(0);
+  WN* zeroWN = WN_Zerocon(Boolean_type); // CreateBoolConst(0);
   WN* newcondWN = WN_NE(Boolean_type, condWN, zeroWN);
   return newcondWN;
 }
