@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.h,v 1.4 2003/07/24 20:30:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/init2f.h,v 1.5 2004/02/17 22:40:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -85,7 +85,7 @@
 
 //*************************** User Include Files ****************************
 
-#include "whirl2f_common.h"
+#include "whirl2xaif.i"
 #include <lib/support/xmlostream.h>
 #include "XlationContext.h"
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.16 2004/02/17 20:44:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.17 2004/02/17 22:40:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -72,7 +72,7 @@
 //*************************** User Include Files ****************************
 
 #include "ty2xaif.h"
-#include "whirl2f_common.h"
+#include "whirl2xaif.i"
 #include "PUinfo.h"
 #include "wn2xaif.h"
 #include "st2xaif.h"

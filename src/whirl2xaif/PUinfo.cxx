@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.cxx,v 1.8 2004/02/17 18:53:48 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/PUinfo.cxx,v 1.9 2004/02/17 22:40:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -83,7 +83,7 @@
 //*************************** User Include Files ****************************
 
 #include "PUinfo.h"
-#include "whirl2f_common.h"
+#include "whirl2xaif.i"
 
 #include <lib/support/WhirlParentize.h>
 

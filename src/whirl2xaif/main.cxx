@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.14 2004/02/17 18:54:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.15 2004/02/17 22:40:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -73,7 +73,7 @@
 
 //*************************** User Include Files ****************************
 
-#include "whirl2f_common.h"
+#include "whirl2xaif.i"
 #include "whirl2xaif.h"
 
 #include <lib/support/xmlostream.h>

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/whirl2f_common.h,v 1.10 2004/02/17 22:24:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Attic/whirl2f_common.h,v 1.11 2004/02/17 22:40:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -46,7 +46,7 @@
 // Description:
 //   [The set of functions, macros, etc. defined in the file]
 //
-// Based on Open64 be/whirl2f/whirl2f_common.h
+// Based on Open64 be/whirl2f/whirl2xaif.i
 //
 //***************************************************************************
 
