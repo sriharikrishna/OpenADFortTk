@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.35 2004/04/14 21:26:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.36 2004/04/29 21:29:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -491,16 +491,19 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
     SymTabId scopeid = ctxt.FindSymTabId(sttab);
     ASSERT_FATAL(scopeid != 0, (DIAG_UNIMPLEMENTED, 0, "xlate_CALL"));
-    
+    const char* funcNm = ST_name(st);
+
     IntrinsicXlationTable::XAIFInfo* info
-      = IntrinsicTable.FindXAIFInfo(opr, ST_name(st));
+      = IntrinsicTable.FindXAIFInfo(opr, funcNm);
     if (info) {
       // Intrinsic
       xlate_as = 2; // intrinsic
       targid = ctxt.GetNewVId();
       xos << BegElem("xaif:Intrinsic")
 	  << Attr("vertex_id", targid) << Attr("name", info->name)
-	  << Attr("type", "***") << EndElem;
+	  << Attr("type", "***");
+      if (info->key) { xos << IntrinsicKeyAnnot(info->key); }
+      xos << EndElem;
     } else if (return_ty != (TY_IDX)0 && TY_kind(return_ty) != KIND_VOID) {
       // FunctionCall
       xlate_as = 1; // function
