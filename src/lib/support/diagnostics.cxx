@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.cxx,v 1.4 2003/07/24 20:22:01 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.cxx,v 1.5 2004/01/25 02:40:42 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -65,30 +65,38 @@
  * ====================================================================
  */
 
+//************************* System Include Files ****************************
+
 #include <stdarg.h>
 #include <errno.h>		    /* for sys_errlist */
 #include <stdio.h>		    /* for stderr */
 
+//************************** Open64 Include Files ***************************
+
 #include <include/Open64BasicTypes.h>
-#include "file_util.h"
+#include "file_util.h" 
+
+//*************************** User Include Files ****************************
 
 #include "diagnostics.h"
 
+//***************************************************************************
+
 static char        Diag_Phase_Name[80] = "";
 static FILE       *Diag_File = NULL;
-static INT         Diag_Max_Diags = 10;  /* Default */
-static INT         Diag_Warn_Count = 0;
+static int         Diag_Max_Diags = 10;  /* Default */
+static int         Diag_Warn_Count = 0;
 static const char *Diag_File_Location = NULL;
-static INT         Diag_Line_Location = 0;
-static INT         Diag_SrcLine_Location = 0;
-static INT         Diag_SrcCol_Location = 0;
+static int         Diag_Line_Location = 0;
+static int         Diag_SrcLine_Location = 0;
+static int         Diag_SrcCol_Location = 0;
 
 static const char *Diag_Msg[DIAG_LAST+1];
 
 
 void Diag_Init(void)
 {
-   INT diag;
+   int diag;
 
    /* Initiate the Diag_Msg[] table to a standard error message.
     */
@@ -235,19 +243,19 @@ void Diag_Set_File(const char *filename)
 } /* Diag_Set_File */
 
 
-void Diag_Set_Max_Diags(INT max_allowed_diags)
+void Diag_Set_Max_Diags(int max_allowed_diags)
 {
    Diag_Max_Diags = max_allowed_diags;
 } /* Diag_Set_Max_Diags */
 
 
-INT Diag_Get_Warn_Count(void)
+int Diag_Get_Warn_Count(void)
 {
    return Diag_Warn_Count;
 } /* Diag_Get_Warn_Count */
 
 
-void Diag_Set_Location(const char *file_name, INT line_number)
+void Diag_Set_Location(const char *file_name, int line_number)
 {
    Diag_File_Location = file_name;
    Diag_Line_Location = line_number;

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.5 2003/07/24 20:22:01 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.6 2004/01/25 02:40:42 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -161,6 +161,56 @@
  * ====================================================================
  * ====================================================================
  */
+
+//************************* System Include Files ****************************
+
+#include <stdio.h>		    /* for stderr */
+
+//************************** Open64 Include Files ***************************
+
+#include <include/Open64BasicTypes.h> /* "srcpos.h" */
+
+//*************************** User Include Files ****************************
+
+//***************************************************************************
+
+// Debug messages (from csprof)
+
+// Debug and verbosity levels: higher level --> more info; 0 turns
+// respective messages off
+
+// Private debugging level: messages for in-house debugging [0-9]
+#define DBG_LVL 0
+
+// Public debugging level: stuff that a few users may find interesting [0-9]
+extern int DBG_LVL_PUB; // default: 0
+
+#define DBGMSG(level, ...)                                            \
+  if (level <= DBG_LVL) {                                             \
+    fprintf(stderr, "dbg* [%d]: ", level);                            \
+    fprintf(stderr, __VA_ARGS__); fputs("\n", stderr); }
+
+#define DBGMSG_PUB(level, ...)                                        \
+  if (level <= DBG_LVL_PUB) {                                         \
+    fprintf(stderr, "dbg [%d]: ", level);                             \
+    fprintf(stderr, __VA_ARGS__); fputs("\n", stderr); }
+
+#define ERRMSG(...)                                                   \
+  { fputs("error", stderr);                                           \
+    if (DBG_LVL) {                                                    \
+      fprintf(stderr, " [%s:%d]", __FILE__, __LINE__); }              \
+    fputs(": ", stderr); fprintf(stderr, __VA_ARGS__); fputs("\n", stderr); }
+
+#define DIE(...) ERRMSG(__VA_ARGS__); { exit(1); }
+
+
+#define IFDBG(level) if (level <= DBG_LVL)
+
+#define IFDBG_PUB(level) if (level <= DBG_LVL_PUB)
+
+//***************************************************************************
+
+
       /* ------------ Initialization and finalization -------------*/
       /* ----------------------------------------------------------*/
 
@@ -168,8 +218,8 @@ extern void Diag_Init(void);
 extern void Diag_Exit(void);
 extern void Diag_Set_Phase(const char *phase_name);
 extern void Diag_Set_File(const char *filename);
-extern void Diag_Set_Max_Diags(INT max_allowed_diags);
-extern INT  Diag_Get_Warn_Count(void);
+extern void Diag_Set_Max_Diags(int max_allowed_diags);
+extern int  Diag_Get_Warn_Count(void);
 
 
       /* -------------- Diagnostic code enumeration ---------------*/
@@ -296,7 +346,7 @@ typedef enum Diag_Code
     (Diag_Set_Srcpos(WN_Get_Linenum(wn)), \
      diag_handler  diag_args))
 
-extern void Diag_Set_Location(const char *file_name, INT line_number);
+extern void Diag_Set_Location(const char *file_name, int line_number);
 extern void Diag_Set_Srcpos(SRCPOS srcpos);
 extern void Diag_User_Warning(DIAG_CODE code, ...);
 extern void Diag_User_Fatal(DIAG_CODE code, ...);
