@@ -192,7 +192,7 @@ sub undefEnvVarErr
     RunCmd("$W2X      ${base}.B -o ${base}.xaif");
     RunCmd("$NORM     ${base}.xaif");
     RunCmd("$XB_BB -i ${base}.xaif -o ${base}.xb.xaif");
-    RunCmd("$X2W      ${base}.B ${base}.xb.xaif -o ${base}.xb.x2w.B");
+    RunCmd("$X2W --st ${base}.B ${base}.xb.xaif -o ${base}.xb.x2w.B");
     RunCmd("$WHIRL2F  ${base}.xb.x2w.B");
     RunCmd("$NORM     ${base}.xb.x2w.w2f.f");
     RunCmd("$PP       ${base}.xb.x2w.w2f.f");
