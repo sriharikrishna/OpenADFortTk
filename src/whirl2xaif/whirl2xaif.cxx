@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.19 2003/12/08 17:40:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.20 2003/12/11 20:59:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -635,7 +635,7 @@ struct enter_fld
 {
   void operator() (UINT32 ty_idx, const TY* typ) const 
   {
-    TY & ty = (TY &) typ;
+    const TY & ty = (*typ);
 
     if (TY_kind(ty) == KIND_STRUCT) {
       (void)W2CF_Symtab_Nameof_Ty(ty_idx);
