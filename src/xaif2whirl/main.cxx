@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.7 2004/01/29 15:54:17 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.8 2004/02/17 18:54:36 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -48,6 +48,7 @@
 #include "config_opt.h"     // Instrumentation_Enabled
 #include "config_list.h"    // List_Enabled, etc.
 #include "err_host.tab"	    // load all the error messages
+#include "ir_reader.h"      // fdump_tree
 
 #include "file_util.h"	    // New_Extension, Last_Pathname_Component
 #include "tracing.h"        // trace routines
@@ -136,7 +137,8 @@ real_main(INT argc, char **argv)
   Set_Error_Line( ERROR_LINE_UNKNOWN );
   Set_Error_File( NULL );
   Set_Error_Phase("xaif2whirl");
-
+  IR_set_dump_order(TRUE /*pre*/); // pre-order trees when debugging, please!
+  
 #ifdef Is_True_On
   if (Get_Trace(TKIND_ALLOC, TP_MISC)) {
     MEM_Tracing_Enable();
