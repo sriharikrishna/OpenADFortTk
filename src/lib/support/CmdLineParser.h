@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.h,v 1.2 2004/02/27 20:20:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.h,v 1.3 2004/02/28 16:40:46 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -83,9 +83,6 @@
 //   - Unlike getopt(), we do not currently support short switch grouping,
 //     e.g. using -abc instead of -a -b -c.  [FIXME: we can assume that 
 //     only options without arguments are allowed to be grouped.]
-//   - We do not check for ambiguity in long switch abbreviations.
-//     Currently, such an abbreviation will match the first switch that
-//     it appears to abbreviate.
 //
 // Warnings:
 //   - Switches that take optional arguments can be confusing.  For
@@ -159,10 +156,28 @@ public:
     }    
     virtual void Report() const { Report(std::cerr); }
 
-  private: 
+  protected: 
     std::string msg;
   };
 
+  class ParseError : public Exception {
+  public:
+    ParseError(const char* m) : Exception(m) { }
+    ParseError(std::string m) : Exception(m) { }
+    virtual ~ParseError () { }
+  };
+
+  class InternalError : public Exception {
+  public:
+    InternalError(const char* m) : Exception(m) { }
+    InternalError(std::string m) : Exception(m) { }
+    virtual ~InternalError () { }
+  private:
+    void Ctor() {
+      msg = "CmdLineParser internal error (Don't abuse me!): " + msg;
+    }
+  };
+  
   // ---------------------------------------------------------
 
 public:
@@ -244,25 +259,43 @@ private:
   typedef std::map<std::string, std::string*> SwitchToArgMap;
   typedef std::vector<std::string> ArgVec;
 
+  // Switch descriptor (Because of limited use, we allow this to be
+  // returned as an object)
+  class SwDesc {
+  public:
+    SwDesc() : isLong(false) { }
+    SwDesc(const char* sw_, bool isLong_, const char* arg_) 
+      : sw(sw_), isLong(isLong_), arg(arg_) { }
+    SwDesc(const std::string& sw_, bool isLong_, const std::string& arg_) 
+      : sw(sw_), isLong(isLong_), arg(arg_) { }
+    ~SwDesc() { }
+    // use default copy constructor if necessary
+    
+    std::string sw;  // switch text without dashes
+    bool isLong;     // long style
+    std::string arg; // any argument
+  };
+
 private:
   void Ctor();
   void Reset();
   void CheckForErrors(const OptArgDesc* optArgDescs);
 
   // Parsing helpers
-  void 
-  FindSwitchAndArg(const char* swString, std::string& sw, std::string& arg);
+  SwDesc
+  MakeSwitchDesc(const char* str);
   
   const OptArgDesc*
-  FindOptDesc(const OptArgDesc* optArgDescs, const char* sw);
+  FindOptDesc(const OptArgDesc* optArgDescs, const SwDesc& swdesc,
+	      bool errOnMultipleMatches = true);
   
   void
-  AddOption(const OptArgDesc& desc, const std::string& arg);
+  AddOption(const OptArgDesc& odesc, const SwDesc& swdesc);
   
   void
-  AddOption(const OptArgDesc& desc, 
+  AddOption(const OptArgDesc& odesc, 
 	    const std::string& sw, const std::string& arg);
-
+  
 private:
   
   std::string command;           // comand name
