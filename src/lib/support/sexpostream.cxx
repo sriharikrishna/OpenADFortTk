@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.cxx,v 1.2 2004/08/06 17:29:33 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.cxx,v 1.3 2005/01/07 18:56:14 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -34,18 +34,19 @@
   margin), the state-action table indicates the possible resulting
   states after an action
 
-        States                         Actions
+        States/Qalifiers          Actions
        |--------------------------------------------------------------------
-       |          ..LIST_..     | Beg  Beg  End   End  Beg  End
-       |INIT FINI OP_I OPEN ERR | Lst  Atom Atom  Lst  Com  Com
+       |          LIST      ATOM| Beg   Beg   End   End   Quot  Beg  End
+       |INIT DEF  OPEN ERR  OPEN| Lst   Atom  Atom  Lst         Com  Com
        |-------------------------------------------------------------------- 
-  INIT |no   no   yes  yes  yes | OPEN ERR  ERR   ERR  CO?  ER?
-  FINI |no   no   yes  yes  yes | OPEN ERR  ERR   ERR  CO?  ER?
-  ERR  |no   no   no   no   no  | .    .    .     .    .    .  
-  OP_I |no   no   err  yes  yes | ERR  ERR  OPEN  ERR  CO?  ER?
-  OPEN |no   yes  yes  yes  yes | OPEN OP_I ERR   FINI CO?  ER?
-       |                        |                 OPEN
-  COM  |                        | ERR  ERR  ERR   ERR  ER?  <>
+  INIT |no   yes  yes  yes  yes | LOPN  DEF   ERR   ERR   DEF  +COM -COM
+  DEF  |no   yes  yes  yes  yes | LOPN  DEF   DEF   ERR   DEF  +COM -COM
+  LOPN |no   yes  yes  yes  yes | LOPN  LOPN  LOPN  DEF   LOPN +COM -COM
+       |                        |                   LOPN    
+  ERR  |no   no   no   no   no  |+ERR  +ERR  +ERR  +ERR  +ERR  +ERR +ERR
+  AOPN |no   yes  yes  yes  no  |+ERR  +ERR  -AOPN +ERR  +ERR  +ERR +ERR
+  COM  |                        |+ERR  +ERR  +ERR  +ERR  +ERR  +ERR -COM
+
 
  */
 
@@ -62,37 +63,130 @@ sexp::ostream::ostream(std::streambuf* sb)
   indentStep = 2;
 }
 
+
 sexp::ostream::~ostream()
 {
 }
 
+
+// Atom: specialization for 'const char*'
+template <>
+void 
+sexp::ostream::Atom(int aflags, const char* const & val)
+{
+  // Sanity check -- rely on BegAtom()
+  BegAtom(aflags);
+  (*this) << ((val) ? val : "");
+  EndAtom();
+}
+
+
 void
-sexp::ostream::BegList(int flags)
+sexp::ostream::BegAtom(int xflags)
+{
+  using namespace IOFlags;
+ 
+  // Sanity check
+  if (!IsStateQClear()) {
+    SetStateError();
+    throw Exception("BegAtom: Cannot begin atom!");
+  }
+
+  // Get and check flags
+  int flags = 0;
+  if (slistStack.size() != 0) {
+    int& f = slistStack.front();
+    flags = f;
+    SetFlag(f, L_NONEMPTY);
+  }
+  
+  // (note that there can be two sets of atom flags)
+  AddSpaceIfNecessary(flags);  
+  if (IsFlag(xflags, A_SQUOTE) || IsFlag(flags, A_SQUOTE)) {
+    (*this) << "'";
+  }
+  if (IsFlag(xflags, A_DQUOTE) || IsFlag(flags, A_DQUOTE)) {
+    (*this) << '"';
+  }
+  if (IsFlag(xflags, A_OCT) || IsFlag(flags, A_OCT)) {
+    (*this) << std::oct << "0";
+  }
+  if (IsFlag(xflags, A_HEX) || IsFlag(flags, A_HEX)) {
+    (*this) << std::hex << "0x";
+  }
+  
+  curAtomFlags = xflags;
+  
+  // Set state and qualifier
+  if (IsState(INIT)) { SetState(DEFAULT); }
+  SetStateQ(ATOM_OPEN); 
+  SetAction(BEG_ATOM);
+}
+
+
+void
+sexp::ostream::EndAtom()
+{
+  using namespace IOFlags;
+
+  // Sanity check
+  if (!IsStateQ(ATOM_OPEN)) {
+    SetStateError();
+    throw Exception("EndAtom: No currently open atom!");
+  }
+  
+  // Get and check flags
+  int flags = 0;
+  if (slistStack.size() != 0) {
+    flags = slistStack.front();
+  }
+  
+  // (note that there can be two sets of atom flags)
+  if (IsFlag(curAtomFlags, A_DQUOTE) || IsFlag(flags, A_DQUOTE)) {
+    (*this) << '"';
+  }
+  if (IsFlag(curAtomFlags, A_OCT) || IsFlag(flags, A_OCT) ||
+      IsFlag(curAtomFlags, A_HEX) || IsFlag(flags, A_HEX)) {
+    (*this) << std::dec;
+  }
+  
+  curAtomFlags = IOFlags::NONE;
+  ResetStateQ(ATOM_OPEN); // State remains the same, except for qualifier
+  SetAction(END_ATOM);
+}
+
+
+void
+sexp::ostream::BegList(int xflags)
   throw (sexp::ostream::Exception)
 {
   using namespace IOFlags;
 
   // Sanity check 
-  if (IsState(LIST_OPENI)) {
+  if (!IsStateQClear()) {
     SetStateError();
-    throw Exception("BegList: Within an atom!");
-  }
-  
-  if (slistStack.size() != 0) {
-    int& f = slistStack.front();
-    AddSpaceIfNecessary(f);
-    SetFlag(f, L_NONEMPTY);
+    throw Exception("BegList: Cannot begin list!");
   }
 
-  // FIXME: check flags
+  // Get and check flags
+  int flags = 0;
+  if (slistStack.size() != 0) {
+    int& f = slistStack.front();
+    flags = f;
+    SetFlag(f, L_NONEMPTY);
+  }
+  
+  // [FIXME: more checks]
+  AddSpaceIfNecessary(flags);
   
   (*this) << '(';
   IndentIncr();
   
-  slistStack.push_front(flags);
+  slistStack.push_front(xflags);
   SetState(LIST_OPEN);
   SetAction(BEG_LIST);
 }
+
 
 void
 sexp::ostream::EndList()
@@ -115,7 +209,7 @@ sexp::ostream::EndList()
   // Determine the appropriate state after an element has been closed
   slistStack.pop_front();
   if (slistStack.size() == 0) { 
-    SetState(FINI);
+    SetState(DEFAULT);
   } 
   else {
     SetState(LIST_OPEN);
@@ -123,76 +217,29 @@ sexp::ostream::EndList()
   SetAction(END_LIST);
 }
 
-// Atom: specialization for 'const char*'
-template <>
-void 
-sexp::ostream::Atom(int aflags, const char* const & val)
-{
-  // Sanity check -- rely on BegAtom()
-  BegAtom(aflags);
-  (*this) << ((val) ? val : "");
-  EndAtom();
-}
 
 void
-sexp::ostream::BegAtom(int aflags)
+sexp::ostream::Quote()
 {
-  using namespace IOFlags;
-  
-  // Sanity check
-  if (!IsState(LIST_OPEN)) {
+  // Sanity check 
+  if (!IsStateQClear()) {
     SetStateError();
-    throw Exception("BegAtom: No currently open list!");
+    throw Exception("Quote: Cannot quote!");
   }
-
-  int& flags = slistStack.front();
-
+  
+  // Get and check flags
+  int flags = 0;
+  if (slistStack.size() != 0) {
+    flags = slistStack.front();
+  }
+  
   AddSpaceIfNecessary(flags);
-  SetFlag(flags, L_NONEMPTY);
-  
-  // Check flags (note that there can be two sets of atom flags)
-  if (IsFlag(aflags, A_SQUOTE) || IsFlag(flags, A_SQUOTE)) {
-    (*this) << "'";
-  }
-  if (IsFlag(aflags, A_DQUOTE) || IsFlag(flags, A_DQUOTE)) {
-    (*this) << '"';
-  }
-  if (IsFlag(aflags, A_OCT) || IsFlag(flags, A_OCT)) {
-    (*this) << std::oct << "0";
-  }
-  if (IsFlag(aflags, A_HEX) || IsFlag(flags, A_HEX)) {
-    (*this) << std::hex << "0x";
-  }
-  
-  curAtomFlags = aflags;
-  SetState(LIST_OPENI);
-  SetAction(BEG_ATOM);
-}
 
-void
-sexp::ostream::EndAtom()
-{
-  using namespace IOFlags;
+  (*this) << "'";
 
-  // Sanity check
-  if (!IsState(LIST_OPENI)) {
-    SetStateError();
-    throw Exception("EndAtom: No currently open atom!");
-  }
-  
-  // Check flags (note that there can be two sets of atom flags)
-  int& flags = slistStack.front();
-  if (IsFlag(curAtomFlags, A_DQUOTE) || IsFlag(flags, A_DQUOTE)) {
-    (*this) << '"';
-  }
-  if (IsFlag(curAtomFlags, A_OCT) || IsFlag(flags, A_OCT) ||
-      IsFlag(curAtomFlags, A_HEX) || IsFlag(flags, A_HEX)) {
-    (*this) << std::dec;
-  }
-  
-  curAtomFlags = IOFlags::NONE;
-  SetState(LIST_OPEN);
-  SetAction(END_ATOM);
+  // Set state and qualifier
+  if (IsState(INIT)) { SetState(DEFAULT); }
+  SetAction(QUOTE);
 }
 
 
@@ -202,30 +249,32 @@ void
 sexp::ostream::BegComment()
 {
   // Sanity check
-  if (IsStateComment()) {
+  if (IsStateQ(COMMENT)) {
     SetStateError();
-    throw Exception("BegComment: Already within a comment!");    
+    throw Exception("BegComment: Already within a comment!");
   }
   
   (*this) << ";; ";
 
-  SetStateComment();
+  SetStateQ(COMMENT);
   SetAction(BEG_COMMENT);
 }
+
 
 void
 sexp::ostream::EndComment()
 {
   // Sanity check
-  if (!IsStateComment()) {
+  if (!IsStateQ(COMMENT)) {
     SetStateError();
     throw Exception("EndComment: Not within a comment!");
   }
   
   SetAction(END_COMMENT); // N.B.: this should come before EndLine()
   EndLine();
-  ResetStateComment();
+  ResetStateQ(COMMENT);
 }
+
 
 void
 sexp::ostream::Comment(const char* str)
@@ -247,6 +296,7 @@ sexp::ostream::EndLine()
   Indent();
 }
 
+
 void
 sexp::ostream::Indent()
 {
@@ -263,8 +313,8 @@ sexp::ostream::AddSpaceIfNecessary(int flags)
 {
   using namespace IOFlags;
   
-  // short-circuit if we just ended a line or indented
-  if (WasAction(END_LINE) || WasAction(INDENT)) {
+  // short-circuit if we just quoted, ended a line, or indented
+  if (WasAction(QUOTE) || WasAction(END_LINE) || WasAction(INDENT)) {
     return;
   }
   

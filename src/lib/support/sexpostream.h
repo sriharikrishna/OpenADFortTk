@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.h,v 1.5 2004/12/08 22:09:29 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.h,v 1.6 2005/01/07 18:56:14 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -35,9 +35,7 @@
 // ---------------------------------------------------------
 // sexp::ostream:
 // 
-// FIXME: we do not require that this be a full xml document (no state
-// for dtd, etc.) since one should be able to create subdocuments that
-// can be appended to larger ones.
+// An ostream class for generating S-expressions.
 // ---------------------------------------------------------
 namespace sexp {
 
@@ -50,8 +48,8 @@ namespace sexp {
       NONE       = 0x00000000, // no flag
       
       // atom flags
-      A_SQUOTE   = 0x00000001, // single quote atom
-      A_DQUOTE   = 0x00000002, // double quote atom
+      A_SQUOTE   = 0x00000001, // single quote atom: 'x'
+      A_DQUOTE   = 0x00000002, // double quote atom: "x" 
       A_OCT      = 0x00000010, // use oct mode; revert to dec 
       A_HEX      = 0x00000020, // use hex mode; revert to dec
 
@@ -96,27 +94,16 @@ class ostream : public std::ostream {
   };
   
   // ---------------------------------------------------------
-  
-  // BegList: Generate a new list [(...], using flags to override
-  // default formatting (atom flags apply to all atoms in list).
-  // Indentation is incremented, if necessary.
-  void BegList(int flags = IOFlags::NONE)
-    throw (Exception);
 
-  // EndList: End the current list [...)].  Indentation is decremented, if
-  // necessary.
-  void EndList();
-  
   // Atom: Output the sexp-atom 'atom', leaving the stream ready to
   // accept another sexp. Uses the atom flag to override default
   // formatting for this atom. [FIXME: escape certain chars?]
+  // N.B.: See specializations below
   template <class T>
     void Atom(int aflags, const T& val);
 
   template <class T>
     void Atom(const T& val) { Atom(IOFlags::NONE, val); }
-
-  // Note specializations below
   
 
   // BegAtom and EndAtom together are equivalent to Atom.  These
@@ -124,12 +111,24 @@ class ostream : public std::ostream {
   // formed from several sub-strings.
   
   // BegAtom: Prepare the stream for the atom, using flags for formatting.
-  void BegAtom(int aflags = IOFlags::NONE);
+  void BegAtom(int xflags = IOFlags::NONE);
   
   // EndAtom: End the atom and prepare the stream for another sexp.
   void EndAtom();
+
   
-  // Quote: ***
+  // BegList: Generate a new list [(...], using flags to override
+  // default formatting (atom flags apply to all atoms in list).
+  // Indentation is incremented, if necessary.
+  void BegList(int xflags = IOFlags::NONE)
+    throw (Exception);
+
+  // EndList: End the current list [...)].  Indentation is decremented, if
+  // necessary.
+  void EndList();
+    
+
+  // Quote: Quote the subsequent S-expression (atom or list)
   void Quote();
   
   
@@ -188,22 +187,22 @@ class ostream : public std::ostream {
   enum State {
     // A list of mutually exclusive states 
     INIT       = 0x00000001, // initial state, nothing has happened
-    FINI       = 0x00000002, // a complete sexp
-
-    LIST_OPENI = 0x00000004, // within list, incompleted atom
-    LIST_OPEN  = 0x00000008, // within list, completed atom
-
+    DEFAULT    = 0x00000002, // no open list; ATOM_OPEN is possible
+    LIST_OPEN  = 0x00000004, // open list; ATOM_OPEN is possible
+    
     STMASK     = 0xff000000, // reserves 8 bits for state qualifiers
-
+    
     // A list of state qualifiers (can co-exist with some/all of the above)
     ERR        = 0x10000000, // error
-    COMMENT    = 0x20000000  // within a comment
+    ATOM_OPEN  = 0x20000000, // open atom
+    COMMENT    = 0x40000000  // within a comment
   };
   
   enum Action {
     // A list of mutually exclusive actions, affecting context of sexp
-    BEG_LIST, END_LIST,
+    QUOTE,
     BEG_ATOM, END_ATOM,
+    BEG_LIST, END_LIST,
     BEG_COMMENT, END_COMMENT, 
     END_LINE,
     INDENT
@@ -217,9 +216,11 @@ class ostream : public std::ostream {
   bool IsStateError() { return (state & ERR); }
   void SetStateError() { state = (state | ERR); }
   
-  bool IsStateComment() { return (state & COMMENT); }
-  void SetStateComment() { state = (state | COMMENT); }
-  void ResetStateComment() { state = (state & ~COMMENT); }
+  bool IsStateQ(State st) { return (state & st); }
+  void SetStateQ(State st) { state = (state | st); }
+  void ResetStateQ(State st) { state = (state & ~st); }
+
+  bool IsStateQClear() { return ((state & STMASK) == 0); }
 
   // Access to actions
   bool WasAction(Action a) { return (lastAction == a); }
@@ -277,6 +278,13 @@ operator<<(std::ostream& os, omanip f)
 
 
 inline ostream& 
+EndAtom(ostream& sos)
+{ 
+  sos.EndAtom();
+  return sos;
+}
+
+inline ostream& 
 EndList(ostream& sos)
 { 
   sos.EndList();
@@ -284,9 +292,9 @@ EndList(ostream& sos)
 }
 
 inline ostream& 
-EndAtom(ostream& sos)
+Quote(ostream& sos)
 { 
-  sos.EndAtom();
+  sos.Quote();
   return sos;
 }
 
@@ -344,7 +352,7 @@ IndentDecr(ostream& sos)
 namespace sexp {
 
 // ---------------------------------------------------------
-// BegElem, BegAtom
+// BegAtom, BegList
 // ---------------------------------------------------------
 struct FlagElemInfo_ {
   int flags;
@@ -355,21 +363,6 @@ operator<<(std::ostream& os, const FlagElemInfo_ x) // ok to pass x directly
 {
   ostream& sos = dynamic_cast<ostream&>(os); // FIXME
   sos.BegList(x.flags);
-  return sos;
-}
-
-inline FlagElemInfo_ 
-BegList(int flags)
-{
-  FlagElemInfo_ x;
-  x.flags = flags;
-  return x;
-}
-
-inline ostream&
-BegList(ostream& sos)
-{
-  sos.BegList();
   return sos;
 }
 
@@ -385,6 +378,21 @@ inline ostream&
 BegAtom(ostream& sos)
 {
   sos.BegAtom();
+  return sos;
+}
+
+inline FlagElemInfo_ 
+BegList(int flags)
+{
+  FlagElemInfo_ x;
+  x.flags = flags;
+  return x;
+}
+
+inline ostream&
+BegList(ostream& sos)
+{
+  sos.BegList();
   return sos;
 }
 
