@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.30 2004/04/05 21:00:01 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.31 2004/04/07 14:59:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -27,6 +27,10 @@
 using std::vector;
 #include <set>
 using std::set;
+#include <list> // FIXME: TopologicalSort
+using std::list;
+#include <map>  // FIXME: TopologicalSort
+using std::map;
 
 //************************* Xerces Include Files ****************************
 
@@ -52,7 +56,8 @@ using std::set;
 #include <lib/support/SymTab.h> // for XAIFSymToWhirlSymMap
 #include <lib/support/WhirlIDMaps.h>
 #include <lib/support/WhirlParentize.h>
-#include <lib/support/wn_attr.h> // for WN_Tree_Type
+#include <lib/support/wn_attr.h>   // for WN_Tree_Type
+#include <lib/support/stab_attr.h> 
 #include <lib/support/XAIFStrings.h>
 #include <lib/support/diagnostics.h>
 
@@ -199,6 +204,15 @@ private:
 
 static DGraph* 
 CreateCFGraph(const DOMElement* elem);
+
+static list<DGraph::Node*>*
+TopologicalSort(DGraph* graph);
+
+static void
+DDumpDotGraph(DGraph* graph);
+
+static void
+DumpDotGraph(std::ostream& os, DGraph* graph);
 
 //****************************************************************************
 
@@ -578,7 +592,7 @@ xlate_CFGstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
 	xlate_CFGstruct(wn_pu, cfg, body, xlated, ctxt);
       WN* bodyWN = ret.first;
       
-      // 3. Translate condition expression
+      // 3. Translate condition expression (and update/init statements)
       DOMElement* cond = 
 	GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
       DOMElement* condexpr = GetFirstChildElement(cond);      
@@ -636,11 +650,21 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
 {
   WN* blkWN = WN_CreateBlock();
   
-  for (DGraph::DFSIterator nodeIt(*cfg); (bool)nodeIt; ++nodeIt) {
-    MyDGNode* curNode = dynamic_cast<MyDGNode*>((DGraph::Node*)nodeIt);
+  // Find a safe place for creating special labels that will not
+  // overlap with any node ids (which are used as basic block labels).
+  unsigned int nextExtraLabel = ((MyDGNode*)cfg->root())->getId();
+  nextExtraLabel += cfg->num_nodes();
+  
+  // Iterate over graph in topological order to ensure that, e.g., the
+  // exit node is last.
+  list<DGraph::Node*>* sorted = TopologicalSort(cfg);
+  for (list<DGraph::Node*>::iterator it = sorted->begin(); 
+       it != sorted->end(); ++it) {
+    MyDGNode* curNode = dynamic_cast<MyDGNode*>(*it);
     
     DOMElement* bbElem = curNode->GetElem();
     
+#if 0
     // Guard against retranslation (e.g. following back goto edge)
     // [FIXME: May not ultimately need this.]
     set<DOMElement*>::iterator it = xlated.find(bbElem);
@@ -649,6 +673,7 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
     } else {
       continue; // we have already translated this basic block
     }
+#endif
     
     if (XAIF_BBElemFilter::IsBBEntry(bbElem) ||
 	XAIF_BBElemFilter::IsBBExit(bbElem) ||
@@ -720,22 +745,54 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
     else if (XAIF_BBElemFilter::IsBBForLoop(bbElem) ||
 	     XAIF_BBElemFilter::IsBBPreLoop(bbElem) ||
 	     XAIF_BBElemFilter::IsBBPostLoop(bbElem)) {
-#if 0 // FIXME
       // ---------------------------------------------------
       // A loop with possibly unstructured control flow
       // ---------------------------------------------------
+      
+      // XAIF Loop sub-graphs
+      // --------------------
+      //   ForLoop ---> [loopbody nodes...] ---> EndLoop--| 
+      //     Init  \                                   <--| (backedge)
+      //     Cond   \
+      //     Update  \------------------------------------> fallthru block
+      //             
+      //   PreLoop and PostLoop are the same, but without special Init
+      //   and Update statements.
+      // 
+      // Translation into unstructured WHIRL:
+      // ForLoop               PreLoop               PostLoop
+      // ----------------------------------------------------------------
+      // Init
+      // goto for_test         
+      // label for_loop        
+      // Update                                      goto loop_body
+      // label for_test        label pre_loop        label post_loop
+      // if (Cond)             if (Cond)             if (Cond)
+      //   goto loop_body        goto loop_body        goto loop_body
+      // else                  else                  else
+      //   goto fallthru_blk     goto fallthru_blk     goto fallthru_blk
+      // 
+      // ----------------------------------------------------------------
+      //  [fallthru subgraph]  label loop_body
+      //                       ... 
+      //                       goto end_loop
+      //
+      //            [EndLoop]  label end_loop
+      //                       goto for/pre/post_loop
+      //
+      // Note: Moving Init and Update statments out of the 'loop
+      // scope' is not a problem -- i.e. there won't be symbol clashes
+      // -- because in WHIRL the whole procedure is actually in the same
+      // lexical scope.
+      
       // 1. Gather children
       MyDGNode* body = GetSuccessorAlongEdge(curNode, 1);
       MyDGNode* fallthru = GetSuccessorAlongEdge(curNode, 0);
       
-      // 2. Translate (recursively) loop body
-      pair<WN*, MyDGNode*> ret = 
-	xlate_CFGstruct(wn_pu, cfg, body, xlated, ctxt);
-      WN* bodyWN = ret.first;
-      
-      // 3. Translate condition expression
-      DOMElement* cond = GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
-      DOMElement* condexpr = GetFirstChildElement(cond);      
+      // 2. Translate condition expression (and update/init statements)
+      DOMElement* cond = 
+	GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
+      DOMElement* condexpr = GetFirstChildElement(cond);
       WN* condWN = TranslateExpression(condexpr, ctxt);
       
       DOMElement *init = NULL, *update = NULL;
@@ -748,33 +805,49 @@ xlate_CFGunstruct(WN* wn_pu, DGraph* cfg, MyDGNode* startNode,
 	updateWN = TranslateStmt(update, ctxt);
       }
       
-      // 4. Create control flow statement
+      // 3. Create loop control flow
       WN* stmtWN = NULL;
       if (XAIF_BBElemFilter::IsBBForLoop(bbElem)) {
-	WN* idxWN = WN_CreateIdname(WN_store_offset(initWN), WN_st(initWN));
-	stmtWN = WN_CreateDO(idxWN, initWN, condWN, updateWN, bodyWN, NULL);
+	INT32 label_for_test = nextExtraLabel++;
+	WN_INSERT_BlockLast(blkWN, initWN); // Init
+	WN* gotoWN = WN_CreateGoto(label_for_test);
+	WN_INSERT_BlockLast(blkWN, gotoWN);
+	WN* lbl1WN = WN_CreateLabel(curNode->getId(), 0 /*label_flag*/, NULL);
+	WN_INSERT_BlockLast(blkWN, lbl1WN);
+	WN_INSERT_BlockLast(blkWN, updateWN); // Update
+	WN* lbl2WN = WN_CreateLabel(label_for_test, 0 /*label_flag*/, NULL);
+	WN_INSERT_BlockLast(blkWN, lbl2WN);
       }
       else if (XAIF_BBElemFilter::IsBBPreLoop(bbElem)) {
-	stmtWN = WN_CreateWhileDo(condWN, bodyWN);
+	WN* lblWN = WN_CreateLabel(curNode->getId(), 0 /*label_flag*/, NULL);
+	WN_INSERT_BlockLast(blkWN, lblWN);
       }
       else if (XAIF_BBElemFilter::IsBBPostLoop(bbElem)) {
-	stmtWN = WN_CreateDoWhile(condWN, bodyWN);
+	WN* gotoWN = WN_CreateGoto(body->getId());
+	WN_INSERT_BlockLast(blkWN, gotoWN);
+	WN* lblWN = WN_CreateLabel(curNode->getId(), 0 /*label_flag*/, NULL);
+	WN_INSERT_BlockLast(blkWN, lblWN);
       }
       
-      WN_INSERT_BlockLast(blkWN, stmtWN);
-      curNode = fallthru;
-#endif
-    }      
+      // Create 'if (Cond)'
+      WN* thenWN = WN_CreateGoto(body->getId());
+      WN* elseWN = WN_CreateGoto(fallthru->getId());
+      WN* ifWN = WN_CreateIf(condWN, thenWN, elseWN);
+      WN_INSERT_BlockLast(blkWN, ifWN);
+    }
     else if (XAIF_BBElemFilter::IsBBEndLoop(bbElem)) {
       // ---------------------------------------------------
-      // The loop back-branch
+      // The loop back-branch: a dummy basis block
       // ---------------------------------------------------
-      // FIXME
+      MyDGNode* nextNode = GetSuccessor(curNode); // at most one backedge
+      WN* stmts = xlate_CFG_BasicBlock(wn_pu, curNode, nextNode, ctxt, true);
+      WN_INSERT_BlockLast(blkWN, stmts);
     }
     else {
       ASSERT_FATAL(blkWN, (DIAG_A_STRING, "Programming error."));
     }
   }
+  delete sorted;
   
   return blkWN;
 }  
@@ -1882,5 +1955,134 @@ CreateCFGraph(const DOMElement* cfgElem)
   
   return g;
 }
+
+
+// DumpDotGraph:
+
+static std::string
+DumpDotGraph_GetNodeName(MyDGNode* n);
+
+static void
+DDumpDotGraph(DGraph* graph)
+{
+  DumpDotGraph(std::cerr, graph);
+}
+
+static void
+DumpDotGraph(std::ostream& os, DGraph* graph)
+{
+  os << "digraph MyGraph {\n";
+  os << "  graph [ ];\n"
+     << "  node [ fontsize = \"10\" ];\n"
+     << "  edge [ ];\n"
+     << std::endl;
+  
+  for (DGraph::EdgesIterator edgesIt(*graph); (bool)edgesIt; ++edgesIt) {
+    DGraph::Edge* e = (DGraph::Edge*)edgesIt;
+    MyDGNode* src = dynamic_cast<MyDGNode*>(e->source());
+    MyDGNode* snk = dynamic_cast<MyDGNode*>(e->sink());
+    std::string srcNm = DumpDotGraph_GetNodeName(src);
+    std::string snkNm = DumpDotGraph_GetNodeName(snk);
+    os << "  \"" << srcNm << "\" -> \"" << snkNm << "\";\n";
+  }
+  os << "}" << std::endl;
+}
+
+static std::string
+DumpDotGraph_GetNodeName(MyDGNode* n) 
+{
+  std::string name;
+  
+  // MyDGNode portion
+  const char* nodeIdStr = Num2Str(n->getId(), "%u");
+  name += "Node(";
+  name += nodeIdStr;
+  name += ")";
+
+  // XAIF portion
+  DOMElement* elem = n->GetElem();
+  const XMLCh* vidX = elem->getAttribute(XAIFStrings.attr_Vid_x());
+  XercesStrX vid = XercesStrX(vidX);
+
+  name += " XAIF(";
+  name += vid.c_str();
+  name += ")";
+  
+  return name;
+}
+
+
+// TopologicalSort: [FIXME: put in OpenAnalysis]
+
+#define TOPOSORT_WHITE 0 /* node has not been seen */
+#define TOPOSORT_GREY  1 /* seen but not all children have been visited */
+#define TOPOSORT_BLACK 2 /* seen and all children have been visited */
+
+static void 
+TopoSortLocal(list<DGraph::Node*>& sorted, DGraph* g, DGraph::Node* node, 
+	      map<DGraph::Node*, int>& visited);
+
+static list<DGraph::Node*>*
+TopologicalSort(DGraph* graph)
+{
+  list<DGraph::Node*>* sorted = new list<DGraph::Node*>;
+  map<DGraph::Node*, int> visited;
+  
+  for (DGraph::NodesIterator nodeIt(*graph); (bool)nodeIt; ++nodeIt) {
+    DGraph::Node* n = (DGraph::Node*)nodeIt;
+    visited[n] = TOPOSORT_WHITE;
+  }
+  
+  // This will ensure every node is visited
+  for (DGraph::NodesIterator nodeIt(*graph); (bool)nodeIt; ++nodeIt) {
+    DGraph::Node* n = (DGraph::Node*)nodeIt;
+    TopoSortLocal(*sorted, graph, n, visited);
+  }
+  
+  return sorted;
+}
+
+static void 
+TopoSortLocal(list<DGraph::Node*>& sorted, DGraph* g, DGraph::Node* node, 
+	      map<DGraph::Node*, int>& visited)
+{
+  if (!node) { return; }
+  
+  if (visited[node] == TOPOSORT_BLACK) { return; }
+  
+  // Note: If node is already GREY we have a loop.  Continue
+  // processing, but in a special way to avoid infinite loops.
+  bool isLoop = false;
+  if (visited[node] == TOPOSORT_GREY) {
+    isLoop = true; 
+  } else {
+    visited[node] = TOPOSORT_GREY;
+  }
+  
+  // Visit each outgoing edge, like DFS
+  for (DGraph::SinkNodesIterator it(node); (bool)it; ++it) {
+    DGraph::Node* n = (DGraph::Node*)it;
+    if (isLoop) {
+      // If we are visiting this node again in a loop, only visit
+      // WHITE children to avoid infinite loops.
+      if (visited[n] == TOPOSORT_WHITE) {
+	TopoSortLocal(sorted, g, n, visited);
+      }
+    } else {
+      // We want to recur on loops; do not check color
+      TopoSortLocal(sorted, g, n, visited);
+    }
+  }
+  
+  // Finished visiting all children; push into sorted list
+  visited[node] = TOPOSORT_BLACK;
+  if (!isLoop) {
+    sorted.push_front(node); 
+  }
+}
+
+#undef TOPOSORT_WHITE
+#undef TOPOSORT_GREY
+#undef TOPOSORT_BLACK
 
 //****************************************************************************
