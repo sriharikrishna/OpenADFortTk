@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.10 2003/10/10 17:57:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.11 2004/02/24 20:45:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -313,9 +313,11 @@ XAIF_BBElemFilter::IsAnyBB(const DOMNode *node)
   const XMLCh* name = node->getNodeName();
   return (IsBB(node) 
 	  || XMLString::equals(name, XAIFStrings.elem_BBEntry_x()) 
-	  || XMLString::equals(name, XAIFStrings.elem_BBExit_x()) 
+	  || XMLString::equals(name, XAIFStrings.elem_BBExit_x())
 	  || IsBBIf(node) || IsBBForLoop(node) 
-	  || IsBBPreLoop(node) || IsBBPostLoop(node));
+	  || IsBBPreLoop(node) || IsBBPostLoop(node)
+	  || XMLString::equals(name, XAIFStrings.elem_BBEndBranch_x())
+	  || XMLString::equals(name, XAIFStrings.elem_BBEndLoop_x()));
 }
 
 bool 

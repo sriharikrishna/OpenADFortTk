@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.21 2004/02/17 18:54:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.22 2004/02/24 20:45:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -291,6 +291,8 @@ TranslateBB(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
     xlate_BBCondition(wn_pu, bbElem, ctxt);
   } else if (XAIF_BBElemFilter::IsBBForLoop(bbElem)) {
     // FIXME: what to do with ForLoops?
+  } else {
+    // skip anything else for now
   }
 }
 
