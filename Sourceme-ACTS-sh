@@ -1,5 +1,5 @@
 # -*-Mode: sh;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.6 2003/11/10 14:08:38 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.7 2003/11/13 14:55:12 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
@@ -29,15 +29,16 @@ export OPEN64ROOT="${base}/Open64"
 export OPENANALYSISROOT="${base}/OpenAnalysis"
 export XERCESCROOT="${base}/xercesc"
 
-export XAIFBOOSTERROOT="${base}/xaifbooster"
-export BOOSTROOT="${base}/boost_1_29_0"
+# This points to the *parent* directory of xaifBooster
+export XAIFBOOSTERROOT="${base}"
+export BOOSTROOT="${base}/boost-1.30.2"
 export ANGELROOT="${base}/angel"
 
 
 if [ "${PLATFORM}" = "i686-Cygwin" ]; then 
-  XAIFSCHEMA="${basewin}/xaif_1.0"
+  XAIFSCHEMA="${basewin}/xaif-1.0"
 else 
-  XAIFSCHEMA="${base}/xaif_1.0"
+  XAIFSCHEMA="${base}/xaif-1.0"
 fi
 
 unset base
@@ -112,14 +113,19 @@ fi
 # xaifbooster
 #############################################################################
 
-# To be deprecated
+# Used by Angel
 export XAIF_DIR="${XAIFBOOSTERROOT}"
-export BOOST_ROOT="${BOOSTROOT}"
 export BOOST_DIR="${BOOSTROOT}"
-export ANGEL_DIR="${ANGELROOT}"
 
-alias xboostread="${XAIFBOOSTERROOT}/system/tests/t -c ${XAIFSCHEMA}/inlinable_intrinsics.xaif"
-alias xboost="${XAIFBOOSTERROOT}/angel_interface/test/t -c ${XAIFSCHEMA}/inlinable_intrinsics.xaif"
+xbase="${XAIFBOOSTERROOT}/xaifBooster"
+ii_xaif="${XAIFSCHEMA}/schema/examples/inlinable_intrinsics.xaif"
+
+alias xboostread="${xbase}/system/test/t -c ${ii_xaif}"
+alias xboostl="${xbase}/algorithms/Linearization/test/t -c ${ii_xaif}"
+alias xboostbb="${xbase}/algorithms/BasicBlockPreaccumulation/test/t -c ${ii_xaif}"
+
+unset xbase
+unset ii_xaif
 
 #############################################################################
 

@@ -1,6 +1,6 @@
 # -*-Mode: sh;-*-
 # For csh or tcsh
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.4 2003/11/10 14:08:38 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-csh,v 1.5 2003/11/13 14:55:12 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
@@ -34,11 +34,12 @@ setenv OPEN64ROOT "${base}/Open64"
 setenv OPENANALYSISROOT "${HOME}/Develop/OpenAnalysis"
 setenv XERCESCROOT "${HOME}/Develop/xercesc"
 
-setenv XAIFBOOSTERROOT "${base}/ACTS/ALL/xaifbooster"
-setenv BOOSTROOT "${base}/ACTS/boost_1_29_0"
+# This points to the *parent* directory of xaifBooster
+setenv XAIFBOOSTERROOT "${base}/ACTS"
+setenv BOOSTROOT "${base}/ACTS/boost-1.30.2"
 setenv ANGELROOT "${base}/ACTS/angel"
 
-set XAIFSCHEMA="${base}/ACTS/ALL/xaif_1.0"
+set XAIFSCHEMA="${base}/ACTS/xaif-1.0"
 
 unset base
 
@@ -117,14 +118,19 @@ endif
 # xaifbooster
 #############################################################################
 
-# To be deprecated
+# Used by Angel
 setenv XAIF_DIR "${XAIFBOOSTERROOT}"
-setenv BOOST_ROOT "${BOOSTROOT}"
 setenv BOOST_DIR "${BOOSTROOT}"
-setenv ANGEL_DIR "${ANGELROOT}"
 
-alias xboostread "${XAIFBOOSTERROOT}/system/tests/t -c ${XAIFSCHEMA}/inlinable_intrinsics.xaif"
-alias xboost "${XAIFBOOSTERROOT}/angel_interface/test/t -c ${XAIFSCHEMA}/inlinable_intrinsics.xaif"
+set xbase="${XAIFBOOSTERROOT}/xaifBooster"
+set ii_xaif="${XAIFSCHEMA}/schema/examples/inlinable_intrinsics.xaif"
+
+alias xboostread "${xbase}/system/test/t -c ${ii_xaif}"
+alias xboostl "${xbase}/algorithms/Linearization/test/t -c ${ii_xaif}"
+alias xboostbb "${xbase}/algorithms/BasicBlockPreaccumulation/test/t -c ${ii_xaif}"
+
+unset xbase
+unset ii_xaif
 
 #############################################################################
 
