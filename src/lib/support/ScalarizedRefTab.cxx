@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.14 2005/03/19 22:54:50 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.15 2005/03/31 03:44:33 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -451,7 +451,7 @@ int
 AddToScalarizedRefTabOp::operator()(const WN* wn) 
 {
   // create a hash of this reference
-  OA::OA_ptr<OA::ExprTree::ExprTree> e = 
+  OA::OA_ptr<OA::ExprTree> e = 
     ir->getExprTree(OA::ExprHandle((OA::irhandle_t)wn));
   ostringstream o;
   e->dump(o, ir); // e->str(o);

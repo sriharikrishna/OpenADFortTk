@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.2 2005/03/19 22:55:25 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.3 2005/03/31 03:44:32 utke Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Michelle Strout, Nathan Tallent
-  \version $Id: Open64IRInterface.hpp,v 1.2 2005/03/19 22:55:25 eraxxon Exp $
+  \version $Id: Open64IRInterface.hpp,v 1.3 2005/03/31 03:44:32 utke Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -87,7 +87,7 @@ public:
   
   virtual OA::ProcHandle current() const 
     { return (OA::irhandle_t)(*pulist_iter); }
-  virtual bool isValid () const { return (pulist_iter != pulist.end()); }
+  virtual bool isValid () const { return (pulist.end() != pulist_iter); }
   virtual void operator++();
   void operator++(int) { ++*this; }  // postfix
   
@@ -162,7 +162,7 @@ public:
   
   virtual OA::ExprHandle current() const  
     { return (OA::irhandle_t)(*wnlist_iter); }
-  virtual bool isValid () const { return (wnlist_iter != wnlist.end()); }
+  virtual bool isValid () const { return (wnlist.end() != wnlist_iter); }
   virtual void operator++() { ++wnlist_iter; }
 
   virtual void reset() { wnlist_iter = wnlist.begin(); }
@@ -188,7 +188,7 @@ public:
   }
 
   virtual bool isValid () const {        // False when all items are exhausted. 
-    return (wnlist_iter != wnlist.end()); 
+    return (wnlist.end() != wnlist_iter); 
   }
 
   virtual void operator++() { ++wnlist_iter; }
@@ -240,7 +240,7 @@ public:
   
   virtual OA::SymHandle current() const
     { return (OA::irhandle_t)(*symlist_iter); }
-  virtual bool isValid () const { return (symlist_iter != symlist.end()); }
+  virtual bool isValid () const { return (symlist.end() != symlist_iter); }
   virtual void operator++() { if (symlist_iter != symlist.end()) ++symlist_iter; }
   
   virtual void reset() { symlist_iter = symlist.begin(); }

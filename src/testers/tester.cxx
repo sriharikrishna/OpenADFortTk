@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.19 2005/03/30 22:33:28 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.20 2005/03/31 03:44:33 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -54,7 +54,7 @@ static int
 DumpExprTree(std::ostream& os, WN* wn);
 
 static int
-DumpExprTree(std::ostream& os, OA::OA_ptr<OA::ExprTree::ExprTree> tree);
+DumpExprTree(std::ostream& os, OA::OA_ptr<OA::ExprTree> tree);
 
 //****************************************************************************
 
@@ -170,7 +170,7 @@ RecursiveFnWN(std::ostream& os, WN* wn)
 //****************************************************************************
 
 static int
-DumpExprNode(std::ostream& os, OA::OA_ptr<OA::ExprTree::ExprTree::Node> node, 
+DumpExprNode(std::ostream& os, OA::OA_ptr<OA::ExprTree::Node> node, 
              OA::OA_ptr<Open64IRInterface> ir);
 
 static int
@@ -181,7 +181,7 @@ DumpExprTree(std::ostream& os, WN* wn)
 
   OPERATOR opr = WN_operator(wn);
   if (OPERATOR_is_expression(opr)) {
-      OA::OA_ptr<OA::ExprTree::ExprTree> tree = 
+      OA::OA_ptr<OA::ExprTree> tree = 
       ir->getExprTree(OA::ExprHandle((OA::irhandle_t)wn));
     DumpExprTree(os, tree);
   }

@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.2 2005/03/19 22:55:25 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.3 2005/03/31 03:44:32 utke Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Nathan Tallent, Michelle Strout
-  \version $Id: Open64IRInterface.cpp,v 1.2 2005/03/19 22:55:25 eraxxon Exp $
+  \version $Id: Open64IRInterface.cpp,v 1.3 2005/03/31 03:44:32 utke Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -3310,7 +3310,7 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
         InitContextVisitor initVisitor( proc );
         for (exprIter=exprSet.begin(); exprIter!=exprSet.end(); exprIter++) {
             OA::ExprHandle expr = *exprIter;
-            OA::OA_ptr<OA::ExprTree::ExprTree> eTreePtr = tempIR.getExprTree(expr);
+            OA::OA_ptr<OA::ExprTree> eTreePtr = tempIR.getExprTree(expr);
             eTreePtr->acceptVisitor( initVisitor );
         }
 

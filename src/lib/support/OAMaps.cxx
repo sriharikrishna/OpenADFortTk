@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.cxx,v 1.3 2005/03/30 22:33:28 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.cxx,v 1.4 2005/03/31 03:44:32 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -750,7 +750,7 @@ public:
     if (ST_is_in_module(st)) {
       // If 'st' is actually a module variable
       if (!ST_is_external(st)) {
-	modSymNmMap->insert(make_pair(ST_name(st), st));
+	modSymNmMap->insert(make_pair(std::string(ST_name(st)), st));
       } 
       else {
 	modSymDup->insert(st);
