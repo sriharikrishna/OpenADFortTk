@@ -1,14 +1,28 @@
 # -*-Mode: sh;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.5 2003/11/07 21:01:37 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.6 2003/11/10 14:08:38 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
 #############################################################################
 
-base="/cygdrive/c/Tmp/ACTS"
-basewin="c:/Tmp/ACTS" # xerces for cygwin wants windows paths! yuck.
-
 export WHIRL2XAIF="${base}/whirl2xaif"
+
+PLATFORM=`cd ${WHIRL2XAIF}/src/config; ./hpcplatform`
+case $PLATFORM in
+  i686-Cygwin) 
+    base="/cygdrive/c/Tmp/ACTS"
+    basewin="c:/Tmp/ACTS" # xerces for cygwin wants windows paths! yuck.
+    ;;
+  i686-Linux | ia64-Linux) 
+    base="/local/eraxxon"
+    ;;
+  mips-IRIX64 | sparc-SunOS)
+    base="/net/basuri4/eraxxon"
+    ;;
+  *)   
+    echo "PLATFORM '${PLATFORM}' is unknown..." ;;
+esac
+
 
 export OPEN64ROOT="${base}/Open64"
 
@@ -45,7 +59,7 @@ case $PLATFORM in
   sparc-SunOS)
     o64targ="targ_sparc_solaris" ;;
   *)   
-    echo "$PLATFORM '$$PLATFORM' is unknown..." ;;
+    echo "PLATFORM '${PLATFORM}' is unknown..." ;;
 esac
 
 OPEN64TARG="${OPEN64ROOT}/osprey1.0/${o64targ}"
@@ -71,7 +85,7 @@ alias ir_size="${OPEN64TARG}/ir_tools/ir_size"
 
 source ${WHIRL2XAIF}/Sourceme-sh
 
-export WHIRL2XAIF_OPEN64="${OPEN64ROOT}/osprey1.0"
+export WHIRL2XAIF_OPEN64="${OPEN64ROOT}"
 export WHIRL2XAIF_OA="${OPENANALYSISROOT}"
 export WHIRL2XAIF_XERCESC="${XERCESCROOT}"
 
