@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.2 2003/09/02 15:02:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.3 2003/09/17 19:41:44 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -34,6 +34,8 @@
 
 //*************************** User Include Files ****************************
 
+#include "XlationContext.h"
+
 //*************************** Forward Declarations ***************************
 
 XERCES_CPP_NAMESPACE_USE
@@ -44,21 +46,27 @@ namespace xaif2whirl {
 
 void
 TranslateIR(PU_Info* pu_forest, DOMDocument* doc);
+
+ST*
+GetST(DOMElement* elem, XlationContext& ctxt);
  
 }; /* namespace xaif2whirl */
+
 
 //****************************************************************************
 // FIXME: move to another file
 
-UINT 
-GetIntrinsicOperandNum(const char* name);
-
-OPERATOR 
-GetIntrinsicOperator(const char* name);
-
+inline WN*
+CreateParm(WN *arg, UINT32 flag)
+{
+  TYPE_ID rtype = WN_rtype(arg);
+  return WN_CreateParm(rtype, arg, MTYPE_To_TY(rtype), flag);
+}
 
 #include <lib/support/WhirlIDMaps.h>
 
+// Get the appropriate persistant id from the element 'elem'.  See
+// detailed descriptions for generic functions below.
 SymTabId
 GetSymTabId(DOMElement* elem);
 
