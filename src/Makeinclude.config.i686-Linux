@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makeinclude.config.i686-Linux,v 1.2 2003/07/24 20:31:06 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makeinclude.config.i686-Linux,v 1.3 2003/08/08 19:50:44 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -16,17 +16,14 @@
 #  Compilers and building tools
 #-----------------------------------------------------------------
 
-#  Paths
-GCC_BIN_304 = /scratch/gcc-3.0.4/inst/bin
-
-#  C++ compiler
+# C++ compiler
 CXX = g++ -fPIC -D__GNU_BUG_WORKAROUND
   # Note: use default template handling (use 3.0.4 or later)
 
-#  ANSI C compiler
+# ANSI C compiler
 CC = gcc -fPIC -D__GNU_BUG_WORKAROUND
 
-#  Archiver
+# Archiver
 AR = /usr/bin/ar -rv  # GCC
 
 #-----------------------------------------------------------------
