@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.9 2003/07/09 19:43:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.10 2003/07/21 15:22:18 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -217,7 +217,7 @@ TranslateScopeHierarchy(xml::ostream& xos, PU_Info* pu_tree,
   UINT32 gid = ++nextId;
   map.Insert(Scope_tab[GLOBAL_SYMTAB].st_tab, gid);
   
-  xos << BegElem("xaif:Scope") << Attr("vertex_id", gid) << EndAttr;
+  xos << BegElem("xaif:Scope") << Attr("vertex_id", gid) << EndAttrs;
   xlate_SYMTAB(xos, GLOBAL_SYMTAB, ctxt);
   xos << EndElem << std::endl;
 
@@ -241,7 +241,7 @@ TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId,
   UINT32 id = ++nextId;
   map.Insert(Scope_tab[CURRENT_SYMTAB].st_tab, id);
   
-  xos << BegElem("xaif:Scope") << Attr("vertex_id", id) << EndAttr;
+  xos << BegElem("xaif:Scope") << Attr("vertex_id", id) << EndAttrs;
   xlate_SYMTAB(xos, CURRENT_SYMTAB, ctxt);
   xos << EndElem << std::endl;
   
@@ -286,7 +286,7 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
 	  && (!Is_Set_PU_Info_flags(pu, PU_IS_COMPILER_GENERATED)));
 #endif
     
-    xos << Attr("subroutine_name", W2CF_Symtab_Nameof_St(st)) << EndAttr;
+    xos << Attr("subroutine_name", W2CF_Symtab_Nameof_St(st)) << EndAttrs;
     TranslateWNPU(xos, wn_pu, ctxt);
     xos << EndElem;
     

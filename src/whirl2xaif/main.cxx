@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.7 2003/07/16 12:24:40 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.8 2003/07/21 15:22:18 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -107,8 +107,13 @@ CloseFile(std::ofstream& fs);
 static void 
 Process_Command_Line (INT, char **);
 
-static PU_Info* 
-LoadIR();
+
+static PU_Info*
+ReadIR(const char* irfilename);
+
+static void 
+WriteIR(const char* irfilename, PU_Info* pu_forest);
+
 static void 
 FreeIR(PU_Info *pu_forest);
 
@@ -129,6 +134,7 @@ char XAIF_filename[PATH_MAX+1] = "";
 bool opt_dumpIR = false;
 bool opt_testPersistentIDs = false;      // FIXME
 const char* PersistentIDsToPrint = NULL; // write persistent ids if 
+bool opt_testTypes = false;
 
 //************************** Forward Declarations ***************************
 
@@ -195,10 +201,10 @@ real_main(INT argc, char **argv)
   OpenFile(ofs, XAIF_filename); // FIXME: errors
   
   // -------------------------------------------------------
-  // 3. Load WHIRL IR and translate
+  // 3. Read WHIRL IR and translate
   // -------------------------------------------------------
   PU_Info* pu_forest = NULL;
-  pu_forest = LoadIR();
+  pu_forest = ReadIR(Src_File_Name);
   
   // if verbose and if translating to file...
   cerr << ProgramName << " translates " << WHIRL_filename << " into "
@@ -209,8 +215,16 @@ real_main(INT argc, char **argv)
   if (opt_dumpIR) { DumpIR(pu_forest); }
   ofs << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n";
   whirl2xaif::TranslateIR(ofs, pu_forest);
-  
-  FreeIR(pu_forest);
+
+  // FIXME: Temporary test
+  if (opt_testTypes) { 
+    std::string file = Src_File_Name;
+    file += ".tytst.B";
+    WriteIR(file.c_str(), pu_forest); 
+  }
+
+  // FIXME: why does Writing the IR does some freeing (Arg!)
+  if (!opt_testTypes) { FreeIR(pu_forest); }
   
   // -------------------------------------------------------
   // 4. 
@@ -230,15 +244,19 @@ real_main(INT argc, char **argv)
   return RC_OKAY;
 }
 
+
 //***************************************************************************
-// 
+// ReadIR
 //***************************************************************************
 
-static void LoadPU(PU_Info* pu);
-static void FreePU(PU_Info* pu);
+static void 
+ReadPU(PU_Info* pu);
 
+
+// ReadIR: Given a WHIRL filename, reads the entire contents into
+// memory to form a PU forest (a collection of PU trees).
 static PU_Info*
-LoadIR()
+ReadIR(const char* irfilename)
 {
   Diag_Set_Phase("WHIRL to XAIF: Load IR");
 
@@ -257,13 +275,7 @@ LoadIR()
   Options_Stack = CXX_NEW(OPTIONS_STACK(&MEM_src_nz_pool), &MEM_src_nz_pool);
   Options_Stack->Push_Current_Options();
   
-  if (Read_Global_Data) {
-    // get input from two separate files
-    Irb_File = (FILE *)Open_Global_Input(Global_File_Name);
-    Irb_File = (FILE *)Open_Local_Input(Irb_File_Name);
-  } else {
-    Irb_File = (FILE *)Open_Input_Info(Irb_File_Name);
-  }
+  Open_Input_Info((char*)irfilename); // FIXME: change caller to accept const
   
   Initialize_Symbol_Tables(FALSE);
   New_Scope(GLOBAL_SYMTAB, Malloc_Mem_Pool, FALSE);
@@ -290,12 +302,175 @@ LoadIR()
   // 2. Read PUs and local symbol tables (FIXME: may not need to do this)
   // -------------------------------------------------------
   for (PU_Info *pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
-    LoadPU(pu);
+    ReadPU(pu);
   }
+
+  // Free_Input_Info // should we do this?
 
   return pu_forest;
 }
 
+
+void
+ReadPU(PU_Info *pu)
+{
+  Current_PU_Info = pu;
+  
+  // Read program unit (Reads the PUs (WHIRL trees), symbol tables;
+  // sets CURRENT_SYMTAB and Scope_tab[]).
+  Read_Local_Info(MEM_pu_nz_pool_ptr, pu);
+  
+#if 0 // FIXME: Be_scope_tab needs to be changed when another PU is read
+  BE_symtab_alloc_scope_level(CURRENT_SYMTAB);
+  Scope_tab[CURRENT_SYMTAB].st_tab->
+    Register(*Be_scope_tab[CURRENT_SYMTAB].be_st_tab);
+#endif
+
+  WN *wn_pu = PU_Info_tree_ptr(pu); // made possible by Read_Local_Info()
+  
+  //REMOVE Set_Current_PU_For_Trace(ST_name(PU_Info_proc_sym(pu)), Current_PU_Count());
+
+  /* Always create region pool because there are many places where
+   * they can be introduced. Needed for PUs with no regions also */
+  /* NOTE: part of what REGION_initialize does can be moved
+   * to when the .B file is read in.  (FIXME) */
+  REGION_Initialize(wn_pu, PU_has_region(Get_Current_PU()));
+
+  Advance_Current_PU_Count();
+
+  // Now recursively process the child PU's.
+  for (PU_Info *child = PU_Info_child(pu); child != NULL;
+       child = PU_Info_next(child)) {
+    ReadPU(child);
+  }
+
+  SaveOpen64PUGlobalVars(pu);
+}
+
+
+//***************************************************************************
+// WriteIR
+//***************************************************************************
+
+static void
+WritePU(PU_Info* pu);
+
+static void
+SetPUInfoStateIR(PU_Info* pu_forest, Subsect_State state);
+
+static void
+SetPUInfoStatePU(PU_Info* pu, Subsect_State state);
+
+static void
+SetPUInfoState(PU_Info* pu, Subsect_State state);
+
+
+// WriteIR: given a filename write the entire IR (a PU forest) to
+// disk.  *Warning*: Writing to disk also frees part of the IR when
+// compiled with BACK_END.
+static void 
+WriteIR(const char* irfilename, PU_Info* pu_forest)
+{
+  Open_Output_Info((char*)irfilename); // FIXME change to accept const
+
+  // -------------------------------------------------------
+  // 1. Write PUs and local symbol tables
+  // -------------------------------------------------------
+
+  // It would be possible to use the standard iterator here, but in
+  // order to highlight the special handling in WritePU, we do not.
+  for (PU_Info *pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
+    WritePU(pu);
+  }
+
+  // -------------------------------------------------------
+  // 2. Write Global info
+  // -------------------------------------------------------
+  
+  // FIXME
+  // In 'WritePU()' we had to change the pu state type from
+  // 'Subsect_Written' to 'Subsect_InMem' to support save/restore.
+  // However, 'Write_Global_Info()' wants the state to be
+  // 'Subsect_Written', so we quickly change the state and then revert
+  // it.  Note that we do not need to use save/restore.
+  SetPUInfoStateIR(pu_forest, Subsect_Written);
+  Write_Global_Info(pu_forest);
+  //SetPUInfoStateIR(pu_forest, Subsect_InMem);
+  
+  Close_Output_Info();
+}
+
+static void
+WritePU(PU_Info* pu)
+{
+  RestoreOpen64PUGlobalVars(pu);
+  
+  // 'Write_PU_Info()' will set the PU state to be 'Subsect_Written'.
+  // However, when the state is not 'Subsect_InMem', the save/restore
+  // routines, which are needed for the current _and_ future iterations
+  // over the PU forest, choke.  Unfortunately these states are
+  // mutually exclusive, even though they are not necessarily
+  // distinct.  To get around the problem we reset the state here.
+  Write_PU_Info(pu);
+  SetPUInfoState(pu, Subsect_InMem);
+  
+  SaveOpen64PUGlobalVars(pu);
+  
+  // Recur
+  for (PU_Info *child = PU_Info_child(pu); child != NULL;
+       child = PU_Info_next(child)) {
+    WritePU(child);
+  }
+}
+
+// SetPUInfoStateIR: For each PU in IR 'pu_forest', sets each
+// subsection to have the state 'state' if the subsection is present
+// (i.e. not Subsect_Missing).
+static void
+SetPUInfoStateIR(PU_Info* pu_forest, Subsect_State state) 
+{
+  for (PU_Info *pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
+    SetPUInfoStatePU(pu, state);
+  }
+}
+
+// SetPUInfoStatePU: Sets the state for the PU tree: the current PU
+// and all children.
+static void
+SetPUInfoStatePU(PU_Info* pu, Subsect_State state) 
+{
+  // Set the state
+  SetPUInfoState(pu, state);
+  
+  // Recur
+  for (PU_Info *child = PU_Info_child(pu); child != NULL;
+       child = PU_Info_next(child)) {
+    SetPUInfoStatePU(child, state);
+  }
+}
+
+// SetPUInfoState: Set the state for the current PU
+static void
+SetPUInfoState(PU_Info* pu, Subsect_State state) 
+{
+  for (int subsec = 0; subsec < WT_SUBSECTIONS; ++subsec) {
+    if (PU_Info_state(pu, subsec) != Subsect_Missing) {
+      Set_PU_Info_state(pu, subsec, state);
+    }
+  }
+}
+
+
+
+//***************************************************************************
+// FreeIR
+//***************************************************************************
+
+static void 
+FreePU(PU_Info* pu);
+
+
+// FreeIR: Given a PU forest, frees all memory consumed by it.
 static void
 FreeIR(PU_Info *pu_forest)
 {
@@ -345,49 +520,12 @@ FreeIR(PU_Info *pu_forest)
 }
 
 
-void
-LoadPU(PU_Info *pu)
-{
-  Current_PU_Info = pu;
-  
-  // Read program unit (Reads the PUs (WHIRL trees), symbol tables;
-  // sets CURRENT_SYMTAB and Scope_tab[]).
-  Read_Local_Info(MEM_pu_nz_pool_ptr, pu);
-  
-#if 0 // FIXME: Be_scope_tab needs to be changed when another PU is read
-  BE_symtab_alloc_scope_level(CURRENT_SYMTAB);
-  Scope_tab[CURRENT_SYMTAB].st_tab->
-    Register(*Be_scope_tab[CURRENT_SYMTAB].be_st_tab);
-#endif
-
-  WN *wn_pu = PU_Info_tree_ptr(pu); // made possible by Read_Local_Info()
-  
-  //REMOVE Set_Current_PU_For_Trace(ST_name(PU_Info_proc_sym(pu)), Current_PU_Count());
-
-  /* Always create region pool because there are many places where
-   * they can be introduced. Needed for PUs with no regions also */
-  /* NOTE: part of what REGION_initialize does can be moved
-   * to when the .B file is read in.  (FIXME) */
-  REGION_Initialize(wn_pu, PU_has_region(Get_Current_PU()));
-
-  Advance_Current_PU_Count();
-
-  // Now recursively process the child PU's.
-  for (PU_Info *child = PU_Info_child(pu); child != NULL;
-       child = PU_Info_next(child)) {
-    LoadPU(child);
-  }
-
-  SaveOpen64PUGlobalVars(pu);
-}
-
-
 static void
 FreePU(PU_Info* pu) // FIXME: unload
 {
   RestoreOpen64PUGlobalVars(pu);
 
-  REGION_Finalize();
+  //REGION_Finalize();
   
 #if 0 // FIXME
   SYMTAB_IDX scopelvl = PU_lexical_level(PU_Info_pu(pu));
@@ -404,6 +542,9 @@ FreePU(PU_Info* pu) // FIXME: unload
   }
 }
 
+
+//***************************************************************************
+// PrepareIR
 //***************************************************************************
 
 static void 
@@ -439,8 +580,9 @@ PrepareIR(PU_Info* pu_forest)
   }
 }
 
+
 //***************************************************************************
-// 
+// DumpIR
 //***************************************************************************
 
 static void 
@@ -467,6 +609,7 @@ DumpIR(PU_Info* pu_forest)
     }
   }
 }
+
 
 //***************************************************************************
 // from be/be/driver_util.c
@@ -514,7 +657,11 @@ Process_Command_Line (INT argc, char **argv)
 	PersistentIDsToPrint = argv[++i]; // FIXME: should test array bounds
 	continue;
       }
-
+      
+      if (strcmp(opt, "t") == 0) { 
+	opt_testTypes = true;
+	continue;
+      }
       
     } else if (argv[i] != NULL) {
       dashdash_flag = FALSE;
@@ -540,6 +687,7 @@ Process_Command_Line (INT argc, char **argv)
   strncpy(XAIF_filename, fname, PATH_MAX);
   Irb_File_Name = WHIRL_filename; // FIXME: make Open64 happy
 }
+
 
 //***************************************************************************
 // 

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.9 2003/07/16 12:24:40 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.10 2003/07/21 15:22:18 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -242,8 +242,8 @@ private:
 //   ST_TAB: The type of the symbol table proper, a table that appears
 //   at all lexical levels.
 //
-//   ST_IDX: An index into any ST_TAB within the 'Scope_tab[]'.  It is
-//   two part bit field that contains an index into the ST_TAB at a
+//   ST_IDX: A two-part index into any ST_TAB within the 'Scope_tab[]'.
+//   The two-part bit field contains an index into the ST_TAB at a
 //   certain lexical level.
 //
 //   ST: The type of a ST_TAB entry.
@@ -265,7 +265,7 @@ void
 whirl2xaif::xlate_SYMTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
 			 XlationContext& ctxt)
 {
-  xos << BegElem("xaif:SymbolTable") << EndAttr;
+  xos << BegElem("xaif:SymbolTable") << EndAttrs;
 
   // Note: 'For_all' applies the object's 'operator()' to every entry
   // of the respective table.

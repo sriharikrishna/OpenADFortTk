@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.7 2003/07/16 12:24:40 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.8 2003/07/21 15:22:18 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -489,7 +489,7 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << BegElem("xaif:Assignment") << Attr("statement_id", ctxt.GetNewVId());
   
   // LHS of assignment
-  xos << BegElem("xaif:AssignmentLHS") << EndAttr;
+  xos << BegElem("xaif:AssignmentLHS") << EndAttrs;
   ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for LHS
   
   if (ST_class(base_st) == CLASS_PREG) { // FIXME
@@ -502,7 +502,7 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << EndElem;
   
   // RHS of assignment
-  xos << BegElem("xaif:AssignmentRHS") << EndAttr;
+  xos << BegElem("xaif:AssignmentRHS") << EndAttrs;
   ctxt.CreateContext(XlationContext::NOFLAG, wn);
   TranslateWN(xos, WN_kid0(wn), ctxt);
   ctxt.DeleteContext();
@@ -535,7 +535,7 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   xos << BegElem("xaif:Assignment") << Attr("statement_id", ctxt.GetNewVId());
   
   // LHS of assignment (dereference address)
-  xos << BegElem("xaif:AssignmentLHS") << EndAttr;
+  xos << BegElem("xaif:AssignmentLHS") << EndAttrs;
   ctxt.CreateContext(XlationContext::VARREF, wn); // implicit for LHS
 
   if (WN_operator(baseptr) == OPR_LDA || WN_operator(baseptr) == OPR_LDID) {
@@ -549,7 +549,7 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   xos << EndElem;
 
   // RHS of assignment
-  xos << BegElem("xaif:AssignmentRHS") << EndAttr;
+  xos << BegElem("xaif:AssignmentRHS") << EndAttrs;
   ctxt.CreateContext(XlationContext::NOFLAG, wn);
   TranslateWN(xos, WN_kid0(wn), ctxt);
   ctxt.DeleteContext();

@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.10 2003/07/16 12:24:40 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.11 2003/07/21 15:22:18 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -107,7 +107,9 @@ using namespace xml; // for xml::ostream, etc
 // FIXME: REMOVE: defined in main.cxx
 extern bool opt_testPersistentIDs;
 extern const char* PersistentIDsToPrint;
+extern bool opt_testTypes;
 void PERSISTENT_ID_TESTER(WN* wn);
+void CONVERT_TYPES_TESTER(SYMTAB_IDX symtab_lvl);
 
 //************************** Forward Declarations ***************************
 
@@ -353,7 +355,9 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   AddToNonScalarSymTabOp op(symtab);
   ForAllNonScalarRefs(fbody, op); //FIXME
 
-  PERSISTENT_ID_TESTER(wn);
+  // FIXME: temporary testing
+  if (opt_testPersistentIDs) { PERSISTENT_ID_TESTER(wn); }
+  if (opt_testTypes) { CONVERT_TYPES_TESTER(CURRENT_SYMTAB); }
   
   // Emit symbol table for this function
   //FIXME: xlate_SymbolTables(xos, CURRENT_SYMTAB, symtab, ctxt);
@@ -1048,7 +1052,7 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos, ST* base_st, TY_IDX baseptr_ty,
     NonScalarSym* sym = ctxt.FindNonScalarSym(wn);
     if (sym) {
       xos << BegElem("xaif:NONSCALAR") << Attr("id", sym->GetName())
-	  << EndAttr;
+	  << EndAttrs;
     }
     
     /* We only dereference a field when the base need not be 
@@ -1222,7 +1226,7 @@ WN2F_Offset_Memref(xml::ostream& xos,
       NonScalarSym* sym = ctxt.FindNonScalarSym(wn);
       if (sym) {
 	xos << BegElem("xaif:NONSCALAR") << Attr("id", sym->GetName())
-	    << EndAttr;
+	    << EndAttrs;
       }
       
       WN_OFFSET tmp = WN2F_Sum_Offsets(addr);
@@ -1323,7 +1327,7 @@ WN2F_End_Routine_Strings(xml::ostream& xos, INT32 func_id)
 
 
 /////////////////////////////////////////////////////////////////////////////
-// FIXME: REMOVE
+// FIXME: REMOVE: Temporary tests
 
 #include <set>
 
@@ -1384,3 +1388,79 @@ void PERSISTENT_ID_TESTER_INIT(IdSet& x, const char* idstr)
 
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// FIXME: REMOVE
+
+TY_IDX
+find_ADIFOR_type_for_BUILTINS(TY_IDX ty_idx);
+
+
+void 
+CONVERT_TYPES_TESTER(SYMTAB_IDX symtab_lvl)
+{
+  //For_all(St_Table, symtab_lvl, xlate_ST_TAB(xos, symtab_lvl, ctxt));
+  
+  ST* st;
+  ST_IDX    st_idx;
+  FOREACH_SYMBOL(symtab_lvl, st, st_idx) {
+    
+    // VARs hold a TY_IDX
+    if (ST_sym_class(*st) == CLASS_VAR) {
+      TY_IDX ty_idx = ST_type(*st);
+      
+      MTYPE mt = TY_mtype(ty_idx);
+      if (TY_kind(ty_idx) == KIND_SCALAR) {
+	
+	TY_IDX new_ty_idx = find_ADIFOR_type_for_BUILTINS(ty_idx);
+	
+	if (ty_idx != new_ty_idx) { 
+	  Set_ST_type(*st, new_ty_idx);
+	  cout << "  Converting " 
+	       << TY_name(ty_idx) << " --> " << TY_name(new_ty_idx) << "\n";
+	}
+      }
+    }
+    
+  }
+}
+
+
+
+// based on 'make_ptr_type' from symtab.cxx
+TY_IDX
+find_ADIFOR_type_for_BUILTINS(TY_IDX ty_idx)
+{
+  // A one element map
+  static TY_IDX oldtype = 0;
+  static TY_IDX newtype = 0;
+ 
+  const TY& ty = Ty_Table[ty_idx];
+  MTYPE mt = TY_mtype(ty);
+  
+  TY_IDX new_ty_idx = ty_idx;
+  
+  if (mt == MTYPE_F4) { // for now only do f4
+
+    // Create a new type on demand
+    if (oldtype == 0) {
+      char new_name[32] = "ADIFOR_";
+      std::strncat(new_name, Mtype_Name(mt), 32-1);
+      // std::strcpy(new_name, TY_name(ty));  // FIXME: testing hack
+      
+      TY& new_ty = New_TY(new_ty_idx); // sets 'new_ty_idx'
+      //TY_Init(new_ty, TY_size(ty), TY_kind(ty), TY_mtype(ty), 
+      //        Save_Str(new_name));
+      TY_Init(new_ty, 8, KIND_SCALAR, MTYPE_I8, Save_Str("MY_I8"));
+
+      
+      oldtype = ty_idx;
+      newtype = new_ty_idx;
+    }
+
+    Is_True(ty_idx == oldtype, ("Big error!"));
+    new_ty_idx = newtype;
+
+  }
+
+  return new_ty_idx;
+}

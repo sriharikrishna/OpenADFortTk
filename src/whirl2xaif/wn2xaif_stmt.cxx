@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.8 2003/06/02 13:43:23 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.9 2003/07/21 15:22:18 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -324,7 +324,9 @@ xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		   WN_operator(wn) == OPR_REGION_EXIT,
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_GOTO"));
   
-  ASSERT_FATAL(FALSE, (DIAG_UNIMPLEMENTED, "Should not be called."));
+  xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
+      << BegAttr("annotation") << "goto " << WN_label_number(wn) << EndAttr
+      << EndElem;
   
   return EMPTY_WN2F_STATUS;
 }
@@ -336,6 +338,9 @@ WN2F_agoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // REMOVE
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_AGOTO,
 		   (DIAG_W2F_UNEXPECTED_OPC, "WN2F_agoto"));
+
+  xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
+      << Attr("annotation", "***FIXME: agoto") << EndElem;
 
   xos << std::endl << "GO TO";
   TranslateWN(xos, WN_kid0(wn), ctxt); // FIXME
@@ -362,7 +367,9 @@ xlate_RETURN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_RETURN,
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_RETURN"));
   
-  xos << Comment("RETURN");
+  xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
+      << Attr("annotation", "return") << EndElem;
+  
   return EMPTY_WN2F_STATUS;
 }
 
@@ -383,7 +390,9 @@ xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ASSERT_DBG_FATAL(WN_operator(wn) == OPR_LABEL, 
 		   (DIAG_W2F_UNEXPECTED_OPC, "xlate_LABEL"));
   
-  xos << BegComment << "label=" << WN_label_number(wn) << EndComment;
+  xos << BegElem("xaif:Nop") << Attr("statement_id", ctxt.GetNewVId())
+      << BegAttr("annotation") << "label " << WN_label_number(wn) << EndAttr
+      << EndElem;
   
   return EMPTY_WN2F_STATUS;
 }

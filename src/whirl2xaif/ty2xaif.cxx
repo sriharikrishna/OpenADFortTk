@@ -1,4 +1,4 @@
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.7 2003/06/02 13:43:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.8 2003/07/21 15:22:18 eraxxon Exp $
 // -*-C++-*-
 
 // * BeginCopyright *********************************************************
@@ -1208,7 +1208,7 @@ TY2F_Translate_ArrayElt(xml::ostream& xos,
   XlationContext ctxt; // FIXME
 
   xos << BegElem("xaif:Property") << Attr("id", ctxt.GetNewVId())
-      << Attr("name", "arrayindex***") << EndAttr;
+      << Attr("name", "arrayindex***") << EndAttrs;
 
   if (TY_Is_Character_String(arr_ty_idx)) { // FIXME
     // Character strings can only be indexed using the substring notation
