@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.9 2004/06/09 20:42:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.10 2004/06/09 21:59:31 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -193,15 +193,17 @@ public:
 // 
 // ---------------------------------------------------------
 
+// Note: Assumes ownership of the tables it creates
 class WNToWNIdTabMap 
   : public FortTk::BaseMap<PU_Info*, WNToWNIdMap*> {
   
 public:
-  WNToWNIdTabMap();
-  WNToWNIdTabMap(PU_Info* pu_forest);
+  WNToWNIdTabMap() { }
+  WNToWNIdTabMap(PU_Info* pu_forest) { Create(pu_forest); }
   virtual ~WNToWNIdTabMap();
   
   void Create(PU_Info* pu_forest);  
+  void Destroy();
 };
 
 

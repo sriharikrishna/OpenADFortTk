@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.i,v 1.13 2004/06/03 13:15:36 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.i,v 1.14 2004/06/09 21:59:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -61,6 +61,7 @@
 
 #include <lib/support/IntrinsicXlationTable.h>
 #include <lib/support/ScalarizedRefTab.h>
+#include <lib/support/WhirlIDMaps.h>
 
 #include <lib/support/stab_attr.h>
 #include <lib/support/wn_attr.h>
@@ -83,6 +84,7 @@ namespace whirl2xaif {
   extern IntrinsicXlationTable IntrinsicTable;
   
   extern ScalarizedRefTabMap_W2X ScalarizedRefTableMap;
+  extern WNToWNIdTabMap WNToWNIdTableMap;
   
 }; /* namespace whirl2xaif */
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.cxx,v 1.5 2004/06/09 20:42:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.cxx,v 1.6 2004/06/09 21:59:31 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -74,6 +74,12 @@ WNIdToWNMap::Create(WN* wn)
   CreateWhirlIdMaps(wn, NULL, this);
 }
 
+
+WNToWNIdTabMap::~WNToWNIdTabMap()
+{
+  Destroy();
+}
+
 void 
 WNToWNIdTabMap::Create(PU_Info* pu_forest)
 {
@@ -87,6 +93,14 @@ WNToWNIdTabMap::Create(PU_Info* pu_forest)
   }
 }
 
+void 
+WNToWNIdTabMap::Destroy()
+{
+  for (iterator it = begin(); it != end(); ++it) {
+    delete (*it).second; // WNToWNIdMap*
+  }
+  clear();
+}
 
 //***************************************************************************
 // Optional routines for map creation

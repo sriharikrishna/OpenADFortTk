@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.64 2004/06/09 20:43:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.65 2004/06/09 21:59:32 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -259,7 +259,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ctxt.SetScalarizedRefTab(tab);
   
   // 2. WHIRL<->ID maps
-  WNToWNIdMap* wnmap = new WNToWNIdMap(wn);
+  WNToWNIdMap* wnmap = WNToWNIdTableMap.Find(Current_PU_Info);
   ctxt.SetWNToIdMap(wnmap);
   
   AddControlFlowEndTags(wn, &wnParentMap); // FIXME
@@ -356,7 +356,6 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // Cleanup
   // -------------------------------------------------------
   ctxt.DeleteContext();
-  delete wnmap;
   
   return whirl2xaif::good;
 }

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.42 2004/06/09 20:43:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.43 2004/06/09 21:59:31 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -79,6 +79,7 @@ using namespace xml; // for xml::ostream, etc
 IntrinsicXlationTable whirl2xaif::IntrinsicTable(IntrinsicXlationTable::W2X);
 
 ScalarizedRefTabMap_W2X whirl2xaif::ScalarizedRefTableMap;
+WNToWNIdTabMap          whirl2xaif::WNToWNIdTableMap;
 
 //***************************************************************************
 
@@ -113,6 +114,19 @@ static void
 DumpTranslationHeaderComment(xml::ostream& xos);
 
 //***************************************************************************
+
+class CreateScalarizedRef : public ScalarizedRef::CreateOp {
+public:
+  CreateScalarizedRef();
+  virtual ~CreateScalarizedRef();
+  
+  virtual ScalarizedRef* 
+  operator()(const PU_Info* pu, const WN* wn, const char* hstr);
+
+private: 
+};
+
+//***************************************************************************
 // 
 //***************************************************************************
 
@@ -139,13 +153,14 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   
   PUToPUIdMap* pumap = new PUToPUIdMap(pu_forest);
   ctxt.SetPUToIdMap(pumap);
-  
-  // FIXME: WNToWNIdTabMap...
 
+  WNToWNIdTableMap.Create(pu_forest); // Note: could make this local
+  
   // Create scalarized var reference table.  Note: At the moment we
   // must create all tables in memory because they must be available
-  // for the ScopeHeirarchy.
-  ScalarizedRefTableMap.Create(pu_forest);
+  // for the ScopeHeirarchy.  
+  CreateScalarizedRef newrefop;
+  ScalarizedRefTableMap.Create(pu_forest, &newrefop);
   
   // -------------------------------------------------------
   // 2. Create and dump CallGraph
@@ -396,6 +411,26 @@ DumpTranslationHeaderComment(xml::ostream& xos)
       << BegComment << "XAIF file translated from WHIRL at " << tmStr 
       << EndComment
       << Comment(whirl2xaif_divider_comment) << std::endl;
+}
+
+
+//***************************************************************************
+// 
+//***************************************************************************
+
+CreateScalarizedRef::CreateScalarizedRef() 
+{
+}
+
+CreateScalarizedRef::~CreateScalarizedRef() 
+{
+}
+
+ScalarizedRef*
+CreateScalarizedRef::operator()(const PU_Info* pu, const WN* wn, 
+				const char* hstr)
+{ 
+  return new ScalarizedRef(); 
 }
 
 
