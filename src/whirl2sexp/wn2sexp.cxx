@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.5 2004/10/06 22:10:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.6 2004/12/23 16:28:07 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -26,6 +26,8 @@
 
 #include "wn2sexp.i"
 #include "wn2sexp.h"
+
+#include <lib/support/SexpTags.h>
 
 //************************** Forward Declarations ***************************
 
@@ -91,7 +93,7 @@ operator<<(std::ostream& os, const GenSexpSymInfo_& x)
   UINT lvl = (UINT)ST_IDX_level(st_idx);
   UINT idx = (UINT)ST_IDX_index(st_idx);
 
-  sos << BegList << Atom("st") << Atom(lvl) << Atom(idx) << EndList;
+  sos << BegList << Atom(SexpTags::ST) << Atom(lvl) << Atom(idx) << EndList;
   
   return sos;
 }
@@ -107,7 +109,7 @@ operator<<(std::ostream& os, const GenSexpTyInfo_& x)
   const char* nm = TY_name(ty_idx);
   
   using namespace sexp::IOFlags;
-  sos << BegList << Atom("ty") << Atom(A_DQUOTE, nm) << Atom(ty_idx) 
+  sos << BegList << Atom(SexpTags::TY) << Atom(A_DQUOTE, nm) << Atom(ty_idx)
       << EndList;
   
   return sos;
@@ -156,8 +158,8 @@ operator<<(std::ostream& os, const GenSexpSymRefInfo_& x)
   } 
   
   using namespace sexp::IOFlags;
-  sos << BegList << Atom("st") << Atom(A_DQUOTE, nm) << Atom(lvl) << Atom(idx)
-      << EndList;
+  sos << BegList << Atom(SexpTags::ST) << Atom(A_DQUOTE, nm) 
+      << Atom(lvl) << Atom(idx) << EndList;
   
   return sos;
 }
@@ -183,7 +185,7 @@ operator<<(std::ostream& os, const GenSexpTyUseInfo_& x)
   
   using namespace sexp::IOFlags;
   sos << BegList 
-      << Atom("ty") << Atom(A_DQUOTE, nm) << Atom(idx) << Atom(algn)
+      << Atom(SexpTags::TY) << Atom(A_DQUOTE, nm) << Atom(idx) << Atom(algn)
       << EndList;
   
   return sos;

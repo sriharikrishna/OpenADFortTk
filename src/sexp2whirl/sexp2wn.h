@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.h,v 1.1 2004/12/20 15:17:44 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.h,v 1.2 2004/12/23 16:28:07 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -59,18 +59,31 @@ namespace sexp2whirl {
 
 
 //***************************************************************************
-// Commonly used routines for extracting information from AST S-expressions
+// Commonly used routines for extracting information from S-expressions
 //***************************************************************************
 
 namespace sexp2whirl {
   
-  // GetWNOperator
-  OPERATOR
-  GetWNOperator(sexp_t* sx);
+  ST_IDX 
+  GetWhirlSym(sexp_t* sx);
   
-  // GetWNOpcode
+  TY_IDX
+  GetWhirlTy(sexp_t* sx);
+  
+  OPERATOR
+  GetWhirlOpr(sexp_t* sx);
+  
   OPCODE
-  GetWNOpcode(sexp_t* sx);
+  GetWhirlOpc(sexp_t* sx);
+  
+  ST_IDX
+  GetWhirlSymRef(sexp_t* sx);
+  
+  TY_IDX
+  GetWhirlTyUse(sexp_t* sx);
+  
+  sexp_t*
+  GetBeginFlgList(sexp_t* sx);
   
 }; /* namespace sexp2whirl */
 

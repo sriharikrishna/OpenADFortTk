@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.cxx,v 1.4 2004/12/20 15:18:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.cxx,v 1.5 2004/12/23 16:28:07 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -127,13 +127,51 @@ void
 GenHeader(sexp::ostream& sos)
 {
   using namespace sexp;
-  sos << Comment("WHIRL_IR   ::= (whirl GBL_SYMTAB PU_FOREST)")
-      << Comment("GBL_SYMTAB ::= (gobal_symtab GBL_TAB1..GBL_TABn)")
-      << Comment("PU_FOREST  ::= (pu_forest PU_TREE*) ;; list of PU_TREEs")
+
+  sos << Comment("*** Summary ***")
+      << Comment("WHIRL      ::= (whirl GBL_SYMTAB PU_FOREST)")
+      << Comment("GBL_SYMTAB ::= (gbl_symtab GBL_TAB1..GBL_TABn)")
+      << Comment("PU_FOREST  ::= (pu_forest PU_TREE*) !! list of PU_TREEs")
       << Comment("PU_TREE    ::= (pu_tree PU PU_TREE*) | NULL")
       << Comment("PU         ::= (pu PU_SYM PU_SYMTAB WN_AST)")
       << Comment("PU_SYMTAB  ::= (pu_symtab PU_TAB1..PU_TABn)")
-      << Comment("WN_AST     ::= (WN_OPR WN_ATTRS WN_AST*) | NULL")
+      << Comment("WN_AST     ::= (WN_OPR WN_ATTRS WN_AST*) | NULL");
+
+  sos << Comment("");
+
+  sos << Comment("*** Symbol Table Details ***")
+      << Comment("GBL_SYMTAB ::= (gbl_symtab FILE_INFO ST_TAB PU_TAB")
+      << Comment("                  TY_TAB FLD_TAB TYLIST_TAB ARB_TAB")
+      << Comment("                  BLK_TAB TCON_TAB INITO_TAB ST_ATTR_TAB")
+      << Comment("                  STR_TAB)")
+      << Comment("PU_SYMTAB  ::= (pu_symtab ST_TAB INITO_TAB ST_ATTR_TAB")
+      << Comment("                  PREG_TAB LABEL_TAB")
+      << Comment("")
+      << Comment("FILE_INFO   ::= (file_info ...)")
+      << Comment("ST_TAB      ::= (st_tab ST_TAB_NTRY*) !! also a PU_TAB")
+      << Comment("PU_TAB      ::= (pu_tab ...)")
+      << Comment("TY_TAB      ::= (ty_tab ...)")
+      << Comment("FLD_TAB     ::= (fld_tab ...)")
+      << Comment("TYLIST_TAB  ::= (tylist_tab ...)")
+      << Comment("ARB_TAB     ::= (arb_tab ...)")
+      << Comment("BLK_TAB     ::= (blk_tab ...)")
+      << Comment("TCON_TAB    ::= (tcon_tab ...)")
+      << Comment("INITO_TAB   ::= (inito_tab ...)   !! also a PU_TAB")
+      << Comment("ST_ATTR_TAB ::= (st_attr_tab ...) !! also a PU_TAB")
+      << Comment("STR_TAB     ::= (str_tab ...)")
+      << Comment("PREG_TAB    ::= (preg_tab ...)    !! PU_TAB")
+      << Comment("LABEL_TAB   ::= (label_tab ...)   !! PU_TAB")
+      << Comment("")
+      << Comment("ST_TAB_NTRY ::= (IDX SYM_CLASS STORAGE_CLASS EXPORT_CLASS NAME_IDX/TCON TYPE/PU/BLK BASE_IDX OFFSET (FLG FLAGS FLAGS_EXT) ST_IDX)")
+      << Comment("")
+      << Comment("ST  ::= (st HSTR SCOPE_IDX IDX)")
+      << Comment("TY  ::= (ty HSTR IDX)")
+      << Comment("")
+      << Comment("HSTR (helper string) is a (possibly empty) quoted string.");
+  
+  sos << Comment("");
+  
+  sos << Comment("*** AST Details ***")
       << Comment("WN_OPR     ::= operator rtype dtype")
       << Comment("WN_ATTRS   ::= ((attr1 ...) (attr2 ...) (attr3 ...) ...)");
 }

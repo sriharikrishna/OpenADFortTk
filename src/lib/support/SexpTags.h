@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SexpTags.h,v 1.1 2004/12/20 15:17:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SexpTags.h,v 1.2 2004/12/23 16:28:07 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -50,6 +50,10 @@ namespace SexpTags {
   extern const char* STR_TAB;
   extern const char* PREG_TAB;
   extern const char* LABEL_TAB;
+
+  extern const char* ST;
+  extern const char* TY;
+  extern const char* FLG;
 
 };
 

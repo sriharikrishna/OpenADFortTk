@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.1 2004/12/20 15:17:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.2 2004/12/23 16:28:07 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -31,13 +31,16 @@
 #include "sexp2wn.i"
 #include "sexp2wn.h"
 
+#include <lib/support/SexpTags.h>
+#include <lib/support/sexputil.h>
+
 //************************** Forward Declarations ***************************
 
 using namespace sexp2whirl;
 
 
 //***************************************************************************
-// Translate any WN
+// Translate any S-expression AST node
 //***************************************************************************
 
 // TranslateWN: see header. 
@@ -52,7 +55,7 @@ sexp2whirl::TranslateWN(sexp_t* sx)
     return NULL; 
   }
   
-  OPERATOR opr = GetWNOperator(sx);
+  OPERATOR opr = GetWhirlOpr(sx);
   FORTTK_DEVMSG(3, "Translating " << OPERATOR_name(opr));
   
   // Dispatch to the appropriate handler for this construct.
@@ -82,118 +85,124 @@ sexp2whirl::TranslateWNChildren(sexp_t* sx)
 
 
 //***************************************************************************
-// S-expressions sexp::ostream operators
+// Commonly used routines for extracting information from S-expressions
 //***************************************************************************
 
-#if 0
-
-// Cf. GenSexpSym
-sexp::ostream&
-operator<<(std::ostream& os, const GenSexpSymInfo_& x)
+// GetWhirlSym
+ST_IDX 
+sexp2whirl::GetWhirlSym(sexp_t* sx)
 {
-  sexp::ostream& sos = dynamic_cast<sexp::ostream&>(os);
-
-  ST_IDX st_idx = x.val;
-  UINT lvl = (UINT)ST_IDX_level(st_idx);
-  UINT idx = (UINT)ST_IDX_index(st_idx);
-
-  sos << BegList << Atom("st") << Atom(lvl) << Atom(idx) << EndList;
+  using namespace sexp;
   
-  return sos;
+  // Sanity check
+  FORTTK_ASSERT(is_list(sx), FORTTK_UNEXPECTED_INPUT);  
+  
+  sexp_t* tag_sx = get_elem0(sx);
+  const char* tagstr = get_value(tag_sx);
+  FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::ST) == 0,
+		FORTTK_UNEXPECTED_INPUT);
+  
+  // Convert st_idx
+  sexp_t* lvl_st = get_elem1(sx);
+  sexp_t* idx_st = get_elem2(sx);
+  SYMTAB_IDX lvl = (SYMTAB_IDX)get_value_ui32(lvl_st);
+  UINT32 idx = get_value_ui32(idx_st);
+  ST_IDX st_idx = make_ST_IDX(idx, lvl);  
+  return st_idx;
 }
 
 
-// Cf. GenSexpTy
-sexp::ostream&
-operator<<(std::ostream& os, const GenSexpTyInfo_& x)
+// GetWhirlTy
+TY_IDX
+sexp2whirl::GetWhirlTy(sexp_t* sx)
 {
-  sexp::ostream& sos = dynamic_cast<sexp::ostream&>(os);
-
-  TY_IDX ty_idx = x.val;
-  const char* nm = TY_name(ty_idx);
+  using namespace sexp;
   
-  using namespace sexp::IOFlags;
-  sos << BegList << Atom("ty") << Atom(A_DQUOTE, nm) << Atom(ty_idx) 
-      << EndList;
+  // Sanity check
+  FORTTK_ASSERT(is_list(sx), FORTTK_UNEXPECTED_INPUT);  
   
-  return sos;
+  sexp_t* tag_sx = get_elem0(sx);
+  const char* tagstr = get_value(tag_sx);
+  FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::TY) == 0,
+		FORTTK_UNEXPECTED_INPUT);
+  
+  // Convert ty_idx
+  sexp_t* ty_idx_sx = get_elem2(sx);
+  TY_IDX ty_idx = get_value_ui32(ty_idx_sx);
+  return ty_idx;
 }
-#endif
 
 
-
-// GetWNOperator
+// GetWhirlOpr
 OPERATOR
-sexp2whirl::GetWNOperator(sexp_t* sx)
+sexp2whirl::GetWhirlOpr(sexp_t* sx)
 {
   return OPR_FUNC_ENTRY; // FIXME
 }
 
 
-// GetWNOpcode
+// GetWhirlOpcode
 OPCODE
-sexp2whirl::GetWNOpcode(sexp_t* sx)
+sexp2whirl::GetWhirlOpc(sexp_t* sx)
 {
   return OPC_FUNC_ENTRY; // FIXME
 }
 
 
-#if 0
-// Cf. GenSexpSymRef
-sexp::ostream&
-operator<<(std::ostream& os, const GenSexpSymRefInfo_& x)
+// GetWhirlSymRef
+ST_IDX
+sexp2whirl::GetWhirlSymRef(sexp_t* sx)
 {
-  sexp::ostream& sos = dynamic_cast<sexp::ostream&>(os);
+  using namespace sexp;
 
-  ST_IDX st_idx = x.val;
-  ST* st = (st_idx != 0) ? &St_Table[st_idx] : NULL;
-
-  const char* nm = NULL;
-  UINT lvl = 0;
-  UINT idx = 0;
-  if (st) {
-    nm = ST_name(st);
-    lvl = (UINT)ST_level(st);
-    idx = (UINT)ST_index(st);
-  } 
+  // Sanity check
+  FORTTK_ASSERT(is_list(sx), FORTTK_UNEXPECTED_INPUT);  
   
-  using namespace sexp::IOFlags;
-  sos << BegList << Atom("st") << Atom(A_DQUOTE, nm) << Atom(lvl) << Atom(idx)
-      << EndList;
+  sexp_t* tag_sx = get_elem0(sx);
+  const char* tagstr = get_value(tag_sx);
+  FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::ST) == 0,
+		FORTTK_UNEXPECTED_INPUT);
   
-  return sos;
+  // Convert st_idx
+  sexp_t* lvl_st = get_elem2(sx);
+  sexp_t* idx_st = get_elem3(sx);
+  SYMTAB_IDX lvl = (SYMTAB_IDX)get_value_ui32(lvl_st);
+  UINT32 idx = get_value_ui32(idx_st);
+  ST_IDX st_idx = make_ST_IDX(idx, lvl);  
+  return st_idx;
 }
 
 
-// Cf. GenSexpTyUse
-sexp::ostream&
-operator<<(std::ostream& os, const GenSexpTyUseInfo_& x)
+// GetWhirlTyUse
+TY_IDX
+sexp2whirl::GetWhirlTyUse(sexp_t* sx)
 {
-  sexp::ostream& sos = dynamic_cast<sexp::ostream&>(os);
-
-  TY_IDX ty_idx = x.val;
-  TY* ty = (ty_idx != 0) ? &Ty_Table[ty_idx] : NULL;
-  
-  const char* nm = NULL;
-  UINT idx = 0;
-  UINT algn = 0;
-  if (ty) {
-    nm = TY_name(ty_idx);
-    idx = TY_id(ty_idx);
-    algn = TY_align(ty_idx);
-  } 
-  
-  using namespace sexp::IOFlags;
-  sos << BegList 
-      << Atom("ty") << Atom(A_DQUOTE, nm) << Atom(idx) << Atom(algn)
-      << EndList;
-  
-  return sos;
+  return 0;
 }
 
 
-// Cf. GenBeginFlgList
-#endif
+// GetBeginFlgList
+sexp_t*
+sexp2whirl::GetBeginFlgList(sexp_t* sx)
+{
+  using namespace sexp;
+  
+  // Sanity check
+  FORTTK_ASSERT(is_list(sx), FORTTK_UNEXPECTED_INPUT);  
+  
+  sexp_t* tag_sx = get_elem0(sx);
+  const char* tagstr = get_value(tag_sx);
+  FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::FLG) == 0,
+		FORTTK_UNEXPECTED_INPUT);
+
+  // Get the first flag
+  sexp_t* flg1_sx = get_elem1(sx);
+  FORTTK_ASSERT(flg1_sx, FORTTK_UNEXPECTED_INPUT);
+  
+  return flg1_sx;
+}
+
+
 
 //***************************************************************************
 // Structured Control Flow Statements: translation of these is
@@ -487,7 +496,7 @@ WN*
 sexp2whirl::xlate_unknown(sexp_t* sx)
 {
   // Warn about opcodes we cannot translate, but keep translating.
-  OPERATOR opr = GetWNOperator(sx);
+  OPERATOR opr = GetWhirlOpr(sx);
   
   FORTTK_DEVMSG(0, FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
   return NULL;

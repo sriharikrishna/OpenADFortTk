@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.5 2004/12/20 15:18:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.6 2004/12/23 16:28:07 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -42,7 +42,7 @@ whirl2sexp::TranslateGlobalSymbolTables(sexp::ostream& sos, int flags)
 {
   // There are GLOBAL_SYMTAB_TABLES [13] number of global tables. 
   //   FILE_INFO     (File_info)
-  //   SYMBOL_TABLE  (St_Table)
+  //   ST_TAB        (St_Table)
   //   PU_TAB        (Pu_Table)
   //   TYPE_TABLE    (Ty_Table)
   // -   FLD_TAB     (Fld_Table)
@@ -60,7 +60,7 @@ whirl2sexp::TranslateGlobalSymbolTables(sexp::ostream& sos, int flags)
 
   xlate_FILE_INFO(sos);
   sos << EndLine;
-
+  
   xlate_ST_TAB(sos, GLOBAL_SYMTAB);
   sos << EndLine;
   
@@ -104,9 +104,9 @@ whirl2sexp::TranslateLocalSymbolTables(sexp::ostream& sos, SYMTAB_IDX stab_lvl,
 				       int flags)
 {
   // There are LOCAL_SYMTAB_TABLES [5] number of global tables. 
-  //   ST
-  //   INITO
-  //   ST_ATTR
+  //   ST_TAB
+  //   INITO_TAB
+  //   ST_ATTR_TAB
   //   PREG_TABLE  (Preg_Table)
   //   LABEL_TABLE (Label_Table)
 
@@ -292,24 +292,24 @@ whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, ST* st)
   
   sos << BegList << Atom(idx);
   
-  // sym_class
+  // sym_class, storage_class, export_class
   ST_CLASS stclass = ST_class(st);
   const char* stclass_nm = Class_Name(stclass);
   sos << Atom(stclass_nm);
+  
+  ST_SCLASS stsclass = ST_sclass(st);
+  const char* stsclass_nm = Sclass_Name(stsclass);
+  sos << Atom(stsclass_nm);
+  
+  ST_EXPORT stexport = ST_export(st);
+  const char* stexport_nm = Export_Name(stexport);
+  sos << Atom(stexport_nm);
   
   // name_idx/tcon
   STR_IDX nmidx = ST_name_idx(st); // or TCON_IDX  
   const char* nm = (stclass != CLASS_CONST) ? ST_name(st) : NULL;
   sos << BegList << Atom(A_DQUOTE, nm) << Atom(nmidx) << EndList;
-  
-  // storage_class, export class
-  ST_SCLASS stsclass = ST_sclass(st);
-  ST_EXPORT stexport = ST_export(st);
-  const char* stsclass_nm = Sclass_Name(stsclass);
-  const char* stexport_nm = Export_Name(stexport);
-  sos << BegList << Atom("xclass") 
-      << Atom(stsclass_nm) << Atom(stexport_nm) << EndList;
-  
+    
   // type/pu/blk
   if (stclass == CLASS_FUNC) {
     PU_IDX stpu = ST_pu(st);
@@ -344,16 +344,29 @@ void
 whirl2sexp::xlate_SYMTAB_entry(sexp::ostream& sos, UINT32 idx, PU* pu)
 {
   sos << BegList << Atom(idx);
-
+  
+  // prototype
   TY_IDX ty_idx = PU_prototype(*pu);
+  sos << GenSexpTy(ty_idx);
+  
+  // lexical_level
   UINT lvl = (UINT)PU_lexical_level(*pu);
+  sos << Atom(lvl);
+  
+  // gp_group
   UINT gp = (UINT)PU_gp_group(*pu);
+  sos << Atom(gp);
+  
+  // src_lang
   UINT64 srclang = PU_src_lang(*pu);
+  sos << Atom(srclang);
+  
+  // target_idx
   TARGET_INFO_IDX targidx = PU_target_idx(*pu);
+  sos << Atom(targidx);
 
-  sos << GenSexpTy(ty_idx) 
-      << Atom(lvl) << Atom(gp) << Atom(srclang) << Atom(targidx) 
-      << GenBeginFlgList(pu->flags) << EndList;
+  // flags
+  sos << GenBeginFlgList(pu->flags) << EndList;
   
   sos << EndList;
 }

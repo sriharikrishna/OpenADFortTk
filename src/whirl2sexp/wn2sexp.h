@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.h,v 1.3 2004/12/08 22:10:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.h,v 1.4 2004/12/23 16:28:07 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -29,7 +29,9 @@
 //*************************** User Include Files ****************************
 
 #include "whirl2sexp.i"
+
 #include <lib/support/sexpostream.h>
+#include <lib/support/SexpTags.h>
 
 //************************** Forward Declarations ***************************
 
@@ -185,7 +187,7 @@ operator<<(std::ostream& os, const GenBeginFlgListInfo_<T>& x)
   
   using namespace sexp;
   using namespace sexp::IOFlags;
-  sos << BegList << Atom("flg") << Atom(A_HEX, val);
+  sos << BegList << Atom(SexpTags::FLG) << Atom(A_HEX, val);
   // Do not end the list!
   
   return sos;

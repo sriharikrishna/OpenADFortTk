@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.h,v 1.1 2004/12/20 15:17:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.h,v 1.2 2004/12/23 16:28:07 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -115,12 +115,17 @@ namespace sexp2whirl {
 
 namespace sexp2whirl {
   
+  ST*
+  xlate_ST_TAB_entry(sexp_t* sx);
+
+#if 0
   void
   xlate_SYMTAB_entry(sexp_t* sx, UINT32 idx, ST* st);
+#endif  
   
-  void
-  xlate_SYMTAB_entry(sexp_t* sx, UINT32 idx, PU* pu);
-  
+  PU*
+  xlate_PU_TAB_entry(sexp_t* sx);
+
   void
   xlate_SYMTAB_entry(sexp_t* sx, UINT32 idx, TY* ty);
 
