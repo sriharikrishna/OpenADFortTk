@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.12 2004/04/12 13:59:48 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.13 2004/04/14 14:52:32 eraxxon Exp $
 # -*-makefile-*-
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -18,14 +18,32 @@ include $(WHIRL2XAIF)/test/Makeinclude.config
 .SUFFIXES: .f90
 
 F90_EXCEPTIONS =
-F90_EXCEPTIONS1 = \
+
+F90b_EXCEPTIONS = \
 	arrays1.f90 arrays2.f90 arrays_dimensions1.f90 \
-	controlflow_loop1c.f90 controlflow_loop2.f90 \
-	  controlflow_loop4.f90 controlflow_switch1.f90 \
-	functions1.f90 functions2.f90 functions_nested2.f90 \
-	  functions_nested3.f90 intrinsics1.f90 \
-	pragma1.f90 scoping1.f90 \
+	controlflow_loop1c.f90 controlflow_loop4.f90 \
+	controlflow_switch1.f90 \
+	functions1.f90 functions2.f90 \
+	functions_nested2.f90 functions_nested3.f90 intrinsics1.f90 \
+	pragma1.f90 \
 	types_derived1.f90 types_derived2.f90
+
+F90b_STRUCTURED = \
+	constants1.f90 \
+	controlflow1.f90 \
+	controlflow_if1.f90 controlflow_if2.f90 \
+	controlflow_loop1a.f90 controlflow_loop1b.f90 \
+	functions_nested1.f90 \
+	inline1.f90 inline2.f90 inline3.f90 \
+	scalars1.f90 scalars2.f90 scalars3.f90 scalars4.f90 scalars5.f90 \
+	types_kind1.f90
+
+F90b_UNSTRUCTURED = \
+	controlflow_if3.f90 \
+	controlflow_loop2.f90 controlflow_loop3.f90 \
+	scoping1.f90 
+
+#TODO: 
 
 VPATH = .
 
@@ -69,10 +87,16 @@ tests_run:
 
 tests_pipeline:
 	@echo "****** PIPELINE TESTS ******"
-	@echo "*** exceptions: $(F90_EXCEPTIONS1) ***"
-	@for f in $(F90_MASTERS1) ; do \
+	@echo "*** exceptions: $(F90b_EXCEPTIONS) ***"
+	@echo "--- structured control flow ---"
+	@for f in $(F90b_STRUCTURED) ; do \
 	  printf "  " ; \
-	  $(OPENAD) -v --bb $${f} ; \
+	  $(OPENAD) -v --bb --x2w-structured $${f} ; \
+	done
+	@echo "--- unstructured control flow ---"
+	@for f in $(F90b_UNSTRUCTURED) ; do \
+	  printf "  " ; \
+	  $(OPENAD) -v --bb --x2w-unstructured $${f} ; \
 	done
 
 tests_post:
