@@ -7,27 +7,27 @@
 subroutine d_head(x, d_x, y, d_y) 
   double precision, intent(in) :: x, d_x
   double precision, intent(inout) :: y, d_y
-  double precision t1, t2, xb_aux_1__, xb_aux_2__ 
-  double precision xb_aux_3__, xb_aux_4__, xb_aux_5__
+  double precision t1, t2, xb_aux_1, xb_aux_2 
+  double precision xb_aux_3, xb_aux_4, xb_aux_5
   integer i
 
   i=1
-  xb_aux_1__=sin(x)
-  xb_aux_2__=cos(x)
-  t1=xb_aux_1__*y
+  xb_aux_1=sin(x)
+  xb_aux_2=cos(x)
+  t1=xb_aux_1*y
   t2=t1*x+i
   y=t1+t2
 
-  xb_aux_3__=x+1
-  xb_aux_4__=t1+xb_aux_2__*y*xb_aux_3__
-  xb_aux_5__=xb_aux_1__*xb_aux_3__
+  xb_aux_3=x+1
+  xb_aux_4=t1+xb_aux_2*y*xb_aux_3
+  xb_aux_5=xb_aux_1*xb_aux_3
 
-  d_y = d_x*xb_aux_4__+d_y*xb_aux_5__
+  d_y = d_x*xb_aux_4+d_y*xb_aux_5
 
 end subroutine
 
 
-program simple2
+program deriv
 
   double precision :: x, d_x, y, d_y
   x = 45
