@@ -1,5 +1,5 @@
 # -*-Mode: sh;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.14 2004/02/19 22:12:51 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.15 2004/03/03 16:30:30 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
@@ -127,6 +127,7 @@ fi
 alias xboostread="${xbase}/system/test/t -c ${ii_xaif}"
 alias xboost_l="${xbase}/algorithms/Linearization/test/t -c ${ii_xaif}"
 alias xboost_bb="${xbase}/algorithms/BasicBlockPreaccumulation/test/t -c ${ii_xaif}"
+alias xboost_bb="${xbase}/algorithms/BasicBlockPreaccumulationReverse/test/t -c ${ii_xaif}"
 
 unset xbase
 unset ii_xaif
