@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.55 2004/05/07 20:04:33 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.56 2004/05/10 13:57:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1175,17 +1175,14 @@ xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     ST* parm_st = params_st[parm]; //WN_st(parm_wn);
     
     if (!ST_is_return_var(parm_st)) {
-      // FIXME: abstract (SymbolReference)
       ST_TAB* sttab = Scope_tab[ST_level(parm_st)].st_tab;
       SymTabId scopeid = ctxt.FindSymTabId(sttab);
-      
       xos << BegElem("xaif:ArgumentSymbolReference")
 	  << Attr("position", position) 
 	  << Attr("scope_id", scopeid) << AttrSymId(parm_st)
 	  << Attr("intent", xlate_intent(parm_wn))
-	//<< WhirlIdAnnot(ctxt.FindWNId(parm_wn))
+	  << WhirlIdAnnot(ctxt.FindWNId(parm_wn))
 	  << EndElem;
-      
       position++;
     }
     
@@ -1227,18 +1224,17 @@ GetParamSymHandleSet(WN* wn_pu)
 static const char*
 xlate_intent(WN* parm)
 {
-  if ( WN_parm_flag(parm) == 0 || WN_Parm_By_Reference(parm) 
-       || WN_Parm_Dummy(parm)) {
-    return "inout"; 
-  }
-  else if (WN_Parm_By_Value(parm)) {
+  // Note: WN_parm flags are typically not set 
+  // WN_parm_flag(parm), WN_Parm_Dummy(parm)
+  ST* st = WN_st(parm);
+  if (ST_is_intent_in_argument(st) || WN_Parm_In(parm)) {
     return "in";
   } 
-  else if (WN_Parm_Out(parm)) {
+  else if (ST_is_intent_out_argument(st) || WN_Parm_Out(parm)) {
     return "out";
   }
-  else {
-    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Unknown intent type."));
+  else { // WN_Parm_By_Reference(parm)
+    return "inout"; 
   }
 }
 
