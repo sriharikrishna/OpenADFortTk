@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/main.cxx,v 1.1 2004/12/15 17:54:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/main.cxx,v 1.2 2004/12/15 21:00:43 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -15,11 +15,6 @@
 //***************************************************************************
 
 //************************** System Include Files ***************************
-
-#include <iostream>
-using std::endl;
-using std::cout;
-#include <string>
 
 #include <fcntl.h> // for use in ReadWhirlSexp()
 #include <errno.h> // for use in ReadWhirlSexp()
@@ -39,6 +34,7 @@ using std::cout;
 //*************************** User Include Files ****************************
 
 #include "Args.h"
+#include "sexp2whirl.h"
 
 #include <lib/support/Exception.h>
 #include <lib/support/WhirlIO.h>
@@ -50,16 +46,6 @@ real_main(int argc, char **argv);
 
 static sexp_t*
 ReadWhirlSexp(const char* filename);
-
-static void
-DumpSexp(std::ostream& os, sexp_t* sexp); // FIXME
-
-static void 
-OpenFile(std::ofstream& fs, const char* filename);
-
-static void 
-CloseFile(std::ofstream& fs);
-
 
 //***************************************************************************
 
@@ -126,11 +112,14 @@ real_main(int argc, char **argv)
   
   sexp_t* ir_sexp = ReadWhirlSexp(args.sexpFileNm.c_str());
   
-  DumpSexp(std::cout, ir_sexp);
+  sexp2whirl::DumpIR(ir_sexp, sexp2whirl::XlateFlags::NONE);
   
   //PU_Info* ir_whirl = sexp2whirl::TranslateIR(*os, ir_sexp);  
   //WriteIR(args.whirlFileNm.c_str(), ir_whirl);
   
+  // destroy_sexp(sx);
+  // sexp_cleanup();
+
   // -------------------------------------------------------
   // 4. Finalization
   // -------------------------------------------------------
@@ -167,17 +156,4 @@ ReadWhirlSexp(const char* filename)
   return sexp;
 }
 
-// destroy_sexp(sx);
-// sexp_cleanup();
-
-static void
-DumpSexp(std::ostream& os, sexp_t* sexp)
-{
-  const int sz = 1 << 20;
-  char* buf = new char[sz];
-  
-  int rval = print_sexp(buf, sz, sexp);
-  os << buf << std::endl;
-  delete[] buf;
-}
 
