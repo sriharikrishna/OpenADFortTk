@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.3 2004/06/02 18:51:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.4 2004/06/02 19:56:38 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -205,32 +205,12 @@ WNToScalarizedRefTab::WNToScalarizedRefTab()
 WNToScalarizedRefTab::~WNToScalarizedRefTab()
 {
   // Clear table
-  for (WNToScalarizedRefTabIterator it(*this); it.IsValid(); ++it) {
-    delete it.CurrentTarg(); // ScalarizedRef*
+  for (iterator it = begin(); it != end(); ++it) {
+    delete (*it).second; // ScalarizedRef*
   }
-  wnToSymMap.clear();
+  clear();
 }
 
-ScalarizedRef*
-WNToScalarizedRefTab::Find(const WN* wn_) const
-{
-  WN* wn = const_cast<WN*>(wn_); // WNToSymMap uses non const types
-
-  WNToSymMapItC it = wnToSymMap.find(wn);
-  ScalarizedRef* sym = (it == wnToSymMap.end()) ? NULL : (*it).second;
-  return sym;
-}
-
-bool
-WNToScalarizedRefTab::Insert(const WN* wn_, const ScalarizedRef* sym_)
-{
-  WN* wn = const_cast<WN*>(wn_); // WNToSymMap uses non const types
-  ScalarizedRef* sym = const_cast<ScalarizedRef*>(sym_);
-
-  WNToSymMapVal val = WNToSymMapVal(wn, sym);
-  pair<WNToSymMapIt, bool> p = wnToSymMap.insert(val);
-  return p.second;
-}
 
 void
 WNToScalarizedRefTab::Dump(std::ostream& o, const char* pre) const
@@ -239,11 +219,11 @@ WNToScalarizedRefTab::Dump(std::ostream& o, const char* pre) const
   std::string p1 = p + "  ";
 
   o << p << "{ ================== Begin NonScalar SymTab Dump ("
-    << GetSize() << " Entries):\n";
+    << size() << " Entries):\n";
   
-  for (WNToScalarizedRefTabIterator it(*this); it.IsValid(); ++it) {
-    WN* wn = it.CurrentSrc();
-    ScalarizedRef* sym = it.CurrentTarg();
+  for (const_iterator it = begin(); it != end(); ++it) {
+    WN* wn = (*it).first;
+    ScalarizedRef* sym = (*it).second;
     o << p1 << wn << " --> ";
     sym->Dump(o);
     o << std::endl;
@@ -285,16 +265,3 @@ ScalarizedRef::DDump() const
   Dump(std::cerr);
 }
 
-//***************************************************************************
-// WNToScalarizedRefTabIterator
-//***************************************************************************
-
-WNToScalarizedRefTabIterator::WNToScalarizedRefTabIterator(const WNToScalarizedRefTab& x)
-  : symtab(x)
-{
-  Reset();
-}
-
-WNToScalarizedRefTabIterator::~WNToScalarizedRefTabIterator()
-{
-}

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.3 2004/06/02 18:51:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.4 2004/06/02 19:56:38 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -57,7 +57,7 @@ WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2);
 
 
 //***************************************************************************
-// WNToScalarizedRefTabMap
+// PUToScalarizedRefTabMap
 //***************************************************************************
 
 
@@ -68,6 +68,12 @@ WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2);
 
 class ScalarizedRef;
 
+namespace ScalarizedRefTab_hidden {
+  typedef std::map<WN*, ScalarizedRef*> WNToScalarizedRefMap;
+  typedef std::map<ScalarizedRef*, WN*> ScalarizedRefToWNMap;
+}; /* namespace ScalarizedRefTab_hidden */
+
+
 // 'WNToScalarizedRefTab' is a special symbol table mapping certain
 // non-scalar WHIRL references to dummy scalar variables
 
@@ -75,21 +81,35 @@ class ScalarizedRef;
 // WNToWNToScalarizedRefTab
 // ScalarizedRefToWNTab
 
-class WNToScalarizedRefTab {
+class WNToScalarizedRefTab 
+  : public ScalarizedRefTab_hidden::WNToScalarizedRefMap {
+
 public:
   // Constructor allocates an empty data structure
   WNToScalarizedRefTab();
   virtual ~WNToScalarizedRefTab();
   
-  // Find: find 
-  ScalarizedRef* Find(const WN* wn) const;
+  // Find:
+  ScalarizedRef* 
+  Find(const WN* wn_) const
+  {
+    WN* wn = const_cast<WN*>(wn_); // WNToSymMap uses non const types
+    const_iterator it = find(wn);
+    ScalarizedRef* sym = (it == end()) ? NULL : (*it).second;
+    return sym;
+  }
   
   // Insert: insert <'wn','sym'> pair in the map and return true; if
   // 'wn' already exists, the operation fails and returns false.
-  bool Insert(const WN* wn, const ScalarizedRef* sym);
-  
-  // Return number of entries
-  unsigned int GetSize() const { return wnToSymMap.size(); }
+  bool 
+  Insert(const WN* wn_, const ScalarizedRef* sym_) {
+    WN* wn = const_cast<WN*>(wn_); // WNToSymMap uses non const types
+    ScalarizedRef* sym = const_cast<ScalarizedRef*>(sym_);
+    
+    pair<iterator, bool> p = insert(value_type(wn, sym));
+    return p.second;
+  }
+
 
   // Return a globally unique name
   std::string& GetName() { return name; }
@@ -101,28 +121,20 @@ public:
   virtual void Dump(std::ostream& o = std::cerr, const char* pre = "") const;
   virtual void DDump() const;
   
-  friend class WNToScalarizedRefTabIterator;
-  
 protected:
   // Should not be used
   WNToScalarizedRefTab(const WNToScalarizedRefTab& x) { }
   WNToScalarizedRefTab& operator=(const WNToScalarizedRefTab& x) { return *this; }
 
 private: 
-  // A map of WN* to ScalarizedRef*.
-  typedef std::map<WN*, ScalarizedRef*> WNToSymMap;
-  typedef WNToSymMap::iterator         WNToSymMapIt;
-  typedef WNToSymMap::const_iterator   WNToSymMapItC;
-  typedef WNToSymMap::value_type       WNToSymMapVal;
-
-private: 
-  WNToSymMap wnToSymMap; // owns all ScalarizedRef*
-
   std::string name; // FIXME: 
   UINT id;
 
   static UINT nextId; // for globally uniqe id numbers
 };
+
+
+
 
 //***************************************************************************
 // ScalarizedRef
@@ -152,51 +164,6 @@ private:
   UINT id; 
 
   static UINT nextId; // for globally uniqe id numbers
-};
-
-
-//***************************************************************************
-// WNToScalarizedRefTabIterator
-//***************************************************************************
-
-// 'WNToScalarizedRefTabIterator': iterator for symbols in a 'WNToScalarizedRefTab'
-class WNToScalarizedRefTabIterator {
-public:   
-  WNToScalarizedRefTabIterator(const WNToScalarizedRefTab& x);
-  ~WNToScalarizedRefTabIterator();
-
-  // Returns the current WN* or NULL
-  WN* CurrentSrc() const {
-    if (it != symtab.wnToSymMap.end()) { return (*it).first; }
-    else { return NULL; }
-  }
-
-  // Returns the current ScalarizedRef*
-  ScalarizedRef* CurrentTarg() const {
-    if (it != symtab.wnToSymMap.end()) { return (*it).second; }
-    else { return NULL; }
-  }
-  
-  void operator++()    { ++it; } // prefix increment
-  void operator++(int) { it++; } // postfix increment
-
-  bool IsValid() const { return it != symtab.wnToSymMap.end(); } 
-  bool IsEmpty() const { return it == symtab.wnToSymMap.end(); }
-
-  // Reset and prepare for iteration again
-  void Reset() { it = symtab.wnToSymMap.begin(); }
-
-private:
-  // Should not be used
-  WNToScalarizedRefTabIterator();
-  WNToScalarizedRefTabIterator(const WNToScalarizedRefTabIterator& x);
-  WNToScalarizedRefTabIterator& operator=(const WNToScalarizedRefTabIterator& x)
-    { return *this; }
-
-protected:
-private:
-  const WNToScalarizedRefTab& symtab;
-  WNToScalarizedRefTab::WNToSymMapItC it;
 };
 
 //***************************************************************************
