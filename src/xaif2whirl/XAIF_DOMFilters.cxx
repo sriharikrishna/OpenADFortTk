@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.1 2003/08/01 16:41:13 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.2 2003/08/08 20:04:36 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -27,11 +27,17 @@
 //************************* Xerces Include Files ****************************
 
 #include <xercesc/dom/DOMNode.hpp>
+#include <xercesc/dom/DOMNodeList.hpp>
+#include <xercesc/dom/DOMElement.hpp>
+#include <xercesc/dom/DOMAttr.hpp>
+#include <xercesc/dom/DOMNamedNodeMap.hpp>
+
 #include <xercesc/util/XMLString.hpp>
 
 //*************************** User Include Files ****************************
 
 #include "XAIF_DOMFilters.h"
+#include "XercesStrX.h"
 
 #include <lib/support/XAIFStrings.h>
 
@@ -39,6 +45,83 @@
 
 using std::cerr;
 using std::endl;
+
+//****************************************************************************
+
+void 
+XercesDumpNode(DOMNode* n, int iter);
+
+void 
+XercesDumpNode(DOMNode* n)
+{
+  XercesDumpNode(n, 0);
+}
+
+void 
+XercesDumpNode(DOMNode* n, int iter)
+{
+  if (!n) { return; }
+
+  // Depending on iteration, start or continue the line
+  const char* prefix = (iter == 0) ? "<" : " ";
+  std::cout << prefix;
+
+  // Depending on node type, print different things
+  if (n->getNodeType() == DOMNode::ATTRIBUTE_NODE) {
+    DOMAttr* attr = dynamic_cast<DOMAttr*>(n);
+    const XMLCh* nm = attr->getName();
+    const XMLCh* val = attr->getValue();
+    std::cout << XercesStrX(nm) << "='" << XercesStrX(val) << "'";
+  } else {
+    const XMLCh* nm = n->getNodeName();
+    std::cout << XercesStrX(nm);
+  }
+
+  // Recur on certain nodes
+  DOMNamedNodeMap* attrs = n->getAttributes();
+  if (attrs) {
+    for (XMLSize_t i = 0; i < attrs->getLength(); ++i) {
+      DOMNode* attr = attrs->item(i);
+      XercesDumpNode(attr, iter + 1);
+    }
+  }
+
+  // End the line, if necessary
+  if (iter == 0) { 
+    std::cout << ">" << endl;
+  }
+}
+
+
+DOMElement*
+GetFirstChildElement(DOMNode* n)
+{
+  DOMNodeList* children = n->getChildNodes();
+  if (children) {
+    for (XMLSize_t i = 0; i < children->getLength(); ++i) {
+      DOMNode* child = children->item(i);
+      if (child->getNodeType() == DOMNode::ELEMENT_NODE) {
+	return dynamic_cast<DOMElement*>(child);
+      }
+    }
+  }
+  return NULL;
+}
+
+DOMElement*
+GetLastChildElement(DOMNode* n)
+{
+  DOMNodeList* children = n->getChildNodes();
+  if (children) {
+    for (int i = ((int)children->getLength() - 1); i >= 0; --i) {
+      DOMNode* child = children->item(i);
+      if (child->getNodeType() == DOMNode::ELEMENT_NODE) {
+	return dynamic_cast<DOMElement*>(child);
+      }
+    }
+  }
+  return NULL;
+}
 
 //****************************************************************************
 
@@ -52,6 +135,7 @@ XAIF_CFGElemFilter::acceptNode(const DOMNode *node) const
   return FILTER_SKIP;
 }
 
+//****************************************************************************
 
 short
 XAIF_BBElemFilter::acceptNode(const DOMNode *node) const
@@ -75,3 +159,36 @@ XAIF_BBElemFilter::IsBB(const DOMNode *node)
 	  || XMLString::equals(name, XAIFStrings.elem_BBPreLoop_x())
 	  || XMLString::equals(name, XAIFStrings.elem_BBPostLoop_x()));
 }
+
+//****************************************************************************
+
+short
+XAIF_BBStmtElemFilter::acceptNode(const DOMNode *node) const
+{
+  if ( (node->getNodeType() == DOMNode::ELEMENT_NODE) && IsStmt(node) ) {
+    return FILTER_ACCEPT;
+  }
+  return FILTER_SKIP;
+}
+
+
+bool 
+XAIF_BBStmtElemFilter::IsStmt(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_Assign_x())
+	  || XMLString::equals(name, XAIFStrings.elem_SubCall_x())
+	  || XMLString::equals(name, XAIFStrings.elem_Nop_x()));
+}
+
+
+bool 
+XAIF_BBStmtElemFilter::IsNop(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_Nop_x()));
+}
+
+
+//****************************************************************************
+

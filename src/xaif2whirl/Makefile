@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/Makefile,v 1.1 2003/08/01 16:41:13 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/Makefile,v 1.2 2003/08/08 20:04:36 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -34,6 +34,8 @@ VPATH = $(SRCS)
 OBJS = \
 	main.o \
 	xaif2whirl.o \
+	\
+	XlationContext.o \
 	\
 	XAIF_SAXHandler.o \
 	XAIF_DOMErrorHandler.o \

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.2 2003/08/05 20:02:29 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.3 2003/08/08 20:04:36 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -170,7 +170,11 @@ real_main(INT argc, char **argv)
   main_DOM(pu_forest, XAIF_filename.c_str()); // FIXME check return
   //ret = main_SAX(xmlFile);
 
-  //WriteIR(file.c_str(), pu_forest); 
+
+  std::string new_WHIRL_file = WHIRL_filename;
+  new_WHIRL_file += ".new.B";
+  WriteIR(new_WHIRL_file.c_str(), pu_forest);
+  //FreeIR(pu_forest);
   
   // -------------------------------------------------------
   // 5. Finalization
@@ -264,6 +268,20 @@ ReadXAIF_DOM(const char* xaiffilenm)
   return parser;
 }
 
+
+// Print the DOM IR
+#if 0
+static void
+PrintIR_DOM(DOMDocument* doc)
+{
+  DOMNodeIterator* it = 
+    doc->createNodeIterator(doc, DOMNodeFilter::SHOW_ELEMENT, NULL, true);
+  for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
+    cout << XercesStrX(node->getNodeName()) << endl;
+  }
+  it->release();
+}
+#endif
 
 //****************************************************************************
 

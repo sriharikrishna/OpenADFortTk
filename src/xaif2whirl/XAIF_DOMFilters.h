@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.1 2003/08/01 16:41:13 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.2 2003/08/08 20:04:36 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -32,9 +32,21 @@
 
 //*************************** Forward Declarations ***************************
 
+XERCES_CPP_NAMESPACE_USE
+
 //****************************************************************************
 
-XERCES_CPP_NAMESPACE_USE
+// FIXME: this could be moved to a better place
+void 
+XercesDumpNode(DOMNode* n);
+
+DOMElement*
+GetFirstChildElement(DOMNode* n);
+
+DOMElement*
+GetLastChildElement(DOMNode* n);
+
+//****************************************************************************
 
 class XAIF_CFGElemFilter : public DOMNodeFilter
 {
@@ -69,6 +81,27 @@ public:
   short acceptNode(const DOMNode *node) const;
 
   static bool IsBB(const DOMNode *node);
+
+private:
+};
+
+
+class XAIF_BBStmtElemFilter : public DOMNodeFilter
+{
+public:
+  // -----------------------------------------------------------------------
+  //  Constructors and Destructor
+  // -----------------------------------------------------------------------
+  XAIF_BBStmtElemFilter() { }
+  ~XAIF_BBStmtElemFilter() { }
+  
+  // -----------------------------------------------------------------------
+  //  Implementation of the filter interface
+  // -----------------------------------------------------------------------
+  short acceptNode(const DOMNode *node) const;
+
+  static bool IsStmt(const DOMNode *node);
+  static bool IsNop(const DOMNode *node);
 
 private:
 };
