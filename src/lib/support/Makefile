@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.9 2004/01/29 23:16:05 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.10 2004/02/20 18:57:07 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -41,7 +41,6 @@ OBJS = \
 	\
 	wn_attr.o \
 	stab_attr.o \
-	w2cf_symtab.o \
 	SymTab.o \
 	\
 	xmlostream.o \
