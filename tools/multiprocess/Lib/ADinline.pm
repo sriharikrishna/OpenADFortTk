@@ -31,7 +31,7 @@ sub inline {
     my($inl_next) = 0;
     my($directive_re) = qr/^[^\d\s] \s+ 
                            \$OpenAD\$ \s+ INLINE \s+
-			   (\w+)\((.*)\)/ix;
+			   (\w+) \( (.*) \)/ix;
     my($fn,$info) = ();
 
     return sub {
@@ -40,11 +40,13 @@ sub inline {
 	    $inl_next = 0;
 	    my($scn) = FTscan->new($line);
 	    my($name,$args) = $scn->match(qr/^call $TB (\w+) $TB
-					     \( $TB (.*) $TB \)/ix);
+					     \( $TB (.*) \)/ix);
+	    return ("C!! could not find call stmt for '$fn'\n", $UNCHANGED)
+		unless (defined($name) && defined($args));
 	    $name = lc $name->str();
 	    my(@args) = $args->cbreak();
 	    @args = map {$_->str()} @args;
-	    return ("C!! requested inline of $name has no defn\n",
+	    return ("C!! requested inline of '$name' has no defn\n",
 		    $UNCHANGED,) unless ($inlobj->{$name});
 	    my(@lns) = $inlobj->mksubs($name,[ @args ]);
 	    @lns = map {$_ . "\n"} @lns;
