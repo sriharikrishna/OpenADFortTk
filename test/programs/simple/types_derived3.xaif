@@ -36,8 +36,8 @@
 
     <xaif:Scope vertex_id="2" annotation="{SymTab_Id#2}">
       <xaif:SymbolTable>
-        <xaif:Symbol symbol_id="A_2" kind="variable" type="***" shape="***" annotation="{Sym_Id#2}" active="0"/>
-        <xaif:Symbol symbol_id="B_3" kind="variable" type="***" shape="***" annotation="{Sym_Id#3}" active="0"/>
+        <xaif:Symbol symbol_id="A_2" kind="variable" type="opaque" shape="scalar" annotation="{Sym_Id#2}" active="0"/>
+        <xaif:Symbol symbol_id="B_3" kind="variable" type="opaque" shape="scalar" annotation="{Sym_Id#3}" active="0"/>
         <xaif:Symbol symbol_id="=_4" kind="variable" type="***" shape="***" annotation="{Sym_Id#4}" active="0"/>
       </xaif:SymbolTable>
     </xaif:Scope>
@@ -46,8 +46,8 @@
 
     <xaif:Scope vertex_id="3" annotation="{SymTab_Id#3}">
       <xaif:SymbolTable>
-        <xaif:Symbol symbol_id="A_2" kind="variable" type="***" shape="***" annotation="{Sym_Id#2}" active="0"/>
-        <xaif:Symbol symbol_id="B_3" kind="variable" type="***" shape="***" annotation="{Sym_Id#3}" active="0"/>
+        <xaif:Symbol symbol_id="A_2" kind="variable" type="opaque" shape="scalar" annotation="{Sym_Id#2}" active="0"/>
+        <xaif:Symbol symbol_id="B_3" kind="variable" type="opaque" shape="scalar" annotation="{Sym_Id#3}" active="0"/>
         <xaif:Symbol symbol_id="__slink_sym_temp_0_4" kind="variable" type="integer" shape="scalar" annotation="{Sym_Id#4}" active="0"/>
         <xaif:Symbol symbol_id="scalarizedref0" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#17}" active="1"/>
         <xaif:Symbol symbol_id="scalarizedref2" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#19}" active="1"/>
@@ -61,7 +61,7 @@
     <xaif:Scope vertex_id="4" annotation="{SymTab_Id#4}">
       <xaif:SymbolTable>
         <xaif:Symbol symbol_id="R_1" kind="variable" type="real" shape="scalar" annotation="{Sym_Id#1}" active="1"/>
-        <xaif:Symbol symbol_id="C_3" kind="variable" type="***" shape="***" annotation="{Sym_Id#3}" active="0"/>
+        <xaif:Symbol symbol_id="C_3" kind="variable" type="opaque" shape="scalar" annotation="{Sym_Id#3}" active="0"/>
         <xaif:Symbol symbol_id="scalarizedref4" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#36}" active="1"/>
         <xaif:Symbol symbol_id="scalarizedref5" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#42}" active="1"/>
       </xaif:SymbolTable>
@@ -72,14 +72,14 @@
     <xaif:Scope vertex_id="5" annotation="{SymTab_Id#5}">
       <xaif:SymbolTable>
         <xaif:Symbol symbol_id="C_1" kind="variable" type="real" shape="scalar" annotation="{Sym_Id#1}" active="1"/>
-        <xaif:Symbol symbol_id="C1_3" kind="variable" type="***" shape="***" annotation="{Sym_Id#3}" active="0"/>
-        <xaif:Symbol symbol_id="C2_4" kind="variable" type="***" shape="***" annotation="{Sym_Id#4}" active="0"/>
+        <xaif:Symbol symbol_id="C1_3" kind="variable" type="opaque" shape="scalar" annotation="{Sym_Id#3}" active="0"/>
+        <xaif:Symbol symbol_id="C2_4" kind="variable" type="opaque" shape="scalar" annotation="{Sym_Id#4}" active="0"/>
         <xaif:Symbol symbol_id="D_5" kind="variable" type="real" shape="scalar" annotation="{Sym_Id#5}" active="1"/>
         <xaif:Symbol symbol_id="distancefromorigin__6" kind="subroutine" type="void" annotation="{Sym_Id#6}"/>
         <xaif:Symbol symbol_id="N_7" kind="variable" type="integer" shape="scalar" annotation="{Sym_Id#7}" active="0"/>
         <xaif:Symbol symbol_id="_END_8" kind="subroutine" type="void" annotation="{Sym_Id#8}"/>
-        <xaif:Symbol symbol_id="t__1_9" kind="variable" type="***" shape="***" annotation="{Sym_Id#9}" active="0"/>
-        <xaif:Symbol symbol_id="t__2_10" kind="variable" type="***" shape="***" annotation="{Sym_Id#10}" active="0"/>
+        <xaif:Symbol symbol_id="t__1_9" kind="variable" type="opaque" shape="scalar" annotation="{Sym_Id#9}" active="0"/>
+        <xaif:Symbol symbol_id="t__2_10" kind="variable" type="opaque" shape="scalar" annotation="{Sym_Id#10}" active="0"/>
         <xaif:Symbol symbol_id="scalarizedref6" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#53}" active="1"/>
         <xaif:Symbol symbol_id="scalarizedref7" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#56}" active="1"/>
       </xaif:SymbolTable>

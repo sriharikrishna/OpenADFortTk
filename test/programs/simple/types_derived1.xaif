@@ -43,7 +43,7 @@
     <xaif:Scope vertex_id="3" annotation="{SymTab_Id#3}">
       <xaif:SymbolTable>
         <xaif:Symbol symbol_id="R_1" kind="variable" type="real" shape="scalar" annotation="{Sym_Id#1}" active="1"/>
-        <xaif:Symbol symbol_id="C_3" kind="variable" type="***" shape="***" annotation="{Sym_Id#3}" active="0"/>
+        <xaif:Symbol symbol_id="C_3" kind="variable" type="opaque" shape="scalar" annotation="{Sym_Id#3}" active="0"/>
         <xaif:Symbol symbol_id="scalarizedref0" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#20}" active="1"/>
         <xaif:Symbol symbol_id="scalarizedref1" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#26}" active="1"/>
       </xaif:SymbolTable>
@@ -53,12 +53,12 @@
 
     <xaif:Scope vertex_id="4" annotation="{SymTab_Id#4}">
       <xaif:SymbolTable>
-        <xaif:Symbol symbol_id="C_2" kind="variable" type="***" shape="***" annotation="{Sym_Id#2}" active="0"/>
+        <xaif:Symbol symbol_id="C_2" kind="variable" type="opaque" shape="scalar" annotation="{Sym_Id#2}" active="0"/>
         <xaif:Symbol symbol_id="D_3" kind="variable" type="real" shape="scalar" annotation="{Sym_Id#3}" active="1"/>
         <xaif:Symbol symbol_id="distancefromorigin__4" kind="subroutine" type="void" annotation="{Sym_Id#4}"/>
         <xaif:Symbol symbol_id="N_5" kind="variable" type="integer" shape="scalar" annotation="{Sym_Id#5}" active="0"/>
         <xaif:Symbol symbol_id="_END_6" kind="subroutine" type="void" annotation="{Sym_Id#6}"/>
-        <xaif:Symbol symbol_id="t__1_7" kind="variable" type="***" shape="***" annotation="{Sym_Id#7}" active="0"/>
+        <xaif:Symbol symbol_id="t__1_7" kind="variable" type="opaque" shape="scalar" annotation="{Sym_Id#7}" active="0"/>
         <xaif:Symbol symbol_id="scalarizedref2" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#37}" active="1"/>
         <xaif:Symbol symbol_id="scalarizedref3" kind="variable" type="real" shape="scalar" annotation="{WHIRL_Id#40}" active="1"/>
       </xaif:SymbolTable>

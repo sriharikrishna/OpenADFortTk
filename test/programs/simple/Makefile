@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.19 2004/05/28 15:18:46 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/test/programs/simple/Makefile,v 1.20 2004/06/22 21:49:25 eraxxon Exp $
 # -*-makefile-*-
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -21,16 +21,16 @@ F90_EXCEPTIONS =
 
 F90b_EXCEPTIONS = \
 	arrays1.f90 arrays2.f90 arrays_dimensions1.f90 \
-	controlflow_switch1.f90 \
 	functions1.f90 functions2.f90 \
 	functions_nested2.f90 functions_nested3.f90 intrinsics1.f90 \
 	pragma1.f90 \
-	types_derived1.f90 types_derived2.f90
+	types_derived1.f90 types_derived2.f90 types_derived3.f90
 
 F90b_STRUCTURED = \
 	constants1.f90 \
 	controlflow1.f90 \
 	controlflow_if1.f90 controlflow_if2.f90 \
+	controlflow_switch1.f90 \
 	controlflow_loop1a.f90 controlflow_loop1b.f90 controlflow_loop1c.f90 \
 	functions_nested1.f90 \
 	inline1.f90 inline2.f90 inline3.f90 \
