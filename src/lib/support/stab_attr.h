@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.8 2004/03/19 16:54:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.9 2004/07/28 01:28:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -244,6 +244,14 @@
 // Referenced Information (REMOVE/FIXME)
 extern void 
 Stab_Reset_Referenced_Flag(SYMTAB_IDX symtab);
+
+//***************************************************************************
+// Active Information
+//***************************************************************************
+
+// FIXME: temporary implementation and location
+bool
+IsActivePU(ST* pu_st);
 
 //***************************************************************************
 // Type Information

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.cxx,v 1.9 2004/02/23 18:23:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.cxx,v 1.10 2004/07/28 01:28:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -142,6 +142,31 @@ Stab_Reset_Referenced_Flag(SYMTAB_IDX symtab)
     Clear_BE_ST_w2fc_referenced(st);
   
 } /* Stab_Reset_Referenced_Flag */
+
+
+//***************************************************************************
+// Active Information
+//***************************************************************************
+
+bool
+IsActivePU(ST* pu_st)
+{
+  bool active = true;
+
+  TY_IDX pu_ty = ST_pu_type(pu_st);
+  TY_IDX pu_ret_ty = TY_ret_type(pu_ty);
+
+  if (ST_is_in_module(pu_st) && !PU_is_nested_func(Pu_Table[ST_pu(pu_st)])) {
+    active = false; // module
+  } 
+  else if (pu_ret_ty != 0 && TY_kind(pu_ret_ty) != KIND_VOID) {
+    active = false; // function
+  }
+  
+  // assume subroutines are all active
+  
+  return active;
+}
 
 
 //***************************************************************************

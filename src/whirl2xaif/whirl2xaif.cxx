@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.46 2004/07/16 21:57:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.47 2004/07/28 01:28:22 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -324,7 +324,7 @@ TranslatePU(xml::ostream& xos, PU_Info *pu, UINT32 vertexId,
       << AttrSymId(st) << PUIdAnnot(puId)
       << Attr("controlflowgraph_scope_id", puScopeId)
       << EndAttrs;
-  if (!ST_is_in_module(st)) { // FIXME:TEMPORARY -- module routines?
+  if (IsActivePU(st)) {
     TranslateWNPU(xos, wn_pu, ctxt);
   }
   xos << EndElem; // xaif:ControlFlowGraph

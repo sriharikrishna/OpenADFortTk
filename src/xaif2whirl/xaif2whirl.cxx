@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.55 2004/07/27 19:25:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.56 2004/07/28 01:28:23 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -342,9 +342,9 @@ TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
   // -------------------------------------------------------
   // Translate, modifying 'wn_pu'
   // -------------------------------------------------------
-  // FIXME:TEMPORARY -- module routines
+
   ST* st = ST_ptr(PU_Info_proc_sym(pu));
-  if (!ST_is_in_module(st)) { // FIXME:TEMPORARY -- module routines?  
+  if (IsActivePU(st)) {
     TranslateCFG(wn_pu, cfgElem, ctxt);
   }
   
