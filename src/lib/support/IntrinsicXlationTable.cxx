@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.5 2004/04/07 14:58:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.6 2004/04/08 13:51:28 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -118,13 +118,13 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
 
   // Logical operations
   { { WNExpr, OPR_BNOT, NULL, 1 },
-                        { XAIFIntrin, "bogus_not_scal", 1 } },
+                        { XAIFBoolOp, "not", 1 } },
   { { WNExpr, OPR_BAND, NULL, 2 },
-                        { XAIFIntrin, "bogus_and_scal_scal", 2 } },
+                        { XAIFBoolOp, "and", 2 } },
   { { WNExpr, OPR_BIOR, NULL, 2 },
-                        { XAIFIntrin, "bogus_or_scal_scal", 2 } },
+                        { XAIFBoolOp, "or", 2 } },
   { { WNExpr, OPR_BXOR, NULL, 2 },
-                        { XAIFIntrin, "bogus_xor_scal_scal", 2 } },
+                        { XAIFBoolOp, "xor", 2 } },
   { { WNExpr, OPR_EQ, NULL, 2 },
                         { XAIFBoolOp, "equal", 2 } },
   { { WNExpr, OPR_NE, NULL, 2 },
