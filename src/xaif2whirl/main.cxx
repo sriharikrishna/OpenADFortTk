@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.15 2004/04/20 13:18:11 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.16 2004/05/04 23:51:02 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -47,6 +47,7 @@
 #include "cmplrs/rcodes.h"  // return codes
 #include "tracing.h"        // trace routines
 #include "ir_reader.h"      // fdump_tree
+#include "wn_simp.h"        // WN_Simplifier_Enable()
 
 //************************ OpenAnalysis Include Files ***********************
 
@@ -141,7 +142,8 @@ real_main(int argc, char **argv)
   Preconfigure();         // from config.cxx...
   Configure();            // needed for WN_lower!
   Configure_Source(NULL); // Most config variables set here
-
+  
+  WN_Simplifier_Enable(FALSE); // turn off WHIRL expression simplifier
   Init_Operator_To_Opcode_Table(); // FIXME
 
   // -------------------------------------------------------
