@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.18 2003/10/01 16:32:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.19 2003/10/10 17:25:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -465,26 +465,30 @@ typedef void (*XlateSTHandlerFunc)(xml::ostream&, ST*, XlationContext&);
 
 static const XlateSTHandlerFunc XlateSTDecl_HandlerTable[CLASS_COUNT] =
 {
-  &xlate_ST_ignore,         /* CLASS_UNK    == 0x00 */
-  &xlate_STDecl_VAR,    /* CLASS_VAR    == 0x01 */
-  &xlate_STDecl_FUNC,   /* CLASS_FUNC   == 0x02 */
-  &xlate_STDecl_CONST,  /* CLASS_CONST  == 0x03 */
-  &xlate_STDecl_PREG,   /* CLASS_PREG   == 0x04 */
-  &xlate_STDecl_BLOCK,  /* CLASS_BLOCK  == 0x05 */
-  &xlate_STDecl_NAME,   /* CLASS_NAME   == 0x06 */
-  &xlate_STDecl_error,  /* CLASS_MODULE == 0x07 */
-  &xlate_STDecl_TYPE,   /* CLASS_TYPE   == 0x08 */
+  &xlate_ST_ignore,     /* CLASS_UNK    == 0 */
+  &xlate_STDecl_VAR,    /* CLASS_VAR    == 1 */
+  &xlate_STDecl_FUNC,   /* CLASS_FUNC   == 2 */
+  &xlate_STDecl_CONST,  /* CLASS_CONST  == 3 */
+  &xlate_STDecl_PREG,   /* CLASS_PREG   == 4 */
+  &xlate_STDecl_BLOCK,  /* CLASS_BLOCK  == 5 */
+  &xlate_STDecl_NAME,   /* CLASS_NAME   == 6 */
+  &xlate_STDecl_error,  /* CLASS_MODULE == 7 */
+  &xlate_STDecl_TYPE,   /* CLASS_TYPE   == 8 */
+  &xlate_STDecl_CONST,  /* CLASS_PARAMETER  == 9 */
 };
 
 static const XlateSTHandlerFunc XlateSTUse_HandlerTable[CLASS_COUNT] =
 {
-  &xlate_ST_ignore,     /* CLASS_UNK   == 0x00 */
-  &xlate_STUse_VAR,     /* CLASS_VAR   == 0x01 */
-  &xlate_STUse_FUNC,    /* CLASS_FUNC  == 0x02 */
-  &xlate_STUse_CONST,   /* CLASS_CONST == 0x03 */
-  &xlate_STUse_error,   /* CLASS_PREG  == 0x04 */
-  &xlate_STUse_BLOCK,   /* CLASS_BLOCK == 0x05 */
-  &xlate_STUse_error    /* CLASS_NAME  == 0x06 */
+  &xlate_ST_ignore,     /* CLASS_UNK   == 0 */
+  &xlate_STUse_VAR,     /* CLASS_VAR   == 1 */
+  &xlate_STUse_FUNC,    /* CLASS_FUNC  == 2 */
+  &xlate_STUse_CONST,   /* CLASS_CONST == 3 */
+  &xlate_STUse_error,   /* CLASS_PREG  == 4 */
+  &xlate_STUse_BLOCK,   /* CLASS_BLOCK == 5 */
+  &xlate_STUse_error,   /* CLASS_NAME  == 6 */
+  &xlate_STDecl_error,  /* CLASS_MODULE == 7 */
+  &xlate_STDecl_error,  /* CLASS_TYPE   == 8 */
+  &xlate_STDecl_error,  /* CLASS_PARAMETER  == 9 */
 };
 
 //***************************************************************************
@@ -581,11 +585,15 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
     
     const char* shape_str = TranslateTYToSymShape(ty);
     if (!shape_str) { shape_str = "***"; }
-
+    
+    int active = (strcmp(ty_str, "real") == 0 // FIXME: more elegant
+		  || strcmp(ty_str, "complex") == 0) ? 1 : 0;
+    
     SymId st_id = (SymId)ST_index(st);
     xos << BegElem("xaif:Symbol") << AttrSymId(st)
 	<< Attr("kind", "variable") << Attr("type", ty_str)
-	<< Attr("shape", shape_str) << SymIdAnnot(st_id) << EndElem;
+	<< Attr("shape", shape_str) << SymIdAnnot(st_id)
+	<< Attr("active", active) << EndElem;
   }
 
   //FIXME: TY2F_translate(xos, ty, ctxt); // Add type specs
@@ -913,8 +921,8 @@ whirl2xaif::xlate_Params(xml::ostream& xos, WN* wn, ST* st, ST** params,
       ST* st = params[param];
       ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
       SymTabId scopeid = ctxt.FindSymTabId(sttab);
-
-      xos << BegElem("xaif:ArgumentSymbolReference") 
+      
+      xos << BegElem("xaif:ArgumentSymbolReference")
 	  << Attr("position", position) 
 	  << Attr("scope_id", scopeid) << AttrSymId(st) << EndElem;
       
