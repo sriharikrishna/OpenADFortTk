@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.18 2004/04/30 20:39:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.19 2004/05/03 18:06:04 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -469,6 +469,8 @@ xlate_ExprOpUsingIntrinsicTable(IntrinsicXlationTable::XAIFOpr xopr,
     opnd_wn[i] = xlate_Expression(g, opnd, ctxt);
   }
   
+  // FIXME:: Here promote all arguments up to 8 bytes
+  
   // 3. Translate into either WHIRL OPR_CALL or a WHIRL expression operator
   WN* wn = NULL;
   switch (info->oprcl) {
@@ -512,6 +514,7 @@ xlate_ExprOpUsingIntrinsicTable(IntrinsicXlationTable::XAIFOpr xopr,
 
 // xlate_SymbolReferenceSimple: Translate a symbol reference.  May an
 // active flag in 'ctxt' that is inherited *up* the context stack.
+// N.B.: For PREGS we *do not* create a LDA
 static WN*
 xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
 {
@@ -535,14 +538,17 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
   bool create_lda = false;
   
   // Note: Order matters in these tests
-  if (ctxt.IsArray()) {
-    // Do not load the address of symbol that is already a pointer
-    if (TY_kind(ty) != KIND_POINTER) {
+  if (ST_class(st) != CLASS_PREG) { // never create a pointer to a preg
+    if (ctxt.IsArray()) {
+      // Do not load the address of symbol that is already a pointer
+      if (TY_kind(ty) != KIND_POINTER) {
+	create_lda = true;
+      }
+    } 
+    else if (ctxt.IsLValue()) {
       create_lda = true;
-    }
-  } else if (ctxt.IsLValue()) {
-    create_lda = true;
-  } 
+    } 
+  }
 
   // -------------------------------------------------------
   // 2. Create the reference
