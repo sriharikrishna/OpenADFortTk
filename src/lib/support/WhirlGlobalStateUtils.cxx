@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlGlobalStateUtils.cxx,v 1.3 2004/02/20 18:58:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlGlobalStateUtils.cxx,v 1.4 2005/01/12 20:00:27 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -46,6 +46,7 @@ PU_SetGlobalState(PU_Info* pu)
   Current_PU_Info = pu;
   CURRENT_SYMTAB = PU_lexical_level(*Current_pu); // == Current_scope
   Scope_tab = PUToScopeTabMap.Find(pu);
+  //Current_DST
   assert(Scope_tab);
 }
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlGlobalStateUtils.h,v 1.4 2004/02/20 18:58:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlGlobalStateUtils.h,v 1.5 2005/01/12 20:00:27 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -76,6 +76,7 @@ extern PUToScopedSymTabMap PUToScopeTabMap;
 //   - Current_PU_Info
 //   - CURRENT_SYMTAB == Current_scope
 //   - Scope_tab
+//   ? Current_DST
 void
 PU_SetGlobalState(PU_Info* pu);
 

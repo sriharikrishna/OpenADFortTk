@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.24 2004/07/30 17:50:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Pro64IRInterface.cxx,v 1.25 2005/01/12 20:00:27 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -38,12 +38,12 @@
 
 #include "Pro64IRInterface.h"
 
-//*************************** Forward Declarations ***************************
+//*************************** Forward Declarations **************************
 
 ExprTree::Node*
 BuildExprTreeForWN(ExprTree* tree, WN* wn);
 
-//****************************************************************************
+//***************************************************************************
 
 //-----------------------------------------------------------------------------
 //
