@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.12 2004/03/24 13:32:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.13 2004/03/29 23:41:13 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -120,15 +120,22 @@ public:
   // -----------------------------------------------------------------------
   //  Constructors and Destructor
   // -----------------------------------------------------------------------
-  XAIF_CFGElemFilter() { }
+  XAIF_CFGElemFilter(bool cfgOrReplaceList_ = true) 
+    : cfgOrReplaceList(cfgOrReplaceList_) { }
   ~XAIF_CFGElemFilter() { }
   
   // -----------------------------------------------------------------------
   //  Implementation of the filter interface
   // -----------------------------------------------------------------------
   short acceptNode(const DOMNode *node) const;
-
+  
+  static bool IsCFG(const DOMNode *node);
+  static bool IsReplaceList(const DOMNode *node);
+  
+  static bool IsReplacement(const DOMNode *node);
+  
 private:
+  bool cfgOrReplaceList;
 };
 
 
@@ -149,11 +156,15 @@ public:
   short acceptNode(const DOMNode *node) const;
   
   static bool IsAnyBB(const DOMNode *node);
+  static bool IsBBEntry(const DOMNode *node);
+  static bool IsBBExit(const DOMNode *node);
   static bool IsBB(const DOMNode *node);
   static bool IsBBBranch(const DOMNode *node);
+  static bool IsBBEndBr(const DOMNode *node);
   static bool IsBBForLoop(const DOMNode *node);
   static bool IsBBPreLoop(const DOMNode *node);
   static bool IsBBPostLoop(const DOMNode *node);
+  static bool IsBBEndLoop(const DOMNode *node);
 
   static bool IsEdge(const DOMNode *node);
 

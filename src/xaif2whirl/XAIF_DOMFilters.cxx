@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.13 2004/03/24 13:32:53 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.14 2004/03/29 23:41:13 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -282,11 +282,35 @@ XAIF_SymbolElemFilter::acceptNode(const DOMNode *node) const
 short
 XAIF_CFGElemFilter::acceptNode(const DOMNode *node) const
 {
-  if ( (node->getNodeType() == DOMNode::ELEMENT_NODE)
-       && XMLString::equals(node->getNodeName(), XAIFStrings.elem_CFG_x()) ) {
-    return FILTER_ACCEPT;
+  bool ans = (node->getNodeType() == DOMNode::ELEMENT_NODE);
+  
+  if (cfgOrReplaceList) {
+    ans &= (IsCFG(node) || IsReplaceList(node));
+  } else {
+    ans &= IsReplacement(node);
   }
-  return FILTER_SKIP;
+  return (ans) ? FILTER_ACCEPT : FILTER_SKIP;
+}
+
+bool 
+XAIF_CFGElemFilter::IsCFG(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_CFG_x()));
+}
+
+bool 
+XAIF_CFGElemFilter::IsReplaceList(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_ReplaceList_x()));
+}
+
+bool 
+XAIF_CFGElemFilter::IsReplacement(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_Replacement_x()));
 }
 
 //****************************************************************************
@@ -294,10 +318,12 @@ XAIF_CFGElemFilter::acceptNode(const DOMNode *node) const
 short
 XAIF_BBElemFilter::acceptNode(const DOMNode *node) const
 {
-  bool ans = (node->getNodeType() == DOMNode::ELEMENT_NODE) && IsAnyBB(node);
+  bool ans = (node->getNodeType() == DOMNode::ELEMENT_NODE);
   
-  if (includeEdges ) {
-    ans &= IsEdge(node);
+  if (includeEdges) {
+    ans &= (IsAnyBB(node) || IsEdge(node));
+  } else {
+    ans &= IsAnyBB(node);
   }
   return (ans) ? FILTER_ACCEPT : FILTER_SKIP;
 }
@@ -307,13 +333,24 @@ bool
 XAIF_BBElemFilter::IsAnyBB(const DOMNode *node)
 {
   const XMLCh* name = node->getNodeName();
-  return (IsBB(node) 
-	  || XMLString::equals(name, XAIFStrings.elem_BBEntry_x()) 
-	  || XMLString::equals(name, XAIFStrings.elem_BBExit_x())
-	  || IsBBBranch(node) || IsBBForLoop(node) 
-	  || IsBBPreLoop(node) || IsBBPostLoop(node)
-	  || XMLString::equals(name, XAIFStrings.elem_BBEndBranch_x())
-	  || XMLString::equals(name, XAIFStrings.elem_BBEndLoop_x()));
+  return (IsBBEntry(node) || IsBBExit(node) || IsBB(node)
+	  || IsBBBranch(node) || IsBBEndBr(node)
+	  || IsBBForLoop(node) || IsBBPreLoop(node) || IsBBPostLoop(node)
+	  || IsBBEndLoop(node));
+}
+
+bool 
+XAIF_BBElemFilter::IsBBEntry(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_BBEntry_x()));
+}
+
+bool 
+XAIF_BBElemFilter::IsBBExit(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_BBExit_x()));
 }
 
 bool 
@@ -328,6 +365,13 @@ XAIF_BBElemFilter::IsBBBranch(const DOMNode *node)
 {
   const XMLCh* name = node->getNodeName();
   return (XMLString::equals(name, XAIFStrings.elem_BBBranch_x()));
+}
+
+bool 
+XAIF_BBElemFilter::IsBBEndBr(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_BBEndBranch_x()));
 }
 
 bool 
@@ -349,6 +393,13 @@ XAIF_BBElemFilter::IsBBPostLoop(const DOMNode *node)
 {
   const XMLCh* name = node->getNodeName();
   return (XMLString::equals(name, XAIFStrings.elem_BBPostLoop_x()));
+}
+
+bool 
+XAIF_BBElemFilter::IsBBEndLoop(const DOMNode *node)
+{
+  const XMLCh* name = node->getNodeName();
+  return (XMLString::equals(name, XAIFStrings.elem_BBEndLoop_x()));
 }
 
 bool 
