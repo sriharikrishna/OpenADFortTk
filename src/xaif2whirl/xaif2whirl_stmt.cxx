@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.19 2004/07/30 17:52:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.20 2004/07/31 19:47:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -556,13 +556,16 @@ PatchWN_IO_ITEM_list(WN* wn, XlationContext& ctxt)
   
   IOITEM kind = WN_io_item(wn);
   switch (kind) {
-  case IOL_VAR:        // skip
-  case IOL_ARRAY:      // skip
-  case IOL_CHAR_ARRAY: // skip
-  case IOL_RECORD:     // skip
+  case IOL_VAR:
+  case IOL_ARRAY:
+  case IOL_RECORD:
+    PatchWNExpr(wn, 0 /* kid */, ctxt);
+    break;
+    
+  case IOL_CHAR_ARRAY:
   case IOL_CHAR:       // skip
     break;
-
+    
   case IOL_EXPR: // patch
     PatchWNExpr(wn, 0 /* kid */, ctxt);
     break;
