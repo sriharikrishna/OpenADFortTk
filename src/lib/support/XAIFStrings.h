@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.3 2003/08/11 14:24:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.4 2003/08/13 22:58:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -96,6 +96,9 @@ public:
     
     ELEM_ExprEdge,
 
+    ATTR_name,
+    ATTR_value,
+
     // -----------------------------------------------------
 
     // Special tags
@@ -191,7 +194,10 @@ public:
   XMLCh*      elem_SymRef_x() const { return x_strTbl[ELEM_SymRef]; }
   
   XMLCh*      elem_ExprEdge_x() const { return x_strTbl[ELEM_ExprEdge]; }
-  
+
+  XMLCh*      attr_name_x() const { return x_strTbl[ATTR_name]; }
+  XMLCh*      attr_value_x() const { return x_strTbl[ATTR_value]; }  
+
   // -----------------------------------------------------
   
   // Special tags

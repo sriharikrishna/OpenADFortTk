@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.3 2003/08/11 14:24:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.4 2003/08/13 22:58:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -87,18 +87,21 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "xaif:Nop",
 
   // Expressions
-  "xaif:VariableReference"
-  "xaif:Constant"
-  "xaif:Intrinsic"
-  "xaif:FunctionCall"
-  "xaif:BooleanOperation"
+  "xaif:VariableReference",
+  "xaif:Constant",
+  "xaif:Intrinsic",
+  "xaif:FunctionCall",
+  "xaif:BooleanOperation",
 
   "xaif:SymbolReference",
 
   "xaif:ExpressionEdge",
 
-  // -----------------------------------------------------
+  "name",
+  "value",
   
+  // -----------------------------------------------------
+
   // Special tags
   "[WHIRLIDS]"
 };

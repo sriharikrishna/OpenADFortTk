@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.4 2003/08/11 14:24:23 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.5 2003/08/13 22:58:53 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -42,6 +42,7 @@
 #include <lib/support/Pro64IRInterface.h>
 #include <lib/support/SymTab.h> // for XAIFSymToWhirlSymMap
 #include <lib/support/WhirlIDMaps.h>
+#include <lib/support/wn_attr.h> // for WN_Tree_Type
 #include <lib/support/XAIFStrings.h>
 #include <lib/support/diagnostics.h>
 
@@ -103,6 +104,14 @@ GetWNIdList(const char* idstr);
 static void
 xlate_Scope(DOMElement* elem, XAIFSymToWhirlSymMap* symMap, 
 	    XlationContext& ctxt);
+
+//****************************************************************************
+
+UINT 
+GetIntrinsicOperandNum(const char* name);
+
+OPERATOR 
+GetIntrinsicOperator(const char* name);
 
 //****************************************************************************
 
@@ -347,7 +356,7 @@ FindNextStmtInterval(WN* &firstWN, WN* &lastWN,
   // 1. Find the set of WHIRL nodes in this BB
   WNIdList* idlist = GetWNIdList(bbElem);
   
-  // 2. Find the interval boundariesn
+  // 2. Find the interval boundaries
   DOMElement* firstE = GetFirstChildElement(bbElem);
   firstWN = FindIntervalBoundary(firstE, idlist, wnmap, 0 /* beg */);
   
@@ -585,11 +594,12 @@ xlate_Assignment(DOMElement* elem, XlationContext& ctxt)
 {
   WN* lhs = xlate_AssignmentLHS(GetFirstChildElement(elem), ctxt);
   WN* rhs = xlate_AssignmentRHS(GetLastChildElement(elem), ctxt);
-  // FIXME: should we try to select btwn STID and ISTORE, etc?
-  
-  // ISTORE
 
-  WN* wn = WN_CreateAssert(0, WN_CreateIntconst(OPC_I4INTCONST, (INT64)1));
+  // FIXME: ISTORE: should we try to select btwn STID and ISTORE, etc?
+  // FIXME: first argument is bogus // WN_Tree_Type(rhs)
+  WN* wn = WN_Istore(MTYPE_F8, 0, MTYPE_To_TY(MTYPE_F8), lhs, rhs, 0);
+
+  //WN* wn = WN_CreateAssert(0, WN_CreateIntconst(OPC_I4INTCONST, (INT64)1));
   return wn;
 }
 
@@ -612,7 +622,7 @@ static WN*
 xlate_AssignmentRHS(DOMElement* elem, XlationContext& ctxt)
 {
   // ExpressionType
-  WN* wn = TranslateExpression(elem, ctxt);
+  WN* wn = TranslateExpression(GetFirstChildElement(elem), ctxt);
   return wn;
 }
 
@@ -638,34 +648,88 @@ xlate_Expression(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   DOMElement* elem = n->GetElem();
   assert(elem); // FIXME
   
-  const XMLCh* name = elem->getNodeName();
-  if (XMLString::equals(name, XAIFStrings.elem_VarRef_x())) {
+  const XMLCh* nameX = elem->getNodeName();
+  XercesStrX name = XercesStrX(nameX); // FIXME
+  
+  if (XMLString::equals(nameX, XAIFStrings.elem_VarRef_x())) {
+
+    // -------------------------------------------------------
+    // base case: variable reference
+    // -------------------------------------------------------
     return xlate_VarRef(elem, ctxt, false);
-  } else if (XMLString::equals(name, XAIFStrings.elem_Constant_x())) {
+
+  } else if (XMLString::equals(nameX, XAIFStrings.elem_Constant_x())) {
+
+    // -------------------------------------------------------
+    // base case: constant
+    // -------------------------------------------------------
     return xlate_Constant(elem, ctxt);
-  } else if (XMLString::equals(name, XAIFStrings.elem_Intrinsic_x())) {
-    
-    // is unary
-    // is binary
-    // is ternary
 
-    // translate the children
+  } else if (XMLString::equals(nameX, XAIFStrings.elem_Intrinsic_x())) {
     
-    // find a function pointer to the appropriate tranlation function
+    // -------------------------------------------------------
+    // recursive case: intrinsic
+    // -------------------------------------------------------
+    const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
+    XercesStrX nm = XercesStrX(nmX);
     
-    // children are expressions
-    return NULL;
+    UINT opand = GetIntrinsicOperandNum(nm.c_str());
+    OPERATOR opor = GetIntrinsicOperator(nm.c_str());
+    
+    switch (opand) {
+      // unary
+    case 1: {
+      // WN *WN_Unary(OPERATOR opr,TYPE_ID rtype,WN *l);
+      assert(false); 
+      return NULL;
+    }
+      
+      // binary
+    case 2: {
+      assert(n->num_incoming() == 2); // FIXME
 
-  } else if (XMLString::equals(name, XAIFStrings.elem_FuncCall_x())) {
+      MyDGNode* nexpr[2]; 
+      DGraph::IncomingEdgesIterator it = DGraph::IncomingEdgesIterator(n);
+      for (int i = 0; (bool)it; ++it, ++i) {
+	DGraph::Edge* edge = (DGraph::Edge*)it;
+	nexpr[i] = dynamic_cast<MyDGNode*>(edge->source());
+      }
+      
+      WN* e1 = xlate_Expression(g, nexpr[0], ctxt);
+      WN* e2 = xlate_Expression(g, nexpr[1], ctxt);
+      return WN_Binary(opor, MTYPE_F8, e1, e2);
+      // FIXME is this the correct return type
+    }
+      
+      // ternary
+    case 3: {
+      // WN *WN_Ternary(OPERATOR opr, TYPE_ID rtype,WN *kid0,WN *kid1,WN *kid2)
+      assert(false); 
+      return NULL;
+    }
+      
+    default:
+      assert(false);
+    } 
+
+  } else if (XMLString::equals(nameX, XAIFStrings.elem_FuncCall_x())) {
+
+    // -------------------------------------------------------
+    // recursive case: function call
+    // -------------------------------------------------------
     // children are expressions
     // find number of arguments
     return NULL;
 
-  } else if (XMLString::equals(name, XAIFStrings.elem_BoolOp_x())) {
+  } else if (XMLString::equals(nameX, XAIFStrings.elem_BoolOp_x())) {
+
+    // -------------------------------------------------------
+    // recursive case: boolean operation
+    // -------------------------------------------------------
     // children are expressions
     return NULL;
-
   }
+  
 }
 
 
@@ -673,26 +737,47 @@ xlate_Expression(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 static WN*
 xlate_VarRef(DOMElement* elem, XlationContext& ctxt, bool lvalue)
 {
-  assert(lvalue);
+  if (!lvalue) {
+    // skip the xaif:VariableReference node
+    elem = GetFirstChildElement(elem);
+  }
   
   const XMLCh* name = elem->getNodeName();
   //XercesStrX nameStr = XercesStrX(name);
   assert(XMLString::equals(name, XAIFStrings.elem_SymRef_x()));
   
   ST* st = GetST(elem, ctxt);
-  
-  // FIXME: LDID? // LDA // opcode
-  // ***FIXME***
-  // WN* wn = WN_CreateLda(OPC_F8LDA, 0, TY_pointer(ST_type(st)), st);
 
-  return NULL;
+  WN* wn = NULL;
+  if (lvalue) {
+    // FIXME
+    //wn = WN_CreateLda(OPC_F8LDA, 0, TY_pointer(ST_type(st)), st);
+    wn = WN_CreateLda(OPR_LDA, Pointer_Mtype, MTYPE_V, 0, 
+		      TY_pointer(ST_type(st)), st, 0);
+  } else {
+    // FIXME
+    wn = WN_CreateLdid(OPC_F8F8LDID, 0, st, MTYPE_To_TY(MTYPE_F8));
+  }
+
+  return wn;
 }
 
 
 static WN*
 xlate_Constant(DOMElement* elem, XlationContext& ctxt)
 {
-  return NULL;
+  const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
+  const XMLCh* valX = elem->getAttribute(XAIFStrings.attr_value_x());
+
+  XercesStrX type = XercesStrX(typeX);
+  XercesStrX value = XercesStrX(valX);
+  
+  assert(strcmp(type.c_str(), "integer") == 0); // FIXME: ints for now
+  
+  UINT val = strtol(value.c_str(), (char **)NULL, 10);
+  
+  WN* wn = WN_CreateIntconst(OPC_I4INTCONST, (INT64)val); // int4?
+  return wn;
 }
 
 
@@ -749,12 +834,12 @@ CreateExpressionGraph(DOMNode* node)
 
       MyDGNode* gn1 = NULL, *gn2 = NULL; // src and targ
       
-      IdToNodeMap::iterator it = m.find(src.c_str());
+      IdToNodeMap::iterator it = m.find(std::string(src.c_str()));
       if (it != m.end()) { 
 	gn1 = dynamic_cast<MyDGNode*>((*it).second); 
       }
       
-      it = m.find(targ.c_str());
+      it = m.find(std::string(targ.c_str()));
       if (it != m.end()) { 
 	gn2 = dynamic_cast<MyDGNode*>((*it).second); 
       }
@@ -771,6 +856,7 @@ CreateExpressionGraph(DOMNode* node)
       
       MyDGNode* gn = new MyDGNode(e);
       g->add(gn);
+      m.insert(make_pair(std::string(vid.c_str()), gn));
     }
     
   } while ( (n = n->getNextSibling()) );
@@ -886,3 +972,35 @@ xlate_Symbol(DOMElement* elem, const char* scopeId, PU_Info* pu,
   }
 } 
 
+//****************************************************************************
+
+UINT 
+GetIntrinsicOperandNum(const char* name)
+{
+  if (!name) { return 0; }
+  
+  if (strcmp(name, "mul_scal_scal") == 0) {
+    return 2;
+  } else if (strcmp(name, "add_scal_scal") == 0) {
+    return 2;
+  } else {
+    assert(0); //FIXME
+    return 0;
+  }
+}
+
+OPERATOR 
+GetIntrinsicOperator(const char* name)
+{
+  if (!name) { return OPERATOR_UNKNOWN; }
+  
+  if (strcmp(name, "mul_scal_scal") == 0) {
+    return OPR_MPY;
+  } else if (strcmp(name, "add_scal_scal") == 0) {
+    return OPR_ADD;
+  } else {
+    assert(0); //FIXME
+    return OPERATOR_UNKNOWN;
+  }
+  // OPR_SUB, OPR_MPY, OPR_DIV
+}
