@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.h,v 1.2 2003/11/26 14:49:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.h,v 1.3 2003/12/02 13:32:24 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -79,7 +79,9 @@ public:
     WNCall,       // A WHIRL function or subroutine call
     WNIntrinCall, // A WHIRL intrinsics call
     WNIntrinOp,   // A WHIRL intrinsics operation
-    WNExpr        // A WHIRL expression
+    WNExpr,       // A WHIRL expression
+
+    WNOprClass_UNKNOWN // special, reserved for searching table
   };
 
   static const char* WNOprClass2Str(WNOprClass oprcl);
@@ -89,7 +91,9 @@ public:
   enum XAIFOpr {
     XAIFSubCall,
     XAIFFuncCall,
-    XAIFIntrin
+    XAIFIntrin,
+    
+    XAIFOpr_UNKNOWN   // special, reserved for searching table
   };
 
   static const char* XAIFOpr2Str(XAIFOpr opr);
@@ -100,6 +104,7 @@ public:
     const char* name;   // string qualifier for calls
     unsigned int numop; // number of operands to intrinsic
 
+    //WHIRLInfo();
     void Dump(std::ostream& os = std::cerr) const;
     void DDump() const;
   };
@@ -109,6 +114,7 @@ public:
     const char* name;   // intrinsic name (if applicable)
     unsigned int numop; // number of operands to intrinsic
 
+    //XAIFInfo();
     void Dump(std::ostream& os = std::cerr) const;
     void DDump() const;
   };

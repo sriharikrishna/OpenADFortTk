@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.2 2003/11/26 14:49:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.3 2003/12/02 13:32:24 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -162,6 +162,20 @@ unsigned int IntrinsicXlationTable::tableSz = TABLE_SZ;
 
 //****************************************************************************
 
+#if 0
+IntrinsicXlationTable::WHIRLInfo::WHIRLInfo()
+  : oprcl(WNOprClass_UNKNOWN), opr(0), name(NULL), numop(0)
+{
+}
+
+IntrinsicXlationTable::XAIFInfo::XAIFInfo()
+  : opr(XAIFOpr_UNKNOWN), name(NULL), numop(0)
+{
+}
+#endif
+
+//****************************************************************************
+
 const char* 
 IntrinsicXlationTable::WNOprClass2Str(WNOprClass oprcl)
 {
@@ -231,8 +245,12 @@ operator()(const Entry* e1, const Entry* e2) const
     // 1. whirl_info.opr is the primary sorting key
     if (e1->whirl_info.opr == e2->whirl_info.opr) {
       
-      // both whirl_info.oprcl should be equal!
-      switch (e1->whirl_info.oprcl) {
+      // Either 1) both whirl_info.oprcl will be equal or 2) one will
+      // be 'WNOprClass_UNKNOWN' (the search item)
+      WNOprClass cl = (e1->whirl_info.oprcl == WNOprClass_UNKNOWN) ? 
+	e2->whirl_info.oprcl : e1->whirl_info.oprcl;
+
+      switch (cl) {
       case WNCall:
       case WNIntrinCall:
       case WNIntrinOp:
@@ -320,6 +338,7 @@ IntrinsicXlationTable::FindXAIFInfo(OPERATOR opr, const char* name)
   if (tableType != W2X) { return NULL; }
 
   static Entry toFind;
+  toFind.whirl_info.oprcl = WNOprClass_UNKNOWN;
   toFind.whirl_info.opr = opr;
   toFind.whirl_info.name = name;
 
@@ -341,6 +360,7 @@ IntrinsicXlationTable::FindWHIRLInfo(XAIFOpr opr, const char* name)
   if (tableType != X2W) { return NULL; }
   
   static Entry toFind;
+  
   toFind.xaif_info.opr = opr;
   toFind.xaif_info.name = name;
   
