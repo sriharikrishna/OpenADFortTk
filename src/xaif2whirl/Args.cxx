@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.cxx,v 1.7 2004/05/06 21:53:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.cxx,v 1.8 2004/05/07 20:04:58 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -44,6 +44,7 @@ static const char* usage_details =
 "extension of <xaif-file> with 'x2w.B'.\n"
 "\n"
 "Algorithms:\n"
+"  -m, --mode=<mode> forward, reverse.  By default, assumes reverse.\n"
 "  --structured-cf   Generate structured control-flow\n"
 "  --unstructured-cf Generate unstructured control-flow [Default]\n"
 "  --bb-patching     TEMPORARY: use basic-block patch algorithm\n"
@@ -59,6 +60,7 @@ static const char* usage_details =
 
 CmdLineParser::OptArgDesc Args::optArgs[] = {
   // Options
+  { 'm', "mode",     CLP::ARG_REQ, CLP::DUPOPT_CLOB, NULL },
   {  0 , "structured-cf",   CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "unstructured-cf", CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "bb-patching",     CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
@@ -90,8 +92,9 @@ Args::Args(int argc, const char* const argv[])
 void
 Args::Ctor()
 {
+  mode      = xaif2whirl::MODE_REVERSE;
   algorithm = xaif2whirl::ALG_UNSTRUCTURED_CF;
-  debug = 0;      // default: 0 (off)
+  debug     = 0; // default: 0 (off)
 }
 
 Args::~Args()
@@ -159,6 +162,18 @@ Args::Parse(int argc, const char* const argv[])
     }
     
     // Check for algorithm options
+    if (parser.IsOpt("mode")) { 
+      const string& arg = parser.GetOptArg("mode");
+      if (arg == "forward") {
+	mode = xaif2whirl::MODE_FORWARD;
+      }
+      else if (arg == "reverse") {
+	mode = xaif2whirl::MODE_REVERSE;
+      } else {
+	PrintError(std::cerr, "Invalid argument to 'mode': " + arg);
+	exit(1);
+      }
+    }
     if (parser.IsOpt("structured-cf")) { 
       algorithm = xaif2whirl::ALG_STRUCTURED_CF;
     }

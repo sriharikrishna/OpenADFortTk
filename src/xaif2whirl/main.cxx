@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.17 2004/05/06 21:53:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.18 2004/05/07 20:04:58 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -90,6 +90,7 @@ XercesFini();
 //*************************** Forward Declarations ***************************
 
 // Options (FIXME)
+xaif2whirl::ModeType      opt_mode      = xaif2whirl::MODE_NULL;
 xaif2whirl::AlgorithmType opt_algorithm = xaif2whirl::ALG_NULL;
 
 //****************************************************************************
@@ -156,6 +157,7 @@ real_main(int argc, char **argv)
   XAIFStrings.XMLInitialize();
 
   Args args(argc, argv);
+  opt_mode = args.mode; // FIXME
   opt_algorithm = args.algorithm; // FIXME
   DBG_LVL_PUB = args.debug;
   

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.17 2004/04/30 20:39:40 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.18 2004/05/07 20:04:58 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -51,6 +51,12 @@ XERCES_CPP_NAMESPACE_USE
 //****************************************************************************
 
 namespace xaif2whirl {
+
+  enum ModeType {
+    MODE_NULL,
+    MODE_FORWARD,  // forward mode
+    MODE_REVERSE,  // reverse mode
+  };
 
   enum AlgorithmType {
     ALG_NULL,

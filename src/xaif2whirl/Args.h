@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.h,v 1.5 2004/05/06 21:53:47 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.h,v 1.6 2004/05/07 20:04:58 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -59,8 +59,9 @@ public:
   const std::string& GetCmd() const { return parser.GetCmd(); }
   
   // Parsed Data: optional arguments
+  xaif2whirl::ModeType      mode;      // default: MODE_REVERSE
   xaif2whirl::AlgorithmType algorithm; // default: ALG_UNSTRUCTURED_CF
-  int debug;                  // default: 0 (off)
+  int debug;                           // default: 0 (off)
   
   // Parsed Data: arguments
   std::string inWhirlFileNm;
