@@ -47,7 +47,8 @@ end subroutine sub2
 
 program controlflow
   real :: bogus 
-  call sub1(1, bogus)
-  call sub2(1, bogus)
+  integer :: one = 1
+  call sub1(one, bogus)
+  call sub2(one, bogus)
 end program
 
