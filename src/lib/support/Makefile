@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.16 2004/12/20 15:17:58 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Attic/Makefile,v 1.17 2005/02/01 21:53:31 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -44,6 +44,7 @@ OBJS = \
 	wn_attr.o \
 	\
 	sexpostream.o \
+	sexputil.o \
 	SexpTags.o \
 	xmlostream.o \
 	XAIFStrings.o \
@@ -62,7 +63,7 @@ OBJS = \
 CXXFLAGS := $(USER_CXXFLAGS) 
 CFLAGS := $(USER_CFLAGS) 
 IFLAGS := $(USER_C_IFLAGS) -I. -I$(VPATH) -I$(OPENADFORTTK_INCLUDE_PATH) \
-	$(OPEN64_IFLAGS) $(OA_IFLAGS) $(XERCES_IFLAGS)
+	$(OPEN64_IFLAGS) $(OA_IFLAGS) $(XERCES_IFLAGS) $(SEXP_IFLAGS)
 
 #############################################################################
 # Compiling Rules:
