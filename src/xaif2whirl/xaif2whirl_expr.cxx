@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.27 2004/06/16 14:27:31 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.28 2004/06/17 13:33:16 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -111,6 +111,10 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt);
 
 static ST*
 xlate_SymbolReferenceSimple(const DOMElement* elem, XlationContext& ctxt);
+
+static WN*
+xlate_SymbolReferenceCollapsedPath(const DOMElement* elem, WN* pathVorlageWN,
+				   XlationContext& ctxt);
 
 static WN*
 xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt);
@@ -562,17 +566,26 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
   if (!elem) { 
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
   }
-
+  
+  // -------------------------------------------------------
+  // 0. Setup; Possibly redirect processing
+  // -------------------------------------------------------
   WN* wn = NULL;
   Symbol* sym = GetSymbol(elem, ctxt);
+  if (sym->IsActive()) {
+    ctxt.SetActive(); // N.B. inherited up the ctxt stack
+  }
+  
+  // redirect handling if access path was collapsed (includes scalarization)
+  if (sym->IsPathCollapsed()) {
+    WN* pathVorlage = ctxt.FindWN(sym->GetPathVorlage(), true /* mustFind */);
+    return xlate_SymbolReferenceCollapsedPath(elem, pathVorlage, ctxt);
+  }
+
   ST* st = sym->GetST();
   TY_IDX ty = ST_type(st);
   TYPE_ID rty, dty;
   
-  if (sym->IsActive()) {
-    ctxt.SetActive(); // N.B. inherited up the ctxt stack
-  }
-
   // -------------------------------------------------------
   // 1. Determine which type of load to use
   // -------------------------------------------------------
@@ -590,11 +603,10 @@ xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
       create_lda = true;
     } 
   }
-
+  
   // -------------------------------------------------------
   // 2. Create the reference
   // -------------------------------------------------------
-
   if (create_lda) {
     // OPR_LDA
     TY_IDX ty_ptr = Stab_Pointer_To(ty);
@@ -628,6 +640,72 @@ xlate_SymbolReferenceSimple(const DOMElement* elem, XlationContext& ctxt)
   Symbol* sym = GetSymbol(elem, ctxt);
   ST* st = sym->GetST();
   return st;
+}
+
+
+// xlate_SymbolReferenceCollapsedPath:
+static WN*
+xlate_SymbolReferenceCollapsedPath(const DOMElement* elem, WN* pathVorlageWN,
+				   XlationContext& ctxt)
+{
+  OPERATOR opr = WN_operator(pathVorlageWN);
+  bool create_lda = (ctxt.IsLValue()); // FIXME  
+  WN* wn = NULL;  
+  
+  switch (opr) {
+  case OPR_STID: 
+  case OPR_STBITS: {
+    // Create an LDID
+    TY_IDX ty_idx = WN_GetRefObjType(pathVorlageWN);
+    TYPE_ID rty = TY_mtype(ty_idx); // OPCODE_rtype(WN_opcode())
+    TYPE_ID dty = TY_mtype(ty_idx); // OPCODE_dtype(WN_opcode())
+    ST* st = WN_st(pathVorlageWN);
+    WN_OFFSET ofst = WN_offset(pathVorlageWN);
+    UINT fid = WN_field_id(pathVorlageWN);
+    
+#if 0 // FIXME
+    if (!TY_Is_Pointer(ty_idx)) {
+      ty_idx = Stab_Pointer_To(ty_idx);
+    }
+    TYPE_ID rty = TY_mtype(ty_idx);
+    wn = WN_CreateLda(OPR_LDA, rty, MTYPE_V, ofst, ty_idx, st, fid);
+#endif
+      
+    wn = WN_CreateLdid(OPR_LDID, rty, dty, ofst, st, ty_idx, fid);
+    break;
+  }
+    
+  case OPR_ISTORE: 
+  case OPR_ISTBITS: {
+    // Create an ILOAD (copy ISTORE.kid1 to ILOAD.kid0)
+    WN* addr = WN_COPY_Tree(WN_kid1(pathVorlageWN));
+    TY_IDX refty = WN_GetRefObjType(pathVorlageWN);
+    TY_IDX ptrty = WN_ty(pathVorlageWN);
+    TYPE_ID mty = TY_mtype(refty);
+    WN_OFFSET ofst = WN_offset(pathVorlageWN); 
+    if (OPERATOR_has_offset(WN_operator(addr))) {
+      ofst += WN_offset(addr); // ISTORE.offset + ISTORE.kid1.offset
+    }
+    UINT fid = WN_field_id(pathVorlageWN);
+    wn = WN_CreateIload(OPR_ILOAD, mty, mty, ofst, refty, ptrty, addr, fid);
+    break;
+  }
+    
+  case OPR_LDA:
+  case OPR_LDMA:
+  case OPR_LDID:
+  case OPR_LDBITS: 
+  case OPR_ILOAD: 
+  case OPR_ILDBITS:
+    wn = WN_COPY_Tree(pathVorlageWN);
+    break;
+  } // switch
+  ASSERT_FATAL(wn, (DIAG_A_STRING, "Unimplemented."));
+    
+  //if (!create_lda) {
+  //}
+    
+  return wn;
 }
 
 
