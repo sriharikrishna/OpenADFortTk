@@ -1,4 +1,4 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.9 2003/11/25 16:18:12 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.11 2003/11/25 16:47:11 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
@@ -31,11 +31,14 @@ whirl2xaif
   cvs co whirl2xaif
 
 xaifbooster, angel, boost
-  [respectively: Argonne bitkeeper /home/derivs/share/xaifBooster, 
-   www.sourceforge.net, www.boost.org]
+  [xaifbooster: Argonne bitkeeper /home/derivs/share/xaifBooster]
+  bk clone <user>@terra.mcs.anl.gov:/home/derivs/share/xaifBooster
+
+  [angel, boost, respectively: www.sourceforge.net, www.boost.org]  
 
 xaif-1.0
-  [bitkeeper: xaif.bkbits.net/xaif-1.0]
+  [bitkeeper]
+  bk clone http://xaif.bkbits.net/xaif-1.0
 
 =============================================================================
 
