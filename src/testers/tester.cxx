@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.5 2003/12/03 20:43:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.6 2003/12/05 13:42:47 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -122,7 +122,7 @@ TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn,
 
   OPERATOR opr = WN_operator(wn);
   
-  if (IsVarRefTranslatableToXAIF(wn)) {
+  if (IsVarRefTranslatableToXAIF(wn) || opr == OPR_STID) {
     // Base case
     VN vn = vnmap.Find((ExprHandle)wn);
     
