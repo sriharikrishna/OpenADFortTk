@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.44 2004/06/09 22:11:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.45 2004/06/11 19:46:01 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -114,19 +114,6 @@ static void
 DumpTranslationHeaderComment(xml::ostream& xos);
 
 //***************************************************************************
-
-class CreateScalarizedRef : public ScalarizedRef::CreateOp {
-public:
-  CreateScalarizedRef();
-  virtual ~CreateScalarizedRef();
-  
-  virtual ScalarizedRef* 
-  operator()(const PU_Info* pu, const WN* wn, const char* hstr);
-
-private: 
-};
-
-//***************************************************************************
 // 
 //***************************************************************************
 
@@ -159,8 +146,7 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
   // Create scalarized var reference table.  Note: At the moment we
   // must create all tables in memory because they must be available
   // for the ScopeHeirarchy.  
-  CreateScalarizedRef newrefop;
-  ScalarizedRefTableMap.Create(pu_forest, &newrefop);
+  ScalarizedRefTableMap.Create(pu_forest);
   
   // -------------------------------------------------------
   // 2. Create and dump CallGraph
@@ -257,11 +243,14 @@ TranslateScopeHierarchyPU(xml::ostream& xos, PU_Info* pu, UINT32 parentId,
 {
   PU_SetGlobalState(pu);
   
+  // We need WHIRL<->ID maps for translating ScalarizedRefs
+  WNToWNIdMap* wnmap = WNToWNIdTableMap.Find(pu);
+  ctxt.SetWNToIdMap(wnmap);
+  
   ScalarizedRefTab_W2X* tab = ScalarizedRefTableMap.Find(pu);
-  
-  // Translate current symbol table
-  SymTabId scopeId = ctxt.FindSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
-  
+  SymTabId scopeId = ctxt.FindSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);  
+
+  // Translate symbol tables 
   xos << BegElem("xaif:Scope") << Attr("vertex_id", scopeId) 
       << SymTabIdAnnot(scopeId) << EndAttrs;
   xlate_SymbolTables(xos, CURRENT_SYMTAB, tab, ctxt);
@@ -418,19 +407,14 @@ DumpTranslationHeaderComment(xml::ostream& xos)
 // 
 //***************************************************************************
 
-CreateScalarizedRef::CreateScalarizedRef() 
-{
-}
-
-CreateScalarizedRef::~CreateScalarizedRef() 
-{
-}
-
-ScalarizedRef*
-CreateScalarizedRef::operator()(const PU_Info* pu, const WN* wn, 
-				const char* hstr)
-{ 
-  return new ScalarizedRef(); 
-}
+#if 0
+  static char buf[32]; // easily hold a 64 bit number
+  WNId id = curwnmap->Find(const_cast<WN*>(wn), true /*mustFind*/);
+  
+  sprintf(buf, "%u", id);
+  std::string s = XAIFStrings.tag_WHIRLId();
+  s += buf;
+  s += XAIFStrings.tag_End();
+#endif
 
 //***************************************************************************

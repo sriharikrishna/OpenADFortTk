@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.35 2004/06/09 20:43:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.36 2004/06/11 19:46:01 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -356,11 +356,12 @@ whirl2xaif::xlate_PREGTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
 
 
 void
-whirl2xaif::xlate_ScalarizedRefTab(xml::ostream& xos, ScalarizedRefTab_W2X* symtab, 
-				  XlationContext& ctxt)
+whirl2xaif::xlate_ScalarizedRefTab(xml::ostream& xos, 
+				   ScalarizedRefTab_W2X* symtab, 
+				   XlationContext& ctxt)
 {
   if (!symtab) { return; }
-
+  
   // FIXME: *** may be active and non active non-scalar syms
   
   for (ScalarizedRefTab_W2X::ScalarizedRefPoolTy::iterator it 
@@ -368,7 +369,12 @@ whirl2xaif::xlate_ScalarizedRefTab(xml::ostream& xos, ScalarizedRefTab_W2X* symt
        it != symtab->RefPoolEnd(); ++it) {
     ScalarizedRef* sym = (*it);
     
-    xos << BegElem("xaif:Symbol") << Attr("symbol_id", sym->GetName())
+    // FIXME: need access to the WN [located within the symbol name]
+    // add to symbol
+    
+    xos << BegElem("xaif:Symbol") 
+      	<< BegAttr("symbol_id") << sym->GetName()
+	<< WhirlIdAnnotVal(ctxt.FindWNId(sym->GetWN())) << EndAttr
 	<< Attr("kind", "variable") << Attr("type", "opaque")
 	<< Attr("shape", "scalar") << Attr("active", "true") 
 	<< EndElem;

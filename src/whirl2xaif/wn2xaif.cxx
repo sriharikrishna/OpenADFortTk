@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.65 2004/06/09 21:59:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.66 2004/06/11 19:46:01 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -249,11 +249,11 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // -------------------------------------------------------
   // Collect auxillary data
   // -------------------------------------------------------
-
+  
   // 0. WHIRL parent map
   WhirlParentMap wnParentMap(wn);
   ctxt.SetWNParentMap(&wnParentMap);
-
+  
   // 1. Non-scalar symbol table
   ScalarizedRefTab_W2X* tab = ScalarizedRefTableMap.Find(Current_PU_Info);
   ctxt.SetScalarizedRefTab(tab);
@@ -263,24 +263,24 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   ctxt.SetWNToIdMap(wnmap);
   
   AddControlFlowEndTags(wn, &wnParentMap); // FIXME
-
+  
   // 3. OpenAnalysis CFG
   Pro64IRInterface irInterface;
   Pro64IRStmtIterator irStmtIter(fbody);
   CFG::resetIds();
   CFG cfg(irInterface, &irStmtIter, (SymHandle)WN_st(wn), true);
   if (0) { cfg.dump(); }
-
+  
   // 4. OpenAnalysis UJ numbers
   set<SymHandle>* params = GetParamSymHandleSet(wn);
   UJNumbers vnmap(cfg, *params);
   delete params;
   ctxt.SetWNToValNum(&vnmap);
-
+  
   // 5. Massage CFG (wait until after Uwe numbers have been computed)
   MassageOACFGIntoXAIFCFG(&cfg);
   if (0) { cfg.dump(); }
-
+  
   // -------------------------------------------------------
   // Translate the function header
   // -------------------------------------------------------
@@ -585,7 +585,9 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos,
     // Get the dummy variable (need the parent wn) FIXME
     ScalarizedRef* sym = ctxt.FindScalarizedRef(ctxt.GetWN_MR());
     if (sym) {
-      xos << BegElem("xaif:NONSCALAR") << Attr("id", sym->GetName())
+      xos << BegElem("xaif:NONSCALAR") 
+	  << BegAttr("id") << sym->GetName() 
+	  << WhirlIdAnnotVal(ctxt.FindWNId(sym->GetWN())) << EndAttr
 	  << EndAttrs;
     }
     
@@ -770,7 +772,9 @@ whirl2xaif::xlate_MemRef(xml::ostream& xos,
       WN* wn = ctxt.GetWN();
       ScalarizedRef* sym = ctxt.FindScalarizedRef(wn);
       if (sym) {
-	xos << BegElem("xaif:NONSCALAR") << Attr("id", sym->GetName())
+	xos << BegElem("xaif:NONSCALAR") 
+	    << BegAttr("id") << sym->GetName()
+	    << WhirlIdAnnotVal(ctxt.FindWNId(sym->GetWN())) << EndAttr
 	    << EndAttrs;
       }
       
