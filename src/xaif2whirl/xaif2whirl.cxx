@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.22 2004/02/24 20:45:32 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.23 2004/02/25 16:23:29 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -123,6 +123,10 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
 
 static ST* 
 CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm);
+
+// FIXME: temporary
+static TY_IDX
+XAIFTyToWHIRLTy(const char* type);
 
 //FIXME (Note: TYPE_ID and TY_IDX are typedef'd to the same type, so
 //overloading is not possible!)
@@ -748,17 +752,13 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
   assert( strcmp(kind.c_str(), "variable" ) == 0 ); // FIXME: assume only
     
   // 1. Find basic type according to 'type' and 'active'
-  TY_IDX basicTy;
-
-  assert( strcmp(type.c_str(), "real" ) == 0 );     // real variables
-  basicTy = MTYPE_To_TY(MTYPE_F8); // FIXME: assume only reals
-
+  TY_IDX basicTy = XAIFTyToWHIRLTy(type.c_str());
   if (opt_typeChangeInWHIRL) {
     if (active) {
       basicTy = ActiveTypeTyIdx;
     } 
   }
-
+  
   // 2. Modify basic type according to the (non-scalar) shapes
   TY_IDX ty;
   if (strcmp(shape.c_str(), "scalar") == 0) {
@@ -999,6 +999,24 @@ CreateIntrinsicCall(OPERATOR opr, INTRINSIC intrn,
 }
 
 //****************************************************************************
+
+static TY_IDX
+XAIFTyToWHIRLTy(const char* type)
+{
+  TY_IDX ty = 0;
+  if (strcmp(type, "real") == 0) {
+    ty = MTYPE_To_TY(MTYPE_F8);
+  } 
+  else if (strcmp(type, "integer") == 0) {
+    ty = MTYPE_To_TY(MTYPE_I8); 
+  } 
+  else {
+    // don't know about anything else yet
+    ASSERT_FATAL(false, (DIAG_A_STRING, "Programming error."));
+  }
+  return ty;
+}
+
 
 static void 
 DeclareActiveModule()
