@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.16 2004/01/14 16:57:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.17 2004/01/25 02:43:56 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -47,11 +47,14 @@
 #include <lib/support/Pro64IRInterface.h>
 #include <lib/support/SymTab.h> // for XAIFSymToWhirlSymMap
 #include <lib/support/WhirlIDMaps.h>
+#include <lib/support/WhirlParentize.h>
 #include <lib/support/wn_attr.h> // for WN_Tree_Type
 #include <lib/support/XAIFStrings.h>
 #include <lib/support/diagnostics.h>
 
 //*************************** Forward Declarations ***************************
+
+//#define FIXME_CHANGE_TYPES_IN_WHIRL
 
 using std::cerr;
 using std::endl;
@@ -101,9 +104,6 @@ FindWNBlock(const DOMElement* bbElem, WN* wn_pu,
 	    IdList<WNId>* idlist, WNIdToWNMap* wnmap);
 
 static WN* 
-FindParentWNBlock(WN* wn_tree, WN* wn);
-
-static WN* 
 FindSafeInsertionPoint(WN* blckWN, WN* stmtWN);
 
 static void
@@ -124,7 +124,16 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
 	     XAIFSymToSymbolMap* symMap);
 
 static ST* 
-CreateST(SYMTAB_IDX level, const char* nm, const DOMElement* elem);
+CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm);
+
+//FIXME (Note: TYPE_ID and TY_IDX are typedef'd to the same type, so
+//overloading is not possible!)
+static TY_IDX MY_Make_Array_Type1 (TYPE_ID elem_ty, INT32 ndim, INT64 len);
+static TY_IDX MY_Make_Array_Type (TY_IDX elem_ty, INT32 ndim, INT64 len);
+
+TY_IDX ActiveTypeTyIdx; // FIXME: just for temporary testing
+static void 
+DeclareActiveModule();
 
 //****************************************************************************
 
@@ -163,6 +172,9 @@ static void
 TranslateCallGraph(PU_Info* pu_forest, const DOMDocument* doc,
 		   XlationContext& ctxt)
 {
+  // FIXME: test: add active module type
+  DeclareActiveModule();
+  
   // FIXME: Do something about the ScopeHeirarchy
   XAIFSymToSymbolMap* symmap = TranslateScopeHierarchy(doc, ctxt);
   ctxt.SetXAIFSymToSymbolMap(symmap);
@@ -580,58 +592,6 @@ FindWNBlock(const DOMElement* bbElem, WN* wn_pu,
   return blk;
 }
 
-// FindParentWNBlock: Given two WHIRL nodes, a subtree 'wn_tree' and an
-// some descendent 'wn', return the BLOCK WN that contains 'wn', or
-// NULL.
-// 
-// FIXME: I can't see a more efficient way of doing this (besides some
-// sort of pre-calculated map) since we don't have parent pointers.
-static WN* 
-FindParentWNBlock(WN* wn_tree, WN* wn)
-{
-  if (!wn_tree || !wn) { return NULL; }
-
-  OPERATOR opr = WN_operator(wn_tree);
-  if (!OPERATOR_is_scf(opr)) {
-    // 'wn_tree' is not structured control flow and cannot contain blocks
-    return NULL;
-  } else {
-
-    WN* blkWN = NULL;
-    if (opr == OPR_BLOCK) {
-      
-      // Test to see if 'wn' is a child of 'wn_tree'
-      WN *kid = WN_first(wn_tree);
-      while (kid) {
-	
-	// Test this child
-	if (kid == wn) {
-	  return wn_tree; // we found the parent block|
-	} 
-
-	// Recursively test 
-	if ( (blkWN = FindParentWNBlock(kid, wn)) ) {
-	  return blkWN;
-	}
-
-	kid = WN_next(kid);
-      }
-    } else {
-      
-      // Recur on for non-block structured control flow
-      for (INT kidno = 0; kidno < WN_kid_count(wn_tree); kidno++) {
-	WN* kid = WN_kid(wn_tree, kidno);
-	if ( (blkWN = FindParentWNBlock(kid, wn)) ) {
-	  return blkWN;
-	}
-      }
-
-    }
-
-    return NULL; // not found
-  }
-}
-
 
 // FindSafeInsertionPoint: Given a WHIRL statement node 'stmtWN' and
 // its containing block 'blckWN', find (or create) the statement just
@@ -750,11 +710,18 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
   ST* st = NULL;
   if (symId == 0) {
     // Create the symbol
-    st = CreateST(level, symNm.c_str(), elem);
+    st = CreateST(elem, level, symNm.c_str());
+#ifndef FIXME_CHANGE_TYPES_IN_WHIRL
     active = true; // FIXME: for now we force all temps to be active
+#endif
   } else {
-    // Find the symbol
+    // Find the symbol and change type if necessary
     st = &(Scope_tab[level].st_tab->Entry(symId));
+#ifdef FIXME_CHANGE_TYPES_IN_WHIRL
+    if (active && ST_class(st) == CLASS_VAR) {
+      Set_ST_type(*st, ActiveTypeTyIdx);
+    }
+#endif
   }
   
   // 3. Create our own symbol structure and add to the map
@@ -770,25 +737,37 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
 // CreateST: Creates and returns a WHIRL ST* at level 'level' with
 // name 'nm' using 'elem' to gather ST shape and storage class info.
 static ST* 
-CreateST(SYMTAB_IDX level, const char* nm, const DOMElement* elem)
+CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
 {
   const XMLCh* kindX = elem->getAttribute(XAIFStrings.attr_kind_x());
   const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
   const XMLCh* shapeX = elem->getAttribute(XAIFStrings.attr_shape_x());    
-  
+
   XercesStrX kind = XercesStrX(kindX);
   XercesStrX type = XercesStrX(typeX);
   XercesStrX shape = XercesStrX(shapeX);
+
+  bool active = GetActiveAttr(elem);
   
   assert( strcmp(kind.c_str(), "variable" ) == 0 ); // FIXME: assume only
-  assert( strcmp(type.c_str(), "real" ) == 0 );     // real variables
     
-  // 1. Find correct type according to the shape
+  // 1. Find basic type according to 'type' and 'active'
+  TY_IDX basicTy;
+
+  assert( strcmp(type.c_str(), "real" ) == 0 );     // real variables
+  basicTy = MTYPE_To_TY(MTYPE_F8); // FIXME: assume only reals
+
+#ifdef FIXME_CHANGE_TYPE_IN_WHIRL
+  if (active) {
+    basicTy = ActiveTypeTyIdx;
+  } 
+#endif
+
+  // 2. Modify basic type according to the (non-scalar) shapes
   TY_IDX ty;
   if (strcmp(shape.c_str(), "scalar") == 0) {
-    ty = MTYPE_To_TY(MTYPE_F8); // FIXME: assume only reals
-  } else { 
-    
+    ty = basicTy;
+  } else {
     // Note: cf. be/com/wn_instrument.cxx:1253 for example creating vector
     INT32 ndim = 0;
     INT64 len = 1000; // FIXME: this is fixed size!!
@@ -798,16 +777,16 @@ CreateST(SYMTAB_IDX level, const char* nm, const DOMElement* elem)
       // FIXME: add tensors
       ASSERT_FATAL(false, (DIAG_A_STRING, "Programming error."));
     }
-    ty = Make_Array_Type(MTYPE_F8, ndim, len);
+    ty = MY_Make_Array_Type(basicTy, ndim, len);
   }
   
-  // 2. Find storage class
+  // 3. Find storage class
   ST_SCLASS sclass = SCLASS_AUTO; // default: auto implies local storage
   if (level == GLOBAL_SYMTAB) {
-    //sclass = SCLASS_UGLOBAL; // FIXME
+    sclass = SCLASS_COMMON; // SCLASS_PSTATIC; // FIXME
   }
   
-  // 3. Create the new symbol
+  // 4. Create the new symbol
   ST* st = New_ST(level);
   ST_Init(st, Save_Str(nm), CLASS_VAR, sclass, EXPORT_LOCAL, ty);
   
@@ -1024,3 +1003,83 @@ CreateIntrinsicCall(OPERATOR opr, INTRINSIC intrn,
 }
 
 //****************************************************************************
+
+static void 
+DeclareActiveModule()
+{
+  // Cf. dra_ec.cxx / DRA_EC_Declare_Types()
+  // type active
+  //   sequence
+  //   double precision :: v 
+  //   double precision :: d
+  // end type active
+
+  // Create 'v' (value) and 'd' (deriv) fields
+  FLD_HANDLE valFld = New_FLD();  
+  TY_IDX valTyIdx = MTYPE_To_TY(MTYPE_F8);
+  FLD_Init(valFld, Save_Str("v"), valTyIdx, 0);
+  
+  FLD_HANDLE derivFld = New_FLD();
+  TY_IDX derivTyIdx = MTYPE_To_TY(MTYPE_F8);
+  FLD_Init(derivFld, Save_Str("d"), derivTyIdx, TY_size(valTyIdx));
+  Set_FLD_last_field(derivFld);
+  
+  // Decare a struct with above fields
+  TY_IDX activeTyIdx;
+  TY& activeTy = New_TY(activeTyIdx); // sets 'activeTyIdx'
+  INT64 activeSz = 2 * MTYPE_byte_size(valTyIdx);
+  TY_Init (activeTy, activeSz, KIND_STRUCT, MTYPE_M, Save_Str("active"));
+  Set_TY_fld(activeTy, valFld); // location of first field
+  Set_TY_align(activeTyIdx, 8);
+  Set_TY_is_sequence(activeTy);
+  Set_TY_is_external(activeTy);
+  
+#if 0  
+  // FIXME // declare type to be "external" in the SYM_TAB
+  ST* stHandleType = New_ST(GLOBAL_SYMTAB);
+  ST_Init(stHandleType, Save_Str("active"), CLASS_TYPE,
+	  SCLASS_UNKNOWN, EXPORT_LOCAL, activeTyIdx); 
+#endif
+  
+  ActiveTypeTyIdx = activeTyIdx;
+}
+
+
+// FIXME: modify symtab.cxx if this works out
+static TY_IDX
+MY_Make_Array_Type1 (TYPE_ID elem_ty, INT32 ndim, INT64 len)
+{
+  return MY_Make_Array_Type(MTYPE_To_TY (elem_ty), ndim, len);
+}
+
+static TY_IDX
+MY_Make_Array_Type (TY_IDX elem_ty, INT32 ndim, INT64 len)
+{
+    INT64 elem_sz = TY_size (elem_ty);
+    UINT elem_align = TY_align(elem_ty);
+    FmtAssert(elem_sz > 0 && elem_align > 0,
+              ("Cannot make an array of %s", TY_name (elem_ty)));
+    
+    ARB_HANDLE arb,arb_first;
+    for (UINT i = 0; i < ndim; ++i) {
+       arb = New_ARB ();
+       if (i==0) {
+	 arb_first = arb;
+       }
+       ARB_Init (arb, 0, len - 1, elem_sz);
+       Set_ARB_dimension (arb, ndim-i);
+    }
+    
+    Set_ARB_last_dimen (arb);
+    Set_ARB_first_dimen (arb_first);
+    
+    TY_IDX ty_idx;
+    TY& ty = New_TY (ty_idx);
+    TY_Init (ty, elem_sz * ndim * len, KIND_ARRAY, MTYPE_UNKNOWN, 0);
+    Set_TY_align (ty_idx, elem_align);
+    Set_TY_etype (ty, elem_ty);
+    Set_TY_arb (ty, arb_first);
+
+    return ty_idx;
+
+} // Make_Array_Type
