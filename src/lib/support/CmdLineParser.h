@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.h,v 1.4 2004/03/02 20:25:54 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.h,v 1.5 2004/04/28 17:46:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -287,6 +287,9 @@ private:
   void Ctor();
   void Reset();
   void CheckForErrors(const OptArgDesc* optArgDescs);
+
+  const OptArgDesc* 
+  CreateSortedCopy(const OptArgDesc* optArgDescs);
 
   // Parsing helpers
   SwDesc

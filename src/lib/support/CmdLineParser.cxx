@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.cxx,v 1.5 2004/03/03 16:30:49 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.cxx,v 1.6 2004/04/28 17:46:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -25,6 +25,8 @@
 #include <string.h> // <cstring>
 #include <errno.h>  // <cerrno>
 
+#include <algorithm> // for sort
+
 //************************** Open64 Include Files ***************************
 
 //*************************** User Include Files ****************************
@@ -38,6 +40,39 @@ using std::string;
 static string MISSING_SWITCH = "Missing switch after -";
 static string UNKNOWN_SWITCH = "Unknown option switch: ";
 static string MISSING_ARG = "Missing argument for switch: ";
+
+//*************************** Forward Declarations ***************************
+
+// lt_OptArgDesc: Used to sort CmdLineParser::OptArgDesc
+struct lt_OptArgDesc
+{
+  // return true if x1 < x2; false otherwise
+  bool operator()(const CmdLineParser::OptArgDesc& x1, 
+		  const CmdLineParser::OptArgDesc& x2) const
+  {
+    // There are three possibilities, listed in order of preference:
+    //   - both long switches are present 
+    //   - both short switches are present
+    //   - one short and one long switch
+    if (x1.swLong && x2.swLong) {
+      return (strcmp(x1.swLong, x2.swLong) < 0);
+    }
+    else if (x1.swShort != 0 && x2.swShort != 0) {
+      return (x1.swShort < x2.swShort);
+    } 
+    else {
+      if (x1.swLong && x2.swShort != 0) {
+	return (x1.swLong[0] < x2.swShort);
+      } 
+      else {
+	return (x1.swShort < x2.swLong[0]);
+      }
+    }
+  }
+
+private:
+
+};
 
 //****************************************************************************
 
@@ -102,13 +137,14 @@ CmdLineParser::~CmdLineParser()
 
 
 void
-CmdLineParser::Parse(const OptArgDesc* optArgDescs, 
+CmdLineParser::Parse(const OptArgDesc* optArgDescsOrig, 
 		     int argc, const char* const argv[])
 { 
   Reset();
   command = argv[0]; // always do first so it will be available after errors
   
-  CheckForErrors(optArgDescs);
+  CheckForErrors(optArgDescsOrig);  
+  const OptArgDesc* optArgDescs = CreateSortedCopy(optArgDescsOrig);
   
   bool endOfOpts = false;  // are we at end of optional args?
   
@@ -177,6 +213,8 @@ CmdLineParser::Parse(const OptArgDesc* optArgDescs,
       arguments.push_back(string(str));
     } 
   } 
+  
+  delete[] optArgDescs;
 }
 
 
@@ -393,6 +431,32 @@ CmdLineParser::Reset()
 }
 
 
+// CreateSortedCopy: create a sorted NULL-terminated copy of
+// 'optArgDescs'.  WARNING: the OptArgDesc objects are bitwise-copied.
+const CmdLineParser::OptArgDesc* 
+CmdLineParser::CreateSortedCopy(const OptArgDesc* optArgDescs)
+{
+  // Find the size, not including the NULL-terminator
+  unsigned int sz = 0; 
+  for (const OptArgDesc* p = optArgDescs; *p != OptArgDesc_NULL; ++p) { ++sz; }
+  
+  // Make a copy of 'optArgDescs'
+  OptArgDesc* copy = new OptArgDesc[sz+1];
+  unsigned int i = 0; 
+  for (const OptArgDesc* p = optArgDescs; *p != OptArgDesc_NULL; ++p, ++i) {
+    copy[i] = *p; // bitwise copy is ok
+  }
+  copy[sz] = OptArgDesc_NULL; // add the NULL-terminator
+  
+  // Sort
+  if (sz > 1) {
+    std::sort(&copy[0], &copy[sz-1], lt_OptArgDesc());
+  }
+  
+  return copy;
+}
+
+
 // CheckForErrors: Checks argument descriptor for errors
 void
 CmdLineParser::CheckForErrors(const OptArgDesc* optArgDescs)
@@ -481,8 +545,8 @@ CmdLineParser::MakeSwitchDesc(const char* str)
 }
 
 
-// FindOptDesc: Given a NULL-terminated array of OptArgDesc and an
-// option switch, return a reference to the appropriate OptArgDesc.
+// FindOptDesc: Given a *sorted* NULL-terminated array of OptArgDesc and
+// an option switch, return a reference to the appropriate OptArgDesc.
 // If 'errOnMultipleMatches' is true, checks to make sure we don't
 // match more than one descriptor (useful for testing long argument
 // abbreviation).
@@ -491,7 +555,12 @@ CmdLineParser::FindOptDesc(const OptArgDesc* optArgDescs, const SwDesc& swdesc,
 			   bool errOnMultipleMatches)
 {
   // Note: Because there will never be very many options, we simply
-  // use a linear search.
+  //   use a linear search.
+  // Note: A long option may be a substring of another long option!
+  //   Because 'optArgDescs' will be sorted, any options that are
+  //   substrings of other options will be ordered so that they appear
+  //   before the option that contains them, e.g. 'xx', 'xxx', 'xxxx',
+  //   'xxxxx'.
   
   // Try to find a matching descriptor
   unsigned int swLen = swdesc.sw.length();
@@ -511,17 +580,25 @@ CmdLineParser::FindOptDesc(const OptArgDesc* optArgDescs, const SwDesc& swdesc,
   }
   if (!odesc) { return NULL; }
   
-  // We have a match. Check for more matches.
+  // We have a match. Check for more matches ==> ambiguity.
   const OptArgDesc* m = NULL;
   if (errOnMultipleMatches && (m = FindOptDesc((odesc+1), swdesc, false))) {
-    string msg = "Switch `"; 
-    msg += swdesc.sw; msg += "' matches two different options: ";
-    if (swdesc.isLong) {
-      msg += odesc->swLong; msg += ", "; msg += m->swLong;
-    } else {
-      msg += odesc->swShort; msg += ", "; msg += m->swShort;
-    }
-    throw ParseError(msg);
+    // Special case to handle a long option that is a substring of
+    // another. If the long option switch exactly matches 'odesc' and
+    // it is different than 'm' then we do not want to generate an
+    // ambiguous option error.
+    bool ok = (swdesc.isLong && (strcmp(odesc->swLong, swdesc.sw.c_str()) == 0)
+	       && (strcmp(odesc->swLong, m->swLong) != 0));
+    if (!ok) {
+      string msg = "Switch `"; 
+      msg += swdesc.sw; msg += "' matches two different options: ";
+      if (swdesc.isLong) {
+	msg += odesc->swLong; msg += ", "; msg += m->swLong;
+      } else {
+	msg += odesc->swShort; msg += ", "; msg += m->swShort;
+      }
+      throw ParseError(msg);
+    } 
   }
   
   return odesc;
