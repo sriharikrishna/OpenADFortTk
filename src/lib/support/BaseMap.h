@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/BaseMap.h,v 1.1 2004/06/09 20:41:43 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/BaseMap.h,v 1.2 2004/06/30 23:45:00 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -66,6 +66,21 @@ public:
     pair<typename std::map<FromTy, ToTy>::iterator, bool> p = 
       insert(make_pair(x, y)); // std::map<FromTy, ToTy>::value_type
     return p.second;
+  }
+  
+  // Dump: Dump that integer values in the map
+  virtual void Dump(std::ostream& o = std::cerr) const {
+    o << "{ Map:\n";
+    for (typename std::map<FromTy, ToTy>::const_iterator it = begin(); 
+	 it != end(); ++it) {
+      o << "(" << it->first << " --> " << it->second << ")\n";
+    }
+    o << "}\n";
+    o.flush();
+  }
+  
+  virtual void DDump() const {
+    Dump(std::cerr);
   }
 
 protected:
