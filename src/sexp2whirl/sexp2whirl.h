@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2whirl.h,v 1.1 2004/12/15 20:59:24 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2whirl.h,v 1.2 2004/12/20 15:18:13 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -50,21 +50,10 @@ namespace sexp2whirl {
   };
   
   
-  // Translate the whole IR, return a PU_FOREST and set GBL_SYMTAB state.
+  // Translate the whole WHIRL_IR, return a PU_FOREST and set GBL_SYMTAB state.
   extern PU_Info*
   TranslateIR(sexp_t* ir, int flags = 0);
-    
-  // Translate and return a PU_TREE (a PU and all children)
-  extern PU_Info*
-  TranslatePUTree(sexp_t* pu_tree, int flags = 0);
-    
-  // Translate and return a PU and set PU_SYMTAB state.
-  extern PU_Info* 
-  TranslatePU(sexp_t* pu, int flags = 0);
 
-  // Translate and return a WHIRL_AST
-  extern WN* 
-  TranslateWN(sexp_t* wn, int flags = 0);
   
   // Dump to std::cout
   extern void DumpIR(sexp_t* ir, int flags);

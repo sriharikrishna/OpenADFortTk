@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/Attic/Makefile,v 1.2 2004/12/15 21:00:43 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/Attic/Makefile,v 1.3 2004/12/20 15:18:12 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -34,11 +34,10 @@ VPATH = $(SRCS)
 OBJS = \
 	main.o \
 	Args.o \
-	sexp2whirl.o 
-
-#	\
-#	wn2sexp.o \
-#	symtab2sexp.o 
+	sexp2whirl.o \
+	\
+	sexp2wn.o \
+	sexp2symtab.o
 
 ####################
 
