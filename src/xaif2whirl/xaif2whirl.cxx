@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.10 2003/09/17 19:41:44 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.11 2003/09/18 19:18:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -59,41 +59,43 @@ using std::endl;
 using namespace xaif2whirl;
 
 static void
-TranslateCallGraph(PU_Info* pu_forest, DOMDocument* doc, XlationContext& ctxt);
+TranslateCallGraph(PU_Info* pu_forest, const DOMDocument* doc, 
+		   XlationContext& ctxt);
 
 static XAIFSymToWhirlSymMap*
-TranslateScopeHierarchy(DOMDocument* doc, XlationContext& ctxt);
+TranslateScopeHierarchy(const DOMDocument* doc, XlationContext& ctxt);
 
 static void
-TranslateCFG(PU_Info* pu_forest, DOMElement* cfgElem, XlationContext& ctxt);
+TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
+	     XlationContext& ctxt);
 
 static void
-TranslateCFG(WN *wn_pu, DOMElement* cfgElem, XlationContext& ctxt);
+TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt);
 
 static void
-TranslateBB(WN *wn_pu, DOMElement* bbElem, XlationContext& ctxt);
+TranslateBB(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt);
 
 //*************************** Forward Declarations ***************************
 
 static void
-xlate_BasicBlock(WN *wn_pu, DOMElement* bbElem, XlationContext& ctxt);
+xlate_BasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt);
 
 static void
-xlate_BBCondition(WN* wn_pu, DOMElement* bbElem, XlationContext& ctxt);
+xlate_BBCondition(WN* wn_pu, const DOMElement* bbElem, XlationContext& ctxt);
 
 
 static bool
-FindNextStmtInterval(DOMElement* bbElem, IdList<WNId>* bbIdList, 
+FindNextStmtInterval(const DOMElement* bbElem, IdList<WNId>* bbIdList, 
 		     WNIdToWNMap* wnmap, WN* blkWN,
 		     DOMElement* &begXAIF, DOMElement* &endXAIF,
 		     WN* &begWN, WN* &endWN);
 
 static WN*
-FindIntervalBoundary(DOMElement* elem, IdList<WNId>* bbIdList, 
+FindIntervalBoundary(const DOMElement* elem, IdList<WNId>* bbIdList, 
 		     WNIdToWNMap* wnmap, WN* blkWN, int boundary);
 
 static WN* 
-FindWNBlock(DOMElement* bbElem, WN* wn_pu, 
+FindWNBlock(const DOMElement* bbElem, WN* wn_pu, 
 	    IdList<WNId>* idlist, WNIdToWNMap* wnmap);
 
 static WN* 
@@ -108,22 +110,22 @@ RemoveFromWhirlIdMaps(WN* wn, WNToWNIdMap* wn2idmap, WNIdToWNMap* id2wnmap);
 //****************************************************************************
 
 static void
-xlate_Scope(DOMElement* elem, XAIFSymToWhirlSymMap* symMap, 
+xlate_Scope(const DOMElement* elem, XAIFSymToWhirlSymMap* symMap, 
 	    XlationContext& ctxt);
 
 static void
-xlate_SymbolTable(DOMElement* STElem, const char* scopeId, PU_Info* pu, 
+xlate_SymbolTable(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
 		  XAIFSymToWhirlSymMap* symMap);
 
 static void
-xlate_Symbol(DOMElement* elem, const char* scopeId, PU_Info* pu, 
+xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
 	     XAIFSymToWhirlSymMap* symMap);
 
 //****************************************************************************
 
 // TranslateIR: 
 void
-xaif2whirl::TranslateIR(PU_Info* pu_forest, DOMDocument* doc)
+xaif2whirl::TranslateIR(PU_Info* pu_forest, const DOMDocument* doc)
 {
   Diag_Set_Phase("WHIRL to XAIF: translate IR");
   
@@ -153,7 +155,8 @@ xaif2whirl::TranslateIR(PU_Info* pu_forest, DOMDocument* doc)
 
 // TranslateCallGraph: 
 static void
-TranslateCallGraph(PU_Info* pu_forest, DOMDocument* doc, XlationContext& ctxt)
+TranslateCallGraph(PU_Info* pu_forest, const DOMDocument* doc,
+		   XlationContext& ctxt)
 {
   // FIXME: Do something about the ScopeHeirarchy
   XAIFSymToWhirlSymMap* symmap = TranslateScopeHierarchy(doc, ctxt);
@@ -162,9 +165,10 @@ TranslateCallGraph(PU_Info* pu_forest, DOMDocument* doc, XlationContext& ctxt)
   // -------------------------------------------------------
   // Translate each ControlFlowGraph in the CallGraph
   // -------------------------------------------------------
+  DOMDocument* d = const_cast<DOMDocument*>(doc); // Xerces can't take a const!
   DOMNodeIterator* it = 
-    doc->createNodeIterator(doc, DOMNodeFilter::SHOW_ALL, 
-			    new XAIF_CFGElemFilter(), true);
+    d->createNodeIterator((DOMNode*)doc, DOMNodeFilter::SHOW_ALL, 
+			  new XAIF_CFGElemFilter(), true);
   for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
     DOMElement* elem = dynamic_cast<DOMElement*>(node);
 
@@ -178,16 +182,17 @@ TranslateCallGraph(PU_Info* pu_forest, DOMDocument* doc, XlationContext& ctxt)
 
 // TranslateScopeHierarchy: 
 static XAIFSymToWhirlSymMap*
-TranslateScopeHierarchy(DOMDocument* doc, XlationContext& ctxt)
+TranslateScopeHierarchy(const DOMDocument* doc, XlationContext& ctxt)
 {
   XAIFSymToWhirlSymMap* symMap = new XAIFSymToWhirlSymMap;
 
   // -------------------------------------------------------
   // Enter symbols for all Scopes in the ScopeHierarchy
   // -------------------------------------------------------
+  DOMDocument* d = const_cast<DOMDocument*>(doc); // Xerces can't take a const!
   DOMNodeIterator* it = 
-    doc->createNodeIterator(doc, DOMNodeFilter::SHOW_ALL, 
-			    new XAIF_ScopeElemFilter(), true);
+    d->createNodeIterator((DOMNode*)doc, DOMNodeFilter::SHOW_ALL, 
+			  new XAIF_ScopeElemFilter(), true);
   for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
     DOMElement* elem = dynamic_cast<DOMElement*>(node);
     xlate_Scope(elem, symMap, ctxt);
@@ -200,7 +205,8 @@ TranslateScopeHierarchy(DOMDocument* doc, XlationContext& ctxt)
 
 // TranslateCFG: 
 static void
-TranslateCFG(PU_Info* pu_forest, DOMElement* cfgElem, XlationContext& ctxt)
+TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
+	     XlationContext& ctxt)
 {
   // -------------------------------------------------------
   // Translate XAIF CFG to WHIRL PU.
@@ -218,6 +224,12 @@ TranslateCFG(PU_Info* pu_forest, DOMElement* cfgElem, XlationContext& ctxt)
   WN *wn_pu = PU_Info_tree_ptr(pu);
   TranslateCFG(wn_pu, cfgElem, ctxt);
 
+#if 0
+  IR_set_dump_order(TRUE); /* dump parent before children*/
+  fprintf(stderr, "\n----------------------------------------------------\n");
+  fdump_tree(stderr, wn_pu);
+#endif
+
   SaveOpen64PUGlobalVars(pu);
 }
 
@@ -226,7 +238,7 @@ TranslateCFG(PU_Info* pu_forest, DOMElement* cfgElem, XlationContext& ctxt)
 // corresponding WHIRL tree 'wn_pu', modify the WHIRL to reflect the
 // XAIF.
 static void
-TranslateCFG(WN *wn_pu, DOMElement* cfgElem, XlationContext& ctxt)
+TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
 {
   pair<WNToWNIdMap*, WNIdToWNMap*> wnmaps = CreateWhirlIdMaps(wn_pu);
   ctxt.SetWNToIdMap(wnmaps.first);
@@ -237,7 +249,7 @@ TranslateCFG(WN *wn_pu, DOMElement* cfgElem, XlationContext& ctxt)
   // -------------------------------------------------------
   DOMDocument* doc = cfgElem->getOwnerDocument();
   DOMNodeIterator* it = 
-    doc->createNodeIterator(cfgElem, DOMNodeFilter::SHOW_ALL, 
+    doc->createNodeIterator((DOMNode*)cfgElem, DOMNodeFilter::SHOW_ALL, 
 			    new XAIF_BBElemFilter(), true);
   for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
     DOMElement* elem = dynamic_cast<DOMElement*>(node);
@@ -246,19 +258,13 @@ TranslateCFG(WN *wn_pu, DOMElement* cfgElem, XlationContext& ctxt)
   }
   it->release();
 
-#if 0
-  IR_set_dump_order(TRUE); /* dump parent before children*/
-  fprintf(stderr, "\n----------------------------------------------------\n");
-  fdump_tree(stderr, wn_pu);
-#endif
-
   delete wnmaps.first;
   delete wnmaps.second;
 }
 
 // TranslateBB: 
 static void
-TranslateBB(WN *wn_pu, DOMElement* bbElem, XlationContext& ctxt)
+TranslateBB(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
 {
   if (XAIF_BBElemFilter::IsBB(bbElem)) {
     xlate_BasicBlock(wn_pu, bbElem, ctxt);
@@ -267,12 +273,12 @@ TranslateBB(WN *wn_pu, DOMElement* bbElem, XlationContext& ctxt)
 	     || XAIF_BBElemFilter::IsBBPostLoop(bbElem)) {
     xlate_BBCondition(wn_pu, bbElem, ctxt);
   } else if (XAIF_BBElemFilter::IsBBForLoop(bbElem)) {
-    // FIXME: translate for loop stuff?
+    // FIXME: what to do with ForLoops?
   }
 }
 
 static void
-xlate_BasicBlock(WN *wn_pu, DOMElement* bbElem, XlationContext& ctxt)
+xlate_BasicBlock(WN *wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
 {
   // -------------------------------------------------------
   // 1. Find some info now to prevent several recalculations
@@ -346,7 +352,7 @@ xlate_BasicBlock(WN *wn_pu, DOMElement* bbElem, XlationContext& ctxt)
 
 
 static void
-xlate_BBCondition(WN* wn_pu, DOMElement* bbElem, XlationContext& ctxt)
+xlate_BBCondition(WN* wn_pu, const DOMElement* bbElem, XlationContext& ctxt)
 {
   // -------------------------------------------------------
   // 1. Find corresponding WHIRL condition node
@@ -408,7 +414,7 @@ xlate_BBCondition(WN* wn_pu, DOMElement* bbElem, XlationContext& ctxt)
 // xaif:Marker element with annotation attribute and will never be
 // NULL.
 static bool
-FindNextStmtInterval(DOMElement* bbElem, IdList<WNId>* bbIdList, 
+FindNextStmtInterval(const DOMElement* bbElem, IdList<WNId>* bbIdList, 
 		     WNIdToWNMap* wnmap, WN* blkWN,
 		     DOMElement* &begXAIF, DOMElement* &endXAIF,
 		     WN* &begWN, WN* &endWN)
@@ -481,14 +487,13 @@ FindNextStmtInterval(DOMElement* bbElem, IdList<WNId>* bbIdList,
 // corrresponding WN* should never be NULL.  If 'elem' is NULL, the
 // interval is NULL.
 static WN*
-FindIntervalBoundary(DOMElement* elem, IdList<WNId>* bbIdList, 
+FindIntervalBoundary(const DOMElement* elem, IdList<WNId>* bbIdList, 
 		     WNIdToWNMap* wnmap, WN* blkWN, int boundary)
 {
   if (!elem) {
     return NULL;
   }
 
-  // FIXME: Abstract this out
   WN* wn = NULL;
   if (boundary == 0) {
     
@@ -556,7 +561,7 @@ FindIntervalBoundary(DOMElement* elem, IdList<WNId>* bbIdList,
 // FindWNBlock: Given an XAIF basic block element, find the
 // corresponding WHIRL block.
 static WN* 
-FindWNBlock(DOMElement* bbElem, WN* wn_pu, 
+FindWNBlock(const DOMElement* bbElem, WN* wn_pu, 
 	    IdList<WNId>* idlist, WNIdToWNMap* wnmap)
 {
   // We pass 'idlist' to avoid continual reparsing
@@ -573,8 +578,8 @@ FindWNBlock(DOMElement* bbElem, WN* wn_pu,
 // some descendent 'wn', return the BLOCK WN that contains 'wn', or
 // NULL.
 // 
-// FIXME: I can't see a better way of doing this since we don't have
-// parent pointers.
+// FIXME: I can't see a more efficient way of doing this (besides some
+// sort of pre-calculated map) since we don't have parent pointers.
 static WN* 
 FindParentWNBlock(WN* wn_tree, WN* wn)
 {
@@ -667,7 +672,7 @@ RemoveFromWhirlIdMaps(WN* wn, WNToWNIdMap* wn2idmap, WNIdToWNMap* id2wnmap)
 //****************************************************************************
 
 ST*
-xaif2whirl::GetST(DOMElement* elem, XlationContext& ctxt)
+xaif2whirl::GetST(const DOMElement* elem, XlationContext& ctxt)
 {
   const XMLCh* scopeIdX = elem->getAttribute(XAIFStrings.attr_scopeId_x());
   const XMLCh* symIdX = elem->getAttribute(XAIFStrings.attr_symId_x());
@@ -682,7 +687,7 @@ xaif2whirl::GetST(DOMElement* elem, XlationContext& ctxt)
 }
 
 static void
-xlate_Scope(DOMElement* elem, XAIFSymToWhirlSymMap* symMap, 
+xlate_Scope(const DOMElement* elem, XAIFSymToWhirlSymMap* symMap, 
 	    XlationContext& ctxt)
 {
   // Find the corresponding WHIRL symbol table (ST_TAB)
@@ -700,24 +705,25 @@ xlate_Scope(DOMElement* elem, XAIFSymToWhirlSymMap* symMap,
 }  
 
 static void
-xlate_SymbolTable(DOMElement* STElem, const char* scopeId, PU_Info* pu, 
+xlate_SymbolTable(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
 		  XAIFSymToWhirlSymMap* symMap)
 {
   // For all xaif:Symbol in the xaif:SymbolTable
-  DOMDocument* doc = STElem->getOwnerDocument();
+  DOMDocument* doc = elem->getOwnerDocument();
   DOMNodeIterator* it = 
-    doc->createNodeIterator(STElem, DOMNodeFilter::SHOW_ALL, 
+    doc->createNodeIterator((DOMNode*)elem, DOMNodeFilter::SHOW_ALL, 
 			    new XAIF_SymbolElemFilter(), true);
   for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
-    DOMElement* elem = dynamic_cast<DOMElement*>(node);
-    xlate_Symbol(elem, scopeId, pu, symMap);
+    DOMElement* e = dynamic_cast<DOMElement*>(node);
+    xlate_Symbol(e, scopeId, pu, symMap);
   }
   it->release();
 }
 
-// FIXME: only handles global and PU scopes
+// xlate_Symbol: Note that symbols can only be in a global or PU
+// scope; IOW, there are no block scopes.
 static void
-xlate_Symbol(DOMElement* elem, const char* scopeId, PU_Info* pu, 
+xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
 	     XAIFSymToWhirlSymMap* symMap)
 {
   // 1. Initialize
@@ -735,7 +741,10 @@ xlate_Symbol(DOMElement* elem, const char* scopeId, PU_Info* pu,
 
   // 2. Find or Create symbol
   ST* st = NULL;
-  if (symId == 0) {  // check temporary tag FIXME
+  if (symId == 0) {
+
+    // FIXME: temporaries will have a tag marking them as such.  We
+    // should check this.
     
     // Create the symbol
     const XMLCh* kindX = elem->getAttribute(XAIFStrings.attr_kind_x());
@@ -770,33 +779,43 @@ xlate_Symbol(DOMElement* elem, const char* scopeId, PU_Info* pu,
 
 //****************************************************************************
 
-// FIXME: move to another place
+unsigned int
+xaif2whirl::GetPositionAttr(const DOMElement* elem)
+{
+  const XMLCh* posAttrX = elem->getAttribute(XAIFStrings.attr_position_x());
+  XercesStrX posAttr = XercesStrX(posAttrX);
+  
+  unsigned int pos = strtol(posAttr.c_str(), (char **)NULL, 10);
+  return pos;
+}
+
+
 SymTabId
-GetSymTabId(DOMElement* elem)
+xaif2whirl::GetSymTabId(const DOMElement* elem)
 {
   return GetId<SymTabId>(elem, XAIFStrings.tag_SymTabId());
 }
 
 SymId
-GetSymId(DOMElement* elem)
+xaif2whirl::GetSymId(const DOMElement* elem)
 {
   return GetId<SymId>(elem, XAIFStrings.tag_SymId());
 }
 
 PUId
-GetPUId(DOMElement* elem)
+xaif2whirl::GetPUId(const DOMElement* elem)
 {
   return GetId<PUId>(elem, XAIFStrings.tag_PUId());
 }
 
 WNId
-GetWNId(DOMElement* elem)
+xaif2whirl::GetWNId(const DOMElement* elem)
 {
   return GetId<WNId>(elem, XAIFStrings.tag_WHIRLId());
 }
 
 IdList<WNId>*
-GetWNIdList(DOMElement* elem)
+xaif2whirl::GetWNIdList(const DOMElement* elem)
 {
   return GetIdList<WNId>(elem, XAIFStrings.tag_WHIRLId());
 }
@@ -805,7 +824,7 @@ GetWNIdList(DOMElement* elem)
 // GetId, GetIdList: <see header>
 template <class T>
 T
-GetId(DOMElement* elem, const char* tag)
+xaif2whirl::GetId(const DOMElement* elem, const char* tag)
 {
   const XMLCh* annot = (elem) ? elem->getAttribute(XAIFStrings.attr_annot_x())
     : NULL;
@@ -816,7 +835,7 @@ GetId(DOMElement* elem, const char* tag)
 
 template <class T>
 IdList<T>*
-GetIdList(DOMElement* elem, const char* tag)
+xaif2whirl::GetIdList(const DOMElement* elem, const char* tag)
 {
   const XMLCh* annot = (elem) ? elem->getAttribute(XAIFStrings.attr_annot_x())
     : NULL;
@@ -829,7 +848,7 @@ GetIdList(DOMElement* elem, const char* tag)
 // GetId, GetIdList: <see header>
 template <class T>
 T
-GetId(const char* idstr, const char* tag)
+xaif2whirl::GetId(const char* idstr, const char* tag)
 {
   T id = 0;
   if (!idstr) { return id; }
@@ -850,7 +869,7 @@ GetId(const char* idstr, const char* tag)
 
 template <class T>
 IdList<T>*
-GetIdList(const char* idstr, const char* tag)
+xaif2whirl::GetIdList(const char* idstr, const char* tag)
 {
   IdList<T>* idlist = new IdList<T>;
 
@@ -881,6 +900,22 @@ GetIdList(const char* idstr, const char* tag)
   }
 
   return idlist;
+}
+
+//****************************************************************************
+
+WN*
+CreateIntrinsicCall(TYPE_ID rtype, const char* fname, unsigned int argc)
+{
+  // Cf. WN* Gen_Call_Shell(...) in be/com/wn_instrument.cxx
+  
+  TY_IDX ty = Make_Function_Type(MTYPE_To_TY(rtype));
+  ST* st = Gen_Intrinsic_Function(ty, fname); // create if non-existant
+  
+  WN* callWN = WN_Call(rtype, MTYPE_V, argc, st);
+  WN_Set_Call_Default_Flags(callWN);
+  
+  return callWN;
 }
 
 //****************************************************************************

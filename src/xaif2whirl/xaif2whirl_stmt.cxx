@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.1 2003/09/17 19:42:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.2 2003/09/18 19:18:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -59,24 +59,24 @@ using std::endl;
 using namespace xaif2whirl;
 
 static WN* 
-xlate_Assignment(DOMElement* elem, XlationContext& ctxt);
+xlate_Assignment(const DOMElement* elem, XlationContext& ctxt);
 
 static WN*
-xlate_AssignmentLHS(DOMElement* elem, XlationContext& ctxt);
+xlate_AssignmentLHS(const DOMElement* elem, XlationContext& ctxt);
 
 static WN*
-xlate_AssignmentRHS(DOMElement* elem, XlationContext& ctxt);
+xlate_AssignmentRHS(const DOMElement* elem, XlationContext& ctxt);
 
 
 static WN* 
-xlate_SubroutineCall(DOMElement* elem, XlationContext& ctxt);
+xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt);
 
 
 static WN* 
-xlate_DerivativePropagator(DOMElement* elem, XlationContext& ctxt);
+xlate_DerivativePropagator(const DOMElement* elem, XlationContext& ctxt);
 
 static WN* 
-xlate_Saxpy(DOMElement* elem, XlationContext& ctxt, bool saxpy);
+xlate_Saxpy(const DOMElement* elem, XlationContext& ctxt, bool saxpy);
 
 //****************************************************************************
 
@@ -92,7 +92,7 @@ PatchWN_IO_ITEM_list(WN* wn, XlationContext& ctxt);
 //****************************************************************************
 
 WN* 
-xaif2whirl::TranslateStmt(DOMElement* stmt, XlationContext& ctxt)
+xaif2whirl::TranslateStmt(const DOMElement* stmt, XlationContext& ctxt)
 {
   WN* wn = NULL;
   
@@ -114,7 +114,7 @@ xaif2whirl::TranslateStmt(DOMElement* stmt, XlationContext& ctxt)
 
 
 static WN* 
-xlate_Assignment(DOMElement* elem, XlationContext& ctxt)
+xlate_Assignment(const DOMElement* elem, XlationContext& ctxt)
 {
   DOMElement* lhs_elem = GetChildElement(elem, XAIFStrings.elem_AssignLHS_x());
   DOMElement* rhs_elem = GetChildElement(elem, XAIFStrings.elem_AssignRHS_x());
@@ -133,7 +133,7 @@ xlate_Assignment(DOMElement* elem, XlationContext& ctxt)
 }
 
 static WN*
-xlate_AssignmentLHS(DOMElement* elem, XlationContext& ctxt)
+xlate_AssignmentLHS(const DOMElement* elem, XlationContext& ctxt)
 {
   // VariableReferenceType
   DOMElement* varref = GetFirstChildElement(elem);
@@ -144,7 +144,7 @@ xlate_AssignmentLHS(DOMElement* elem, XlationContext& ctxt)
 }
 
 static WN*
-xlate_AssignmentRHS(DOMElement* elem, XlationContext& ctxt)
+xlate_AssignmentRHS(const DOMElement* elem, XlationContext& ctxt)
 {
   // ExpressionType
   DOMElement* child = GetFirstChildElement(elem);
@@ -156,14 +156,14 @@ xlate_AssignmentRHS(DOMElement* elem, XlationContext& ctxt)
 
 
 static WN* 
-xlate_SubroutineCall(DOMElement* elem, XlationContext& ctxt)
+xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
 {
-  TYPE_ID rtype = MTYPE_V; // MTYPE_F8
-
-  // 1. Translate arguments
+  // -------------------------------------------------------
+  // 1. Gather the arguments, sorted by "position" attribute and
+  // translate them into a WHIRL expression tree.
+  // -------------------------------------------------------
   unsigned int numArgs = GetChildElementCount(elem);
-  std::vector<WN*> args(numArgs, NULL);
-  
+  std::vector<WN*> args_wn(numArgs, NULL);
   for (DOMElement* arg = GetFirstChildElement(elem); (arg); 
        arg = GetNextSiblingElement(arg) ) {
     
@@ -171,31 +171,31 @@ xlate_SubroutineCall(DOMElement* elem, XlationContext& ctxt)
     ASSERT_FATAL(XMLString::equals(nmX, XAIFStrings.elem_Argument_x()), 
 		 (DIAG_A_STRING, "Programming error."));
     
-    const XMLCh* posX = arg->getAttribute(XAIFStrings.attr_position_x());
-    XercesStrX posStr = XercesStrX(posX);
-    UINT pos = strtol(posStr.c_str(), (char **)NULL, 10); // 1-based
-    // FIXME: remove second test to accomodate missing constant arguments
+    unsigned int pos = GetPositionAttr(arg); // 1-based
     ASSERT_FATAL(1 <= pos /* && pos <= numArgs */, 
-		 (DIAG_A_STRING, "Programming error."));
-
+		 (DIAG_A_STRING, "Error."));
+    // FIXME: remove second test to accomodate missing constant arguments
+    
     DOMElement* argExpr = GetFirstChildElement(arg);
     ctxt.CreateContext(XlationContext::NOFLAG);
     WN* argExprWN = TranslateVarRef(argExpr, ctxt);
     ctxt.DeleteContext();
-    args[pos - 1] = argExprWN;
+    args_wn[pos - 1] = argExprWN;
   }
   
+  // -------------------------------------------------------
   // 2. Create function call
+  // -------------------------------------------------------
+  TYPE_ID rtype = MTYPE_V; // MTYPE_F8 for FuncCall
   ST* st = GetST(elem, ctxt);
   WN* callWN = WN_Call(rtype, MTYPE_V, numArgs, st);
   
   WN_Set_Call_Default_Flags(callWN); // FIXME
   WN_Set_Call_Parm_Mod(callWN);
   
-  // FIXME: do we need to handle paramaters differently?
   for (int i = 0; i < numArgs; ++i) {
-    if (args[i]) {
-      WN_actual(callWN, i) = CreateParm(args[i], WN_PARM_BY_REFERENCE);
+    if (args_wn[i]) { // FIXME: do we need to handle paramaters differently?
+      WN_actual(callWN, i) = CreateParm(args_wn[i], WN_PARM_BY_REFERENCE);
     }
   }
   
@@ -205,14 +205,14 @@ xlate_SubroutineCall(DOMElement* elem, XlationContext& ctxt)
 
 // Must not return an empty block
 static WN* 
-xlate_DerivativePropagator(DOMElement* elem, XlationContext& ctxt)
+xlate_DerivativePropagator(const DOMElement* elem, XlationContext& ctxt)
 {
   WN* blckWN = WN_CreateBlock();
   
   // Accumulate derivative propagator statements and add to block
   DOMDocument* doc = elem->getOwnerDocument();
   DOMNodeIterator* it = 
-    doc->createNodeIterator(elem, DOMNodeFilter::SHOW_ALL, 
+    doc->createNodeIterator((DOMNode*)elem, DOMNodeFilter::SHOW_ALL, 
 			    new XAIF_DerivPropStmt(), true);
   for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
     DOMElement* stmt = dynamic_cast<DOMElement*>(node);
@@ -241,14 +241,13 @@ xlate_DerivativePropagator(DOMElement* elem, XlationContext& ctxt)
   return blckWN;
 }
 
-
+// xlate_Saxpy: handles calls to both
+//   saxpy_a_a(a,x,y): Y=A1*X1+A2*X2+...+Y
+//   sax_a_a(a,x,y)  : Y=A1*X1+A2*X2+...
 static WN* 
-xlate_Saxpy(DOMElement* elem, XlationContext& ctxt, bool saxpy)
+xlate_Saxpy(const DOMElement* elem, XlationContext& ctxt, bool saxpy)
 {
-  // FIXME: better sax/saxpy abstraction
-  // saxpy_a_a(a,x,y) and sax_a_a(a,x,y)
-  const char* fn = (saxpy) ? "saxpy_a_a" : "sax_a_a";
-
+  // 1. Create WHIRL expressions for sax(py) parameters
   // FIXME: could be a list. We ensure there is no list for now.
   ASSERT_FATAL(GetChildElementCount(elem) == 2, 
 	       (DIAG_A_STRING, "Programming error."));
@@ -264,25 +263,13 @@ xlate_Saxpy(DOMElement* elem, XlationContext& ctxt, bool saxpy)
   WN* y_wn = TranslateVarRef(GetFirstChildElement(Y), ctxt);
   ctxt.DeleteContext();
 
-  // ------------------------------------------- // FIXME
-  // WN *call = Gen_Call_Shell(name, rtype, 3); // wn_instrument.cxx
-  
-  TY_IDX ty = Make_Function_Type(MTYPE_To_TY(MTYPE_V));
-  ST* st = Gen_Intrinsic_Function(ty, const_cast<char*>(fn)); // create if non-existant
-
-  Clear_PU_no_side_effects(Pu_Table[ST_pu(st)]); // FIXME
-  Clear_PU_is_pure(Pu_Table[ST_pu(st)]);
-  Set_PU_no_delete(Pu_Table[ST_pu(st)]);
-
-
-  WN* callWN = WN_Call(MTYPE_V, MTYPE_V, 3, st);
-
-  WN_Set_Call_Default_Flags(callWN);
-  WN_Set_Call_Parm_Mod(callWN);
-  // ---------------------------------------------
+  // 2. Create a WHIRL call with the above expressions as paramaters
+  const char* fnm = (saxpy) ? "saxpy_a_a" : "sax_a_a";
+  MTYPE rtype = MTYPE_V;
+  WN* callWN = CreateIntrinsicCall(rtype, fnm, 3);
   
   WN_actual(callWN, 0) = CreateParm(a_wn, WN_PARM_BY_VALUE);
-  WN_actual(callWN, 1) = CreateParm(x_wn, WN_PARM_BY_REFERENCE);
+  WN_actual(callWN, 1) = CreateParm(x_wn, WN_PARM_BY_VALUE);
   WN_actual(callWN, 2) = CreateParm(y_wn, WN_PARM_BY_REFERENCE);
   
   return callWN;
@@ -312,7 +299,8 @@ PatchWN_IO_cray(WN* wn, XlationContext& ctxt)
   IOSTATEMENT iostmt = WN_io_statement(wn);
   ASSERT_WARN(iostmt == IOS_CR_FWF || iostmt == IOS_CR_FWU 
 	      || iostmt == IOS_CR_FRF || iostmt == IOS_CR_FRU,
-	      (DIAG_W2F_UNEXPECTED_IOS, IOSTATEMENT_name(iostmt), "PatchWN_IO"));
+	      (DIAG_W2F_UNEXPECTED_IOS, IOSTATEMENT_name(iostmt), 
+	       "PatchWN_IO_cray"));
   
   // Iterate over IO_ITEMs and translate IOLs (io lists)
   for (INT kidno = 0; kidno < WN_kid_count(wn); ++kidno) {
@@ -343,7 +331,7 @@ PatchWN_IO_ITEM_list(WN* wn, XlationContext& ctxt)
     
   case IOL_IMPLIED_DO:
   case IOL_IMPLIED_DO_1TRIP:
-    assert(false); //FIXME
+    assert(false); // FIXME
     break;
     
   case IOL_LOGICAL: // skip

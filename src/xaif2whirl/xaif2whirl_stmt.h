@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.h,v 1.1 2003/09/17 19:42:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.h,v 1.2 2003/09/18 19:18:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -48,7 +48,7 @@ namespace xaif2whirl {
 // initialized!
 
 WN* 
-TranslateStmt(DOMElement* stmt, XlationContext& ctxt); 
+TranslateStmt(const DOMElement* stmt, XlationContext& ctxt); 
  
 WN*
 PatchWNStmt(WN* wn, XlationContext& ctxt);

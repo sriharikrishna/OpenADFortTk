@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.1 2003/09/17 19:42:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.2 2003/09/18 19:18:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -23,6 +23,8 @@
 #include <string.h> // ANSI: cstring // for strcmp, etc.
 
 #include <iostream>
+#include <vector>
+#include <algorithm>
 
 //************************* Xerces Include Files ****************************
 
@@ -59,18 +61,31 @@ using std::endl;
 
 using namespace xaif2whirl;
 
-// Used with CreateExpressionGraph
+// MyDGNode: Used with CreateExpressionGraph
 typedef std::map<std::string, DGraph::Node*> IdToNodeMap;
 
 class MyDGNode : public DGraph::Node {
 public:
-  MyDGNode(DOMElement* e_) : e(e_) { }
+  MyDGNode(const DOMElement* e_) : e(e_) { }
   virtual ~MyDGNode() { }
 
-  DOMElement* GetElem() { return e; }
+  DOMElement* GetElem() const { return const_cast<DOMElement*>(e); }
   
 private:
-  DOMElement* e;
+  const DOMElement* e;
+};
+
+// lt_ExprArgument: Used to sort operands (arguments) of (to) an
+// expression by the "position" attribute
+struct lt_ExprArgument
+{
+  // return true if n1 < n2; false otherwise
+  bool operator()(const MyDGNode* n1, const MyDGNode* n2) const
+  {
+    unsigned int pos1 = GetPositionAttr(n1->GetElem());
+    unsigned int pos2 = GetPositionAttr(n2->GetElem());
+    return (pos1 < pos2);
+  }
 };
 
 //*************************** Forward Declarations ***************************
@@ -82,11 +97,27 @@ static WN*
 xlate_VarRef(DGraph* g, MyDGNode* n, XlationContext& ctxt);
 
 static WN*
-xlate_Constant(DOMElement* elem, XlationContext& ctxt);
+xlate_Constant(const DOMElement* elem, XlationContext& ctxt);
+
+static WN*
+xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt);
+
+static WN*
+xlate_FunctionCall(DGraph* g, MyDGNode* n, XlationContext& ctxt);
+
+static WN*
+xlate_BooleanOperation(DGraph* g, MyDGNode* n, XlationContext& ctxt);
+
+
+static WN*
+xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt);
+
+static WN*
+xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt);
 
 
 static DGraph* 
-CreateExpressionGraph(DOMNode* node, bool varRef = false);
+CreateExpressionGraph(const DOMElement* elem, bool varRef = false);
 
 //*************************** Forward Declarations ***************************
 
@@ -104,7 +135,7 @@ GetIntrinsicOperator(const char* name);
 
 // TranslateExpression: Given the first node in an expression graph... 
 WN*
-xaif2whirl::TranslateExpression(DOMElement* elem, XlationContext& ctxt)
+xaif2whirl::TranslateExpression(const DOMElement* elem, XlationContext& ctxt)
 {
   if (!elem) {
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
@@ -129,88 +160,40 @@ xlate_Expression(DGraph* g, MyDGNode* n, XlationContext& ctxt)
   const XMLCh* nameX = elem->getNodeName();
   XercesStrX name = XercesStrX(nameX);
   
+  WN* wn = NULL;
   if (XMLString::equals(nameX, XAIFStrings.elem_VarRef_x())) {
 
-    // -------------------------------------------------------
-    // base case: VariableReference
-    // -------------------------------------------------------
+    // VariableReference
     elem = GetFirstChildElement(elem); // skip the xaif:VariableReference node
     ctxt.CreateContext(XlationContext::NOFLAG);
-    WN* wn = TranslateVarRef(elem, ctxt);
+    wn = TranslateVarRef(elem, ctxt);
     ctxt.DeleteContext();
-    return wn;
 
   } else if (XMLString::equals(nameX, XAIFStrings.elem_Constant_x())) {
-
-    // -------------------------------------------------------
-    // base case: Constant
-    // -------------------------------------------------------
-    return xlate_Constant(elem, ctxt);
+    
+    // Constant
+    wn = xlate_Constant(elem, ctxt);
 
   } else if (XMLString::equals(nameX, XAIFStrings.elem_Intrinsic_x())) {
     
-    // -------------------------------------------------------
-    // recursive case: Intrinsic
-    // -------------------------------------------------------
-    const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
-    XercesStrX nm = XercesStrX(nmX);
+    // Intrinsic
+    wn = xlate_Intrinsic(g, n, ctxt);
     
-    UINT opnd_num = GetIntrinsicOperandNum(nm.c_str());
-    OPERATOR op = GetIntrinsicOperator(nm.c_str());
-    
-    // Gather operands for intrinsic 
-    // (FIXME: this needs to be sorted by position)
-    ASSERT_FATAL(n->num_incoming() == opnd_num, 
-		 (DIAG_A_STRING, "Programming error."));
-    std::vector<MyDGNode*> opnd(opnd_num); 
-
-    DGraph::IncomingEdgesIterator it = DGraph::IncomingEdgesIterator(n);
-    for (int i = 0; (bool)it; ++it, ++i) {
-      DGraph::Edge* edge = (DGraph::Edge*)it;
-      opnd[i] = dynamic_cast<MyDGNode*>(edge->source());
-    }
-
-    // Translate each operand into a WHIRL expression tree
-    std::vector<WN*> opnd_wn(opnd_num); 
-    for (int i = 0; i < opnd_num; ++i) {
-      opnd_wn[i] = xlate_Expression(g, opnd[i], ctxt);
-    }
-
-    // Create a WHIRL expression tree for the operator and operands
-    // FIXME: we need to verify the return type
-    switch (opnd_num) {
-    case 1: // unary
-      return WN_Unary(op, MTYPE_F8, opnd_wn[0]);
-    case 2: // binary
-      return WN_Binary(op, MTYPE_F8, opnd_wn[0], opnd_wn[1]);
-    case 3: // ternary
-      return WN_Ternary(op, MTYPE_F8, opnd_wn[0], opnd_wn[1], opnd_wn[2]);
-    default:
-      ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
-    } 
-
   } else if (XMLString::equals(nameX, XAIFStrings.elem_FuncCall_x())) {
 
-    // -------------------------------------------------------
-    // recursive case: FunctionCall
-    // -------------------------------------------------------
-    // children are expressions
-    // find number of arguments
-    assert(false && "Please implement me"); 
-    return NULL; // FIXME
+    // FunctionCall
+    wn = xlate_FunctionCall(g, n, ctxt);
 
   } else if (XMLString::equals(nameX, XAIFStrings.elem_BoolOp_x())) {
-
-    // -------------------------------------------------------
-    // recursive case: BooleanOperation
-    // -------------------------------------------------------
-    // children are expressions
-    assert(false && "Please implement me");
-    return NULL; // FIXME
+    
+    // BooleanOperation
+    wn = xlate_BooleanOperation(g, n, ctxt);
+    
   } else {
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Unknown Expression element"));
   }
-  
+
+  return wn;
 }
 
 
@@ -221,7 +204,7 @@ xlate_Expression(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 // is returned; otherwise a rvalue is returned.  If the VARREF flag of
 // 'ctxt' is already set, no value-selector is created.
 WN*
-xaif2whirl::TranslateVarRef(DOMElement* elem, XlationContext& ctxt)
+xaif2whirl::TranslateVarRef(const DOMElement* elem, XlationContext& ctxt)
 {
   if (!elem) {
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
@@ -246,94 +229,25 @@ xaif2whirl::TranslateVarRef(DOMElement* elem, XlationContext& ctxt)
 static WN*
 xlate_VarRef(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 {
+  if (!g || !n) { 
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+  }
+  
   // Recursively translate the DAG (tree) rooted at this node
   DOMElement* elem = n->GetElem();
   ASSERT_FATAL(elem, (DIAG_A_STRING, "Programming error."));
-
+  
   WN* wn = NULL;  
-
   const XMLCh* nameX = elem->getNodeName();
   if (XMLString::equals(nameX, XAIFStrings.elem_SymRef_x())) {
-
-    // -------------------------------------------------------
-    // base case: SymbolReference
-    // -------------------------------------------------------    
-    ST* st = GetST(elem, ctxt);
     
-    if (ctxt.IsLValue()) {
-      wn = WN_CreateLda(OPR_LDA, Pointer_Mtype, MTYPE_V, 0, 
-			TY_pointer(ST_type(st)), st, 0);
-    } else {
-      // FIXME
-      wn = WN_CreateLdid(OPC_F8F8LDID, 0, st, MTYPE_To_TY(MTYPE_F8));
-    }
+    // SymbolReference
+    wn = xlate_SymbolReference(elem, ctxt);
 
   } else if (XMLString::equals(nameX, XAIFStrings.elem_ArrayElemRef_x())) {
     
-    // -------------------------------------------------------
-    // recursive case: ArrayElementReference
-    // -------------------------------------------------------    
-
-    // 1. Translate the index expression for each dimension
-    unsigned int rank = GetChildElementCount(elem);
-    std::vector<WN*> indices(rank); 
-    
-    DOMElement* dim = GetFirstChildElement(elem);
-    for (int i = 0; dim; dim = GetNextSiblingElement(dim), ++i) {
-      
-      const XMLCh* nmX = dim->getNodeName();
-      ASSERT_FATAL(XMLString::equals(nmX, XAIFStrings.elem_Index_x()), 
-		   (DIAG_A_STRING, "Programming error."));
-      
-      DOMElement* indexExpr = GetFirstChildElement(dim);
-      WN* indexExprWN = TranslateExpression(indexExpr, ctxt);
-      
-      // Ensure an integer 4 type for the index expression
-      indices[i] = WN_Type_Conversion(indexExprWN, MTYPE_I4);
-    }
-    
-    // 2. Translate the array symbol reference
-    ASSERT_FATAL(n->num_incoming() == 1,
-		 (DIAG_A_STRING, "Programming error."));
-    DGraph::IncomingEdgesIterator it = DGraph::IncomingEdgesIterator(n);
-    DGraph::Edge* edge = (DGraph::Edge*)it;
-
-    MyDGNode* n1 = dynamic_cast<MyDGNode*>(edge->source());
-    const XMLCh* nmX = n1->GetElem()->getNodeName();
-    ASSERT_FATAL(XMLString::equals(nmX, XAIFStrings.elem_SymRef_x()),
-		 (DIAG_A_STRING, "Programming error."));
-    
-    ctxt.CreateContext(XlationContext::LVALUE);
-    WN* arraySym = xlate_VarRef(g, n1, ctxt);
-    ctxt.DeleteContext();
-
-    ST* st = WN_st(arraySym);
-    TY_IDX ty = ST_type(st); // array type
-    if (TY_kind(ty) == KIND_POINTER) { 
-      ty = TY_pointed(ty); 
-    }
-    ASSERT_FATAL(TY_AR_ndims(ty) == rank,
-		 (DIAG_A_STRING, "Programming error."));
-    
-    // 3. Create Whirl ARRAY node (cf. wn_fio.cxx:7056)
-    UINT nkids = (rank * 2) + 1; // 2n + 1 where (where n == rank)
-    WN* array = WN_Create(OPC_U8ARRAY, nkids);
-    
-    // kid 0 is the array's base address
-    WN_kid0(array) = arraySym;
-    
-    // kids 1 to n give size of each dimension.  We use a bogus value,
-    // since we only need to support translation back to source code.
-    for (int i = 1; i <= rank; ++i) {
-      WN_kid(array, i) = NULL;
-    }
-    
-    // kids n + 1 to 2n give index expressions for each dimension
-    for (int i = rank + 1, j = 0; i <= 2*rank; ++i, ++j) {
-      WN_kid(array, i) = indices[j];
-    }
-    
-    wn = array;
+    // ArrayElementReference
+    wn = xlate_ArrayElementReference(g, n, ctxt);
     
   } else {
     ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Unknown Variable Reference element"));
@@ -344,8 +258,12 @@ xlate_VarRef(DGraph* g, MyDGNode* n, XlationContext& ctxt)
 
 
 static WN*
-xlate_Constant(DOMElement* elem, XlationContext& ctxt)
+xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
 {
+  if (!elem) { 
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+  }
+
   const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
   const XMLCh* valX = elem->getAttribute(XAIFStrings.attr_value_x());
 
@@ -362,9 +280,10 @@ xlate_Constant(DOMElement* elem, XlationContext& ctxt)
 
   } else if (strcmp(type.c_str(), "integer") == 0) {
 
+    // FIXME: some expressions want constants to be floats
     UINT val = strtol(value.c_str(), (char **)NULL, 10);    
     TCON tcon = Host_To_Targ_Float(MTYPE_F8, (double)val);
-    wn = Make_Const(tcon); // FIXME: only works for float
+    wn = Make_Const(tcon);
     //wn = WN_CreateIntconst(OPC_I8INTCONST, (INT64)val); 
 
   } else if (strcmp(type.c_str(), "bool") == 0) {
@@ -380,6 +299,180 @@ xlate_Constant(DOMElement* elem, XlationContext& ctxt)
   }
 
   return wn;
+}
+
+
+static WN*
+xlate_Intrinsic(DGraph* g, MyDGNode* n, XlationContext& ctxt)
+{
+  if (!g || !n) {
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+  }
+
+  DOMElement* elem = n->GetElem();
+
+  const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
+  XercesStrX nm = XercesStrX(nmX);
+  
+  UINT opnd_num = GetIntrinsicOperandNum(nm.c_str());
+  OPERATOR op = GetIntrinsicOperator(nm.c_str());
+  
+  // 1. Gather the operands, sorted by the "position" attribute
+  ASSERT_FATAL(n->num_incoming() == opnd_num, 
+	       (DIAG_A_STRING, "Programming error."));
+  std::vector<MyDGNode*> opnd(opnd_num, NULL); 
+  
+  DGraph::IncomingEdgesIterator it = DGraph::IncomingEdgesIterator(n);
+  for (int i = 0; (bool)it; ++it, ++i) {
+    DGraph::Edge* edge = (DGraph::Edge*)it;
+    opnd[i] = dynamic_cast<MyDGNode*>(edge->source());
+  }
+  
+  std::sort(opnd.begin(), opnd.end(), lt_ExprArgument()); // ascending
+  
+  // 2. Translate each operand into a WHIRL expression tree
+  std::vector<WN*> opnd_wn(opnd_num, NULL); 
+  for (int i = 0; i < opnd_num; ++i) {
+    opnd_wn[i] = xlate_Expression(g, opnd[i], ctxt);
+  }
+  
+  // 3. Create a WHIRL expression tree for the operator and operands
+  // FIXME: we need to verify the return type
+  switch (opnd_num) {
+  case 1: // unary
+    return WN_Unary(op, MTYPE_F8, opnd_wn[0]);
+  case 2: // binary
+    return WN_Binary(op, MTYPE_F8, opnd_wn[0], opnd_wn[1]);
+  case 3: // ternary
+    return WN_Ternary(op, MTYPE_F8, opnd_wn[0], opnd_wn[1], opnd_wn[2]);
+  default:
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+  } 
+}
+
+static WN*
+xlate_FunctionCall(DGraph* g, MyDGNode* n, XlationContext& ctxt)
+{
+  if (!g || !n) { 
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+  }
+  
+  DOMElement* elem = n->GetElem();
+  
+  // FIXME: children are expr; find num of args
+  assert(false && "implement"); 
+  return NULL;
+}
+
+static WN*
+xlate_BooleanOperation(DGraph* g, MyDGNode* n, XlationContext& ctxt)
+{
+  if (!g || !n) { 
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+  }
+
+  DOMElement* elem = n->GetElem();
+  
+  // FIXME: children are expressions
+  assert(false && "implement");
+  return NULL;
+}
+
+static WN*
+xlate_SymbolReference(const DOMElement* elem, XlationContext& ctxt)
+{
+  if (!elem) { 
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+  }
+
+  WN* wn = NULL;
+  ST* st = GetST(elem, ctxt);
+    
+  // FIXME: types
+  if (ctxt.IsLValue()) {
+    wn = WN_CreateLda(OPR_LDA, Pointer_Mtype, MTYPE_V, 0, 
+		      TY_pointer(ST_type(st)), st, 0);
+  } else {
+    wn = WN_CreateLdid(OPC_F8F8LDID, 0, st, MTYPE_To_TY(MTYPE_F8));
+  }
+  return wn;
+}
+
+static WN*
+xlate_ArrayElementReference(DGraph* g, MyDGNode* n, XlationContext& ctxt)
+{
+  if (!g || !n) { 
+    ASSERT_FATAL(FALSE, (DIAG_A_STRING, "Programming error."));
+  }
+
+  DOMElement* elem = n->GetElem();
+  
+  // -------------------------------------------------------
+  // 1. Translate the index expression for each dimension
+  // -------------------------------------------------------
+  unsigned int rank = GetChildElementCount(elem);
+  std::vector<WN*> indices(rank); 
+  
+  DOMElement* dim = GetFirstChildElement(elem);
+  for (int i = 0; dim; dim = GetNextSiblingElement(dim), ++i) {
+    
+    const XMLCh* nmX = dim->getNodeName();
+    ASSERT_FATAL(XMLString::equals(nmX, XAIFStrings.elem_Index_x()), 
+		 (DIAG_A_STRING, "Programming error."));
+    
+    DOMElement* indexExpr = GetFirstChildElement(dim);
+    WN* indexExprWN = TranslateExpression(indexExpr, ctxt);
+    
+    // Ensure an integer 4 type for the index expression
+    indices[i] = WN_Type_Conversion(indexExprWN, MTYPE_I4);
+  }
+  
+  // -------------------------------------------------------
+  // 2. Translate the array symbol reference
+  // -------------------------------------------------------
+  ASSERT_FATAL(n->num_incoming() == 1,
+	       (DIAG_A_STRING, "Programming error."));
+  DGraph::IncomingEdgesIterator it = DGraph::IncomingEdgesIterator(n);
+  DGraph::Edge* edge = (DGraph::Edge*)it;
+  
+  MyDGNode* n1 = dynamic_cast<MyDGNode*>(edge->source());
+  const XMLCh* nmX = n1->GetElem()->getNodeName();
+  ASSERT_FATAL(XMLString::equals(nmX, XAIFStrings.elem_SymRef_x()),
+	       (DIAG_A_STRING, "Programming error."));
+  
+  ctxt.CreateContext(XlationContext::LVALUE);
+  WN* arraySym = xlate_VarRef(g, n1, ctxt);
+  ctxt.DeleteContext();
+  
+  ST* st = WN_st(arraySym);
+  TY_IDX ty = ST_type(st); // array type
+  if (TY_kind(ty) == KIND_POINTER) { 
+    ty = TY_pointed(ty); 
+  }
+  ASSERT_FATAL(TY_AR_ndims(ty) == rank,
+	       (DIAG_A_STRING, "Programming error."));
+  
+  // -------------------------------------------------------
+  // 3. Create Whirl ARRAY node (cf. wn_fio.cxx:7056)
+  // -------------------------------------------------------
+  UINT nkids = (rank * 2) + 1; // 2n + 1 where (where n == rank)
+  WN* array = WN_Create(OPC_U8ARRAY, nkids);
+  
+  // kid 0 is the array's base address
+  WN_kid0(array) = arraySym;
+  
+  // kids 1 to n give size of each dimension.  We use a bogus value,
+  // since we only need to support translation back to source code.
+  for (int i = 1; i <= rank; ++i) {
+    WN_kid(array, i) = NULL;
+  }
+  
+  // kids n + 1 to 2n give index expressions for each dimension
+  for (int i = rank + 1, j = 0; i <= 2*rank; ++i, ++j) {
+    WN_kid(array, i) = indices[j];
+  }
+  
+  return array;
 }
 
 
@@ -411,45 +504,35 @@ xlate_Constant(DOMElement* elem, XlationContext& ctxt)
 //  SymbolReference: A
 //    
 static DGraph* 
-CreateExpressionGraph(DOMNode* node, bool varRef)
+CreateExpressionGraph(const DOMElement* elem, bool varRef)
 {
   DGraph* g = new DGraph;
   IdToNodeMap m;
 
   // Setup variables
-  XMLCh* edgeStr = NULL, *positionStr = NULL;
+  XMLCh* edgeStr = NULL;
   if (varRef) {
     edgeStr = XAIFStrings.elem_VarRefEdge_x();
-    // No position for variable references
   } else {
     edgeStr = XAIFStrings.elem_ExprEdge_x();
-    positionStr = XAIFStrings.attr_position_x();
   }
   
   // -------------------------------------------------------
-  // Create the graph
+  // Create the graph (only examine element nodes)
   // -------------------------------------------------------
-  DOMNode* n = node; 
+  DOMElement* e = const_cast<DOMElement*>(elem);
   do {
-    // Only examine element nodes
-    if (n->getNodeType() != DOMNode::ELEMENT_NODE) { continue; }
-    
-    DOMElement* e = dynamic_cast<DOMElement*>(n);
     
     const XMLCh* name = e->getNodeName();
     if (XMLString::equals(name, edgeStr)) {
-      // Add an edge to the graph
+      // Add an edge to the graph.  N.B.: we ignore the 'position'
+      // attribute during creation of the graph.
       
-      // Find src and target (sink) nodes
+      // Find src and target (sink) nodes. 
       const XMLCh* srcX = e->getAttribute(XAIFStrings.attr_source_x());
       const XMLCh* targX = e->getAttribute(XAIFStrings.attr_target_x());
       XercesStrX src = XercesStrX(srcX);
       XercesStrX targ = XercesStrX(targX);
-
-      if (positionStr) {
-	// FIXME: how best to deal with 'position'?
-	// we need to sort the edges by position
-      }
 
       MyDGNode* gn1 = NULL, *gn2 = NULL; // src and targ
       
@@ -480,7 +563,7 @@ CreateExpressionGraph(DOMNode* node, bool varRef)
 			 dynamic_cast<DGraph::Node*>(gn)));
     } 
     
-  } while ( (n = n->getNextSibling()) );
+  } while ( (e = GetNextSiblingElement(e)) );
   
   
   // -------------------------------------------------------
@@ -546,18 +629,16 @@ xaif2whirl::PatchWNExpr(WN* parent, INT kidno, XlationContext& ctxt)
   return parent;
 }
 
+
+//****************************************************************************
+
+// CreateValueSelector: Select the value portion of 'wn', by wrapping
+// a dummy intrinsic call around it
 static WN*
 CreateValueSelector(WN* wn)
 {
-  // Select the value portion of 'wn', by wrapping a function call around it
-  TY_IDX fty = Make_Function_Type(MTYPE_To_TY(MTYPE_F8));
-  ST* fst = Gen_Intrinsic_Function(fty, "__value__"); // create if non-existant
-  
-  WN* callWN = WN_Call(MTYPE_F8, MTYPE_V, 1, fst);
-  WN_Set_Call_Default_Flags(callWN);
-  
+  WN* callWN = CreateIntrinsicCall(MTYPE_F8, "__value__", 1);
   WN_actual(callWN, 0) = CreateParm(wn, WN_PARM_BY_VALUE);
-  
   return callWN;
 }
 
@@ -607,4 +688,3 @@ GetIntrinsicOperator(const char* name)
 }
 
 //****************************************************************************
-

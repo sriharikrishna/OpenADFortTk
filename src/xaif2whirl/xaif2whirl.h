@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.3 2003/09/17 19:41:44 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.4 2003/09/18 19:18:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -36,6 +36,8 @@
 
 #include "XlationContext.h"
 
+#include <lib/support/WhirlIDMaps.h>
+
 //*************************** Forward Declarations ***************************
 
 XERCES_CPP_NAMESPACE_USE
@@ -45,42 +47,38 @@ XERCES_CPP_NAMESPACE_USE
 namespace xaif2whirl {
 
 void
-TranslateIR(PU_Info* pu_forest, DOMDocument* doc);
+TranslateIR(PU_Info* pu_forest, const DOMDocument* doc);
 
 ST*
-GetST(DOMElement* elem, XlationContext& ctxt);
+GetST(const DOMElement* elem, XlationContext& ctxt);
  
 }; /* namespace xaif2whirl */
 
-
 //****************************************************************************
-// FIXME: move to another file
 
-inline WN*
-CreateParm(WN *arg, UINT32 flag)
-{
-  TYPE_ID rtype = WN_rtype(arg);
-  return WN_CreateParm(rtype, arg, MTYPE_To_TY(rtype), flag);
-}
+namespace xaif2whirl {
 
-#include <lib/support/WhirlIDMaps.h>
+// GetPositionAttr: Returns the value of the position attribute, if
+// available.  A valid position value is non-zero.
+unsigned int
+GetPositionAttr(const DOMElement* elem);
 
 // Get the appropriate persistant id from the element 'elem'.  See
 // detailed descriptions for generic functions below.
 SymTabId
-GetSymTabId(DOMElement* elem);
+GetSymTabId(const DOMElement* elem);
 
 SymId
-GetSymId(DOMElement* elem);
+GetSymId(const DOMElement* elem);
 
 PUId
-GetPUId(DOMElement* elem);
+GetPUId(const DOMElement* elem);
 
 WNId
-GetWNId(DOMElement* elem);
+GetWNId(const DOMElement* elem);
 
 IdList<WNId>*
-GetWNIdList(DOMElement* elem);
+GetWNIdList(const DOMElement* elem);
 
 
 // GetId, GetIdList: Returns an id or list of ids from the given tag
@@ -90,11 +88,11 @@ GetWNIdList(DOMElement* elem);
 // memory.
 template <class T>
 T
-GetId(DOMElement* elem, const char* tag);
+GetId(const DOMElement* elem, const char* tag);
 
 template <class T>
 IdList<T>*
-GetIdList(DOMElement* elem, const char* tag);
+GetIdList(const DOMElement* elem, const char* tag);
 
 
 // GetId, GetIdList: Returns an id or the list of ids from the given
@@ -109,6 +107,22 @@ GetId(const char* idstr, const char* tag);
 template <class T>
 IdList<T>*
 GetIdList(const char* idstr, const char* tag);
+
+}; /* namespace xaif2whirl */
+
+//***************************************************************************
+
+// FIXME: move to another file
+
+WN*
+CreateIntrinsicCall(TYPE_ID rtype, const char* fname, unsigned int argc);
+
+inline WN*
+CreateParm(WN *arg, UINT32 flag)
+{
+  TYPE_ID rtype = WN_rtype(arg);
+  return WN_CreateParm(rtype, arg, MTYPE_To_TY(rtype), flag);
+}
 
 //***************************************************************************
 

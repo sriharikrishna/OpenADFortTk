@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.8 2003/09/17 19:43:49 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.9 2003/09/18 19:18:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -40,39 +40,39 @@ XERCES_CPP_NAMESPACE_USE
 
 // Dumps only this node
 void 
-XercesDumpNode(DOMNode* n);
+XercesDumpNode(const DOMNode* n);
 
 // Dumps the tree rooted at 'n'
 void 
-XercesDumpTree(DOMNode* n);
+XercesDumpTree(const DOMNode* n);
 
 void 
-XercesDumpNode(void* n); // For *(#% debuggers
+XercesDumpNode(void* n); // For *^#% debuggers
 
 void 
-XercesDumpTree(void* n); // For *(#% debuggers
+XercesDumpTree(void* n); // For *^#% debuggers
 
 
 DOMElement*
-GetFirstChildElement(DOMNode* n);
+GetFirstChildElement(const DOMNode* n);
 
 DOMElement*
-GetLastChildElement(DOMNode* n);
+GetLastChildElement(const DOMNode* n);
 
 DOMElement*
-GetChildElement(DOMNode* n, XMLCh* name);
+GetChildElement(const DOMNode* n, const XMLCh* name);
 
 unsigned int
-GetChildElementCount(DOMNode* n);
+GetChildElementCount(const DOMNode* n);
 
 DOMElement*
-GetPrevSiblingElement(DOMNode* n);
+GetPrevSiblingElement(const DOMNode* n);
 
 DOMElement*
-GetNextSiblingElement(DOMNode* n);
+GetNextSiblingElement(const DOMNode* n);
 
 DOMElement*
-GetNextSiblingElement(DOMNode* n, XMLCh* name);
+GetNextSiblingElement(const DOMNode* n, const XMLCh* name);
 
 //****************************************************************************
 

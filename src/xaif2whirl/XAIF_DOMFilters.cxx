@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.8 2003/09/17 19:43:49 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.9 2003/09/18 19:18:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -49,21 +49,21 @@ using std::endl;
 //****************************************************************************
 
 static void 
-XercesDumpNode(DOMNode* n, int iter);
+XercesDumpNode(const DOMNode* n, int iter);
 
 static void 
-XercesDumpTree(DOMNode* n, int ilevel);
+XercesDumpTree(const DOMNode* n, int ilevel);
 
 
 void 
-XercesDumpNode(DOMNode* n)
+XercesDumpNode(const DOMNode* n)
 {
   // Iteration count starts at 0
   XercesDumpNode(n, 0);
 }
 
 void 
-XercesDumpTree(DOMNode* n)
+XercesDumpTree(const DOMNode* n)
 {
   // Indentation level starts at 0
   XercesDumpTree(n, 0);
@@ -83,7 +83,7 @@ XercesDumpTree(void* n) // For *(#% debuggers
 
 
 static void 
-XercesDumpNode(DOMNode* n, int iter)
+XercesDumpNode(const DOMNode* n, int iter)
 {
   if (!n) { return; }
 
@@ -93,7 +93,7 @@ XercesDumpNode(DOMNode* n, int iter)
 
   // Depending on node type, print different things
   if (n->getNodeType() == DOMNode::ATTRIBUTE_NODE) {
-    DOMAttr* attr = dynamic_cast<DOMAttr*>(n);
+    const DOMAttr* attr = dynamic_cast<const DOMAttr*>(n);
     const XMLCh* nm = attr->getName();
     const XMLCh* val = attr->getValue();
     std::cout << XercesStrX(nm) << "='" << XercesStrX(val) << "'";
@@ -119,7 +119,7 @@ XercesDumpNode(DOMNode* n, int iter)
 
 
 static void 
-XercesDumpTree(DOMNode* n, int ilevel)
+XercesDumpTree(const DOMNode* n, int ilevel)
 {
   if (!n) { return; }
 
@@ -141,7 +141,7 @@ XercesDumpTree(DOMNode* n, int ilevel)
 
 
 DOMElement*
-GetFirstChildElement(DOMNode* n)
+GetFirstChildElement(const DOMNode* n)
 {
   if (!n) { return NULL; }
 
@@ -158,7 +158,7 @@ GetFirstChildElement(DOMNode* n)
 }
 
 DOMElement*
-GetLastChildElement(DOMNode* n)
+GetLastChildElement(const DOMNode* n)
 {
   if (!n) { return NULL; }
 
@@ -175,7 +175,7 @@ GetLastChildElement(DOMNode* n)
 }
 
 DOMElement*
-GetChildElement(DOMNode* n, XMLCh* name)
+GetChildElement(const DOMNode* n, const XMLCh* name)
 {
   if (!n) { return NULL; }
 
@@ -193,7 +193,7 @@ GetChildElement(DOMNode* n, XMLCh* name)
 }
 
 unsigned int
-GetChildElementCount(DOMNode* n)
+GetChildElementCount(const DOMNode* n)
 {
   unsigned int cnt = 0;
   if (!n) { return cnt; }
@@ -209,42 +209,42 @@ GetChildElementCount(DOMNode* n)
 }
 
 DOMElement*
-GetPrevSiblingElement(DOMNode* n)
+GetPrevSiblingElement(const DOMNode* n)
 {
   if (!n) { return NULL; }
 
-  DOMNode* node = n;
+  const DOMNode* node = n;
   while ( (node = node->getPreviousSibling()) ) {
     if (node->getNodeType() == DOMNode::ELEMENT_NODE) {
-      return dynamic_cast<DOMElement*>(node);
+      return dynamic_cast<DOMElement*>(const_cast<DOMNode*>(node));
     }
   }
   return NULL;
 }
 
 DOMElement*
-GetNextSiblingElement(DOMNode* n)
+GetNextSiblingElement(const DOMNode* n)
 {
   if (!n) { return NULL; }
 
-  DOMNode* node = n;
+  const DOMNode* node = n;
   while ( (node = node->getNextSibling()) ) {
     if (node->getNodeType() == DOMNode::ELEMENT_NODE) {
-      return dynamic_cast<DOMElement*>(node);
+      return dynamic_cast<DOMElement*>(const_cast<DOMNode*>(node));
     }
   }
   return NULL;
 }
 
 DOMElement*
-GetNextSiblingElement(DOMNode* n, XMLCh* name)
+GetNextSiblingElement(const DOMNode* n, const XMLCh* name)
 {
   if (!n) { return NULL; }
 
-  DOMNode* node = n;
+  const DOMNode* node = n;
   while ( (node = GetNextSiblingElement(node)) ) { // node must be a DOMElement
     if (XMLString::equals(name, node->getNodeName())) {
-      return dynamic_cast<DOMElement*>(node);
+      return dynamic_cast<DOMElement*>(const_cast<DOMNode*>(node));
     }
   }
   return NULL;
