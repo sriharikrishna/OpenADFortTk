@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SexpTags.h,v 1.4 2005/02/01 00:42:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SexpTags.h,v 1.5 2005/02/01 22:02:28 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -26,6 +26,12 @@
 //***************************************************************************
 
 namespace SexpTags {
+
+  const char* 
+  get_grammar_summary();
+  
+  const char* 
+  get_grammar();
 
   extern const char* WHIRL;
   extern const char* PU_FOREST;
