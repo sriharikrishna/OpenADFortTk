@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.14 2004/06/01 22:22:13 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.15 2004/06/16 14:27:31 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -282,7 +282,7 @@ TestIR_OA_ForEachVarRef(std::ostream& os, WN* wn,
   // OPR_STID is a special case.  It is a base case in the sense the
   // it represents a LHS definition; but it is also a recursive case
   // because uses are embedded in its RHS subtree.
-  bool varref = IsVarRefTranslatableToXAIF(wn);
+  bool varref = IsRefTranslatableToXAIF(wn);
   bool recur = false;
 
   // Base case

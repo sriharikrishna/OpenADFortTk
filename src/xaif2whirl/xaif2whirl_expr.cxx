@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.26 2004/06/02 17:06:52 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.27 2004/06/16 14:27:31 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -843,7 +843,7 @@ xaif2whirl::PatchWNExpr(WN* parent, INT kidno, XlationContext& ctxt)
   if (!OPERATOR_is_expression(opr)) { return parent; }
   
   // Base case: a variable reference
-  if (IsVarRefTranslatableToXAIF(wn)) {
+  if (IsRefTranslatableToXAIF(wn)) {
     TY_IDX ty = WN_GetBaseObjType(wn);
     if (TY_kind(ty) == KIND_ARRAY) {
       ty = TY_etype(ty);
