@@ -125,7 +125,7 @@ sub gendef {
 	my($scn) = FTscan->new($line);
 	my($name,$args) = $scn->match(qr/^subroutine $TB (\w+)
 				      (?:
-				       $TB \( $TB (.*) $TB \)
+				       $TB \( $TB (.*) \)
 				       )?$/ix);
 	if ($name){
 	    $skip_til_sub = 0;
