@@ -34,18 +34,26 @@ Mode:
   --memopstradeoff  MemOpsTradeoffPreaccumulation
 
 xaif2whirl [Temporary options]
-  --x2w-structured    Use structured-CFG algorithm
+  --x2w-structured    Use structured-CFG algorithm [Default]
   --x2w-unstructured  Use unstructured CFG algorithm
   --x2w-bb            Use BB patching algorithm (only for forward mode!)
   
-Options:
+General options:
+  -v [lvl], --verbose [lvl]
+    Set verbosity level.  If no level is supplied, defaults to 2.
+    0: Play the silent game
+    1: Print only a terse message
+    2: Print standard activity notes [Default]
+    3: Chatty
+    4: Talk your ear off
+  -h, --help         print help
+
+Development options:
+  -n, --normalize 
+    normalize away timestamps to ease output comparison with 'diff'
   -i, --interactive  
     prompt user to authorize each step in pipeline
-  -v [lvl], --verbose [lvl]
-    Set verbosity level.  If no level is supplied, defaults to 1.
-    1: 
-    2: Print all pipeline commands
-  -h, --help         print help
+
 \n";
 
 #############################################################################
@@ -64,6 +72,20 @@ my ($mode_x2w_structured,
     $mode_x2w_bb) =
     (1, 2, 3);
 
+my ($mode_verb_silent,
+    $mode_verb_terse,
+    $mode_verb_normal,
+    $mode_verb_chatty,
+    $mode_verb_teengirls) =
+    (0, 1, 2, 3, 4);
+
+
+# CmdDesc: a pipeline command and associated metadata
+my %CmdDesc = (
+	      cmd          => undef,
+	      desc         => undef,
+	      );
+
 #############################################################################
 ## main/driver
 #############################################################################
@@ -80,13 +102,18 @@ my @options = ('bb-rev',
 	       'x2w-unstructured',
 	       'x2w-bb',
 	       
-	       'interactive|i',
 	       'verbose|v:i',
-	       'help|h');
+	       'help|h', 
 
+	       'interactive|i',
+	       'normalize|n',
+	       );
+
+my $opt_verbose = undef;
+my $opt_normalize = undef;
 my $opt_interactive = undef;
-my $opt_verbose = 0;
 #my $opt_debug = 0;
+
 my $openad_mode = undef;
 my $openad_x2w_mode = undef;
 my $openad_input = undef;
@@ -103,16 +130,16 @@ if (!$ret) {
 }
 
 # Get optional arguments: verbose, help
+$opt_verbose = $mode_verb_normal; # default
 if (defined($opts{'verbose'})) {
   $opt_verbose = $opts{'verbose'};
-  if ($opt_verbose == 0) { $opt_verbose = 1; }
 } 
 if (defined($opts{'help'})) {
   printUsageAndExit($the_program);
 } 
 
 # Get required argument: OpenAD Mode
-$openad_mode = $mode_BBReverse;
+$openad_mode = $mode_BBReverse; # default
 if (defined($opts{'bb-rev'})) {
   $openad_mode = $mode_BBReverse;
 } 
@@ -139,7 +166,7 @@ if (!defined($openad_mode)) {
 }
 
 # Get optional arguments: OpenAD xaif2whirl mode
-$openad_x2w_mode = $mode_x2w_structured;
+$openad_x2w_mode = $mode_x2w_structured; # default
 if (defined($opts{'x2w-structured'})) {
   $openad_x2w_mode = $mode_x2w_structured;
 } 
@@ -150,11 +177,13 @@ if (defined($opts{'x2w-bb'})) {
   $openad_x2w_mode = $mode_x2w_bb;
 } 
 
-# Get optional arguments: interactive
+# Get optional arguments: normalize, interactive
+if (defined($opts{'normalize'})) {
+  $opt_normalize = 1;
+} 
 if (defined($opts{'interactive'})) {
   $opt_interactive = 1;
 } 
-
 
 # Get required arguments
 my $numArgs = scalar(@ARGV);
@@ -181,7 +210,6 @@ sub printUsageAndExit
   print STDOUT ${the_usage};
   exit(-1);
 }
-
 # printErrorAndExit
 sub printErrorAndExit 
 {
@@ -251,21 +279,62 @@ sub undefEnvVarErr
       $x2w_opt .= "--bb";
     }
     
-    if ($opt_verbose >= 1) {
-      print STDOUT "OpenAD: ${fortranfile} --> ${base}.xb.x2w.w2f.pp.f\n";
+    # Generate commands for pipeline
+    my $cmdDescVecRef = [ ];
+
+    my $desc = { %CmdDesc, }; 
+    $desc->{cmd} = "$MFEF90 ${fortranfile}";
+    $desc->{desc} = "Fortran to WHIRL: ${fortranfile} -> ${base}.B";
+    push @{$cmdDescVecRef}, $desc;
+
+    $desc = { %CmdDesc, }; 
+    $desc->{cmd} = "$W2X ${base}.B -o ${base}.xaif";
+    $desc->{desc} = "WHIRL to XAIF: ${base}.B -> ${base}.xaif";
+    push @{$cmdDescVecRef}, $desc;
+
+    if ($opt_normalize) {
+      $desc = { %CmdDesc, }; 
+      $desc->{cmd} = "$NORM ${base}.xaif";
+      $desc->{desc} = "Normalize XAIF: ${base}.xaif";
+      push @{$cmdDescVecRef}, $desc;
+    }
+    
+    $desc = { %CmdDesc, }; 
+    $desc->{cmd} = "$XB -i ${base}.xaif -o ${base}.xb.xaif";
+    $desc->{desc} = "xaifBooster: ${base}.xaif -> ${base}.xb.xaif";
+    push @{$cmdDescVecRef}, $desc;
+    
+    $desc = { %CmdDesc, }; 
+    $desc->{cmd} = "$X2W $x2w_opt ${base}.B ${base}.xb.xaif -o ${base}.xb.x2w.B";
+    $desc->{desc} = "XAIF to WHIRL: (${base}.B ${base}.xb.xaif) -> ${base}.xb.x2w.B";
+    push @{$cmdDescVecRef}, $desc;
+
+    $desc = { %CmdDesc, }; 
+    $desc->{cmd} = "$WHIRL2F ${base}.xb.x2w.B";
+    $desc->{desc} = "WHIRL to Fortran: ${base}.xb.x2w.B -> ${base}.xb.x2w.w2f.f";
+    push @{$cmdDescVecRef}, $desc;
+
+    if ($opt_normalize) {
+      $desc = { %CmdDesc, }; 
+      $desc->{cmd} = "$NORM ${base}.xb.x2w.w2f.f";
+      $desc->{desc} = "Normalize Fortran: ${base}.xb.x2w.w2f.f";
+      push @{$cmdDescVecRef}, $desc;
+    }
+    
+    $desc = { %CmdDesc, }; 
+    $desc->{cmd} = "$PP ${base}.xb.x2w.w2f.f";
+    $desc->{desc} = "Postprocess Fortran: ${base}.xb.x2w.w2f.f -> ${base}.xb.x2w.w2f.pp.f";
+    push @{$cmdDescVecRef}, $desc;
+    
+    RunCmds($cmdDescVecRef, $opt_verbose, $opt_interactive);
+
+    if ($opt_verbose >= $mode_verb_normal) {
+      print STDOUT "\n";
     }
 
-    my $cmdsRef = 
-	["$MFEF90       ${fortranfile}",
-	 "$W2X          ${base}.B -o ${base}.xaif",
-	 "$NORM         ${base}.xaif",
-	 "$XB        -i ${base}.xaif -o ${base}.xb.xaif",
-	 "$X2W $x2w_opt ${base}.B ${base}.xb.xaif -o ${base}.xb.x2w.B",
-	 "$WHIRL2F      ${base}.xb.x2w.B",
-	 "$NORM         ${base}.xb.x2w.w2f.f",
-	 "$PP           ${base}.xb.x2w.w2f.f"];
-    
-    RunCmds($cmdsRef, $opt_verbose, $opt_interactive);
+    if ($opt_verbose >= $mode_verb_terse) {
+      print STDOUT "OpenAD: ${fortranfile} --> ${base}.xb.x2w.w2f.pp.f\n";
+    }
   }
 
   sub ConfigRunOpenADPipeline 
@@ -361,11 +430,14 @@ sub undefEnvVarErr
 
   sub RunCmds
   {
-    my($cmdsRef, $verbose, $interactive) = @_;
+    my($cmdDescVecRef, $verbose, $interactive) = @_;
     
-    for my $cmd (@{$cmdsRef}) {
+    for my $desc (@{$cmdDescVecRef}) {
+      if ($verbose >= $mode_verb_normal) {
+	print STDOUT $desc->{desc}, "\n";
+      }
       if ($interactive) {
-	print STDOUT "OpenAD: Execute? '${cmd}'\n";
+	print STDOUT "Execute? '$desc->{cmd}'\n";
 	print STDOUT "...[Y/n]\n";
 	my $ans = <STDIN>;
 	chomp($ans);
@@ -373,9 +445,8 @@ sub undefEnvVarErr
 	  last;
 	}
       }
-      RunCmd($cmd, $verbose); 
+      RunCmd($desc->{cmd}, $verbose); 
     }
-    
   }
 
   sub RunCmd
@@ -385,7 +456,7 @@ sub undefEnvVarErr
     my $outfile = "./OpenAD-out.tmp~";
     $cmd .= " > ${outfile} 2>&1";
 
-    if ($verbose >= 2) {
+    if ($verbose >= $mode_verb_chatty) {
       print STDOUT "OpenAD: Executing '${cmd}'\n";
     }
 
