@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.i,v 1.1 2004/08/05 18:38:14 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.i,v 1.2 2004/12/15 20:59:41 eraxxon Exp $
 
 //***************************************************************************
 //
@@ -18,8 +18,6 @@
 #define whirl2sexp_i
 
 //************************** System Include Files ***************************
-
-//************************** Open64 Include Files ***************************
 
 //*************************** User Include Files ****************************
 
