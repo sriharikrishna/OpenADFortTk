@@ -87,7 +87,8 @@
     <xaif:BasicBlock vertex_id="3" scope_id="3" annotation="{WHIRL_Id#24}">
       <xaif:Assignment statement_id="1">
         <xaif:AssignmentLHS du_ud="2">
-FACTORIAL        </xaif:AssignmentLHS>
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="RES_1"/>
+        </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Constant vertex_id="1" type="integer" value="1"/>
         </xaif:AssignmentRHS>
@@ -97,7 +98,8 @@ FACTORIAL        </xaif:AssignmentLHS>
     <xaif:BasicBlock vertex_id="4" scope_id="3" annotation="{WHIRL_Id#27}">
       <xaif:Assignment statement_id="1">
         <xaif:AssignmentLHS du_ud="4">
-FACTORIAL        </xaif:AssignmentLHS>
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="RES_1"/>
+        </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Intrinsic vertex_id="1" name="mul_scal_scal" type="***"/>
           <xaif:VariableReference vertex_id="2" du_ud="3">

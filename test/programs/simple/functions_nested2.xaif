@@ -87,7 +87,8 @@
     <xaif:BasicBlock vertex_id="3" scope_id="3" annotation="{WHIRL_Id#24}">
       <xaif:Assignment statement_id="1">
         <xaif:AssignmentLHS du_ud="2">
-FOO        </xaif:AssignmentLHS>
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="RES_1"/>
+        </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Constant vertex_id="1" type="integer" value="1"/>
         </xaif:AssignmentRHS>
@@ -97,7 +98,8 @@ FOO        </xaif:AssignmentLHS>
     <xaif:BasicBlock vertex_id="4" scope_id="3" annotation="{WHIRL_Id#27}">
       <xaif:Assignment statement_id="1">
         <xaif:AssignmentLHS du_ud="3">
-FOO        </xaif:AssignmentLHS>
+          <xaif:SymbolReference vertex_id="1" scope_id="3" symbol_id="RES_1"/>
+        </xaif:AssignmentLHS>
         <xaif:AssignmentRHS>
           <xaif:Constant vertex_id="1" type="integer" value="5"/>
         </xaif:AssignmentRHS>
