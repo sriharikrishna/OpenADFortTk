@@ -1,4 +1,4 @@
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.3 2003/08/05 20:04:18 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/README,v 1.4 2003/10/10 20:49:27 eraxxon Exp $
 =============================================================================
 ==
 == $Source: /Volumes/cvsrep/developer/OpenADFortTk/README,v $
@@ -8,13 +8,34 @@
 =============================================================================
 
 Contents:
-  0. Building
-  1. Using
-  2. Brief comments on whirl2xaif sources
+  0. Obtaining
+  1. Building
+  2. Using
+  3. Brief comments on whirl2xaif sources
 
 =============================================================================
 
-0. Building on i686-Linux or sparc-SunOS
+0. Obtaining
+--------------------
+
+Open64
+  cvs co Open64
+
+OpenAnalysis
+  cvs co OpenAnalysis -r ValNum-init
+  cvs update -j HEAD
+
+xercesc [if necessary]
+  cvs co xercesc
+
+whirl2xaif
+  cvs co whirl2xaif
+
+xaifbooster
+  
+=============================================================================
+
+1. Building on i686-Linux or sparc-SunOS
 --------------------
 
 Compiler: 
@@ -30,27 +51,32 @@ with
 
 
 1. Prepare env. 
+   
+   See Sourceme-ACTS-csh...
 
-   setenv WHIRL2XAIF ".../whirl2xaif"
-   source $WHIRL2XAIF/Sourceme-csh  [or Sourceme-sh for sh-variants]
-
-   setenv WHIRL2XAIF_OPEN64 ".../Open64/osprey1.0"
-
-2. Build Open64's be.so.  (Building whirl2f will ensure the correct
-   -Ddefines/symbols are included.)
+2. Build Open64's be.so and mfef90.  (Building whirl2f will ensure the 
+   correct -Ddefines/symbols are included in be.so.)
 
    Ensure the correct compiler is in your path.
 
    E.g., for i686-Linux:
      cd ${WHIRL2XAIF_OPEN64}/targ_ia32_ia64_linux/whirl2f 
-     make
+     make MAKE="make"
+  
+     cd ${WHIRL2XAIF_OPEN64}/targ_ia32_ia64_linux/crayf90/sgi
+     make MAKE="make"
    
 3. Build OA.
 
-   cd .../OpenAnalysis
-   make CXX="<compiler>" CXXFLAGS="-g"
+   cd OpenAnalysis
+   make CXX="<C++ compiler>" CXXFLAGS="<options such as -g or -O>"
 
-4. Build whirl2xaif:
+4. Build XercesC [if necessary]:
+
+   cd xercesc
+   make CXX="<C++ compiler>" CC="<C compiler>"
+
+5. Build whirl2xaif:
 
    Ensure the correct C++ compiler is used in
      ${WHIRL2XAIF}/src/Makeinclude.config.${WHIRL2XAIF_PLATFORM}
@@ -58,9 +84,11 @@ with
    cd ${WHIRL2XAIF}/src
    make 
 
+6. xaifbooster...
+
 =============================================================================
 
-1. Using
+2. Using
 --------------------
 
 Currently the binary -- whirl2xaif -- is just stored with the build
@@ -71,16 +99,20 @@ If you are using a csh-variant, execute a 'rehash' command to ensure
 that your path is fully searched.  On the other hand, bash should find
 the binary with no problem.
 
-There are some test programs in ${WHIRL2XAIF}/test.
+The whole pipeline:
 
-Example:
-  cd ${WHIRL2XAIF}/test/simple
-  mfef90 simple3.f90
-  whirl2xaif simple3.B
+  mfef90 file.f --> file.B
+  whirl2xaif file.B --> file.xaif
+  
+  xaifbooster --> file.boost.xaif
+  
+  xaif2whirl file.B file.boost.xaif --> file.boost.x2w.B
+  whirl2f file.boost.x2w.B --> file.boost.x2w.w2f.f
+  perl pp.pl file.boost.x2w.w2f.f --> file.boost.x2w.w2f.pp.f
 
 =============================================================================
 
-2. Brief comments on whirl2xaif sources
+3. Brief comments on whirl2xaif sources
 --------------------
 
 The sources are littered with FIXMEs and REMOVEs.  A great deal of
@@ -97,24 +129,13 @@ wn2xiaf_stmt.cxx : routines for translating WHIRL statements
 wn2xaif_expr.cxx : routines for translating WHIRL expressions
 wn2xaif_mem.cxx  : routines for translating WHIRL memory refs 
                    (references and assignments)
-
-st2f.cxx   : routines for translating WHIRL symbol table entries
-ty2f.cxx   : routines for translating WHIRL types
-tcon2f.cxx : routines for translating WHIRL constants
+st2xaif.cxx      : routines for translating WHIRL symbol table entries
+ty2xaif.cxx      : routines for translating WHIRL types
 
 Pro64IRInterface.cxx/h : OpenAnalysis interface for Open64's IR
 xmlostream.cxx/h       : xml::ostream class
 
 =============================================================================
-
-3. Misc
---------------------
-
-Tar for whirl2xaif (gnutar):
-  tar cvf whirl2xaif.tar --exclude="whirl2xaif/obj" --exclude="*.B" whirl2xaif
-
-Tar for OA (gnutar):
-  tar cvf OpenAnalysis.tar --exclude="*.a" OpenAnalysis
 
 =============================================================================
 
