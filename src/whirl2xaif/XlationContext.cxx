@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.11 2003/09/17 19:44:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.12 2003/12/06 00:21:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -184,6 +184,33 @@ XlationContext::FindWNId(WN* wn)
 // Misc
 // -------------------------------------------------------
 
+VN
+XlationContext::FindVN(WN* wnexpr)
+{
+  for (XlationContextIterator it(*this); it.IsValid(); ++it) {
+    Ctxt* ctxt = it.Current();
+    ValueNumbers* vnmap = ctxt->GetValNum();
+    if (vnmap) {
+      // We found a ValueNumber map. Query it.
+      VN vn = vnmap->Find((ExprHandle)wnexpr);
+      if (vn != 0) { return vn; }
+    }
+  }
+  return 0;
+}
+
+WN* 
+XlationContext::GetWN_MR()
+{
+  for (XlationContextIterator it(*this); it.IsValid(); ++it) {
+    Ctxt* ctxt = it.Current();
+    WN* wn = ctxt->GetWN();
+    if (wn) { return wn; }
+  }
+  return NULL;
+}
+
+
 NonScalarSym* 
 XlationContext::FindNonScalarSym(WN* wn)
 {
@@ -236,7 +263,7 @@ XlationContext::DDump() const
 //***************************************************************************
 
 XlationContext::Ctxt::Ctxt()
-  : wn(NULL), nextVId(0), nextEId(0), symtab(NULL), wnmap(NULL)
+  : wn(NULL), nextVId(0), nextEId(0), symtab(NULL), wnmap(NULL), vnmap(NULL)
 {
 }
 

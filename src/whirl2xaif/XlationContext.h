@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.13 2003/09/17 19:44:15 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.14 2003/12/06 00:21:11 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -62,6 +62,11 @@
 
 #include <include/Open64BasicTypes.h>
 
+//************************ OpenAnalysis Include Files ***********************
+
+#include <OpenAnalysis/CFG/CFG.h>
+#include <OpenAnalysis/ValueNumbers/ValueNumbers.h>
+
 //*************************** User Include Files ****************************
 
 #include <lib/support/XlationCtxt.h>
@@ -111,6 +116,9 @@ public:
     WNToWNIdMap* GetWNMap() const { return wnmap; }
     void SetWNMap(WNToWNIdMap* x) { wnmap = x; }
     
+    ValueNumbers* GetValNum() const { return vnmap; }
+    void SetValNum(ValueNumbers* x) { vnmap = x; }
+
     
     // WHIRL node for context (this class does not assume ownership of WN*)
     WN*  GetWN() const { return wn; }
@@ -138,6 +146,7 @@ public:
     // FIXME: Move into a specialized derived class such as CtxtX (extended)
     NonScalarSymTab* symtab;
     WNToWNIdMap* wnmap; 
+    ValueNumbers* vnmap;
   };
   
   
@@ -202,12 +211,17 @@ public:
   // Misc
   // -------------------------------------------------------
 
+  // VN map: returns 0 if not found
+  VN FindVN(WN* wnexpr);
+
   // Searches for symbol tables and queries them for 'wn'.  The symbol
   // table search begins at the current context and continues to
   // parents.
   NonScalarSym* FindNonScalarSym(WN* wn);
 
+  // Get WN* from the current context; Get WN* the most recent non-NULL WN.
   WN* GetWN() { return CurContext().GetWN(); }
+  WN* GetWN_MR();
 
   virtual void Dump(std::ostream& o = std::cerr, const char* pre = "") const;
   virtual void DDump() const;
