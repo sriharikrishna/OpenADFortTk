@@ -1,5 +1,5 @@
 # -*-Mode: sh;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.10 2003/12/02 13:20:14 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Attic/Sourceme-ACTS-sh,v 1.11 2003/12/02 13:39:59 eraxxon Exp $
 
 #############################################################################
 # These variables should be set by the user
@@ -53,10 +53,6 @@ case $PLATFORM in
     echo "PLATFORM '${PLATFORM}' is unknown..." ;;
 esac
 
-if [ "${PLATFORM}" = "i686-Cygwin" ]; then 
-  # convert to Windows path for XercesC
-  XAIFSCHEMA=`cygpath -w ${XAIFSCHEMA}`
-else 
 
 # Installations of the respective components
 export OPEN64ROOT="${OPEN64_BASE}/osprey1.0/${o64targ}"
@@ -120,6 +116,12 @@ export BOOST_DIR="${BOOSTROOT}"
 
 xbase="${XAIFBOOSTERROOT}/xaifBooster"
 ii_xaif="${XAIFSCHEMA}/schema/examples/inlinable_intrinsics.xaif"
+
+if [ "${PLATFORM}" = "i686-Cygwin" ]; then 
+  # convert to Windows path for XercesC
+  ii_xaif=`cygpath -w ${ii_xaif}`
+fi
+
 
 alias xboostread="${xbase}/system/test/t -c ${ii_xaif}"
 alias xboost_l="${xbase}/algorithms/Linearization/test/t -c ${ii_xaif}"
