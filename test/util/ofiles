@@ -82,7 +82,15 @@ if (!defined($driver_mode)) {
 # ----------------------------------------------------------
 
 if ($driver_mode eq 'move') {
-    DoSomething("mv", \@fromToExt);
+    print STDOUT "Do you really want to clobber files? [Y/n]\n";
+    my $ans = <STDIN>;
+    chomp($ans);
+    if (defined($ans) && ($ans eq 'n' || $ans eq 'N')) {
+	print STDOUT "Skipping.\n";	
+    } else {
+	DoSomething("mv", \@fromToExt);
+    }
+
 } 
 elsif ($driver_mode eq 'diff') {
     my $toFromExtRef = CreateReversedExtList(\@fromToExt);
