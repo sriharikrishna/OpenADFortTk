@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.10 2004/06/01 22:21:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.h,v 1.11 2004/06/17 13:32:26 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -31,6 +31,8 @@
 #include <include/Open64BasicTypes.h>
 
 //*************************** User Include Files ****************************
+
+#include "WhirlIDMaps.h"
 
 //************************** Forward Declarations ***************************
 
@@ -74,16 +76,28 @@ private:
 // Symbol
 //***************************************************************************
 
+// Symbol: This is hackish and ugly until we figure out what exactly we need.
 class Symbol {
 public:
   Symbol();
-  Symbol(const ST* st, bool act);
+  Symbol(const ST* st, WNId wnid, bool act);
   virtual ~Symbol();
-
+  
+  // -------------------------------------------------------
+  
   // Return the WHIRL symbol
   ST* GetST() const { return st; }
-  ST* SetST(const ST* st_) { st = const_cast<ST*>(st_); }
+  void SetST(const ST* x) { st = const_cast<ST*>(x); }
+  
+  // -------------------------------------------------------
+  
+  bool IsPathCollapsed() { return wnid != 0; }
 
+  WNId GetPathVorlage() { return wnid; }
+  void SetPathVorlage(WNId x) { wnid = x; }
+  
+  // -------------------------------------------------------
+  
   // Is the symbol active in the AD sense
   bool IsActive() const { return active; }
   bool SetActive(bool act) { active = act; }
@@ -97,7 +111,8 @@ private:
   Symbol& operator=(const Symbol& x) { return *this; }
 
 private:
-  ST* st;
+  ST* st;     // 
+  WNId wnid;  // for a scalarized symbol
   bool active;
 };
 

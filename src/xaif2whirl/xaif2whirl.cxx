@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.50 2004/06/16 14:28:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.51 2004/06/17 13:32:26 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -1491,7 +1491,7 @@ GetOrCreateSymbol(const char* sname, XlationContext& ctxt)
     ST* st = New_ST(level);
     ST_Init(st, Save_Str(sname), CLASS_VAR, SCLASS_AUTO, EXPORT_LOCAL, ty);
     
-    sym = new Symbol(st, active);
+    sym = new Symbol(st, 0, active);
     symMap->Insert(scopeId, sname, sym);
   }
   return sym;
@@ -1580,7 +1580,7 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
   } 
   
   // 3. Create our own symbol structure and add to the map
-  Symbol* sym = new Symbol(st, active);
+  Symbol* sym = new Symbol(st, wnId, active);
   symMap->Insert(scopeId, symNm.c_str(), sym);
 } 
 
