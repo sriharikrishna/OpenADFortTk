@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.31 2004/04/07 14:59:22 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.32 2004/04/07 16:00:56 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -1404,8 +1404,12 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
   if (symId == 0) {
     // Create the symbol
     st = CreateST(elem, level, symNm.c_str());
-    if (!opt_typeChangeInWHIRL) {
-      active = true; // FIXME: for now we force all temps to be active
+    
+    // FIXME: for now we force all real temps to be active
+    const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
+    XercesStrX type = XercesStrX(typeX);
+    if (!opt_typeChangeInWHIRL && strcmp(type.c_str(), "real") == 0) {
+      active = true;
     }
   } else {
     // Find the symbol and change type if necessary
