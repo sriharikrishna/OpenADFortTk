@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makefile,v 1.2 2003/07/24 20:31:05 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makefile,v 1.3 2003/08/01 15:53:11 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -27,7 +27,7 @@ include $(WHIRL2XAIF)/src/Makeinclude.config
 
 all: exes install
 
-exes: build_whirl2xaif
+exes: build_exes
 
 .PHONY: all exes
 
@@ -38,14 +38,18 @@ exes: build_whirl2xaif
 #  Binaries
 #-----------------------------------------------------------------
 
-build_whirl2xaif: libs
-	src=$(WHIRL2XAIF)/src/whirl2xaif ; \
-	obj=$(WHIRL2XAIF_OBJ_PATH)/exewhirl2xaif ; \
-	mkdir -p $$obj ; \
-	cd $$obj ; \
-	$(MAKE) -f $$src/Makefile SRCS=$$src
+EXEDIRS = whirl2xaif xaif2whirl
 
-.PHONY: build_whirl2xaif
+build_exes: build_libs
+	src=$(WHIRL2XAIF)/src ; \
+	for exe in $(EXEDIRS) ; do \
+	  obj=$(WHIRL2XAIF_OBJ_PATH)/exe-$$exe ; \
+	  mkdir -p $$obj ; \
+	  cd $$obj ; \
+	  $(MAKE) -f $$src/$$exe/Makefile SRCS=$$src/$$exe ; \
+	done
+
+.PHONY: build_exes
 
 
 #-----------------------------------------------------------------
@@ -53,9 +57,8 @@ build_whirl2xaif: libs
 #-----------------------------------------------------------------
 
 LIBDIRS = lib/support
-#libcomutil libwhirlreader
 
-libs: 
+build_libs: 
 ifdef LIBDIRS
 	src=$(WHIRL2XAIF)/src ; \
 	for lib in $(LIBDIRS) ; do \
@@ -66,7 +69,7 @@ ifdef LIBDIRS
 	done
 endif
 
-.PHONY: libs
+.PHONY: build_libs
 
 
 #-----------------------------------------------------------------

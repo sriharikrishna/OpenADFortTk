@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makeinclude.config.sparc-SunOS,v 1.3 2003/07/24 20:31:06 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Attic/Makeinclude.config.sparc-SunOS,v 1.4 2003/08/01 15:53:11 eraxxon Exp $
 
 ## * BeginCopyright *********************************************************
 ## *********************************************************** EndCopyright *
@@ -23,7 +23,7 @@ GCC_BIN = /usr/site/gcc-3.0.4/bin
 BIN = $(BIN_53)
 
 #  ANSI C++ compiler
-CXX = CC
+CXX = CC -features=rtti
   # Note: use default template handling: -instances=extern
 
 #CXX = g++
