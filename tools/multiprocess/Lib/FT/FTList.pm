@@ -54,7 +54,7 @@ $word = qr/[a-z_\$][\w\$]*/i; # fortran wd starts w letter++
 $int = qr/\d+/; # no sign, work out sign later if need be
 $ddot = qr/::/; # :: token in F90
 $conc = qr@//@;
-$symb = qr@[-+*/()=,;%]@;
+$symb = qr@[-+*/()=,;%:]@;
 $dot = qr/\.          # fortran "dotted" key words
           (?:
              eq         |

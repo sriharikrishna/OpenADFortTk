@@ -30,7 +30,7 @@ sub xaifpp {
       use active_module
 U
     }
-    if($line =~ /$active_re/) {
+    if($line =~ /$active_re/i) {
 	$line =~s/$decl_re/type(active) ::/i;
 	return $line;
     }

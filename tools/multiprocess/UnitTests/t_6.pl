@@ -15,6 +15,8 @@ use PPsetup;
 
 setup();
 
+ADxaif::set_old();
+
 $inl = ADinline->new(Ffile->new_from_heredoc($inl_ff));
 $template = ADtemplate->new(Ffile->new_from_heredoc($templ_ff));
 

@@ -14,6 +14,8 @@ use PPsetup;
 
 setup();
 
+ADxaif::set_old();
+
 is($ff->rewrite_sem(\&xaifpp)->to_string(),$w2f1_pp,'xaif pp ok');
 
 teardown();

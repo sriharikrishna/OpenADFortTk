@@ -155,7 +155,10 @@ HEAD
 	   $line =~ s/template/$info{name}/;
 	   return ($line);
        }
-
+       if ($line =~ /__SRNAME__/){
+	   $line =~ s/__SRNAME__/$info{name}/g;
+	   return ($line);
+       }
        return ($UNCHANGED);
    }
 }

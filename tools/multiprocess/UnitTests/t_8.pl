@@ -33,6 +33,14 @@ teardown();
 
 sub setup {
     $res = <<'RES';
+      MODULE foo
+      integer crap1
+      real crap2
+
+C this is a non-module
+C      
+
+      end MODULE foo
        subroutine top(z,call_nr,version)
           use OpenAD_scalar_adjoint
           use OpenAD_dct
@@ -148,6 +156,15 @@ C
         end subroutine head
 RES
     $ff_src = <<'FFSRC';
+      MODULE foo
+      integer crap1
+      real crap2
+
+C this is a non-module
+C      
+
+      end MODULE foo
+
       SUBROUTINE top(z)
       use w2f__types
       REAL(w2f__8) OpenAD_Symbol_0

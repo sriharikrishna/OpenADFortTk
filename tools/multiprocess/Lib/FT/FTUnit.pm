@@ -36,11 +36,12 @@ sub to_unit {
 
     $unit->add_text_lines($line);
     $$end_ref = FTscan->new($line)
-	        ->match(qr/end $TB (?: module|
-		                       program|
-				       subroutine|
-				       function ) $TBE/ix);
+	        ->match(qr/^ end (?: $TB (?: module (?: $TB \w+)?|
+		                       program (?: $TB \w+)?|
+				       subroutine (?: $TB \w+)?|
+				       function (?: $TB \w+)? ))? $/ix);
 }
+
 sub units {
     return @{$_[0]->{_units}};
 }

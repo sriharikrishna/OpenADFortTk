@@ -6,6 +6,7 @@ use Test::More qw(no_plan);
 use Ffile;
 use FTscan;
 use FTpat;
+#use FTutil;
 use ADinline;
 
 use PPsetup;
@@ -166,7 +167,7 @@ F2
           double_arguments_pointer = double_arguments_pointer+1
 
 
-C!! requested inline of push_result has no defn
+C!! requested inline of 'push_result' has no defn
       CALL push_result(OpenAD_Symbol_16)
           OpenAD_Symbol_17%d = OpenAD_Symbol_17%d+OpenAD_Symbol_22%d*T1+
      +25.2*(t2+t3)

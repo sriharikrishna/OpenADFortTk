@@ -6,6 +6,7 @@ use Test::More qw(no_plan);
 use Ffile;
 use FTscan;
 use FTpat;
+# use FTutil;
 use ADinline;
 
 use PPsetup;
@@ -53,6 +54,8 @@ S2
 
 is(join("\n",$inl2->mksubs('saxpy',['foo','bar','bletch'])) . "\n",
    $s2,'subst 2');
+
+#is($f3->rewrite($inl->inline())->to_string,'','inlining');
 
 teardown();
 
