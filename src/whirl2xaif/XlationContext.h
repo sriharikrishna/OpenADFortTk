@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.12 2003/09/16 14:30:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.h,v 1.13 2003/09/17 19:44:15 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -64,6 +64,7 @@
 
 //*************************** User Include Files ****************************
 
+#include <lib/support/XlationCtxt.h>
 #include <lib/support/WhirlIDMaps.h>
 #include <lib/support/SymTab.h>
 
@@ -96,15 +97,10 @@ class XlationContext
 public: 
   
   // Ctxt: represents the current context
-  class Ctxt {
+  class Ctxt : public CtxtFlags {
   public: 
     Ctxt();
     virtual ~Ctxt();
-
-    // Flags for context
-    BOOL AreFlags(mUINT32 f) const { return (flags & f); }
-    void SetFlags(mUINT32 f)       { flags = flags | f; }
-    void ResetFlags(mUINT32 f)     { flags = flags & ~f; }
 
     // FIXME: move according to notes below
     // Non Scalar Symbol table for context (this class does not assume
@@ -134,7 +130,6 @@ public:
     virtual void DDump() const;
     
   private:
-    mUINT32 flags;
     WN*     wn;
 
     UINT nextVId; // next unique vertex id for this context
@@ -158,10 +153,10 @@ public:
   // can pass flags that should apply to the new context.  Note that
   // that these flags *do not* override any inherited flags.
   XlationContext& CreateContext();
-  XlationContext& CreateContext(mUINT32 flags_);
-  XlationContext& CreateContext(mUINT32 flags_, 
+  XlationContext& CreateContext(uint32_t flags_);
+  XlationContext& CreateContext(uint32_t flags_, 
 				NonScalarSymTab* symtab_, WNToWNIdMap* wnmap_);
-  XlationContext& CreateContext(mUINT32 flags_, WN* wn_);
+  XlationContext& CreateContext(uint32_t flags_, WN* wn_);
 
   // Delete the current context and make its parent the current
   // context.  Everything (including memory) associated with the old
@@ -222,7 +217,7 @@ public:
 public:
   // FIXME: these refer to the current context; they support the
   // crusty old implementation of W2F_CONTEXT
-  mUINT32 flags;
+  uint32_t flags;
   
   enum Flags {
     NOFLAG           = 0x00000000,
@@ -247,6 +242,10 @@ public:
 #define XlationContext_HAS_NO_ARR_ELMT         0x00200000
     
   };
+
+  // -------------------------------------------------------
+  // Flags
+  // -------------------------------------------------------
 
 #define reset_XlationContext(c) ((c).flags = 0U)
   
@@ -395,7 +394,7 @@ private:
   XlationContext(const XlationContext& x) { }
   XlationContext& operator=(const XlationContext& x) { return *this; }
   
-  XlationContext& Ctor(mUINT32 flags_, WN* wn_,
+  XlationContext& Ctor(uint32_t flags_, WN* wn_,
 		       NonScalarSymTab* symtab_, WNToWNIdMap* wnmap_);
   
   // Use a list instead a stack so that we can easily examine

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.10 2003/09/16 14:30:57 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.11 2003/09/17 19:44:15 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -91,26 +91,26 @@ XlationContext::CreateContext()
 }
 
 XlationContext&
-XlationContext::CreateContext(mUINT32 flags_)
+XlationContext::CreateContext(uint32_t flags_)
 {
   return Ctor(flags_, NULL, NULL, NULL);
 }
 
 XlationContext&
-XlationContext::CreateContext(mUINT32 flags_, 
+XlationContext::CreateContext(uint32_t flags_, 
 			      NonScalarSymTab* symtab_, WNToWNIdMap* wnmap_)
 {
   return Ctor(flags_, NULL, symtab_, wnmap_);
 }
 
 XlationContext&
-XlationContext::CreateContext(mUINT32 flags_, WN* wn_)
+XlationContext::CreateContext(uint32_t flags_, WN* wn_)
 {
   return Ctor(flags_, wn_, NULL, NULL);
 }
 
 XlationContext&
-XlationContext::Ctor(mUINT32 flags_, WN* wn_, 
+XlationContext::Ctor(uint32_t flags_, WN* wn_, 
 		     NonScalarSymTab* symtab_, WNToWNIdMap* wnmap_)
 {
   // If available, get enclosing context
@@ -236,7 +236,7 @@ XlationContext::DDump() const
 //***************************************************************************
 
 XlationContext::Ctxt::Ctxt()
-  : flags(0), wn(NULL), nextVId(0), nextEId(0), symtab(NULL), wnmap(NULL)
+  : wn(NULL), nextVId(0), nextEId(0), symtab(NULL), wnmap(NULL)
 {
 }
 
@@ -248,6 +248,7 @@ void
 XlationContext::Ctxt::Dump(std::ostream& o) const
 {
   o << "{context}";
+  CtxtFlags::Dump(o);
 }
 
 void 
