@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.25 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/ty2xaif.cxx,v 1.26 2005/04/20 19:14:40 utke Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1464,13 +1464,16 @@ TranslateTYToSymType(TY_IDX ty_idx)
       str = TranslateTYToSymType(ety_idx);
     }
   } 
-  else if (TY_kind(ty) == KIND_STRUCT) {
+  else if (TY_kind(ty) == KIND_STRUCT 
+	   || 
+	   TY_kind(ty) == KIND_INVALID) {
+    // the latter applies to symbols that are f90 interface names
     str = "opaque";
   }  
   else if (TY_kind(ty) == KIND_FUNCTION) {
     str = "void";
   } 
-  
+
   return str;
 }
 
@@ -1507,7 +1510,10 @@ TranslateTYToSymShape(TY_IDX ty_idx)
     }
 
   } 
-  else if (TY_kind(ty) == KIND_STRUCT) {
+  else if (TY_kind(ty) == KIND_STRUCT
+	   || 
+	   TY_kind(ty) == KIND_INVALID) {
+    // the latter applies to symbols that are f90 interface names
     str = "scalar"; // FIXME
   }  
   
