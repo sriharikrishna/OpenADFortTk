@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.3 2005/03/31 03:44:32 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.4 2005/05/16 15:15:59 eraxxon Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Nathan Tallent, Michelle Strout
-  \version $Id: Open64IRInterface.cpp,v 1.3 2005/03/31 03:44:32 utke Exp $
+  \version $Id: Open64IRInterface.cpp,v 1.4 2005/05/16 15:15:59 eraxxon Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -3191,13 +3191,6 @@ class InitContextVisitor : public OA::ExprTreeVisitor {
     maps all handles to a procedure handle that indicates their context
     assumes that all handles except for SymHandle's and ProcHandle's
     are only valid in one procedure context.
-
-    FIXME: This code does not traverse all the IRStmtRegion handles yet
-    therefore we can't call setCurrentProcToProcContext in any of the CFGIRInterface
-    routines.  Not really an issue though because a CFG is created 
-    for only one procedure.  It does however mean we don't have context
-    information for the higher level stmt handles.  In the future we should
-    either traverse these ahead of time as well or change the CFGIRInterface.
 */
 void Open64IRInterface::initProcContext(PU_Info* pu_forest, 
                                         Open64IRProcIterator &procIter)
@@ -3219,108 +3212,24 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
         proc = procIter.current();
 	PU_Info* pu = (PU_Info*)proc.hval();
 	WN *wn_pu = PU_Info_tree_ptr(pu);
-
-	// set to collect all ExprHandle's for later eval
-	std::set<OA::ExprHandle> exprSet;
-
-        // Visible symbols
-        OA::OA_ptr<OA::IRSymIterator> symIter = tempIR.getVisibleSymIterator(proc);
+	
+        // Add Whirl symbols to map
+        OA::OA_ptr<OA::IRSymIterator> symIter 
+	  = tempIR.getVisibleSymIterator(proc);
         for ( ; symIter->isValid(); (*symIter)++ ) {
             // symbols can be visible in multiple contexts so don't check
             // that they are only mapped to one
             sProcContext[symIter->current()] = proc;
         }
-
-        // Statements in each procedure
-        // Need to map stmts to procedure context before initializing 
-        // the MemRefExprKludge
-        OA::OA_ptr<OA::IRStmtIterator> stmtIter = tempIR.getStmtIterator(proc);
-        for ( ; stmtIter->isValid(); (*stmtIter)++ ) {
-            OA::StmtHandle stmt = stmtIter->current();
-
-            // check that statement has not already been mapped
-            //assert(sProcContext.find(stmt)==sProcContext.end());
-            //Can't do the above check because sometimes a stmt and
-            //memref will have same handle in Whirl
-            sProcContext[stmt] = proc;
-        }
-
-        // need to do this before iterating over memory references
-        tempIR.initMemRefExprKludge(proc);
-
-        // Statements in each procedure
-        stmtIter = tempIR.getStmtIterator(proc);
-        for ( ; stmtIter->isValid(); (*stmtIter)++ ) {
-            OA::StmtHandle stmt = stmtIter->current();
-
-            // Memory references in each statement
-            OA::OA_ptr<OA::MemRefHandleIterator> memRefIter;
-            memRefIter = tempIR.getAllMemRefs(stmt);
-            for ( ; memRefIter->isValid(); (*memRefIter)++ ) {
-                OA::MemRefHandle memref = memRefIter->current();
-
-                // check that memref has not already been mapped
-                //assert(sProcContext.find(memref)==sProcContext.end());
-                sProcContext[memref] = proc;
-                // FIXME: should also create mapping of memrefs to stmts here
-            }                
-
-            // Callsites in each statement, ExprHandle's
-            OA::OA_ptr<OA::IRCallsiteIterator> callSiteIter;
-            callSiteIter = tempIR.getCallsites(stmt);
-            for ( ; callSiteIter->isValid(); (*callSiteIter)++ ) {
-                OA::ExprHandle call = callSiteIter->current();
-                exprSet.insert(call);
-
-                // check that call has not already been mapped
-                //assert(sProcContext.find(call)==sProcContext.end());
-                sProcContext[call] = proc;
-                // FIXME: should also create mapping of call to stmts here
-                
-                // Callsite parameters, ExprHandle's
-                OA::OA_ptr<OA::IRCallsiteParamIterator> paramIter;
-                paramIter = tempIR.getCallsiteParams(call);
-                for ( ; paramIter->isValid(); (*paramIter)++ ) {
-                    OA::ExprHandle param = paramIter->current();
-                    exprSet.insert(param);
-                    
-                    // check that call has not already been mapped
-                    //assert(sProcContext.find(param)==sProcContext.end());
-                    sProcContext[param] = proc;
-                    // FIXME: should also create mapping of expr to stmts here
-                } 
-            }                
-
-            // ExprHandles in statement
-            OA::OA_ptr<OA::ExprStmtPairIterator> exprPairIter;
-            exprPairIter = tempIR.getExprStmtPairIterator(stmt);
-            for ( ; exprPairIter->isValid(); (*exprPairIter)++ ) {
-                OA::ExprHandle expr = exprPairIter->currentSource();
-                exprSet.insert(expr);
-
-                // check that call has not already been mapped
-                //assert(sProcContext.find(expr)==sProcContext.end());
-                sProcContext[expr] = proc;
-            }
-        }
-
-        // for all expressions have an ExprTree visitor that will 
-        // collect various handles
-        std::set<OA::ExprHandle>::iterator exprIter;
-        InitContextVisitor initVisitor( proc );
-        for (exprIter=exprSet.begin(); exprIter!=exprSet.end(); exprIter++) {
-            OA::ExprHandle expr = *exprIter;
-            OA::OA_ptr<OA::ExprTree> eTreePtr = tempIR.getExprTree(expr);
-            eTreePtr->acceptVisitor( initVisitor );
-        }
-
-        // iterate over statements as is done in CFG analysis
-        // FIXME: not prepared to do this yet so things like getLabel
-        // don't call setCurrentProcToProcContext
-        //OA_ptr<IRRegionStmtIterator> stmt_iterptr = tempIR->procBody(proc);
-        //while (stmt_iterptr->isValid()) {
-        //  StmtHandle stmt = si_ptr->current();
-
+	
+	// Add Whirl AST nodes to map
+	WN_TREE_CONTAINER<PRE_ORDER> wtree(wn_pu);
+	WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
+	for (it = wtree.begin(); it != wtree.end(); ++it) {
+	    WN* curWN = it.Wn();
+	    OA::IRHandle h((OA::irhandle_t)curWN);
+	    sProcContext[h] = proc;
+	}
     }
 
     // the last procedure is the one that is the currentProc context
