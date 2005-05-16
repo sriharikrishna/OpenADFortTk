@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.35 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.36 2005/05/16 15:17:56 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -106,10 +106,10 @@ static WN *WN2F_OneInt_Ptr = NULL;
                             : WN2F_OneInt_Ptr)
 
 static void 
-WN2F_Arrsection_Slots(xml::ostream& xos, WN *wn, XlationContext& ctxt, BOOL parens);
+WN2F_Arrsection_Slots(xml::ostream& xos, WN* wn, XlationContext& ctxt, BOOL parens);
 
 static void 
-xlate_ArrayIndices(xml::ostream& xos, WN *wn, XlationContext& ctxt);
+xlate_ArrayIndices(xml::ostream& xos, WN* wn, XlationContext& ctxt);
 
 //***************************************************************************
 
@@ -302,7 +302,7 @@ WN2F_Is_Address_Preg(WN * ad ,TY_IDX ptr_ty)
 //***************************************************************************
 
 whirl2xaif::status 
-whirl2xaif::xlate_LDA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::xlate_LDA(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_LDA, FORTTK_UNEXPECTED_INPUT);
   FORTTK_ASSERT(ST_class(WN_st(wn)) != CLASS_PREG, "Cannot LDA a PREG");
@@ -401,26 +401,22 @@ whirl2xaif::xlate_LDID(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 
 
 whirl2xaif::status 
-whirl2xaif::xlate_ILOAD(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::xlate_ILOAD(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   // Note that we handle this just like we do the lhs of an ISTORE.
   FORTTK_ASSERT(WN_operator(wn) == OPR_ILOAD, FORTTK_UNEXPECTED_INPUT);
-
+  
   // Base and referenced (some offset, possibly 0, from base) objects
   WN* baseptr = WN_kid0(wn); // address expression as WN
   TY_IDX base_ty = WN_GetBaseObjType(wn);
   TY_IDX baseptr_ty = Stab_Pointer_To(base_ty);
   TY_IDX ref_ty = WN_GetRefObjType(wn);
   
-  // Translate into a reference (dereference address???)
-  WN* ctxtWN = wn; 
-  if (WN_operator(baseptr) == OPR_ARRAY) {
-    // FIXME: for du_ud numbers; ARRAY, not ILOAD, is top of ref
-    ctxtWN = baseptr; 
-  }
-  ctxt.CurContext().SetWN(ctxtWN);
-  if (WN_operator(baseptr) == OPR_LDA || WN_operator(baseptr) == OPR_LDID)
+  // Translate into a reference
+  ctxt.CurContext().SetWN(wn);
+  if (WN_operator(baseptr) == OPR_LDA || WN_operator(baseptr) == OPR_LDID) {
     set_XlationContext_has_no_arr_elmt(ctxt); // FIXME
+  }
   
   xlate_MemRef(xos, baseptr, baseptr_ty, ref_ty, WN_load_offset(wn), ctxt);
   
@@ -430,7 +426,7 @@ whirl2xaif::xlate_ILOAD(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 }
 
 whirl2xaif::status 
-whirl2xaif::xlate_ILOADX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::xlate_ILOADX(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   FORTTK_DIE(FORTTK_UNIMPLEMENTED);
   xos << OPCODE_name(WN_opcode(wn));
@@ -439,7 +435,7 @@ whirl2xaif::xlate_ILOADX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status 
-whirl2xaif::WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_mload(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   // This should only appear the as the rhs of an ISTORE.  Treat
   // it just like an ILOAD.
@@ -468,7 +464,7 @@ whirl2xaif::WN2F_mload(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 // xlate_STID: Translate a WHIRL STID node to an XAIF assignment
 whirl2xaif::status 
-whirl2xaif::xlate_STID(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::xlate_STID(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_STID, FORTTK_UNEXPECTED_INPUT);
 
@@ -566,7 +562,7 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 }
 
 whirl2xaif::status 
-whirl2xaif::xlate_ISTOREX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::xlate_ISTOREX(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   FORTTK_DIE(FORTTK_UNIMPLEMENTED);
   xos << std::endl << OPCODE_name(WN_opcode(wn));
@@ -575,7 +571,7 @@ whirl2xaif::xlate_ISTOREX(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status 
-whirl2xaif::WN2F_mstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_mstore(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   /* Note that we make the assumption that this is just like an 
    * ISTORE, and handle it as though it were.  We do not handle
@@ -617,7 +613,7 @@ whirl2xaif::WN2F_mstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status
-whirl2xaif::WN2F_pstid(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_pstid(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_PSTID, FORTTK_UNEXPECTED_INPUT);
   
@@ -651,7 +647,7 @@ whirl2xaif::WN2F_pstid(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status
-whirl2xaif::WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_pstore(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   TY_IDX        base_ty;
   FORTTK_ASSERT(WN_operator(wn) == OPR_PSTORE, FORTTK_UNEXPECTED_INPUT);
@@ -694,7 +690,7 @@ whirl2xaif::WN2F_pstore(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 //***************************************************************************
 
 whirl2xaif::status
-whirl2xaif::xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::xlate_ARRAY(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   // N.B.: WHIRL indices are 0-based and memory layout is row-major
   // (right-most index represents contiguous elements).  
@@ -794,7 +790,7 @@ whirl2xaif::xlate_ARRAY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 |*                                                                           *|
 */
 whirl2xaif::status
-whirl2xaif::WN2F_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_triplet(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   WN      *kid0;
   WN      *kid1;
@@ -946,7 +942,7 @@ whirl2xaif::WN2F_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status
-whirl2xaif::WN2F_src_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_src_triplet(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   WN      *kid0;
   WN      *kid1;
@@ -971,7 +967,7 @@ whirl2xaif::WN2F_src_triplet(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status
-whirl2xaif::WN2F_arrayexp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_arrayexp(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   TranslateWN(xos, WN_kid0(wn), ctxt);
   return whirl2xaif::good;
@@ -979,7 +975,7 @@ whirl2xaif::WN2F_arrayexp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status
-whirl2xaif::WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_arrsection(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
    /* Note that array indices have been normalized to assume the
     * array is based at index zero.  Since a base at index 1 is
@@ -1057,7 +1053,7 @@ whirl2xaif::WN2F_arrsection(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 whirl2xaif::status
-whirl2xaif::WN2F_where(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+whirl2xaif::WN2F_where(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   xos << "WHERE(";
   TranslateWN(xos, WN_kid0(wn), ctxt);
@@ -1070,7 +1066,7 @@ whirl2xaif::WN2F_where(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 
 void
-WN2F_Arrsection_Slots(xml::ostream& xos, WN *wn, XlationContext& ctxt, BOOL parens)
+WN2F_Arrsection_Slots(xml::ostream& xos, WN* wn, XlationContext& ctxt, BOOL parens)
 {
   INT32 dim;
   WN * kidz;
@@ -1166,7 +1162,7 @@ WN2F_Arrsection_Slots(xml::ostream& xos, WN *wn, XlationContext& ctxt, BOOL pare
 }
 
 void
-xlate_ArrayIndices(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+xlate_ArrayIndices(xml::ostream& xos, WN* wn, XlationContext& ctxt)
 {
   // FIXME: do not handle co dimentions
   
@@ -1208,7 +1204,7 @@ xlate_ArrayIndices(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 }
 
 void
-WN2F_array_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,
+WN2F_array_bounds(xml::ostream& xos, WN* wn, TY_IDX array_ty,
 		  XlationContext& ctxt)
 {
   // FIXME: referenced in ty2xaif.cxx
@@ -1229,7 +1225,7 @@ WN2F_array_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,
 }
 
 void
-WN2F_arrsection_bounds(xml::ostream& xos, WN *wn, TY_IDX array_ty,
+WN2F_arrsection_bounds(xml::ostream& xos, WN* wn, TY_IDX array_ty,
 		       XlationContext& ctxt)
 {
   /* This prints the array subscript expression. It was part of

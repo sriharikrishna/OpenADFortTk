@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.62 2005/03/30 22:33:28 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.63 2005/05/16 15:17:56 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -27,9 +27,9 @@
 using std::vector;
 #include <set>
 using std::set;
-#include <list> // FIXME: TopologicalSort
+#include <list> // FIXME: for TopologicalSort
 using std::list;
-#include <map>  // FIXME: TopologicalSort
+#include <map>  // FIXME: for TopologicalSort
 using std::map;
 
 //************************* Xerces Include Files ****************************
@@ -67,7 +67,8 @@ using std::endl;
 
 using namespace xaif2whirl;
 
-IntrinsicXlationTable xaif2whirl::IntrinsicTable(IntrinsicXlationTable::X2W);
+IntrinsicXlationTable   xaif2whirl::IntrinsicTable(IntrinsicXlationTable::X2W);
+WNIdToWNTabMap          xaif2whirl::WNIdToWNTableMap;
 
 // FIXME
 extern xaif2whirl::ModeType      opt_mode;
@@ -146,16 +147,16 @@ RemoveFromWhirlIdMaps(WN* wn, WNToWNIdMap* wn2idmap, WNIdToWNMap* id2wnmap);
 // Scopes and Symbols
 
 static void
-xlate_Scope(const DOMElement* elem, XAIFSymToSymbolMap* symMap, 
-            XlationContext& ctxt);
+xlate_Scope(const DOMElement* elem, XlationContext& ctxt, 
+	    XAIFSymToSymbolMap* symMap);
 
 static void
 xlate_SymbolTable(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
-                  XAIFSymToSymbolMap* symMap);
+                  XlationContext& ctxt, XAIFSymToSymbolMap* symMap);
 
 static void
 xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
-             XAIFSymToSymbolMap* symMap);
+             XlationContext& ctxt, XAIFSymToSymbolMap* symMap);
 
 //*************************** Forward Declarations ***************************
 
@@ -182,9 +183,16 @@ DeclareActiveTypes();
 static void 
 ConvertToActiveType(ST* st);
 
+static void 
+ConvertStructMemberToActiveType(TY_IDX base_ty, TY_IDX ref_ty,
+				STAB_OFFSET ref_ofst);
+
+static void 
+ConvertScalarizedRefToActiveType(WN* wn);
 
 static FLD_HANDLE
-My_FLD_get_to_field(TY_IDX struct_ty_idx, UINT64 ofst); // FIXME
+TY_Lookup_FLD(TY_IDX struct_ty, TY_IDX ref_ty, UINT64 ref_ofst);
+
 
 // FIXME (Note: TYPE_ID and TY_IDX are typedef'd to the same type, so
 // overloading is not possible!)
@@ -196,6 +204,43 @@ static TY_IDX Create_New_Array_Type(TY_IDX old_array_ty);
 
 static TY_IDX
 XAIFTyToWHIRLTy(const char* type); // FIXME: temporary
+
+//*************************** Forward Declarations ***************************
+
+class ConvertModuleTypeFctr {
+public:
+  ConvertModuleTypeFctr(TY_IDX struct_ty_, TY_IDX ref_ty_, UINT64 ref_ofst_)
+    : struct_ty(struct_ty_), ref_ty(ref_ty_), ref_ofst(ref_ofst_)
+    { 
+      ty_name  = TY_name(struct_ty);
+      ty_mtype = TY_mtype(struct_ty);
+      ty_size  = TY_size(struct_ty);
+    }
+  ~ConvertModuleTypeFctr() { }
+  
+  bool operator()(UINT32 idx, const TY* entry) const { 
+    // If this is the non-external version of the type we seek, change it
+    if (!TY_is_external(*entry) 
+	&& TY_mtype(*entry) == ty_mtype
+	&& TY_size(*entry) == ty_size
+	&& strcmp(TY_name(*entry), ty_name) == 0) {
+      TY_IDX ty = make_TY_IDX(idx);
+      ConvertStructMemberToActiveType(ty, ref_ty, ref_ofst);
+      return true; // early exit
+    }
+    return false; // continue
+  }
+  
+private:
+  TY_IDX struct_ty;
+  TY_IDX ref_ty;
+  UINT64 ref_ofst;
+
+  // cached values
+  const char* ty_name;
+  MTYPE       ty_mtype;
+  UINT64      ty_size;
+};
 
 //*************************** Forward Declarations ***************************
 
@@ -261,7 +306,9 @@ xaif2whirl::TranslateIR(PU_Info* pu_forest, const DOMDocument* doc)
   
   PUIdToPUMap* pumap = new PUIdToPUMap(pu_forest);
   ctxt.SetIdToPUMap(pumap);
-  
+
+  WNIdToWNTableMap.Create(pu_forest); // Note: could make this local
+
   // -------------------------------------------------------
   // 2. Translate
   // -------------------------------------------------------
@@ -282,7 +329,9 @@ TranslateCallGraph(PU_Info* pu_forest, const DOMDocument* doc,
 {
   DeclareActiveTypes();
   
-  // FIXME: Do something about the ScopeHeirarchy
+  // -------------------------------------------------------
+  // Process the symbol tables in the ScopeHierarchy
+  // -------------------------------------------------------
   XAIFSymToSymbolMap* symmap = TranslateScopeHierarchy(doc, ctxt);
   ctxt.SetXAIFSymToSymbolMap(symmap);
   
@@ -300,7 +349,10 @@ TranslateCallGraph(PU_Info* pu_forest, const DOMDocument* doc,
 
 
 // TranslateScopeHierarchy: Enter symbols for all Scopes in the
-// ScopeHierarchy
+// ScopeHierarch.  
+//
+// Note: We ignore the scope hierarchy graph, assuming it retains the
+// basic structure it had before xaifBooster.
 static XAIFSymToSymbolMap*
 TranslateScopeHierarchy(const DOMDocument* doc, XlationContext& ctxt)
 {
@@ -316,7 +368,7 @@ TranslateScopeHierarchy(const DOMDocument* doc, XlationContext& ctxt)
   XAIF_ScopeElemFilter filt;
   for (DOMElement* elem = GetChildElement(scopeHier, &filt);
        (elem); elem = GetNextSiblingElement(elem, &filt)) {
-    xlate_Scope(elem, symMap, ctxt);
+    xlate_Scope(elem, ctxt, symMap);
   }
   
   return symMap;
@@ -422,9 +474,10 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   
   // 1. WHIRL<->ID maps
   WNToWNIdMap* wnmapx = new WNToWNIdMap();
-  WNIdToWNMap* wnmapy = new WNIdToWNMap();
-  CreateWhirlIdMaps(wn_pu, wnmapx, wnmapy);
+  CreateWhirlIdMaps(wn_pu, wnmapx, NULL);
   ctxt.SetWNToIdMap(wnmapx);
+
+  WNIdToWNMap* wnmapy = WNIdToWNTableMap.Find(Current_PU_Info);
   ctxt.SetIdToWNMap(wnmapy);
   
   // -------------------------------------------------------
@@ -448,16 +501,16 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
     if (strcmp(intent.c_str(), "in") == 0) {
       WN_Set_Parm_In(parmWN);
       Set_ST_is_intent_in_argument(parmST);
-    } 
+    }
     else if (strcmp(intent.c_str(), "out") == 0) {
       WN_Set_Parm_Out(parmWN);
       Set_ST_is_intent_out_argument(parmST);		
-    } 
+    }
     else if (strcmp(intent.c_str(), "inout") == 0) {
       WN_Set_Parm_By_Reference(parmWN); // unnecessary for 'whirl2f'
       Clear_ST_is_intent_in_argument(parmST);
       Clear_ST_is_intent_out_argument(parmST);
-    } 
+    }
     else {
       FORTTK_DIE("Unknown intent to argument:\n" << *arg);
     }
@@ -539,7 +592,6 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
   // 5. Cleanup
   // -------------------------------------------------------
   delete wnmapx;
-  delete wnmapy;
 }
 
 
@@ -558,7 +610,8 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
 // the WHIRL FUNC_ENTRY.
 //
 // Note: This routine will not translate any basic blocks in the CFG
-// that are unreachable from 'startNode' (i.e. dead code). [FIXME unstructured]
+// that are unreachable from 'startNode' (i.e. dead code). 
+// [FIXME unstructured]
 
 static pair<WN*, OA::OA_ptr<MyDGNode> >
 xlate_CFGstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
@@ -1636,12 +1689,21 @@ GetOrCreateBogusTmpSymbol(XlationContext& ctxt)
 //****************************************************************************
 
 static void
-xlate_Scope(const DOMElement* elem, XAIFSymToSymbolMap* symMap, 
-            XlationContext& ctxt)
+xlate_Scope(const DOMElement* elem, XlationContext& ctxt,
+	    XAIFSymToSymbolMap* symMap)
 {
   // Find the corresponding WHIRL symbol table (ST_TAB)
   SymTabId symtabId = GetSymTabId(elem);
   pair<ST_TAB*, PU_Info*> stab = ctxt.FindSymTab(symtabId);
+  
+  PU_Info* pu = stab.second;
+  if (pu) { // This is a local symbol table; restore it's global state.
+    PU_SetGlobalState(pu);
+    
+    // Need WHIRL<->ID maps for translating ScalarizedRefs
+    WNIdToWNMap* wnmap = WNIdToWNTableMap.Find(pu);
+    ctxt.SetIdToWNMap(wnmap);
+  }
   
   // Find the scope id
   const XMLCh* scopeIdX = elem->getAttribute(XAIFStrings.attr_Vid_x());
@@ -1649,19 +1711,19 @@ xlate_Scope(const DOMElement* elem, XAIFSymToSymbolMap* symMap,
 
   // Translate the xaif:SymbolTable (the only child)
   DOMElement* symtabElem = GetFirstChildElement(elem);
-  xlate_SymbolTable(symtabElem, scopeId.c_str(), stab.second, symMap);
+  xlate_SymbolTable(symtabElem, scopeId.c_str(), pu, ctxt, symMap);
 }  
 
 
 static void
 xlate_SymbolTable(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
-                  XAIFSymToSymbolMap* symMap)
+		  XlationContext& ctxt, XAIFSymToSymbolMap* symMap)
 {
   // For all xaif:Symbol in the xaif:SymbolTable
   XAIF_SymbolElemFilter filt;
   for (DOMElement* e = GetChildElement(elem, &filt);
        (e); e = GetNextSiblingElement(e, &filt)) {
-    xlate_Symbol(e, scopeId, pu, symMap);
+    xlate_Symbol(e, scopeId, pu, ctxt, symMap);
   }
 }
 
@@ -1670,33 +1732,29 @@ xlate_SymbolTable(const DOMElement* elem, const char* scopeId, PU_Info* pu,
 // scope; IOW, there are no block scopes.
 static void
 xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
-             XAIFSymToSymbolMap* symMap)
+             XlationContext& ctxt, XAIFSymToSymbolMap* symMap)
 {
   // 1. Initialize
-  SYMTAB_IDX level = GLOBAL_SYMTAB; // Default: assume a global symbol
-  if (pu) {
-    // This is a PU-scoped symbol.  Restore global state for PU.
-    PU_SetGlobalState(pu);
-    level = CURRENT_SYMTAB; // PU_lexical_level
-  }
+  SYMTAB_IDX level = (pu) ? CURRENT_SYMTAB : GLOBAL_SYMTAB;
   
   // For symbols not introduced by xaifBooster, *one* of the following applies
   SymId symId = GetSymId(elem); // non-zero for a normal symbol
   WNId wnId = GetWNId(elem);    // non-zero for a scalarized symbol
   
-  bool normalSym = (wnId == 0); // represents some non-scalarized symbol
+  bool normalSym = (wnId == 0); // true if a non-scalarized symbol
   bool active = GetActiveAttr(elem);
   
   const XMLCh* symNmX = elem->getAttribute(XAIFStrings.attr_symId_x());
   XercesStrX symNm = XercesStrX(symNmX);
   
-  // 2. Find or Create WHIRL symbol
+  // 2. Find or Create WHIRL symbol; change type if necessary
   ST* st = NULL;
   if (normalSym) {
     if (symId == 0) {
       // Create the symbol
       st = CreateST(elem, level, symNm.c_str());
-    } else {
+    } 
+    else {
       // Find the symbol and change type if necessary
       st = &(Scope_tab[level].st_tab->Entry(symId));
       if (active && ST_class(st) == CLASS_VAR) {
@@ -1704,6 +1762,15 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
       }
     }
   } 
+  else {
+    // scalarized symbol
+    FORTTK_ASSERT(level == CURRENT_SYMTAB,
+		  "Scalarized symbols must be in a PU-scoped symbol table!");
+    if (active) {
+      WN* pathVorlage = ctxt.FindWN(wnId, true /* mustFind */);
+      ConvertScalarizedRefToActiveType(pathVorlage);
+    }
+  }
   
   // 3. Create our own symbol structure and add to the map
   Symbol* sym = new Symbol(st, wnId, active);
@@ -2091,7 +2158,8 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
   TY_IDX ty;
   if (strcmp(shape.c_str(), "scalar") == 0) {
     ty = basicTy;
-  } else {
+  } 
+  else {
     // Note: cf. be/com/wn_instrument.cxx:1253 for example creating vector
     INT32 ndim = 0;
     INT64 len = 1000; // FIXME: this is fixed size!!
@@ -2315,27 +2383,90 @@ ConvertToActiveType(ST* st)
     mUINT64 offset = ST_ofst(st); // offset into base symbol
     
     // find field with correct offset or symbol
-    FLD_HANDLE fld = My_FLD_get_to_field(base_ty, offset);
+    FLD_HANDLE fld = TY_Lookup_FLD(base_ty, 0, offset);
     Set_FLD_type(fld, newBaseTy);
   }
 }
 
 
-// FIXME: cf. extern FLD_HANDLE FLD_get_to_field(...)
-// FIXME: this is very inefficient; also we could abstract this out. 
-static FLD_HANDLE 
-My_FLD_get_to_field(TY_IDX struct_ty_idx, UINT64 ofst)
+// ConvertStructMemberTouActiveType: Given a base structure type, a
+// referenced object type and the offset of the referenced object,
+// change the type of the referenced field.
+static void 
+ConvertStructMemberToActiveType(TY_IDX base_ty, TY_IDX ref_ty, 
+				STAB_OFFSET ref_ofst)
 {
-  FLD_ITER fld_iter = Make_fld_iter(TY_fld(struct_ty_idx));
+  FLD_HANDLE fld = TY_Lookup_FLD(base_ty, ref_ty, ref_ofst);
+  FORTTK_ASSERT(fld.Entry(), "Could not find field in " << TY_name(base_ty));
+  Set_FLD_type(fld, ActiveTypeTyIdx);
+}
+
+
+// ConvertScalarizedRefToActiveType: Change type of the last component
+// of the scalarized path.  That is, for "a%b%c%d", change the type of
+// 'd'.  (This means we can safely ignore internal path components.)
+// 
+// Note that types from modules will be duplicated in the type table
+// for each 'use', with the duplicates receiving a 'TY_IS_EXTERNAL'
+// flag.  Because the duplicates are igored by whirl2f, the the
+// non-external version of the type needs to be changed so that the
+// module definition is changed.
+static void 
+ConvertScalarizedRefToActiveType(WN* wn)
+{
+  TY_IDX baseobj_ty = WN_GetBaseObjType(wn);
+  TY_IDX refobj_ty  = WN_GetRefObjType(wn);
+      
+  if (TY_Is_Array(baseobj_ty)) {
+    // array reference, such as "s%b(i)"
+    // FIXME: must change type of array
+    FORTTK_DIE(FORTTK_UNIMPLEMENTED << "ConvertScalarizedRefToActiveType");
+  }
+  else {
+    // structure member reference, such as "s%a" or "b(i)%a"
+    // must change type of ref-obj.
+    // Note that we assume the WHIRL includes offsets instead of field ids
+    FORTTK_ASSERT(OPERATOR_has_offset(WN_operator(wn)), "Uh-oh!");
+    STAB_OFFSET refobj_ofst = WN_offset(wn);
+    ConvertStructMemberToActiveType(baseobj_ty, refobj_ty, refobj_ofst);
+    if (TY_is_external(baseobj_ty)) {
+      For_all_until(Ty_Table,
+		    ConvertModuleTypeFctr(baseobj_ty, refobj_ty, refobj_ofst));
+    }
+  }
+}
+
+
+// TY_Lookup_FLD: Given a base structure type, a referenced object type
+// and the offset of the referenced object, return the field entry.
+// The referenced object type may be 0.
+//
+// This is not an overly efficient method, but WHIRL doesn't make this
+// query easy.
+//
+// cf. FLD_get_to_field
+static FLD_HANDLE 
+TY_Lookup_FLD(TY_IDX struct_ty, TY_IDX ref_ty, UINT64 ref_ofst)
+{
+  FLD_ITER fld_iter = Make_fld_iter(TY_fld(struct_ty));
   do {
     FLD_HANDLE fld(fld_iter);
-    UINT64 cur_ofst = FLD_ofst(fld);
-    if (cur_ofst == ofst) {
-      return fld;
+    UINT64 ofst = FLD_ofst(fld);
+    TY_IDX ty   = FLD_type(fld);
+    if (ofst == ref_ofst) {
+      if (ref_ty == 0) {
+	return fld;
+      }
+      else {
+	if (Stab_Identical_Types(ref_ty, ty, FALSE /* check_quals */,
+				 FALSE /* check_scalars */, TRUE)) {
+	  return fld;
+	}
+      }
     }
   } while (!FLD_last_field(fld_iter++));
   
-  return FLD_HANDLE();
+  return FLD_HANDLE(); // null field
 }
 
 
@@ -2348,7 +2479,6 @@ MY_Make_Array_Type1 (TYPE_ID elem_ty, INT32 ndim, INT64 len)
 
 
 // FIXME: Available in symtab_utils.h / symtab.cxx
-
 static TY_IDX
 MY_Make_Array_Type (TY_IDX elem_ty, INT32 ndim, INT64 len)
 {

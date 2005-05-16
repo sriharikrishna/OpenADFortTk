@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Args.cxx,v 1.4 2004/08/05 18:35:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Args.cxx,v 1.5 2005/05/16 15:17:56 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -41,6 +41,8 @@ static const char* usage_details =
 "\n"
 "Options:\n"
 "  -o, --output <file> send output to <file> instead of stdout\n"
+"      --prefix <pfx>  Set the temporary variable prefix to <pfx>. Default\n"
+"                      is 'OpenAD_'\n"
 "  -V, --version       print version information\n"
 "  -h, --help          print this help\n"
 "      --debug [lvl]   debug mode at level `lvl'\n";
@@ -51,6 +53,7 @@ static const char* usage_details =
 CmdLineParser::OptArgDesc Args::optArgs[] = {
   // Options
   { 'o', "output",   CLP::ARG_REQ , CLP::DUPOPT_ERR,  NULL },
+  {  0 , "prefix",   CLP::ARG_OPT,  CLP::DUPOPT_CLOB, NULL },
   { 'V', "version",  CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 'h', "help",     CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "debug",    CLP::ARG_OPT,  CLP::DUPOPT_CLOB, NULL },
@@ -77,7 +80,8 @@ Args::Args(int argc, const char* const argv[])
 void
 Args::Ctor()
 {
-  debug = 0;      // default: 0 (off)
+  tmpVarPrefix = "OpenAD_"; // default prefix
+  debug = 0;                // default: 0 (off)
 }
 
 Args::~Args()
@@ -147,6 +151,9 @@ Args::Parse(int argc, const char* const argv[])
     // Check for other options
     if (parser.IsOpt("output")) { 
       xaifFileNm = parser.GetOptArg("output");
+    }    
+    if (parser.IsOpt("prefix")) { 
+      tmpVarPrefix = parser.GetOptArg("prefix");
     }
     
     // Check for required arguments

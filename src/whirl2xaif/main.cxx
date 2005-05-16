@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.24 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.25 2005/05/16 15:17:56 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -175,13 +175,14 @@ real_main(int argc, char **argv)
   // -------------------------------------------------------  
   
   (*os) << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n";
-  whirl2xaif::TranslateIR(*os, pu_forest);
-
+  whirl2xaif::TranslateIR(*os, pu_forest, args.tmpVarPrefix.c_str());
+  
   bool writeIR = false;
   if (writeIR) { 
     std::string file = "out.B"; // FIXME
     WriteIR(file.c_str(), pu_forest); 
-  } else {
+  } 
+  else {
     FreeIR(pu_forest); // Writing frees some of the WHIRL maps
   }
   
@@ -214,7 +215,8 @@ InitOutputStream(Args& args)
   if (args.xaifFileNm.empty()) {
     // Use cout
     return &(cout);
-  } else {
+  } 
+  else {
     ofstream* ofs = new ofstream;
     OpenFile(*ofs, args.xaifFileNm.c_str());
     return ofs;

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.36 2005/03/30 22:33:28 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.37 2005/05/16 15:17:56 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -411,7 +411,7 @@ xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
 
 static WN*
 xlate_Intrinsic(OA::OA_ptr<OA::DGraph::DGraphStandard> g, 
-        OA::OA_ptr<MyDGNode> n, 
+		OA::OA_ptr<MyDGNode> n, 
 		XlationContext& ctxt)
 {
   FORTTK_ASSERT(!g.ptrEqual(NULL) && !n.ptrEqual(NULL), FORTTK_UNEXPECTED_INPUT);

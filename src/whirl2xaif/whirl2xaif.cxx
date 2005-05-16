@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.51 2005/04/05 18:42:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.52 2005/05/16 15:17:56 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -118,7 +118,8 @@ DumpTranslationHeaderComment(xml::ostream& xos);
 //***************************************************************************
 
 void
-whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
+whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest,
+			const char* tmpVarPrefix)
 {
   using namespace OA::CallGraph;
 
@@ -169,7 +170,7 @@ whirl2xaif::TranslateIR(std::ostream& os, PU_Info* pu_forest)
       << Attr("xmlns:xaif", "http://www.mcs.anl.gov/XAIF")
       << Attr("xsi:schemaLocation", "http://www.mcs.anl.gov/XAIF xaif.xsd")
       << Attr("program_name", "***myprog***")
-      << Attr("prefix", "OpenAD_");
+      << Attr("prefix", tmpVarPrefix);
   
   // ScopeHierarchy
   ctxt.CreateContext();

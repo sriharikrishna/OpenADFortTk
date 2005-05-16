@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Args.h,v 1.2 2004/02/28 16:41:38 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Args.h,v 1.3 2005/05/16 15:17:56 eraxxon Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -59,6 +59,7 @@ public:
 
   // Parsed Data: optional arguments
   std::string xaifFileNm;
+  std::string tmpVarPrefix;
   int debug;   // default: 0 (off)
   
   // Parsed Data: arguments

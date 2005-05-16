@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.75 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.76 2005/05/16 15:17:56 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -704,14 +704,21 @@ whirl2xaif::xlate_MemRef(xml::ostream& xos,
 		   && ST_class(WN_st(addr)) == CLASS_CONST);
   bool newContext = false; 
   if (!constant && !ctxt.IsVarRef()) {
+    // FIXME: for du_ud numbers; ARRAY, not ILOAD, is top of ref
+    WN* wn = ref_wn;
+    if (WN_operator(wn) == OPR_ILOAD 
+	&& WN_operator(WN_kid0(wn)) == OPR_ARRAY) {
+      wn = WN_kid0(wn);
+    }
+    
     xos << BegElem(XAIFStrings.elem_VarRef())
 	<< Attr("vertex_id", ctxt.GetNewVId())
-	<< Attr("du_ud", ctxt.FindUDDUChainId(ctxt.GetWN_MR()));
+	<< Attr("du_ud", ctxt.FindUDDUChainId(wn));
     ctxt.CreateContext(XlationContext::VARREF); // FIXME: do we need wn?
     newContext = true; 
   }
-
-
+  
+  
   // -------------------------------------------------------
   //
   // -------------------------------------------------------
@@ -736,7 +743,6 @@ whirl2xaif::xlate_MemRef(xml::ostream& xos,
   } 
   else {
 
-
     ScalarizedRef* sym = ctxt.FindScalarizedRef(ref_wn);
     if (sym) { 
       // 1. A scalarized symbol
@@ -756,15 +762,18 @@ whirl2xaif::xlate_MemRef(xml::ostream& xos,
       // 3. Array reference (non-scalar)
       if (TY_Is_Character_String(base_ty)) {
 	TranslateWN(xos, addr, ctxt); /* String lvalue */
-	if (!XlationContext_has_no_arr_elmt(ctxt))
+	if (!XlationContext_has_no_arr_elmt(ctxt)) {
 	  TY2F_Translate_ArrayElt(xos, base_ty, offset);
+	}
       } 
       else {
 	TranslateWN(xos, addr, ctxt); /* Array lvalue */
-	if (!XlationContext_has_no_arr_elmt(ctxt))
+	if (!XlationContext_has_no_arr_elmt(ctxt)) {
 	  TY2F_Translate_ArrayElt(xos, base_ty, offset);
-	else
+	}
+	else {
 	  reset_XlationContext_has_no_arr_elmt(ctxt);
+	}
       }      
     } 
     else if ((WN_operator(addr) == OPR_LDA || WN_operator(addr) == OPR_LDID) 
@@ -777,8 +786,9 @@ whirl2xaif::xlate_MemRef(xml::ostream& xos,
       FORTTK_ASSERT_WARN(WN2F_Can_Assign_Types(ST_type(WN_st(addr)), base_ty),
 			 "Incompatible types");
       
-      if (WN_operator(addr) == OPR_LDA)
+      if (WN_operator(addr) == OPR_LDA) {
 	ctxt.ResetDerefAddr();
+      }
       xlate_SymRef(xos, WN_st(addr), addr_ty, ref_ty,
 		   offset + WN_lda_offset(addr) /*offset*/, ctxt);
     }
@@ -821,7 +831,8 @@ whirl2xaif::xlate_MemRef(xml::ostream& xos,
 	TY2F_Translate_Fld_Path(xos, fld_path, deref_fld, 
 				FALSE/*common*/, FALSE/*as_is*/, ctxt);
 	TY2F_Free_Fld_Path(fld_path);
-      } else {
+      } 
+      else {
 	xos << "field-at-offset=" << offset /* %lld */;
       }
 #endif

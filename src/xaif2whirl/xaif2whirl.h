@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.20 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.21 2005/05/16 15:17:56 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -66,6 +66,7 @@ namespace xaif2whirl {
   };
   
   extern IntrinsicXlationTable IntrinsicTable;
+  extern WNIdToWNTabMap        WNIdToWNTableMap;
 
   void
   TranslateIR(PU_Info* pu_forest, const DOMDocument* doc);
