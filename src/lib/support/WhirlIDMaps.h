@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.11 2004/07/30 17:50:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.12 2005/05/16 15:17:39 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -206,7 +206,19 @@ public:
   WNToWNIdTabMap(PU_Info* pu_forest) { Create(pu_forest); }
   virtual ~WNToWNIdTabMap();
   
-  void Create(PU_Info* pu_forest);  
+  void Create(PU_Info* pu_forest);
+  void Destroy();
+};
+
+class WNIdToWNTabMap 
+  : public FortTk::BaseMap<PU_Info*, WNIdToWNMap*> {
+  
+public:
+  WNIdToWNTabMap() { }
+  WNIdToWNTabMap(PU_Info* pu_forest) { Create(pu_forest); }
+  virtual ~WNIdToWNTabMap();
+  
+  void Create(PU_Info* pu_forest);
   void Destroy();
 };
 

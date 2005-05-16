@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.cxx,v 1.8 2005/03/19 22:54:50 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.cxx,v 1.9 2005/05/16 15:17:39 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -102,6 +102,35 @@ WNToWNIdTabMap::Destroy()
   clear();
 }
 
+
+WNIdToWNTabMap::~WNIdToWNTabMap()
+{
+  Destroy();
+}
+
+void 
+WNIdToWNTabMap::Create(PU_Info* pu_forest)
+{
+  Open64IRProcIterator procIt(pu_forest);
+  for ( ; procIt.isValid(); ++procIt) { 
+    PU_Info* pu = (PU_Info*)procIt.current().hval();
+    WN* wn_pu = PU_Info_tree_ptr(pu);
+    
+    WNIdToWNMap* tab = new WNIdToWNMap(wn_pu);
+    Insert(pu, tab);
+  }
+}
+
+void 
+WNIdToWNTabMap::Destroy()
+{
+  for (iterator it = begin(); it != end(); ++it) {
+    delete (*it).second; // WNIdToWNMap*
+  }
+  clear();
+}
+
+
 //***************************************************************************
 // Optional routines for map creation
 //***************************************************************************
@@ -163,7 +192,6 @@ CreatePUIdMaps(PU_Info* pu_forest, PUToPUIdMap* x, PUIdToPUMap* y)
 
 void
 CreateWhirlIdMaps(WN* wn, WNToWNIdMap* x, WNIdToWNMap* y)
-  
 {
   // Note: Do not use a static id because it would then require that
   // this function be called in the same order across two different
