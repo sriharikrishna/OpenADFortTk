@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.12 2005/03/19 22:54:50 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.13 2005/05/16 15:17:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -249,43 +249,7 @@ public:
 // Variable References and WHIRL/XAIF
 //***************************************************************************
 
-// These are the categories of WHIRL var-refs that are translatable to
-// XAIF without canonicalization:
-// 
-//   1. 'simple' (scalar, array element of non-structured type)
-//      a
-//      b(3), b(i)
-//      ??? array section ???
-//
-//   2. 'scalarizable' (scalar members of any structured type;
-//      involves path collapsing)
-//      s%a
-//      b(i)%a
-//      s%b(i) ???
-//
-//   ?. 'array references & array operations' (whole arrays of scalar
-//      element-type) (may involve path collapsing)
-//      (put in category 1 if XAIF gets array ops)
-//      x = y      ! where x and y are arrays of scalars
-//      s%x = s%y  ! must collapse access paths
-//
-// These are the categories of WHIRL var-refs that must be
-// canonicalized before translation into XAIF. Note that translation
-// in XAIF may involve access path collapsing.
-//   - non-scalarizable members of structures
-//   - whole structures
-//   - arrays [whole/slice/element] of structured type
-//
-// The XAIF 'opaque' type will be used to represent these types (an
-// array of structures is one 'opaque' type instead of an array of
-// opaque types). Var references to something of opaque type are
-// permissable and paths may need to be collapsed:
-//   foo(s)     ! where s is a structure
-//   foo(a[j])  ! where a[j] is in the second category [collapse]
-//   moo(m%x)   ! where m%x is in the second category [collapse]
-// though assignments of structures with active members will need to
-// be canonicalized into recursive member-wise assignments so they can
-// be scalarized.
+// See tech report for explanation of three categories of references.
 
 bool 
 IsRefTranslatableToXAIF(const WN* wn);

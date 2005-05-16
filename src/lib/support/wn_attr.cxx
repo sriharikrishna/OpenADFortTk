@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.15 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.16 2005/05/16 15:17:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -282,8 +282,10 @@ WN_Tree_Type(const WN* wn)
 	  ty = MTYPE_To_TY(WN_rtype(wn));
 	}
 #endif /* _BUILD_WHIRL2C */
-      } else
+      } 
+      else {
 	ty = MTYPE_To_TY(WN_rtype(wn));
+      }
       break;
       
     case OPR_INTRINSIC_OP:
@@ -418,7 +420,7 @@ WN_GetRefObjType(const WN* wn)
       
     case OPR_ILOAD:   // type of referenced object
     case OPR_ILOADX:
-      ty = TY_pointed(WN_load_addr_ty(wn));
+      ty = WN_ty(wn);
       break;
     
     // STOREs represent the left-hand-side expression
@@ -464,9 +466,18 @@ WN_GetBaseObjType(const WN* wn)
       break;
       
     case OPR_ILOAD:
-    case OPR_ILOADX:
-      ty = WN_ty(wn);
+    case OPR_ILOADX: {
+      WN* baseptr = WN_kid0(wn); // address expression as WN
+      TY_IDX baseptr_ty = WN_Tree_Type(baseptr);
+      FORTTK_ASSERT((TY_kind(baseptr_ty) == KIND_POINTER),
+                    "Internal error: expected a pointer type");
+      ty = TY_pointed(baseptr_ty);
+      // Note: neither WN_ty() nor TY_pointed(WN_load_addr_ty(wn))
+      // always give the base object.  For example, for a reference
+      // like F(i)%v, both return the type of v and not the type of
+      // the structure.
       break;
+    }
       
     // ARRAYs
     case OPR_ARRAY:
@@ -483,9 +494,21 @@ WN_GetBaseObjType(const WN* wn)
     case OPR_ISTORE: 
     case OPR_ISTOREX:
     case OPR_ISTBITS: {
+      // Note: use WN_Tree_Type(baseptr) instead of WN_ty(wn) to find
+      // type of baseptr because the former will attempt to interpret
+      // pointer arithmetic, e.g., the this structure reference
+      // "X(1)%a%y = ..."
+      //   F8ISTORE 0 T<38,anon_ptr.,8>
+      //    ...
+      //    U8ADD
+      //     U8ARRAY 1 48
+      //      U8U8LDID 0 <2,3,X> T<35,anon_ptr.,8>
+      //      I4INTCONST 2 (0x2)
+      //      I4INTCONST 1 (0x1)
+      //     U8INTCONST 8 (0x8)
       WN* baseptr = WN_kid1(wn); // address expression as WN
-      TY_IDX baseptr_ty = WN_ty(wn); // == WN_Tree_Type(baseptr)
-      ty = TY_pointed(baseptr_ty); 
+      TY_IDX baseptr_ty = WN_Tree_Type(baseptr); // was: WN_ty(wn)
+      ty = TY_pointed(baseptr_ty);
       // This assertion is not always true, e.g. given this Fortan:
       //   F(i)%v = y
       // and this WHIRL

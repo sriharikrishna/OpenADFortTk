@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.15 2005/03/31 03:44:33 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.16 2005/05/16 15:17:10 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -24,6 +24,8 @@
 //************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
+
+#include "ir_reader.h"      // fdump_tree
 
 //************************ OpenAnalysis Include Files ***********************
 
