@@ -2,6 +2,7 @@ package FTscan;
 use FTList qw(:REs :DEFAULT);
 use FTpat;
 use FTTerm;
+use FTscanUtils;
 
 sub new {
     my($class,$l) = @_;
@@ -11,6 +12,37 @@ sub new {
     return bless {ln => $ln,
 		  leading => $leading,
 		  tl => \@tl},$class;
+}
+sub empty {
+    return bless {ln => '',
+		  leading => '',
+		  tl => []},$_[0];
+}
+sub set_indent {
+    $_[0]->{leading} = $_[1];
+    return $_[0];
+}
+sub indent {
+    local($_) = $_[0]->{leading};
+    s/\d/ /g;
+    return $_;
+}
+sub plus_indent {
+    $_[0]->set_indent($_[0]->indent() . $_[1]);
+    return $_[0];
+}
+sub make_term {
+    my($class,$f,@args) = @_;
+    my($term) = FTscan->empty()
+	        ->set_tl($f,'(', sl_join(',',@args)->tl(),')');
+    return $term;
+}
+#
+# convert an array of termlist(refs) to array of FTscans
+#
+sub conv {
+    my($class) = shift;
+    return (map {_nln(@$_)} @_);
 }
 #
 # internal use only: make a new scan object from token list
@@ -38,6 +70,9 @@ sub str {
 	if (/^\w+$/ && ($prv =~ /^\w+$/)){
 	    push @jl,' ';
 	}
+	if (/^[\'\"]/ && ($prv =~ /^\w+$/)){
+	    push @jl,' ';
+	}
 	if (/^$dot$/ || ($prv =~ /^$dot$/i)){
 	    push @jl,' ';
 	}
@@ -48,6 +83,12 @@ sub str {
 	    push @jl,' ';
 	}
 	if (($_ eq '*') && ($prv =~ /print/i)){
+	    push @jl,' ';
+	}
+	if ($_ eq '//' || $prv eq '//') {
+	    push @jl,' ';
+	}
+	if ($_ eq '::' || $prv eq '::') {
 	    push @jl,' ';
 	}
 	push @jl,$_;
@@ -179,6 +220,11 @@ sub args {
     
     return map {_nln(@$_)} (tlcsv (@tl[1 .. $#tl-1]));
 }
+sub args_p {
+    my(@tl) = $_[0]->tl();
+    shift @tl; pop @tl;
+    return (FTscan->empty()->set_tl(@tl)->cbreak());
+}
 sub term {
     my($self) = @_;
     my(@tl) = $self->tl();
@@ -186,5 +232,73 @@ sub term {
     @tl = map {_nln(@$_)} (tlcsv (@tl[1 .. $#tl-1]));
     return ($f,@tl);
 }
+sub csv {
+    my(@tl) = $_[0]->tl();
+    return map {_nln(@$_)} tlcsv(@tl);
+}
+sub concatd {
+    my($self) = shift @_;
+    $self->set_tl($self->tl(),map {_concat_helper($_)} @_);
+    return $self;
+}
+sub _concat_helper {
+    return ($_[0]) unless (ref($_[0]) eq 'FTscan');
+    return ($_[0]->tl());
+}
+sub lmatch {
+    my($s) = shift @_;
+    my(@tl) = $s->tl();
+    my($i);
+
+    for $i (0 .. $#_){
+	return () unless ($tl[$i] eq $_[$i]);
+    }
+    return ($s);
+}
+sub checkit (@@) {
+    my($l1,$l2) = @_;
+    my(@l1) = @$l1;
+    my(@l2) = @$l2;
+
+    return () if (@l1 != @l2);
+    for my $i (0 .. $#l2){
+	return () unless ($l1[$i] eq $l2[$i]);
+    }
+    return ($l1);
+
+}
+sub token_scan {
+    my($s) = shift @_;
+    my($tl) = [ $s->tl() ];
+
+    while ( (@$tl + 0) >= @_ + 0){
+	return ($s) if checkit([ @$tl[0 .. $#_] ],[ @_ ]);
+	shift @$tl;
+    }
+    return ();
+}
+sub scan_index (@@) {
+    my($l1,$l2) = @_;
+
+    return () if ( @$l1 == 0 || @$l2 == 0);
+    foreach my $i (0 .. (@$l1+0) - (@$l2+0)){
+	return ($i) if checkit([ @$l1[$i .. $i + @$l2 -1] ], $l2);
+    }
+    return ();
+}
+sub g_repl_token {
+    my($s) = shift @_;
+    my(@pat) = @{ shift @_ };
+    my(@repl) = @{ shift @_ };
+
+    my(@tl) = $s->tl();
+    my(@tl1) = @tl;
+    while (my($i) = scan_index([ @tl1 ],[ @pat ])){
+	splice @tl, $i, @pat+0, @repl;
+	@tl1 = @tl1[$i + @repl .. $#tl];
+    }
+    return $s->set_tl(@tl);
+}
+
 1;
 

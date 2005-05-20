@@ -1,6 +1,9 @@
 package Ffile;
 use Exporter;
 use FortranSourceLine;
+use FTscan;
+use FTproc;
+use FTdecl;
 
 @ISA = qw(Exporter);
 
@@ -9,7 +12,7 @@ $ADDLINES = bless {},'ADL';
 $COMMENT_OUT = bless {},'CMO';
 
 @EXPORT = qw($UNCHANGED $ADDLINES $COMMENT_OUT declare_after
-              lines_from_heredoc fconcat);
+              lines_from_heredoc fconcat grep_joined_lines);
 
 $NO_TRIM = 0;
 
@@ -33,9 +36,12 @@ $decl    = qr/^[\d\s]+(?:
 	      save |
 	      external |
 	      character |
+	      intrinsic |
+              include   | # hmmm
 	      real |
 	      integer |
 	      dimension |
+              namelist  |
               double\s*precision |
               complex |
               double\s*complex)/xi;
@@ -64,7 +70,7 @@ sub new
 
     $class->new_from_lines(@lines);
 }
-
+$VERBOSE = 0;
 sub new_from_lines
 {
     local($/);
@@ -78,6 +84,11 @@ sub new_from_lines
     {
         $line = shift @lines;
 	chomp($line);
+	if ($line =~ /\r$/) {
+	    print STDERR "Warning, carriage return encounterd!\n"
+		if ($VERBOSE);
+	    $line =~ s/\r+$//;
+	}
 	@rawline = ($line);
 	$line = &kill_bang_comments($line);
 
@@ -119,6 +130,11 @@ sub new_from_lines
 	    {
 	        my($cont) = shift @lines;
 	        chomp($cont);
+		if ($cont =~ /\r$/) {
+		    print STDERR "Warning, carriage return encounterd!\n"
+			if ($VERBOSE);
+		    $cont =~ s/\r+$//;
+		}
 		push @rawline,$cont;
 		$cont = &kill_bang_comments(substr($cont,6,66));
 		$line .= $cont;
@@ -287,6 +303,47 @@ sub rewrite_sem
     }
     return $rw;
 }
+#
+# convenience function
+#
+sub mkSrcLine {
+    return map {FortranSourceLine::gen($_)} @_;
+}
+#
+# context rewrite -- use line object instead of 
+# line text
+#
+sub crewrite {
+    my($self,$proc,@rest) = @_;
+    my($rw) = Ffile->empty();
+    my(@lines) = $self->lines();
+
+    if (ref($proc) eq 'FTproc') {
+	$proc->[0]->(@rest);
+    }
+    my($p) = ref($proc) eq 'FTproc' ? $proc->[1] : $proc;
+    $rw->add_lines(map {mkSrcLine(&$p($_,@rest))} @lines);
+    if ((ref($proc) eq 'FTproc') && $proc->[2]){
+	$proc->[2]->(@rest);
+    }
+    return $rw;
+}
+sub crewrite_sem {
+    my($self,$proc,@rest) = @_;
+    my($rw) = Ffile->empty();
+    my(@lines) = $self->lines();
+
+    if (ref($proc) eq 'FTproc') {
+	$proc->[0]->(@rest);
+    }
+    my($p) = ref($proc) eq 'FTproc' ? $proc->[1] : $proc;
+    $rw->add_lines(map {$_->is_comment() ? ($_) : mkSrcLine(&$p($_,@rest))}
+		   @lines);
+    if ((ref($proc) eq 'FTproc') && $proc->[2]){
+	$proc->[2]->(@rest);
+    }
+    return $rw;
+}
 sub raw_rewrite
 {
     my($self,$proc) = @_;
@@ -326,6 +383,18 @@ sub map_sem
     return map {my($l) = $_->line();
 		(($l =~ /$comment/) || ($l =~ /$blank/))?
 		    () : &$proc($l,@args)} $self->lines();
+}
+sub cmap {
+    my($self,$proc,@args) = @_;
+
+    return map {&$proc($_,@args)} $self->lines();
+}
+sub cmap_sem {
+    my($self,$proc,@args) = @_;
+
+    return map {my($l) = $_->line();
+		(($l =~ /$comment/) || ($l =~ /$blank/))?
+		    () : &$proc($_,@args)} $self->lines();
 }
 sub grep_joined_lines
 {

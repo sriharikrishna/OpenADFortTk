@@ -5,7 +5,8 @@
 package FTTerm;
 use Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(pt tlcsv ptl mterm);
+# @EXPORT = qw(pt tlcsv ptl mterm);
+@EXPORT = qw(pt tlcsv ptl);
 
 # from token list, extract balanced paren element
 #  return 1 ref, 1 list: list 1 = paren list, list 2 = remaining
@@ -67,6 +68,7 @@ sub mterm {
     my($pat) = shift;
     my(@remain) = @_;
     my(@before,@term,@after) = ();
+    local($_);
     
     while (@remain){
 	$_ = shift @remain;

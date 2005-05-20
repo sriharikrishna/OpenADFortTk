@@ -32,8 +32,8 @@ $bl = qr/^\s*(?:!.*)?$/;
 
 $q_str = qr/'             # single quote opening
             (?:           # body of quote is collection of chars
-              [^'\\] |    #  a NON special character OR
-              ''     |    #  specifically a repeated quote OR
+              [^\'\\] |    #  a NON special character OR
+              \'\'     |    #  specifically a repeated quote OR
               \\.    |    #  a backslashed anything (including quote)
              )*           # zero or more occurences
             '/x;          # followed by a trailing quote
@@ -43,8 +43,8 @@ $q_str = qr/'             # single quote opening
 
 $qq_str = qr/"            # double quote opening
             (?:           # body of quote is collection of chars
-              [^"\\] |    #  a NON special character OR
-              ''     |    #  specifically a repeated quote OR
+              [^\"\\] |    #  a NON special character OR
+              \'\'     |    #  specifically a repeated quote OR
               \\.    |    #  a backslashed anything (including quote)
              )*           # zero or more occurences
             "/x;          # followed by a trailing dbl quote
@@ -170,7 +170,7 @@ sub ftlist {
     my(@list) = /($fttok)/g;
     my($ln) = ($list[0] =~ /^\d+$/) ? shift @list : '';
 
-    return map {/^['"]/? $_ : lc $_}($ln,@list) unless ($_RETAIN_CASE);
+    return map {/^[\'\"]/? $_ : lc $_}($ln,@list) unless ($_RETAIN_CASE);
     return ($ln,@list);
 }
 sub nlftlist {

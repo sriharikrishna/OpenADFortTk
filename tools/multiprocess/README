@@ -1,3 +1,12 @@
+
+=============================================================================
+
+N.B.: While this directory is called postprocessor, it has expanded to
+include other things such as a preprocessor.  We plan to rename it
+when all the CVS-nonsense required will not be too big of an issue.
+
+=============================================================================
+
 To use the preprocessor, you *must* define 2 files:
 
    ad_inline.f
