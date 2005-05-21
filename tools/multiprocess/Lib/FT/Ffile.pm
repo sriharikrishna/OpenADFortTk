@@ -24,7 +24,7 @@ $type = qr/logical |
            integer |
            character (?: \s* \* \s* \d+)?/xi;
 $continuation = qr/^\s{5}\S/;
-$comment = qr/^[^\d\s]/;
+$comment = qr/(?:^[^\d\s]) | (?:^ \s+ !)/ix;
 $blank   = qr/^\s*$/;
 $decl    = qr/^[\d\s]+(?:
               common  |
