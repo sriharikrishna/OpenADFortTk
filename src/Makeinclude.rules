@@ -1,10 +1,10 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Makeinclude.config,v 1.20 2005/06/10 17:44:51 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Makeinclude.rules,v 1.1 2005/06/10 17:44:32 eraxxon Exp $
 
 #############################################################################
 #
 # File:
-#   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/Makeinclude.config,v $
+#   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/Makeinclude.rules,v $
 #
 # Description:
 #   Include file for package Makefile.in
@@ -14,25 +14,28 @@
 #############################################################################
 
 #############################################################################
-# OpenADFortTk Components and Settings
+# OpenADFortTk Extra rules
 #############################################################################
 
-# $(top_srcdir) is fine, but $(abs_top_srcdir) must be used with @@
-OPENADFORTTK = @abs_top_srcdir@
-
 ############################################################
-# Local includes
+# C Preprocessor
 ############################################################
 
-OPENADFORTTK_IFLAGS = -I$(OPENADFORTTK)/src
+# Assumes includer sets MYCXXFLAGS and MYCFLAGS
 
-############################################################
-# Local libraries
-############################################################
+MYCPPFLAGS_CXX = $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) \
+	$(MYCXXFLAGS)
 
-# Linking dependencies:
-#   OPENADFORTTK_LIBSUPPORT
+MYCPPFLAGS_CC  = $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) \
+	$(MYCFLAGS)
 
-OPENADFORTTK_LIBSUPPORT  = $(top_builddir)/src/lib/support/libsupport.a
+%.cpp.pp : %.cpp
+	$(CXXCPP) $(MYCPPFLAGS_CXX) $< > $@
+
+%.cxx.pp : %.cxx
+	$(CXXCPP) $(MYCPPFLAGS_CXX) $< > $@
+
+%.c.pp : %.c
+	$(CXXCPP) $(MYCPPFLAGS_CC) $< > $@
 
 #############################################################################
