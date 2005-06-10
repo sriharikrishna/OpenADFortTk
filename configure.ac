@@ -1,5 +1,5 @@
 # -*-Mode: autoconf;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/configure.ac,v 1.1 2005/06/10 17:44:31 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/configure.ac,v 1.2 2005/06/10 18:16:21 eraxxon Exp $
 
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -381,20 +381,20 @@ AM_CONDITIONAL(IS_HOST_AR, test "${HOST_AR}" != "")
 AC_OUTPUT([ \
   Makefile \
   doc/Makefile \
-  src/Makefile \
   \
+  src/Makefile \
   src/lib/Makefile \
   src/lib/support/Makefile \
-  \
   src/whirl2sexp/Makefile \
   src/sexp2whirl/Makefile \
   src/whirl2xaif/Makefile \
   src/xaif2whirl/Makefile \
   src/testers/Makefile \
   \
-  postprocess/Makefile \
+  tools/Makefile \
+  tools/multiprocess/Makefile \
+  tools/normalize/Makefile \
   \
   test/Makefile \
-  test/util/Makefile \
 ])
 

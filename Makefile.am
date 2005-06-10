@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Makefile.am,v 1.1 2005/06/10 17:44:31 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/Makefile.am,v 1.2 2005/06/10 18:16:21 eraxxon Exp $
 
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -69,7 +69,7 @@ MYINSTALLDIR = $(DESTDIR)$(prefix)
 SUBDIRS = \
 	doc \
 	src \
-	postprocess \
+	tools \
 	test
 
 #############################################################################
