@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.cxx,v 1.4 2005/03/31 03:44:32 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.cxx,v 1.5 2005/06/10 15:59:05 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -98,6 +98,7 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
   if (!pu_forest) { return; }
   
   OA::OA_ptr<Open64IRInterface> irIF; irIF = new Open64IRInterface;
+  Open64IRInterface::initContextState(pu_forest);
   x->SetIRInterface(irIF);
 
   OA::OA_ptr<Open64IRProcIterator> procIt;
@@ -117,8 +118,6 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
     PU_Info* pu = (PU_Info*)procIt->current().hval();
     OA::OA_ptr<OA::CFG::Interface> cfg = CreateCFG(pu, cfgeach, irIF);
 
-    // FIXME: Do MemRefExprKludge NOW after adding CFG stmt tags
-    irIF->initMemRefExprKludge((OA::irhandle_t)pu);
   }
   
   // For each proc 
@@ -144,11 +143,17 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
   // Compute interprocedural analysis info
   // -------------------------------------------------------
 
-  // Inter Alias
-  OA::OA_ptr<OA::Alias::ManagerInterAliasMapBasic> interaliasmapman;
-  interaliasmapman = new OA::Alias::ManagerInterAliasMapBasic(irIF);
+  // ParamBindings
+  OA::OA_ptr<OA::DataFlow::ManagerParamBindings> parambindman;
+  parambindman = new OA::DataFlow::ManagerParamBindings(irIF);
+  OA::OA_ptr<OA::DataFlow::ParamBindings> parambind
+      = parambindman->performAnalysis(cgraph);
+
+  // Inter Alias 
+  OA::OA_ptr<OA::Alias::ManagerInsNoPtrInterAliasMap> interaliasmapman;
+  interaliasmapman = new OA::Alias::ManagerInsNoPtrInterAliasMap(irIF);
   OA::OA_ptr<OA::Alias::InterAliasMap> interAlias;
-  interAlias = interaliasmapman->performAnalysis();
+  interAlias = interaliasmapman->performAnalysis(cgraph,parambind);
 
   x->SetInterAlias(interaliasmapman, interAlias);
 
@@ -162,17 +167,24 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
   OA::OA_ptr<OA::SideEffect::ManagerInterSideEffectStandard> interSEman;
   interSEman = new OA::SideEffect::ManagerInterSideEffectStandard(irIF);
   OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> interSE;
-  interSE = interSEman->performAnalysis(cgraph, interAlias, sideeffectman);
+  interSE = interSEman->performAnalysis(cgraph, parambind,
+                                        interAlias, sideeffectman);
 
   x->SetInterSideEffect(interSEman, interSE);
   
+  // ICFG
+  OA::OA_ptr<OA::ICFG::ManagerICFGStandard> icfgman;
+  icfgman = new OA::ICFG::ManagerICFGStandard(irIF);
+  OA::OA_ptr<OA::ICFG::ICFGStandard> icfg 
+      = icfgman->performAnalysis(procIt,cfgeach);
+
   // Activity Analysis
-  OA::OA_ptr<OA::Activity::ManagerEachActive> activeman;
-  activeman = new OA::Activity::ManagerEachActive(irIF);
-  
+  OA::OA_ptr<OA::Activity::ManagerICFGActive> activeman;
+  activeman = new OA::Activity::ManagerICFGActive(irIF);
   OA::OA_ptr<OA::Activity::InterActive> active;
-  active = activeman->performAnalysis(procIt, interAlias, interSE, cfgeach);
-  
+  active = activeman->performAnalysis(cgraph, icfg, parambind,
+                interAlias, interSE, cfgeach);
+
   MassageActivityInfo(active, irIF);
   
   x->SetInterActive(activeman, active);
@@ -909,4 +921,3 @@ GetCFGControlFlowVertexType(WN* wstmt)
   
   return NULL;
 }
-

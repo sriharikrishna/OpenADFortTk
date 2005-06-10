@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.21 2004/07/28 19:04:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.22 2005/06/10 15:59:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -70,6 +70,11 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "kind",
   "type",
   "shape",
+  
+  // xaif:DimensionBounds
+  "xaif:DimensionBounds",
+  "lower",
+  "upper",
   
   // -----------------------------------------------------
   

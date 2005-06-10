@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.41 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.42 2005/06/10 15:59:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -307,6 +307,31 @@ whirl2xaif::xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
   xos << EndElem;
 }
 
+void 
+whirl2xaif::xlate_ArrayBounds(xml::ostream& xos, 
+			      TY_IDX ty_idx, 
+			      XlationContext& ctxt) { 
+  if (TY_kind(ty_idx) == KIND_ARRAY) {
+    if (! TY_is_character(ty_idx)) { 
+      bool assumeBoundsAllConst=false;
+      for (int i=0; i<TY_AR_ndims(ty_idx); i++) {
+	if (TY_AR_const_lbnd(ty_idx,i) && TY_AR_const_ubnd(ty_idx,i)) { 
+	  xos << BegElem("xaif:DimensionBounds") 
+	      << Attr("lower", TY_AR_lbnd_val(ty_idx,i))
+	      << Attr("upper", TY_AR_ubnd_val(ty_idx,i))
+	      << EndElem;
+	  if (!assumeBoundsAllConst && i==0)
+	    assumeBoundsAllConst=true;
+	  if (!assumeBoundsAllConst && i>0)
+	    FORTTK_DIE("Cannot handle mixed constant and variable array bounds");
+	}
+	else 
+	  if (assumeBoundsAllConst)
+	    FORTTK_DIE("Cannot handle mixed constant and variable array bounds");
+      }
+    }
+  } 
+} 
 
 // FIXME: move to xlateSYMTAB.cxx
 class xlate_ST_TAB {
@@ -472,10 +497,10 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
     
     const char* shape_str = TranslateTYToSymShape(ty);
     if (!shape_str) { shape_str = "***"; }
-
+#if 0    
     int active = (strcmp(ty_str, "real") == 0 // FIXME: see xlate_STDecl_VAR
 		  || strcmp(ty_str, "complex") == 0) ? 1 : 0; 
-#if 0    
+#endif
     int active = (ctxt.IsActiveSym(st)) ? 1 : 0;
     if (strcmp(ty_str, "integer") == 0) {
       active = false;
@@ -491,13 +516,15 @@ xlate_STDecl_VAR(xml::ostream& xos, ST *st, XlationContext& ctxt)
 		   << txt1 << ST_name(st) << txt2);
       }
     }
-#endif
+
     
     SymId st_id = (SymId)ST_index(st);
     xos << BegElem("xaif:Symbol") << AttrSymId(st)
 	<< Attr("kind", "variable") << Attr("type", ty_str)
 	<< Attr("shape", shape_str) << SymIdAnnot(st_id)
-	<< Attr("active", active) << EndElem;
+	<< Attr("active", active) <<  EndAttrs;
+    xlate_ArrayBounds(xos, ty, ctxt);
+    xos << EndElem;
   }
 
   //FIXME: TY2F_translate(xos, ty, ctxt); // Add type specs

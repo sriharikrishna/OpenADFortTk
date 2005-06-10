@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.h,v 1.2 2005/03/19 22:55:25 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.h,v 1.3 2005/06/10 15:59:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -43,10 +43,15 @@
 #include <OpenAnalysis/ReachConsts/ManagerReachConstsStandard.hpp>
 #include <OpenAnalysis/UDDUChains/ManagerUDDUChainsStandard.hpp>
 #include <OpenAnalysis/Activity/ManagerActiveStandard.hpp>
-#include <OpenAnalysis/Activity/ManagerEachActive.hpp>
+#include <OpenAnalysis/Activity/ManagerICFGActive.hpp>
 #include <OpenAnalysis/XAIF/UDDUChainsXAIF.hpp>
 #include <OpenAnalysis/XAIF/ManagerUDDUChainsXAIF.hpp>
 #include <OpenAnalysis/XAIF/ManagerAliasMapXAIF.hpp>
+#include <OpenAnalysis/DataFlow/ManagerParamBindings.hpp>
+#include <OpenAnalysis/Alias/ManagerSymAliasSetsBottom.hpp>
+#include <OpenAnalysis/Alias/ManagerInsNoPtrInterAliasMap.hpp>
+#include <OpenAnalysis/ICFG/ManagerICFGStandard.hpp>
+
 
 //*************************** User Include Files ****************************
 
@@ -105,9 +110,9 @@ public:
 
 
   // Inter Alias
-  OA::OA_ptr<OA::Alias::ManagerInterAliasMapBasic> GetInterAlias()
+  OA::OA_ptr<OA::Alias::ManagerInsNoPtrInterAliasMap> GetInterAlias()
     { return interaliasmapman; }
-  void SetInterAlias(OA::OA_ptr<OA::Alias::ManagerInterAliasMapBasic> m, 
+  void SetInterAlias(OA::OA_ptr<OA::Alias::ManagerInsNoPtrInterAliasMap> m, 
 		     OA::OA_ptr<OA::Alias::InterAliasMap> x) 
     { interaliasmapman = m; interAlias = x; }
 
@@ -123,7 +128,7 @@ public:
 
   // Activity
   OA::OA_ptr<OA::Activity::InterActive> GetInterActive() { return active; }
-  void SetInterActive(OA::OA_ptr<OA::Activity::ManagerEachActive> m,
+  void SetInterActive(OA::OA_ptr<OA::Activity::ManagerICFGActive> m,
 		      OA::OA_ptr<OA::Activity::InterActive> x) 
     { activeman = m; active = x; }
 
@@ -136,7 +141,7 @@ private:
   OA::OA_ptr<OA::CFG::ManagerStandard> cfgman;
   OA::OA_ptr<OA::CFG::EachCFGInterface> cfgeach;
   
-  OA::OA_ptr<OA::Alias::ManagerInterAliasMapBasic> interaliasmapman;
+  OA::OA_ptr<OA::Alias::ManagerInsNoPtrInterAliasMap> interaliasmapman;
   OA::OA_ptr<OA::Alias::InterAliasMap> interAlias;
 
   OA::OA_ptr<OA::SideEffect::ManagerStandard> sideeffectman;
@@ -144,7 +149,7 @@ private:
   OA::OA_ptr<OA::SideEffect::ManagerInterSideEffectStandard> interSEman;
   OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> interSE;
   
-  OA::OA_ptr<OA::Activity::ManagerEachActive> activeman;
+  OA::OA_ptr<OA::Activity::ManagerICFGActive> activeman;
   OA::OA_ptr<OA::Activity::InterActive> active;  
 };
 

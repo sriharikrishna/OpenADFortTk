@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.21 2004/07/28 19:04:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.22 2005/06/10 15:59:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -69,6 +69,11 @@ public:
     ATTR_kind,
     ATTR_type,
     ATTR_shape,
+
+    // xaif:DimensionBounds
+    ELEM_DimensionBounds,
+    ATTR_lower,
+    ATTR_upper,
     
     // -----------------------------------------------------
     
@@ -248,6 +253,15 @@ public:
   XMLCh*      attr_type_x() const { return x_strTbl[ATTR_type]; }
   const char* attr_shape() const { return c_strTbl[ATTR_shape]; }
   XMLCh*      attr_shape_x() const { return x_strTbl[ATTR_shape]; }
+
+  // xaif:DimensionBounds
+  const char* elem_DimensionBounds() const { return c_strTbl[ELEM_DimensionBounds]; }
+  XMLCh*      elem_DimensionBounds_x() const { return x_strTbl[ELEM_DimensionBounds]; }
+  
+  const char* attr_lower() const { return c_strTbl[ATTR_lower]; }
+  XMLCh*      attr_lower_x() const { return x_strTbl[ATTR_lower]; }
+  const char* attr_upper() const { return c_strTbl[ATTR_upper]; }
+  XMLCh*      attr_upper_x() const { return x_strTbl[ATTR_upper]; }
   
   // -----------------------------------------------------
   

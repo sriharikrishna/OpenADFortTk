@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.21 2005/05/16 15:17:56 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.22 2005/06/10 15:59:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -36,6 +36,7 @@
 //************************ OpenAnalysis Include Files ***********************
 
 #include <OpenAnalysis/CFG/CFGStandard.hpp> // for DGraphStandard, CFG::Edge
+#include <OpenAnalysis/Utils/DGraph/DGraphInterfaceIterators.hpp> 
 
 //*************************** User Include Files ****************************
 

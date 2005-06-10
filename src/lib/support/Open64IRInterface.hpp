@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.3 2005/03/31 03:44:32 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.4 2005/06/10 15:59:06 eraxxon Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Michelle Strout, Nathan Tallent
-  \version $Id: Open64IRInterface.hpp,v 1.3 2005/03/31 03:44:32 utke Exp $
+  \version $Id: Open64IRInterface.hpp,v 1.4 2005/06/10 15:59:06 eraxxon Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -37,19 +37,19 @@
 #include <OpenAnalysis/IRInterface/ConstValBasicInterface.hpp>
 #include <OpenAnalysis/IRInterface/ConstValIntInterface.hpp>
 #include <OpenAnalysis/IRInterface/ReachConstsIRInterface.hpp>
-#include <OpenAnalysis/IRInterface/MREBasicIRShortCircuitDefault.hpp>
 #include <OpenAnalysis/IRInterface/XAIFIRInterface.hpp>
 #include <OpenAnalysis/IRInterface/SideEffectIRInterface.hpp>
 #include <OpenAnalysis/IRInterface/CallGraphDFProblemIRInterface.hpp>
 #include <OpenAnalysis/IRInterface/InterSideEffectIRInterfaceDefault.hpp>
 #include <OpenAnalysis/IRInterface/ActivityIRInterface.hpp>
 #include <OpenAnalysis/IRInterface/ParamBindingsIRInterface.hpp>
+#include <OpenAnalysis/IRInterface/ICFGIRInterface.hpp>
 
 #include <OpenAnalysis/ExprTree/ExprTreeVisitor.hpp>
 #include <OpenAnalysis/MemRefExpr/MemRefExpr.hpp>
 
 // still needed for MemRefKludge
-#include <OpenAnalysis/MemRefExpr/MemRefExprBasic.hpp>
+//#include <OpenAnalysis/MemRefExpr/MemRefExprBasic.hpp>
 
 #include <OpenAnalysis/Utils/OA_ptr.hpp>
 
@@ -73,7 +73,35 @@
 
 #include <lib/support/WhirlGlobalStateUtils.h>
 #include <lib/support/diagnostics.h>
+//#include "Open64IRInterface/WhirlGlobalStateUtils.h"
+//#include "Open64IRInterface/diagnostics.h"
 
+//typedef std::pair<char*,char*> fully_qualified_name;
+typedef struct fully_qualified_name {
+    std::string mVar;
+    std::string mContext;
+
+    fully_qualified_name() 
+        : mVar("garbage", "garbage") {}
+    fully_qualified_name(char* var, char *context) 
+        : mVar(var), mContext(context) {}
+
+    bool operator< (const  fully_qualified_name& other) const
+    {
+        if (mVar < other.mVar
+            || (mVar == other.mVar && mContext < other.mContext) )
+        { return true; }
+        else {return false; }
+    }
+
+    bool operator== (const  fully_qualified_name& other) const
+    {
+        if (mVar == other.mVar && mContext == other.mContext) 
+        { return true; }
+        else {return false; }
+    }
+
+};
 
 //***************************************************************************
 // Iterators, roughly organized by heirarchy (procedure, statement, etc.)
@@ -87,7 +115,7 @@ public:
   
   virtual OA::ProcHandle current() const 
     { return (OA::irhandle_t)(*pulist_iter); }
-  virtual bool isValid () const { return (pulist.end() != pulist_iter); }
+  virtual bool isValid () const { return (pulist_iter != pulist.end()); }
   virtual void operator++();
   void operator++(int) { ++*this; }  // postfix
   
@@ -162,7 +190,7 @@ public:
   
   virtual OA::ExprHandle current() const  
     { return (OA::irhandle_t)(*wnlist_iter); }
-  virtual bool isValid () const { return (wnlist.end() != wnlist_iter); }
+  virtual bool isValid () const { return (wnlist_iter != wnlist.end()); }
   virtual void operator++() { ++wnlist_iter; }
 
   virtual void reset() { wnlist_iter = wnlist.begin(); }
@@ -188,7 +216,7 @@ public:
   }
 
   virtual bool isValid () const {        // False when all items are exhausted. 
-    return (wnlist.end() != wnlist_iter); 
+    return (wnlist_iter != wnlist.end()); 
   }
 
   virtual void operator++() { ++wnlist_iter; }
@@ -202,12 +230,13 @@ private:
 
 };
 
-//! Enumerate all the top memory references in a stmt
-class Open64IRTopMemRefIterator : public OA::IRTopMemRefIterator {
+//! Enumerate all the memory references in a stmt
+//! Used by a helper method
+class Open64IRMemRefIterator : public OA::MemRefHandleIterator {
 public:
-  Open64IRTopMemRefIterator(OA::StmtHandle h);
-  Open64IRTopMemRefIterator() { mValid = false; }
-  virtual ~Open64IRTopMemRefIterator() { };
+  Open64IRMemRefIterator(OA::StmtHandle h);
+  Open64IRMemRefIterator() { mValid = false; }
+  virtual ~Open64IRMemRefIterator() { };
 
   virtual OA::MemRefHandle current() const; 
   virtual bool isValid() const 
@@ -221,6 +250,13 @@ private:
   list<WN*>* findTopMemRefs(WN* wn);
   void findTopMemRefs(WN* wn, list<WN*>& topMemRefs);
 
+  list<OA::MemRefHandle>*
+  findAllMemRefsAndMapToMemRefExprs(WN* wn);
+
+  typedef std::pair<unsigned, OA::SymHandle> MemRefExprInfo;
+  list<Open64IRMemRefIterator::MemRefExprInfo>
+  findAllMemRefsAndMapToMemRefExprs(WN* wn, list<OA::MemRefHandle>& memRefs,
+	                                unsigned lvl, unsigned flags);
 
 private:
   std::list<OA::MemRefHandle> mMemRefList;
@@ -240,7 +276,7 @@ public:
   
   virtual OA::SymHandle current() const
     { return (OA::irhandle_t)(*symlist_iter); }
-  virtual bool isValid () const { return (symlist.end() != symlist_iter); }
+  virtual bool isValid () const { return (symlist_iter != symlist.end()); }
   virtual void operator++() { if (symlist_iter != symlist.end()) ++symlist_iter; }
   
   virtual void reset() { symlist_iter = symlist.begin(); }
@@ -432,12 +468,12 @@ class Open64IRInterface
     public virtual OA::ReachDefs::ReachDefsIRInterface,
     public virtual OA::UDDUChains::UDDUChainsIRInterface,
     public virtual OA::ReachConsts::ReachConstsIRInterface,
-    public OA::MREBasicIRShortCircuitDefault,
     public virtual OA::XAIF::XAIFIRInterface,
     public virtual OA::SideEffect::SideEffectIRInterface,
     public virtual OA::DataFlow::CallGraphDFProblemIRInterface,
     public OA::SideEffect::InterSideEffectIRInterfaceDefault,
     public virtual OA::DataFlow::ParamBindingsIRInterface,
+    public virtual OA::ICFG::ICFGIRInterface,
     public virtual OA::Activity::ActivityIRInterface
 {
 public:
@@ -502,14 +538,13 @@ public:
                                    OA::ProcHandle callee, OA::ExprHandle param);
  
   //-------------------------------------------------------------------------
-  // CFGIRInterfaceDefault
+  // CFGIRInterface
   //-------------------------------------------------------------------------
   
   //! Given a ProcHandle, return an IRRegionStmtIterator* for the
   //! procedure. The user must free the iterator's memory via delete.
   OA::OA_ptr<OA::IRRegionStmtIterator> procBody(OA::ProcHandle h);
 
-  //--------------------------------------------------------
   // Statements: General
   //--------------------------------------------------------
 
@@ -523,7 +558,6 @@ public:
 
   OA::OA_ptr<OA::IRRegionStmtIterator> getFirstInCompound(OA::StmtHandle h);
 
-  //--------------------------------------------------------
   // Loops
   //--------------------------------------------------------
   OA::OA_ptr<OA::IRRegionStmtIterator> loopBody(OA::StmtHandle h);
@@ -533,7 +567,6 @@ public:
   OA::ExprHandle getLoopCondition(OA::StmtHandle h); //resurrected, used in
                                                      // MPICFGIRInterface
 
-  //--------------------------------------------------------
   // Structured two-way conditionals
   //--------------------------------------------------------
   OA::OA_ptr<OA::IRRegionStmtIterator> trueBody (OA::StmtHandle h);
@@ -541,7 +574,6 @@ public:
   OA::ExprHandle getCondition(OA::StmtHandle h); // resurrected, used in
                                                  // MPICFGIRInterface
   
-  //--------------------------------------------------------
   // Structured multiway conditionals
   //--------------------------------------------------------
   int numMultiCases(OA::StmtHandle h);
@@ -552,12 +584,10 @@ public:
   OA::ExprHandle getSMultiCondition (OA::StmtHandle h, int bodyIndex);
   OA::ExprHandle getSMultiTest(OA::StmtHandle h);  // used in MPICFGIRInterface
 
-  //--------------------------------------------------------
   // Unstructured two-way conditionals
   //--------------------------------------------------------
   OA::StmtLabel getTargetLabel(OA::StmtHandle h, int n);
   
-  //--------------------------------------------------------
   // Unstructured multi-way conditionals
   //--------------------------------------------------------
   int numUMultiTargets(OA::StmtHandle h);
@@ -566,27 +596,16 @@ public:
   OA::ExprHandle getUMultiCondition(OA::StmtHandle h, int targetIndex);
   OA::ExprHandle getUMultiTest(OA::StmtHandle h);  // used in MPICFGInterface
 
-  //--------------------------------------------------------
-  // Symbol Handles
-  //--------------------------------------------------------
-  
-  // getProcSymHandle(ProcHandle h)
-
   //-------------------------------------------------------------------------
-  // AliasIRInterfaceDefault
+  // AliasIRInterface
   //-------------------------------------------------------------------------
 
-  // getStmtIterator(ProcHandle h)
-
-  //! Given a statement return an IRTopMemRefIterator* 
-  // this is an iterator over all the top memory references in a statement
-  // for example, in *p = q[i][j], *p and q[i][j] are the top memory 
-  // references which contain the sub memory references p and q,i,j 
-  // respectively
-  // The user must free the iterator's memory via delete.
-  OA::OA_ptr<OA::IRTopMemRefIterator> getTopMemRefIterator(OA::StmtHandle h); 
-  
-  // Given a statement, return its Alias::IRStmtType
+  //! Given a MemRefHandle return an iterator over
+  //! MemRefExprs that describe this memory reference
+  OA::OA_ptr<OA::MemRefExprIterator> 
+    getMemRefExprIterator(OA::MemRefHandle h);
+ 
+  //! Given a statement, return its Alias::IRStmtType
   OA::Alias::IRStmtType getAliasStmtType(OA::StmtHandle h); 
 
   //! Given a procedure return associated SymHandle
@@ -605,6 +624,11 @@ public:
         return retval;
     }
 
+  //! For the given symbol create a Location that indicates statically
+  //! overlapping locations and information about whether the location
+  //! is local or not, local means visible in only this procedure
+  OA::OA_ptr<OA::Location> getLocation(OA::ProcHandle p, OA::SymHandle s);
+
   //-------------------------------------------------------------------------
   // ActivityIRInterface
   //-------------------------------------------------------------------------
@@ -617,6 +641,9 @@ public:
  
   //! Given a statement, return its Activity::IRStmtType
   OA::Activity::IRStmtType getActivityStmtType(OA::StmtHandle h);
+
+  //! given a symbol return the size in bytes of that symbol
+  int getSizeInBytes(OA::SymHandle h);
 
   //-------------------------------------------------------------------------
   // ReachDefsIRInterface
@@ -694,107 +721,73 @@ public:
   OA::OA_ptr<OA::SideEffect::SideEffectStandard> 
       getSideEffect(OA::ProcHandle callerProc, OA::SymHandle calleeSym);
 
-  // FIXME: want to deprecate this
-  void currentProc(OA::ProcHandle p) {
-    PU_Info* pu = (PU_Info*)p.hval();
-    PU_SetGlobalState(pu);
-  }
-
   //-------------------------------------------------------------------------
-  // ExprTreeIRShortCircuit
+  // ParamBindingsIRInterface
   //-------------------------------------------------------------------------
 
   //! Given an ExprHandle, return an ExprTree* 
-  //! The user must free the expr tree  
   OA::OA_ptr<OA::ExprTree> getExprTree(OA::ExprHandle h);
-
-  //-------------------------------------------------------------------------
-  // LocationIRShortCircuit
-  //-------------------------------------------------------------------------
-  //! For the given symbol create a Location that indicates statically
-  //! overlapping locations and information about whether the location
-  //! is local or not, local means visible in only this procedure
-  OA::OA_ptr<OA::Location> getLocation(OA::ProcHandle p, OA::SymHandle s);
-
-  //-------------------------------------------------------------------------
-  // MemRefExprIRShortCircuit
-  //-------------------------------------------------------------------------
-public:
-  //! Given a MemRefHandle return an iterator over
-  //! MemRefExprs that describe this memory reference
-  OA::OA_ptr<OA::MemRefExprIterator> 
-    getMemRefExprIterator(OA::MemRefHandle h);
- 
-  // FIXME: will set up some data structures so I can implement the 
-  // MemRefExprIRShortCircuit interface using what is already here
-  // and should be reorganized, it will also help with other interfaces
-  // that need the ability to iterate over memory references for a stmt
-  void initMemRefExprKludge(OA::ProcHandle h);
-private:
   
-  // data structures that the above kludge will setup
-  // assumption is that StmtHandles and MemRefHandles are unique across
-  // different program and procedure contexts for which analysis is being
-  // currently performed
-  static std::map<OA::StmtHandle,std::set<OA::MemRefHandle> > sStmt2allMemRefsMap;
-  static std::map<OA::StmtHandle,std::set<OA::MemRefHandle> > sStmt2defMemRefsMap;
-  static std::map<OA::StmtHandle,std::set<OA::MemRefHandle> > sStmt2useMemRefsMap;
-  static std::map<OA::MemRefHandle,OA::StmtHandle> sMemRef2StmtMap;
-
-  // will have to use MemRefExprBasic to create the MemRefExpr, which
-  // the user will own
-  static std::map<OA::MemRefHandle,std::list<OA::MemRefExprBasic> > sMemref2mrebasicMap;
-
-  std::map<OA::MemRefHandle,int > mTestMap;
-  
-
-   
-public:
   //-------------------------------------------------------------------------
-  // MREBasicIRShortCircuitDefault
-  // being used to implement various kludges for newer interfaces
+  // ICFGIRInterface
   //-------------------------------------------------------------------------
+  //! Given the callee symbol returns the callee proc handle
+  OA::ProcHandle getProcHandle(OA::SymHandle sym);
   
-  // getStmtIterator(ProcHandle h)
-
-  // getTopMemRefIterator(OA::StmtHandle h)
-
-  //! Given a MemRefHandle for a top mem ref
-  //!  return a list of all MemRefExprBasics
-  OA::OA_ptr<std::list<OA::MemRefExprBasic> > 
-      getMemRefExprBasicList(OA::MemRefHandle h); 
-  
-  // getVisibleSymIterator(OA::ProcHandle h)
-
-  //! For the given symbol create a LocBlock that indicates statically
-  //! overlapping locations
-// will be deprecated once no longer being used anywhere
-  OA::OA_ptr<OA::LocBlock> getLocBlock(OA::SymHandle s) 
-      { OA::OA_ptr<OA::LocBlock> retval; retval = NULL; 
-        return retval; 
-      }
-
   //-------------------------------------------------------------------------
   // XAIFIRInterface
   //-------------------------------------------------------------------------
 
-  // getTopMemRefIterator(StmtHandle h)
-  
   //-------------------------------------------------------------------------
+
+private:
+  
+  // assumption is that StmtHandles and MemRefHandles are unique across
+  // different program and procedure contexts for which analysis is being
+  // currently performed
+  static std::map<OA::StmtHandle,std::set<OA::MemRefHandle> > 
+      sStmt2allMemRefsMap;
+
+  static std::map<OA::MemRefHandle,OA::StmtHandle> sMemRef2StmtMap;
+
+  static std::map<OA::MemRefHandle,set<OA::OA_ptr<OA::MemRefExpr> > > 
+      sMemref2mreSetMap;
+
+  // mapping of call symbols to procedure handles
+  static std::map<OA::SymHandle,OA::ProcHandle> sCallSymToProc;
+
+  // mapping of fully qualified global variable names to a set of SymHandles
+  // that all have that fully qualified name
+  static std::map<fully_qualified_name,std::set<OA::SymHandle> > sGlobalVarMap;
+
+  // mapping of symbol handles to strings used in getSideEffect
+  static std::map<OA::SymHandle,std::string> sSymToVarStringMap;
+
 
   //***************************************************************************
   // Helpers
   //***************************************************************************
 private:
-  typedef std::pair<unsigned, OA::SymHandle> MemRefExprInfo;
+  //! Given a statement return an iterator over all memory references
+  //! During its creation it also sets up sStmt2allMemRefs 
+  //! and memRefs2mreSetMap.
+  OA::OA_ptr<OA::MemRefHandleIterator> getMemRefIterator(OA::StmtHandle h); 
+  
+  void currentProc(OA::ProcHandle p) {
+    assert(p!=OA::ProcHandle(0));
+    PU_Info* pu = (PU_Info*)p.hval();
+    PU_SetGlobalState(pu);
+  }
 
-  void DumpWN(WN* wn, ostream& os);
 
-  void DumpWNMemRef(WN* wn, ostream& os);
 
-  void DumpWNLeaf(WN* wn, ostream & os);
+  static void DumpWN(WN* wn, ostream& os);
 
-  void DumpWNMemRefLeaf(WN* wn, ostream& os);
+  static void DumpWNMemRef(WN* wn, ostream& os);
+
+  static void DumpWNLeaf(WN* wn, ostream & os);
+
+  static void DumpWNMemRefLeaf(WN* wn, ostream& os);
 
   OA::OA_ptr<OA::ExprTree> createExprTree(WN* wn);
 
@@ -804,12 +797,6 @@ private:
   OA::OA_ptr<OA::ExprStmtPairIterator> findExprStmtPairs(WN* wn);
 
   OA::OA_ptr<OA::ConstValBasicInterface> getConstValBasicFromST(ST* st);
-
-  OA::OA_ptr<list<OA::MemRefExprBasic> > findMemRefExpr(WN* wn);
-
-  std::list<MemRefExprInfo>
-  findMemRefExpr(WN* wn, list<OA::MemRefExprBasic>& memRefExprs,
-                 unsigned lvl, unsigned flags);
 
   // maintaining the context of all handles in terms of Program and Procedure
   // For now just allowing one program context
@@ -821,12 +808,17 @@ private:
                               Open64IRProcIterator &procIter);
   static void setCurrentProcToProcContext(OA::IRHandle h);
 
+  static fully_qualified_name create_fqn(OA::SymHandle sym);
+
+  // mapping of calls to procs
+  static void initCallSymToProcMap(Open64IRProcIterator &procIter);
 
   // context information is initialized and used within some of the iterators
   // so they need to be friends
   friend class Open64IRProcIterator;
-  friend class Open64IRTopMemRefIterator;
+  friend class Open64IRMemRefIterator;
   friend class InitContextVisitor;
+
 
 public:
 

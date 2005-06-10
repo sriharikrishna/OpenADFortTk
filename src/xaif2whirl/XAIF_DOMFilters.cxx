@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.17 2004/07/30 17:52:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.cxx,v 1.18 2005/06/10 15:59:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -334,6 +334,19 @@ XAIF_SymbolElemFilter::acceptNode(const DOMNode *node) const
   const XMLCh* name = node->getNodeName();
   if ( (node->getNodeType() == DOMNode::ELEMENT_NODE)
        && XMLString::equals(name, XAIFStrings.elem_Symbol_x()) ) {
+    return FILTER_ACCEPT;
+  }
+  return FILTER_SKIP;
+}
+
+//****************************************************************************
+
+short
+XAIF_DimensionBoundsElemFilter::acceptNode(const DOMNode *node) const
+{
+  const XMLCh* name = node->getNodeName();
+  if ( (node->getNodeType() == DOMNode::ELEMENT_NODE)
+       && XMLString::equals(name, XAIFStrings.elem_DimensionBounds_x()) ) {
     return FILTER_ACCEPT;
   }
   return FILTER_SKIP;

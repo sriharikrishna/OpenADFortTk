@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.10 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.11 2005/06/10 15:59:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -492,6 +492,23 @@ Stab_Is_Based_At_Common_Or_Equivalence(const ST *st)
   return (Stab_Is_Valid_Base(st) &&
 	  (Stab_Is_Common_Block(ST_base(st)) ||
 	   Stab_Is_Equivalence_Block(ST_base(st))));
+}
+
+inline BOOL 
+Stab_Is_In_Module(const ST *st)
+{
+  return (Stab_Is_Valid_Base(st) &&
+	  ST_sclass(st) == SCLASS_MODULE);
+}
+
+inline BOOL 
+Stab_Is_Module(const ST *st)
+{
+  return (ST_base(st) != NULL &&
+	  // we are at the base
+	  ST_base(st) == (st) &&
+	  // the module name has this class
+	  ST_sclass(st) == SCLASS_TEXT);
 }
 
 inline BOOL 

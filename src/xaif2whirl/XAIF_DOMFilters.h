@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.16 2004/07/30 17:52:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.17 2005/06/10 15:59:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -161,6 +161,26 @@ public:
   // -----------------------------------------------------------------------
   XAIF_SymbolElemFilter() { }
   ~XAIF_SymbolElemFilter() { }
+  
+  // -----------------------------------------------------------------------
+  //  Implementation of the filter interface
+  // -----------------------------------------------------------------------
+  short acceptNode(const DOMNode *node) const;
+
+private:
+};
+
+
+//****************************************************************************
+
+class XAIF_DimensionBoundsElemFilter : public DOMNodeFilter
+{
+public:
+  // -----------------------------------------------------------------------
+  //  Constructors and Destructor
+  // -----------------------------------------------------------------------
+  XAIF_DimensionBoundsElemFilter() { }
+  ~XAIF_DimensionBoundsElemFilter() { }
   
   // -----------------------------------------------------------------------
   //  Implementation of the filter interface

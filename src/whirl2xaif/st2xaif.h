@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.14 2004/08/05 18:36:07 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.15 2005/06/10 15:59:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -112,6 +112,11 @@ namespace whirl2xaif {
   xlate_ScalarizedRefTab(xml::ostream& xos, ScalarizedRefTab_W2X* symtab, 
 			XlationContext& ctxt);
   
+  extern void 
+  xlate_ArrayBounds(xml::ostream& xos, 
+		    TY_IDX ty_idx, 
+		    XlationContext& ctxt);
+
   extern void 
   TranslateSTDecl(xml::ostream& xos, ST* st, XlationContext& ctxt);
   

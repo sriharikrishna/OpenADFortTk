@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.4 2005/05/16 15:15:59 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.5 2005/06/10 15:59:06 eraxxon Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Nathan Tallent, Michelle Strout
-  \version $Id: Open64IRInterface.cpp,v 1.4 2005/05/16 15:15:59 eraxxon Exp $
+  \version $Id: Open64IRInterface.cpp,v 1.5 2005/06/10 15:59:06 eraxxon Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -28,6 +28,7 @@ static bool debug = false;
 //************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
+//#include "Open64BasicTypes.h"
 #include "ir_reader.h" // for fdump_wn()
 
 //*************************** User Include Files ****************************
@@ -49,13 +50,20 @@ PU_Info* Open64IRInterface::sProgContext = NULL;
 PU_Info* Open64IRInterface::sCurrentProc = NULL;
 bool Open64IRInterface::sContextInit = false;
 
-std::map<OA::StmtHandle,std::set<OA::MemRefHandle> > Open64IRInterface::sStmt2allMemRefsMap;
-std::map<OA::StmtHandle,std::set<OA::MemRefHandle> > Open64IRInterface::sStmt2defMemRefsMap;
-std::map<OA::StmtHandle,std::set<OA::MemRefHandle> > Open64IRInterface::sStmt2useMemRefsMap;
+std::map<OA::StmtHandle,std::set<OA::MemRefHandle> > 
+    Open64IRInterface::sStmt2allMemRefsMap;
+
 std::map<OA::MemRefHandle,OA::StmtHandle> Open64IRInterface::sMemRef2StmtMap;
 
-std::map<OA::MemRefHandle,std::list<OA::MemRefExprBasic> > 
-Open64IRInterface::sMemref2mrebasicMap;
+std::map<OA::MemRefHandle,set<OA::OA_ptr<OA::MemRefExpr> > > 
+    Open64IRInterface::sMemref2mreSetMap;
+
+std::map<OA::SymHandle,OA::ProcHandle> Open64IRInterface::sCallSymToProc;
+
+std::map<fully_qualified_name,
+         std::set<OA::SymHandle> > Open64IRInterface::sGlobalVarMap;
+
+std::map<OA::SymHandle,std::string> Open64IRInterface::sSymToVarStringMap;
 
 //***************************************************************************
 // Iterators
@@ -262,7 +270,7 @@ Open64IRCallsiteParamIterator::Open64IRCallsiteParamIterator(WN *wn)
 //---------------------------------------------------------------------------
 // Memory Reference Iterator
 //---------------------------------------------------------------------------
-Open64IRTopMemRefIterator::Open64IRTopMemRefIterator(OA::StmtHandle h)
+Open64IRMemRefIterator::Open64IRMemRefIterator(OA::StmtHandle h)
 {
   create(h);
   reset();
@@ -270,7 +278,7 @@ Open64IRTopMemRefIterator::Open64IRTopMemRefIterator(OA::StmtHandle h)
 }
         
 OA::MemRefHandle 
-Open64IRTopMemRefIterator::current() const
+Open64IRMemRefIterator::current() const
 {
   if (mValid) { 
     return (*mMemRefIter); 
@@ -280,7 +288,7 @@ Open64IRTopMemRefIterator::current() const
 }
 
 void 
-Open64IRTopMemRefIterator::operator++()
+Open64IRMemRefIterator::operator++()
 {
   if (mValid) {
     mMemRefIter++;
@@ -288,28 +296,65 @@ Open64IRTopMemRefIterator::operator++()
 }
 
 void 
-Open64IRTopMemRefIterator::reset()
+Open64IRMemRefIterator::reset()
 {
   mMemRefIter = mMemRefList.begin();
   mEnd = mMemRefList.end();
   mBegin = mMemRefList.begin();
 }
 
+/*! this method sets up sMemRef2StmtMap, sStmt2MemRefSet?, and 
+    sMemRef2mreSetMap?
+    Is only way to get MemRefHandle's therefore no queries should
+    be logically made on MemRefHandle's before one of these
+    iterators has been requested.
+*/
 void 
-Open64IRTopMemRefIterator::create(OA::StmtHandle h)
+Open64IRMemRefIterator::create(OA::StmtHandle stmt)
 {
-  Open64IRInterface::setCurrentProcToProcContext(h);
+  Open64IRInterface::setCurrentProcToProcContext(stmt);
 
   // NOTE: this could be a little more efficient
-  WN* wn = (WN*)h.hval();
+  WN* wn = (WN*)stmt.hval();
   if (!wn) { return; }
+
+  // if haven't already determined the set of memrefs for this stmt
+  // then do so by finding all the top memory references and then
+  // initializing the mapping of MemRefHandle's to a set of MemRefExprs,
+  // and based off that map get all the MemRefHandle's
+  if (Open64IRInterface::sStmt2allMemRefsMap[stmt].empty() ) {
   
- list<WN*>* topMemRefs = findTopMemRefs(wn);
- for (list<WN*>::iterator it = topMemRefs->begin(); 
-      it != topMemRefs->end(); ++it) {
-   WN* memrefWN = (*it);
-   mMemRefList.push_back(OA::MemRefHandle((OA::irhandle_t)memrefWN));
- }
+    // get all the top memory references
+    list<WN*>* topMemRefs = findTopMemRefs(wn);
+    for (list<WN*>::iterator it = topMemRefs->begin(); 
+         it != topMemRefs->end(); ++it)
+    {
+      WN* memrefWN = (*it);
+
+      // get all the sub memory references including top memory reference
+      list<OA::MemRefHandle>* subMemRefList 
+        = findAllMemRefsAndMapToMemRefExprs(memrefWN);
+
+      // put those memory references in the static mapping of statements to 
+      // the set of all memory references
+      list<OA::MemRefHandle>::iterator mrIter;
+      for (mrIter=subMemRefList->begin(); mrIter!=subMemRefList->end(); 
+           mrIter++)
+      {
+          Open64IRInterface::sStmt2allMemRefsMap[stmt].insert(*mrIter);
+          Open64IRInterface::sMemRef2StmtMap[*mrIter] = stmt;
+      }
+    }
+  }
+
+  // loop through MemRefHandle's for this statement and for now put them
+  // into our own list
+  std::set<OA::MemRefHandle>::iterator setIter;
+  for (setIter=Open64IRInterface::sStmt2allMemRefsMap[stmt].begin(); 
+       setIter!=Open64IRInterface::sStmt2allMemRefsMap[stmt].end(); setIter++) 
+  {
+    mMemRefList.push_back(*setIter);
+  }
 }
 
 
@@ -379,7 +424,11 @@ Open64IRInterface::toString(const OA::ProcHandle h)
   
   std::ostringstream oss;
   //oss << pu;
-  oss << toString(getSymHandle(h));
+  if (h==OA::ProcHandle(0)) {
+    oss << "ProcHandle(0)";
+  } else {
+    oss << toString(getSymHandle(h));
+  }
   return oss.str();
 }
 
@@ -484,6 +533,8 @@ Open64IRInterface::dump(OA::MemRefHandle h, std::ostream& os)
 {
   setCurrentProcToProcContext(h);
   WN* wn = (WN*)h.hval();
+
+  os << "hval = " << h.hval() << ", ";
   
   OPERATOR opr = WN_operator(wn);
   // STOREs represent the left-hand-side memory-ref
@@ -648,6 +699,7 @@ OA::OA_ptr<OA::IRRegionStmtIterator>
 Open64IRInterface::procBody(OA::ProcHandle h)
 {
   PU_Info* pu = (PU_Info*)h.hval();
+  currentProc(h);
   WN* wn_pu = PU_Info_tree_ptr(pu);
   //WN* wn_pu = (WN*)h.hval();
   assert(WN_operator(wn_pu) == OPR_FUNC_ENTRY);
@@ -1203,12 +1255,12 @@ Open64IRInterface::getUMultiTest(OA::StmtHandle h) {
 // AliasIRInterfaceDefault
 //---------------------------------------------------------------------------
 
-OA::OA_ptr<OA::IRTopMemRefIterator> 
-Open64IRInterface::getTopMemRefIterator(OA::StmtHandle h) 
+OA::OA_ptr<OA::MemRefHandleIterator> 
+Open64IRInterface::getMemRefIterator(OA::StmtHandle h) 
 {
   setCurrentProcToProcContext(h);
-  OA::OA_ptr<OA::IRTopMemRefIterator> retval;
-  retval = new Open64IRTopMemRefIterator(h);
+  OA::OA_ptr<OA::MemRefHandleIterator> retval;
+  retval = new Open64IRMemRefIterator(h);
   return retval;
 }
 
@@ -1259,6 +1311,7 @@ OA::OA_ptr<OA::LocIterator>
 Open64IRInterface::getIndepLocIter(OA::ProcHandle h)
 {
   PU_Info* pu = (PU_Info*)h.hval();
+  currentProc(h);
 
   // Get independent variables
   OA::OA_ptr<OA::LocSet> indepSet;
@@ -1271,10 +1324,9 @@ Open64IRInterface::getIndepLocIter(OA::ProcHandle h)
     }
     
     WN_PRAGMA_ID prag = (WN_PRAGMA_ID)WN_pragma(wn);
-    ST* st = WN_st(wn);
-    OA::OA_ptr<OA::Location> loc;
-    
     if (prag == WN_PRAGMA_OPENAD_INDEPENDENT) {
+      ST* st = WN_st(wn);
+      OA::OA_ptr<OA::Location> loc;
       loc = getLocation((OA::irhandle_t)pu, (OA::irhandle_t)st);
       indepSet->insert(loc);
     }
@@ -1282,12 +1334,13 @@ Open64IRInterface::getIndepLocIter(OA::ProcHandle h)
 
   // if set is empty then none were specified for this procedure
   // so must put UknownLoc in set
+  /*
   if (indepSet->empty()) {
     OA::OA_ptr<OA::Location> unknownLoc; 
     unknownLoc = new OA::UnknownLoc;
     indepSet->insert(unknownLoc);
   }
-
+*/
   OA::OA_ptr<OA::LocSetIterator> indepIter;
   indepIter = new OA::LocSetIterator(indepSet);
   return indepIter;
@@ -1298,6 +1351,7 @@ OA::OA_ptr<OA::LocIterator>
 Open64IRInterface::getDepLocIter(OA::ProcHandle h)
 {
   PU_Info* pu = (PU_Info*)h.hval();
+  currentProc(h);
 
   // Get dependent variables
   OA::OA_ptr<OA::LocSet> depSet;
@@ -1310,21 +1364,13 @@ Open64IRInterface::getDepLocIter(OA::ProcHandle h)
     }
     
     WN_PRAGMA_ID prag = (WN_PRAGMA_ID)WN_pragma(wn);
-    ST* st = WN_st(wn);
-    OA::OA_ptr<OA::Location> loc;
     
     if (prag == WN_PRAGMA_OPENAD_DEPENDENT) {
+      ST* st = WN_st(wn);
+      OA::OA_ptr<OA::Location> loc;
       loc = getLocation((OA::irhandle_t)pu, (OA::irhandle_t)st);
       depSet->insert(loc);
     }
-  }
-
-  // if set is empty then none were specified for this procedure
-  // so must put UknownLoc in set
-  if (depSet->empty()) {
-    OA::OA_ptr<OA::Location> unknownLoc; 
-    unknownLoc = new OA::UnknownLoc;
-    depSet->insert(unknownLoc);
   }
 
   OA::OA_ptr<OA::LocSetIterator> depIter;
@@ -1343,6 +1389,11 @@ OA::Activity::IRStmtType Open64IRInterface::getActivityStmtType(OA::StmtHandle h
     }
 }
 
+int Open64IRInterface::getSizeInBytes(OA::SymHandle h)
+{
+    setCurrentProcToProcContext(h);
+    return TY_size(ST_type((ST*)h.hval()));
+}
 
 //---------------------------------------------------------------------------
 // ReachDefsIRInterface
@@ -1366,20 +1417,24 @@ Open64IRInterface::getDefMemRefs(OA::StmtHandle stmt)
   setCurrentProcToProcContext(stmt);
   OA::OA_ptr<std::list<OA::MemRefHandle> > retList;
   retList = new std::list<OA::MemRefHandle>;
+  
+  // get iterator over memory references for this statement
+  // and only put DEFs in the list
+  OA::OA_ptr<OA::MemRefHandleIterator> mIter = getMemRefIterator(stmt);
+  for ( ; mIter->isValid(); (*mIter)++ ) {
+    OA::MemRefHandle memref = mIter->current();
 
-  // make sure the kludge data structures have been initialized
-  // for this memory reference
-  if (sStmt2defMemRefsMap.find(stmt) == sStmt2defMemRefsMap.end()) {
-      std::cerr << "Must call initMemRefExprKludge for each function before using any OA Managers that use the getDefMemRefs method" << std::endl;
-      assert(0);
-  }
-
-  // now just iterate over precomputed set and stuff into list
-  std::set<OA::MemRefHandle>::iterator setIter;
-  for (setIter=sStmt2defMemRefsMap[stmt].begin(); 
-       setIter!=sStmt2defMemRefsMap[stmt].end(); setIter++) 
-  {
-    retList->push_back(*setIter);
+    // loop over memory reference expressions for this memref handle
+    set<OA::OA_ptr<OA::MemRefExpr> >::iterator mreIter;
+    for (mreIter = sMemref2mreSetMap[memref].begin();
+         mreIter != sMemref2mreSetMap[memref].end(); mreIter++ ) 
+    {
+        OA::OA_ptr<OA::MemRefExpr> mre = *mreIter;
+        if (mre->isDef()) {
+          retList->push_back(memref);
+          break;
+        }
+    }
   }
 
   OA::OA_ptr<Open64MemRefHandleIterator> retval;
@@ -1396,20 +1451,13 @@ Open64IRInterface::getAllMemRefs(OA::StmtHandle stmt)
   setCurrentProcToProcContext(stmt);
   OA::OA_ptr<std::list<OA::MemRefHandle> > retList; 
   retList = new std::list<OA::MemRefHandle>;
-
-  // make sure the kludge data structures have been initialized
-  // for this memory reference
-  if (sStmt2allMemRefsMap.find(stmt) == sStmt2allMemRefsMap.end()) {
-      std::cerr << "Must call initMemRefExprKludge for each function before using any OA Managers that use the getAllMemRefs method" << std::endl;
-      assert(0);
-  }
-
-  // now just iterate over precomputed set and stuff into list
-  std::set<OA::MemRefHandle>::iterator setIter;
-  for (setIter=sStmt2allMemRefsMap[stmt].begin(); 
-       setIter!=sStmt2allMemRefsMap[stmt].end(); setIter++) 
-  {
-    retList->push_back(*setIter);
+  
+  // get iterator over memory references for this statement
+  // and for now just copy the list
+  OA::OA_ptr<OA::MemRefHandleIterator> mIter = getMemRefIterator(stmt);
+  for ( ; mIter->isValid(); (*mIter)++ ) {
+    OA::MemRefHandle memref = mIter->current();
+    retList->push_back(memref);
   }
 
   OA::OA_ptr<Open64MemRefHandleIterator> retval;
@@ -1431,19 +1479,23 @@ Open64IRInterface::getUseMemRefs(OA::StmtHandle stmt)
   OA::OA_ptr<std::list<OA::MemRefHandle> > retList; 
   retList = new std::list<OA::MemRefHandle>;
 
-  // make sure the kludge data structures have been initialized
-  // for this memory reference
-  if (sStmt2useMemRefsMap.find(stmt) == sStmt2useMemRefsMap.end()) {
-      std::cerr << "Must call initMemRefExprKludge for each function before using any OA Managers that use the getUseMemRefs method" << std::endl;
-      assert(0);
-  }
+  // get iterator over memory references for this statement
+  // and only put USES in the list
+  OA::OA_ptr<OA::MemRefHandleIterator> mIter = getMemRefIterator(stmt);
+  for ( ; mIter->isValid(); (*mIter)++ ) {
+    OA::MemRefHandle memref = mIter->current();
 
-  // now just iterate over precomputed set and stuff into list
-  std::set<OA::MemRefHandle>::iterator setIter;
-  for (setIter=sStmt2useMemRefsMap[stmt].begin(); 
-       setIter!=sStmt2useMemRefsMap[stmt].end(); setIter++) 
-  {
-    retList->push_back(*setIter);
+    // loop over memory reference expressions for this memref handle
+    set<OA::OA_ptr<OA::MemRefExpr> >::iterator mreIter;
+    for (mreIter = sMemref2mreSetMap[memref].begin();
+         mreIter != sMemref2mreSetMap[memref].end(); mreIter++ ) 
+    {
+        OA::OA_ptr<OA::MemRefExpr> mre = *mreIter;
+        if (mre->isUse()) {
+          retList->push_back(memref);
+          break;
+        }
+    }
   }
 
   OA::OA_ptr<Open64MemRefHandleIterator> retval;
@@ -1620,14 +1672,9 @@ Open64IRInterface::returnOpEnumValInt(OA::OpHandle op)
 //! Return a stmt handle for the given memory reference handle
 OA::StmtHandle 
 Open64IRInterface::getStmtFromMemRef(OA::MemRefHandle h) {
-  setCurrentProcToProcContext(h);
 
-  // make sure the kludge data structures have been initialized
-  // for this memory reference
-  if (sMemRef2StmtMap.find(h) == sMemRef2StmtMap.end()) {
-      std::cerr << "Must call initMemRefExprKludge for each function before using any OA Managers that use the getStmtFromMemRef method" << std::endl;
-      assert(0);
-  }
+  // if haven't seen this MemRefHandle yet will assert in this call
+  setCurrentProcToProcContext(h);
 
   return sMemRef2StmtMap[h];
 }
@@ -1665,6 +1712,10 @@ Open64IRInterface::getConstValBasic (unsigned int val) {
 // InterSideEffectIRInterface.hpp
 //---------------------------------------------------------------------------
 
+/*! 
+   Note: This routine uses sSymToVarStringMap, which is initialized in
+   initProcContext
+*/
 OA::OA_ptr<OA::SideEffect::SideEffectStandard> 
 Open64IRInterface::getSideEffect(OA::ProcHandle callerProc, 
                                  OA::SymHandle calleeSym)
@@ -1674,25 +1725,13 @@ Open64IRInterface::getSideEffect(OA::ProcHandle callerProc,
   OA::OA_ptr<OA::SideEffect::SideEffectStandard> retSideEffect;
   retSideEffect= new OA::SideEffect::SideEffectStandard();
  
-  std::map<OA::SymHandle,std::string> symToVarStringMap;
 
   currentProc(callerProc);
-
-  // FIXME: this is not the most efficient way to do what is already
-  //        a hack
-  // create mapping of symbol handles to variable names
-  OA::OA_ptr<OA::IRSymIterator> symIterPtr;
-  symIterPtr = getVisibleSymIterator(callerProc);
-  for ( ; symIterPtr->isValid(); (*symIterPtr)++ ) {
-    OA::SymHandle h = symIterPtr->current();
-    ST* st = (ST*)h.hval();
-    symToVarStringMap[h] = ST_name(st);
-  }
-
+  
   // see if symbol matches one of the procedures we want to have
   // optimistic results for
   std::set<std::string> noSideEffectProcs;
-  symToVarStringMap[OA::SymHandle(0)] = "<no-symbol>";
+  sSymToVarStringMap[OA::SymHandle(0)] = "<no-symbol>";
   noSideEffectProcs.insert("<no-symbol>");
   noSideEffectProcs.insert("_END");
   noSideEffectProcs.insert("ABS");
@@ -1725,7 +1764,7 @@ Open64IRInterface::getSideEffect(OA::ProcHandle callerProc,
   noSideEffectProcs.insert("DLOG");
   noSideEffectProcs.insert("REAL");
     
-  if (noSideEffectProcs.find(symToVarStringMap[calleeSym])
+  if (noSideEffectProcs.find(sSymToVarStringMap[calleeSym])
       != noSideEffectProcs.end() )
   {
     // empty out all the sets
@@ -1741,8 +1780,6 @@ Open64IRInterface::getSideEffect(OA::ProcHandle callerProc,
   }
   
   return retSideEffect;
-
-  //return OA::SideEffect::InterSideEffectIRInterfaceDefault::getSideEffect(callerProc,calleeSym);
 
 }
 
@@ -1776,12 +1813,43 @@ Open64IRInterface::getLocation(OA::ProcHandle p, OA::SymHandle s)
     setCurrentProcToProcContext(s);
     bool isLocal, isUnique;
     bool hasNestedProc = (PU_Info_child(Current_PU_Info) != NULL);
-    OA::OA_ptr<OA::Location> retval;
+    OA::OA_ptr<OA::NamedLoc> retval;
 
     if (s!=OA::SymHandle(0)) {
       isLocal = (!hasNestedProc) && (ST_level((ST*)s.hval()) == CURRENT_SYMTAB);
       isUnique = isLocal;
+
       retval = new OA::NamedLoc(s, isLocal);
+      
+      // if it is a common block variable then need to make sure the same var
+      // name within the same common block indicates the other symbol handles
+      // for that same var name and common block that fully overlap
+      ST* st = (ST*)s.hval();
+      if (Stab_Is_Based_At_Common_Or_Equivalence(st) 
+          || Stab_Is_In_Module(st) ) 
+      {
+          fully_qualified_name fqn = create_fqn(s);
+          if (sGlobalVarMap[fqn].empty()) {
+            assert(0); // this symbol should have been put in there
+                       // around line 3233
+          }
+
+          retval = new OA::NamedLoc(s, isLocal);
+
+          // indicate that all of the symbols in sGlobalVarMap with the same
+          // fully qualified name overlap with this location
+          std::set<OA::SymHandle>::iterator setIter;
+          for (setIter = sGlobalVarMap[fqn].begin(); 
+               setIter!=sGlobalVarMap[fqn].end(); setIter++)
+          {
+              OA::SymHandle overlapSym = *setIter;
+              //std::cout << " sym (hval=" <<  overlapSym.hval() 
+              //          << ") = " << toString(*setIter) << std::endl;
+              retval->addFullOverlap(*setIter);
+          }
+          
+      }
+
     } else {
       retval = NULL;
     }
@@ -1789,92 +1857,24 @@ Open64IRInterface::getLocation(OA::ProcHandle p, OA::SymHandle s)
 }
 
 
-//---------------------------------------------------------------------------
-// MemRefExprIRShortCircuit
-//---------------------------------------------------------------------------
-//! Given a MemRefHandle return a list of all 
+//! Given a MemRefHandle return an iterator over all
 //! MemRefExprs that describe this memory reference
-//! FIXME: using data structures set up by kludge,
-//! there has got to be a better way, right now creating MemRefExpr's
-//! from info available in MemRefExprBasic which should be deprecated
 OA::OA_ptr<OA::MemRefExprIterator> 
-Open64IRInterface::getMemRefExprIterator(OA::MemRefHandle h)
+Open64IRInterface::getMemRefExprIterator(OA::MemRefHandle memref)
 {
-    setCurrentProcToProcContext(h);
+    // will assert if haven't seen MemRefHandle yet
+    setCurrentProcToProcContext(memref);
 
-    // make sure the kludge data structures have been initialized
-    // for this memory reference
-    if (sMemref2mrebasicMap.find(h) == sMemref2mrebasicMap.end()) {
-      std::cerr << "Must call initMemRefExprKludge for each function before using any OA Managers that use the getMemRefExprList method in the MemRefExprIRShortCircuit interface" << std::endl;
-      assert(0);
-    }
-
-    OA::OA_ptr<OA::MemRefExpr> mre;
     OA::OA_ptr<std::list<OA::OA_ptr<OA::MemRefExpr> > > retList;
     retList = new std::list<OA::OA_ptr<OA::MemRefExpr> >;
 
-    // iterate over set of MemRefExprBasic's associated with the
-    // given MemRefHandle and create a MemRefExpr for each
-    std::list<OA::MemRefExprBasic>::iterator listIter;
-    for (listIter=sMemref2mrebasicMap[h].begin(); 
-         listIter!=sMemref2mrebasicMap[h].end(); listIter++ )
+    // iterate over set of MemRefExpr's associated with
+    // the given MemRefHandle and put them in our list
+    set<OA::OA_ptr<OA::MemRefExpr> >::iterator mreIter;
+    for (mreIter = sMemref2mreSetMap[memref].begin();
+         mreIter != sMemref2mreSetMap[memref].end(); mreIter++ ) 
     {
-        OA::MemRefExprBasic mrebasic = *listIter;
-        OA::MemRefExpr::MemRefType mretype;
-
-        if (debug) { 
-            std::cout << "In getMemRefExprList: MemRefHandle = ";
-            std::cout << toString(h);
-            std::cout << std::endl;
-            std::cout << "In getMemRefExprList: mrebasic = ";
-            mrebasic.dump(std::cout, *this); 
-            std::cout << std::endl;
-        }
-
-        // convert TARGET, SOURCE, or SUB to DEF or USE
-        if (mrebasic.isTarget()) {
-            mretype = OA::MemRefExpr::DEF;
-        } else { //if (mrebasic.isSource()) {
-            mretype = OA::MemRefExpr::USE;
-        } //else {
-          //  continue;  // don't want SUB's for fortran, happens in array assigns
-       // }
-
-        // Either going to be unnamed or named (probably just named
-        // for Fortran90)
-        if (mrebasic.isNamed()) {
-            // the base will get its accuracy from the MemRefExprBasic
-            // if there are 0 derefs
-            bool accuracy = true;
-            if (mrebasic.getNumDerefs()==0) { 
-                accuracy = mrebasic.hasFullAccuracy();
-            }
-            mre = new OA::NamedRef(mrebasic.hasAddressTaken(),
-				   accuracy, mretype,
-				   mrebasic.getSymHandle() );
-        // unnamed
-        } else {
-            // for now just assume this doesn't happen, this is a kludge
-            // already
-            assert(0);
-        }
-
-        // now figure out if we need to have a dereference modifier
-        // and if introduced some inaccuracy
-        if (mrebasic.getNumDerefs() > 0) {
-            mre = new OA::Deref(mre,mrebasic.getNumDerefs());
-            if (!mrebasic.hasFullAccuracy()) {
-                mre->setPartialAccuracy();
-            }
-        }
-
-        if (debug) { 
-            std::cout << "In getMemRefExprList: mre = ";
-            mre->dump(std::cout, *this); 
-            std::cout << std::endl;
-        }
-
-        retList->push_back(mre);
+        retList->push_back(*mreIter);
     }
 
     OA::OA_ptr<Open64MemRefExprIterator> retval;
@@ -1882,92 +1882,19 @@ Open64IRInterface::getMemRefExprIterator(OA::MemRefHandle h)
     return retval;
 }
 
-// FIXME: will set up some data structures so I can implement the 
-// MemRefExprIRShortCircuit interface using what is already here
-// and should be reorganized, it will also help with other interfaces
-// that need the ability to iterate over memory references for a stmt
+//-------------------------------------------------------------------------
+// ICFGIRInterface
+//-------------------------------------------------------------------------
 
-/* maybe not
-// and the LocationIRShortCircuit interface that requires a Location
-// data structure for each SymHandle assuming no static aliasing
-// to begin with which is something that will need fixed
-// (also want Location datastructure for Stmts that
-// allocate unnamed space but won't be needing that for Fortran90
-// part of Open64)
-*/
-void Open64IRInterface::initMemRefExprKludge(OA::ProcHandle proc)
+//! Given the callee symbol returns the callee proc handle
+OA::ProcHandle Open64IRInterface::getProcHandle(OA::SymHandle sym)
 {
-  currentProc(proc);
-
-  // iterate over all stmts in proc
-  Open64IRStmtIterator stmtIter(proc);
-  for (; stmtIter.isValid(); ++stmtIter) {
-    OA::StmtHandle stmt = stmtIter.current();
-    // will put an empty set associated with this statement
-    sStmt2allMemRefsMap[stmt].clear();
-    sStmt2defMemRefsMap[stmt].clear();
-    sStmt2useMemRefsMap[stmt].clear();
-
-    // get the top memory references
-    OA::OA_ptr<OA::IRTopMemRefIterator> mrIt = getTopMemRefIterator(stmt);
-    for ( ; mrIt->isValid(); (*mrIt)++) {
-      OA::MemRefHandle memref = mrIt->current();
-      // will put an empty set assocatiated with this memref
-      sMemref2mrebasicMap[memref];
-    
-      // get the memory reference expressions basic for this handle
-      // because they each contain the MemRefHandle they map to,
-      // put info in data structures used for kludge
-      OA::OA_ptr<std::list<OA::MemRefExprBasic> > mreList 
-        = getMemRefExprBasicList(memref);
-      std::list<OA::MemRefExprBasic>::iterator exprIt;
-      for (exprIt = mreList->begin(); exprIt != mreList->end(); exprIt++) {
-        OA::MemRefExprBasic& mre = *exprIt;
-
-        // store all MemRefHandles for this statement (and reverse)
-        // and mapping of MemRefHandles to MemRefExprBasic's
-        sStmt2allMemRefsMap[stmt].insert(mre.getMemRefHandle());
-        sMemRef2StmtMap[mre.getMemRefHandle()] = stmt;
-        sMemref2mrebasicMap[mre.getMemRefHandle()].push_back(mre);
-
-        // store def MemRefHandles for this statement
-        if (mre.isTarget()) {
-          sStmt2defMemRefsMap[stmt].insert(mre.getMemRefHandle());
-        
-        // store use MemRefHandles for this statement
-        } else {
-          sStmt2useMemRefsMap[stmt].insert(mre.getMemRefHandle());
-        }
-
-        // ???make a Location data structure for the base
-        //assert(mre.isNamed());	// for Fortran90 assuming only named bases
-        
-      }
-    }
-  }
+    return Open64IRInterface::sCallSymToProc[sym];
+}
   
-}
-
-
-//---------------------------------------------------------------------------
-// MREBasicIRShortCircuitDefault
-//---------------------------------------------------------------------------
- 
-//! Given a MemRefHandle for a top mem ref
-//!  return a list of all MemRefExprs
-OA::OA_ptr<std::list<OA::MemRefExprBasic> > 
-    Open64IRInterface::getMemRefExprBasicList(OA::MemRefHandle h)
-{
-  //setCurrentProcToProcContext(h);   // creates a cyclic dependence
-  WN* wn = (WN*)h.hval();
-  return findMemRefExpr(wn);
-}
-
-
 //---------------------------------------------------------------------------
 // XAIFIRInterface
 //---------------------------------------------------------------------------
- 
 
 //---------------------------------------------------------------------------
 // Context state
@@ -1981,6 +1908,7 @@ Open64IRInterface::initContextState(PU_Info* pu_forest)
   if (Open64IRInterface::sContextInit==false) { 
     Open64IRProcIterator procIt(pu_forest);
     Open64IRInterface::initProcContext(pu_forest, procIt);
+    Open64IRInterface::initCallSymToProcMap(procIt);
   }
 }
 
@@ -2283,13 +2211,13 @@ Open64IRInterface::getConstValBasicFromST(ST* st)
 
 // findTopMemRefs: Given WHIRL statements (including control flow
 // statements representing embedded expressions, but not statements),
-// recursively find the top-memory-references.  Note: Memory
+// recursively find the top memory-references in the statement.  Note: Memory
 // references will generally be WHIRL expressions; however STORES --
 // WHIRL *statements* -- are returned to represent a left-hand-side
 // reference; and indirect CALLS are returned to represent a function
 // pointer reference.
 list<WN*>*
-Open64IRTopMemRefIterator::findTopMemRefs(WN* wn)
+Open64IRMemRefIterator::findTopMemRefs(WN* wn)
 {
   list<WN*>* topMemRefs = new list<WN*>;
   findTopMemRefs(wn, *topMemRefs);
@@ -2298,7 +2226,7 @@ Open64IRTopMemRefIterator::findTopMemRefs(WN* wn)
 
 
 void 
-Open64IRTopMemRefIterator::findTopMemRefs(WN* wn, list<WN*>& topMemRefs)
+Open64IRMemRefIterator::findTopMemRefs(WN* wn, list<WN*>& topMemRefs)
 {
   // Base case
   if (!wn) { return; }
@@ -2367,30 +2295,36 @@ Open64IRTopMemRefIterator::findTopMemRefs(WN* wn, list<WN*>& topMemRefs)
 }
 
 
-// findMemRefExpr: Given a top-mem-ref, find all mem-ref-exprs
-OA::OA_ptr<list<OA::MemRefExprBasic> >
-Open64IRInterface::findMemRefExpr(WN* wn)
+/*! Given a mem-ref, find all mem-ref-exprs and sub mem-refs
+    and return a list of them, also maps MemRefHandle's to a set of MemRefExpr's
+    describing them for OA.
+*/
+list<OA::MemRefHandle>*
+Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs(WN* wn)
 {
-  OA::OA_ptr<list<OA::MemRefExprBasic> > memRefExprs;
-  memRefExprs = new list<OA::MemRefExprBasic>;
-  findMemRefExpr(wn, *memRefExprs, 0, 0);
-  return memRefExprs;
+  list<OA::MemRefHandle>* memRefs;
+  memRefs = new list<OA::MemRefHandle>;
+  findAllMemRefsAndMapToMemRefExprs(wn, *memRefs, 0, 0);
+  return memRefs;
 }
 
 
-// findMemRefExpr: Given a memory-reference WN, find all mem-ref-expr
-// contained within and place them in 'memRefExprs'.  Returns the
-// number of dereferences within the mem-ref and the location block
-// used within the top-most mem-ref-expr of the mem-ref.  Outside
-// callers of this routine should pass a recursion level 'lvl' of 0
-// and flags 'flags' of 0.
-//
-// Note: The returned information is consumed by recursive calls and
-// will not be of interest to others.  The returned information
-// should be *copied* if it is to be used.)
-list<Open64IRInterface::MemRefExprInfo>
-Open64IRInterface::findMemRefExpr(WN* wn, list<OA::MemRefExprBasic>& memRefExprs,
-	       unsigned lvl, unsigned flags)
+/*! Given a memory-reference WN, find all MemRefHandles
+    contained within and place them in 'memRefs'.  
+    Also map each MemRefHandle to a set of MemRefExprs in sMemRef2mreSetMap.
+    Returns the number of dereferences within the mem-ref and the location block
+    used within the top-most mem-ref-expr of the mem-ref.  Outside
+    callers of this routine should pass a recursion level 'lvl' of 0
+    and flags 'flags' of 0.
+
+    Note: The returned information is consumed by recursive calls and
+    will not be of interest to others.  The returned information
+    should be *copied* if it is to be used.)
+*/
+list<Open64IRMemRefIterator::MemRefExprInfo>
+Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs(WN* wn, 
+                                  list<OA::MemRefHandle>& memRefs,
+	                          unsigned lvl, unsigned flags)
 {
   Language = LANG_F90; // FIXME: Open64's global var Language isn't set
 
@@ -2409,7 +2343,7 @@ Open64IRInterface::findMemRefExpr(WN* wn, list<OA::MemRefExprBasic>& memRefExprs
   bool isMemRefExprXXX = true;
   
   // A list of mem-ref infos, *some* of which correspond to
-  // mem-ref-expr added to 'memRefExprs' for this WHIRL node.
+  // mem-ref-handles added to 'memRefs' for this WHIRL node.
   list<MemRefExprInfo> curMemRefExprInfos;  
   
   // -------------------------------------------------------
@@ -2440,7 +2374,7 @@ Open64IRInterface::findMemRefExpr(WN* wn, list<OA::MemRefExprBasic>& memRefExprs
 	flags |= flags_STORE_PARENT;
 	isMemRefExprXXX = false; // use info from ARRAY
       }    
-      childInfos = findMemRefExpr(WN_kid1(wn), memRefExprs, mylvl, flags);
+      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid1(wn), memRefs, mylvl, flags);
     }
   } 
   else if (OPERATOR_is_load(opr)) {
@@ -2450,7 +2384,7 @@ Open64IRInterface::findMemRefExpr(WN* wn, list<OA::MemRefExprBasic>& memRefExprs
 	mylvl = lvl;
 	isMemRefExprXXX = false; // use info from ARRAY
       }
-      childInfos = findMemRefExpr(WN_kid0(wn), memRefExprs, mylvl, flags);
+      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), memRefs, mylvl, flags);
     }
   } 
   else {
@@ -2466,16 +2400,16 @@ Open64IRInterface::findMemRefExpr(WN* wn, list<OA::MemRefExprBasic>& memRefExprs
       // We do not even recur on dimension information.
       case OPR_ARRAY: // recur on array indices
       case OPR_ARRSECTION: {
-	flags |= flags_EXPECT_ARRAY_BASE;
-	childInfos = findMemRefExpr(WN_kid0(wn), memRefExprs, lvl + 1, flags);
+        flags |= flags_EXPECT_ARRAY_BASE;
+        childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), memRefs, lvl + 1, flags);
 
-	kidsAreDistinctExpr = true; // index expressions are distinct
+	    kidsAreDistinctExpr = true; // index expressions are distinct
         INT dim = kid_end / 2;
         kid_beg = dim + 1; // index expr are dim+1 ... 2*dim
         break;
       }
       case OPR_ARRAYEXP: {
-	childInfos = findMemRefExpr(WN_kid0(wn), memRefExprs, lvl + 1, flags);
+        childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), memRefs, lvl + 1, flags);
 	break;
       }
 	
@@ -2485,7 +2419,7 @@ Open64IRInterface::findMemRefExpr(WN* wn, list<OA::MemRefExprBasic>& memRefExprs
 	flags |= flags_EXPECT_FUNC_BASE;
 	int k = WN_kid_count(wn) - 1;
 	childInfos = 
-	  findMemRefExpr(WN_kid(wn, k), memRefExprs, lvl + 1, flags);
+	  findAllMemRefsAndMapToMemRefExprs(WN_kid(wn, k), memRefs, lvl + 1, flags);
 	break;
       }
 	
@@ -2512,7 +2446,7 @@ Open64IRInterface::findMemRefExpr(WN* wn, list<OA::MemRefExprBasic>& memRefExprs
     for (INT kidno = kid_beg; kidno <= kid_end; ++kidno) {
       WN* kid = WN_kid(wn, kidno);
       list<MemRefExprInfo> infos = 
-	findMemRefExpr(kid, memRefExprs, kid_lvl, kid_flags);
+	findAllMemRefsAndMapToMemRefExprs(kid, memRefs, kid_lvl, kid_flags);
       if (kidInfosUsedForCurrentMemRefExpr) {
 	childInfos.splice(childInfos.end(), infos);
       }
@@ -2547,15 +2481,15 @@ Open64IRInterface::findMemRefExpr(WN* wn, list<OA::MemRefExprBasic>& memRefExprs
     
     // Assume a source-ref-expr if level 0.  This will be corrected, if
     // necessary, below.
-    OA::MemRefHandleType hty = OA::SUB;
+    OA::MemRefExpr::MemRefType hty;
     if (lvl == 0) {
-      hty = (flags & flags_STORE_PARENT) ? OA::TARGET : 
-	                                   OA::SOURCE;
+      hty = (flags & flags_STORE_PARENT) ? OA::MemRefExpr::DEF: 
+	                                   OA::MemRefExpr::USE;
     }
 
     unsigned derefs = childDerefs;
     bool isAddrOf = false;
-    AccuracyType acc = OA::PARTIAL;
+    bool fullAccuracy = false;
     
     // Location block
     //LocBlock* locblk = NULL;
@@ -2583,7 +2517,7 @@ Open64IRInterface::findMemRefExpr(WN* wn, list<OA::MemRefExprBasic>& memRefExprs
       offset = WN_load_offset(wn); // == WN_lda_offset()
     } 
     else if (OPERATOR_is_store(opr)) {
-      if (lvl == 0) { hty = OA::TARGET; }
+      if (lvl == 0) { hty = OA::MemRefExpr::DEF; }
       base_ty = WN_GetBaseObjType(wn);
       ref_ty = WN_GetRefObjType(wn);
       offset = WN_store_offset(wn);
@@ -2600,15 +2534,15 @@ Open64IRInterface::findMemRefExpr(WN* wn, list<OA::MemRefExprBasic>& memRefExprs
       // LOADs represent an rvalue
       case OPR_LDA:
       case OPR_LDMA:
-	st = WN_st(wn);
-	if (!isFortran) {
-	  isAddrOf = true;
-	}
-	if ((flags & flags_EXPECT_ARRAY_BASE)) {
-	  ref_ty = (TY_Is_Pointer(ref_ty)) ? TY_pointed(ref_ty) : base_ty;
-	  isAddrOf = false; // implicitly dereference the address
-	}
-	break;
+        st = WN_st(wn);
+        if (!isFortran) {
+          isAddrOf = true;
+        }
+        if ((flags & flags_EXPECT_ARRAY_BASE)) {
+          ref_ty = (TY_Is_Pointer(ref_ty)) ? TY_pointed(ref_ty) : base_ty;
+          isAddrOf = false; // implicitly dereference the address
+        }
+        break;
 	
       case OPR_LDID:
       case OPR_LDBITS:
@@ -2652,7 +2586,7 @@ Open64IRInterface::findMemRefExpr(WN* wn, list<OA::MemRefExprBasic>& memRefExprs
     }
   
     // -------------------------------------------------------
-    // c. Compute mem-ref-expr information and add to 'memRefExprs'
+    // c. Compute mem-ref-expr information and add to 'memRefs'
     // -------------------------------------------------------
     // Create location block 
     // FIXME: not as accurate as it could be
@@ -2669,8 +2603,6 @@ Open64IRInterface::findMemRefExpr(WN* wn, list<OA::MemRefExprBasic>& memRefExprs
 		 ST_sclass(st) != SCLASS_EXTERN);
       isUnique = isLocal;
       locSH = OA::SymHandle((irhandle_t)st);
-      //locblk = new LocBlock(SymHandle((irhandle_t)st), 
-      //			    isLocal, isNamed, isUnique);
     } 
     else if (childSH) {
       locSH = childSH; 
@@ -2680,22 +2612,40 @@ Open64IRInterface::findMemRefExpr(WN* wn, list<OA::MemRefExprBasic>& memRefExprs
     if (offset == 0 && field_id == 0) { // we do not have a structure ref
       if (derefs > 0) { 
 	// A plain deref always has full accuracy
-	acc = OA::FULL;
+	fullAccuracy = true;
       }
       if (base_ty != 0 && WN2F_Can_Assign_Types(base_ty, ref_ty)) {
 	// If assigning to same object, we have full accuracy
-	acc = OA::FULL;
+	fullAccuracy = true;
       }
     }
     
     // Create mem-ref-expr and add to list
     if (isMemRefExpr) {
-      //MemRefExprBasic* expr = 
-      //new MemRefExprBasic(MemRefHandle((irhandle_t)wn), hty, locblk, derefs,
-      // 		    isAddrOf, acc);
-      memRefExprs.push_back(OA::MemRefExprBasic(OA::MemRefHandle((irhandle_t)wn), 
-						hty, locSH, derefs,
-						isAddrOf, acc));
+      // currently only handling named memory references
+      // FIXME: need to handle malloc's at some point
+      
+      // if there are 0 derefs then just create a NamedRef
+      OA::OA_ptr<OA::MemRefExpr> mre;
+      if (derefs==0) {
+        mre = new NamedRef(isAddrOf,fullAccuracy,hty,locSH);
+      } else {
+        // create base named reference with no address of and full accuracy
+        // and then a Deref
+        mre = new NamedRef(false, true, hty, locSH);
+        mre = new Deref(mre,derefs);
+        // if the reference isn't accurate then set partial accuracy on the deref
+        if (!fullAccuracy) { mre->setPartialAccuracy(); }
+      }
+
+      // mapping of MemRefHandle to MemRefExprs
+      Open64IRInterface::sMemref2mreSetMap[OA::MemRefHandle((irhandle_t)wn)].insert(mre);
+      // list of MemRefHandles we are building
+      memRefs.push_back(OA::MemRefHandle((irhandle_t)wn));
+      
+      //memRefExprs.push_back(OA::MemRefExprBasic(OA::MemRefHandle((irhandle_t)wn), 
+//							    hty, locSH, derefs,
+//							    isAddrOf, acc));
     } 
     
     // Save mem-ref-expr info
@@ -3116,6 +3066,25 @@ Open64IRInterface::DumpWNMemRefLeaf(WN* wn, ostream& os)
   }
 }
 
+
+/*! creates a mapping of call symbol handles to the associated proc handle
+ */
+void Open64IRInterface::initCallSymToProcMap(Open64IRProcIterator &procIter)
+{
+    // create an instance of Open64IRInterface so that we have access
+    // to all methods
+    Open64IRInterface tempIR;
+    
+    // Iterate over procedures in program
+    OA::ProcHandle proc;
+    for (procIter.reset(); procIter.isValid(); procIter++) {
+        proc = procIter.current();
+        OA::SymHandle sym = tempIR.getSymHandle(proc);
+        Open64IRInterface::sCallSymToProc[sym] = proc;
+    }
+}
+
+	
 /*! 
    Determines the current context for given handle and makes sure that
    Open64 is properly set up to answer the query on the handle
@@ -3152,9 +3121,16 @@ class InitContextVisitor : public OA::ExprTreeVisitor {
 
     void visitOpNode(OA::ExprTree::OpNode& n)
     {
-        // check that call has not already been mapped
-        //assert(Open64IRInterface::sProcContext.find(n.getHandle())==Open64IRInterface::sProcContext.end());
         Open64IRInterface::sProcContext[n.getHandle()] = mProc;
+
+        // visit each child
+        OA::OA_ptr<OA::ExprTree::Node> cetNodePtr;
+        OA::ExprTree::ChildNodesIterator cNodesIter(n);
+        for ( ; cNodesIter.isValid(); cNodesIter++ ) {
+            cetNodePtr = cNodesIter.current();
+            cetNodePtr->acceptVisitor(*this);
+        }
+
     }
 
     void visitCallNode(OA::ExprTree::CallNode& n)
@@ -3171,21 +3147,59 @@ class InitContextVisitor : public OA::ExprTreeVisitor {
 
     void visitConstSymNode(OA::ExprTree::ConstSymNode& n)
     {
-        // check that call has not already been mapped
-        //assert(Open64IRInterface::sProcContext.find(n.getHandle())==Open64IRInterface::sProcContext.end());
         Open64IRInterface::sProcContext[n.getHandle()] = mProc;
     }
 
     void visitConstValNode(OA::ExprTree::ConstValNode& n)
     {
-        // check that call has not already been mapped
-        //assert(Open64IRInterface::sProcContext.find(n.getHandle())==Open64IRInterface::sProcContext.end());
         Open64IRInterface::sProcContext[n.getHandle()] = mProc;
     }
 
   private:
     OA::ProcHandle mProc;
 };
+
+/*! only call if the symbol is in a module or a common block
+*/
+fully_qualified_name Open64IRInterface::create_fqn(OA::SymHandle sym)
+{
+    fully_qualified_name retval; 
+    static char* aDummyModuleName("Dummy_module");
+
+    ST* st = (ST*)sym.hval();
+    assert(Stab_Is_Based_At_Common_Or_Equivalence(st) || Stab_Is_In_Module(st) );
+    
+    if (Stab_Is_Based_At_Common_Or_Equivalence(st) ) {
+        ST* tempst = st;
+        while (!Stab_Is_Common_Block(tempst)) {
+            tempst = ST_base(tempst);
+        }
+        ST* base_st = tempst;
+
+        // make a pair for fully-qualified name
+        retval = fully_qualified_name(ST_name(st), ST_name(base_st));
+        //retval = (fully_qualified_name)std::make_pair(ST_name(st), 
+        //                                              ST_name(base_st));
+
+    // this is true if this symbol is part of module
+    } else if (Stab_Is_In_Module(st) ) {
+        ST* tempst = st;
+// FIXME: can't find the module name
+//         while (!Stab_Is_Module(tempst)) {
+// 	  // here we try to get down to the module name
+// 	  tempst = ST_base(tempst);
+//         }
+//        ST* base_st = tempst;
+     // make a pair for fully-qualified name
+	// consisting of the symbol and the module name
+	// FIXME: find the right module name
+        //retval = (fully_qualified_name)std::make_pair(ST_name(st),
+        //                                              aDummyModuleName);
+        retval = fully_qualified_name(ST_name(st), aDummyModuleName);
+    }
+
+    return retval;
+}
 
 /*! 
     maps all handles to a procedure handle that indicates their context
@@ -3207,6 +3221,7 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
     sProgContext = pu_forest;
 
     // Iterate over procedures in program
+    bool globalSymsVisitFlag = false;
     OA::ProcHandle proc;
     for ( ; procIter.isValid(); procIter++) {
         proc = procIter.current();

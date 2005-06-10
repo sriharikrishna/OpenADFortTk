@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.63 2005/05/16 15:17:56 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.64 2005/06/10 15:59:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -196,8 +196,12 @@ TY_Lookup_FLD(TY_IDX struct_ty, TY_IDX ref_ty, UINT64 ref_ofst);
 
 // FIXME (Note: TYPE_ID and TY_IDX are typedef'd to the same type, so
 // overloading is not possible!)
-static TY_IDX MY_Make_Array_Type1 (TYPE_ID elem_ty, INT32 ndim, INT64 len);
-static TY_IDX MY_Make_Array_Type (TY_IDX elem_ty, INT32 ndim, INT64 len);
+// static TY_IDX MY_Make_Array_Type1 (TYPE_ID elem_ty, INT32 ndim, INT64 len);
+static TY_IDX MY_Make_Array_Type (TY_IDX elem_ty, 
+				  INT32 ndim, 
+				  bool fixed,  
+				  const INT64* lower, 
+				  const INT64* upper);
 
 static TY_IDX Create_New_Array_Type(TY_IDX old_array_ty);
 
@@ -270,8 +274,8 @@ private:
 static OA::OA_ptr<OA::DGraph::Interface> 
 CreateCFGraph(const DOMElement* elem);
 
-static list<OA::OA_ptr<OA::DGraph::Interface::Node> >*
-TopologicalSort(OA::OA_ptr<OA::DGraph::Interface> graph);
+//static list<OA::OA_ptr<OA::DGraph::Interface::Node> >*
+//TopologicalSort(OA::OA_ptr<OA::DGraph::Interface> graph);
 
 static void
 DDumpDotGraph(OA::OA_ptr<OA::DGraph::Interface> graph);
@@ -544,12 +548,16 @@ TranslateCFG(WN *wn_pu, const DOMElement* cfgElem, XlationContext& ctxt)
       XAIF_BBElemFilter filt(false /* edges */);
       for (DOMElement* elem = GetChildElement(cfgelm, &filt);
 	   (elem); elem = GetNextSiblingElement(elem, &filt)) {
-	TranslateBB_OLD(wn_pu, elem, ctxt);
+        TranslateBB_OLD(wn_pu, elem, ctxt);
       }
     } 
     else {
-      OA::OA_ptr<OA::DGraph::Interface::Node> rtmp = cfg->getSource();
-      OA::OA_ptr<MyDGNode> root = rtmp.convert<MyDGNode>();
+      OA::OA_ptr<OA::DGraph::Interface::NodesIterator> enodeIter
+          = cfg->getEntryNodesIterator();
+      assert(enodeIter->isValid());
+      OA::OA_ptr<OA::DGraph::Interface::Node> temp = enodeIter->current();
+      OA::OA_ptr<MyDGNode> root = temp.convert<MyDGNode>();
+      (*enodeIter)++; assert(!enodeIter->isValid());
       bool structuredCF = (opt_algorithm == ALG_STRUCTURED_CF);
       WN* cfgblkWN = xlate_CFG(wn_pu, cfg, root, ctxt, structuredCF);
       if (XAIF_CFGElemFilter::IsReplacement(cfgelm)) {
@@ -867,8 +875,8 @@ xlate_CFGunstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg,
   WN* blkWN = WN_CreateBlock();
 
   // Topological sort to ensure that, e.g., the exit node is last
-  list<OA::OA_ptr<OA::DGraph::Interface::Node> >* topoSortedCFG 
-      = TopologicalSort(cfg);
+  OA::OA_ptr<list<OA::OA_ptr<OA::DGraph::Interface::Node> > > topoSortedCFG 
+      = OA::DGraph::create_reverse_post_order_list(*cfg);
 
 #if 0
   std::cerr << "TopoSort: ";
@@ -1127,7 +1135,7 @@ xlate_CFGunstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg,
   // ---------------------------------------------------
   // Cleanup
   // ---------------------------------------------------
-  delete topoSortedCFG;
+  //delete topoSortedCFG; OA_ptr takes care of it
   
   return blkWN;
 }  
@@ -2143,6 +2151,8 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
   XercesStrX shape = XercesStrX(shapeX);
   
   bool active = GetActiveAttr(elem);
+
+  bool hasToBeAllocatable=false; // set to true for temp arrays without dimension bounds
   
   // FIXME: assume only
   FORTTK_ASSERT(strcmp(kind.c_str(), "variable") == 0,
@@ -2160,17 +2170,57 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
     ty = basicTy;
   } 
   else {
+    if (!active) { 
+      // this is a shortcut that needs fixing. 
+      basicTy = MTYPE_To_TY(MTYPE_F4);
+    }
+    
     // Note: cf. be/com/wn_instrument.cxx:1253 for example creating vector
     INT32 ndim = 0;
-    INT64 len = 1000; // FIXME: this is fixed size!!
     if (strcmp(shape.c_str(), "vector") == 0) {
       ndim = 1;
     } 
+    else if (strcmp(shape.c_str(), "matrix") == 0) {
+      ndim = 2;
+    } 
+    else if (strcmp(shape.c_str(), "three_tensor") == 0) {
+      ndim = 3;
+    } 
+    else if (strcmp(shape.c_str(), "four_tensor") == 0) {
+      ndim = 4;
+    } 
     else {
-      // FIXME: add tensors
-      FORTTK_DIE(FORTTK_UNIMPLEMENTED << "Cannot translate > 2-dimensional variables");
+      // FIXME: add other tensors
+      FORTTK_DIE(FORTTK_UNIMPLEMENTED << "Cannot translate variables of shape " << shape.c_str() );
     }
-    ty = MY_Make_Array_Type(basicTy, ndim, len);
+    INT64 lower[ndim],upper[ndim];
+    INT32 ndimIndex=0;
+    XAIF_DimensionBoundsElemFilter dbFilt;
+    for (DOMElement* dbElem = GetChildElement(elem, &dbFilt);
+	 (dbElem); 
+	 ++ndimIndex,
+	   dbElem = GetNextSiblingElement(dbElem, &dbFilt)) {
+      if (ndimIndex==ndim) { 
+	FORTTK_DIE("Cannot have more DimensionBounds than data type allows");
+      }
+      const XMLCh* lowerX = dbElem->getAttribute(XAIFStrings.attr_lower_x());
+      XercesStrX lowerS = XercesStrX(lowerX);
+      lower[ndimIndex]=strtol(lowerS.c_str(), (char **)NULL, 10);
+      const XMLCh* upperX = dbElem->getAttribute(XAIFStrings.attr_upper_x());
+      XercesStrX upperS = XercesStrX(upperX);
+      upper[ndimIndex]=strtol(upperS.c_str(), (char **)NULL, 10);
+    }
+    if (ndimIndex>0 && ndimIndex!=ndim) { 
+      FORTTK_DIE("Need to have all or no DimensionBounds specified (have only " << ndimIndex << " for " << shape.c_str() );
+    }
+    bool haveDimensionBounds=false;
+    if (ndimIndex) 
+      haveDimensionBounds=true;
+    else
+      // if we don't know the dimension somebody has to allocate this 
+      // since assumed shape arrays can otherwise only be formal parameters
+      hasToBeAllocatable=true; 
+    ty = MY_Make_Array_Type(basicTy, ndim, haveDimensionBounds,lower,upper);
   }
   
   // 3. Find storage class and export scope 
@@ -2184,12 +2234,13 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
   // 4. Create the new symbol
   ST* st = New_ST(level);
   ST_Init(st, Save_Str(nm), CLASS_VAR, sclass, escope, ty);
-  
+  if (hasToBeAllocatable)
+    Set_ST_is_allocatable(*st);
+
   // 5. For global symbols, modify and add to a global/common block
   if (level == GLOBAL_SYMTAB) {
     //FIXME ConvertIntoGlobalST(st);
   }
-  
   return st;
 }
 
@@ -2470,45 +2521,50 @@ TY_Lookup_FLD(TY_IDX struct_ty, TY_IDX ref_ty, UINT64 ref_ofst)
 }
 
 
-// FIXME: modify symtab.cxx if this works out
-static TY_IDX
-MY_Make_Array_Type1 (TYPE_ID elem_ty, INT32 ndim, INT64 len)
-{
-  return MY_Make_Array_Type(MTYPE_To_TY (elem_ty), ndim, len);
-}
-
-
 // FIXME: Available in symtab_utils.h / symtab.cxx
 static TY_IDX
-MY_Make_Array_Type (TY_IDX elem_ty, INT32 ndim, INT64 len)
-{
-    INT64 elem_sz = TY_size (elem_ty);
-    UINT elem_align = TY_align(elem_ty);
-    FORTTK_ASSERT(elem_sz > 0 && elem_align > 0,
-		  "Cannot make an array of " << TY_name(elem_ty));
-    
-    ARB_HANDLE arb,arb_first;
-    for (INT i = 0; i < ndim; ++i) {
-       arb = New_ARB ();
-       if (i==0) {
-         arb_first = arb;
-       }
-       ARB_Init (arb, 0, len - 1, elem_sz);
-       Set_ARB_dimension (arb, ndim-i);
+MY_Make_Array_Type (TY_IDX elem_ty, 
+		    INT32 ndim, 
+		    bool fixed,  
+		    const INT64* lower, 
+		    const INT64* upper) {
+  INT64 elem_sz = TY_size (elem_ty);
+  UINT elem_align = TY_align(elem_ty);
+  FORTTK_ASSERT(elem_sz > 0 && elem_align > 0,
+		"Cannot make an array of " 
+		<< TY_name(elem_ty));
+  ARB_HANDLE arb_h,arb_h_first;
+  INT64 ty_size=0; // for variable length arrays this should stay 0
+  for (INT i = 0; i < ndim; ++i) {
+    arb_h = New_ARB ();
+    if (i==0) {
+      arb_h_first = arb_h;
     }
-    
-    Set_ARB_last_dimen (arb);
-    Set_ARB_first_dimen (arb_first);
-    
-    TY_IDX ty_idx;
-    TY& ty = New_TY (ty_idx);
-    TY_Init (ty, elem_sz * ndim * len, KIND_ARRAY, MTYPE_UNKNOWN, 0);
-    Set_TY_align (ty_idx, elem_align);
-    Set_TY_etype (ty, elem_ty);
-    Set_TY_arb (ty, arb_first);
-
-    return ty_idx;
-
+    if (!fixed) { 
+      ARB * arb = arb_h.Entry();
+      arb->flags = ARB_EMPTY_LBND | ARB_EMPTY_UBND | ARB_EMPTY_STRIDE;
+      arb->dimension = 1;
+      arb->co_dimension = 0;
+      arb->unused = 0;
+      arb->u1.lbnd_val = 0;
+      arb->u2.ubnd_val = 0;
+      arb->u3.stride_val = 0;
+    }
+    else { 
+       ARB_Init (arb_h, lower[i], upper[i], elem_sz);
+       ty_size+=(upper[i]-lower[i])*elem_sz;
+    }
+    Set_ARB_dimension (arb_h, ndim-i);
+  }
+  Set_ARB_last_dimen (arb_h);
+  Set_ARB_first_dimen (arb_h_first);
+  TY_IDX ty_idx;
+  TY& ty = New_TY (ty_idx);
+  TY_Init (ty, ty_size, KIND_ARRAY, MTYPE_UNKNOWN, 0);
+  Set_TY_align (ty_idx, elem_align);
+  Set_TY_etype (ty, elem_ty);
+  Set_TY_arb (ty, arb_h_first);
+  return ty_idx;
 } // Make_Array_Type
 
 
@@ -2675,13 +2731,15 @@ CreateCFGraph(const DOMElement* cfgElem)
       m[std::string(vid.c_str())] = gn;
       
       // Set the graph root if necessary
+      /* MMS, 5/18/05, DGraph doesn't have root anymore
       const XMLCh* name = elem->getNodeName();
       if (XMLString::equals(name, XAIFStrings.elem_BBEntry_x())) {
-        g->setSource(gn);
+        g->setEntry(gn);
       }
       else if (XMLString::equals(name, XAIFStrings.elem_BBExit_x())) {
-	g->setSink(gn);
+        g->setExit(gn);
       }
+      */
     } 
   }
   
@@ -2751,11 +2809,12 @@ DumpDotGraph_GetNodeName(OA::OA_ptr<MyDGNode> n)
 }
 
 
+/*
 // TopologicalSort: [FIXME: put in OpenAnalysis]
 
-#define TOPOSORT_WHITE 0 /* node has not been seen */
-#define TOPOSORT_GREY  1 /* seen but not all children have been visited */
-#define TOPOSORT_BLACK 2 /* seen and all children have been visited */
+#define TOPOSORT_WHITE 0 // node has not been seen 
+#define TOPOSORT_GREY  1 // seen but not all children have been visited 
+#define TOPOSORT_BLACK 2 // seen and all children have been visited 
 
 static void 
 TopoSortLocal(list<OA::OA_ptr<OA::DGraph::Interface::Node> >& sorted, 
@@ -2844,5 +2903,6 @@ TopoSortLocal(list<OA::OA_ptr<OA::DGraph::Interface::Node> >& sorted,
 #undef TOPOSORT_WHITE
 #undef TOPOSORT_GREY
 #undef TOPOSORT_BLACK
+*/
 
 //****************************************************************************
