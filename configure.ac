@@ -1,5 +1,5 @@
 # -*-Mode: autoconf;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/configure.ac,v 1.2 2005/06/10 18:16:21 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/configure.ac,v 1.3 2005/06/10 20:20:57 eraxxon Exp $
 
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -309,12 +309,12 @@ HOST_OPEN64_IFLAGS=""
 if test "$OPT_ENABLE_DEVELOP" = "yes" ; then
   my_opt_cflags="-g -O0"
   my_opt_cxxflags="-g -O0"
+  HOST_OPEN64_IFLAGS="${HOST_OPEN64_IFLAGS} -D_DEBUG"
 else 
   # On some compilers, -g implies -O0.  Make sure -O2 takes precedence!
   my_opt_cflags="-g -O2"
   my_opt_cxxflags="-g -O2"
 fi
-
 
 case ${host} in
 
@@ -326,10 +326,6 @@ case ${host} in
     fi
 
     HOST_OPEN64_IFLAGS="${HOST_OPEN64_IFLAGS} -D_LINUX_LINUX -D_SGI_SOURCE -D_SVR4_SOURCE -DTARG_IA64 -DCOMPILE_UPC -D_MIPSEL -D_LONGLONG -D_MIPS_SZINT=32 -D_MIPS_SZPTR=32 -D_MIPS_SZLONG=32 -D__MIPS_AND_IA64_ELF_H"
-
-    if test "$OPT_ENABLE_DEVELOP" = "yes" ; then
-      HOST_OPEN64_IFLAGS="${HOST_OPEN64_IFLAGS} -D_DEBUG"
-    fi
     ;;
 
   x86_64*-*-linux* | ia64*-*-linux*)
@@ -338,6 +334,7 @@ case ${host} in
   sparc*-*-solaris*)
     if HPCcxxcmp([CC]); then
       # Sun Forte/ONE
+      HOST_OPEN64_IFLAGS="${HOST_OPEN64_IFLAGS} -KPIC -features=rtti"
       HOST_AR="$CXX $CXXFLAGS -xar -o"
       if test "$OPT_ENABLE_DEVELOP" = "yes" ; then
         my_opt_cflags="-g"
@@ -346,13 +343,18 @@ case ${host} in
         my_opt_cflags="-O"
         my_opt_cxxflags="-O"
       fi
+    else
+      HOST_OPEN64_IFLAGS="${HOST_OPEN64_IFLAGS} -fPIC -D__GNU_BUG_WORKAROUND"
     fi
+
+    HOST_OPEN64_IFLAGS="${HOST_OPEN64_IFLAGS} -D_SOLARIS_SOLARIS -D_SOLARIS -D_SGI_SOURCE -D_SVR4_SOURCE -DTARG_SOLARIS -DCOMPILE_UPC -D_NEW_SYMTAB -D_LONGLONG -Dlonglong -D_LIBELF_XTND_64"
     ;;
 
   *)
     ;;
 esac
 
+ 
 
 case ${host} in
   *-*-cygwin* | *-*-cygwin*)
