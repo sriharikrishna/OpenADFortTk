@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.4 2005/06/10 15:59:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.5 2005/06/13 13:22:50 eraxxon Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Michelle Strout, Nathan Tallent
-  \version $Id: Open64IRInterface.hpp,v 1.4 2005/06/10 15:59:06 eraxxon Exp $
+  \version $Id: Open64IRInterface.hpp,v 1.5 2005/06/13 13:22:50 eraxxon Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -73,8 +73,6 @@
 
 #include <lib/support/WhirlGlobalStateUtils.h>
 #include <lib/support/diagnostics.h>
-//#include "Open64IRInterface/WhirlGlobalStateUtils.h"
-//#include "Open64IRInterface/diagnostics.h"
 
 //typedef std::pair<char*,char*> fully_qualified_name;
 typedef struct fully_qualified_name {
@@ -103,6 +101,7 @@ typedef struct fully_qualified_name {
 
 };
 
+
 //***************************************************************************
 // Iterators, roughly organized by heirarchy (procedure, statement, etc.)
 //***************************************************************************
@@ -115,7 +114,7 @@ public:
   
   virtual OA::ProcHandle current() const 
     { return (OA::irhandle_t)(*pulist_iter); }
-  virtual bool isValid () const { return (pulist_iter != pulist.end()); }
+  virtual bool isValid () const { return (pulist.end() != pulist_iter); }
   virtual void operator++();
   void operator++(int) { ++*this; }  // postfix
   
@@ -190,7 +189,7 @@ public:
   
   virtual OA::ExprHandle current() const  
     { return (OA::irhandle_t)(*wnlist_iter); }
-  virtual bool isValid () const { return (wnlist_iter != wnlist.end()); }
+  virtual bool isValid () const { return (wnlist.end() != wnlist_iter); }
   virtual void operator++() { ++wnlist_iter; }
 
   virtual void reset() { wnlist_iter = wnlist.begin(); }
@@ -216,7 +215,7 @@ public:
   }
 
   virtual bool isValid () const {        // False when all items are exhausted. 
-    return (wnlist_iter != wnlist.end()); 
+    return (wnlist.end() != wnlist_iter); 
   }
 
   virtual void operator++() { ++wnlist_iter; }
@@ -276,7 +275,7 @@ public:
   
   virtual OA::SymHandle current() const
     { return (OA::irhandle_t)(*symlist_iter); }
-  virtual bool isValid () const { return (symlist_iter != symlist.end()); }
+  virtual bool isValid () const { return (symlist.end() != symlist_iter); }
   virtual void operator++() { if (symlist_iter != symlist.end()) ++symlist_iter; }
   
   virtual void reset() { symlist_iter = symlist.begin(); }

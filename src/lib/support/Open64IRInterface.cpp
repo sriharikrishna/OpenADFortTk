@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.5 2005/06/10 15:59:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.6 2005/06/13 13:22:50 eraxxon Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Nathan Tallent, Michelle Strout
-  \version $Id: Open64IRInterface.cpp,v 1.5 2005/06/10 15:59:06 eraxxon Exp $
+  \version $Id: Open64IRInterface.cpp,v 1.6 2005/06/13 13:22:50 eraxxon Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -28,7 +28,6 @@ static bool debug = false;
 //************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
-//#include "Open64BasicTypes.h"
 #include "ir_reader.h" // for fdump_wn()
 
 //*************************** User Include Files ****************************
