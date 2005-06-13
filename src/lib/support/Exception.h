@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Exception.h,v 1.2 2004/07/30 17:50:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Exception.h,v 1.3 2005/06/13 14:30:17 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -84,6 +84,7 @@ namespace FortTk {
     virtual void Report(std::ostream& os) const { 
       os << "OpenADFortTk::FatalException: " << GetMessage() << std::endl;
     }
+    virtual void Report() const { Report(std::cerr); }
 
   };
   

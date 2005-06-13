@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.5 2005/06/13 13:22:50 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.6 2005/06/13 14:30:17 eraxxon Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Michelle Strout, Nathan Tallent
-  \version $Id: Open64IRInterface.hpp,v 1.5 2005/06/13 13:22:50 eraxxon Exp $
+  \version $Id: Open64IRInterface.hpp,v 1.6 2005/06/13 14:30:17 eraxxon Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -75,7 +75,7 @@
 #include <lib/support/diagnostics.h>
 
 //typedef std::pair<char*,char*> fully_qualified_name;
-typedef struct fully_qualified_name {
+struct fully_qualified_name {
     std::string mVar;
     std::string mContext;
 
