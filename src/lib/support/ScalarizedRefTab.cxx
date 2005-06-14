@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.16 2005/05/16 15:17:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.17 2005/06/14 16:55:35 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -134,7 +134,21 @@ Create(PU_Info* pu)
 
 void
 ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
-Dump(std::ostream& o, const char* pre) const
+Dump(std::ostream& o) const
+{
+  DumpFmt(std::cerr);
+}
+
+void
+ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
+DDump() const
+{
+  Dump(std::cerr);
+}
+
+void
+ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
+DumpFmt(std::ostream& o, const char* pre) const
 {
   std::string p = pre;
   std::string p1 = p + "  ";
@@ -150,13 +164,6 @@ Dump(std::ostream& o, const char* pre) const
     o << std::endl;
   }
   o << p << "End ScalarizedRefTab Dump ================== }\n";
-}
-
-void
-ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
-DDump() const
-{
-  Dump(std::cerr);
 }
 
 //***************************************************************************

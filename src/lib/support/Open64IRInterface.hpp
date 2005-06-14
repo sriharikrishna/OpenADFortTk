@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.6 2005/06/13 14:30:17 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.7 2005/06/14 16:55:35 eraxxon Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Michelle Strout, Nathan Tallent
-  \version $Id: Open64IRInterface.hpp,v 1.6 2005/06/13 14:30:17 eraxxon Exp $
+  \version $Id: Open64IRInterface.hpp,v 1.7 2005/06/14 16:55:35 eraxxon Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -81,7 +81,7 @@ struct fully_qualified_name {
 
     fully_qualified_name() 
         : mVar("garbage", "garbage") {}
-    fully_qualified_name(char* var, char *context) 
+    fully_qualified_name(const char* var, const char *context) 
         : mVar(var), mContext(context) {}
 
     bool operator< (const  fully_qualified_name& other) const

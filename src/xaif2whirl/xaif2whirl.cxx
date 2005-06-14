@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.64 2005/06/10 15:59:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.65 2005/06/14 16:55:35 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -2114,7 +2114,7 @@ CreateOpenADReplacementBeg(const char* placeholder)
 static WN*
 CreateOpenADReplacementEnd()
 {
-  WN* comWN = WN_CreateComment("$OpenAD$ END REPLACEMENT");
+  WN* comWN = WN_CreateComment((char*)"$OpenAD$ END REPLACEMENT");
   return comWN;
 }
 
@@ -2193,8 +2193,12 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
       // FIXME: add other tensors
       FORTTK_DIE(FORTTK_UNIMPLEMENTED << "Cannot translate variables of shape " << shape.c_str() );
     }
-    INT64 lower[ndim],upper[ndim];
-    INT32 ndimIndex=0;
+    
+    INT64 *lower, *upper;
+    lower = new INT64[ndim];
+    upper = new INT64[ndim];
+
+    INT32 ndimIndex = 0;
     XAIF_DimensionBoundsElemFilter dbFilt;
     for (DOMElement* dbElem = GetChildElement(elem, &dbFilt);
 	 (dbElem); 
@@ -2210,17 +2214,24 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
       XercesStrX upperS = XercesStrX(upperX);
       upper[ndimIndex]=strtol(upperS.c_str(), (char **)NULL, 10);
     }
+    
     if (ndimIndex>0 && ndimIndex!=ndim) { 
       FORTTK_DIE("Need to have all or no DimensionBounds specified (have only " << ndimIndex << " for " << shape.c_str() );
     }
-    bool haveDimensionBounds=false;
-    if (ndimIndex) 
-      haveDimensionBounds=true;
-    else
+    
+    bool haveDimensionBounds = false;
+    if (ndimIndex) {
+      haveDimensionBounds = true;
+    }
+    else {
       // if we don't know the dimension somebody has to allocate this 
       // since assumed shape arrays can otherwise only be formal parameters
-      hasToBeAllocatable=true; 
+      hasToBeAllocatable = true; 
+    }
     ty = MY_Make_Array_Type(basicTy, ndim, haveDimensionBounds,lower,upper);
+
+    delete[] lower;
+    delete[] upper;
   }
   
   // 3. Find storage class and export scope 
@@ -2637,15 +2648,15 @@ GetSuccessor(OA::OA_ptr<MyDGNode> node, bool succIsOutEdge)
   // We know there is one successor
   OA::OA_ptr<MyDGNode> succ; succ = NULL;
   if (succIsOutEdge) {
-    OA::OA_ptr<Interface::SinkNodesIterator> it;
+    OA::OA_ptr<DGraphStandard::SinkNodesIterator> it;
     it = node->getSinkNodesIterator();
-    OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = it->current();
+    OA::OA_ptr<DGraphStandard::Node> ntmp = it->current();
     succ = ntmp.convert<MyDGNode>();
   }
   else {
-    OA::OA_ptr<Interface::SourceNodesIterator> it;
+    OA::OA_ptr<DGraphStandard::SourceNodesIterator> it;
     it = node->getSourceNodesIterator();
-    OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = it->current();
+    OA::OA_ptr<DGraphStandard::Node> ntmp = it->current();
     succ = ntmp.convert<MyDGNode>();
   }
   return succ;
@@ -2662,16 +2673,16 @@ GetSuccessorAlongEdge(OA::OA_ptr<MyDGNode> node, unsigned int condition,
   int numSucc = (succIsOutEdge) ? node->num_outgoing() : node->num_incoming();
   
   if (succIsOutEdge) {
-    OA::OA_ptr<Interface::OutgoingEdgesIterator> it;
+    OA::OA_ptr<DGraphStandard::OutgoingEdgesIterator> it;
     it = node->getOutgoingEdgesIterator();
     for ( ; it->isValid(); ++(*it)) {
-      OA::OA_ptr<OA::DGraph::Interface::Edge> etmp = it->current();
+      OA::OA_ptr<DGraphStandard::Edge> etmp = it->current();
       OA::OA_ptr<MyDGEdge> edge = etmp.convert<MyDGEdge>();
       DOMElement* e = edge->GetElem();
       
       unsigned int cond = GetCondAttr(e);
       if (condition == cond) {
-	OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = edge->sink();
+	OA::OA_ptr<DGraphStandard::Node> ntmp = edge->sink();
         succ = ntmp.convert<MyDGNode>();
         break;
       }

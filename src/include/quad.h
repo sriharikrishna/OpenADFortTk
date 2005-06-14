@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/include/quad.h,v 1.1 2005/01/07 18:54:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/include/quad.h,v 1.2 2005/06/14 16:55:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -43,8 +43,8 @@ namespace FortTk {
     uint128_t() : hi(0), lo(0) { }
     ~uint128_t() { }
     
-    uint128_t(uint128_t& v) : hi(v.hi), lo(v.lo) { }
-    uint128_t(QUAD_TYPE& v) { *this = v; }
+    uint128_t(const uint128_t& v) : hi(v.hi), lo(v.lo) { }
+    uint128_t(const QUAD_TYPE& v) { *this = v; }
     
     uint64_t hi;
     uint64_t lo;

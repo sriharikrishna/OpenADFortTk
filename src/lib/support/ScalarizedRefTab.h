@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.13 2005/05/16 15:17:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.14 2005/06/14 16:55:35 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -95,7 +95,7 @@ class ScalarizedRef {
 public:
   // Constructor: if 'x' is supplied, it will be appended to the
   // symbol name
-  ScalarizedRef(WN* wn, const char* x = NULL) { Ctor(wn, x);  }
+  ScalarizedRef(WN* wn_, const char* x = NULL) { Ctor(wn_, x);  }
   virtual ~ScalarizedRef();
   
   // GetName: Return a globally unique dummy symbol name
@@ -159,6 +159,11 @@ public:
   
   // Create: Fills in map
   void Create(PU_Info* pu);
+
+  // Find: 
+  virtual ScalarizedRef* 
+  Find(WN* x_, bool mustFind = false) const
+  { return FortTk::BaseMap<WN*, ScalarizedRef*>::Find(x_, mustFind); }
   
   // Find: a version with const params for convenience
   ScalarizedRef* 
@@ -170,7 +175,7 @@ public:
   
   
   // Insert: override to manage scalar ref pool
-  bool 
+  virtual bool 
   Insert(WN* x, ScalarizedRef* y) {
     InsertIntoPool(y);
     return FortTk::BaseMap<WN*, ScalarizedRef*>::Insert(x, y);
@@ -186,8 +191,10 @@ public:
   
   
   // Dump contents for inspection
-  virtual void Dump(std::ostream& o = std::cerr, const char* pre = "") const;
+  virtual void Dump(std::ostream& o = std::cerr) const;
   virtual void DDump() const;
+
+  void DumpFmt(std::ostream& o = std::cerr, const char* pre = "") const;
   
 protected:
   // Should not be used

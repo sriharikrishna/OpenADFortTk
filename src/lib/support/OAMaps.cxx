@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.cxx,v 1.5 2005/06/10 15:59:05 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.cxx,v 1.6 2005/06/14 16:55:34 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -500,13 +500,16 @@ MassageOACFGIntoXAIFCFG(OA::OA_ptr<OA::CFG::CFGStandard> cfg,
   MySplitList toSplit; // nodes to split
 
   OA::OA_ptr<OA::CFG::Interface::NodesIterator> nodeIt;
+  OA::OA_ptr<OA::CFG::CFGStandard::NodesIterator> nodeItTmp; 
 
   // -------------------------------------------------------
   // 1. Find BBs with conditionals and split them
   // -------------------------------------------------------
 
   // a. Collect all BBs with more that one stmt into 'workList'
-  for (nodeIt = cfg->getNodesIterator(); nodeIt->isValid(); ++(*nodeIt)) {
+  nodeItTmp = cfg->getNodesIterator();
+  nodeIt = nodeItTmp.convert<OA::CFG::Interface::NodesIterator>();
+  for ( ; nodeIt->isValid(); ++(*nodeIt)) {
     OA::OA_ptr<OA::CFG::Interface::Node> n = nodeIt->current();
     if ( (n->size() > 1) ) { 
       workList.push_back(n);
@@ -566,7 +569,9 @@ MassageOACFGIntoXAIFCFG(OA::OA_ptr<OA::CFG::CFGStandard> cfg,
   CFGNodeList toRemove; // basic blocks made empty (slated for removal)
   
   
-  for (nodeIt = cfg->getNodesIterator(); nodeIt->isValid(); ++(*nodeIt)) {
+  nodeItTmp = cfg->getNodesIterator();
+  nodeIt = nodeItTmp.convert<OA::CFG::Interface::NodesIterator>();
+  for ( ; nodeIt->isValid(); ++(*nodeIt)) {
     OA::OA_ptr<OA::CFG::Interface::Node> n = nodeIt->current();
 
     // Use CFG nodes representing the OPR_DO_LOOP condition to find
@@ -654,7 +659,9 @@ MassageOACFGIntoXAIFCFG(OA::OA_ptr<OA::CFG::CFGStandard> cfg,
   std::list<CFGNodeList::iterator> toRem;
   
   // a. Collect all BBs with more that one stmt into 'workList'
-  for (nodeIt = cfg->getNodesIterator(); nodeIt->isValid(); ++(*nodeIt)) {
+  nodeItTmp = cfg->getNodesIterator();
+  nodeIt = nodeItTmp.convert<OA::CFG::Interface::NodesIterator>();
+  for ( ; nodeIt->isValid(); ++(*nodeIt)) {
     OA::OA_ptr<OA::CFG::Interface::Node> n = nodeIt->current();
     
     if ( (n->size() > 1) ) { 

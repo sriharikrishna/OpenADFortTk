@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.22 2005/06/10 15:59:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.h,v 1.23 2005/06/14 16:55:35 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -56,7 +56,7 @@ namespace xaif2whirl {
   enum ModeType {
     MODE_NULL,
     MODE_FORWARD,  // forward mode
-    MODE_REVERSE,  // reverse mode
+    MODE_REVERSE   // reverse mode
   };
 
   enum AlgorithmType {

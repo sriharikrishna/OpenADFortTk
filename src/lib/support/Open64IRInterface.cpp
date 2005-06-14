@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.6 2005/06/13 13:22:50 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.7 2005/06/14 16:55:35 eraxxon Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Nathan Tallent, Michelle Strout
-  \version $Id: Open64IRInterface.cpp,v 1.6 2005/06/13 13:22:50 eraxxon Exp $
+  \version $Id: Open64IRInterface.cpp,v 1.7 2005/06/14 16:55:35 eraxxon Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -3163,7 +3163,7 @@ class InitContextVisitor : public OA::ExprTreeVisitor {
 fully_qualified_name Open64IRInterface::create_fqn(OA::SymHandle sym)
 {
     fully_qualified_name retval; 
-    static char* aDummyModuleName("Dummy_module");
+    static const char* aDummyModuleName("Dummy_module");
 
     ST* st = (ST*)sym.hval();
     assert(Stab_Is_Based_At_Common_Or_Equivalence(st) || Stab_Is_In_Module(st) );

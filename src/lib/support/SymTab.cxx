@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.cxx,v 1.13 2005/03/19 22:54:50 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.cxx,v 1.14 2005/06/14 16:55:35 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -95,11 +95,11 @@ Symbol::Symbol()
 {
 }
 
-Symbol::Symbol(const ST* st, WNId wnid, bool act)
+Symbol::Symbol(const ST* st_, WNId wnid_, bool act_)
 {
-  SetST(st);
-  SetPathVorlage(wnid);
-  SetActive(act);
+  SetST(st_);
+  SetPathVorlage(wnid_);
+  SetActive(act_);
 }
 
 Symbol::~Symbol()

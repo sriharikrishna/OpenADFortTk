@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.h,v 1.2 2004/10/06 22:10:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.h,v 1.3 2005/06/14 16:55:35 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -45,7 +45,7 @@ namespace whirl2sexp {
       FOO1       = 0x00000001, // 
       FOO2       = 0x00000002, // 
       FOO3       = 0x00000004, // 
-      FOO4       = 0x00000008, // 
+      FOO4       = 0x00000008  // 
     };
   }
   
