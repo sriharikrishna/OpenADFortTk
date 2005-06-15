@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.17 2005/06/14 16:55:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.18 2005/06/15 15:11:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -349,6 +349,24 @@ IsRefScalarizable(const WN* wn)
     // (for stores, only check LHS (kid1))
     TY_IDX baseobj_ty = WN_GetBaseObjType(wn);
     TY_IDX refobj_ty = WN_GetRefObjType(wn);
+    
+    // Special cases:
+    // 1) passing a whole array looks like a scalarizable reference:
+    //  call foo(x) ! where x is an array
+    //    (ILOAD F8 F8 (0 0 (ty ".predef_F8" 11 8) (ty pointer-to-F8))
+    //      (LDID U8 U8 ((st "X" 2 1) 0 (ty pointer-to-array) 0))))
+    //  call foo(px) ! where px is an array
+    //    (ILOAD F8 F8 (0 0 (ty ".predef_F8" 11 8) (ty pointer-to-F8))
+    //      (LDA U8 V ((st "PX" 2 4) 0 (ty pointer-to-array) 0))))
+    if (opr == OPR_ILOAD && 
+	(WN_operator(WN_kid0(wn)) == OPR_LDID || 
+	 WN_operator(WN_kid0(wn)) == OPR_LDA)) {
+      TY_IDX ty = WN_ty(WN_kid0(wn));
+      if (TY_Is_Pointer(ty) && TY_Is_Array(TY_pointed(ty))) {
+	return false;
+      }
+    } 
+    
     return (TY_Is_Scalar(refobj_ty) && !IsRefScalar(baseobj_ty, refobj_ty));
   }
 
@@ -410,7 +428,8 @@ ForAllScalarizableRefs(const WN* wn, ForAllScalarizableRefsOp& op)
     
     // Base case
     int ret = op(wn); // FIXME: what to do on error?
-    
+    bool foo = IsRefScalarizable(wn); // FIXME:eraxxon DEBUGGING
+
     // Special recursive case: Since WHIRL stores are statements (not
     // expressions) we need to check the RHS (kid0) of the implied
     // assignment for non-scalar references.

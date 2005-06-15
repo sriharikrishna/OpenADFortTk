@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.76 2005/05/16 15:17:56 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.77 2005/06/15 15:11:12 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -210,7 +210,8 @@ whirl2xaif::TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     // may also be a logical argument, so
     // XlationContext_is_logical_arg(ctxt) may also be true.
     set_XlationContext_has_logical_arg(ctxt);
-  } else if (XlationContext_has_logical_arg(ctxt)) { 
+  } 
+  else if (XlationContext_has_logical_arg(ctxt)) { 
     // This is a logical argument.  This is the only place where we
     // should need to check whether this is expected to be a logical
     // valued expression. I.e. the only place where we apply
@@ -218,7 +219,8 @@ whirl2xaif::TranslateWN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     // set at other places (e.g. in wn2f_stmt.c).
     reset_XlationContext_has_logical_arg(ctxt);
     set_XlationContext_is_logical_arg(ctxt);
-  } else {
+  }
+  else {
     reset_XlationContext_has_logical_arg(ctxt);
     reset_XlationContext_is_logical_arg(ctxt);
   }
@@ -550,7 +552,8 @@ whirl2xaif::xlate_SymRef(xml::ostream& xos,
       && !TY_is_f90_pointer(ST_type(base_st))) {
     /* An explicit dereference */
     translate_var_ref = &ST2F_deref_translate;
-  } else {
+  } 
+  else {
     /* A direct reference or an implicit dereference */
     translate_var_ref = &TranslateSTUse;
   }
@@ -760,21 +763,22 @@ whirl2xaif::xlate_MemRef(xml::ostream& xos,
     } 
     else if (TY_Is_Array(ref_ty) || TY_Is_Array(base_ty)) { // FIXME
       // 3. Array reference (non-scalar)
+      bool hasArrayElmt = !XlationContext_has_no_arr_elmt(ctxt);
       if (TY_Is_Character_String(base_ty)) {
 	TranslateWN(xos, addr, ctxt); /* String lvalue */
-	if (!XlationContext_has_no_arr_elmt(ctxt)) {
+	if (hasArrayElmt) {
 	  TY2F_Translate_ArrayElt(xos, base_ty, offset);
 	}
       } 
       else {
 	TranslateWN(xos, addr, ctxt); /* Array lvalue */
-	if (!XlationContext_has_no_arr_elmt(ctxt)) {
+	if (hasArrayElmt) {
 	  TY2F_Translate_ArrayElt(xos, base_ty, offset);
 	}
 	else {
 	  reset_XlationContext_has_no_arr_elmt(ctxt);
 	}
-      }      
+      }    
     } 
     else if ((WN_operator(addr) == OPR_LDA || WN_operator(addr) == OPR_LDID) 
 	       && (TY_kind(base_ty) != KIND_STRUCT)
