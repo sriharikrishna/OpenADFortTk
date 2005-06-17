@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.7 2005/06/14 16:55:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.8 2005/06/17 16:00:04 eraxxon Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Nathan Tallent, Michelle Strout
-  \version $Id: Open64IRInterface.cpp,v 1.7 2005/06/14 16:55:35 eraxxon Exp $
+  \version $Id: Open64IRInterface.cpp,v 1.8 2005/06/17 16:00:04 eraxxon Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -3227,16 +3227,46 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
 	PU_Info* pu = (PU_Info*)proc.hval();
 	WN *wn_pu = PU_Info_tree_ptr(pu);
 	
-        // Add Whirl symbols to map
-        OA::OA_ptr<OA::IRSymIterator> symIter 
-	  = tempIR.getVisibleSymIterator(proc);
-        for ( ; symIter->isValid(); (*symIter)++ ) {
-            // symbols can be visible in multiple contexts so don't check
-            // that they are only mapped to one
-            sProcContext[symIter->current()] = proc;
+        // 1. Add Whirl symbols to map
+
+        // NOTE: Do not use tempIR.getVisibleSymIterator(proc) or it
+        // will kill performance.  Instead just get symbols at the
+        // global level once and for each procedure just get symbols
+        // on all levels higher than global
+        std::list<ST*> symlist;
+        int stopLevel;
+        if ( globalSymsVisitFlag==false ) {
+	    stopLevel = GLOBAL_SYMTAB;
+	    globalSymsVisitFlag = true;
+        } else { 
+            stopLevel = GLOBAL_SYMTAB+1;
         }
-	
-	// Add Whirl AST nodes to map
+        // inserts all symbols at corresponding symbol table levels
+        // into symlist
+        for (SYMTAB_IDX lvl = CURRENT_SYMTAB; lvl >= stopLevel; --lvl) {
+            For_all(St_Table, lvl, insert_ST(symlist));
+        }
+        std::list<ST*>::iterator symIter;
+        for (symIter = symlist.begin(); symIter!=symlist.end(); symIter++ ) { 
+            ST* st = *symIter;
+            OA::SymHandle sym((OA::irhandle_t)st);
+
+            // set the procedure context for the symbol
+            sProcContext[sym] = proc;
+
+            // store the string for the symbol
+            sSymToVarStringMap[sym] = ST_name(st);
+
+            // store symbols based on fully qualified name as well
+            // if they are module or common block variables
+            if (Stab_Is_Based_At_Common_Or_Equivalence(st) 
+                || Stab_Is_In_Module(st) ) 
+            {
+                sGlobalVarMap[create_fqn(sym)].insert(sym);
+            }
+        }
+
+	// 2. Add Whirl AST nodes to map
 	WN_TREE_CONTAINER<PRE_ORDER> wtree(wn_pu);
 	WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
 	for (it = wtree.begin(); it != wtree.end(); ++it) {
