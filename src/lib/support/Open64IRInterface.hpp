@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.7 2005/06/14 16:55:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.8 2005/06/27 18:10:45 eraxxon Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Michelle Strout, Nathan Tallent
-  \version $Id: Open64IRInterface.hpp,v 1.7 2005/06/14 16:55:35 eraxxon Exp $
+  \version $Id: Open64IRInterface.hpp,v 1.8 2005/06/27 18:10:45 eraxxon Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -771,14 +771,15 @@ private:
   //! During its creation it also sets up sStmt2allMemRefs 
   //! and memRefs2mreSetMap.
   OA::OA_ptr<OA::MemRefHandleIterator> getMemRefIterator(OA::StmtHandle h); 
-  
+
   void currentProc(OA::ProcHandle p) {
     assert(p!=OA::ProcHandle(0));
     PU_Info* pu = (PU_Info*)p.hval();
     PU_SetGlobalState(pu);
   }
 
-
+  //! use this to appropriately get a string for a symbol
+  static char* createCharStarForST(ST*);
 
   static void DumpWN(WN* wn, ostream& os);
 
@@ -801,7 +802,7 @@ private:
   // For now just allowing one program context
   static std::map<OA::IRHandle,OA::ProcHandle> sProcContext;
   static PU_Info* sProgContext;
-  static PU_Info* sCurrentProc; // current proc context in Open64 datastructures
+  //static PU_Info* sCurrentProc; // current proc context in Open64 datastructures
   static bool sContextInit;
   static void initProcContext(PU_Info* pu_forest, 
                               Open64IRProcIterator &procIter);

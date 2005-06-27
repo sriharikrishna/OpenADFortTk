@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.8 2005/06/17 16:00:04 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.9 2005/06/27 18:10:45 eraxxon Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Nathan Tallent, Michelle Strout
-  \version $Id: Open64IRInterface.cpp,v 1.8 2005/06/17 16:00:04 eraxxon Exp $
+  \version $Id: Open64IRInterface.cpp,v 1.9 2005/06/27 18:10:45 eraxxon Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -46,7 +46,7 @@ static bool debug = false;
 //***************************************************************************
 std::map<OA::IRHandle,OA::ProcHandle> Open64IRInterface::sProcContext;
 PU_Info* Open64IRInterface::sProgContext = NULL;
-PU_Info* Open64IRInterface::sCurrentProc = NULL;
+//PU_Info* Open64IRInterface::sCurrentProc = NULL;
 bool Open64IRInterface::sContextInit = false;
 
 std::map<OA::StmtHandle,std::set<OA::MemRefHandle> > 
@@ -489,7 +489,7 @@ Open64IRInterface::toString(const OA::SymHandle h)
   std::string symnm; 
   if (st) {
     setCurrentProcToProcContext(h);
-    symnm = ST_name(st);
+    symnm = createCharStarForST(st);
   } else {
     symnm = "<no-symbol>";
   }
@@ -2653,7 +2653,29 @@ Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs(WN* wn,
   
   return curMemRefExprInfos;
 }
-  
+
+/*!
+   constant symbols get their strings from the TCON table?
+*/
+char* Open64IRInterface::createCharStarForST(ST* st)
+{
+    char* nm = NULL;
+
+    if (ST_class(st) == CLASS_CONST) {
+        TCON& tcon = STC_val(st);
+        if (TCON_ty(tcon) == MTYPE_STR) {
+            STR_IDX idx = TCON_str_idx(tcon);
+        } else {
+            nm = Targ_Print(NULL, tcon);
+        }
+    } else { nm = ST_name(st); }
+
+    if (nm==NULL) {
+        nm = "<no-symbol>";
+    }
+
+    return nm;
+}
 
 //---------------------------------------------------------------------------
 // Visualize Whirl expressions in a compact way.
@@ -2990,7 +3012,7 @@ print_generic_binary:
     os << ")";
     break;
   case OPR_CALL:
-    os << ST_name (WN_st (wn)) << "(";
+    os << createCharStarForST(WN_st (wn)) << "(";
     for (int kid = 0; kid < WN_kid_count(wn); kid++) {
       DumpWN(WN_kid(wn, kid), os);
       if (kid < WN_kid_count(wn)-1)
@@ -3055,7 +3077,7 @@ Open64IRInterface::DumpWNMemRefLeaf(WN* wn, ostream& os)
 
   OPERATOR opr = WN_operator(wn);
   if (OPERATOR_has_sym(opr)) {
-    os << ST_name(WN_st(wn)) << ":";
+    os << createCharStarForST(WN_st(wn)) << ":";
   } 
   if (OPERATOR_has_offset(opr)) {
     os << WN_offset(wn) << ":";
@@ -3093,8 +3115,8 @@ void Open64IRInterface::setCurrentProcToProcContext(OA::IRHandle h)
     if (h.hval()!=0) {
       PU_Info *pu = (PU_Info*)sProcContext[h].hval();
       assert(pu!=NULL);
-      if ( sCurrentProc != pu && pu != NULL ) {
-        sCurrentProc = pu;
+      // have to check what Open64 thinks is current context
+      if ( Current_PU_Info  != pu && pu != NULL ) {
         PU_SetGlobalState(pu);
       }
     }
@@ -3103,6 +3125,7 @@ void Open64IRInterface::setCurrentProcToProcContext(OA::IRHandle h)
 /*! Helper class to initProcContext.  Finds all handles within
     an expression and maps them to the given procedure context.
 */
+/*
 class InitContextVisitor : public OA::ExprTreeVisitor {
   public:
     InitContextVisitor(OA::ProcHandle proc) : mProc(proc) {}
@@ -3157,6 +3180,8 @@ class InitContextVisitor : public OA::ExprTreeVisitor {
   private:
     OA::ProcHandle mProc;
 };
+*/
+
 
 /*! only call if the symbol is in a module or a common block
 */
@@ -3176,7 +3201,7 @@ fully_qualified_name Open64IRInterface::create_fqn(OA::SymHandle sym)
         ST* base_st = tempst;
 
         // make a pair for fully-qualified name
-        retval = fully_qualified_name(ST_name(st), ST_name(base_st));
+        retval = fully_qualified_name(createCharStarForST(st), createCharStarForST(base_st));
         //retval = (fully_qualified_name)std::make_pair(ST_name(st), 
         //                                              ST_name(base_st));
 
@@ -3194,7 +3219,7 @@ fully_qualified_name Open64IRInterface::create_fqn(OA::SymHandle sym)
 	// FIXME: find the right module name
         //retval = (fully_qualified_name)std::make_pair(ST_name(st),
         //                                              aDummyModuleName);
-        retval = fully_qualified_name(ST_name(st), aDummyModuleName);
+        retval = fully_qualified_name(createCharStarForST(st), aDummyModuleName);
     }
 
     return retval;
@@ -3224,8 +3249,8 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
     OA::ProcHandle proc;
     for ( ; procIter.isValid(); procIter++) {
         proc = procIter.current();
-	PU_Info* pu = (PU_Info*)proc.hval();
-	WN *wn_pu = PU_Info_tree_ptr(pu);
+        PU_Info* pu = (PU_Info*)proc.hval();
+        WN *wn_pu = PU_Info_tree_ptr(pu);
 	
         // 1. Add Whirl symbols to map
 
@@ -3236,8 +3261,8 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
         std::list<ST*> symlist;
         int stopLevel;
         if ( globalSymsVisitFlag==false ) {
-	    stopLevel = GLOBAL_SYMTAB;
-	    globalSymsVisitFlag = true;
+            stopLevel = GLOBAL_SYMTAB;
+            globalSymsVisitFlag = true;
         } else { 
             stopLevel = GLOBAL_SYMTAB+1;
         }
@@ -3253,9 +3278,15 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
 
             // set the procedure context for the symbol
             sProcContext[sym] = proc;
+            if (debug) {
+                std::cout << "symbol = " << createCharStarForST(st) 
+                          << ", sProcContext[" << sym.hval() << "] = " 
+                          << proc.hval() << std::endl;
+            }
 
             // store the string for the symbol
-            sSymToVarStringMap[sym] = ST_name(st);
+            const char* nm = createCharStarForST(st);
+            sSymToVarStringMap[sym] = nm;
 
             // store symbols based on fully qualified name as well
             // if they are module or common block variables
@@ -3263,19 +3294,28 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
                 || Stab_Is_In_Module(st) ) 
             {
                 sGlobalVarMap[create_fqn(sym)].insert(sym);
+                if (debug) {
+                    fully_qualified_name fqn = create_fqn(sym);
+                    std::cout << "create_fqn(" << createCharStarForST(st) << ") = "
+                              << fqn.mVar << ", " << fqn.mContext << std::endl;
+                }
             }
         }
 
-	// 2. Add Whirl AST nodes to map
-	WN_TREE_CONTAINER<PRE_ORDER> wtree(wn_pu);
-	WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
-	for (it = wtree.begin(); it != wtree.end(); ++it) {
-	    WN* curWN = it.Wn();
-	    OA::IRHandle h((OA::irhandle_t)curWN);
-	    sProcContext[h] = proc;
-	}
+        // 2. Add Whirl AST nodes to map
+        WN_TREE_CONTAINER<PRE_ORDER> wtree(wn_pu);
+        WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
+        for (it = wtree.begin(); it != wtree.end(); ++it) {
+            WN* curWN = it.Wn();
+            OA::IRHandle h((OA::irhandle_t)curWN);
+            sProcContext[h] = proc;
+            if (debug) {
+                std::cout << "sProcContext[" << h.hval() << "] = " 
+                          << proc.hval() << std::endl;
+            }
+        }
     }
 
     // the last procedure is the one that is the currentProc context
-    sCurrentProc = (PU_Info*)proc.hval();
+    //sCurrentProc = (PU_Info*)proc.hval();
 }
