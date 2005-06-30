@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.22 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.23 2005/06/30 14:53:49 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -451,48 +451,43 @@ xlate_ZeroDeriv(const DOMElement* elem, XlationContext& ctxt)
 //   saxpy(a,x,y): Y=A1*X1+A2*X2+...+Y
 //   sax(a,x,y)  : Y=A1*X1+A2*X2+...
 static WN* 
-xlate_Saxpy(const DOMElement* elem, XlationContext& ctxt, bool saxpy)
-{
-  // -------------------------------------------------------
-  // 1. Create WHIRL expressions for sax(py) parameters
-  // -------------------------------------------------------
-  // FIXME: could be a list. We ensure there is no list for now.
-  FORTTK_ASSERT(GetChildElementCount(elem) == 2, 
-		FORTTK_UNIMPLEMENTED << "Cannot handle saxpy list");
-  
-  DOMElement* AX = GetChildElement(elem, XAIFStrings.elem_AX_x());
-  DOMElement* A = GetChildElement(AX, XAIFStrings.elem_A_x());
-  DOMElement* X = GetChildElement(AX, XAIFStrings.elem_X_x());
-  DOMElement* Y = GetChildElement(elem, XAIFStrings.elem_Y_x());
-  
-  // A
-  WN* a_wn = TranslateExpression(GetFirstChildElement(A), ctxt);
-  
-  // X
-  bool deriv = GetDerivAttr(X);
-  uint32_t flg = (deriv) ? XlationContext::ACTIVE_D : XlationContext::ACTIVE_V;
-  ctxt.CreateContext(flg);
-  WN* x_wn = TranslateVarRef(GetFirstChildElement(X), ctxt);
-  ctxt.DeleteContext();
-  
+xlate_Saxpy(const DOMElement* elem, XlationContext& ctxt, bool saxpy) {
+  // count the children
+  int elemCount=GetChildElementCount(elem);
+  // create a WHIRL call 
+  const char* fnm = (saxpy) ? "saxpy" : "sax";
+  MTYPE rtype = MTYPE_V;
+  // one child element for 'y'; all other child elements are pairs of 'a' and 'x'
+  WN* callWN = CreateCallToIntrin(rtype, fnm, 2*(elemCount-1)+1);
+  int parameterPosition=0;
+  // get the a/x pairs
+  DOMElement* aChildElem(GetFirstChildElement(elem));
+  while (aChildElem) { 
+    if (XAIF_ElemFilter(XAIFStrings.elem_AX_x()).acceptNode(aChildElem) == DOMNodeFilter::FILTER_ACCEPT) { 
+      DOMElement* theA = GetChildElement(aChildElem, XAIFStrings.elem_A_x());
+      DOMElement* theX = GetChildElement(aChildElem, XAIFStrings.elem_X_x());
+      // A
+      WN* a_wn = TranslateExpression(GetFirstChildElement(theA), ctxt);
+      // X
+      bool deriv = GetDerivAttr(theX);
+      uint32_t flg = (deriv) ? XlationContext::ACTIVE_D : XlationContext::ACTIVE_V;
+      ctxt.CreateContext(flg);
+      WN* x_wn = TranslateVarRef(GetFirstChildElement(theX), ctxt);
+      ctxt.DeleteContext();
+      // add the parameters
+      WN_actual(callWN, parameterPosition++) = CreateParm(a_wn, WN_PARM_BY_VALUE);
+      WN_actual(callWN, parameterPosition++) = CreateParm(x_wn, WN_PARM_BY_VALUE);
+    }
+    aChildElem=GetNextSiblingElement(aChildElem);
+  }
   // Y
-  deriv = GetDerivAttr(Y);
-  flg = (deriv) ? XlationContext::ACTIVE_D : XlationContext::ACTIVE_V;
+  DOMElement* Y = GetChildElement(elem, XAIFStrings.elem_Y_x());
+  bool deriv = GetDerivAttr(Y);
+  uint32_t flg = (deriv) ? XlationContext::ACTIVE_D : XlationContext::ACTIVE_V;
   ctxt.CreateContext(flg);
   WN* y_wn = TranslateVarRef(GetFirstChildElement(Y), ctxt);
   ctxt.DeleteContext();
-  
-  // -------------------------------------------------------
-  // 2. Create a WHIRL call with the above expressions as paramaters
-  // -------------------------------------------------------
-  const char* fnm = (saxpy) ? "saxpy" : "sax";
-  MTYPE rtype = MTYPE_V;
-  WN* callWN = CreateCallToIntrin(rtype, fnm, 3);
-  
-  WN_actual(callWN, 0) = CreateParm(a_wn, WN_PARM_BY_VALUE);
-  WN_actual(callWN, 1) = CreateParm(x_wn, WN_PARM_BY_VALUE);
-  WN_actual(callWN, 2) = CreateParm(y_wn, WN_PARM_BY_REFERENCE);
-  
+  WN_actual(callWN, parameterPosition) = CreateParm(y_wn, WN_PARM_BY_REFERENCE);
   return callWN;
 }
 
