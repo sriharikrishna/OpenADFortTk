@@ -1,5 +1,5 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.22 2005/06/10 15:59:06 eraxxon Exp $
+
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.23 2005/07/19 21:03:41 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -119,7 +119,6 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "xaif:AssignmentRHS",
   
   "xaif:Argument",
-  "xaif:ArgumentSubstitute",
   
   "subroutine_name",
   

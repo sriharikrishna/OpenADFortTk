@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.23 2005/01/19 04:08:14 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.24 2005/07/19 21:03:41 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -119,6 +119,10 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
                         { XAIFIntrin, "cosh_scal", "0_COSH", 1 } },
   { { WNCall, OPR_CALL, "DCOSH", 1 },
                         { XAIFIntrin, "cosh_scal", "1_DCOSH", 1 } },
+  { { WNCall, OPR_CALL, "TANH", 1 },
+                        { XAIFIntrin, "tanh_scal", "0_TANH", 1 } },
+  { { WNCall, OPR_CALL, "DTANH", 1 },
+                        { XAIFIntrin, "tanh_scal", "1_DTANH", 1 } },
   
   // hyperbolic fns
 
@@ -170,6 +174,8 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
                         { XAIFIntrin, "bogus_floor_scal", NULL, 1 } },
 
   { { WNCall, OPR_CALL, "REAL", 1 },
+                        { XAIFIntrin, "real_int_scal", NULL, 1 } },
+  { { WNCall, OPR_CALL, "FLOAT", 1 },
                         { XAIFIntrin, "real_int_scal", NULL, 1 } },
   { { WNCall, OPR_CALL, "DBLE", 1 },
                         { XAIFIntrin, "bogus_dble_scal", NULL, 1 } },

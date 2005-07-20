@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.37 2005/05/16 15:17:56 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.38 2005/07/19 21:03:41 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -92,7 +92,7 @@ static WN*
 xlate_VarRef(OA::OA_ptr<OA::DGraph::DGraphStandard> g, OA::OA_ptr<MyDGNode> n, 
              XlationContext& ctxt);
 
-static WN*
+WN*
 xlate_Constant(const DOMElement* elem, XlationContext& ctxt);
 
 static WN*
@@ -340,7 +340,7 @@ xlate_VarRef(OA::OA_ptr<OA::DGraph::DGraphStandard> g, OA::OA_ptr<MyDGNode> n,
 }
 
 
-static WN*
+WN*
 xlate_Constant(const DOMElement* elem, XlationContext& ctxt)
 {
   FORTTK_ASSERT(elem, FORTTK_UNEXPECTED_INPUT);

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.22 2005/06/10 15:59:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.23 2005/07/19 21:03:41 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -118,7 +118,6 @@ public:
     ELEM_AssignRHS,
 
     ELEM_Argument,
-    ELEM_ArgumentSubst,
 
     ATTR_subname,
 
@@ -335,8 +334,6 @@ public:
 
   const char* elem_Argument() const { return c_strTbl[ELEM_Argument]; }
   XMLCh*      elem_Argument_x() const { return x_strTbl[ELEM_Argument]; }
-  const char* elem_ArgumentSubst() const { return c_strTbl[ELEM_ArgumentSubst]; }
-  XMLCh*      elem_ArgumentSubst_x() const { return x_strTbl[ELEM_ArgumentSubst]; }
 
   const char* attr_subname() const { return c_strTbl[ATTR_subname]; }
   XMLCh*      attr_subname_x() const { return x_strTbl[ATTR_subname]; }

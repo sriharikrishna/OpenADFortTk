@@ -1,5 +1,5 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.23 2005/06/30 14:53:49 utke Exp $
+
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_stmt.cxx,v 1.24 2005/07/19 21:03:41 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -70,6 +70,9 @@ xlate_AssignmentRHS(const DOMElement* elem, XlationContext& ctxt);
 
 static WN* 
 xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt);
+
+extern WN* 
+xlate_Constant(const DOMElement* elem, XlationContext& ctxt);
 
 static WN* 
 xlate_InlinableSubroutineCall(const DOMElement* elem, XlationContext& ctxt);
@@ -251,17 +254,37 @@ xlate_SubroutineCall(const DOMElement* elem, XlationContext& ctxt)
     uint32_t flg = XlationContext::ACTIVE_D;
     
     DOMElement* argExpr = GetFirstChildElement(arg);
-    
-    ctxt.CreateContext(flg);
-    WN* argExprWN = TranslateVarRef(argExpr, ctxt);
-    ctxt.DeleteContext();
-    args_wn[pos - 1] = argExprWN;
 
-    // Determine whether WHIRL needs an implicit argument
-    // (cf. WN2F_call() in wn2f_stmt.cxx)
-    TY_IDX ty = WN_Tree_Type(argExprWN);
-    if (TY_Is_Character_Reference(ty) || TY_Is_Chararray_Reference(ty)) {
-      numiArgs++;
+    // this one can be a VariableReference or a Constant
+    // figure out which it is: 
+    const XMLCh* nameArgExpr = argExpr->getNodeName();
+    if (XMLString::equals(nameArgExpr, XAIFStrings.elem_VarRef_x())) {
+      DOMElement* varRef = GetFirstChildElement(argExpr);
+      ctxt.CreateContext(flg);
+      WN* varRefWN = TranslateVarRef(varRef, ctxt);
+      ctxt.DeleteContext();
+      args_wn[pos - 1] = varRefWN;
+      // Determine whether WHIRL needs an implicit argument
+      // (cf. WN2F_call() in wn2f_stmt.cxx)
+      TY_IDX ty = WN_Tree_Type(varRefWN);
+      if (TY_Is_Character_Reference(ty) || TY_Is_Chararray_Reference(ty)) {
+	numiArgs++;
+      }
+    }
+    else if (XMLString::equals(nameArgExpr, XAIFStrings.elem_Constant_x())) {
+      ctxt.CreateContext(flg);
+      WN* constWN = xlate_Constant(argExpr, ctxt);
+      ctxt.DeleteContext();
+      args_wn[pos - 1] = constWN;
+      // Determine whether WHIRL needs an implicit argument
+      // (cf. WN2F_call() in wn2f_stmt.cxx)
+      TY_IDX ty = WN_Tree_Type(constWN);
+      if (TY_Is_Character_Reference(ty) || TY_Is_Chararray_Reference(ty)) {
+	numiArgs++;
+      }
+    }
+    else {
+      FORTTK_DIE("Unknown XAIF subroutine call argument:\n" << *argExpr);
     }
   }
   
@@ -314,8 +337,8 @@ xlate_InlinableSubroutineCall(const DOMElement* elem, XlationContext& ctxt)
     
     // VariableReferenceType
     const XMLCh* nmX = arg->getNodeName();
-    FORTTK_ASSERT(XMLString::equals(nmX, XAIFStrings.elem_ArgumentSubst_x()), 
-		  "Expected " << XAIFStrings.elem_ArgumentSubst() 
+    FORTTK_ASSERT(XMLString::equals(nmX, XAIFStrings.elem_Argument_x()), 
+		  "Expected " << XAIFStrings.elem_Argument() 
 		  << "; found\n" << *arg);
     
     unsigned int pos = GetPositionAttr(arg); // 1-based
@@ -328,10 +351,25 @@ xlate_InlinableSubroutineCall(const DOMElement* elem, XlationContext& ctxt)
     
     DOMElement* argExpr = GetFirstChildElement(arg);
     
-    ctxt.CreateContext(flg);
-    WN* argExprWN = TranslateVarRef(argExpr, ctxt);
-    ctxt.DeleteContext();
-    args_wn[pos - 1] = argExprWN;
+    // this one can be a VariableReference or a Constant
+    // figure out which it is: 
+    const XMLCh* nameArgExpr = argExpr->getNodeName();
+    if (XMLString::equals(nameArgExpr, XAIFStrings.elem_VarRef_x())) {
+      DOMElement* varRef = GetFirstChildElement(argExpr);
+      ctxt.CreateContext(flg);
+      WN* varRefWN = TranslateVarRef(varRef, ctxt);
+      ctxt.DeleteContext();
+      args_wn[pos - 1] = varRefWN;
+    }
+    else if (XMLString::equals(nameArgExpr, XAIFStrings.elem_Constant_x())) {
+      ctxt.CreateContext(flg);
+      WN* constWN = xlate_Constant(argExpr, ctxt);
+      ctxt.DeleteContext();
+      args_wn[pos - 1] = constWN;
+    }
+    else {
+      FORTTK_DIE("Unknown XAIF subroutine call argument:\n" << *argExpr);
+    }
   }
     
   // -------------------------------------------------------

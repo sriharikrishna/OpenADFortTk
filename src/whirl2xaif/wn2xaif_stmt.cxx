@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.40 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.41 2005/07/19 21:03:41 utke Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -612,7 +612,9 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	// SubroutineCall, FunctionCall
 	xos << BegElem("xaif:Argument");
 	if (xlate_as == 0) { xos << Attr("position", position); }
-	ctxt.CreateContext(XlationContext::VARREF, wn);// implicit for Argument
+	// JU-begin
+	// ctxt.CreateContext(XlationContext::VARREF, wn);// implicit for Argument
+	// JU-end
       }
 
 
@@ -713,7 +715,9 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       
       if (xlate_as == 0 || xlate_as == 1) { 
 	// SubroutineCall, FunctionCall
-	ctxt.DeleteContext(); // end VARREF context
+	// JU-begin
+	// ctxt.DeleteContext(); // end VARREF context
+	// JU-end
 	xos << EndElem; // End Argument
       } else {
 	// Intrinsic: create an edge
