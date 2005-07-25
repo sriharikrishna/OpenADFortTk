@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.11 2005/06/10 15:59:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.12 2005/07/25 15:35:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -484,6 +484,13 @@ Stab_Is_Equivalence_Block(const ST *st)
 	  ST_sclass(st) != SCLASS_COMMON                &&
 	  ! TY_flist(Ty_Table[ST_type(st)]).Is_Null ()  &&
 	  FLD_equivalence(TY_fld(Ty_Table[ST_type(st)])));
+}
+
+
+inline BOOL 
+Stab_Is_Based_At_Common_Block(const ST *st)
+{
+  return (Stab_Is_Valid_Base(st) && Stab_Is_Common_Block(ST_base(st)));
 }
 
 inline BOOL 
