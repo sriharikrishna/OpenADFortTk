@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.9 2005/06/27 18:10:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.10 2005/07/25 15:35:31 eraxxon Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Nathan Tallent, Michelle Strout
-  \version $Id: Open64IRInterface.cpp,v 1.9 2005/06/27 18:10:45 eraxxon Exp $
+  \version $Id: Open64IRInterface.cpp,v 1.10 2005/07/25 15:35:31 eraxxon Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -1824,8 +1824,7 @@ Open64IRInterface::getLocation(OA::ProcHandle p, OA::SymHandle s)
       // name within the same common block indicates the other symbol handles
       // for that same var name and common block that fully overlap
       ST* st = (ST*)s.hval();
-      if (Stab_Is_Based_At_Common_Or_Equivalence(st) 
-          || Stab_Is_In_Module(st) ) 
+      if (Stab_Is_Based_At_Common_Block(st) || Stab_Is_In_Module(st)) 
       {
           fully_qualified_name fqn = create_fqn(s);
           if (sGlobalVarMap[fqn].empty()) {
@@ -3191,9 +3190,9 @@ fully_qualified_name Open64IRInterface::create_fqn(OA::SymHandle sym)
     static const char* aDummyModuleName("Dummy_module");
 
     ST* st = (ST*)sym.hval();
-    assert(Stab_Is_Based_At_Common_Or_Equivalence(st) || Stab_Is_In_Module(st) );
+    assert(Stab_Is_Based_At_Common_Block(st) || Stab_Is_In_Module(st));
     
-    if (Stab_Is_Based_At_Common_Or_Equivalence(st) ) {
+    if (Stab_Is_Based_At_Common_Block(st)) {
         ST* tempst = st;
         while (!Stab_Is_Common_Block(tempst)) {
             tempst = ST_base(tempst);
@@ -3206,7 +3205,8 @@ fully_qualified_name Open64IRInterface::create_fqn(OA::SymHandle sym)
         //                                              ST_name(base_st));
 
     // this is true if this symbol is part of module
-    } else if (Stab_Is_In_Module(st) ) {
+    } 
+    else if (Stab_Is_In_Module(st) ) {
         ST* tempst = st;
 // FIXME: can't find the module name
 //         while (!Stab_Is_Module(tempst)) {
@@ -3290,8 +3290,7 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
 
             // store symbols based on fully qualified name as well
             // if they are module or common block variables
-            if (Stab_Is_Based_At_Common_Or_Equivalence(st) 
-                || Stab_Is_In_Module(st) ) 
+            if (Stab_Is_Based_At_Common_Block(st) || Stab_Is_In_Module(st)) 
             {
                 sGlobalVarMap[create_fqn(sym)].insert(sym);
                 if (debug) {
