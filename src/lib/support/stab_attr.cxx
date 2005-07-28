@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.cxx,v 1.11 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.cxx,v 1.12 2005/07/28 15:46:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -191,6 +191,17 @@ Stab_Assignment_Compatible_Types(TY_IDX t1, TY_IDX t2, BOOL check_quals,
     * a value of type t2 will be assigned to a location of type t1. */
    return Stab_Compare_Types(t1, t2, check_quals, FALSE, 
 			     check_scalars, ptrs_as_scalars, TRUE);
+}
+
+bool
+WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2)
+{
+  bool simple = Stab_Identical_Types(ty1, ty2, FALSE, /*check_quals*/
+				     FALSE, /*check_scalars*/ 
+				     TRUE); /*ptrs_as_scalars*/
+  bool special = (TY_Is_Array(ty1) && TY_is_character(ty1) && 
+		  TY_Is_Array(ty2) && TY_is_character(ty2));
+  return (simple || special);
 }
 
 

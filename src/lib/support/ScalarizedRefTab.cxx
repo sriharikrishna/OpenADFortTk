@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.18 2005/06/15 15:11:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.19 2005/07/28 15:46:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -397,19 +397,6 @@ IsRefScalar(TY_IDX baseobj_ty, TY_IDX refobj_ty)
   else {
     return false;
   }
-}
-
-
-// FIXME: 
-bool
-WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2)
-{
-  bool simple = Stab_Identical_Types(ty1, ty2, FALSE, /*check_quals*/
-				     FALSE, /*check_scalars*/ 
-				     TRUE); /*ptrs_as_scalars*/
-  bool special = (TY_Is_Array(ty1) && TY_is_character(ty1) && 
-		  TY_Is_Array(ty2) && TY_is_character(ty2));
-  return (simple || special);
 }
 
 

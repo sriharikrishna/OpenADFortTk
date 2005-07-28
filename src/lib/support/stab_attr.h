@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.12 2005/07/25 15:35:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.13 2005/07/28 15:46:51 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -268,6 +268,14 @@ Stab_Assignment_Compatible_Types(TY_IDX t1, TY_IDX t2,
 				 BOOL check_quals, 
 				 BOOL check_scalars,
 				 BOOL ptrs_as_scalars);
+
+// WN2F_Can_Assign_Types: This determines whether or not a value of
+// type t1 can be used anywhere we expect a value of type t2.  When
+// this condition is TRUE, yet t1 is different from t2, we expect the
+// implicit Fortran type coersion to transform an object of one type
+// to the other. [FIXME-orig. text]
+bool
+WN2F_Can_Assign_Types(TY_IDX ty1, TY_IDX ty2);
 
 extern BOOL 
 Stab_Is_Element_Type_Of_Array(TY_IDX atype, TY_IDX etype);
