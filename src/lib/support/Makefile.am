@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Makefile.am,v 1.1 2005/06/10 17:44:32 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Makefile.am,v 1.2 2005/07/28 16:47:45 eraxxon Exp $
 
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -90,13 +90,13 @@ MYSOURCES = \
 # FileUtil.h FileUtil.cxx
 
 MYCFLAGS   = $(OPENADFORTTK_IFLAGS) \
-	$(OPEN64_IFLAGS) @OPEN64_CFLAGS@ \
-	$(OA_IFLAGS) $(XERCES_IFLAGS) $(OPT_SEXP_IFLAGS) \
+	@OPEN64_IFLAGS@ @OPEN64_CFLAGS@ \
+	@OA_IFLAGS@ @XERCES_IFLAGS@ @OPT_SEXP_IFLAGS@ \
 	@HOST_CFLAGS@
 
 MYCXXFLAGS = $(OPENADFORTTK_IFLAGS) \
-	$(OPEN64_IFLAGS) @OPEN64_CXXFLAGS@ \
-	$(OA_IFLAGS) $(XERCES_IFLAGS) $(OPT_SEXP_IFLAGS) \
+	@OPEN64_IFLAGS@ @OPEN64_CXXFLAGS@ \
+	@OA_IFLAGS@ @XERCES_IFLAGS@ @OPT_SEXP_IFLAGS@ \
 	@HOST_CXXFLAGS@
 
 if IS_HOST_AR
