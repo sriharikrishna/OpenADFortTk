@@ -53,6 +53,9 @@ sub clearprop {
 sub same_level {
     return gen($_[1])->set_indent($_[0]->indent());
 }
+sub same_leading {
+    return gen($_[1])->set_leading($_[0]->leading())
+}
 sub plus_indent {
     $_[0]->{_scan}->plus_indent($_[1]);
     return $_[0]->adjust2scan();
@@ -239,14 +242,16 @@ sub smap {
 sub mterm {
     return $_[0]->{_scan}->mterm($_[1]);
 }
-
+sub gmterm {
+    return $_[0]->{_scan}->gmterm($_[1]);
+}
 sub rterm {
-    $_[0]->{_scan}->rterm($_[1],$_[2]);
+    $_[0]->{_scan} = $_[0]->{_scan}->rterm($_[1],$_[2]);
     adjust2scan($_[0]);
     return $_[0];
 }
 sub grterm {
-    $_[0]->{_scan}->grterm($_[1],$_[2]);
+    $_[0]->{_scan} = $_[0]->{_scan}->grterm($_[1],$_[2]);
     adjust2scan($_[0]);
     return $_[0];
 }

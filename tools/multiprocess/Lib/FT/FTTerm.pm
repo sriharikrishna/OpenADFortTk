@@ -64,7 +64,7 @@ sub ptl {
 # from token list, extract term whose head matches
 # a given pattern
 #
-sub mterm {
+sub _mterm_pat {
     my($pat) = shift;
     my(@remain) = @_;
     my(@before,@term,@after) = ();
@@ -89,6 +89,42 @@ sub mterm {
 	last unless ($cnt);
     }
     return (\@before,\@term,\@after);
+}
+
+#
+# from token list, extract term whose head
+# satisfies a given predicate
+#
+sub _mterm_p {
+    my($pred) = shift;
+    my(@remain) = @_;
+    my(@before,@term,@after) = ();
+    
+    while (@remain){
+	if (&$pred(\@remain)){
+	    push @term,shift @remain;
+	    @after = @remain;
+	    last;
+	}
+	push @before,shift @remain;
+    }
+    return (\@before,\@term,\@after) unless ($after[0] eq '(');
+    my($cnt) = 0;
+    while (@after) {
+	my $tok = shift @after;
+	push @term, $tok;
+	$cnt++ if ($tok eq '(');
+	$cnt-- if ($tok eq ')');
+	last unless ($cnt);
+    }
+    return (\@before,\@term,\@after);
+}
+
+sub mterm {
+
+    return _mterm_p(@_) if (ref($_[0]) eq 'CODE');
+
+    return _mterm_pat(@_);
 }
 
 1;

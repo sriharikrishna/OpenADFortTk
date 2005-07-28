@@ -129,6 +129,9 @@ sub set_tl {
     $self->{'tl'} = [ @_ ];
     return $self;
 }
+sub is_nil {
+    return (! ($_[0]->tl()));
+}
 sub match {
     my($self,$pat) = @_;
 
@@ -197,7 +200,28 @@ sub mterm {
     $b->set_tl(@$bp);
     return ($b,_nln(@$tp),_nln(@$ap));
 }
+sub gmterm {
+    my($self,$pat) = @_;
 
+    my($bp,$tp,$ap) = $self->mterm($pat);
+    return () if $tp->is_nil();
+    push my(@t),$tp,$ap->gmterm($pat);
+    return (@t);
+}
+sub gmterm_r {
+    my($self,$pat) = @_;
+
+    my($bp,$tp,$ap) = $self->mterm($pat);
+
+    return () if $tp->is_nil();
+
+    my @rec = map {$_->gmterm_r($pat)} $tp->args();
+    return (
+       $tp,
+       @rec,
+       $ap->gmterm_r($pat),
+    );
+}
 sub rterm {
     my($self,$pat,$fn) = @_;
     my($b,$t,$a) = $self->mterm($pat);
@@ -220,10 +244,24 @@ sub args {
     
     return map {_nln(@$_)} (tlcsv (@tl[1 .. $#tl-1]));
 }
+sub term_split {
+    my($term) = @_;
+
+    my($head) = ( $term->tl() )[0];
+    return ($head,$term->args());
+}
 sub args_p {
     my(@tl) = $_[0]->tl();
     shift @tl; pop @tl;
     return (FTscan->empty()->set_tl(@tl)->cbreak());
+}
+sub args_as_scan {
+    my(@tl) = $_[0]->tl();
+    shift @tl;  # grab head
+    shift @tl;  # grab '('
+    pop @tl;    # remove ')'
+
+    return (FTscan->empty()->set_tl(@tl));
 }
 sub term {
     my($self) = @_;
