@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.h,v 1.3 2005/06/14 16:55:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.h,v 1.4 2005/08/01 19:42:17 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -17,8 +17,8 @@
 //
 //***************************************************************************
 
-#ifndef whirl2xaif_h
-#define whirl2xaif_h
+#ifndef whirl2sexp_h
+#define whirl2sexp_h
 
 //************************** System Include Files ***************************
 
