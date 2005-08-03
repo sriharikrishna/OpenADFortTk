@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.19 2005/07/28 15:46:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.cxx,v 1.20 2005/08/02 22:17:26 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -415,7 +415,7 @@ ForAllScalarizableRefs(const WN* wn, ForAllScalarizableRefsOp& op)
     
     // Base case
     int ret = op(wn); // FIXME: what to do on error?
-    bool foo = IsRefScalarizable(wn); // FIXME:eraxxon DEBUGGING
+    //bool foo = IsRefScalarizable(wn); // for debugging
 
     // Special recursive case: Since WHIRL stores are statements (not
     // expressions) we need to check the RHS (kid0) of the implied
