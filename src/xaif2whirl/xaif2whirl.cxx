@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.65 2005/06/14 16:55:35 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.66 2005/08/02 22:18:29 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -1763,9 +1763,12 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
       st = CreateST(elem, level, symNm.c_str());
     } 
     else {
-      // Find the symbol and change type if necessary
+      // Find the symbol and change type if necessary.  N.B. we skip
+      // variables of structured type because they will be handled
+      // through the scalarized references.
       st = &(Scope_tab[level].st_tab->Entry(symId));
-      if (active && ST_class(st) == CLASS_VAR) {
+      if (active && ST_class(st) == CLASS_VAR
+	  && (TY_kind(ST_type(st)) != KIND_STRUCT)) {
 	ConvertToActiveType(st);
       }
     }
@@ -2431,6 +2434,8 @@ ConvertToActiveType(ST* st)
     Set_ST_type(st, new_ty);
   } 
   else {
+    // Note: We should never see a KIND_STRUCT; this is handled
+    // through scalarization.
     FORTTK_DIE("Unexpected type kind: " << TY_kind(ty));
   }
   
