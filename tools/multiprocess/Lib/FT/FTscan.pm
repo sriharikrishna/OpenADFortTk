@@ -70,6 +70,9 @@ sub str {
 	if (/^\w+$/ && ($prv =~ /^\w+$/)){
 	    push @jl,' ';
 	}
+	if (/^\w+$/ && ($prv =~ /\A double \s* precision \z/xms)){
+	    push @jl,' ';
+	}
 	if (/^[\'\"]/ && ($prv =~ /^\w+$/)){
 	    push @jl,' ';
 	}

@@ -8,16 +8,46 @@ use FortranSourceLine;
 
 @ISA = qw(Exporter);
 @EXPORT = qw( $fn2sub 
+	      $add_fun_repl_decls
 	      add_fun_repl_decls
 	    );
 
-$fn2sub = FTproc->new(\&__init,\&rw_fn_w_tmp);
+$fn2sub             = FTproc->new(\&__init ,\&rw_fn_w_tmp);
+$add_fun_repl_decls = FTproc->new(\&__init2,\&add_fun_repl_decls);
+
+#my(@subtree_pat) = (
+#    \qw(select case),
+#    \(call \qr/\A \w+ \z/xms),
+#    \qw(if),
+#    \qw(do while),
+#    \qw(open),
+#    \qw(close),
+#    \qw(read),
+#    \qw(write),
+#    \qw(print),
+#);
+
+$__VERBOSE = 0;
+
+sub __set_verbose {
+    $__VERBOSE = $_[0];
+}
 
 sub __init {
     my($st) = @_;
 
+    print STDERR 'canonicalizing routine ',$st->unit_name(),"\n"
+	if ($__VERBOSE);
+
     $st->{_is_fun}     = _gen_pred($st);
     $st->{_repl_fun}   = _gen_repl($st);
+}
+
+sub __init2 {
+    my($st) = @_;
+
+    print STDERR 'declaring vars for ',$st->unit_name(),"\n"
+	if ($__VERBOSE);
 }
 
 sub _gen_pred {
@@ -72,6 +102,10 @@ sub _is_call {
     return $l->lmatch('call');
 }
 
+sub _is_if {
+    return $_[0]->lmatch('if');
+}
+
 sub _repl_w_tmp_in_call {
     my($l,$st,$is_fun,$repl_fun) = @_;
 
@@ -83,6 +117,22 @@ sub _repl_w_tmp_in_call {
     return $new_line;
 }
 
+sub _repl_w_tmp_in_if {
+    my($l,$st,$is_fun,$repl_fun) = @_;
+
+    my($b,$t,$a) = $l->mterm(qr/\A if \z/ixms);
+    my(@tl) = $t->tl();
+    shift @tl;
+    $t->set_tl(@tl);
+    $t = $t->grterm($is_fun,$repl_fun);
+    my($new_line) = $l->same_leading('if')->concatd($t,$a);
+    return $new_line;
+}
+
+sub _should_repl_in_subtree {
+    my($l) = @_;
+}
+
 sub _repl_fn_w_tmp {
     my($l,$st,$is_fun,$repl_fun) = @_;
     my($repl_line);
@@ -90,6 +140,9 @@ sub _repl_fn_w_tmp {
     $st->{_new_calls} = [];
     if (_is_call($l)){
 	$repl_line = _repl_w_tmp_in_call($l,$st,$is_fun,$repl_fun);
+    }
+    elsif (_is_if($l)){
+	$repl_line = _repl_w_tmp_in_if($l,$st,$is_fun,$repl_fun);
     }
     else {
 	$repl_line = $l->grterm($is_fun,$repl_fun);
@@ -150,7 +203,7 @@ sub _in_exec_stmts {
 
 sub _has_paren {
     my($tl_ref) = @_;
-    return ($tl_ref->[0] =~ qr/\w+/) && ( $tl_ref->[1] eq '(' );
+    return ($tl_ref->[0] =~ qr/\A \w+ \z/xms) && ( $tl_ref->[1] eq '(' );
 }
 
 sub fn_in_l {
