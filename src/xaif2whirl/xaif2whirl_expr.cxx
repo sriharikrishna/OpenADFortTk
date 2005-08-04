@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.38 2005/07/19 21:03:41 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.39 2005/08/04 11:16:30 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -481,7 +481,8 @@ xlate_ExprOpUsingIntrinsicTable(IntrinsicXlationTable::XAIFOpr xopr,
   
   // 1. Gather the operands, sorted by the "position" attribute
   FORTTK_ASSERT(n->num_incoming() == info->numop, 
-		"Internal error: inconsistent number of intrinsic arguments");
+		"Internal error: inconsistent number of intrinsic arguments '"
+		<< xoprNm  << "-" << xIntrinKey << "'");
   OA::OA_ptr<MyDGEdge> tmp; tmp = NULL;
   vector<OA::OA_ptr<MyDGEdge> > opnd_edge(info->numop, tmp);
   OA::OA_ptr<Interface::IncomingEdgesIterator> itPtr 
