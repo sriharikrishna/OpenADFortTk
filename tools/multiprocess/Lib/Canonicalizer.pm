@@ -5,6 +5,7 @@ use Ffile;
 use FTpat;
 use FTproc;
 use FortranSourceLine;
+use Intrinsic;
 
 @ISA = qw(Exporter);
 @EXPORT = qw( $fn2sub 
@@ -55,7 +56,8 @@ sub _gen_pred {
 
     return sub {
 	my($a_ref) = @_;
-	return _has_paren($a_ref) && !$st->lookup_dims($a_ref->[0]);
+	return _has_paren($a_ref) && !$st->lookup_dims($a_ref->[0])
+	    && ! _is_intrinsic($a_ref);
     };
 }
 
@@ -206,12 +208,22 @@ sub _has_paren {
     return ($tl_ref->[0] =~ qr/\A \w+ \z/xms) && ( $tl_ref->[1] eq '(' );
 }
 
+sub _is_intrinsic {
+    my($tl_ref) = @_;
+
+    return $Intrinsic::table{ $tl_ref->[0] };
+}
+
 sub fn_in_l {
     my($l,$is_fun) = @_;
 
     if (my($call_args) = $l->match(
 	      qr/^ call $TB \w+ $TB \( $TB (.*) $TB \)/ix)){
 	return fn_in_l($call_args,$is_fun);
+    }
+
+    if (_is_if($l)) {
+	return fn_in_l($l->scan()->args_as_scan(),$is_fun);
     }
     
     my($b,$t,$a) = $l->mterm($is_fun);
