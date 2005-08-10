@@ -6,6 +6,7 @@ package Intrinsic;
 	     cos
 	     tan
 	     atan2
+	     write
          );
 
 %table = map { $_=> 1 } @table;
