@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.8 2005/06/27 18:10:45 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.9 2005/08/10 18:05:58 utke Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Michelle Strout, Nathan Tallent
-  \version $Id: Open64IRInterface.hpp,v 1.8 2005/06/27 18:10:45 eraxxon Exp $
+  \version $Id: Open64IRInterface.hpp,v 1.9 2005/08/10 18:05:58 utke Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -650,7 +650,11 @@ public:
 
   //! Given a subprogram return an IRSymIterator for all
   //! symbols that are visible in the subprogram
-  OA::OA_ptr<OA::IRSymIterator> getVisibleSymIterator(OA::ProcHandle h);
+  //OA::OA_ptr<OA::IRSymIterator> getVisibleSymIterator(OA::ProcHandle h);
+
+  //! Given a subprogram return an IRSymIterator for all
+  //! symbols that are referenced in the subprogram
+  OA::OA_ptr<OA::IRSymIterator> getRefSymIterator(OA::ProcHandle h);
 
   // getStmtIterator(ProcHandle h)
 

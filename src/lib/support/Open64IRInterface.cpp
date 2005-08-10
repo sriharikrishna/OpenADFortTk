@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.10 2005/07/25 15:35:31 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.11 2005/08/10 18:05:58 utke Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Nathan Tallent, Michelle Strout
-  \version $Id: Open64IRInterface.cpp,v 1.10 2005/07/25 15:35:31 eraxxon Exp $
+  \version $Id: Open64IRInterface.cpp,v 1.11 2005/08/10 18:05:58 utke Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -391,11 +391,39 @@ Open64IRSymIterator::create(PU_Info* pu)
   
   PU_SetGlobalState(pu);
   
-  // Iterate through the lexical symbol tables
-  for (SYMTAB_IDX lvl = CURRENT_SYMTAB; lvl >= GLOBAL_SYMTAB; --lvl) {
+  // The global symbol table contains symbols that may not have been
+  // lexically visible in the original source code.  For example,
+  // given two procedures, one uses a common block and the other
+  // doesn't, but the common block symbols are placed in the global
+  // symbol table even though the second procedure never lexically saw
+  // them.  (The same is true for modules.)  Thus, we are careful to
+  // only insert globabl symbosl *referenced* in the AST.
+
+  // 1. Iterate through the non-global lexical symbol tables.  These
+  // tables should truly correspond to lexically visible symbols.
+  for (SYMTAB_IDX lvl = CURRENT_SYMTAB; lvl > GLOBAL_SYMTAB; --lvl) {
     // Scope_tab[lvl].st_tab;
     For_all(St_Table, lvl, insert_ST(symlist));
   }
+  
+  // 2. Enter global symbols referenced in the AST
+  WN *wn_pu = PU_Info_tree_ptr(pu);
+
+  WN_TREE_CONTAINER<PRE_ORDER> wtree(wn_pu);
+  WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
+  for (it = wtree.begin(); it != wtree.end(); ++it) {
+    WN* curWN = it.Wn();
+    
+    // If the node has a global symbol, push it in the list
+    OPERATOR opr = WN_operator(curWN);
+    if (OPERATOR_has_sym(opr)) {
+      ST* st = WN_st(curWN);
+      if (ST_level(st) == GLOBAL_SYMTAB) {
+	symlist.push_back(st);
+      }
+    }
+  }
+
 }
 
 
@@ -1399,7 +1427,7 @@ int Open64IRInterface::getSizeInBytes(OA::SymHandle h)
 //---------------------------------------------------------------------------
 
 OA::OA_ptr<OA::IRSymIterator>
-Open64IRInterface::getVisibleSymIterator(OA::ProcHandle h)
+Open64IRInterface::getRefSymIterator(OA::ProcHandle h)
 {
   PU_Info* pu = (PU_Info*)h.hval();
   OA::OA_ptr<OA::IRSymIterator> retval;
