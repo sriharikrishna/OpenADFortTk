@@ -5,6 +5,7 @@ use Ffile;
 use FTpat;
 use FTproc;
 use FortranSourceLine;
+use FTtypes;
 use Intrinsic;
 
 @ISA = qw(Exporter);
@@ -57,6 +58,7 @@ sub _gen_pred {
     return sub {
 	my($a_ref) = @_;
 	return _has_paren($a_ref) && !$st->lookup_dims($a_ref->[0])
+            && ! (is_char_type($st->lookup_type($a_ref->[0])))
 	    && ! _is_intrinsic($a_ref);
     };
 }
@@ -108,6 +110,10 @@ sub _is_if {
     return $_[0]->lmatch('if');
 }
 
+sub _is_elsif {
+    return $_[0]->lmatch('elseif');
+}
+
 sub _repl_w_tmp_in_call {
     my($l,$st,$is_fun,$repl_fun) = @_;
 
@@ -131,6 +137,26 @@ sub _repl_w_tmp_in_if {
     return $new_line;
 }
 
+sub _repl_w_tmp_in_elsif {
+    my($l,$st,$is_fun,$repl_fun) = @_;
+
+    my($b,$t,$a) = $l->mterm(qr/\A elseif \z/ixms);
+    my(@tl) = $t->tl();
+    shift @tl;
+    $t->set_tl(@tl);
+    ($b,$t,$a) = $t->mterm($is_fun);
+
+    return($l) if ($t->is_nil());
+
+    warn "function call detected in elsif",
+    "-- see source code for comment mark\n";
+
+    return (<<'END_WARN',$l);
+c !!! WARNING ---- elsif has a function call !!!
+END_WARN
+
+}
+
 sub _should_repl_in_subtree {
     my($l) = @_;
 }
@@ -145,6 +171,14 @@ sub _repl_fn_w_tmp {
     }
     elsif (_is_if($l)){
 	$repl_line = _repl_w_tmp_in_if($l,$st,$is_fun,$repl_fun);
+    }
+    elsif (_is_elsif($l)) {
+#
+#	$repl_line = _repl_w_tmp_in_elsif($l,$st,$is_fun,$repl_fun);
+#
+#     no repl line yet -- just return line + optional comment
+#
+	return _repl_w_tmp_in_elsif($l,$st,$is_fun,$repl_fun);
     }
     else {
 	$repl_line = $l->grterm($is_fun,$repl_fun);
