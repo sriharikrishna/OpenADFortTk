@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.77 2005/06/15 15:11:12 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.78 2005/08/15 19:14:17 utke Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1086,6 +1086,106 @@ DumpCFGraphEdge(xml::ostream& xos, UINT eid,
 // Helpers
 //***************************************************************************
 
+
+void 
+xlate_SideEffectNamedLocation(OA::OA_ptr<OA::NamedLoc> theNamedLoc,
+			      xml::ostream& xos, 
+			      WN *wn, 
+			      XlationContext& ctxt,
+			      OA::OA_ptr<OA::SymHandleIterator> formalArgSymHandleI) 
+{ 
+  // OA may include constants in the Location lists.  We splice them
+  // out since they are not in the XAIF symbol table.
+  ST* st = (ST*)theNamedLoc->getSymHandle().hval();
+  ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
+  SymTabId scopeid = ctxt.FindSymTabId(sttab);
+
+  if (ST_class(st) == CLASS_CONST) {
+    return;
+  }
+
+  if (theNamedLoc->isLocal()) { 
+    // we don't want local variables except 
+    // if it is a formal parameter
+    bool foundAsFormalArgument=false;
+    formalArgSymHandleI->reset();
+    while (formalArgSymHandleI->isValid()) { 
+//       // JU: debugging prepare begin
+//       const char* nm=ST_name(st);
+//       ST* st1=(ST*)formalArgSymHandleI->current().hval();
+//       const char* nm1=ST_name(st1);
+//       // JU: debugging prepare end
+      if (formalArgSymHandleI->current()==theNamedLoc->getSymHandle()) { 
+	// is a formal paramter
+	foundAsFormalArgument=true;
+// 	// JU: debugging begin
+// 	std::cout << "xlate_SideEffectNamedLocation: matched " << nm << " with " << nm1 << std::endl;  
+// 	// JU: debugging end
+	break;
+      }
+//       // JU: debugging begin
+//       else { 
+// 	std::cout << "xlate_SideEffectNamedLocation: did not match " << nm << " with " << nm1 << std::endl;  
+//       }
+//       // JU: debugging end
+      ++(*formalArgSymHandleI);
+    }
+    if (!foundAsFormalArgument) { 
+      return;
+    }
+  }
+
+  // the wrapper for the VariableReference: 
+  xos << BegElem("xaif:SideEffectReference")
+      << Attr("vertex_id", "1");
+  
+  // the contents, i.e. the SymbolReference
+  xos << BegElem("xaif:SymbolReference")
+      << Attr("vertex_id", "1")
+      << Attr("scope_id", scopeid) 
+      << AttrSymId(st)
+      << EndElem;
+  xos << EndElem;
+}
+
+void 
+xlate_SideEffectEntry(OA::OA_ptr<OA::Location> theLocation,
+		      xml::ostream& xos, 
+		      WN *wn, 
+		      XlationContext& ctxt,
+		      OA::OA_ptr<OA::SymHandleIterator> formalArgSymHandleI) { 
+  if (theLocation->isaNamed()) { 
+    // get the named location
+    OA::OA_ptr<OA::NamedLoc> namedLoc=
+      theLocation.convert<OA::NamedLoc>();
+    xlate_SideEffectNamedLocation(namedLoc,
+				  xos, 
+				  wn, 
+				  ctxt,
+				  formalArgSymHandleI);
+  }
+  else if (theLocation->isaSubSet()) { 
+    OA::OA_ptr<OA::LocSubSet> subSetLoc=
+      theLocation.convert<OA::LocSubSet>();
+    if (subSetLoc->getLoc()->isaNamed()) { 
+      // get the named location
+      OA::OA_ptr<OA::NamedLoc> namedLoc=
+	subSetLoc->getLoc().convert<OA::NamedLoc>();
+      xlate_SideEffectNamedLocation(namedLoc,
+				    xos, 
+				    wn, 
+				    ctxt,
+				    formalArgSymHandleI);
+    } 
+    else { 
+      FORTTK_DIE(FORTTK_UNIMPLEMENTED << "side effect list contains a subsetloc that has no named location");
+    }
+  }
+  else { 
+    FORTTK_DIE(FORTTK_UNIMPLEMENTED << "side effect list contains something that is not a named location");
+  }
+} 
+
 // xlate_EntryPoint: Translates a function entry or alternate entry
 // point, with parameter declarations.  
 // FIXME: XAIF doesn't support alt-entry.
@@ -1150,8 +1250,78 @@ xlate_EntryPoint(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   }
   
   xos << EndElem /* xaif:ArgumentList */;
-}
 
+  // add the side effect lists here: 
+  // the analysis result: 
+  OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> interSideEffects=
+    OAAnalMap.GetInterSideEffect();
+
+  // an iterator over locations: 
+  OA::OA_ptr<OA::LocIterator> anOALocIterOAPtr;
+  OA::ProcHandle proc((OA::irhandle_t)Current_PU_Info);
+
+  // symbol handle iterator from parameter bindings to distinguish the formal parameters 
+  // from the strictly local variables 
+  OA::OA_ptr<OA::SymHandleIterator> symHandleI=OAAnalMap.GetParamBindings()->getFormalIterator(proc);
+
+//   // begin debugging stuff
+//   ST* st = ST_ptr(PU_Info_proc_sym(Current_PU_Info));
+//   const char* nm = ST_name(st);
+//   if (!symHandleI->isValid())
+//     std::cout << "Note: in xlate_EntryPoint empty symHandleI for " << nm << std::endl;
+//   else 
+//     std::cout << "Note: in xlate_EntryPoint non-empty symHandleI for " << nm << std::endl;
+//   // end debugging stuff
+
+  symHandleI->reset();
+  xos << BegElem("xaif:ModLocal");
+  anOALocIterOAPtr = interSideEffects->getLMODIterator(proc);
+  for ( ; anOALocIterOAPtr->isValid(); ++(*anOALocIterOAPtr) ) {
+    xlate_SideEffectEntry(anOALocIterOAPtr->current(), 
+			  xos, 
+			  wn, 
+			  ctxt, 
+			  symHandleI);
+  }
+  xos << EndElem; // xaif:ModLocal
+
+  symHandleI->reset();
+  xos << BegElem("xaif:Mod");
+  anOALocIterOAPtr = interSideEffects->getMODIterator(proc);
+  for ( ; anOALocIterOAPtr->isValid(); ++(*anOALocIterOAPtr) ) {
+    xlate_SideEffectEntry(anOALocIterOAPtr->current(), 
+			  xos, 
+			  wn, 
+			  ctxt, 
+			  symHandleI);
+  }
+  xos << EndElem; // xaif:ModLocal
+
+  symHandleI->reset();
+  xos << BegElem("xaif:ReadLocal");
+  anOALocIterOAPtr = interSideEffects->getLUSEIterator(proc);
+  for ( ; anOALocIterOAPtr->isValid(); ++(*anOALocIterOAPtr)) {
+    xlate_SideEffectEntry(anOALocIterOAPtr->current(), 
+			  xos, 
+			  wn, 
+			  ctxt, 
+			  symHandleI);
+  }
+  xos << EndElem; // xaif:ModLocal
+
+  symHandleI->reset();
+  xos << BegElem("xaif:Read");
+  anOALocIterOAPtr = interSideEffects->getUSEIterator(proc);
+  for ( ; anOALocIterOAPtr->isValid(); ++(*anOALocIterOAPtr)) {
+    xlate_SideEffectEntry(anOALocIterOAPtr->current(), 
+			  xos, 
+			  wn, 
+			  ctxt, 
+			  symHandleI);
+  }
+  xos << EndElem; // xaif:ModLocal
+
+}
 
 // GetParamSymHandleSet: Return a set of SymHandles representing the
 // parameters of the OPR_FUNC_ENTRY.

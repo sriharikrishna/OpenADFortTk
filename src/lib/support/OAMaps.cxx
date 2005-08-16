@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.cxx,v 1.6 2005/06/14 16:55:34 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.cxx,v 1.7 2005/08/15 19:14:17 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -148,6 +148,31 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
   parambindman = new OA::DataFlow::ManagerParamBindings(irIF);
   OA::OA_ptr<OA::DataFlow::ParamBindings> parambind
       = parambindman->performAnalysis(cgraph);
+
+//   // JU: begin debugging stuff
+//   procIt->reset();
+//   for ( ; procIt->isValid(); ++(*procIt)) { 
+//     OA::OA_ptr<OA::SymHandleIterator> symHandleI=parambind->getFormalIterator(procIt->current());
+//     symHandleI->reset();
+//     ST* st = ST_ptr(PU_Info_proc_sym((PU_Info*)procIt->current().hval()));
+//     const char* nm = ST_name(st);
+//     if (!symHandleI->isValid())
+//       std::cout << "Note: after performAnalysis: empty symHandleI for " << nm << std::endl;
+//     else { 
+//       for ( ; symHandleI->isValid(); ++(*symHandleI)) { 
+// 	ST* st1 = (ST*)(symHandleI->current().hval());
+// 	const char* nm1 = ST_name(st1);
+// 	std::cout << "Note: after performAnalysis: symHandleI for " 
+// 		  << nm 
+// 		  << " contains " 
+// 		  << nm1 
+// 		  <<  std::endl;
+//       }
+//     }
+//   }
+//   // JU: end debugging stuff
+
+  x->SetParamBind(parambindman, parambind);
 
   // Inter Alias 
   OA::OA_ptr<OA::Alias::ManagerInsNoPtrInterAliasMap> interaliasmapman;

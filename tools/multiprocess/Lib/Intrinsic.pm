@@ -19,6 +19,9 @@ package Intrinsic;
 	     read
 	     write
 	     close
+#	     igl
+#	     jgl
+#	     Limiter
          );
 
 %table = map { $_=> 1 } @table;
