@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.11 2005/08/10 18:05:58 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.12 2005/08/15 20:17:25 utke Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Nathan Tallent, Michelle Strout
-  \version $Id: Open64IRInterface.cpp,v 1.11 2005/08/10 18:05:58 utke Exp $
+  \version $Id: Open64IRInterface.cpp,v 1.12 2005/08/15 20:17:25 utke Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -1825,6 +1825,14 @@ Open64IRInterface::getExprTree(OA::ExprHandle h)
   return createExprTree(wn);
 }
 
+//! returns true if given symbol is a parameter 
+bool Open64IRInterface::isParam(OA::SymHandle anOASymbolHandle){ 
+  ST* anOpen64Symbol_p = (ST*)anOASymbolHandle.hval();
+  return ((ST_sclass(anOpen64Symbol_p)==SCLASS_FORMAL) 
+	  || 
+	  (ST_sclass(anOpen64Symbol_p)==SCLASS_FORMAL_REF)); 
+} 
+  
 //---------------------------------------------------------------------------
 // LocationIRShortCircuit
 //---------------------------------------------------------------------------

@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.9 2005/08/10 18:05:58 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.10 2005/08/15 20:17:25 utke Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Michelle Strout, Nathan Tallent
-  \version $Id: Open64IRInterface.hpp,v 1.9 2005/08/10 18:05:58 utke Exp $
+  \version $Id: Open64IRInterface.hpp,v 1.10 2005/08/15 20:17:25 utke Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -730,6 +730,9 @@ public:
 
   //! Given an ExprHandle, return an ExprTree* 
   OA::OA_ptr<OA::ExprTree> getExprTree(OA::ExprHandle h);
+
+  //! returns true if given symbol is a parameter 
+  bool isParam(OA::SymHandle);
   
   //-------------------------------------------------------------------------
   // ICFGIRInterface

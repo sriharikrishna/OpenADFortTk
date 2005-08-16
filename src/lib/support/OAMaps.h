@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.h,v 1.3 2005/06/10 15:59:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.h,v 1.4 2005/08/15 20:17:25 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -108,7 +108,16 @@ public:
 		  OA::OA_ptr<OA::CFG::EachCFGInterface> x) 
     { cfgman = m; cfgeach = x; }
 
-
+  // Parameter Bindings
+  OA::OA_ptr<OA::DataFlow::ParamBindings> GetParamBindings() { 
+    return paramBindings; 
+  }
+  void SetParamBind(OA::OA_ptr<OA::DataFlow::ManagerParamBindings> m, 
+		     OA::OA_ptr<OA::DataFlow::ParamBindings> x) { 
+    paramBindingsman = m; 
+    paramBindings = x; 
+  }
+  
   // Inter Alias
   OA::OA_ptr<OA::Alias::ManagerInsNoPtrInterAliasMap> GetInterAlias()
     { return interaliasmapman; }
@@ -145,6 +154,9 @@ private:
   OA::OA_ptr<OA::Alias::InterAliasMap> interAlias;
 
   OA::OA_ptr<OA::SideEffect::ManagerStandard> sideeffectman;
+
+  OA::OA_ptr<OA::DataFlow::ParamBindings> paramBindings;
+  OA::OA_ptr<OA::DataFlow::ManagerParamBindings> paramBindingsman;
   
   OA::OA_ptr<OA::SideEffect::ManagerInterSideEffectStandard> interSEman;
   OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> interSE;

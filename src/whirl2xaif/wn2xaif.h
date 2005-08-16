@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.31 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.32 2005/08/15 20:17:25 utke Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -194,17 +194,25 @@ DumpExprGraphEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid,
 // AttrSymId: Generate an XAIF symbol id attribute
 // ---------------------------------------------------------
 
-struct AttrSymTab_ {
+struct AttrSymId_ {
   const ST* st;
 };
 
 inline ostream&
-operator<<(std::ostream& os, const AttrSymTab_& x) 
+operator<<(std::ostream& os, const AttrSymId_& x) 
 {
   xml::ostream& xos = dynamic_cast<xml::ostream&>(os); // FIXME
 
-  const char* st_name = ST_name(x.st);
-  SymId st_id = (SymId)ST_index(x.st);
+  const ST* st = x.st;
+
+  // We cannot generate symbol_id references for CONSTs because they
+  // are not in the symbol table. (Also, a ST_name(st) on a CONST is
+  // not valid.)
+  FORTTK_ASSERT(ST_class(st) != CLASS_CONST,
+		"Attempting to generate a symbol_id for a CONST. ST level/index = " << (SymTabId)ST_level(st) << ", " << (SymId)ST_index(st));
+
+  const char* st_name = ST_name(st);
+  SymId st_id = (SymId)ST_index(st);
   
   xos << xml::BegAttr(XAIFStrings.attr_symId())
       << st_name << "_" << st_id
@@ -214,10 +222,10 @@ operator<<(std::ostream& os, const AttrSymTab_& x)
 }
 
 // AttrSymId: Given a symtab symbol (ST*), generate a symbol id attribute
-inline AttrSymTab_
+inline AttrSymId_
 AttrSymId(ST* st_)
 {
-  AttrSymTab_ x;
+  AttrSymId_ x;
   x.st = st_;
   return x;
 }
