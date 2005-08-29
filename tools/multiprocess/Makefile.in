@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/tools/multiprocess/Makefile.am,v 1.1 2005/06/10 17:44:31 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/tools/multiprocess/Makefile.am,v 1.2 2005/08/29 18:25:59 utke Exp $
 
 #############################################################################
 #
@@ -202,6 +202,7 @@ AUTOMAKE_OPTIONS = foreign
 MYSCRIPTS = \
 	pre.pl \
 	multi-pp.pl \
+	canon.pl \
 	pp.pl
 
 
@@ -218,6 +219,8 @@ MYSCRIPTLIB = \
 	Lib/Unreadhack.pm \
 	Lib/Active_Chg.pm \
 	Lib/MultiTemplate.pm \
+	Lib/Canonicalizer.pm \
+	Lib/Intrinsic.pm \
 	\
 	Lib/FT/FTList.pm \
 	Lib/FT/FTTerm.pm \
