@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/tools/multiprocess/Makefile.am,v 1.2 2005/08/29 18:25:59 utke Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/tools/multiprocess/Makefile.am,v 1.3 2005/08/29 18:34:07 utke Exp $
 
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -75,6 +75,8 @@ MYSCRIPTLIB = \
 	Lib/Unreadhack.pm \
 	Lib/Active_Chg.pm \
 	Lib/MultiTemplate.pm \
+	Lib/Canonicalizer.pm \
+	Lib/Intrinsic.pm \
 	\
 	Lib/FT/FTList.pm \
 	Lib/FT/FTTerm.pm \
