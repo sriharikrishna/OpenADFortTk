@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/tools/multiprocess/Makefile.am,v 1.1 2005/06/10 17:44:31 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/tools/multiprocess/Makefile.am,v 1.2 2005/08/29 18:25:59 utke Exp $
 
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -58,6 +58,7 @@ AUTOMAKE_OPTIONS = foreign
 MYSCRIPTS = \
 	pre.pl \
 	multi-pp.pl \
+	canon.pl \
 	pp.pl
 
 # deprecated: 
