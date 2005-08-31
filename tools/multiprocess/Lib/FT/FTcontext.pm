@@ -107,16 +107,20 @@ sub crewrite_sem {
 sub add_markers {
     my($ff,$st) = @_;
     my($last);
-
+#    print "add_markers starting with", $ff->{_lines}[0]->{_line}, "\n";
     foreach $l (@{$ff->{_lines}}){
 	next if $l->is_comment();
 	if (is_decl($l,$st)){
 	    $last = $l;
 	    next;
 	}
+	if (! defined($last)) {
+	  print "logical error: last not defined for ",$l->{_line};
+	}
 	$l->putprop('_first_exec',1);
 	last;
     }
+#    print "last_decl is ",$last->{_line}, "\n";
     $last->putprop('_last_decl',1);
 }
 
