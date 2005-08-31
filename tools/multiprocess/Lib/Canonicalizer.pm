@@ -95,7 +95,7 @@ sub _new_decl {
     my($tmp_var,$fun_term,$st) = @_;
 
     my($head) = $fun_term->term_split();
-    my($type) = $st->lookup_type($head);
+    my($type) = FTscan->new($st->lookup_type($head));
 
     return FTscan->empty()->concatd($type,$tmp_var);
 }
