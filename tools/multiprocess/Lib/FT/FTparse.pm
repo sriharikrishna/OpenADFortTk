@@ -35,13 +35,11 @@ my(%single_type) = (logical => 1,
 		    complex => 1,);
 my(%pr_type) = (    real    => 1,
 		    integer => 1,);
-my(%unit_token) = (function   => 1,
-		   subroutine => 1,);
 my(%rw) = (read    => 1,
 	   write   => 1,);
 sub parse_type_noun {
     return ( shift, @_) if ($single_type{$_[0]});
-    return ( join(' ',(shift,shift)) ,@_) if ($_[0] eq 'double');
+    return ( join(' ',(shift,shift)),@_) if ($_[0] eq 'double');
 #
 # only handle *4 or *8 for precision of real
 #   complex*16 = dbl complex?
@@ -52,7 +50,7 @@ sub parse_type_noun {
 	shift;
 	my ($p) = shift;
 	return ($t, @_) unless ($p eq '8');
-	return ('double precision',@_);
+	return ('double precision', @_);
     }
 #
 # might have to parse this different
@@ -105,6 +103,11 @@ sub parse_unit {
     }
     if (($_[0] eq 'block') && ($_[1] eq 'data')){
 	return @{['block',$_[2],[] ]};
+    }
+    if ($_[0] eq 'module'){
+	my($u) = shift;
+	my($n) = shift;
+	return @{[ $u,$n,[],()]};
     }
     return ();
 }

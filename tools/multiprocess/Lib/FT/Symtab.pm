@@ -4,11 +4,33 @@ use FTTerm;
 use Ffile;
 use FTparse;
 use FTscan;
+use File::Spec;
+use File::Basename;
 
 sub new {
-    my($class,$fs) = @_;
-    my(@lines) = map {$_->line()} $fs->lines();
+    my($class,$fs,$file_global) = @_;
     my($rv) = bless {},$class;
+
+    $rv->{_file_global} = $file_global;
+
+    _populate($fs,$rv);
+
+    return $rv;
+}
+#
+# The common code to build or redo a symbol table part of
+# a context
+#
+sub _populate {
+    my($fs,$rv) = @_;
+
+    $module_table = $rv->{_file_global}->{_module_table};
+
+    $module_table ||= {};
+
+    $path = $rv->{_file_global}->{_path};
+
+    my(@lines) = map {$_->line()} $fs->lines();
     
     # install std implicit
     # integer (i-n), rest real
@@ -24,6 +46,16 @@ sub new {
 	if (my($incl) = parse_include(@tl)) {
 	    unshift @lines,map {$_->line()}
 	                   Ffile->new($incl)->lines();
+	    next;
+	}
+	if (lc($tl[0]) eq 'use') {
+	    my($tbl) = $module_table->{$tl[1]};
+	    if ($tbl){
+		$rv->_module_merge($tbl);
+	    }
+	    else {
+		warn "WARNING: Module $tl[1] not previously loaded!\n";
+	    }
 	    next;
 	}
 	if (my($u,$n,$t,@v) = parse_unit(@tl)) {
@@ -81,72 +113,9 @@ sub new {
 #
 sub redo {
     my($rv,$fs) = @_;
-    my(@lines) = map {$_->line()} $fs->lines();
-    
-    # install std implicit
-    # integer (i-n), rest real
 
-    $rv->set_implicit_map(nlftlist('real(a-z)'));
-    $rv->set_implicit_map(nlftlist('integer(i-n)'));
+    _populate($fs,$rv);
 
-    while(@lines) {
-	local($_) = shift @lines;
-	next if (/$comment/o || /$bl/o);
-	my($ln,@tl) = ftlist($_);
-	last if ($ln);
-	if (my($incl) = parse_include(@tl)) {
-	    unshift @lines,map {$_->line()}
-	                   Ffile->new($incl)->lines();
-	    next;
-	}
-	if (my($u,$n,$t,@v) = parse_unit(@tl)) {
-	    grep {$rv->{_type_decl}->{$_}->{_vclass} = 'arg'}
-	         @v;
-	    $rv->{_unit}->{_type} = $u;
-	    $rv->{_unit}->{_name} = $n;
-	    $rv->{_unit}->{_retn_type} = $t;
-	    @{$rv->{_unit}->{_args}} = @v;
-	    next;
-	}
-	if (my($t,@vdt) = parse_type(@tl)) {
-	    @vdt = parse_var_dims(@vdt);
-	    grep {my($v,$d) = @$_;
-		  $rv->{_type_decl}->{$v}->{_type} = $t;
-		  $rv->{_type_decl}->{$v}->{_dim} = $d;
-		  $rv->{_type_decl}->{$v}->{_decl} = 1;
-		  $rv->{_type_decl}->{$v}->{_vclass} ||= 'local';
-	      } @vdt;
-	    next;
-	}
-	if (my($cb,@vdt) = parse_common(@tl)){
-	    @vdt = parse_var_dims(@vdt);
-	    grep {my($v,$d) = @$_;
-		  $rv->{_type_decl}->{$v}->{_dim} = $d if (@{$d->[0]});
-#		  $rv->{_type_decl}->{$v}->{_decl} = 1;
-		  $rv->{_type_decl}->{$v}->{_vclass} = "common:$cb";
-	      } @vdt;
-	    @{$rv->{_common_blks}->{$cb}} = map {$_->[0]} @vdt;
-	    next;
-	}
-	if ($tl[0] eq 'dimension') {
-	    shift @tl;
-	    my(@vdt) = parse_var_dims( tlcsv(@tl));
-	    grep {my($v,$d) = @$_;
-		  $rv->{_type_decl}->{$v}->{_dim} = $d;
-#		  $rv->{_type_decl}->{$v}->{_decl} = 1;
-		  $rv->{_type_decl}->{$v}->{_vclass} ||= 'local';
-	      } @vdt;
-	    next;
-	}
-	if ($tl[0] eq 'implicit') {
-	    shift @tl;
-	    if ($tl[0] eq 'none'){
-		$rv->{_impl_map} = {};
-		next;
-	    }
-	    grep {$rv->set_implicit_map(@$_)} tlcsv(@tl);
-	}
-    }
     return $rv;
 }
 sub set_implicit_map {
@@ -194,6 +163,19 @@ sub lookup_type{
 
     $var = lc $var;
     return $self->{_type_decl}->{$var}->{_type} || $self->implicit_type($var);
+}
+#
+# HACK, since character declarations are special
+#
+sub lookup_type_str {
+    my($pre_type) = $_[0]->lookup_type($_[1]);
+    return $pre_type unless (ref($pre_type) eq 'ARRAY');
+    return join('',@$pre_type);
+}
+sub lookup_type_cls {
+    my($pre_type) = $_[0]->lookup_type($_[1]);
+    return $pre_type unless (ref($pre_type) eq 'ARRAY');
+    return 'character';
 }
 sub lookup_dim {
     my($self,$var) = @_;
@@ -248,6 +230,16 @@ sub vars_in_common_block {
     my($self,$cb) = @_;
 
     return @{$self->{_common_blks}->{$cb}};
+}
+sub _module_merge {
+    my($self,$st) = @_; # $st is the module symbol table to be merged
+
+    my($modname) = "module:".$st->unit_name();
+    foreach $v (keys(%{$st->{_type_decl}})){
+	$self->{_type_decl}->{$v}->{_type}   = $st->lookup_type($v);
+	$self->{_type_decl}->{$v}->{_dim}    = [ $st->lookup_dim($v) ];
+	$self->{_type_decl}->{$v}->{_vclass} = $modname; 
+    }
 }
 
 1;
