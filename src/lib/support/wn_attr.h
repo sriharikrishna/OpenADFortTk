@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.10 2004/03/19 16:54:03 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.11 2005/09/15 02:43:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -274,6 +274,16 @@ extern BOOL
 WN_intrinsic_return_to_param(TY_IDX return_ty);
 
 //***************************************************************************
+
+
+// Given a WN, return true if this is an ARRAY reference of some type.
+// In other words, we look for an idiom of the forms:
+//   ISTORE      or    ILOAD
+//     ARRAY             ARRAY
+// An ISTORE is interpreted as a handle for an lvalue; an ILOAD as a
+// handle for an rvalue.
+extern bool 
+WN_isArrayRef(WN* wn);
 
 extern WN *
 WN_Get_PtrAdd_Intconst(WN* wn0, WN* wn1, TY_IDX pointed_ty);

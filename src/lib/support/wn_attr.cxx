@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.16 2005/05/16 15:17:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.17 2005/09/15 02:43:06 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -717,6 +717,45 @@ WN_intrinsic_return_to_param(TY_IDX return_ty)
 
 
 //***************************************************************************
+
+bool 
+WN_isArrayRef(WN* wn)
+{
+  OPERATOR opr = WN_operator(wn);
+  
+  // Idioms: 
+  //   ISTORE/ILOAD (source code: A(j))
+  //     ARRAY
+  //
+  //   ISTORE/ILOAD (source code: A(j)%v)
+  //     ADD
+  //       ARRAY
+
+  if (opr == OPR_ISTORE) {
+    WN* kid = WN_kid1(wn); // lhs
+    if (WN_operator(kid) == OPR_ARRAY) {
+      return true;
+    }
+    else if (WN_operator(kid) == OPR_ADD 
+	     && WN_operator(WN_kid0(kid)) == OPR_ARRAY) {
+      return true;
+    }
+  }
+  else if (opr == OPR_ILOAD) {
+    WN* kid = WN_kid0(wn);
+    if (WN_operator(kid) == OPR_ARRAY) {
+      return true;
+    }
+    else if (WN_operator(kid) == OPR_ADD 
+	     && WN_operator(WN_kid0(kid)) == OPR_ARRAY) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
 
 WN *
 WN_Get_PtrAdd_Intconst(WN* wn0, WN* wn1, TY_IDX pointed_ty)
