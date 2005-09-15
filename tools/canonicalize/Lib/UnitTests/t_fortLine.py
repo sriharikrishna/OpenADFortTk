@@ -1,7 +1,8 @@
 import Setup
 
-from unittest import *
-from fortLine import *
+from unittest  import *
+from fortLine  import *
+from cStringIO import StringIO
 
 class preds(TestCase):
     s1 = '''
