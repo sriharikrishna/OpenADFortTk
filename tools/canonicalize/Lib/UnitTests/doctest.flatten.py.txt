@@ -1,0 +1,13 @@
+Simple 1 line test of the flatten module from ASPN
+
+   >>> from flatten import flatten
+
+l1 has embedded empty lists, and lists of empty lists, etc
+
+   >>> l1 = [[[]],[[['This'],((()))],[[[['is',[[[]]]],'an',['embedded']]],'list'],[]]]
+
+flatten should remove it
+
+   >>> flatten(l1)
+   ['This', 'is', 'an', 'embedded', 'list']
+   >>>
