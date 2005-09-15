@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.12 2005/08/15 20:17:25 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.13 2005/09/15 02:43:42 eraxxon Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Nathan Tallent, Michelle Strout
-  \version $Id: Open64IRInterface.cpp,v 1.12 2005/08/15 20:17:25 utke Exp $
+  \version $Id: Open64IRInterface.cpp,v 1.13 2005/09/15 02:43:42 eraxxon Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -2403,7 +2403,7 @@ Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs(WN* wn,
   if (OPERATOR_is_store(opr)) {
     if (WN_kid_count(wn) >= 2) {
       unsigned mylvl = lvl + 1;
-      if (opr == OPR_ISTORE && WN_operator(WN_kid1(wn)) == OPR_ARRAY) {
+      if (WN_isArrayRef(wn)) {
 	mylvl = lvl;
 	flags |= flags_STORE_PARENT;
 	isMemRefExprXXX = false; // use info from ARRAY
@@ -2414,7 +2414,7 @@ Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs(WN* wn,
   else if (OPERATOR_is_load(opr)) {
     if (WN_kid_count(wn) >= 1) {
       unsigned mylvl = lvl + 1;
-      if (opr == OPR_ILOAD && WN_operator(WN_kid0(wn)) == OPR_ARRAY) {
+      if (WN_isArrayRef(wn)) {
 	mylvl = lvl;
 	isMemRefExprXXX = false; // use info from ARRAY
       }
