@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.13 2005/09/15 02:43:42 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.14 2005/09/15 19:47:53 utke Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Nathan Tallent, Michelle Strout
-  \version $Id: Open64IRInterface.cpp,v 1.13 2005/09/15 02:43:42 eraxxon Exp $
+  \version $Id: Open64IRInterface.cpp,v 1.14 2005/09/15 19:47:53 utke Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -1885,7 +1885,14 @@ Open64IRInterface::getLocation(OA::ProcHandle p, OA::SymHandle s)
       }
 
     } else {
-      retval = NULL;
+      // getting a 0 SymbolHandle doesn't make sense 
+      // this must be some logic flaw
+      ST* pu_st = ST_ptr(PU_Info_proc_sym(Current_PU_Info));
+      const char* pu_name = ST_name(pu_st);
+      std::cout << "FortTk: FATAL ERROR: trying to get a location for 0 symbol handle in " 
+		<< pu_name 
+		<< std::endl;
+      assert(0);
     }
     return retval;
 }
