@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.78 2005/08/15 19:14:17 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.79 2005/09/21 16:08:10 utke Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -1177,12 +1177,22 @@ xlate_SideEffectEntry(OA::OA_ptr<OA::Location> theLocation,
 				    ctxt,
 				    formalArgSymHandleI);
     } 
+    else if (subSetLoc->getLoc()->isaUnknown()) { 
+      // we cannot gracefully handle this:
+      ST* pu_st = ST_ptr(PU_Info_proc_sym(Current_PU_Info));
+      const char* pu_nm = ST_name(pu_st);
+      FORTTK_DIE("a side effect list contains a unknown location indicating there is function call within " 
+		 << pu_nm 
+		 << " for which OpenAnalysis cannot determine side effects"); 
+    }
     else { 
+      theLocation->dump(std::cout);
       FORTTK_DIE(FORTTK_UNIMPLEMENTED << "side effect list contains a subsetloc that has no named location");
     }
   }
   else { 
-    FORTTK_DIE(FORTTK_UNIMPLEMENTED << "side effect list contains something that is not a named location");
+    theLocation->dump(std::cout);
+    FORTTK_DIE(FORTTK_UNIMPLEMENTED << "side effect list contains a location that is not a named location");
   }
 } 
 
