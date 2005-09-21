@@ -63,7 +63,8 @@ flonum_re = r'''(?ix)
              (?:       # EITHER
                (?:
                   \d+        # some digits
-                  (?:        #followed by
+                  (?!%s)     # NOT followed by a dot kw, but ARE
+                  (?:        # followed by
                      (?:     #  EITHER
                         \.         # decimal point
                         \d*        # 0 or digits
@@ -79,7 +80,7 @@ flonum_re = r'''(?ix)
                     )
                )
 '''
-flonum_re = flonum_re % ( floexp_re,floexp_re,floexp_re )
+flonum_re = flonum_re % ( dot_re,floexp_re,floexp_re,floexp_re )
 flonum_re = flonum_re + r'(?:_\w+)?'
 
 white_re  = r'\s+'

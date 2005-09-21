@@ -94,10 +94,37 @@ class scanit(TestCase):
 
 class C4(TestCase):
     def test1(self):
-        'logicals and comparisons'
+        'upper case logicals and comparisons'
         ae         = self.assertEquals
         (scanin,r) = scan1.scan('IF (X .LT. 5) Y = 10.e0')
         ae(scanin,['IF','(','X','.LT.','5',')','Y','=','10.e0'])
+        ae(r,'')
+
+    def test2(self):
+        'no space separating logicals, comparisons, case 1'
+
+        ae         = self.assertEquals
+
+        p1         = 'x.lt.1.or.y.gt.3'
+
+        tlp1       = ['x', '.lt.', '1', '.or.', 'y', '.gt.', '3']
+
+        (scanin,r) = scan1.scan(p1)
+        ae(scanin,tlp1)
+        ae(r,'')
+
+    def test3(self):
+        'no space separating logicals, comparisons, case 2'
+
+        ae         = self.assertEquals
+
+        p1         = 'X.LT.1.OR.Y .GT. 3..AND.0.2.GE.3.14'
+
+        tlp1       = ['X', '.LT.', '1', '.OR.', 'Y',
+                      '.GT.', '3.', '.AND.', '0.2', '.GE.', '3.14']
+
+        (scanin,r) = scan1.scan(p1)
+        ae(scanin,tlp1)
         ae(r,'')
 
 def s1():
