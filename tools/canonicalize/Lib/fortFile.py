@@ -9,10 +9,13 @@ from cStringIO import StringIO
 from fortLine  import a_line
 from assembler import vgen
 
+def _ident(s):
+    return [s]
+
 class Ffile(object):
     def __init__(self,fobj):
-        self.lines = list(vgen(a_line,fobj))
-        fobj.close()
+        self.lines = vgen(a_line,fobj)
+        self.fobj  = fobj
 
     @staticmethod
     def file(name):
@@ -23,27 +26,41 @@ class Ffile(object):
         return Ffile(StringIO(str))
 
     def str(self):
+        '''return all of the original file lines concatenated together
+        WARNING: do not use on large files !!
+        '''
         return ''.join([l.rawline for l in self.lines])
 
-def setup():
-    global p1
+    def readlines(self):
+        '''Make Ffile function like readlines for regular files'''
+        return [ ll for l in self.lines for ll in l.rawline.splitlines(True) ]
 
-    p1 = '''
-      subroutine foo(x)
-      x = x +
-c
-c embedded continuation lines
-c
-     &5 + 2 * x
-c
-c more embedded lines
-c
-     & + si
-     &n(x+2.0)
-      x = 5.0
-      x
-     & = 
-     & 13.2
-      end
-'''
-    p1 = p1[1:]
+    def iterlines(self):
+        '''instead of the whole line list, return an iterator
+        that yields 1 rawline at a time
+        '''
+        return ( (ll for l in self.lines for ll in l.rawline.splitlines(True)) )
+
+    def printit(self,out=None):
+        if out:
+            for l in self.iterlines():
+                print >> out,l,
+        else:
+            for l in self.iterlines():
+                print l,
+    
+    def write(self,fname):
+        ff = open(fname,'w')
+
+        self.printit(ff)
+
+        ff.close()
+
+    def map(self,lexi):
+        for (cls,meth) in lexi:
+            cls.map = meth
+        for l in self.lines:
+            for ll in l.map():
+                yield ll
+        for (cls,meth) in lexi:
+            cls.map = _ident

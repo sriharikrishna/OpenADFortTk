@@ -215,7 +215,8 @@ class filetst(TestCase):
         stmt    = seq(s,star(seq(star(c),k)))
         cblk    = plus(c)
     
-        self.f    = file(os.path.join(Setup.mypath,'Tfiles','f0.f'))
+#        self.f    = file(os.path.join(Setup.mypath,'Tfiles','f0.f'))
+        self.f    = Setup.open_t('f0.f')
         self.stmt = stmt
         self.cblk = cblk
 

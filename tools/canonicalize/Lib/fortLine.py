@@ -6,6 +6,10 @@ from chomp import chomp
 from fortScan import q_re,qq_re
 import sre
 
+def ident(self):
+    '''generic identity function for default mappers'''
+    return self
+
 class anyFortLine(object):
     '''generic line class for any fortran line'''
     pass
@@ -13,28 +17,11 @@ class anyFortLine(object):
 class fline(anyFortLine):
     '''a non-comment (semantic) class for a fortran line'''
 
-    def __init__(self,dta):
+    def __init__(self,rawline,line,internal):
 
-        '''a true fortran line dta structure comes in as:
-        [initial stmt [continuation_lines]]
-
-        continuation_lines are structures as well:
-        [[comments] continuation_line]
-        '''
-
-        self.rawline           = ''.join(flatten(dta))
-        self.internal_comments = []
-
-        (self.line,c)          = kill_bang_comment(chomp(dta[0]))
-        if not c == '':
-            self.internal_comments.append(chomp(c))
-
-        for cont in dta[1]:
-            self.internal_comments.extend([ chomp(l) for l in cont[0]])
-            (l,c) = kill_bang_comment(chomp(cont[1])[6:])
-            if not c == '':
-                self.internal_comments.append(chomp(c))
-            self.line += l
+        self.rawline  = rawline
+        self.line     = line
+        self.internal = internal
 
 class cline(anyFortLine):
     '''a comment (or blank) line'''
@@ -43,6 +30,36 @@ class cline(anyFortLine):
 
     def comment_list(self):
         return self.rawline.splitlines()
+
+def fline_from_asm(dta):
+    '''a true fortran line dta structure comes in as:
+    [initial stmt [continuation_lines]]
+
+    continuation_lines are structures as well:
+        [[comments] continuation_line]
+    '''
+
+    rawline           = ''.join(flatten(dta))
+    internal_comments = []
+    (line,c)          = kill_bang_comment(chomp(dta[0]))
+    if not c == '':
+        internal_comments.append(chomp(c))
+
+    for cont in dta[1]:
+        internal_comments.extend([ chomp(l) for l in cont[0]])
+        (l,c) = kill_bang_comment(chomp(cont[1])[6:])
+        if not c == '':
+            internal_comments.append(chomp(c))
+        line += l
+
+    return fline(rawline,line,internal_comments)
+
+def fline_from_line(line):
+
+    if comment_p(line):
+        return cline([line])
+
+    return fline(flow_line(line),line,[])
 
 def comment_p(l):
     '''given a line l, return true if l is a comment (or blank) line'''
@@ -93,6 +110,6 @@ comm   = pred(comment_p)
 cont   = pred(cont_p)
 
 cblk   = treat(plus(comm),cline)
-stmt   = treat(seq(strt,star(seq(star(comm),cont))),fline)
+stmt   = treat(seq(strt,star(seq(star(comm),cont))),fline_from_asm)
 
 a_line = disj(cblk,stmt)

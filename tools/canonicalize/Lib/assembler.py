@@ -14,22 +14,10 @@ from itertools import chain
 from flatten import flatten
 
 class AssemblerException(Exception):
-    '''base class for exception for failure to assemble'''
-    pass
-
-class PredicateFailure(AssemblerException):
-    '''current selected stream item cannot be included in the assembly'''
-    pass
-
-class EmptyAssembly(AssemblerException):
-    '''attempted to assemble from empty'''
-    pass
-
-class CompoundAssembly(AssemblerException):
-    '''some compound object (ie seq) could not be completely assembled'''
-
-class DisjAssembly(AssemblerException):
-    '''no choice in a disjunction worked'''
+    '''exception for failure to assemble'''
+    def __init__(self,msg,rest):
+        self.msg  = msg
+        self.rest = rest
 
 def pred(p):
     '''produce an assembler based on predicate p
@@ -39,10 +27,10 @@ def pred(p):
         try:
             v = s.next()
         except StopIteration:
-            raise EmptyAssembly(iter([]))
+            raise AssemblerException('Empty Assembly',iter([]))
         if p(v):
             return (v,s)
-        raise PredicateFailure(v,s)
+        raise AssemblerException('Predicate Failure',chain(iter([v]),s))
 
     return asm
 
@@ -61,18 +49,8 @@ def star(a):
                 v,sloc = a(sloc)
                 rv.append(v)
 
-        except PredicateFailure,(v,s1):
-            return (rv,chain(iter([v]),s1))
-
-        except EmptyAssembly,s1:
-            return (rv,iter([]))
-
-        except CompoundAssembly,(lst,s1):
-            return (rv,chain(iter(flatten(lst)),s1))
-
-        except DisjAssembly,s1:
-            return (rv,s1.args[0])
-
+        except AssemblerException,excp:
+            return (rv,excp.rest)
 
     return asm
 
@@ -88,19 +66,10 @@ def seq(*asms):
                 rv.append(v)
             return rv,sloc
 
-        except EmptyAssembly,s1:
-            raise CompoundAssembly(rv,iter([]))
-
-        except PredicateFailure,(v,s1):
-            rv.append(v)
-            raise CompoundAssembly(rv,s1)
-
-        except CompoundAssembly,(lst,s1):
-            rv.extend(lst)
-            raise CompoundAssembly(rv,s1)
-
-        except DisjAssembly,s1:
-            raise CompoundAssembly(rv,s1)
+        except AssemblerException,excp:
+            msg  = excp.msg + "->seq failure"
+            rest = chain(iter(flatten(rv)),excp.rest)
+            raise AssemblerException(msg,rest)
 
     return asm
 
@@ -113,19 +82,10 @@ def disj(*asms):
             try:
                 return a(s)
 
-            except EmptyAssembly,s1:
-                s = iter([])
+            except AssemblerException,excp:
+                s = excp.rest
 
-            except PredicateFailure,(v,s1):
-                s = chain(iter([v]),s1)
-
-            except CompoundAssembly,(lst,s1):
-                s = chain(iter(flatten(lst)),s1)
-
-            except DisjAssembly,s1:
-                s = s1
-
-        raise DisjAssembly(s)
+        raise AssemblerException('disj failure',s)
 
     return asm
 

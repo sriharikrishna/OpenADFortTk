@@ -139,7 +139,7 @@ c
     stmt = pred(stmt_p)
     cmnt = pred(comment_p)
     cont = pred(cont_p)
-    full = treat(seq(stmt,star(seq(star(cmnt),cont))),fline)
+    full = treat(seq(stmt,star(seq(star(cmnt),cont))),fline_from_asm)
 
     (fln1,rst) = full(p1f)
 
@@ -155,7 +155,7 @@ c
         aa(fln1.rawline == fline_t.p1)
         ae(fln1.line,fline_t.right)
         ae(list(rst),[])
-        ae('|'.join(fln1.internal_comments),internal_c)
+        ae('|'.join(fln1.internal),internal_c)
 
     def test2(self):
         'cline class, rawline attribute, comment_list method'
@@ -180,8 +180,35 @@ d    a possible debugging line
         aa(fln1.rawline == p1)
         ae(fln1.comment_list(),['   ! This is a comment', 'C', 'c Internal comment', 'c', '* ! another !', 'd    a possible debugging line'])
 
+class fline_from_line_t(TestCase):
+
+    def test1(self):
+        'convert a long line to an fline object'
+        p1 = '''
+       x = somefn('This is an extremely long string to be put on 1 line' // 'Another line')
+'''
+        p1 = p1[1:]
+        ok = '''
+       x = somefn('This is an extremely long string to be put on 1 line'
+     + // 'Another line')
+'''
+        ok = ok[1:]
+        t  = fline_from_line(p1)
+        self.assert_(isinstance(t,fline))
+        self.assertEquals(t.rawline,ok)
+
+    def test2(self):
+        'convert comment line to cline object'
+        p1 = '''
+c This is a comment
+'''
+        p1 = p1[1:]
+        t  = fline_from_line(p1)
+        self.assert_(isinstance(t,cline))
+        self.assertEquals(t.rawline,p1)
+
 def s1():
-    return makeSuite(fline_t)
+    return makeSuite(fline_from_line_t)
 
 def suite():
     
@@ -189,6 +216,7 @@ def suite():
     rv.addTest(makeSuite(flow))
     rv.addTest(makeSuite(kill_bang))
     rv.addTest(makeSuite(fline_t))
+    rv.addTest(makeSuite(fline_from_line_t))
 
     return rv
 
@@ -197,3 +225,4 @@ def runSuite(s):
 
 if __name__ == "__main__":
     runSuite(suite())
+
