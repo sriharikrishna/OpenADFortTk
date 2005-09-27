@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.36 2005/05/16 15:17:56 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.37 2005/09/27 16:04:48 utke Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -152,32 +152,38 @@ WN2F_Substring(xml::ostream& xos,
 	       INT64        string_size,
 	       WN          *lower_bnd,
 	       WN          *substring_size,
-	       XlationContext& ctxt)
-{
+	       XlationContext& ctxt) {
    /* Given a substring offset from the base of a character string 
     * (lower_bnd), the size of the whole string, and the size of the
     * substring, generate the notation necessary as a suffix to the
     * string reference to denote the substring.
+    *
+    * NOTE: but not yet since we don't have the proper 
+    *       XAIF representation yet. 
     */
    if (WN_operator(lower_bnd) != OPR_INTCONST      ||
        WN_const_val(lower_bnd) != 0                    ||
        WN_operator(substring_size) != OPR_INTCONST ||
-       WN_const_val(substring_size) != string_size)
-   {
-      /* Need to generate substring expression "(l+1:l+size)" */
-      xos << "(";
-      //set_XlationContext_no_parenthesis(ctxt);
-      TranslateWN(xos, lower_bnd, ctxt);
-      //reset_XlationContext_no_parenthesis(ctxt);
-      xos << ":";
-      if (WN_operator(lower_bnd) != OPR_INTCONST ||
-	  WN_const_val(lower_bnd) != 0)
-      {
-	 TranslateWN(xos, lower_bnd, ctxt);
-	 xos << "+";
-      }
-      TranslateWN(xos, substring_size, ctxt);
-      xos << ")";
+       WN_const_val(substring_size) != string_size) {
+     FORTTK_MSG(0, 
+		"warning: " 
+		<< FORTTK_UNEXPECTED_INPUT 
+		<< " ignoring substring expression, assuming this was introduced by mfef90" );
+     
+//       /* Need to generate substring expression "(l+1:l+size)" */
+//       xos << "(";
+//       //set_XlationContext_no_parenthesis(ctxt);
+//       TranslateWN(xos, lower_bnd, ctxt);
+//       //reset_XlationContext_no_parenthesis(ctxt);
+//       xos << ":";
+//       if (WN_operator(lower_bnd) != OPR_INTCONST ||
+// 	  WN_const_val(lower_bnd) != 0)
+//       {
+// 	 TranslateWN(xos, lower_bnd, ctxt);
+// 	 xos << "+";
+//       }
+//       TranslateWN(xos, substring_size, ctxt);
+//       xos << ")";
    }
 } /* WN2F_Substring */
 
