@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.66 2005/08/02 22:18:29 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.67 2005/09/27 16:02:06 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -2390,71 +2390,81 @@ DeclareActiveTypes()
 
 }
 
-
 // ConvertToActiveType: Given a symbol, convert it to active type
 static void 
-ConvertToActiveType(ST* st)
-{
+ConvertToActiveType(ST* st) {
   // -------------------------------------------------------
   // 1. Setup
   // -------------------------------------------------------
   // Find the type that will be replaced
-  TY_IDX ty = ST_type(st);
-  if (TY_kind(ty) == KIND_POINTER) { // only have one level of indirection
-    ty = TY_pointed(ty);
+  TY_IDX typeIndex = ST_type(st);
+  if (TY_kind(typeIndex) == KIND_POINTER) { // only have one level of indirection
+    typeIndex = TY_pointed(typeIndex);
   }
 
   // Get the replacement type
-  TY_IDX newBaseTy = ActiveTypeTyIdx;
+  TY_IDX newBaseTypeIndex = ActiveTypeTyIdx;
   if (ST_is_initialized(st)) {
     INITO_IDX inito = Find_INITO_For_Symbol(st);
     if (inito != (INITO_IDX)0) {
-      newBaseTy = ActiveTypeInitializedTyIdx;
+      newBaseTypeIndex = ActiveTypeInitializedTyIdx;
     }
   }
 
   // -------------------------------------------------------
   // 2. Change the type of this symbol
   // -------------------------------------------------------
-  if (TY_kind(ty) == KIND_SCALAR) {
-    Set_ST_type(*st, newBaseTy);
+  if (TY_kind(typeIndex) == KIND_SCALAR) {
+    Set_ST_type(*st, newBaseTypeIndex);
   }
-  else if (TY_kind(ty) == KIND_ARRAY) {
-    // Note: because types may be shared, we cannot simply change the
-    // element type.  For now we create a new type for each active
-    // symbol.
-    TY_IDX new_ar_ty = Copy_TY(ty);     // cf. Create_New_Array_Type
-    Set_TY_etype(new_ar_ty, newBaseTy); // alignment, etc. should be ok
-
-    // Now find the appropriate type for the symbol
-    TY_IDX new_ty = new_ar_ty;
-    if (TY_kind(ST_type(st)) == KIND_POINTER) {
-      new_ty = Make_Pointer_Type(new_ar_ty);
+  else if (TY_kind(typeIndex) == KIND_ARRAY) {
+    // get the element type index 
+    TY_IDX elementTypeIndex = TY_etype(typeIndex);
+    if (TY_kind(elementTypeIndex) == KIND_SCALAR) { 
+      // we do this only for scalars because structures 
+      // are supposed to activated element by element in the 
+      // structure definition and arrays are supposed to be flat 
+      // (i.e. no nesting arrays in arrays without a structure definition)
+      // Note: because types may be shared, we cannot simply change the
+      // element type.  For now we create a new type for each active
+      // symbol.
+      TY_IDX newArrayTypeIndex = Copy_TY(typeIndex); // cf. Create_New_Array_Type
+      Set_TY_etype(newArrayTypeIndex, newBaseTypeIndex); // alignment, etc. should be ok
+      
+      // Now find the appropriate type for the symbol
+      TY_IDX newArraySymbolTypeIndex = newArrayTypeIndex;
+      if (TY_kind(ST_type(st)) == KIND_POINTER) {
+	newArraySymbolTypeIndex = Make_Pointer_Type(newArrayTypeIndex);
+      }
+      Set_ST_type(st,newArraySymbolTypeIndex);
     }
-    Set_ST_type(st, new_ty);
   } 
   else {
     // Note: We should never see a KIND_STRUCT; this is handled
     // through scalarization.
-    FORTTK_DIE("Unexpected type kind: " << TY_kind(ty));
+    FORTTK_DIE("Unexpected type kind: " << TY_kind(typeIndex));
   }
   
-  // -------------------------------------------------------
-  // 3. If this symbol is part of a common block, patch up types in
-  // the common block fields.  Note that we only need to change
-  // scalars -- arrays have been effectively changed above
-  // -------------------------------------------------------
-  if (TY_kind(ty) == KIND_SCALAR 
-      && Stab_Is_Based_At_Common_Or_Equivalence(st)) {
-    TY_IDX base_ty = ST_type(ST_base(st));
-    mUINT64 offset = ST_ofst(st); // offset into base symbol
+  if (TY_kind(typeIndex) == KIND_SCALAR 
+      && 
+      Stab_Is_Based_At_Common_Or_Equivalence(st)) {
+    FORTTK_DIE("Because of default initialization within the active type we cannot handle common blocks/equivalences containing active elements, here occuring for: " << ST_name(st) << " This should instead be handled by the canonicalization of common blocks into modules");
     
-    // find field with correct offset or symbol
-    FLD_HANDLE fld = TY_Lookup_FLD(base_ty, 0, offset);
-    Set_FLD_type(fld, newBaseTy);
+    // commented out the following because of the reasoning above.
+
+//     // -------------------------------------------------------
+//     // 3. If this symbol is part of a common block, patch up types in
+//     // the common block fields.  Note that we only need to change
+//     // scalars -- arrays have been effectively changed above
+//     // -------------------------------------------------------
+//     TY_IDX baseTypeIndex = ST_type(ST_base(st));
+//     mUINT64 offset = ST_ofst(st); // offset into base symbol
+    
+//     // find field with correct offset or symbol
+//     FLD_HANDLE fld = TY_Lookup_FLD(baseTypeIndex, 0, offset);
+//     Set_FLD_type(fld, newBaseTypeIndex);
   }
 }
-
 
 // ConvertStructMemberTouActiveType: Given a base structure type, a
 // referenced object type and the offset of the referenced object,
