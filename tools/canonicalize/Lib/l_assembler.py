@@ -56,6 +56,7 @@ def seq(*asms):
     '''assembler that produces a sequence of assemblies'''
 
     def asm(s):
+        s_save = s
         sloc = s
         rv = []
         try:
@@ -66,7 +67,9 @@ def seq(*asms):
 
         except AssemblerException,excp:
             msg  = excp.msg + "->seq failure"
-            rest = flatten(rv)+excp.rest
+            rest = s_save
+#            rest = flatten(rv)+excp.rest
+
             raise AssemblerException(msg,rest)
 
     return asm
@@ -117,4 +120,47 @@ def vgen(a,src):
             yield v
         except AssemblerException:
             break
+
+def zo1(a):
+    '''implement the '?' operator of classical regexp
+    engines. That is, 0 or 1 occurrences of a
+    '''
+    def asm(s):
+        try:
+            (v,r) = a(s)
+            return ([v],r)
+        except AssemblerException:
+            return ([],s)
+
+    return asm
+
+def lit(s):
+    '''a recognizer for a literal string
+    NOTE: s is in lower case, and the match occurs
+    whenever the element in question and s are equal
+    in a case-insensitive manner
+    '''
+    return pred(lambda x:x.lower()==s)
+
+def cslist(a):
+    '''for a given assembler a, create an assembler that will
+    assemble a list of comma-separated elements of a
+    Example:
+    suppose we have an assembler ays = pred(lambda x: x == 'a')
+    That is, ays recognizes the letter a
+    then cslist(ays) will recognize:
+        "'a','a','a','a',...."
+    which is a comma-separated list of letter 'a'
+    '''
+    def process(e):
+        rv = []
+        for (v,lst) in e:
+            rv.append(v)
+            for (dc,v) in lst:
+                rv.append(v)
+        return rv
+    
+    comma = pred(lambda x:x == ',')
+    return treat(zo1(seq(a,star(seq(comma,a)))),process)
+
 

@@ -8,13 +8,14 @@ Provide mappers, rewriters, string conversion facilities
 from cStringIO import StringIO
 from fortLine  import a_line
 from assembler import vgen
+from buf_iter  import buf_iter
 
 def _ident(s):
     return [s]
 
 class Ffile(object):
     def __init__(self,fobj):
-        self.lines = vgen(a_line,fobj)
+        self.lines = vgen(a_line,buf_iter(fobj))
         self.fobj  = fobj
 
     @staticmethod

@@ -65,12 +65,3 @@ class fortScanFile(object):
                 yield v
         for (cls,meth) in lexi:
             cls.map = _ident
-
-class T(object):
-
-    def test1(self):
-
-        global p1
-
-        p1 = fortScanFile('__tmp.f')
-

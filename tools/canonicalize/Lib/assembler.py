@@ -10,8 +10,9 @@ is the 'remainder' after the assembly
 
 '''
 
-from itertools import chain
-from flatten import flatten
+# from itertools import chain
+from flatten   import flatten
+from buf_iter  import buf_iter
 
 class AssemblerException(Exception):
     '''exception for failure to assemble'''
@@ -27,10 +28,10 @@ def pred(p):
         try:
             v = s.next()
         except StopIteration:
-            raise AssemblerException('Empty Assembly',iter([]))
+            raise AssemblerException('Empty Assembly',buf_iter(iter([])))
         if p(v):
             return (v,s)
-        raise AssemblerException('Predicate Failure',chain(iter([v]),s))
+        raise AssemblerException('Predicate Failure',s.putback([v]))
 
     return asm
 
@@ -68,7 +69,7 @@ def seq(*asms):
 
         except AssemblerException,excp:
             msg  = excp.msg + "->seq failure"
-            rest = chain(iter(flatten(rv)),excp.rest)
+            rest = excp.rest.putback(flatten(rv))
             raise AssemblerException(msg,rest)
 
     return asm
@@ -119,4 +120,3 @@ def vgen(a,src):
             yield v
         except AssemblerException:
             break
-
