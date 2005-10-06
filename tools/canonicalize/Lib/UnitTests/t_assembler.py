@@ -4,6 +4,7 @@ from assembler import *
 from unittest import *
 from flatten import flatten
 from chomp import chomp
+from buf_iter import buf_iter
 
 def mkpred(id):
     '''make a predicate assembler for a given id'''
@@ -22,9 +23,9 @@ class strings(TestCase):
         return ''.join(list(s))
     
     def setUp(self):
-        self.p1   = iter('ssskkss')
-        self.p2   = iter('ccscssscskkskscskskksss')
-        self.p3   = iter('ccscckkscscckcckccssk')
+        self.p1   = buf_iter('ssskkss')
+        self.p2   = buf_iter('ccscssscskkskscskskksss')
+        self.p3   = buf_iter('ccscckkscscckcckccssk')
 
         self.ss   = mkpred('s')
         self.k    = mkpred('k')
@@ -126,9 +127,9 @@ class simple(TestCase):
         self.strng = strng
         self.no    = no
 
-        self.t1 = iter(['string','string','string','no','string','string'])
-        self.t2 = iter(['no','string','no','no'])
-        self.t3 = iter(['string','no','string','no','string','string'])
+        self.t1 = buf_iter(['string','string','string','no','string','string'])
+        self.t2 = buf_iter(['no','string','no','no'])
+        self.t3 = buf_iter(['string','no','string','no','string','string'])
 
         self.seq1 = seq(no,strng)
         self.seq2 = seq(star(self.strng),no,strng)
@@ -171,8 +172,8 @@ class simple(TestCase):
 
 class misc1(TestCase):
     def setUp(self):
-        self.p1 = iter('ccscckkscscckcckccssk')
-        self.ee = iter([])
+        self.p1 = buf_iter('ccscckkscscckcckccssk')
+        self.ee = buf_iter([])
         (s,k,c) = [ mkpred(l) for l in 'skc' ]
 
         self.stmt = seq(s,star(seq(star(c),k)))
@@ -215,7 +216,6 @@ class filetst(TestCase):
         stmt    = seq(s,star(seq(star(c),k)))
         cblk    = plus(c)
     
-#        self.f    = file(os.path.join(Setup.mypath,'Tfiles','f0.f'))
         self.f    = Setup.open_t('f0.f')
         self.stmt = stmt
         self.cblk = cblk
@@ -226,7 +226,7 @@ class filetst(TestCase):
     def testF1(self):
         '''read line assemblies from file'''
         ae   = self.assertEqual
-        rst  = self.f
+        rst  = buf_iter(self.f)
         stmt = self.stmt
         cblk = self.cblk
 
@@ -257,14 +257,14 @@ class generatorTest(TestCase):
     def test1(self):
         'vgen gets all assemblies from a file'
         ae    = self.assertEqual
-        aiter = vgen(self.asem,self.f)
+        aiter = vgen(self.asem,buf_iter(self.f))
 
         asems = list(aiter)
 
         ae(asems,['skk','s','s','ccc'])
 
 def s1():
-    return makeSuite(generatorTest)
+    return makeSuite(simple)
 
 def suite():
     s1 = makeSuite(simple)

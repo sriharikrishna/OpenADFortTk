@@ -141,7 +141,7 @@ c
     cont = pred(cont_p)
     full = treat(seq(stmt,star(seq(star(cmnt),cont))),fline_from_asm)
 
-    (fln1,rst) = full(p1f)
+    (fln1,rst) = full(buf_iter(p1f))
 
     def test1(self):
         'fline class, rawline,line,and internal_comments attributes'
@@ -171,7 +171,7 @@ c
 d    a possible debugging line
 '''
         p1   = p1[1:]
-        p1f  = StringIO(p1)
+        p1f  = buf_iter(StringIO(p1))
         cmnt = pred(comment_p)
         cblk = treat(plus(cmnt),cline)
 
