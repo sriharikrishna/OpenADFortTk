@@ -32,11 +32,17 @@ class fortScanLine(_fortScanLine):
     'non comment fortran lines'
 
     def __init__(self,fline):
+        '''initialize line format characteristics and
+        supply a token scan
 
+        Also, convert !@#$% leading tabs into spaces
+        '''
         from fortScan import scan1
 
         self.rawline         = fline.rawline
         line                 = fline.line
+        if line[0] == '\t':
+            line = ' ' * 8 + line[1:]
         m                    = _lineno_re.search(line[:6])
         self.lineno          = m and int(m.group(1))
         self.lead            = _lead_re.match(line[6:]).group(1)

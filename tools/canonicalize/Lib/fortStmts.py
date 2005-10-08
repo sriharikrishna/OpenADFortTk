@@ -5,12 +5,99 @@ Various Fortran statement types and Fortran parsing functions
 from fortExp     import *
 from l_assembler import *
 from fortLine    import flow_line
+from mapper      import _Mappable
 
-def _ident(self,*args,**kws):
-    return [self]
+class _TypeMod(object):
+    'modifier for type declaration'
 
-class GenStmt(object):
-    map = _ident
+    def __init__(self,e):
+        self.mod = e
+
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__,repr(self.mod),)
+
+    def __str__(self):
+        return self.pat % str(self.mod)
+
+class _Star(object):
+    'Utility modifier type for character data'
+    def __init__(self):
+        pass
+    def __repr__(self):
+        return '_Star()'
+    def __str__(self):
+        return '(*)'
+
+class _F90Len(object):
+    'Utility modifier for character data, F90 style'
+    def __init__(self,len):
+        self.len = len
+    def __repr__(self):
+        return '_F90Len(%s)' % repr(self.len)
+    def __str__(self):
+        return '(%s)' % str(self.len)
+
+class _F77Len(object):
+    'Utility modifier for character data, F77 style'
+    def __init__(self,len):
+        self.len = len
+    def __repr__(self):
+        return '_F77Len(%s)' % repr(self.len)
+    def __str__(self):
+        return '*%s' % str(self.len)
+
+class _Prec(_TypeMod):
+    pat = '*%s'
+
+class _Kind(_TypeMod):
+    pat = '(%s)'
+
+class _ExplKind(_TypeMod):
+    pat = '(kind = %s)'
+
+prec = seq(lit('*'),Exp)
+prec = treat(prec,lambda a:_Prec(a[1]))
+
+kind = seq(lit('('),Exp,lit(')'))
+kind = treat(kind,lambda a:_Kind(a[1]))
+
+explKind = seq(lit('('),lit('kind'),lit('='),Exp,lit(')'))
+explKind = treat(explKind,lambda a:_ExplKind(a[3]))
+
+starmod  = seq(lit('('),lit('*'),lit(')'))
+starmod  = treat(starmod,lambda l: _Star())
+
+lenmod   = disj(Exp,starmod)
+f77mod   = seq(lit('*'),lenmod)
+f77mod   = treat(f77mod,lambda l: _F77Len(l[1]))
+
+f90mod   = seq(lit('('),disj(lit('*'),Exp),lit(')'))
+f90mod   = treat(f90mod,lambda l: _F90Len(l[1]))
+
+id_l     = treat(id,str.lower)
+_typeid  = disj(lit('real'),
+                lit('integer'),
+                lit('logical'),
+                lit('complex'),
+                lit('doubleprecision'),
+                lit('doublecomplex'),
+                )
+
+pstd = seq(_typeid,
+         zo1(disj(prec,kind,explKind)),
+         )
+
+pchar = seq(lit('character'),
+         zo1(disj(f77mod,f90mod)),
+         )
+
+type_pat = disj(pchar,pstd)
+
+def typestr(raw):
+    (tyid,mod) = raw
+    return kwtbl[tyid].kw_str + (mod and str(mod[0]) or '')
+
+class GenStmt(_Mappable):
 
     def __init__(self,scan):
         self.scan = scan
@@ -73,6 +160,12 @@ class FirstExec(Marker):
 class Decl(NonComment):
     pass
 
+class TypeDecl(Decl):
+    kw = '__unknown__'
+    kw_str = kw
+    mod = None
+    decls = []
+
 class PUstart(Decl):
     pass
 
@@ -81,7 +174,7 @@ class Exec(NonComment):
 
 class Leaf(Exec):
     "special Exec that doesn't have components"
-    def __init__(self,dc):
+    def __init__(self,*dc):
         pass
 
     def __repr__(self):
@@ -102,8 +195,38 @@ class CommonStmt(Decl):
 class DataStmt(Decl):
     pass
 
+class ImplicitNone(Leaf):
+    def __str__(self):
+        return 'implicit none'
+
 class ImplicitStmt(Decl):
-    pass
+    @staticmethod
+    def parse(scan):
+        p0 = seq(lit('implicit'),lit('none'))
+        p0 = treat(p0,ImplicitNone)
+
+        impelt = seq(type_pat,lit('('),ExpList_l,lit(')'))
+        impelt = treat(impelt,lambda l: (l[0],l[2]))
+
+        p1 = seq(lit('implicit'),
+                 cslist(impelt))
+
+        p1 = treat(p1,lambda l:ImplicitStmt(l[1]))
+
+        (v,r) = disj(p0,p1)(scan)
+
+        return v
+
+    def __init__(self,lst):
+        self.lst = lst
+
+    def __repr__(self):
+        return 'ImplicitStmt(%s)' % repr(self.lst)
+    '''
+    FIXTHIS
+    def __str__(self):
+        return 'implicit %s' % ','.join(i
+    '''
 
 class EquivalenceStmt(Decl):
     pass
@@ -120,34 +243,9 @@ class StmtFnStmt(Decl):
 class ExternalStmt(Decl):
     pass
 
-class _Star(object):
-    'Utility modifier type for character data'
-    def __init__(self):
-        pass
-    def __repr__(self):
-        return '_Star()'
-    def __str__(self):
-        return '(*)'
-
-class _F90Len(object):
-    'Utility modifier for character data, F90 style'
-    def __init__(self,len):
-        self.len = len
-    def __repr__(self):
-        return '_F90Len(%s)' % repr(self.len)
-    def __str__(self):
-        return '(%s)' % str(self.len)
-
-class _F77Len(object):
-    'Utility modifier for character data, F77 style'
-    def __init__(self,len):
-        self.len = len
-    def __repr__(self):
-        return '_F77Len(%s)' % repr(self.len)
-    def __str__(self):
-        return '*%s' % str(self.len)
-
-class CharacterStmt(Decl):
+class CharacterStmt(TypeDecl):
+    kw = 'character'
+    kw_str = kw
     @staticmethod
     def parse(scan):
         starmod  = seq(lit('('),lit('*'),lit(')'))
@@ -187,28 +285,7 @@ class IntrinsicStmt(Decl):
 class IncludeStmt(Decl):
     pass
 
-class _TypeMod(object):
-    'modifier for type declaration'
-
-    def __init__(self,e):
-        self.mod = e
-
-    def __repr__(self):
-        return '%s(%s)' % (self.__class__.__name__,repr(self.mod),)
-
-    def __str__(self):
-        return self.pat % str(self.mod)
-
-class _Prec(_TypeMod):
-    pat = '*%s'
-
-class _Kind(_TypeMod):
-    pat = '(%s)'
-
-class _ExplKind(_TypeMod):
-    pat = '(kind = %s)'
-
-class BasicTypeDecl(Decl):
+class BasicTypeDecl(TypeDecl):
     @classmethod
     def parse(cls,scan):
         prec = seq(lit('*'),Exp)
@@ -246,17 +323,21 @@ class BasicTypeDecl(Decl):
 
 class RealStmt(BasicTypeDecl):
     kw = 'real'
+    kw_str = kw
 
 class ComplexStmt(BasicTypeDecl):
     kw = 'complex'
+    kw_str = kw
 
 class IntegerStmt(BasicTypeDecl):
     kw = 'integer'
+    kw_str = kw
 
 class LogicalStmt(BasicTypeDecl):
     kw = 'logical'
+    kw_str = kw
 
-class F77Type(Decl):
+class F77Type(TypeDecl):
     '''
     These types do not have kinds or modifiers
     '''
@@ -290,12 +371,22 @@ class DoubleCplexStmt(F77Type):
     kw     = 'doublecomplex'
     kw_str = 'double complex'
 
-#
-# treat as BasicTypeDecl for now
-# FIXME
-#
 class DimensionStmt(BasicTypeDecl):
-    kw = 'dimension'
+    @staticmethod
+    def parse(scan):
+        p1 = seq(lit('dimension'),
+                 cslist(app))
+        ((dc,lst),rest) = p1(scan)
+        return DimensionStmt(lst)
+
+    def __init__(self,lst):
+        self.lst = lst
+
+    def __repr__(self):
+        return 'dimension(%s)' % repr(self.lst)
+
+    def __str__(self):
+        return 'dimension %s' % ','.join([str(l) for l in self.lst])
 
 class NamelistStmt(Decl):
     pass
@@ -306,9 +397,12 @@ class SubroutineStmt(PUstart):
     def parse(scan):
         p1 = seq(lit('subroutine'),
                  id,
-                 lit('('),cslist(id),lit(')')
+                 zo1(seq(lit('('),cslist(id),lit(')')))
                  )
-        ((dc,name,dc,args,dc),rst) = p1(scan)
+        ((dc,name,args),rst) = p1(scan)
+        if args:
+            (dc,args,dc1) = args[0]
+
         return SubroutineStmt(name,args)
 
     def __init__(self,name,args):
@@ -325,6 +419,7 @@ class SubroutineStmt(PUstart):
 
 class ProgramStmt(PUstart):
     utype_name = 'program'
+
     @staticmethod
     def parse(scan):
         p1 = seq(lit('program'),
@@ -343,7 +438,33 @@ class ProgramStmt(PUstart):
 
 class FunctionStmt(PUstart):
     utype_name = 'function'
-    name      = '__NOT_YET__'
+
+    @staticmethod
+    def parse(scan):
+        p1 = seq(zo1(type_pat),
+                 lit('function'),
+                 id,
+                 lit('('),cslist(id),lit(')'),
+             )
+
+        ((ty,dc,name,dc1,args,dc2),rest) = p1(scan)
+        return FunctionStmt(ty,name,args)
+
+    def __init__(self,ty,name,args):
+        self.ty   = ty
+        self.name = name
+        self.args = args
+
+    def __repr__(self):
+        return 'FunctionStmt(%s,%s,%s)' % (repr(self.name),
+                                           repr(self.ty),
+                                           repr(self.args))
+    def __str__(self):
+        ty = self.ty
+        typeprefix = ty and (typestr(ty[0])+' ') or ''
+        return '%sfunction %s(%s)' % (typeprefix,
+                                      str(self.name),
+                                      ','.join([str(l) for l in self.args]))
 
 class ModuleStmt(PUstart):
     utype_name = 'module'
@@ -358,7 +479,7 @@ class ModuleStmt(PUstart):
         self.name = name
 
     def __repr__(self):
-        return '%s(%s,%s)' % (self.__class__.__name__,
+        return '%s(%s)' % (self.__class__.__name__,
                               repr(self.name))
     def __str__(self):
         return 'module %s' % self.name
@@ -366,7 +487,21 @@ class ModuleStmt(PUstart):
     pass
 
 class UseStmt(Decl):
-    pass
+    @staticmethod
+    def parse(scan):
+        p1 = seq(lit('use'),id)
+        ((dc,name),rest) = p1(scan)
+
+        return UseStmt(name)
+
+    def __init__(self,name):
+        self.name = name
+
+    def __repr__(self):
+        return 'UseStmt(%s)' % repr(self.name)
+
+    def __str__(self):
+        return 'use %s' % str(self.name)
 
 class FormatStmt(Decl):
     pass
@@ -597,6 +732,7 @@ def parse(scan):
         lscan = tuple([ l.lower() for l in scan ])
         kw3g  = kw_multi.kw3.get
         kw2g  = kw_multi.kw2.get
+#        print 'testing stmt ','|'.join(scan)
         kw = len(scan) >=3 and kw3g(lscan[0:3]) and sqz(3,[scan]) or \
              len(scan) >=2 and kw2g(lscan[0:2]) and sqz(2,[scan]) or \
              lscan[0]
@@ -619,10 +755,26 @@ _kw_parse = parse
 '''
 Spikes
 
-
 from fortScan import scan1
 def scan(s):
     return scan1.scan(s)[0]
+
+def p(s):
+    return parse(scan(s))
+
+ipl0  = 'implicit integer (e-f,k,l), real*4 (a-d,o-q,r)'
+ipl1  = 'implicit none'
+ipl2  = 'implicit complex (a,b,c,e-g)'
+
+
+dm0   = 'dimension x(10)'
+dm1   = 'dimension x(10),y(1,a:b,6 * STDLEN)'
+
+ff0   = 'function foob(x,y,z)'
+ff1   = 'real(kind=kind(1.0D0)) function ff(zy,zzy)'
+ff2   = 'double complex function foo(xx,yy,zz,ww)'
+ff3   = 'character*(ss+yy) function hhjhj(xx,yy)'
+
 
 c0    = 'character x(10),y(1:2)'
 c1    = 'Character*(AA*BB) zzz,bbb'

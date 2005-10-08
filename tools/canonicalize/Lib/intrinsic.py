@@ -9,4 +9,4 @@ __intrinsics = ('sin',
                 )
 
 def is_intrinsic(op):
-    return op.lower in __intrinsics
+    return op.lower() in __intrinsics

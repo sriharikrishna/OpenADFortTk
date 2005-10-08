@@ -162,5 +162,3 @@ def cslist(a):
     
     comma = pred(lambda x:x == ',')
     return treat(zo1(seq(a,star(seq(comma,a)))),process)
-
-

@@ -71,7 +71,6 @@ def canon_call(self):
         a1           = fn2sub(a,self.ctxt.fn_pat,self.ctxt.fn_repl)
         (a1,assigns) = nontriv(a1,self)
         new_assigns.extend(assigns)
-#        print '->back from nontriv, new assgns =',new_assigns
         newargs.append(a1)
 
     new_call = self.same(fs.CallStmt(self.head,newargs))
@@ -92,6 +91,8 @@ def canon_assign(self):
 
     self.ctxt.new_calls   = []
 
+    print 'canonicalizing assignment stmt:',repr(self)
+    
     rhs = fn2sub(self.rhs,self.ctxt.fn_pat,self.ctxt.fn_repl)
     pre = []
     for c in self.ctxt.new_calls:

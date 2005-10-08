@@ -261,7 +261,6 @@ def subst(a,pat,repl):
 
 '''
 Spikes
-'''
 
 def scan(s):
     import fortScan as fs
@@ -277,8 +276,6 @@ def r1(s):
     return Ops('+',s.a1,s.a2)
 
 ss = 'f(a *x + b, x**2)'
-
-'''
 
 s1 = 'IF((K .GE. 2) .AND.(CALCADVECTION .AND.(.NOT. IMPLICITADVECTION))) THEN'
 s2 = 'DATA(A1(tmp0), tmp0 = 1, 5, 1) / 3.49999994039535522461D-01,' + \

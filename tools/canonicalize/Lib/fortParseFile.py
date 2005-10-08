@@ -3,9 +3,7 @@ Turn a scanned line into a parsed line
 '''
 import fortScanFile as fsf
 import fortStmts    as fs
-
-def _ident(self,*args,**kws):
-    return [self]
+from   mapper       import _Map
 
 class _fortParseLine(object):
     'base class for parsed lines'
@@ -33,17 +31,9 @@ def fortParseLine(scanline):
 
     return line
 
-class _fortParse(object):
+class _fortParse(_Map):
     'base class for fortParseIterator and fortParse'
-
-    def map(self,lexi,*args,**kws):
-        for (cls,meth) in lexi:
-            cls.map = meth
-        for l in self.lines:
-            for v in l.map(*args,**kws):
-                yield v
-        for (cls,meth) in lexi:
-            cls.map = _ident
+    pass
 
 class fortParseIter(_fortParse):
     'return an iterator for parseLine objects'
@@ -69,3 +59,44 @@ def fortParseFileIter(fname):
     'return an iterator for the parseLine objects'
     return fortParseIter(fsf.fortScanFile(fname))
 
+"""
+Spikes
+
+def fname_t(s): return s
+
+class Context(object):
+    'Line context structure'
+
+    def __init__(self,toplev,hook=lambda l:l):
+        self.toplev  = toplev
+        self.uname   = '__dummy__'
+        self.utype   = None
+        self.vars    = dict()
+        self._getnew = False
+        hook(self)
+        print '-->finished init for new context'
+
+    def lookup_var(self,v):
+        return False
+
+def nextunit(line,ctxt):
+    ctxt._getnew = True
+    print '-->>>end unit detected, setting _getnew'
+    return line
+
+def newunit(line,ctxt):
+    ctxt.utype = line.__class__.utype_name
+    ctxt.uname = line.name
+    print '-->>>unit definition encountered:',ctxt.uname
+    return line
+
+ctxt_lexi = [(fs.PUend,nextunit),
+             (fs.PUstart,newunit),
+             ]
+
+def t():
+    global f1,ctxt
+
+    f1 = fortParseFile(fname_t('fc1.f'))
+    ctxt = Context('dc')
+"""

@@ -4,9 +4,13 @@ Turn a parsed line into a context line
 
 import fortParseFile as fpf
 import fortStmts     as fs
+import mapper
+from   mapper    import _Map
 
+'''
 def _ident(self,*args,**kw):
     return [self]
+'''
 
 class Struct(object):
     '''
@@ -17,71 +21,96 @@ class Struct(object):
         pass
 
 class SymEntry(object):
-    def __init__(self):
-        self.type = fs.RealStmt
-        self.mod  = []
-        self.dims = []
-        self.lngth  = None
+    def __init__(self,typeof,kw_str,mod,dims=(),
+                 vclass='local',lngth=None):
+        self.typeof = typeof
+        self.kw_str = kw_str
+        self.mod    = mod
+        self.dims   = dims
+        self.vclass = vclass
+        self.lngth  = lngth
 
-default_sym = SymEntry()
+default_sym = SymEntry(fs.RealStmt,'real',())
 
 class Context(object):
     'Line context structure'
 
-    def __init__(self,toplev):
-        self.toplev  = toplev
-        self.uname   = '__dummy__'
-        self.utype   = None
-        self.vars    = dict()
-        self._getnew = False
+    def __init__(self,toplev,hook=mapper.noop):
+        self.toplev   = toplev
+        self.uname    = '__dummy__'
+        self.utype    = None
+        self.vars     = dict()
+        self._getnew  = False
+        self.implicit = dict()
+        hook(self)
 
     def lookup_var(self,v):
+        if v in self.vars:
+            return self.vars[v]
         return default_sym
 
-def nextunit(line,ctxt):
-    ctxt[0]._getnew = True
-    return [line]
+def nextunit(line,ctxtm):
+    ctxt = ctxtm[0]
+    ctxt._getnew = True
+    return line
 
-def newunit(line,ctxt):
-    ctxt[0].utype = line.__class__.utype_name
-    ctxt[0].uname = line.name
-    return [line]
+def newunit(line,ctxtm):
+    ctxt = ctxtm[0]
+    ctxt.utype = line.__class__.utype_name
+    ctxt.uname = line.name
+    ctxt.utype = None
+    return line
+
+def fnunit(line,ctxtm):
+    ctxt = ctxtm[0]
+    ctxt.utype = 'function'
+    ctxt.uname = line.name
+    ctxt.utype = line.ty
+    return line
+
+def typesep(d):
+    '''return name and dimensions for a given decl entry
+    a type declaration will either be a simple var (string)
+    or an App expression
+    '''
+    return isinstance(d,str) and (d,()) or (d.head,tuple(d.args))
+
+def typedecl(line,ctxtm):
+    ctxt = ctxtm[0]
+
+    typeof  = line.__class__
+    kw_str  = line.kw_str
+    mod     = line.mod
+    lngth   = kw_str == 'character' and (mod and mod[0] or 1)
+    vclass  = 'local'
+    for d in line.decls:
+        (name,dims)     = typesep(d)
+        if name in ctxt.vars:
+            ctxt.vars[name].typeof = typeof
+            ctxt.vars[name].mod    = mod
+        else:
+            ctxt.vars[name] = SymEntry(typeof,kw_str,mod,
+                                       dims,vclass,lngth)
+    return line
 
 ctxt_lexi = [(fs.PUend,nextunit),
              (fs.PUstart,newunit),
+             (fs.FunctionStmt,fnunit),
+             (fs.TypeDecl,typedecl),
              ]
-class fortContext(object):
-    'create a list of contextLine objects'
+
+class fortContext(_Map):
+    '''create a list of contextLine objects:
+    At the moment, this is just a list of parsed lines
+    with an additional attribute called 'ctxt' has
+    been added to the parseLine object
+    '''
 
     def __init__(self,line_iter):
+        'initialize by adding the lines, 1 at a time via iterator'
         self.lines = []
         for l in line_iter:
             self.lines.append(l)
-
-        '''
-        toplev       = Struct()
-        toplev.units = dict()
-
-        ctxt         = Context(toplev)
-
-        ctxt_mutable = [ctxt]
-        self.lines = []
-        for l in parse_iter.map(ctxt_lexi,ctxt_mutable):
-            l.ctxt = ctxt_mutable[0]
-            self.lines.append(l)
-            if l.ctxt._getnew:
-                _new = Context(toplev)
-                ctxt_mutable[0] = _new
-        '''
-
-    def map(self,lexi,*args,**kws):
-        for (cls,meth) in lexi:
-            cls.map = meth
-        for l in self.lines:
-            for v in l.map(*args,**kws):
-                yield v
-        for (cls,meth) in lexi:
-            cls.map = _ident
 
     def rewrite(self,lexi,*args,**kws):
         return fortContext(self.map(lexi,*args,**kws))
@@ -98,25 +127,33 @@ class fortContext(object):
         self.printit(ff)
         ff.close()
 
-def _add_context(parse_iter):
+
+def _gen_context(parse_iter,hook=mapper.noop):
+    '''
+    The workhorse routine:
+      from a list of un contexted but parsed lines, process each line,
+      creating or modifying the context object according to
+      the supplied lexi
+    '''
     toplev       = Struct()
     toplev.units = dict()
 
-    ctxt         = Context(toplev)
+    ctxt         = Context(toplev,hook)
 
     ctxt_mutable = [ctxt]
 
-    for l in parse_iter.map(ctxt_lexi,ctxt_mutable):
+    for l in parse_iter.map1(ctxt_lexi,ctxt_mutable):
         l.ctxt = ctxt_mutable[0]
         yield l
         if l.ctxt._getnew:
-            _new = Context(toplev)
+            _new = Context(toplev,hook)
+            del l.ctxt._getnew
             ctxt_mutable[0] = _new
 
-def fortContextFile(fname):
+def fortContextFile(fname,hook=mapper.noop):
     'from a file name create a fortContext object'
 
-    return fortContext(_add_context(fpf.fortParseFileIter(fname)))
+    return fortContext(_gen_context(fpf.fortParseFileIter(fname),hook))
 
 '''
 Spikes
@@ -124,27 +161,27 @@ Spikes
 def fname_t(s): return s
 
 def show(l):
-    print 'testit COUNT =',l.ctxt.lcount
-    return []
+    print 'testit %s %s COUNT = %d' % (l.ctxt.utype,
+                                       l.ctxt.uname,
+                                       l.ctxt.lcount)
 
-fc1 = fortContextFile(fname_t('fc1.f'))
+def init_cnt(self):
+    self.lcount = 0
+    return self
+
+def bump_cnt(l):
+    l.ctxt.lcount += 1
 
 lexi_show = [(fs.GenStmt,show)]
-'''
 
-'''
-def gen_con(line,ctxt):
-    ctxt[0].lcount += 1
-    return [line]
+lexi_cnt  = [(fs.GenStmt,bump_cnt)]
 
-def unit(line,ctxt):
-    ctxt[0].lcount += 1
-    _new = Context()
-    _new.lcount = 0
-#    print '-->changing ctxt to ',_new
-    ctxt[0] = _new
-    
-    return [line]
+def t():
+    global fc1
+    fc1 = fortContextFile(fname_t('fc1.f'),init_cnt)
 
-for i in fc1.map(lexi_show): pass
+    for dc in fc1.mapc(lexi_cnt):pass
+
+    for dc in fc1.mapc(lexi_show): pass
+
 '''
