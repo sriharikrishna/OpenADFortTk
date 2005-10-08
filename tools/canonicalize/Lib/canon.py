@@ -7,7 +7,7 @@ import fortExp  as fe
 from intrinsic import is_intrinsic
 
 __tmp_prefix = 'ad_ctmp'
-__call_prefix = '_ad_s_'
+__call_prefix = 'ad_s_'
 
 def new_call(a,v):
     '''from an app term, and a new var v,
