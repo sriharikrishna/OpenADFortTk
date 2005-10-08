@@ -1,6 +1,10 @@
 '''
 Module to list the intrinsic functions, and
 a predicate to test for a function being an intrinsic
+Note that the following: 
+   write, read, print, open, close, format 
+are separatly recognized and therefore don't 
+need to be listed here.  
 '''
 __intrinsics = (
     'abs',
