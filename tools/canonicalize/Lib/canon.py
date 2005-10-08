@@ -162,36 +162,12 @@ canon_lexi = [(fs.PUstart,    canon_PUstart),
 '''
 Spikes
 
-from fortScan import scan1
-def scan(s): return scan1.scan(s)[0]
+def fname_t(n): return n
 
-class Sym(object):
-    pass
+from fortContextFile import fortContextFile
 
-dummy_sym       = Sym()
-dummy_sym.dims  = []
-dummy_sym.lngth = False
+fc1 = fortContextFile(fname_t('fc1.f'))
 
-class Context(object):
-    def lookup_var(s,v):
-        return dummy_sym
+fc2 = fc1.rewrite(canon_lexi)
 
-parse = fs.parse
-
-def init():
-    global s,pp,p0,pp1,s1,s2,pp2
-
-    s0 = 'subroutine no()'
-    p0 = parse(scan(s0))
-    p0.basic_line()
-    p0.ctxt = Context()
-    canon_PUstart(p0)
-    s  = 'call foo(bar(x,y()))'
-    pp = parse(scan(s))
-    p0.same(pp)
-    s1 = 'call foo(x + bar(k),h(I(1,2)))'
-    pp1 = p0.same(parse(scan(s1)))
-    s2  = 'xxx = 1. + g(kk * 2.2,h(II,ll(x+5,iiii)))'
-    pp2 = p0.same(parse(scan(s2)))
-    set_canon()
 '''

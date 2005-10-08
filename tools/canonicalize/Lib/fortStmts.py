@@ -83,6 +83,13 @@ _typeid  = disj(lit('real'),
                 lit('doublecomplex'),
                 )
 
+_dblp2   = seq(lit('double'),lit('precision'))
+_dblp2   = treat(_dblp2,lambda l:'doubleprecision')
+
+_dblp1   = lit('doubleprecision')
+
+_dblp    = disj(_dblp2,_dblp1)
+
 pstd = seq(_typeid,
          zo1(disj(prec,kind,explKind)),
          )
@@ -222,6 +229,7 @@ class ImplicitStmt(Decl):
 
     def __repr__(self):
         return 'ImplicitStmt(%s)' % repr(self.lst)
+
     '''
     FIXTHIS
     def __str__(self):
@@ -238,7 +246,18 @@ class SaveStmt(Decl):
     pass
 
 class StmtFnStmt(Decl):
-    pass
+    def __init__(self,name,args,body):
+        self.name = name
+        self.args = args
+        self.body = body
+    def __repr__(self):
+        return 'StmtFnStmt(%s,%s,%s)' % (repr(self.name),
+                                         repr(self.args),
+                                         repr(self.body))
+    def __str__(self):
+        return '%s(%s) = %s' % (str(self.name),
+                                ','.join([str(l) for l in self.args]),
+                                str(self.body))
 
 class ExternalStmt(Decl):
     pass

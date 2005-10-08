@@ -4,6 +4,7 @@ Turn a parsed line into a context line
 
 import fortParseFile as fpf
 import fortStmts     as fs
+import fortExp       as fe
 import mapper
 from   mapper    import _Map
 
@@ -20,17 +21,25 @@ class Struct(object):
     def __init__(self):
         pass
 
-class SymEntry(object):
-    def __init__(self,typeof,kw_str,mod,dims=(),
-                 vclass='local',lngth=None):
-        self.typeof = typeof
-        self.kw_str = kw_str
-        self.mod    = mod
-        self.dims   = dims
-        self.vclass = vclass
-        self.lngth  = lngth
+_sym_init = dict(typeof=None,
+                 mod=(),
+                 dims=(),
+                 vclass='local',
+                 lngth=None,
+                 kw_str='????')
 
-default_sym = SymEntry(fs.RealStmt,'real',())
+class SymEntry(object):
+    def __init__(self,**kw):
+        self.__dict__.update(_sym_init)
+        self.__dict__.update(kw)
+
+default_sym = SymEntry(typeof=None,
+                       kw_str='????',
+                       dims=(),
+                       mod=None,
+                       vclass=None,
+                       lngth=None
+                       )
 
 class Context(object):
     'Line context structure'
@@ -49,23 +58,28 @@ class Context(object):
             return self.vars[v]
         return default_sym
 
+#    def typeof(self,v):
+#        if v in self.vars:
+ 
 def nextunit(line,ctxtm):
     ctxt = ctxtm[0]
     ctxt._getnew = True
+    if ctxt.utype == 'module':
+        ctxt.toplev.modules[ctxt.uname] = ctxt
     return line
 
 def newunit(line,ctxtm):
     ctxt = ctxtm[0]
     ctxt.utype = line.__class__.utype_name
     ctxt.uname = line.name
-    ctxt.utype = None
+    ctxt.retntype = None
     return line
 
 def fnunit(line,ctxtm):
     ctxt = ctxtm[0]
     ctxt.utype = 'function'
     ctxt.uname = line.name
-    ctxt.utype = line.ty
+    ctxt.retntype = line.ty
     return line
 
 def typesep(d):
@@ -82,21 +96,71 @@ def typedecl(line,ctxtm):
     kw_str  = line.kw_str
     mod     = line.mod
     lngth   = kw_str == 'character' and (mod and mod[0] or 1)
-    vclass  = 'local'
     for d in line.decls:
         (name,dims)     = typesep(d)
         if name in ctxt.vars:
             ctxt.vars[name].typeof = typeof
             ctxt.vars[name].mod    = mod
         else:
-            ctxt.vars[name] = SymEntry(typeof,kw_str,mod,
-                                       dims,vclass,lngth)
+            ctxt.vars[name] = SymEntry(typeof=typeof,
+                                       kw_str=kw_str,
+                                       mod=mod,
+                                       dims=dims,
+                                       vclass='local',
+                                       lngth=lngth)
     return line
 
-ctxt_lexi = [(fs.PUend,nextunit),
-             (fs.PUstart,newunit),
-             (fs.FunctionStmt,fnunit),
-             (fs.TypeDecl,typedecl),
+def dimen(line,ctxtm):
+    ctxt = ctxtm[0]
+
+    for d in line.decls:
+        (name,dims) = (d.head,d.args)
+        if name in ctxt.vars:
+            ctxt.vars[name].dims = dims
+        else:
+            (typeof,kw_str,mod) = ctxt.typeof(name)
+            ctxt.vars[name] = SymEntry(typeof,kw_str,mod,dims)
+
+    return line
+
+def assgn(line,ctxtm):
+    ctxt = ctxtm[0]
+    lhs  = line.lhs
+    look = ctxt.lookup_var
+    if isinstance(lhs,fe.App) and not look(lhs.head).dims:
+        ret = fs.StmtFnStmt(lhs.head,lhs.args,line.rhs)
+        ret.rawline = line.rawline
+        ret.lineno  = line.lineno
+        ret.lead    = line.lead
+        return ret
+
+    return line
+
+def use_module(line,ctxtm):
+    from warnings import warn
+    
+    ctxt    = ctxtm[0]
+    modules = ctxt.toplev.modules
+    mod     = line.name
+    if mod not in modules:
+        warn('module %s not seen' % mod)
+        return line
+
+    modvars = modules[mod].vars
+    ctxt.vars.update(modvars)
+    vcstr = 'module:'+mod
+    for v in modvars:
+        ctxt.vars[v].vclass = vcstr
+    
+    return line
+
+ctxt_lexi = [(fs.PUend,         nextunit),
+             (fs.PUstart,       newunit),
+             (fs.FunctionStmt,  fnunit),
+             (fs.TypeDecl,      typedecl),
+             (fs.DimensionStmt, dimen),
+             (fs.AssignStmt,    assgn),
+             (fs.UseStmt,       use_module),
              ]
 
 class fortContext(_Map):
@@ -135,8 +199,9 @@ def _gen_context(parse_iter,hook=mapper.noop):
       creating or modifying the context object according to
       the supplied lexi
     '''
-    toplev       = Struct()
-    toplev.units = dict()
+    toplev         = Struct()
+    toplev.units   = dict()
+    toplev.modules = dict()
 
     ctxt         = Context(toplev,hook)
 
@@ -178,10 +243,10 @@ lexi_cnt  = [(fs.GenStmt,bump_cnt)]
 
 def t():
     global fc1
-    fc1 = fortContextFile(fname_t('fc1.f'),init_cnt)
+    fc1 = fortContextFile(fname_t('fc1.f'))
 
-    for dc in fc1.mapc(lexi_cnt):pass
+#    for dc in fc1.mapc(lexi_cnt,init_cnt):pass
 
-    for dc in fc1.mapc(lexi_show): pass
+#    for dc in fc1.mapc(lexi_show): pass
 
 '''
