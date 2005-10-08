@@ -91,8 +91,6 @@ def canon_assign(self):
 
     self.ctxt.new_calls   = []
 
-    print 'canonicalizing assignment stmt:',repr(self)
-    
     rhs = fn2sub(self.rhs,self.ctxt.fn_pat,self.ctxt.fn_repl)
     pre = []
     for c in self.ctxt.new_calls:
