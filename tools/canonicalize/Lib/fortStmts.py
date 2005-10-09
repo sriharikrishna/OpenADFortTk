@@ -155,8 +155,9 @@ class NonComment(GenStmt):
         targ.ctxt = self.ctxt
         return targ
 
-class Marker(GenStmt):
-    pass
+class Marker(NonComment):
+    def __init__(self):
+        pass
 
 class LastDecl(Marker):
     pass
@@ -230,11 +231,15 @@ class ImplicitStmt(Decl):
     def __repr__(self):
         return 'ImplicitStmt(%s)' % repr(self.lst)
 
-    '''
-    FIXTHIS
     def __str__(self):
-        return 'implicit %s' % ','.join(i
-    '''
+
+        def _helper(elt):
+            (typ,explst) = elt
+            return '%s (%s)' % (typestr(typ),
+                                ','.join([str(l).replace(' ','') \
+                                          for l in explst]))
+            
+        return 'implicit %s' % ', '.join([_helper(e) for e in self.lst])
 
 class EquivalenceStmt(Decl):
     pass
@@ -338,7 +343,9 @@ class BasicTypeDecl(TypeDecl):
         if self.mod:
             modtype += str(self.mod[0])
 
-        return '%s %s' %(modtype, ','.join([str(d) for d in self.decls]))
+        return '%s %s' %(modtype,
+                         ','.join([str(d).replace('()','') \
+                                   for d in self.decls]))
 
 class RealStmt(BasicTypeDecl):
     kw = 'real'

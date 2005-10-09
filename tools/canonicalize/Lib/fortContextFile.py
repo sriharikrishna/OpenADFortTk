@@ -45,12 +45,17 @@ class Context(object):
     'Line context structure'
 
     def __init__(self,toplev,hook=mapper.noop):
-        self.toplev   = toplev
-        self.uname    = '__dummy__'
-        self.utype    = None
-        self.vars     = dict()
-        self._getnew  = False
-        self.implicit = dict()
+        self.toplev     = toplev
+        self.uname      = '__dummy__'
+        self.utype      = None
+        self.vars       = dict()
+        self._getnew    = False
+        self._seekmarks = False
+        self.implicit   = dict()
+        for l in 'abcdefghopqrstuvwxyz':
+            self.implicit[l] = (fs.RealStmt,[])
+        for l in 'ijklmn':
+            self.implicit[l] = (fs.IntegerStmt,[])
         hook(self)
 
     def lookup_var(self,v):
@@ -58,10 +63,22 @@ class Context(object):
             return self.vars[v]
         return default_sym
 
-#    def typeof(self,v):
-#        if v in self.vars:
- 
+    def lookup_type(self,v):
+        try:
+            return self.vars[v].typeof
+        except KeyError, AttributeError:
+            return self.implicit[v[0].lower()]
+
+    def lookup_dims(self,v):
+        try:
+            return self.vars[v].dims
+        except KeyError, AttributeError:
+            return ()
+
 def nextunit(line,ctxtm):
+    '''process end-of-unit, including recording modules in the
+    toplevel module table
+    '''
     ctxt = ctxtm[0]
     ctxt._getnew = True
     if ctxt.utype == 'module':
@@ -69,17 +86,28 @@ def nextunit(line,ctxtm):
     return line
 
 def newunit(line,ctxtm):
+    'start unit: set up decls, etc'
+
     ctxt = ctxtm[0]
     ctxt.utype = line.__class__.utype_name
     ctxt.uname = line.name
     ctxt.retntype = None
+    ctxt._seekmarks = True
     return line
 
 def fnunit(line,ctxtm):
+    'function unit needs to record return type for function'
+    dc = newunit(line,ctxtm)
     ctxt = ctxtm[0]
     ctxt.utype = 'function'
-    ctxt.uname = line.name
+#    ctxt.uname = line.name
     ctxt.retntype = line.ty
+    if line.ty:
+        (ty,mod) = line.ty[0]
+        ty       = fs.kwtbl[ty]
+        ty       = (ty,mod)
+
+        ctxt.vars[line.name] = SymEntry(typeof=ty,dims=(),external=True)
     return line
 
 def typesep(d):
@@ -90,6 +118,8 @@ def typesep(d):
     return isinstance(d,str) and (d,()) or (d.head,tuple(d.args))
 
 def typedecl(line,ctxtm):
+    'type declaration -- record type in symbol table'
+
     ctxt = ctxtm[0]
 
     typeof  = line.__class__
@@ -102,9 +132,8 @@ def typedecl(line,ctxtm):
             ctxt.vars[name].typeof = typeof
             ctxt.vars[name].mod    = mod
         else:
-            ctxt.vars[name] = SymEntry(typeof=typeof,
+            ctxt.vars[name] = SymEntry(typeof=(typeof,mod),
                                        kw_str=kw_str,
-                                       mod=mod,
                                        dims=dims,
                                        vclass='local',
                                        lngth=lngth)
@@ -124,6 +153,9 @@ def dimen(line,ctxtm):
     return line
 
 def assgn(line,ctxtm):
+    '''Check assignment statement to see if it is a statement
+    function.
+    '''
     ctxt = ctxtm[0]
     lhs  = line.lhs
     look = ctxt.lookup_var
@@ -137,6 +169,9 @@ def assgn(line,ctxtm):
     return line
 
 def use_module(line,ctxtm):
+    '''For a use statement, grab the module out of the toplevel
+    module table (or warn if module is unavailable
+    '''
     from warnings import warn
     
     ctxt    = ctxtm[0]
@@ -154,6 +189,28 @@ def use_module(line,ctxtm):
     
     return line
 
+def implicit(line,ctxtm):
+    '''Set up the implicit table
+    '''
+    ctxt = ctxtm[0]
+
+    letters = 'abcdefghijklmnopqrstuvwxyz'
+
+    for (t,tlst) in line.lst:
+        (t_id,mod) = t
+        typecls    = fs.kwtbl[t_id]
+        tval = (typecls,mod)
+        for exp in tlst:
+            if isinstance(exp,str):
+                ctxt.implicit[exp.lower()] = tval
+            else:
+                for l in letters[ \
+                    letters.find(exp.a1.lower()) : \
+                    letters.find(exp.a2.lower())+1]:
+                    ctxt.implicit[l] = tval
+
+    return line
+
 ctxt_lexi = [(fs.PUend,         nextunit),
              (fs.PUstart,       newunit),
              (fs.FunctionStmt,  fnunit),
@@ -161,6 +218,7 @@ ctxt_lexi = [(fs.PUend,         nextunit),
              (fs.DimensionStmt, dimen),
              (fs.AssignStmt,    assgn),
              (fs.UseStmt,       use_module),
+             (fs.ImplicitStmt,  implicit),
              ]
 
 class fortContext(_Map):
@@ -179,16 +237,25 @@ class fortContext(_Map):
     def rewrite(self,lexi,*args,**kws):
         return fortContext(self.map(lexi,*args,**kws))
 
-    def printit(self,out=None):
+    def printit(self,showmarks=False,out=None):
         for l in self.lines:
+            if showmarks:
+                if isinstance(l,fs.LastDecl):
+                    l.rawline = 'c** Insert Decls BEFORE this line\n'
+                elif isinstance(l,fs.FirstExec):
+                    l.rawline = 'c** Next Line is FIRST exectuable\n'
+                else:
+                    pass
+            else:
+                if isinstance(l,fs.Marker): continue
             if out:
                 print >> out,l.rawline,
             else:
                 print l.rawline,
 
-    def write(self,fname):
+    def write(self,fname,showmarks=False):
         ff = open(fname,'w')
-        self.printit(ff)
+        self.printit(showmarks,ff)
         ff.close()
 
 
@@ -207,12 +274,46 @@ def _gen_context(parse_iter,hook=mapper.noop):
 
     ctxt_mutable = [ctxt]
 
+    hold = []
+    is_decl_prev = False
+    decl_lead = ''
     for l in parse_iter.map1(ctxt_lexi,ctxt_mutable):
-        l.ctxt = ctxt_mutable[0]
+        ctxt   = ctxt_mutable[0]
+        l.ctxt = ctxt
+        if ctxt._seekmarks:
+#            if is_decl_prev and isinstance(l,fs.Exec):
+            if isinstance(l,fs.Exec):
+                l.ctxt._seekmarks = False
+                is_prev_decl = False
+                marker = fs.LastDecl()
+                marker.lead = decl_lead
+                marker.ctxt = ctxt
+#                print 'marker set:',dir(marker)
+                yield marker
+                for ll in hold: yield ll
+                hold = []
+                marker = fs.FirstExec()
+                marker.lead = l.lead
+                marker.ctxt = ctxt
+                yield marker
+#                yield l
+#                continue
+            elif is_decl_prev and isinstance(l,fs.Comments):
+                hold.append(l)
+                continue
+            elif is_decl_prev and isinstance(l,fs.Decl):
+                for ll in hold: yield ll
+                hold = []
+            else:
+                is_decl_prev = isinstance(l,fs.Decl)
+                decl_lead    = l.lead
         yield l
         if l.ctxt._getnew:
             _new = Context(toplev,hook)
             del l.ctxt._getnew
+            hold = []
+            is_decl_prev = False
+            decl_lead    = ''
             ctxt_mutable[0] = _new
 
 def fortContextFile(fname,hook=mapper.noop):
@@ -237,6 +338,16 @@ def init_cnt(self):
 def bump_cnt(l):
     l.ctxt.lcount += 1
 
+def decl1(line):
+    (cls,mod)   = line.ctxt.lookup_type('new_ad_var')
+    stmt        = cls(mod,[fe.App('new_ad_var',[])])
+    stmt.lead   = line.lead
+    stmt.lineno = False
+    stmt.flow()
+    return [stmt,line]
+
+lexi_decl1 = [(fs.LastDecl,decl1)]
+
 lexi_show = [(fs.GenStmt,show)]
 
 lexi_cnt  = [(fs.GenStmt,bump_cnt)]
@@ -246,7 +357,6 @@ def t():
     fc1 = fortContextFile(fname_t('fc1.f'))
 
 #    for dc in fc1.mapc(lexi_cnt,init_cnt):pass
-
 #    for dc in fc1.mapc(lexi_show): pass
 
 '''
