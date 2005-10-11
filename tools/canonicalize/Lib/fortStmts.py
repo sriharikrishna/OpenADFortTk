@@ -203,7 +203,11 @@ class CommonStmt(Decl):
 class DataStmt(Decl):
     pass
 
-class ImplicitNone(Leaf):
+class ImplicitNone(Decl):
+    def __init__(self,*dc):
+        pass
+    def __repr__(self):
+        return 'ImplicitNone()'
     def __str__(self):
         return 'implicit none'
 
@@ -774,9 +778,39 @@ def parse(scan):
 _kw_parse = parse
 
 #
-# utility construction routines
+# Type helper routines
 #
 
+def kw2type(s): return(kwtbl[s.lower()])
+def lenfn(n): return [_F77Len(str(n))]
+def poly(s):
+    return s.lower() in ('max',
+                         'min',
+                         )
+def typecompare(t1,t2):
+    mergeit = dict(character=0,
+                   logical=1,
+                   integer=2,
+                   real=3,
+                   complex=4,
+                   doubleprecision=5,
+                   doublecomplex=6,
+                   )
+
+    if t1[0] == t2[0]:
+        return(t1[0],max(t1[1],t2[1]))
+
+    if mergeit[t1[0].kw] > mergeit[t2[0].kw]: return t1
+
+    return t2
+
+def typemerge(lst,default):
+    if not lst: return default
+    if len(lst) == 1: return lst[0]
+    t1 = typecompare(lst[0],lst[1])
+    for l in lst[2:]:
+        t1 = typecompare(t1,l)
+    return t1
 
 '''
 Spikes

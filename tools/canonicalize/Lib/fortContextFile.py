@@ -85,14 +85,18 @@ def nextunit(line,ctxtm):
         ctxt.toplev.modules[ctxt.uname] = ctxt
     return line
 
+_showparse = False
 def newunit(line,ctxtm):
     'start unit: set up decls, etc'
+    import sys
 
     ctxt = ctxtm[0]
     ctxt.utype = line.__class__.utype_name
     ctxt.uname = line.name
     ctxt.retntype = None
     ctxt._seekmarks = True
+    if _showparse:
+        print >> sys.stderr,'Reading and parsing unit',ctxt.uname
     return line
 
 def fnunit(line,ctxtm):
@@ -104,7 +108,7 @@ def fnunit(line,ctxtm):
     ctxt.retntype = line.ty
     if line.ty:
         (ty,mod) = line.ty[0]
-        ty       = fs.kwtbl[ty]
+        ty       = fs.kwtbl[ty.lower()]
         ty       = (ty,mod)
 
         ctxt.vars[line.name] = SymEntry(typeof=ty,dims=(),external=True)
@@ -353,10 +357,10 @@ lexi_show = [(fs.GenStmt,show)]
 lexi_cnt  = [(fs.GenStmt,bump_cnt)]
 
 def t():
-    global fc1
+    global fc1,fc2
     fc1 = fortContextFile(fname_t('fc1.f'))
+#    fc2 = fortContextFile(fname_t('fc2.f'))
 
 #    for dc in fc1.mapc(lexi_cnt,init_cnt):pass
 #    for dc in fc1.mapc(lexi_show): pass
-
 '''

@@ -10,11 +10,11 @@ from intrinsic import is_intrinsic
 __tmp_prefix = 'ad_ctmp'
 __call_prefix = 'ad_s_'
 
-def new_call(a,v):
+def new_call(a,v,polyfix=''):
     '''from an app term, and a new var v,
     generate a call to a related subroutine, with v as the last var
     '''
-    return fs.CallStmt(__call_prefix + a.head,
+    return fs.CallStmt(__call_prefix + a.head + polyfix,
                        a.args + [v])
     
 def gen_repl_fns(line):
@@ -29,9 +29,14 @@ def gen_repl_fns(line):
         tvar = __tmp_prefix + str(line.ctxt._tcnt)
 
         line.ctxt._tcnt += 1
-        ty = line.ctxt.lookup_type(a.head)
+        ty = line.ctxt.ety(a)
+#        ty = line.ctxt.lookup_type(a.head)
+
         line.ctxt.new_vars.append((ty,tvar),)
-        line.ctxt.new_calls.append(new_call(a,tvar))
+        post_tag = ''
+        if fs.poly(a.head):
+            post_tag = '_' + ty[0].kw.lower()[0]
+        line.ctxt.new_calls.append(new_call(a,tvar,post_tag))
 
         return tvar
 
@@ -42,7 +47,16 @@ def gen_repl_fns(line):
                      lookup(a.head).lngth or \
                      is_intrinsic(a.head) )
 
-    return (pat_fn,repl_fn)
+    def ety(e):
+        ety1 = fe.exptype
+        return ety1(e,
+                    line.ctxt.lookup_type,
+                    fs.kw2type,
+                    fs.lenfn,
+                    fs.poly,
+                    fs.typemerge)
+
+    return (pat_fn,repl_fn,ety)
 
 fn2sub = fe.subst
 
@@ -124,13 +138,15 @@ _verbose = True
 
 def canon_PUstart(self):
 
-    (fn_pat,fn_repl)   = gen_repl_fns(self)
+    import sys
+    (fn_pat,fn_repl,ety)   = gen_repl_fns(self)
 
     self.ctxt.fn_pat   = fn_pat
     self.ctxt.fn_repl  = fn_repl
+    self.ctxt.ety      = ety
 
-#    if _verbose:
-#        print 'working on program unit ',self.ctxt.uname
+    if _verbose:
+        print >> sys.stderr, 'working on program unit ',self.ctxt.uname
 
     return [self]
     
@@ -142,6 +158,7 @@ def nontriv(e,line):
 
     tvar = __tmp_prefix + str(line.ctxt._tcnt)
     line.ctxt._tcnt += 1
+    line.ctxt.new_vars.append((line.ctxt.ety(e),tvar),)
     a1 = line.same(fs.AssignStmt(tvar,e))
 #    print 'appending new assign-->',repr(a1)
 #    line.ctxt.new_assigns.append(a1)
@@ -183,10 +200,10 @@ def fname_t(n): return n
 
 from fortContextFile import fortContextFile
 
+fc  = fortContextFile(fname_t('fc3.f'))
 fc1 = fortContextFile(fname_t('fc1.f'))
 
-fc2 = fc1.rewrite(canon_lexi)
+fc1c = fc1.rewrite(canon_lexi)
 
-fc3 = fc2.rewrite(lexi_decl)
-
+fc1d = fc1c.rewrite(decl_lexi)
 '''

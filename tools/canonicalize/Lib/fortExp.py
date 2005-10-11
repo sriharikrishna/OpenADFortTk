@@ -69,7 +69,19 @@ class App(_Exp):
     def map(self,fn):
         return App(self.head,[fn(a) for a in self.args])
 
-class Umi(_Exp):
+    def typeit(self,exptype,idchk,kw2type,lenfn,poly,typemerge):
+        headtype = idchk(self.head)
+        if poly(self.head):
+            return typemerge([exptype(l,idchk,kw2type,lenfn,poly,typemerge) \
+                              for l in self.args],
+                             headtype)
+        return headtype
+
+class Unary(_Exp):
+    def typeit(self,exptype,idchk,kw2type,lenfn,poly,typemerge):
+        return exptype(self.exp,idchk,kw2type,lenfn,poly,typemerge)
+    
+class Umi(Unary):
     'unary minus'
     def __init__(self,exp):
         self.exp = exp
@@ -83,7 +95,7 @@ class Umi(_Exp):
     def map(self,fn):
         return Umi(fn(self.exp))
 
-class Upl(_Exp):
+class Upl(Unary):
     'unary plus'
     def __init__(self,exp):
         self.exp = exp
@@ -97,7 +109,7 @@ class Upl(_Exp):
     def map(self,fn):
         return Upl(fn(self.exp))
 
-class Not(_Exp):
+class Not(Unary):
     'unary not'
 
     def __init__(self,exp):
@@ -112,7 +124,7 @@ class Not(_Exp):
     def map(self,fn):
         return Not(fn(self.exp))
 
-class ParenExp(_Exp):
+class ParenExp(Unary):
     'parenthesized expression'
     def __init__(self,exp):
         self.exp = exp
@@ -142,6 +154,12 @@ class Ops(_Exp):
                              str(self.a2))
     def map(self,fn):
         return Ops(self.op,fn(self.a1),fn(self.a2))
+
+    def typeit(self,exptype,idchk,kw2type,lenfn,poly,typemerge):
+        return typemerge([exptype(self.a1,idchk,kw2type,lenfn,
+                                  poly,typemerge),
+                          exptype(self.a2,idchk,kw2type,lenfn,
+                                  poly,typemerge)],'????')
 
 def is_id(t):
     return _id_re.match(t)
@@ -259,6 +277,33 @@ def subst(a,pat,repl):
     else:
         return a.map(lambda x:subst(x,pat,repl))
 
+def const_type(e,kw2type,lenfn):
+    kind_re = sre.compile(r'_(\w+)')
+    if _flonum_re.match(e):
+        sep_re = sre.compile(r'([^_]+)(_(\w+))?')
+        v      = sep_re.match(e)
+        ty     = 'd' in v.group(1).lower() and 'doubleprecision' or \
+                 'real'
+        ty     = kw2type(ty)
+        kind   = v.group(2) and [v.group(3)] or []
+        return (ty,kind)
+    if _int_re.match(e):
+        ty   = kw2type('integer')
+        kind = kind_re.search(e)
+        kind = kind and [ kind.group(1) ] or []
+        return (ty,kind)
+    if e.lower() in _logicon_set:
+        return (kw2type('logical'),[])
+    if e[0] in _quote_set:
+        return (kw2type('character'),[lenfn(len(e)-2)])
+
+def exptype(e,idchk,kw2type,lenfn,poly,typemerge):
+    if isinstance(e,str) and is_const(e):
+        return const_type(e,kw2type,lenfn)
+    if isinstance(e,str) and _id_re.match(e):
+        return idchk(e)
+    return e.typeit(exptype,idchk,kw2type,lenfn,poly,typemerge)
+
 '''
 Spikes
 
@@ -267,13 +312,69 @@ def scan(s):
     return fs.scan1.scan(s)[0]
 
 def ee(s):
-    return Exp(s)[0]
+    return Exp(scan(s))[0]
 
 def p1(s):
     return isinstance(s,Ops) and s.op == '*'
 
 def r1(s):
     return Ops('+',s.a1,s.a2)
+
+def kw2type(s): return s
+def lenfn(n): return str(n)
+def poly(s) : return s.lower() == 'max'
+mergeit = dict(character=0,
+               logical=1,
+               integer=2,
+               real=3,
+               complex=4,
+               doubleprecision=5,
+               doublecomplex=6,
+               )
+
+def typecompare(t1,t2):
+    if t1[0] == t2[0]:
+        return(t1[0],max(t1[1],t2[1]))
+    if mergeit[t1[0]] > mergeit[t2[0]]: return t1
+    return t2
+    
+def typemerge(lst,default):
+    if not lst: return default
+    if len(lst) == 1: return lst[0]
+    if len(lst) == 2: return typecompare(lst[0],lst[1])
+    t1 = typecompare(lst[0],lst[1])
+    for l in lst[2:]:
+        t1 = typecompare(t1,l)
+    return t1
+    
+def idchk(s):
+    kkk = dict(x=('real',[]),y=('doubleprecision',[]),
+               ix=('integer',[]),hasit=('logical',[]))
+    return kkk.get(s,('real',[]))
+
+def t():
+    global s1,s2,s3,s4,s5,s6,ety
+    s1 = '(1)'
+    s2 = '(.true.)'
+    s3 = 'x(3.,sss * 7.7D0)'
+    s4 = 'max(ix,7.7D0)'
+    s5 = 'max("This is a string" // "more stuff",5)'
+    s6 = 'hasit .or. .not. hasit'
+    ety = lambda e:exptype(e,idchk,kw2type,lenfn,poly,typemerge)
+    
+def t0():
+    global s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11
+    s1 = '3.1415D0'
+    s2 = '3.1415'
+    s3 = '3.1415_w2f_4'
+    s4 = '3.1415_6'
+    s5 = '31415'
+    s6 = '31415_w2f_i2'
+    s7 = '31415_2'
+    s8 = '.TRUE.'
+    s9 = '.False.'
+    s10 = "'123456'"
+    s11 = '"12345678"'
 
 ss = 'f(a *x + b, x**2)'
 
