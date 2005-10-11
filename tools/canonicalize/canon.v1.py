@@ -8,7 +8,7 @@ from Lib.fortContextFile import fortContextFile
 
 from Lib.canon import canon_lexi,decl_lexi,_verbose
 
-# _verbose = True
+_verbose   = True
 
 f1 = fortContextFile(sys.argv[1])
 

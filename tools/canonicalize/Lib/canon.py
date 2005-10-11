@@ -134,7 +134,7 @@ def canon_ifthen(self):
 
     return pre
 
-_verbose = True
+_verbose = False
 
 def canon_PUstart(self):
 
@@ -153,16 +153,11 @@ def canon_PUstart(self):
 def nontriv(e,line):
     if isinstance(e,str):
         return (e,[])
-    if isinstance(e,fe.App) and not line.ctxt.fn_pat(e):
-        return (e,[])
 
     tvar = __tmp_prefix + str(line.ctxt._tcnt)
     line.ctxt._tcnt += 1
     line.ctxt.new_vars.append((line.ctxt.ety(e),tvar),)
     a1 = line.same(fs.AssignStmt(tvar,e))
-#    print 'appending new assign-->',repr(a1)
-#    line.ctxt.new_assigns.append(a1)
-#    print 'new assigns list =',[a1]
     return (tvar,[a1])
 
 def declare_tmpvars(line):
@@ -173,7 +168,8 @@ def declare_tmpvars(line):
     rv = []
     for (ty,tvar) in line.ctxt.new_vars:
         (cls,mod) = ty
-        decl = cls(mod,[fe.App(tvar,[])])
+#        decl = cls(mod,[fe.App(tvar,[])])
+        decl = cls(mod,[tvar])
         decl.lineno = False
         decl.lead   = line.lead
         decl.ctxt   = line.ctxt
@@ -201,9 +197,6 @@ def fname_t(n): return n
 from fortContextFile import fortContextFile
 
 fc  = fortContextFile(fname_t('fc3.f'))
-fc1 = fortContextFile(fname_t('fc1.f'))
-
-fc1c = fc1.rewrite(canon_lexi)
-
-fc1d = fc1c.rewrite(decl_lexi)
+fcc = fc.rewrite(canon_lexi)
+fcd = fcc.rewrite(decl_lexi)
 '''
