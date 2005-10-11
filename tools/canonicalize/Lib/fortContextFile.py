@@ -75,6 +75,12 @@ class Context(object):
         except KeyError, AttributeError:
             return ()
 
+    def lookup_lngth(self,v):
+        try:
+            return self.vars[v].lngth
+        except KeyError, AttributeError:
+            return False
+
 def nextunit(line,ctxtm):
     '''process end-of-unit, including recording modules in the
     toplevel module table

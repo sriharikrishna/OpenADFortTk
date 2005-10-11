@@ -7,8 +7,9 @@ import fortExp  as fe
 from   fortContextFile import SymEntry
 from intrinsic import is_intrinsic
 
-__tmp_prefix = 'ad_ctmp'
-__call_prefix = 'ad_s_'
+__tmp_prefix   = 'ad_ctmp'
+__call_prefix  = 'ad_s_'
+__slice_prefix = 'ad_slc'
 
 def new_call(a,v,polyfix=''):
     '''from an app term, and a new var v,
@@ -30,7 +31,6 @@ def gen_repl_fns(line):
 
         line.ctxt._tcnt += 1
         ty = line.ctxt.ety(a)
-#        ty = line.ctxt.lookup_type(a.head)
 
         line.ctxt.new_vars.append((ty,tvar),)
         post_tag = ''
@@ -56,9 +56,20 @@ def gen_repl_fns(line):
                     fs.poly,
                     fs.typemerge)
 
-    return (pat_fn,repl_fn,ety)
+    def slice_subst(a):
+
+        tvar = __slice_prefix + str(line.ctxt.toplev._scnt)
+        line.ctxt.toplev._scnt += 1
+        line.ctxt.new_vars.append(((fs.IntegerStmt,[]),tvar),)
+        line.ctxt.toplev.slice_undo[tvar] = a
+
+        return tvar
+
+    return (pat_fn,repl_fn,ety,slice_subst)
 
 fn2sub = fe.subst
+def slice_pat(e):
+    return isinstance(e,fe.Ops) and e.op == ':'
 
 def canon1(e,fn_pat,fn_exp):
     '''First canon of an exp: remove function calls and repl
@@ -83,8 +94,10 @@ def canon_call(self):
 
 
     new_assigns = []
+    slice_subst = self.ctxt.slice_subst
     for a in self.args:
-        a1           = fn2sub(a,self.ctxt.fn_pat,self.ctxt.fn_repl)
+        a0           = fe.subst(a,slice_pat,slice_subst)
+        a1           = fn2sub(a0,self.ctxt.fn_pat,self.ctxt.fn_repl)
         (a1,assigns) = nontriv(a1,self)
         new_assigns.extend(assigns)
         newargs.append(a1)
@@ -107,7 +120,10 @@ def canon_assign(self):
 
     self.ctxt.new_calls   = []
 
-    rhs = fn2sub(self.rhs,self.ctxt.fn_pat,self.ctxt.fn_repl)
+    slice_subst = self.ctxt.slice_subst
+    rhs1 = fe.subst(self.rhs,slice_pat,slice_subst)
+#    rhs = fn2sub(self.rhs,self.ctxt.fn_pat,self.ctxt.fn_repl)
+    rhs = fn2sub(rhs1,self.ctxt.fn_pat,self.ctxt.fn_repl)
     pre = []
     for c in self.ctxt.new_calls:
         pre.extend([l for l in self.same(c).map()])
@@ -124,7 +140,10 @@ def canon_ifthen(self):
     '''
     self.ctxt.new_calls   = []
 
-    tst = fn2sub(self.test,self.ctxt.fn_pat,self.ctxt.fn_repl)
+    slice_subst = self.ctxt.slice_subst
+    tst1 = fe.subst(self.test,slice_pat,slice_subst)
+#    tst = fn2sub(self.test,self.ctxt.fn_pat,self.ctxt.fn_repl)
+    tst = fn2sub(tst1,self.ctxt.fn_pat,self.ctxt.fn_repl)
     pre = []
     for c in self.ctxt.new_calls:
         pre.extend([l for l in self.same(c).map()])
@@ -139,11 +158,12 @@ _verbose = False
 def canon_PUstart(self):
 
     import sys
-    (fn_pat,fn_repl,ety)   = gen_repl_fns(self)
+    (fn_pat,fn_repl,ety,slice_subst)   = gen_repl_fns(self)
 
-    self.ctxt.fn_pat   = fn_pat
-    self.ctxt.fn_repl  = fn_repl
-    self.ctxt.ety      = ety
+    self.ctxt.fn_pat      = fn_pat
+    self.ctxt.fn_repl     = fn_repl
+    self.ctxt.ety         = ety
+    self.ctxt.slice_subst = slice_subst  
 
     if _verbose:
         print >> sys.stderr, 'working on program unit ',self.ctxt.uname
@@ -152,6 +172,13 @@ def canon_PUstart(self):
     
 def nontriv(e,line):
     if isinstance(e,str):
+        return (e,[])
+
+    lookup_dims   = line.ctxt.lookup_dims
+    lookup_lngth  = line.ctxt.lookup_lngth
+
+    if isinstance(e,fe.App) and ( lookup_dims(e.head) or \
+                                  lookup_lngth(e.head) ):
         return (e,[])
 
     tvar = __tmp_prefix + str(line.ctxt._tcnt)
@@ -193,10 +220,17 @@ decl_lexi  = [(fs.LastDecl,   declare_tmpvars),
 Spikes
 
 def fname_t(n): return n
+def hook1(self):
+    if hasattr(self.toplev,'_scnt'):
+        pass
+    else:
+        self.toplev._scnt = 0
+        self.toplev.slice_undo = dict()
+
 
 from fortContextFile import fortContextFile
 
-fc  = fortContextFile(fname_t('fc3.f'))
+fc  = fortContextFile(fname_t('fc3.f'),hook1)
 fcc = fc.rewrite(canon_lexi)
 fcd = fcc.rewrite(decl_lexi)
 '''
