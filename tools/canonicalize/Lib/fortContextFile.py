@@ -110,7 +110,6 @@ def fnunit(line,ctxtm):
     dc = newunit(line,ctxtm)
     ctxt = ctxtm[0]
     ctxt.utype = 'function'
-#    ctxt.uname = line.name
     ctxt.retntype = line.ty
     if line.ty:
         (ty,mod) = line.ty[0]
