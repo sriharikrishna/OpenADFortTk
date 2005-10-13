@@ -22,7 +22,7 @@ f1 = fortContextFile(sys.argv[1],hook1)
 
 f1rw = f1.rewrite(canon_lexi).rewrite(decl_lexi)
 
-slcf = open(sys.argv[1] + '.slc','w')
+slcf = open('reslice.dat','w')
 pp = cp.Pickler(slcf)
 pp.dump(f1rw.lines[0].ctxt.toplev.slice_undo)
 slcf.close()

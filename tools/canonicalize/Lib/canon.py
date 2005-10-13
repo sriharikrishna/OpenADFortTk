@@ -93,18 +93,6 @@ def gen_repl_fns(line):
 
 fn2sub = fe.subst
 
-def canon1(e,fn_pat,fn_exp):
-    '''First canon of an exp: remove function calls and repl
-    with subroutine calls.
-    canon1 of an expression => ([contexted-stmts],new_exp)
-    '''
-    e1  = fe.subst(e,fn_pat,fn_repl)
-    pre = []
-    for l in fn_repl.stmts:
-        pre.extend([ll for ll in l.canon()])
-
-    return (pre,e1)
-
 def canon_call(self):
     '''
     Canonicalize a call statement by replacing function calls with
@@ -154,8 +142,6 @@ def canon_assign(self):
     fn_pat      = self.ctxt.repl_fns['fn_pat']
     fn_repl     = self.ctxt.repl_fns['fn_repl']
     rhs1 = fe.subst(self.rhs,slice_pat,slice_subst)
-#    rhs = fn2sub(self.rhs,self.ctxt.fn_pat,self.ctxt.fn_repl)
-#    rhs = fn2sub(rhs1,self.ctxt.fn_pat,self.ctxt.fn_repl)
     rhs = fn2sub(rhs1,fn_pat,fn_repl)
     pre = []
     for c in self.ctxt.new_calls:
@@ -179,7 +165,6 @@ def canon_ifthen(self):
     fn_pat      = repl_fns['fn_pat']
     fn_repl     = repl_fns['fn_repl']
     tst1 = fe.subst(self.test,slice_pat,slice_subst)
-#    tst = fn2sub(self.test,self.ctxt.fn_pat,self.ctxt.fn_repl)
     tst = fn2sub(tst1,fn_pat,fn_repl)
     pre = []
     for c in self.ctxt.new_calls:
@@ -196,12 +181,6 @@ def canon_PUstart(self):
 
     import sys
     self.ctxt.repl_fns    = gen_repl_fns(self)
-#    (fn_pat,fn_repl,ety,slice_subst)   = gen_repl_fns(self)
-
-#    self.ctxt.fn_pat      = fn_pat
-#    self.ctxt.fn_repl     = fn_repl
-#    self.ctxt.ety         = ety
-#    self.ctxt.slice_subst = slice_subst  
 
     if _verbose:
         print >> sys.stderr, 'working on program unit ',self.ctxt.uname
@@ -222,7 +201,6 @@ def nontriv(e,line):
     ety  = line.ctxt.repl_fns['ety']
     tvar = __tmp_prefix + str(line.ctxt._tcnt)
     line.ctxt._tcnt += 1
-#    line.ctxt.new_vars.append((line.ctxt.ety(e),tvar),)
     line.ctxt.new_vars.append((ety(e),tvar),)
     a1 = line.same(fs.AssignStmt(tvar,e))
     return (tvar,[a1])
@@ -235,7 +213,6 @@ def declare_tmpvars(line):
     rv = []
     for (ty,tvar) in line.ctxt.new_vars:
         (cls,mod) = ty
-#        decl = cls(mod,[fe.App(tvar,[])])
         decl = cls(mod,[tvar])
         decl.lineno = False
         decl.lead   = line.lead
@@ -258,7 +235,6 @@ decl_lexi  = [(fs.LastDecl,   declare_tmpvars),
     
 '''
 Spikes
-'''
 
 def fname_t(n): return n
 def hook1(self):
@@ -268,14 +244,68 @@ def hook1(self):
         self.toplev._scnt = 0
         self.toplev.slice_undo = dict()
 
+def reslice_assign(l,pat,subst):
+#    print 'reslice assign called:',l
+    rhs = fe.subst(l.rhs,pat,subst)
+    new_l = l.same(fs.AssignStmt(l.lhs,rhs))
+#    print 'after reslice:',new_l
+    return [new_l]
+
+def reslice_call(l,pat,subst):
+#    print 'reslice call called:',l
+    args = [fe.subst(a,pat,subst) for a in l.args]
+    new_l = l.same(fs.CallStmt(l.head,args))
+#    print 'after reslice:',new_l
+    return [new_l]
+
+def reslice_ifthen(l,pat,subst):
+#    print 'reslice ifthen called:',l
+    test = fe.subst(l.test,pat,subst)
+    new_l = l.same(fs.IfThenStmt(test))
+#    print 'after reslice:',new_l
+    return [new_l]
+
+def gen_reslice_fns(undo_dict):
+    def pat(e):
+        return isinstance(e,str) and e in undo_dict
+
+    def subst(e):
+        return undo_dict[e]
+
+    return (pat,subst)
+
+reslice_lexi = [(fs.AssignStmt,reslice_assign),
+                (fs.CallStmt,reslice_call),
+                (fs.IfThenStmt,reslice_ifthen)]
+
 def t():
+    import cPickle as cp
+    import mapper as map
+
     from fortContextFile import fortContextFile
-    global fc,fcc,fcd,fc2,fcc2,fcd2
+    global fc,fcc,fcd,fc2,fcc2,fcd2,upf,reslc_up,reslice_d
+    global fns,fcr,fcr2
 
     fc  = fortContextFile(fname_t('fc3.f'),hook1)
     fcc = fc.rewrite(canon_lexi)
     fcd = fcc.rewrite(decl_lexi)
+    fcd.write('fc3.canon.f')
+    pf = open('reslice.dat','w')
+    slc_save = cp.Pickler(pf)
+    slc_save.dump(fcd.lines[0].ctxt.toplev.slice_undo)
+    pf.close()
+
+    upf       = open('reslice.dat')
+    reslc_up  = cp.Unpickler(upf)
+    reslice_d = reslc_up.load()
+    upf.close()
+
+    fns  = gen_reslice_fns(reslice_d)
+    fcr  = fortContextFile(fname_t('fc3.canon.mod.f'))
+    
+    fcr2 = fcr.rewrite(reslice_lexi,*fns)
 
     fc2  = fortContextFile(fname_t('fc1.f'),hook1)
     fcc2 = fc2.rewrite(canon_lexi)
     fcd2 = fcc2.rewrite(decl_lexi)
+'''

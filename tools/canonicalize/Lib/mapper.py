@@ -7,6 +7,8 @@ def ident(l,*args,**kws) : return [l]
 def noop(l,*args,**kws)  : pass
 def ident1(l,*args,**kws): return l
 
+_debug = False
+
 class _Mappable(object):
     '''This mixin defines the various mapping hooks for
     elements.
@@ -82,6 +84,8 @@ class _Map(object):
             cls.map = meth
         for l in self.lines:
             for ll in l.map(*args,**kws):
+                if _debug:
+                    print 'about to yield:',ll
                 yield ll
         for (cls,meth) in lexi:
             cls.map = ident
