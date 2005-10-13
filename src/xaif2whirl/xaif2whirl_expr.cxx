@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.39 2005/08/04 11:16:30 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.40 2005/10/13 15:47:36 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -1164,6 +1164,15 @@ GetWNIntrinsic(const char* intrnNm, vector<WN*>& opands, TYPE_ID* dtype)
   TYPE_ID mty = GetRTypeFromOpands(opands);
   
   // FIXME *** make part of an intrinsic table ***
+  // per Nathan the situation is that there is 
+  // a method to translate the whirl intrinsic enumerations 
+  // into a  name but whirl doesn't have a function to 
+  // translate the name back. Some of the backtranslation 
+  // is done by looking at the intrinsics table in 
+  // IntrinsicXlationTable.cxx but the following
+  // are of type WNIntrinOp and 
+  // don't have a backtranslation entry.
+  // see also in Open64 common/com:
   // intrn_info.cxx, wutil.cxx
   INTRINSIC intrn = INTRINSIC_INVALID;
   if (strcmp(intrnNm, "EXPEXPR") == 0) {
@@ -1171,6 +1180,10 @@ GetWNIntrinsic(const char* intrnNm, vector<WN*>& opands, TYPE_ID* dtype)
     if (dtype) { *dtype = MTYPE_F8; }
   }
   else if (strcmp(intrnNm, "CEQEXPR") == 0) {
+    intrn = INTRN_CEQEXPR;
+    if (dtype) { *dtype = MTYPE_I4; }
+  }
+  else if (strcmp(intrnNm, "CNEEXPR") == 0) {
     intrn = INTRN_CEQEXPR;
     if (dtype) { *dtype = MTYPE_I4; }
   }
