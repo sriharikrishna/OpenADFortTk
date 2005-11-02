@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.cxx,v 1.9 2004/12/15 17:54:21 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.cxx,v 1.10 2005/11/01 23:28:48 utke Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -54,6 +54,7 @@ static const char* usage_details =
 "Options:\n"
 "  -o, --output <file> send output to <file> instead of default file\n"
 "  -V, --version       print version information\n"
+"  -v, --validate      validate agains schema\n"
 "  -h, --help          print this help\n"
 "      --debug [lvl]   debug mode at level `lvl'\n";
 
@@ -69,6 +70,7 @@ CmdLineParser::OptArgDesc Args::optArgs[] = {
   {  0 , "types",    CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 'o', "output",   CLP::ARG_REQ , CLP::DUPOPT_ERR,  NULL },
   { 'V', "version",  CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
+  { 'v', "validate", CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 'h', "help",     CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "debug",    CLP::ARG_OPT,  CLP::DUPOPT_CLOB, NULL },
   CmdLineParser::OptArgDesc_NULL
@@ -96,6 +98,7 @@ Args::Ctor()
 {
   mode      = xaif2whirl::MODE_REVERSE;
   algorithm = xaif2whirl::ALG_UNSTRUCTURED_CF;
+  validate  = false; 
   debug     = 0; // default: 0 (off)
 }
 
@@ -157,6 +160,9 @@ Args::Parse(int argc, const char* const argv[])
     if (parser.IsOpt("help")) { 
       PrintUsage(std::cerr); 
       exit(1);
+    }
+    if (parser.IsOpt("validate")) { 
+      validate=true;
     }
     if (parser.IsOpt("version")) { 
       PrintVersion(std::cerr);

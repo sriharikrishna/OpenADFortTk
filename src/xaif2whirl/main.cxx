@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.24 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.25 2005/11/01 23:28:48 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -76,7 +76,7 @@ real_main(int argc, char **argv);
 
 
 static int
-main_DOM(PU_Info* pu_forest, const char* xaiffilenm);
+main_DOM(PU_Info* pu_forest, const char* xaiffilenm, bool validate);
 
 static int
 main_SAX(const char* xaiffilenm);
@@ -175,7 +175,7 @@ real_main(int argc, char **argv)
   // 4. Translate XAIF into WHIRL
   // -------------------------------------------------------  
   
-  ret = main_DOM(pu_forest, args.xaifFileNm.c_str()); // FIXME check return
+  ret = main_DOM(pu_forest, args.xaifFileNm.c_str(),args.validate); // FIXME check return
   //ret = main_SAX(xaifFileNm.c_str());
 
   WriteIR(args.outWhirlFileNm.c_str(), pu_forest);
@@ -204,16 +204,16 @@ real_main(int argc, char **argv)
 //****************************************************************************
 
 static XercesDOMParser*
-ReadXAIF_DOM(const char* xaiffilenm);
+ReadXAIF_DOM(const char* xaiffilenm, bool validate);
 
 
 static int
-main_DOM(PU_Info* pu_forest, const char* xaiffilenm)
+main_DOM(PU_Info* pu_forest, const char* xaiffilenm, bool validate)
 {
   int ret = 0;
   
   // 1. Parse XAIF
-  XercesDOMParser* parser = ReadXAIF_DOM(xaiffilenm);
+  XercesDOMParser* parser = ReadXAIF_DOM(xaiffilenm,validate);
   DOMDocument* doc = parser->getDocument();
 
   // 2. Translate (modify 'pu_forest')
@@ -226,16 +226,22 @@ main_DOM(PU_Info* pu_forest, const char* xaiffilenm)
 }
 
 static XercesDOMParser*
-ReadXAIF_DOM(const char* xaiffilenm) 
+ReadXAIF_DOM(const char* xaiffilenm, bool validate) 
 {
   // 1. Create the parser, and then attach an error handler to the
   // parser.  
   XercesDOMParser* parser = new XercesDOMParser;
 
-  parser->setValidationScheme(XercesDOMParser::Val_Always);
+  if (validate) { 
+    parser->setValidationScheme(XercesDOMParser::Val_Always);
+    parser->setValidationSchemaFullChecking(true);
+  }
+  else { 
+    parser->setValidationScheme(XercesDOMParser::Val_Never);
+    parser->setValidationSchemaFullChecking(false);
+  }
   parser->setDoNamespaces(true);
   parser->setDoSchema(true);
-  parser->setValidationSchemaFullChecking(true);
   parser->setCreateEntityReferenceNodes(false);
   
   XAIF_DOMErrorHandler* errHandler = new XAIF_DOMErrorHandler();

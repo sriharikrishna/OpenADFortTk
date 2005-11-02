@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.h,v 1.6 2004/05/07 20:04:58 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.h,v 1.7 2005/11/01 23:28:48 utke Exp $
 // * BeginRiceCopyright *****************************************************
 // ******************************************************* EndRiceCopyright *
 
@@ -67,6 +67,7 @@ public:
   std::string inWhirlFileNm;
   std::string outWhirlFileNm;
   std::string xaifFileNm;
+  bool validate;
   
 private:
   void Ctor();
