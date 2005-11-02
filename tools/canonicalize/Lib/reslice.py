@@ -25,10 +25,10 @@ def reslice_ifthen(l,pat,subst):
 
 def gen_reslice_fns(undo_dict):
     def pat(e):
-        return isinstance(e,str) and e in undo_dict
+        return isinstance(e,str) and e.lower() in undo_dict
 
     def subst(e):
-        return undo_dict[e]
+        return undo_dict[e.lower()]
 
     return (pat,subst)
 
