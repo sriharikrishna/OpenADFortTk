@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.25 2005/11/01 23:28:48 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.26 2005/11/02 21:41:00 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -232,12 +232,16 @@ ReadXAIF_DOM(const char* xaiffilenm, bool validate)
   // parser.  
   XercesDOMParser* parser = new XercesDOMParser;
 
+  parser->setValidationScheme(XercesDOMParser::Val_Always);
   if (validate) { 
-    parser->setValidationScheme(XercesDOMParser::Val_Always);
+    //parser->setValidationScheme(XercesDOMParser::Val_Always);
     parser->setValidationSchemaFullChecking(true);
   }
-  else { 
-    parser->setValidationScheme(XercesDOMParser::Val_Never);
+  else {
+    // it appears there is a bug in the parser that 
+    // prompts failure to retrieve attributes when this is 
+    // turned off.
+    //parser->setValidationScheme(XercesDOMParser::Val_Never);
     parser->setValidationSchemaFullChecking(false);
   }
   parser->setDoNamespaces(true);
