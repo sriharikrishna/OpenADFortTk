@@ -14,7 +14,7 @@ __intrinsics = (
     'exp',
     'float',
     'int',
-    'length',
+    'len',
     'mod',
     'nint',
     'sign',
