@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.41 2005/07/19 21:03:41 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.42 2005/12/04 06:50:46 utke Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -661,6 +661,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	  has_stat = FALSE;
 	
 	first_nonemptyarg = TRUE;
+	srcid=ctxt.PeekVId();
 	WN2F_String_Argument(xos, WN_kid(wn, cur_idx), /* string base */
 			     WN_kid(wn, len_idx), /* string length */
 			     ctxt);
@@ -677,7 +678,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	if ( !(first_nonemptyarg && !has_stat) )
 	  has_stat = FALSE;
 	first_nonemptyarg = TRUE;
-	srcid = ctxt.PeekVId(); // used for intrinsics
+	srcid = ctxt.PeekVId(); 
 	TranslateWN(xos, WN_kid(wn, arg_idx), ctxt);
 
 
@@ -692,7 +693,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	  has_stat = FALSE;
 	
 	first_nonemptyarg = TRUE;
-	srcid = ctxt.PeekVId(); // used for intrinsics
+	srcid = ctxt.PeekVId(); 
 	xlate_MemRef(xos, 
 			   WN_kid(wn, arg_idx), /* address expression */
 			   arg_ty,              /* address type */
