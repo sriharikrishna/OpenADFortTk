@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.40 2005/10/13 15:47:36 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Attic/xaif2whirl_expr.cxx,v 1.41 2005/12/06 06:54:59 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -1184,7 +1184,7 @@ GetWNIntrinsic(const char* intrnNm, vector<WN*>& opands, TYPE_ID* dtype)
     if (dtype) { *dtype = MTYPE_I4; }
   }
   else if (strcmp(intrnNm, "CNEEXPR") == 0) {
-    intrn = INTRN_CEQEXPR;
+    intrn = INTRN_CNEEXPR;
     if (dtype) { *dtype = MTYPE_I4; }
   }
   else if (strcmp(intrnNm, "AMOD") == 0) {
