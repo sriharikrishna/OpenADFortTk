@@ -13,6 +13,7 @@ __intrinsics = (
     'cos',
     'exp',
     'float',
+    'index',
     'int',
     'len',
     'mod',

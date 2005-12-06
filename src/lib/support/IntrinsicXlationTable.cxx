@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.26 2005/12/04 06:49:11 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.cxx,v 1.27 2005/12/05 20:19:10 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -224,6 +224,8 @@ IntrinsicXlationTable::Entry IntrinsicXlationTable::table[] = {
                         { XAIFIntrin, "lbound", NULL, 2 } },
   { { WNCall, OPR_CALL, "UBOUND", 2 },
                         { XAIFIntrin, "ubound", NULL, 2 } },
+  { { WNIntrinOp, OPR_INTRINSIC_OP, "F90INDEX", 2 },
+                        { XAIFIntrin, "index", NULL, 2 } },
   { { WNCall, OPR_CALL, "LEN", 1 },
                         { XAIFIntrin, "len", NULL, 1 } },
   { { WNExpr, OPR_SHL, NULL, 2 },
