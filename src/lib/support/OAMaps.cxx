@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.cxx,v 1.7 2005/08/15 19:14:17 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.cxx,v 1.8 2005/12/09 20:51:53 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -113,7 +113,7 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
   cfgman = new OA::CFG::ManagerStandard(irIF);
   OA::OA_ptr<OA::CFG::EachCFGInterface> cfgeach;
   cfgeach = new OA::CFG::EachCFGStandard(cfgman);
-  
+  FORTTK_MSG(1, "progress: CreateCFG");
   for ( ; procIt->isValid(); ++(*procIt)) { 
     PU_Info* pu = (PU_Info*)procIt->current().hval();
     OA::OA_ptr<OA::CFG::Interface> cfg = CreateCFG(pu, cfgeach, irIF);
@@ -128,6 +128,7 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
   // Create call graph
   // -------------------------------------------------------
   
+  FORTTK_MSG(1, "progress: call graph: performAnalysis");
   // Create call graph (massage OA version into XAIF version below)
   procIt->reset();
   OA::OA_ptr<OA::CallGraph::ManagerStandard> cgraphman;
@@ -142,7 +143,7 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
   // -------------------------------------------------------
   // Compute interprocedural analysis info
   // -------------------------------------------------------
-
+  FORTTK_MSG(1, "progress: parameter bindings: performAnalysis");
   // ParamBindings
   OA::OA_ptr<OA::DataFlow::ManagerParamBindings> parambindman;
   parambindman = new OA::DataFlow::ManagerParamBindings(irIF);
@@ -173,8 +174,8 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
 //   // JU: end debugging stuff
 
   x->SetParamBind(parambindman, parambind);
-
   // Inter Alias 
+  FORTTK_MSG(1, "progress: inter alias: performAnalysis");
   OA::OA_ptr<OA::Alias::ManagerInsNoPtrInterAliasMap> interaliasmapman;
   interaliasmapman = new OA::Alias::ManagerInsNoPtrInterAliasMap(irIF);
   OA::OA_ptr<OA::Alias::InterAliasMap> interAlias;
@@ -183,12 +184,14 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
   x->SetInterAlias(interaliasmapman, interAlias);
 
   // Side Effect
+  FORTTK_MSG(1, "progress: side effect: performAnalysis");
   OA::OA_ptr<OA::SideEffect::ManagerStandard> sideeffectman;
   sideeffectman = new OA::SideEffect::ManagerStandard(irIF);
 
   x->SetSideEffect(sideeffectman);
 
   // Inter Side Effect
+  FORTTK_MSG(1, "progress: inter side effect: performAnalysis");
   OA::OA_ptr<OA::SideEffect::ManagerInterSideEffectStandard> interSEman;
   interSEman = new OA::SideEffect::ManagerInterSideEffectStandard(irIF);
   OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> interSE;
@@ -198,12 +201,14 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
   x->SetInterSideEffect(interSEman, interSE);
   
   // ICFG
+  FORTTK_MSG(1, "progress: icfg: performAnalysis");
   OA::OA_ptr<OA::ICFG::ManagerICFGStandard> icfgman;
   icfgman = new OA::ICFG::ManagerICFGStandard(irIF);
   OA::OA_ptr<OA::ICFG::ICFGStandard> icfg 
       = icfgman->performAnalysis(procIt,cfgeach);
 
   // Activity Analysis
+  FORTTK_MSG(1, "progress: inter activity: performAnalysis");
   OA::OA_ptr<OA::Activity::ManagerICFGActive> activeman;
   activeman = new OA::Activity::ManagerICFGActive(irIF);
   OA::OA_ptr<OA::Activity::InterActive> active;
@@ -218,6 +223,7 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
   // -------------------------------------------------------
   // For each PU, compute intraprocedural analysis info
   // -------------------------------------------------------
+  FORTTK_MSG(1, "progress: intraprocedural analysis");
   procIt->reset();
   for ( ; procIt->isValid(); ++(*procIt)) { 
     PU_Info* pu = (PU_Info*)procIt->current().hval();
@@ -231,6 +237,7 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
   // -------------------------------------------------------
   
   // Now massage the Call Graph into something that XAIF can use
+  FORTTK_MSG(1, "progress: call graph: massage for XAIF");
   MassageOACallGraphIntoXAIFCallGraph(cgraph);
 }
 
@@ -280,6 +287,7 @@ CreateOAAnalInfo(PU_Info* pu, PUToOAAnalInfoMap* inter, OAAnalInfo* x)
   // -------------------------------------------------------
   
   // Intra Alias
+  FORTTK_MSG(1, "progress: intra alias: performAnalysis");
   OA::OA_ptr<OA::Alias::ManagerAliasMapBasic> aliasman;
   aliasman = new OA::Alias::ManagerAliasMapBasic(irIF);
   OA::OA_ptr<OA::Alias::AliasMap> alias = aliasman->performAnalysis(proc);
@@ -288,6 +296,7 @@ CreateOAAnalInfo(PU_Info* pu, PUToOAAnalInfoMap* inter, OAAnalInfo* x)
   x->SetAlias(aliasman, alias);   
   
   // ReachDefs
+  FORTTK_MSG(1, "progress: reach defs: performAnalysis");
   OA::OA_ptr<OA::ReachDefs::ManagerStandard> rdman;
   rdman = new OA::ReachDefs::ManagerStandard(irIF);
   OA::OA_ptr<OA::ReachDefs::ReachDefsStandard> rds 
@@ -296,6 +305,7 @@ CreateOAAnalInfo(PU_Info* pu, PUToOAAnalInfoMap* inter, OAAnalInfo* x)
   x->SetReachDefs(rdman, rds);
 
   // UDDU chains
+  FORTTK_MSG(1, "progress: uddu: performAnalysis");
   OA::OA_ptr<OA::UDDUChains::ManagerStandard> udman;
   udman = new OA::UDDUChains::ManagerStandard(irIF);
   OA::OA_ptr<OA::UDDUChains::UDDUChainsStandard> udduchains 
@@ -307,6 +317,7 @@ CreateOAAnalInfo(PU_Info* pu, PUToOAAnalInfoMap* inter, OAAnalInfo* x)
   // -------------------------------------------------------
   // XAIF
   // -------------------------------------------------------
+  FORTTK_MSG(1, "progress: alias to xaif: performAnalysis");
   OA::OA_ptr<OA::XAIF::ManagerAliasMapXAIF> aliasmanXAIF;
   aliasmanXAIF = new OA::XAIF::ManagerAliasMapXAIF(irIF);
   OA::OA_ptr<OA::XAIF::AliasMapXAIF> aliasXAIF = 
@@ -315,6 +326,7 @@ CreateOAAnalInfo(PU_Info* pu, PUToOAAnalInfoMap* inter, OAAnalInfo* x)
   x->SetAliasXAIF(aliasmanXAIF, aliasXAIF);
 
 
+  FORTTK_MSG(1, "progress: ud to xaif : performAnalysis");
   OA::OA_ptr<OA::XAIF::ManagerStandard> udmanXAIF;
   udmanXAIF = new OA::XAIF::ManagerStandard(irIF);
   OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchainsXAIF 
