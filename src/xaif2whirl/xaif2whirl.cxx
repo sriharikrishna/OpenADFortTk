@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.68 2005/12/04 06:52:25 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.69 2006/01/04 15:25:34 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -2191,6 +2191,9 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
     } 
     else if (strcmp(shape.c_str(), "four_tensor") == 0) {
       ndim = 4;
+    } 
+    else if (strcmp(shape.c_str(), "five_tensor") == 0) {
+      ndim = 5;
     } 
     else {
       // FIXME: add other tensors
