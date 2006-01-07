@@ -401,6 +401,29 @@ class DoubleCplexStmt(F77Type):
     kw     = 'doublecomplex'
     kw_str = 'double complex'
 
+class DerivedTypeDecl(TypeDecl):
+    @staticmethod
+    def parse(scan):
+        p0 = seq(lit('type'),lit('('),id,lit(')'),
+                  zo1(lit('::')),cslist(Exp))
+        p0 = treat(p0,lambda l:DerivedTypeDecl(l[2],l[5]))
+
+        (v,r) = p0(scan)
+
+        return v
+
+    def __init__(self,name,lst):
+        self.name = name
+        self.lst  = lst
+
+    def __repr__(self):
+        return 'DerivedTypeDecl(%s,%s)' % (repr(self.name),repr(self.lst))
+
+    def __str__(self):
+        return 'type(%s) %s' % (str(self.name),
+                                ','.join([str(d).replace('()','') \
+                                          for d in self.lst]))
+
 class DimensionStmt(BasicTypeDecl):
     @staticmethod
     def parse(scan):
@@ -724,6 +747,7 @@ kwtbl = dict(blockdata       = BlockdataStmt,
              enddo           = EnddoStmt,
              select          = SelectStmt,
              dowhile         = WhileStmt,
+             type            = DerivedTypeDecl,
              )
 
 for kw in ('if','continue','return','else','print'):
