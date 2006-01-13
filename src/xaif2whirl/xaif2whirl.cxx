@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.69 2006/01/04 15:25:34 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.70 2006/01/12 22:09:42 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -172,7 +172,11 @@ static WN*
 CreateIfCondition(WN* condWN);
 
 static ST* 
-CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm);
+CreateST(const DOMElement* elem, 
+	 SYMTAB_IDX level, 
+	 const char* nm,
+	 XAIFSymToSymbolMap* symMap,
+	 const char* scopeId);
 
 static ST* 
 ConvertIntoGlobalST(ST* st);
@@ -333,6 +337,11 @@ TranslateCallGraph(PU_Info* pu_forest, const DOMDocument* doc,
 {
   DeclareActiveTypes();
   
+  
+  DOMElement* topLevel=doc->getDocumentElement();
+  const XMLCh* prefixX = topLevel->getAttribute(XAIFStrings.attr_prefix_x());
+  XlationContext::setPrefix(XercesStrX(prefixX).c_str());
+
   // -------------------------------------------------------
   // Process the symbol tables in the ScopeHierarchy
   // -------------------------------------------------------
@@ -1760,7 +1769,13 @@ xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu,
   if (normalSym) {
     if (symId == 0) {
       // Create the symbol
-      st = CreateST(elem, level, symNm.c_str());
+      st = CreateST(elem, 
+		    level, 
+		    symNm.c_str(), 
+		    symMap,
+		    scopeId);
+      FORTTK_ASSERT(st != 0,
+		  "CreateST returned a null pointer!");
     } 
     else {
       // Find the symbol and change type if necessary.  N.B. we skip
@@ -2143,7 +2158,11 @@ CreateIfCondition(WN* condWN)
 // CreateST: Creates and returns a WHIRL ST* at level 'level' with
 // name 'nm' using 'elem' to gather ST shape and storage class info.
 static ST* 
-CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
+CreateST(const DOMElement* elem, 
+	 SYMTAB_IDX level, 
+	 const char* nm,
+	 XAIFSymToSymbolMap* symMap,
+	 const char* scopeId)
 {
   const XMLCh* kindX = elem->getAttribute(XAIFStrings.attr_kind_x());
   const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
@@ -2158,107 +2177,144 @@ CreateST(const DOMElement* elem, SYMTAB_IDX level, const char* nm)
   bool hasToBeAllocatable=false; // set to true for temp arrays without dimension bounds
   
   // FIXME: assume only
-  FORTTK_ASSERT(strcmp(kind.c_str(), "variable") == 0,
-		FORTTK_UNIMPLEMENTED << "Cannot create non-variable symbols");
-    
-  // 1. Find basic type according to 'type' and 'active'
-  TY_IDX basicTy = XAIFTyToWHIRLTy(type.c_str());
-  if (active) {
-    basicTy = ActiveTypeTyIdx;
-  } 
-  
-  // 2. Modify basic type according to the (non-scalar) shapes
+  FORTTK_ASSERT(strcmp(kind.c_str(), "variable") == 0 
+		|| 
+		strcmp(kind.c_str(), "subroutine") == 0,
+		FORTTK_UNIMPLEMENTED << "Can create only symbols that are temporary variables or subroutine names derived from a given subroutine that has the specified prefix prepended");
   TY_IDX ty;
-  if (strcmp(shape.c_str(), "scalar") == 0) {
-    ty = basicTy;
-  } 
-  else {
-    if (!active) { 
-      // this is a shortcut that needs fixing. 
-      basicTy = MTYPE_To_TY(MTYPE_F4);
-    }
-    
-    // Note: cf. be/com/wn_instrument.cxx:1253 for example creating vector
-    INT32 ndim = 0;
-    if (strcmp(shape.c_str(), "vector") == 0) {
-      ndim = 1;
+
+  ST_CLASS symbolClass;
+
+  if (strcmp(kind.c_str(), "variable") == 0) { 
+    symbolClass=CLASS_VAR;
+    // 1. Find basic type according to 'type' and 'active'
+    TY_IDX basicTy = XAIFTyToWHIRLTy(type.c_str());
+    if (active) {
+      basicTy = ActiveTypeTyIdx;
     } 
-    else if (strcmp(shape.c_str(), "matrix") == 0) {
-      ndim = 2;
-    } 
-    else if (strcmp(shape.c_str(), "three_tensor") == 0) {
-      ndim = 3;
-    } 
-    else if (strcmp(shape.c_str(), "four_tensor") == 0) {
-      ndim = 4;
-    } 
-    else if (strcmp(shape.c_str(), "five_tensor") == 0) {
-      ndim = 5;
+  
+    // 2. Modify basic type according to the (non-scalar) shapes
+    TY_IDX ty;
+    if (strcmp(shape.c_str(), "scalar") == 0) {
+      ty = basicTy;
     } 
     else {
-      // FIXME: add other tensors
-      FORTTK_DIE(FORTTK_UNIMPLEMENTED << "Cannot translate variables of shape " << shape.c_str() );
-    }
-    
-    INT64 *lower, *upper;
-    lower = new INT64[ndim];
-    upper = new INT64[ndim];
-
-    INT32 ndimIndex = 0;
-    XAIF_DimensionBoundsElemFilter dbFilt;
-    for (DOMElement* dbElem = GetChildElement(elem, &dbFilt);
-	 (dbElem); 
-	 ++ndimIndex,
-	   dbElem = GetNextSiblingElement(dbElem, &dbFilt)) {
-      if (ndimIndex==ndim) { 
-	FORTTK_DIE("Cannot have more DimensionBounds than data type allows");
+      if (!active) { 
+	// this is a shortcut that needs fixing. 
+	basicTy = MTYPE_To_TY(MTYPE_F4);
       }
-      const XMLCh* lowerX = dbElem->getAttribute(XAIFStrings.attr_lower_x());
-      XercesStrX lowerS = XercesStrX(lowerX);
-      lower[ndimIndex]=strtol(lowerS.c_str(), (char **)NULL, 10);
-      const XMLCh* upperX = dbElem->getAttribute(XAIFStrings.attr_upper_x());
-      XercesStrX upperS = XercesStrX(upperX);
-      upper[ndimIndex]=strtol(upperS.c_str(), (char **)NULL, 10);
+    
+      // Note: cf. be/com/wn_instrument.cxx:1253 for example creating vector
+      INT32 ndim = 0;
+      if (strcmp(shape.c_str(), "vector") == 0) {
+	ndim = 1;
+      } 
+      else if (strcmp(shape.c_str(), "matrix") == 0) {
+	ndim = 2;
+      } 
+      else if (strcmp(shape.c_str(), "three_tensor") == 0) {
+	ndim = 3;
+      } 
+      else if (strcmp(shape.c_str(), "four_tensor") == 0) {
+	ndim = 4;
+      } 
+      else if (strcmp(shape.c_str(), "five_tensor") == 0) {
+	ndim = 5;
+      } 
+      else {
+	// FIXME: add other tensors
+	FORTTK_DIE(FORTTK_UNIMPLEMENTED << "Cannot translate variables of shape " << shape.c_str() );
+      }
+    
+      INT64 *lower, *upper;
+      lower = new INT64[ndim];
+      upper = new INT64[ndim];
+
+      INT32 ndimIndex = 0;
+      XAIF_DimensionBoundsElemFilter dbFilt;
+      for (DOMElement* dbElem = GetChildElement(elem, &dbFilt);
+	   (dbElem); 
+	   ++ndimIndex,
+	     dbElem = GetNextSiblingElement(dbElem, &dbFilt)) {
+	if (ndimIndex==ndim) { 
+	  FORTTK_DIE("Cannot have more DimensionBounds than data type allows");
+	}
+	const XMLCh* lowerX = dbElem->getAttribute(XAIFStrings.attr_lower_x());
+	XercesStrX lowerS = XercesStrX(lowerX);
+	lower[ndimIndex]=strtol(lowerS.c_str(), (char **)NULL, 10);
+	const XMLCh* upperX = dbElem->getAttribute(XAIFStrings.attr_upper_x());
+	XercesStrX upperS = XercesStrX(upperX);
+	upper[ndimIndex]=strtol(upperS.c_str(), (char **)NULL, 10);
+      }
+    
+      if (ndimIndex>0 && ndimIndex!=ndim) { 
+	FORTTK_DIE("Need to have all or no DimensionBounds specified (have only " << ndimIndex << " for " << shape.c_str() );
+      }
+    
+      bool haveDimensionBounds = false;
+      if (ndimIndex) {
+	haveDimensionBounds = true;
+      }
+      else {
+	// if we don't know the dimension somebody has to allocate this 
+	// since assumed shape arrays can otherwise only be formal parameters
+	hasToBeAllocatable = true; 
+      }
+      ty = MY_Make_Array_Type(basicTy, ndim, haveDimensionBounds,lower,upper);
+
+      delete[] lower;
+      delete[] upper;
+    }
+    // 3. Find storage class and export scope 
+    ST_SCLASS sclass = SCLASS_AUTO; // default: auto implies local storage
+    ST_EXPORT escope = EXPORT_LOCAL_INTERNAL;
+    if (level == GLOBAL_SYMTAB) {
+      sclass = SCLASS_COMMON;
+      escope = EXPORT_LOCAL;
     }
     
-    if (ndimIndex>0 && ndimIndex!=ndim) { 
-      FORTTK_DIE("Need to have all or no DimensionBounds specified (have only " << ndimIndex << " for " << shape.c_str() );
-    }
+    // 4. Create the new symbol
+    ST* st = New_ST(level);
+    ST_Init(st, Save_Str(nm), symbolClass, sclass, escope, ty);
+    if (hasToBeAllocatable)
+      Set_ST_is_allocatable(*st);
     
-    bool haveDimensionBounds = false;
-    if (ndimIndex) {
-      haveDimensionBounds = true;
+    // 5. For global symbols, modify and add to a global/common block
+    if (level == GLOBAL_SYMTAB) {
+      //FIXME ConvertIntoGlobalST(st);
     }
-    else {
-      // if we don't know the dimension somebody has to allocate this 
-      // since assumed shape arrays can otherwise only be formal parameters
-      hasToBeAllocatable = true; 
+    return st;
+  }
+  if (strcmp(kind.c_str(), "subroutine") == 0) { 
+    // the prefix must be in front of the original name
+    // remove the prefix 
+    std::string newXAIFName(nm);
+    if (newXAIFName.find(XlationContext::getPrefix())!=0) {
+      FORTTK_DIE("Cannot only copy existing subroutine calls: "
+		 << nm 
+		 << " does not begin with the required prefix "
+		 << XlationContext::getPrefix().c_str());
     }
-    ty = MY_Make_Array_Type(basicTy, ndim, haveDimensionBounds,lower,upper);
-
-    delete[] lower;
-    delete[] upper;
+    std::string origXAIFName(newXAIFName.substr(XlationContext::getPrefix().size()));
+    Symbol* origNameSymbol_p = symMap->Find(scopeId, origXAIFName.c_str());
+    if (!origNameSymbol_p) {
+      FORTTK_DIE("Cannot find "
+		 << origXAIFName.c_str()
+		 << " in the temporary symbol map");
+    }
+    // the XAIFName has some _index number appended that we need to loose
+    ST* origNameST_p = origNameSymbol_p->GetST();
+    if (!origNameST_p) {
+      FORTTK_DIE("Cannot find whirl symbol table entry. Can only copy existing subroutine names: "
+		 << origXAIFName.c_str()
+		 << " does not exist in the internal symbol table");
+    }
+    std::string origName(ST_name(*origNameST_p));
+    ST* newNameST_p=Copy_ST(origNameST_p); // make a copy in the same scope
+    // reset the name to the newName
+    Set_ST_name_idx (*newNameST_p,Save_Str((XlationContext::getPrefix()+origName).c_str()));
+    return newNameST_p;
   }
-  
-  // 3. Find storage class and export scope 
-  ST_SCLASS sclass = SCLASS_AUTO; // default: auto implies local storage
-  ST_EXPORT escope = EXPORT_LOCAL_INTERNAL;
-  if (level == GLOBAL_SYMTAB) {
-    sclass = SCLASS_COMMON;
-    escope = EXPORT_LOCAL;
-  }
-  
-  // 4. Create the new symbol
-  ST* st = New_ST(level);
-  ST_Init(st, Save_Str(nm), CLASS_VAR, sclass, escope, ty);
-  if (hasToBeAllocatable)
-    Set_ST_is_allocatable(*st);
-
-  // 5. For global symbols, modify and add to a global/common block
-  if (level == GLOBAL_SYMTAB) {
-    //FIXME ConvertIntoGlobalST(st);
-  }
-  return st;
 }
 
 
@@ -2634,6 +2690,9 @@ XAIFTyToWHIRLTy(const char* type)
   } 
   else if (strcmp(type, "integer") == 0) {
     ty = MTYPE_To_TY(DefaultMTypeInt);
+  } 
+  else if (strcmp(type, "void") == 0) {
+    ty = MTYPE_To_TY(MTYPE_V);
   } 
   else {
     // FIXME: don't know about anything else yet
