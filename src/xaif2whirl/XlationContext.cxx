@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.cxx,v 1.8 2004/07/30 17:52:16 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.cxx,v 1.9 2006/01/12 22:07:37 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -32,6 +32,8 @@
 //***************************************************************************
 // XlationContext
 //***************************************************************************
+
+std::string XlationContext::ourPrefix;
 
 XlationContext::XlationContext()
   : wnParentMap(NULL), id2stabMap(NULL), id2puMap(NULL), wn2idMap(NULL),
@@ -180,6 +182,13 @@ XlationContext::DDump() const
   Dump(std::cerr);
 }
 
+void XlationContext::setPrefix(const std::string& aPrefix) { 
+  ourPrefix=aPrefix;
+}
+
+std::string& XlationContext::getPrefix() { 
+  return ourPrefix;
+}
 
 //***************************************************************************
 // XlationContext::Ctxt

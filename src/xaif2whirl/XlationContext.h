@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.h,v 1.7 2004/04/14 21:26:10 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlationContext.h,v 1.8 2006/01/12 22:07:37 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -182,7 +182,9 @@ public:
   
   virtual void Dump(std::ostream& o = std::cerr, const char* pre = "") const;
   virtual void DDump() const;
-  
+
+  static void setPrefix(const std::string& aPrefix);
+  static std::string& getPrefix();
 
 private: 
   // Disable for now
@@ -205,6 +207,9 @@ private:
   WNToWNIdMap* wn2idMap;
   WNIdToWNMap* id2wnMap;
   XAIFSymToSymbolMap* xsym2wsymMap;
+
+  // a globally defined prefix for all newly created symbols
+  static std::string ourPrefix;
 
   CtxtStack ctxtstack;
 };
