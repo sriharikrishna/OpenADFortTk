@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.70 2006/01/12 22:09:42 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.71 2006/01/15 05:59:45 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -155,8 +155,12 @@ xlate_SymbolTable(const DOMElement* elem, const char* scopeId, PU_Info* pu,
                   XlationContext& ctxt, XAIFSymToSymbolMap* symMap);
 
 static void
-xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
-             XlationContext& ctxt, XAIFSymToSymbolMap* symMap);
+xlate_Symbol(const DOMElement* elem, 
+	     const char* scopeId, 
+	     PU_Info* pu, 
+             XlationContext& ctxt, 
+	     XAIFSymToSymbolMap* symMap,
+	     bool doTempSymbols);
 
 //*************************** Forward Declarations ***************************
 
@@ -1740,7 +1744,16 @@ xlate_SymbolTable(const DOMElement* elem, const char* scopeId, PU_Info* pu,
   XAIF_SymbolElemFilter filt;
   for (DOMElement* e = GetChildElement(elem, &filt);
        (e); e = GetNextSiblingElement(e, &filt)) {
-    xlate_Symbol(e, scopeId, pu, ctxt, symMap);
+    // do the non-temporary ones first
+    xlate_Symbol(e, scopeId, pu, ctxt, symMap, false);
+  }
+  for (DOMElement* e = GetChildElement(elem, &filt);
+       (e); e = GetNextSiblingElement(e, &filt)) {
+    // now do the temporary ones since in the 
+    // subroutine ones we refer to the original 
+    // subroutine symbols so we had to translate those
+    // first.
+    xlate_Symbol(e, scopeId, pu, ctxt, symMap, true);
   }
 }
 
@@ -1748,9 +1761,18 @@ xlate_SymbolTable(const DOMElement* elem, const char* scopeId, PU_Info* pu,
 // xlate_Symbol: Note that symbols can only be in a global or PU
 // scope; IOW, there are no block scopes.
 static void
-xlate_Symbol(const DOMElement* elem, const char* scopeId, PU_Info* pu, 
-             XlationContext& ctxt, XAIFSymToSymbolMap* symMap)
+xlate_Symbol(const DOMElement* elem, 
+	     const char* scopeId, 
+	     PU_Info* pu, 
+             XlationContext& ctxt, 
+	     XAIFSymToSymbolMap* symMap,
+	     bool doTempSymbols)
 {
+
+  // at this time do we do temporaries or not?
+  if (doTempSymbols != GetBoolAttr(elem, XAIFStrings.attr_temp_x(), false /* default */)) { 
+    return;
+  }
   // 1. Initialize
   SYMTAB_IDX level = (pu) ? CURRENT_SYMTAB : GLOBAL_SYMTAB;
   
