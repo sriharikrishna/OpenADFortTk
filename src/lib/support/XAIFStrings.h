@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.23 2005/07/19 21:03:41 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.24 2006/01/15 05:57:26 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -58,7 +58,10 @@ public:
     ATTR_target,    // target
     
     // -----------------------------------------------------
-
+    // top level
+    ATTR_prefix,    // specific prefix
+    
+    // -----------------------------------------------------
     // xaif:ScopeHierarchy, xaif:Scope, xaif:SymbolTable
     ELEM_ScopeHierarchy,
     ELEM_Scope,
@@ -69,6 +72,7 @@ public:
     ATTR_kind,
     ATTR_type,
     ATTR_shape,
+    ATTR_temp,
 
     // xaif:DimensionBounds
     ELEM_DimensionBounds,
@@ -233,7 +237,11 @@ public:
   XMLCh*      attr_target_x() const { return x_strTbl[ATTR_target]; }
   
   // -----------------------------------------------------
-  
+  // top level  
+  const char* attr_prefix() const   { return c_strTbl[ATTR_prefix]; }
+  XMLCh*      attr_prefix_x() const { return x_strTbl[ATTR_prefix]; }
+  // -----------------------------------------------------
+
   // xaif:ScopeHierarchy, xaif:Scope, xaif:SymbolTable
   const char* elem_ScopeHierarchy() const { return c_strTbl[ELEM_ScopeHierarchy]; }
   XMLCh*      elem_ScopeHierarchy_x() const { return x_strTbl[ELEM_ScopeHierarchy]; }
@@ -252,6 +260,8 @@ public:
   XMLCh*      attr_type_x() const { return x_strTbl[ATTR_type]; }
   const char* attr_shape() const { return c_strTbl[ATTR_shape]; }
   XMLCh*      attr_shape_x() const { return x_strTbl[ATTR_shape]; }
+  const char* attr_temp() const { return c_strTbl[ATTR_temp]; }
+  XMLCh*      attr_temp_x() const { return x_strTbl[ATTR_temp]; }
 
   // xaif:DimensionBounds
   const char* elem_DimensionBounds() const { return c_strTbl[ELEM_DimensionBounds]; }

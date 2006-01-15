@@ -1,5 +1,5 @@
 
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.23 2005/07/19 21:03:41 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.24 2006/01/15 05:57:27 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -59,6 +59,11 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "target",
   
   // -----------------------------------------------------
+  // top level
+
+  "prefix",
+
+  // -----------------------------------------------------
 
   // xaif:ScopeHierarchy, xaif:Scope, xaif:SymbolTable
   "xaif:ScopeHierarchy",
@@ -70,6 +75,7 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "kind",
   "type",
   "shape",
+  "temp",
   
   // xaif:DimensionBounds
   "xaif:DimensionBounds",
