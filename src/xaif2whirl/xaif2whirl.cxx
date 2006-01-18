@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.71 2006/01/15 05:59:45 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.72 2006/01/18 15:41:47 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -404,14 +404,29 @@ TranslateCFG(PU_Info* pu_forest, const DOMElement* cfgElem,
   PU_Info* pu = ctxt.FindPU(puid);
   if (!pu) { return; }
 
-#if 0
+  // the PU_info is the original one. 
+  // but we may have changed the name
+  // so we should compare if the name 
+  // matches and replace the symbol reference 
+  // to the proper name.  UNLESS this is 
+  // a module
   Symbol* symd = GetSymbol(cfgElem, ctxt);
   ST* std = symd->GetST();
+  bool isModule=ST_is_in_module(*std);
+  // compare this by comparing the symbol table index
+  if (!isModule && PU_Info_proc_sym(pu)!=ST_st_idx (*std))
+    PU_Info_proc_sym(pu)=ST_st_idx (*std);
+  #if 0
   cout << XercesStrX(cfgElem->getNodeName()) << ": " << ST_name(std) << endl;
-#endif  
+  #endif  
   
   // Set globals
   WN *wn_pu = PU_Info_tree_ptr(pu);
+  // set up the name in the FUNC_ENTRY too
+  // compare this by comparing the symbol table index UNLESS this is 
+  // a module
+  if (!isModule && WN_st_idx(wn_pu)!=ST_st_idx (*std))
+    WN_st_idx(wn_pu)=ST_st_idx (*std);
   PU_SetGlobalState(pu);
 
   // -------------------------------------------------------
