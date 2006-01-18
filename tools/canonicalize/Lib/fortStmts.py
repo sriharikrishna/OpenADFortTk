@@ -254,6 +254,9 @@ class ParameterStmt(Decl):
 class SaveStmt(Decl):
     pass
 
+class AllocatableStmt(Decl):
+    pass
+
 class StmtFnStmt(Decl):
     def __init__(self,name,args,body):
         self.name = name
@@ -713,6 +716,7 @@ kwtbl = dict(blockdata       = BlockdataStmt,
              equivalence     = EquivalenceStmt,
              parameter       = ParameterStmt,
              save            = SaveStmt,
+             allocatable     = AllocatableStmt,
              goto            = GotoStmt,
              external        = ExternalStmt,
              character       = CharacterStmt,
