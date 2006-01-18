@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.cxx,v 1.8 2005/12/09 20:51:53 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.cxx,v 1.9 2006/01/18 15:42:12 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -201,14 +201,14 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
   x->SetInterSideEffect(interSEman, interSE);
   
   // ICFG
-  FORTTK_MSG(1, "progress: icfg: performAnalysis");
+  FORTTK_MSG(1, "progress: icfg standard: performAnalysis");
   OA::OA_ptr<OA::ICFG::ManagerICFGStandard> icfgman;
   icfgman = new OA::ICFG::ManagerICFGStandard(irIF);
   OA::OA_ptr<OA::ICFG::ICFGStandard> icfg 
       = icfgman->performAnalysis(procIt,cfgeach);
 
   // Activity Analysis
-  FORTTK_MSG(1, "progress: inter activity: performAnalysis");
+  FORTTK_MSG(1, "progress: icfg activity: performAnalysis");
   OA::OA_ptr<OA::Activity::ManagerICFGActive> activeman;
   activeman = new OA::Activity::ManagerICFGActive(irIF);
   OA::OA_ptr<OA::Activity::InterActive> active;
