@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.26 2005/11/02 21:41:00 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/main.cxx,v 1.27 2006/01/19 19:53:19 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -211,11 +211,12 @@ static int
 main_DOM(PU_Info* pu_forest, const char* xaiffilenm, bool validate)
 {
   int ret = 0;
-  
+  FORTTK_MSG(1, "progress: parsing input XAIF");
   // 1. Parse XAIF
   XercesDOMParser* parser = ReadXAIF_DOM(xaiffilenm,validate);
   DOMDocument* doc = parser->getDocument();
 
+  FORTTK_MSG(1, "progress: translating to WHIRL");
   // 2. Translate (modify 'pu_forest')
   xaif2whirl::TranslateIR(pu_forest, doc);
 
@@ -235,6 +236,7 @@ ReadXAIF_DOM(const char* xaiffilenm, bool validate)
   parser->setValidationScheme(XercesDOMParser::Val_Always);
   if (validate) { 
     //parser->setValidationScheme(XercesDOMParser::Val_Always);
+    FORTTK_MSG(1, "progress: parsing with schema validation");
     parser->setValidationSchemaFullChecking(true);
   }
   else {

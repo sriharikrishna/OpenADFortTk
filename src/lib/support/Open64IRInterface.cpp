@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.14 2005/09/15 19:47:53 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.15 2006/01/19 19:53:19 utke Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Nathan Tallent, Michelle Strout
-  \version $Id: Open64IRInterface.cpp,v 1.14 2005/09/15 19:47:53 utke Exp $
+  \version $Id: Open64IRInterface.cpp,v 1.15 2006/01/19 19:53:19 utke Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -2980,7 +2980,7 @@ print_generic_binary:
     for (int i = 0; i < ndims; i++) {
       DumpWN(WN_kid(wn, i+ndims+1), os);
       if (i < ndims-1) 
-        cout << ",";
+        os << ",";
     }
     os << ")";
     break;
@@ -3002,7 +3002,7 @@ print_generic_binary:
     for (int i = 0; i < ndims; i++) {
       DumpWN(WN_kid(wn, i+ndims+1), os);
       if (i < ndims-1) 
-        cout << ",";
+        os << ",";
     }
     os << ")";
     break;
