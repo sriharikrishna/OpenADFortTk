@@ -29,7 +29,7 @@ my($tfile) = 'ad_template.f';
 my($forward,$real) = (0,0);
 my($result) = GetOptions("forward" => \$forward,
 			 "real" => \$real,
-#			 "template=s" => \$tfile,
+			 "template=s" => \$tfile,
 			 "inline=s" => \$ifile,);
 
 ADxaif::set_old() if ($real);
@@ -38,17 +38,17 @@ ADxaif::set_old() if ($real);
 my($infile) = $ARGV[0];
 my($name,$dir,$ext) = fileparse($infile,'\.[Ff]');
 my($outfile) = $dir . $name . ".pp" . $ext;
-my($inl,$template);
+my($inl,$default_template);
 
 unless ($forward){
     $inl = ADinline->new(Ffile->new($ifile));
-#    $template = ADtemplate->new(Ffile->new($tfile));
+    $default_template = ADtemplate->new(Ffile->new($tfile));
 }
 
 my($ffi) = Ffile->new($infile)->rewrite_sem(\&xaifpp);
 unless ($forward){
     $ffi = $ffi->rewrite($inl->inline());
-    $ffi = fconcat( map {multi_inst($_)}
+    $ffi = fconcat( map {multi_inst($_,$default_template)}
 		     FTUnit->new($ffi)->units() );
 }
 $ffi->write($outfile);
