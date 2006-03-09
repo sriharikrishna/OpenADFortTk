@@ -8,7 +8,8 @@ use ADtemplate;
 
 sub multi_inst {
     my(@template) = $_[0]->map(\&get_templ);
-    my($t) = ADtemplate->new(Ffile->new($template[0]));
+    my($t) = $_[1];
+    $t = ADtemplate->new(Ffile->new($template[0])) if (@template);
     return $t->instantiate($_[0]);
 }
 
