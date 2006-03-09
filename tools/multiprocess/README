@@ -1,26 +1,63 @@
-
-=============================================================================
-
-N.B.: While this directory is called postprocessor, it has expanded to
-include other things such as a preprocessor.  We plan to rename it
-when all the CVS-nonsense required will not be too big of an issue.
-
-=============================================================================
-
-To use the preprocessor, you *must* define 2 files:
+To use the preprocessor, you *must* define an ad_inline file.
+The default is
 
    ad_inline.f
-   ad_template.f
 
-When you run the preprocessor, you *must* have these 2 specific
-files in the directory where you run the pipeline. 
+Otherwise, you may specify 1 on the command line, using the '-i'
+option.
 
-Sample files are supplied in the Samples Directory.
+  Example:
+
+    perl pp.pl -i myinline.f myfile.f
+
+=========
+
+Template expansion is now done with directives inside the
+program file. Directives are of the form:
+
+c $OpenAD XXX Template FILENAME
+
+where FILENAME is the name for the template to be used in the
+subroutine that follows the directive.
+
+Whitespace is not critical, as long as there is some. Also,
+the '$OpenAD', 'Template', and 'XXX' keywords in the pattern are
+NOT case sensitive.
+
+Furthermore, the template directive can appear anywhere inside
+the subroutine unit.
+
+If no template directive is specified, then the default template
+will be used. The default template is *either*:
+   ad_template.f  OR
+   the file specified by the -t option to pp.pl
+
+The AcceptTest directory has t1.f, jean.tst1.f, and jean.tst2.f
+To run the acceptance tests:
+   cd AcceptTest
+   perl ../pp.pl THE_TEST.f
+   diff {OK/,}THE_TEST.pp.f
+
+where THE_TEST is 1 of {t1,jean.tst1,jean.tst2}
 
 Known limitations:
+
+   If using ad_inline.f (the default), it must be defined in
+   the directory where you run the pipeline.
+   Similarly, if you use relative paths for your inline file,
+   then it will be relative to where you run the pipeline.
+
+   For the template files:
+     Filenames with no path info are presumed to be defined in the
+     directory where you run the pipeline.
+
+     Similarly, relative pathnames are relative to the directory
+     where you run your pipeline.
+
+
+   No spaces in the template FILENAME
 
    The indentation sucks.
 
    No error checking (doubly defined definitions, missing
    template directives, etc will all cause massive failure)
-
