@@ -7,6 +7,7 @@ C
 C     **** statements ****
 C
 C     $OpenAD$ BEGIN REPLACEMENT 1
+c$OpenAD XXX Template ad_template.f
       __value__(T1) = (__value__(X) * __value__(Y))
       RETURN
 C     $OpenAD$ END REPLACEMENT
@@ -24,6 +25,8 @@ C     $OpenAD$ INLINE Pop(subst)
 C     $OpenAD$ END REPLACEMENT
       END SUBROUTINE
 
+c  No template specified, so use default template
+c
       SUBROUTINE head(X, Y)
       use w2f__types
       IMPLICIT NONE
