@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.i,v 1.1 2004/12/20 15:17:44 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.i,v 1.2 2006/03/14 01:09:15 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -192,7 +192,14 @@ namespace sexp2whirl {
 
   extern WN*
   xlate_PSTORE(sexp_t* sx);
-  
+
+  // ---------------------------------------------------------
+  // Memory Access (user defined structures)
+  // ---------------------------------------------------------
+
+  extern WN*
+  xlate_STRCTFLD(sexp_t* sx);
+
   // ---------------------------------------------------------
   // Array Operators (N-ary Operations)
   // ---------------------------------------------------------

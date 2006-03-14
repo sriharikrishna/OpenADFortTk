@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.i,v 1.4 2004/12/20 15:18:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.i,v 1.5 2006/03/14 01:09:15 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -190,6 +190,13 @@ namespace whirl2sexp {
   extern whirl2sexp::status
   xlate_PSTORE(sexp::ostream& sos, WN* wn);
   
+  // ---------------------------------------------------------
+  // Memory Access (user defined structures)
+  // ---------------------------------------------------------
+
+  extern whirl2sexp::status 
+  xlate_STRCTFLD(sexp::ostream& sos, WN* wn);
+
   // ---------------------------------------------------------
   // Array Operators (N-ary Operations)
   // ---------------------------------------------------------

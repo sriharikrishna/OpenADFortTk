@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.8 2005/02/01 15:36:27 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.9 2006/03/14 01:09:15 utke Exp $
 
 //***************************************************************************
 //
@@ -1052,6 +1052,37 @@ sexp2whirl::xlate_UnaryOp(sexp_t* sx)
   return wn;
 }
 
+WN* 
+sexp2whirl::xlate_STRCTFLD(sexp_t* sx)
+{
+  using namespace sexp;
+  
+  OPCODE opc = GetWhirlOpc(sx); // WN_OPR
+  
+  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_STRCTFLD, FORTTK_UNEXPECTED_INPUT);
+
+  std::vector<WN*> kids = TranslateWNChildren(sx); // KIDs
+  WN* wn = WN_Create(opc, kids.size());
+  for (INT i = 0; i < kids.size(); ++i) {
+    WN_kid(wn,i) = kids[i];
+  }
+
+  sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
+  sexp_t* cur_sx = get_elem0(attrs_sx);
+
+  TY_IDX ty_idx1 = GetWhirlTyUse(cur_sx);
+  WN_set_load_addr_ty(wn, ty_idx1);
+  cur_sx = get_next(cur_sx);
+
+  TY_IDX ty_idx2 = GetWhirlTyUse(cur_sx);
+  WN_set_ty(wn, ty_idx2);
+  cur_sx = get_next(cur_sx);
+
+  UINT fldid = get_value_ui32(cur_sx);
+  WN_set_field_id(wn, fldid);
+    
+  return wn;
+}
 
 WN* 
 sexp2whirl::xlate_PARM(sexp_t* sx)
@@ -1264,6 +1295,8 @@ WNXlationTable::InitEntry WNXlationTable::initTable[] = {
   { OPR_BNOT,                 &xlate_UnaryOp },
   { OPR_LNOT,                 &xlate_UnaryOp },
   // FIXME: LOWPART, HIGHPART, MINPART, MAXPART, ILDA, EXTRACT_BITS
+  // structure field access
+  { OPR_STRCTFLD,             &xlate_STRCTFLD },
   { OPR_PARM,                 &xlate_PARM },
   // FIXME: ASM_INPUT
   { OPR_ALLOCA,               &xlate_ALLOCA },

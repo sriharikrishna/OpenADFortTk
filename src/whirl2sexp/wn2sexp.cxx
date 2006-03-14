@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.12 2005/02/01 15:36:27 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.13 2006/03/14 01:09:15 utke Exp $
 
 //***************************************************************************
 //
@@ -916,6 +916,37 @@ whirl2sexp::xlate_UnaryOp(sexp::ostream& sos, WN* wn)
   return whirl2sexp::good;
 }
 
+//***************************************************************************
+// structure field access
+//***************************************************************************
+
+whirl2sexp::status 
+whirl2sexp::xlate_STRCTFLD(sexp::ostream& sos, WN* wn)
+{
+  OPERATOR opr = WN_operator(wn);
+  FORTTK_ASSERT(opr == OPR_STRCTFLD,
+		FORTTK_UNEXPECTED_INPUT);
+  
+  FORTTK_ASSERT(WN_kid_count(wn) == 1, 
+		FORTTK_UNEXPECTED_INPUT << OPERATOR_name(opr));
+
+  sos << BegList << GenSexpWNOpr(wn); // WN_OPR
+  {
+    // get the attributes
+    TY_IDX ty_idx1 = WN_load_addr_ty(wn); // the type of the structure
+    TY_IDX ty_idx2 = WN_ty(wn);           // the type of the field being accessed
+    UINT   fldid   = WN_field_id(wn);     // the field_id of the field
+    // put them in the list
+    sos << BegList;                       
+    sos << GenSexpTyUse(ty_idx1);
+    sos << GenSexpTyUse(ty_idx2);
+    sos << Atom(fldid);
+    sos << EndList << EndLine;
+    TranslateWNChildren(sos, wn);
+  }
+  sos << EndList;
+  return whirl2sexp::good;
+}
 
 whirl2sexp::status 
 whirl2sexp::xlate_PARM(sexp::ostream& sos, WN* wn)
@@ -1113,6 +1144,9 @@ WNXlationTable::InitEntry WNXlationTable::initTable[] = {
   { OPR_BNOT,                 &xlate_UnaryOp },
   { OPR_LNOT,                 &xlate_UnaryOp },
   // FIXME: LOWPART, HIGHPART, MINPART, MAXPART, ILDA, EXTRACT_BITS
+  // structure field access: 
+  { OPR_STRCTFLD,             &xlate_STRCTFLD },
+  // parameter:
   { OPR_PARM,                 &xlate_PARM },
   // FIXME: ASM_INPUT
   { OPR_ALLOCA,               &xlate_ALLOCA },
