@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.42 2005/12/04 06:50:46 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.43 2006/04/27 17:47:59 utke Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -513,10 +513,14 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	  << Attr("scope_id", scopeid) << AttrSymId(st);
     } else {
       // SubroutineCall
+      USRCPOS srcpos;
+      USRCPOS_srcpos(srcpos) = WN_Get_Linenum(wn);
       xlate_as = 0; // subroutine
       xos << BegElem("xaif:SubroutineCall")
 	  << Attr("statement_id", ctxt.FindWNId(wn))
-	  << Attr("scope_id", scopeid) << AttrSymId(st);
+	  << Attr("scope_id", scopeid) 
+	  << Attr("lineNumber",USRCPOS_linenum(srcpos))
+	  << AttrSymId(st);
     }
   }
 

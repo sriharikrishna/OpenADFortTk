@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.37 2005/09/27 16:04:48 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_mem.cxx,v 1.38 2006/04/27 17:47:59 utke Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -482,8 +482,11 @@ whirl2xaif::xlate_STID(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   
   // Assignment
   if (!ctxt.IsAssign()) {
+    USRCPOS srcpos;
+    USRCPOS_srcpos(srcpos) = WN_Get_Linenum(wn);
     xos << BegElem(XAIFStrings.elem_Assign())
-	<< Attr("statement_id", ctxt.FindWNId(wn));
+	<< Attr("statement_id", ctxt.FindWNId(wn))
+	<< Attr("lineNumber",USRCPOS_linenum(srcpos));
   }
   
   // LHS of assignment
@@ -534,8 +537,11 @@ whirl2xaif::xlate_ISTORE(xml::ostream& xos, WN* wn, XlationContext& ctxt)
   
   // Assignment
   if (!ctxt.IsAssign()) {
-    xos << BegElem(XAIFStrings.elem_Assign()) 
-	<< Attr("statement_id", ctxt.FindWNId(wn));
+    USRCPOS srcpos;
+    USRCPOS_srcpos(srcpos) = WN_Get_Linenum(wn);
+    xos << BegElem(XAIFStrings.elem_Assign())
+	<< Attr("statement_id", ctxt.FindWNId(wn))
+	<< Attr("lineNumber",USRCPOS_linenum(srcpos));
   }
   
   // LHS of assignment (dereference address)

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.79 2005/09/21 16:08:10 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.80 2006/04/27 17:47:58 utke Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -299,7 +299,7 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   std::set<OA::OA_ptr<OA::CFG::Interface::Node> > usedNodes;
   OA::OA_ptr<OA::CFG::Interface::DFSIterator> nodeItPtr = cfg->getDFSIterator();
   for (; nodeItPtr->isValid(); ++(*nodeItPtr)) {
-      OA::OA_ptr<OA::CFG::Interface::Node> n = nodeItPtr->current();
+    OA::OA_ptr<OA::CFG::Interface::Node> n = nodeItPtr->current();
     usedNodes.insert(n);
     // n->longdump(&cfg, std::cerr); std::cerr << endl;
     
@@ -314,6 +314,39 @@ whirl2xaif::xlate_FUNC_ENTRY(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     }
     else if (vtype == XAIFStrings.elem_BBForLoop()) {
       xos << Attr("reversal", GetLoopReversalType(cfg,n));
+    }
+    if (vtype == XAIFStrings.elem_BBForLoop() 
+	|| 
+	vtype == XAIFStrings.elem_BBPreLoop()
+	|| 
+	vtype == XAIFStrings.elem_BBPostLoop()
+	|| 
+	vtype == XAIFStrings.elem_BBBranch()) { 
+      // to get the line number we need to get  
+      // the whirl node which appears to be quite a chore
+      OA::OA_ptr<OA::CFG::Interface::NodeStatementsIterator> stmtIt = n->getNodeStatementsIterator();
+      bool found=false;
+      for (; stmtIt->isValid() && !found; ++(*stmtIt)) {
+	OA::StmtHandle st = stmtIt->current();
+	WN* wstmt = (WN*)st.hval(); 
+	// now we need to figure out which one of these it actually is: 
+	OPERATOR opr = WN_operator(wstmt);
+	switch (opr) {
+	case OPR_DO_LOOP: 
+	case OPR_DO_WHILE: 
+	case OPR_WHILE_DO:
+	case OPR_IF:
+	case OPR_SWITCH: { 
+	  USRCPOS srcpos;
+	  USRCPOS_srcpos(srcpos) = WN_Get_Linenum(wstmt);
+	  xos << Attr("lineNumber",USRCPOS_linenum(srcpos));
+	  found=true;
+	  break;
+	}
+	default: 
+	  break; // fall through
+	}
+      }
     }
     xos << WhirlIdAnnot(ids);
     
