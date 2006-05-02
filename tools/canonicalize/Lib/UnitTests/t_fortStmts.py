@@ -79,8 +79,61 @@ class C2(TestCase):
            repr(AssignStmt(App('if',['ix','iy']),App('sin',['x'])))
            )
 
-s1    = makeSuite(C1)
-suite = asuite(C1,C2)
+class C3(TestCase):
+    '''derived type declarations'''
+
+    def test1(self):
+        'simple derived type declarations'
+
+        ae = self.assertEquals
+        a_ = self.assert_
+
+        s = 'TYPE (OpenADTy_active) OpenAD_Symbol_3865'
+        v = parse(scan(s))
+        ae(repr(v),
+           repr(DerivedTypeDecl('OpenADTy_active',['OpenAD_Symbol_3865'])))
+
+    def test2(self):
+        'simple derived type declarations with ::'
+
+        ae = self.assertEquals
+        a_ = self.assert_
+
+        s = 'TYPE (OpenADTy_active) :: OpenAD_Symbol_3865'
+        v = parse(scan(s))
+        ae(repr(v),
+           repr(DerivedTypeDecl('OpenADTy_active',['OpenAD_Symbol_3865'])))
+
+    def test3(self):
+        'simple derived type declarations with multiple vars'
+
+        ae = self.assertEquals
+        a_ = self.assert_
+
+        s = 'TYPE (OpenADTy_active) :: OpenAD_Symbol_3865,vv(12),zz(is,ist)'
+        v = parse(scan(s))
+        ae(repr(v),
+           repr(DerivedTypeDecl('OpenADTy_active',['OpenAD_Symbol_3865',
+                                                   App('vv',['12']),
+                                                   App('zz',['is', 'ist'])])))
+
+class C4(TestCase):
+    '''Test Jean's allocatable'''
+
+    def test1(self):
+        '''allocatable Stmt works'''
+
+        ae = self.assertEquals
+        a_ = self.assert_
+
+        s = 'allocatable foo,bar,baz'
+        ss = scan(s)
+        v = parse(ss)
+        ae(repr(v),
+           repr(AllocatableStmt('args')))
+        
+s1    = makeSuite(C4)
+suite = asuite(C1,C2,C3,C4)
 
 if __name__ == '__main__':
     runit(suite)

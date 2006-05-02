@@ -251,10 +251,10 @@ class EquivalenceStmt(Decl):
 class ParameterStmt(Decl):
     pass
 
-class SaveStmt(Decl):
+class AllocatableStmt(Decl):
     pass
 
-class AllocatableStmt(Decl):
+class SaveStmt(Decl):
     pass
 
 class StmtFnStmt(Decl):

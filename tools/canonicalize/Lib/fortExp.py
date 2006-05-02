@@ -4,7 +4,22 @@ Expression parser for fortran expressions:
 '''
 from l_assembler import *
 import fortScan  as fs
-import fortStmts as fst
+
+class _TypeMod(object):
+    'modifier for type declaration'
+
+    def __init__(self,e):
+        self.mod = e
+
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__,repr(self.mod),)
+
+    def __str__(self):
+        return self.pat % str(self.mod)
+
+class fst_Kind(_TypeMod):
+    pat = '(%s)'
+
 import sre
 from flatten import flatten
 from op_prec import OpPrec
@@ -286,12 +301,12 @@ def const_type(e,kw2type,lenfn):
         ty     = 'd' in v.group(1).lower() and 'doubleprecision' or \
                  'real'
         ty     = kw2type(ty)
-        kind   = v.group(2) and fst._Kind(v.group(3)) or []
+        kind   = v.group(2) and fst_Kind(v.group(3)) or []
         return (ty,kind)
     if _int_re.match(e):
         ty   = kw2type('integer')
         kind = kind_re.search(e)
-        kind = kind and [ fst._Kind(kind.group(1)) ] or []
+        kind = kind and [ fst_Kind(kind.group(1)) ] or []
         return (ty,kind)
     if e.lower() in _logicon_set:
         return (kw2type('logical'),[])
