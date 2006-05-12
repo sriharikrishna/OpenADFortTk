@@ -1,51 +1,23 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.15 2005/07/28 15:46:51 eraxxon Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/ScalarizedRefTab.h,v 1.16 2006/05/12 16:12:22 utke Exp $
 
 #ifndef ScalarizedRefTab_H 
 #define ScalarizedRefTab_H
-
-//************************** System Include Files ***************************
 
 #include <set>
 #include <map>
 #include <string>
 #include <iostream>
 
-//************************** Open64 Include Files ***************************
-
-#include <include/Open64BasicTypes.h>
-
-//*************************** User Include Files ****************************
+#include "include/Open64BasicTypes.h"
 
 #include "BaseMap.h"
 #include "Open64IRInterface.hpp"
 #include "diagnostics.h"
+#include "ScalarizedRef.h"
 
-//************************** Forward Declarations ***************************
+namespace fortTk { 
 
-class ScalarizedRef;
-
-//***************************************************************************
-// ScalarizedRefTab (helper types)
-//***************************************************************************
-
-// ScalarizedRefTab_Base: 
 class ScalarizedRefTab_Base
 {
 public:
@@ -86,43 +58,6 @@ protected:
 };
 
 
-//***************************************************************************
-// ScalarizedRef
-//***************************************************************************
-
-class ScalarizedRef {
-  
-public:
-  // Constructor: if 'x' is supplied, it will be appended to the
-  // symbol name
-  ScalarizedRef(WN* wn_, const char* x = NULL) { Ctor(wn_, x);  }
-  virtual ~ScalarizedRef();
-  
-  // GetName: Return a globally unique dummy symbol name
-  std::string& GetName() { return name; }
-  // GetWN: first occurance of reference in PU
-  WN* GetWN() { return wn; }
-  
-  // GetId: Return an id, globally unique across instances of this class
-  UINT GetId() const { return id; }
-  
-  virtual void Dump(std::ostream& o = std::cerr) const;
-  virtual void DDump() const;
-
-private:
-  // These could make sense, but I just haven't implemented them yet
-  ScalarizedRef(const ScalarizedRef& x) { }
-  ScalarizedRef& operator=(const ScalarizedRef& x) { return *this; }
-  
-  void Ctor(WN* wn, const char* x);
-  
-private:
-  UINT id; 
-  std::string name;
-  WN* wn; // first occurance of reference in PU
-  
-  static UINT nextId; // for globally uniqe id numbers
-};
 
 
 //***************************************************************************
@@ -206,30 +141,6 @@ private:
 
 
 // ---------------------------------------------------------
-// ScalarizedRefTab: Specialization for X2W
-// ---------------------------------------------------------
-
-// It turns out that we do not really need this.
-
-
-//***************************************************************************
-// ScalarizedRefTabMap
-//***************************************************************************
-
-#if 0
-// ScalarizedRefTab: A dummy template that will be specialized below.
-// For mapping certain non-scalar WHIRL references to dummy scalar
-// variables
-template <ScalarizedRefTab_Base::TableType TabTy>
-class ScalarizedRefTab 
-  : public ScalarizedRefTab_Base,
-    public FortTk::BaseMap<void*, void*>
-{
-};
-#endif
-
-
-// ---------------------------------------------------------
 // ScalarizedRefTabMap: Specialization for W2X
 // ---------------------------------------------------------
 
@@ -245,37 +156,11 @@ public:
 };
 
 
-// ---------------------------------------------------------
-// ScalarizedRefTabMap: Specialization for X2W
-// ---------------------------------------------------------
-
-// It turns out that we do not really need this.
-
-
 //***************************************************************************
 // Variable References and WHIRL/XAIF
 //***************************************************************************
 
 // See tech report for explanation of three categories of references.
-
-bool 
-IsRefTranslatableToXAIF(const WN* wn);
-
-bool 
-IsRefSimple(const WN* wn);
-bool 
-IsRefSimpleScalar(const WN* wn);
-bool 
-IsRefSimpleArrayElem(const WN* wn);
-bool 
-IsRefSimpleArray(const WN* wn);
-
-bool
-IsRefScalarizable(const WN* wn);
-
-
-bool 
-IsRefScalar(TY_IDX baseobj_ty, TY_IDX refobj_ty);
 
 
 //***************************************************************************
@@ -325,7 +210,6 @@ private:
   WorkMapTy workmap;
 };
 
-
-//***************************************************************************
+}
 
 #endif 

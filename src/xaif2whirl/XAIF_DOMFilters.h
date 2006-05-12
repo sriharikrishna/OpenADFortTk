@@ -1,306 +1,169 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.17 2005/06/10 15:59:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v 1.18 2006/05/12 16:12:23 utke Exp $
 
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XAIF_DOMFilters.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
 
 #ifndef XAIF_DOMFilters_INCLUDED_h
 #define XAIF_DOMFilters_INCLUDED_h
 
-//************************* System Include Files ****************************
-
 #include <iostream>
 
-//************************* Xerces Include Files ****************************
+#include "xercesc/dom/DOMNodeFilter.hpp"
 
-#include <xercesc/dom/DOMNodeFilter.hpp>
+namespace xaif2whirl { 
 
-//*************************** User Include Files ****************************
+  // Dumps only this node
+  void 
+  XercesPrintNode(std::ostream& os, const xercesc::DOMNode* n);
 
-//*************************** Forward Declarations ***************************
+  // Dumps the tree rooted at 'n'
+  void
+  XercesPrintTree(std::ostream& os, const xercesc::DOMNode* n);
 
-XERCES_CPP_NAMESPACE_USE
+  std::ostream& 
+  operator<<(std::ostream& os, const xercesc::DOMElement& elem);
 
-//****************************************************************************
+  // Shortcut for XercesPrintNode
+  void 
+  XercesDumpNode(const xercesc::DOMNode* n);
 
-// FIXME: this could be moved to a better place
+  // Shortcut for XercesPrintTree
+  void 
+  XercesDumpTree(const xercesc::DOMNode* n);
 
-// Dumps only this node
-void 
-XercesPrintNode(std::ostream& os, const DOMNode* n);
+  void 
+  XercesDumpNode(void* n); // For *^#% debuggers
 
-// Dumps the tree rooted at 'n'
-void
-XercesPrintTree(std::ostream& os, const DOMNode* n);
+  void 
+  XercesDumpTree(void* n); // For *^#% debuggers
 
+  xercesc::DOMElement*
+  GetFirstChildElement(const xercesc::DOMNode* n);
 
-std::ostream& 
-operator<<(std::ostream& os, const DOMElement& elem);
+  xercesc::DOMElement*
+  GetLastChildElement(const xercesc::DOMNode* n);
 
+  xercesc::DOMElement*
+  GetChildElement(const xercesc::DOMNode* n, const XMLCh* name);
 
-// Shortcut for XercesPrintNode
-void 
-XercesDumpNode(const DOMNode* n);
+  xercesc::DOMElement*
+  GetChildElement(const xercesc::DOMNode* n, const xercesc::DOMNodeFilter* filter);
 
-// Shortcut for XercesPrintTree
-void 
-XercesDumpTree(const DOMNode* n);
+  unsigned int
+  GetChildElementCount(const xercesc::DOMNode* n);
 
-void 
-XercesDumpNode(void* n); // For *^#% debuggers
+  xercesc::DOMElement*
+  GetPrevSiblingElement(const xercesc::DOMNode* n);
 
-void 
-XercesDumpTree(void* n); // For *^#% debuggers
+  xercesc::DOMElement*
+  GetNextSiblingElement(const xercesc::DOMNode* n);
 
+  xercesc::DOMElement*
+  GetNextSiblingElement(const xercesc::DOMNode* n, const XMLCh* name);
 
+  xercesc::DOMElement*
+  GetNextSiblingElement(const xercesc::DOMNode* n, const xercesc::DOMNodeFilter* filter);
 
-// Useful for either finding one element or iterating over all the
-// children of a node.  Much more efficient than the Xerces DOM
-// iterators.
+  class XAIF_ElemFilter : public xercesc::DOMNodeFilter {
+  public:
+    XAIF_ElemFilter(const XMLCh* name) : mName(name) { }
+    ~XAIF_ElemFilter() { }
+    short acceptNode(const xercesc::DOMNode *node) const;
+  private:
+    const XMLCh* mName;
+  };
 
-#if 0 
-  // Sample DOMNodeIterator iteration (inspects all nodes in the subtree)
-  DOMDocument* doc = bbElem->getOwnerDocument();
-  DOMNodeIterator* it = 
-    doc->createNodeIterator((DOMNode*)bbElem, DOMNodeFilter::SHOW_ALL, 
-                            new XAIF_BBStmtElemFilter(), true);
-  for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
-    DOMElement* stmt = dynamic_cast<DOMElement*>(node);
-    // ...
-  }
-  it->release();
-#endif
+  class XAIF_ScopeElemFilter : public xercesc::DOMNodeFilter {
+  public:
+    XAIF_ScopeElemFilter() { }
+    ~XAIF_ScopeElemFilter() { }
+    short acceptNode(const xercesc::DOMNode *node) const;
+  };
 
-DOMElement*
-GetFirstChildElement(const DOMNode* n);
+  class XAIF_SymbolElemFilter : public xercesc::DOMNodeFilter {
+  public:
+    XAIF_SymbolElemFilter() { }
+    ~XAIF_SymbolElemFilter() { }
+    short acceptNode(const xercesc::DOMNode *node) const;
+  };
 
-DOMElement*
-GetLastChildElement(const DOMNode* n);
+  class XAIF_DimensionBoundsElemFilter : public xercesc::DOMNodeFilter {
+  public:
+    XAIF_DimensionBoundsElemFilter() { }
+    ~XAIF_DimensionBoundsElemFilter() { }
+    short acceptNode(const xercesc::DOMNode *node) const;
+  };
 
-DOMElement*
-GetChildElement(const DOMNode* n, const XMLCh* name);
+  class XAIF_CFGElemFilter : public xercesc::DOMNodeFilter {
+  public:
+    XAIF_CFGElemFilter(bool cfgOrReplaceList_ = true) 
+      : cfgOrReplaceList(cfgOrReplaceList_) { }
+    ~XAIF_CFGElemFilter() { }
 
-DOMElement*
-GetChildElement(const DOMNode* n, const DOMNodeFilter* filter);
-
-unsigned int
-GetChildElementCount(const DOMNode* n);
-
-DOMElement*
-GetPrevSiblingElement(const DOMNode* n);
-
-DOMElement*
-GetNextSiblingElement(const DOMNode* n);
-
-DOMElement*
-GetNextSiblingElement(const DOMNode* n, const XMLCh* name);
-
-DOMElement*
-GetNextSiblingElement(const DOMNode* n, const DOMNodeFilter* filter);
-
-
-//****************************************************************************
-
-class XAIF_ElemFilter : public DOMNodeFilter
-{
-public:
-  // -----------------------------------------------------------------------
-  //  Constructors and Destructor
-  // -----------------------------------------------------------------------
-  XAIF_ElemFilter(const XMLCh* name) : mName(name) { }
-  ~XAIF_ElemFilter() { }
+    short acceptNode(const xercesc::DOMNode *node) const;
   
-  // -----------------------------------------------------------------------
-  //  Implementation of the filter interface
-  // -----------------------------------------------------------------------
-  short acceptNode(const DOMNode *node) const;
+    static bool IsCFG(const xercesc::DOMNode *node);
+    static bool IsReplaceList(const xercesc::DOMNode *node);
+    static bool IsReplacement(const xercesc::DOMNode *node);
+  private:
+    bool cfgOrReplaceList;
+  };
 
-private:
-  const XMLCh* mName;
-};
 
-//****************************************************************************
+  class XAIF_BBElemFilter : public xercesc::DOMNodeFilter {
+  public:
+    // if 'onlyBasicBlock' is true, only xaif:BasicBlocks are in the iteration
+    XAIF_BBElemFilter(bool edges = true)
+      : includeEdges(edges) { }
+    ~XAIF_BBElemFilter() { }
 
-class XAIF_ScopeElemFilter : public DOMNodeFilter
-{
-public:
-  // -----------------------------------------------------------------------
-  //  Constructors and Destructor
-  // -----------------------------------------------------------------------
-  XAIF_ScopeElemFilter() { }
-  ~XAIF_ScopeElemFilter() { }
+    short acceptNode(const xercesc::DOMNode *node) const;
   
-  // -----------------------------------------------------------------------
-  //  Implementation of the filter interface
-  // -----------------------------------------------------------------------
-  short acceptNode(const DOMNode *node) const;
+    static bool IsAnyBB(const xercesc::DOMNode *node);
+    static bool IsBBEntry(const xercesc::DOMNode *node);
+    static bool IsBBExit(const xercesc::DOMNode *node);
+    static bool IsBB(const xercesc::DOMNode *node);
+    static bool IsBBBranch(const xercesc::DOMNode *node);
+    static bool IsBBEndBr(const xercesc::DOMNode *node);
+    static bool IsBBForLoop(const xercesc::DOMNode *node);
+    static bool IsBBPreLoop(const xercesc::DOMNode *node);
+    static bool IsBBPostLoop(const xercesc::DOMNode *node);
+    static bool IsBBEndLoop(const xercesc::DOMNode *node);
+    static bool IsEdge(const xercesc::DOMNode *node);
+  private:
+    bool includeEdges;
+  };
 
-private:
-};
 
-//****************************************************************************
+  // Accepts: basic block statements and DerivativeAccumulator
+  class XAIF_BBStmtElemFilter : public xercesc::DOMNodeFilter {
+  public:
+    XAIF_BBStmtElemFilter() { }
+    ~XAIF_BBStmtElemFilter() { }
 
-class XAIF_SymbolElemFilter : public DOMNodeFilter
-{
-public:
-  // -----------------------------------------------------------------------
-  //  Constructors and Destructor
-  // -----------------------------------------------------------------------
-  XAIF_SymbolElemFilter() { }
-  ~XAIF_SymbolElemFilter() { }
+    short acceptNode(const xercesc::DOMNode *node) const;
+
+    static bool IsAnyStmt(const xercesc::DOMNode *node);
+    static bool IsAssign(const xercesc::DOMNode *node);
+    static bool IsSubCall(const xercesc::DOMNode *node);
+    static bool IsInlinableSubCall(const xercesc::DOMNode *node);
+    static bool IsMarker(const xercesc::DOMNode *node);
+    static bool IsDerivProp(const xercesc::DOMNode *node);
+  };
+
+
+  class XAIF_DerivPropStmt : public xercesc::DOMNodeFilter {
+  public:
+    XAIF_DerivPropStmt() { }
+    ~XAIF_DerivPropStmt() { }
   
-  // -----------------------------------------------------------------------
-  //  Implementation of the filter interface
-  // -----------------------------------------------------------------------
-  short acceptNode(const DOMNode *node) const;
+    short acceptNode(const xercesc::DOMNode *node) const;
 
-private:
-};
+    static bool IsSetDeriv(const xercesc::DOMNode *node);
+    static bool IsSax(const xercesc::DOMNode *node);
+    static bool IsSaxpy(const xercesc::DOMNode *node);
+    static bool IsZeroDeriv(const xercesc::DOMNode *node);  
+  };
 
+}
 
-//****************************************************************************
-
-class XAIF_DimensionBoundsElemFilter : public DOMNodeFilter
-{
-public:
-  // -----------------------------------------------------------------------
-  //  Constructors and Destructor
-  // -----------------------------------------------------------------------
-  XAIF_DimensionBoundsElemFilter() { }
-  ~XAIF_DimensionBoundsElemFilter() { }
-  
-  // -----------------------------------------------------------------------
-  //  Implementation of the filter interface
-  // -----------------------------------------------------------------------
-  short acceptNode(const DOMNode *node) const;
-
-private:
-};
-
-//****************************************************************************
-
-class XAIF_CFGElemFilter : public DOMNodeFilter
-{
-public:
-  // -----------------------------------------------------------------------
-  //  Constructors and Destructor
-  // -----------------------------------------------------------------------
-  XAIF_CFGElemFilter(bool cfgOrReplaceList_ = true) 
-    : cfgOrReplaceList(cfgOrReplaceList_) { }
-  ~XAIF_CFGElemFilter() { }
-  
-  // -----------------------------------------------------------------------
-  //  Implementation of the filter interface
-  // -----------------------------------------------------------------------
-  short acceptNode(const DOMNode *node) const;
-  
-  static bool IsCFG(const DOMNode *node);
-  static bool IsReplaceList(const DOMNode *node);
-  
-  static bool IsReplacement(const DOMNode *node);
-  
-private:
-  bool cfgOrReplaceList;
-};
-
-
-class XAIF_BBElemFilter : public DOMNodeFilter
-{
-public:
-  // -----------------------------------------------------------------------
-  //  Constructors and Destructor
-  // -----------------------------------------------------------------------
-  // if 'onlyBasicBlock' is true, only xaif:BasicBlocks are in the iteration
-  XAIF_BBElemFilter(bool edges = true)
-    : includeEdges(edges) { }
-  ~XAIF_BBElemFilter() { }
-  
-  // -----------------------------------------------------------------------
-  //  Implementation of the filter interface
-  // -----------------------------------------------------------------------
-  short acceptNode(const DOMNode *node) const;
-  
-  static bool IsAnyBB(const DOMNode *node);
-  static bool IsBBEntry(const DOMNode *node);
-  static bool IsBBExit(const DOMNode *node);
-  static bool IsBB(const DOMNode *node);
-  static bool IsBBBranch(const DOMNode *node);
-  static bool IsBBEndBr(const DOMNode *node);
-  static bool IsBBForLoop(const DOMNode *node);
-  static bool IsBBPreLoop(const DOMNode *node);
-  static bool IsBBPostLoop(const DOMNode *node);
-  static bool IsBBEndLoop(const DOMNode *node);
-
-  static bool IsEdge(const DOMNode *node);
-
-private:
-  bool includeEdges;
-};
-
-
-// Accepts: basic block statements and DerivativeAccumulator
-class XAIF_BBStmtElemFilter : public DOMNodeFilter
-{
-public:
-  // -----------------------------------------------------------------------
-  //  Constructors and Destructor
-  // -----------------------------------------------------------------------
-  XAIF_BBStmtElemFilter() { }
-  ~XAIF_BBStmtElemFilter() { }
-  
-  // -----------------------------------------------------------------------
-  //  Implementation of the filter interface
-  // -----------------------------------------------------------------------
-  short acceptNode(const DOMNode *node) const;
-
-  static bool IsAnyStmt(const DOMNode *node);
-  
-  static bool IsAssign(const DOMNode *node);
-  static bool IsSubCall(const DOMNode *node);
-  static bool IsInlinableSubCall(const DOMNode *node);
-  static bool IsMarker(const DOMNode *node);
-  static bool IsDerivProp(const DOMNode *node);
-
-private:
-};
-
-
-class XAIF_DerivPropStmt : public DOMNodeFilter
-{
-public:
-  // -----------------------------------------------------------------------
-  //  Constructors and Destructor
-  // -----------------------------------------------------------------------
-  XAIF_DerivPropStmt() { }
-  ~XAIF_DerivPropStmt() { }
-  
-  // -----------------------------------------------------------------------
-  //  Implementation of the filter interface
-  // -----------------------------------------------------------------------
-  short acceptNode(const DOMNode *node) const;
-
-  static bool IsSetDeriv(const DOMNode *node);
-  static bool IsSax(const DOMNode *node);
-  static bool IsSaxpy(const DOMNode *node);
-  static bool IsZeroDeriv(const DOMNode *node);  
-
-private:
-};
-
-
-//***************************************************************************
-
-#endif // XAIF_DOMFilters_INCLUDED_h
+#endif 

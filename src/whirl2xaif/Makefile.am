@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Makefile.am,v 1.1 2005/06/10 17:44:32 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Makefile.am,v 1.2 2006/05/12 16:12:23 utke Exp $
 
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -73,7 +73,8 @@ MYSOURCES = \
 	wn2xaif_io.h wn2xaif_io.cxx \
 	st2xaif.h st2xaif.cxx \
 	ty2xaif.h ty2xaif.cxx \
-	XlationContext.h XlationContext.cxx
+	XlationContext.h XlationContext.cxx \
+	PUXlationContext.h PUXlationContext.cxx
 
 MYCFLAGS   = $(OPENADFORTTK_IFLAGS) \
 	@OPEN64_IFLAGS@ @OPEN64_CFLAGS@ @OA_IFLAGS@ @XERCES_IFLAGS@ \

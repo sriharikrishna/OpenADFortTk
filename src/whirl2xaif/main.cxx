@@ -1,63 +1,10 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.25 2005/05/16 15:17:56 eraxxon Exp $
-
-// * BeginCopyright *********************************************************
-/*
-  Copyright (C) 2000, 2001 Silicon Graphics, Inc.  All Rights Reserved.
-
-  This program is free software; you can redistribute it and/or modify it
-  under the terms of version 2 of the GNU General Public License as
-  published by the Free Software Foundation.
-
-  This program is distributed in the hope that it would be useful, but
-  WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-  Further, this software is distributed without any warranty that it is
-  free of the rightful claim of any third person regarding infringement 
-  or the like.  Any license provided herein, whether implied or 
-  otherwise, applies only to this software file.  Patent licenses, if 
-  any, provided herein do not apply to combinations of this program with 
-  other software, or any other product whatsoever.  
-
-  You should have received a copy of the GNU General Public License along
-  with this program; if not, write the Free Software Foundation, Inc., 59
-  Temple Place - Suite 330, Boston MA 02111-1307, USA.
-
-  Contact information:  Silicon Graphics, Inc., 1600 Amphitheatre Pky,
-  Mountain View, CA 94043, or:
-
-  http://www.sgi.com
-
-  For further information regarding this notice, see:
-
-  http://oss.sgi.com/projects/GenInfo/NoticeExplan
-*/
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-// Based on Open64 be/be/driver.cxx (curr.driver.cxx)
-//
-//***************************************************************************
-
-//************************** System Include Files ***************************
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.26 2006/05/12 16:12:23 utke Exp $
 
 #include <iostream>
 using std::endl;
 using std::cout;
 #include <string>
-
-//************************** Open64 Include Files ***************************
 
 #include <include/Open64BasicTypes.h>
 
@@ -65,11 +12,7 @@ using std::cout;
 #include "tracing.h"        // trace routines
 #include "ir_reader.h"      // fdump_tree
 
-//************************ OpenAnalysis Include Files ***********************
-
 #include <OpenAnalysis/Utils/Exception.hpp>
-
-//*************************** User Include Files ****************************
 
 #include "Args.h"
 #include "whirl2xaif.h"
@@ -77,8 +20,6 @@ using std::cout;
 #include <lib/support/xmlostream.h>
 #include <lib/support/Exception.h>
 #include <lib/support/WhirlIO.h>
-
-//************************** Forward Declarations ***************************
 
 static int
 real_main(int argc, char **argv);
@@ -95,8 +36,6 @@ OpenFile(std::ofstream& fs, const char* filename);
 static void 
 CloseFile(std::ofstream& fs);
 
-
-//***************************************************************************
 
 int
 main(int argc, char **argv)
@@ -175,7 +114,7 @@ real_main(int argc, char **argv)
   // -------------------------------------------------------  
   
   (*os) << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n";
-  whirl2xaif::TranslateIR(*os, pu_forest, args.tmpVarPrefix.c_str());
+  whirl2xaif::Whirl2Xaif::translateIR(*os, pu_forest, args.tmpVarPrefix.c_str());
   
   bool writeIR = false;
   if (writeIR) { 
@@ -203,11 +142,6 @@ real_main(int argc, char **argv)
 
   return RC_OKAY;
 }
-
-
-//***************************************************************************
-// 
-//***************************************************************************
 
 static std::ostream*
 InitOutputStream(Args& args)

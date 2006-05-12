@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Makefile.am,v 1.1 2005/06/10 17:44:32 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/Makefile.am,v 1.1.6.1 2006/04/10 16:17:02 utke Exp $
 
 #############################################################################
 #
@@ -120,7 +120,8 @@ am__objects_1 = whirl2xaif-main.$(OBJEXT) whirl2xaif-Args.$(OBJEXT) \
 	whirl2xaif-wn2xaif_mem.$(OBJEXT) \
 	whirl2xaif-wn2xaif_io.$(OBJEXT) whirl2xaif-st2xaif.$(OBJEXT) \
 	whirl2xaif-ty2xaif.$(OBJEXT) \
-	whirl2xaif-XlationContext.$(OBJEXT)
+	whirl2xaif-XlationContext.$(OBJEXT) \
+	whirl2xaif-PUXlationContext.$(OBJEXT)
 am_whirl2xaif_OBJECTS = $(am__objects_1)
 whirl2xaif_OBJECTS = $(am_whirl2xaif_OBJECTS)
 am__DEPENDENCIES_1 = $(top_builddir)/src/lib/support/libsupport.a
@@ -300,7 +301,8 @@ MYSOURCES = \
 	wn2xaif_io.h wn2xaif_io.cxx \
 	st2xaif.h st2xaif.cxx \
 	ty2xaif.h ty2xaif.cxx \
-	XlationContext.h XlationContext.cxx
+	XlationContext.h XlationContext.cxx \
+	PUXlationContext.h PUXlationContext.cxx
 
 MYCFLAGS = $(OPENADFORTTK_IFLAGS) \
 	@OPEN64_IFLAGS@ @OPEN64_CFLAGS@ @OA_IFLAGS@ @XERCES_IFLAGS@ \
@@ -398,6 +400,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/whirl2xaif-Args.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/whirl2xaif-PUXlationContext.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/whirl2xaif-XlationContext.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/whirl2xaif-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/whirl2xaif-st2xaif.Po@am__quote@
@@ -576,6 +579,20 @@ whirl2xaif-XlationContext.obj: XlationContext.cxx
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='XlationContext.cxx' object='whirl2xaif-XlationContext.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(whirl2xaif_CXXFLAGS) $(CXXFLAGS) -c -o whirl2xaif-XlationContext.obj `if test -f 'XlationContext.cxx'; then $(CYGPATH_W) 'XlationContext.cxx'; else $(CYGPATH_W) '$(srcdir)/XlationContext.cxx'; fi`
+
+whirl2xaif-PUXlationContext.o: PUXlationContext.cxx
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(whirl2xaif_CXXFLAGS) $(CXXFLAGS) -MT whirl2xaif-PUXlationContext.o -MD -MP -MF "$(DEPDIR)/whirl2xaif-PUXlationContext.Tpo" -c -o whirl2xaif-PUXlationContext.o `test -f 'PUXlationContext.cxx' || echo '$(srcdir)/'`PUXlationContext.cxx; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/whirl2xaif-PUXlationContext.Tpo" "$(DEPDIR)/whirl2xaif-PUXlationContext.Po"; else rm -f "$(DEPDIR)/whirl2xaif-PUXlationContext.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='PUXlationContext.cxx' object='whirl2xaif-PUXlationContext.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(whirl2xaif_CXXFLAGS) $(CXXFLAGS) -c -o whirl2xaif-PUXlationContext.o `test -f 'PUXlationContext.cxx' || echo '$(srcdir)/'`PUXlationContext.cxx
+
+whirl2xaif-PUXlationContext.obj: PUXlationContext.cxx
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(whirl2xaif_CXXFLAGS) $(CXXFLAGS) -MT whirl2xaif-PUXlationContext.obj -MD -MP -MF "$(DEPDIR)/whirl2xaif-PUXlationContext.Tpo" -c -o whirl2xaif-PUXlationContext.obj `if test -f 'PUXlationContext.cxx'; then $(CYGPATH_W) 'PUXlationContext.cxx'; else $(CYGPATH_W) '$(srcdir)/PUXlationContext.cxx'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/whirl2xaif-PUXlationContext.Tpo" "$(DEPDIR)/whirl2xaif-PUXlationContext.Po"; else rm -f "$(DEPDIR)/whirl2xaif-PUXlationContext.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='PUXlationContext.cxx' object='whirl2xaif-PUXlationContext.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(whirl2xaif_CXXFLAGS) $(CXXFLAGS) -c -o whirl2xaif-PUXlationContext.obj `if test -f 'PUXlationContext.cxx'; then $(CYGPATH_W) 'PUXlationContext.cxx'; else $(CYGPATH_W) '$(srcdir)/PUXlationContext.cxx'; fi`
 uninstall-info-am:
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)

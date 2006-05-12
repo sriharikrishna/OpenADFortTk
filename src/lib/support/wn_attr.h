@@ -1,97 +1,19 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.11 2005/09/15 02:43:06 eraxxon Exp $
-
-// * BeginCopyright *********************************************************
-/*
-  Copyright (C) 2000, 2001 Silicon Graphics, Inc.  All Rights Reserved.
-
-  This program is free software; you can redistribute it and/or modify it
-  under the terms of version 2 of the GNU General Public License as
-  published by the Free Software Foundation.
-
-  This program is distributed in the hope that it would be useful, but
-  WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-  Further, this software is distributed without any warranty that it is
-  free of the rightful claim of any third person regarding infringement 
-  or the like.  Any license provided herein, whether implied or 
-  otherwise, applies only to this software file.  Patent licenses, if 
-  any, provided herein do not apply to combinations of this program with 
-  other software, or any other product whatsoever.  
-
-  You should have received a copy of the GNU General Public License along
-  with this program; if not, write the Free Software Foundation, Inc., 59
-  Temple Place - Suite 330, Boston MA 02111-1307, USA.
-
-  Contact information:  Silicon Graphics, Inc., 1600 Amphitheatre Pky,
-  Mountain View, CA 94043, or:
-
-  http://www.sgi.com
-
-  For further information regarding this notice, see:
-
-  http://oss.sgi.com/projects/GenInfo/NoticeExplan
-*/
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-// Based on Open64 be/whirl2c/wn_attr.h
-//
-//***************************************************************************
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.12 2006/05/12 16:12:22 utke Exp $
 
 #ifndef wn_attr_INCLUDED
 #define wn_attr_INCLUDED
-/* ====================================================================
- * ====================================================================
+
+
+#include <include/Open64BasicTypes.h>
+
+
+  /**
+   * Access-macros and access-functions for obtaining attributes of 
+   * WN trees for general use in translating WN to another language
+   * form (e.g. to C or Fortran).  For the most part, this module
+   * supplements common/com/wn_core.h.
  *
- * Description:
- *
- * Access-macros and access-functions for obtaining attributes of 
- * WN trees for general use in translating WN to another language
- * form (e.g. to C or Fortran).  For the most part, this module
- * supplements common/com/wn_core.h.
- *
- * Macros yielding WN attributes:
- * ------------------------------
- *
- *   WN_agoto_addr:
- *      TODO: is this an address or an index into a table of 
- *      addresses?
- *
- *   WN_condbr_cond:
- *      The conditional expression controlling the branch.
- *
- *   WN_compgoto_num_cases:
- *   WN_switch_num_cases:
- *      The number of cases in a computed goto statement (C switch
- *      statement).
- *
- *   WN_compgoto_idx:
- *   WN_switch_idx:
- *      The expression, which value is the index into the goto table.
- *
- *   WN_compgoto_table:
- *   WN_switch_table:
- *      The block of gotos representing the goto table.
- *
- *   WN_compgoto_has_default_case:
- *   WN_switch_has_default_case:
- *      TRUE if the computed goto is blessed with a default case.
- *
- *   WN_is_constant_expr:
- *      Return TRUE if we have an OPR_INTCONST or an OPR_CONST; otherwise
- *      return FALSE.
  *
  * Macros yielding OPCODE information:
  * -----------------------------------
@@ -143,18 +65,6 @@
  * ====================================================================
  */
 
-//************************** System Include Files ***************************
-
-//************************** Open64 Include Files ***************************
-
-#include <include/Open64BasicTypes.h>
-
-//*************************** User Include Files ****************************
-
-//************************** Forward Declarations ***************************
-
-//***************************************************************************
-
 /* several craylib/dope items represent a no-op by a zero inconst...*/
 #define IS_IO_NULL_OPR(wn) ((WN_operator(wn) == OPR_INTCONST) && (WN_const_val(wn) == 0))
 
@@ -173,21 +83,6 @@
 
 //***************************************************************************
 
-// FIXME: WE DON'T WANT THIS JUNK
-#define WN_agoto_addr(wn) WN_kid0(wn)
-
-#define WN_condbr_cond(wn) WN_kid0(wn)
-
-#define WN_compgoto_num_cases(wn) WN_num_entries(wn)
-#define WN_compgoto_idx(wn) WN_kid0(wn)
-#define WN_compgoto_table(wn) WN_kid1(wn)
-#define WN_compgoto_has_default_case(wn) (WN_kid_count(wn) == 3)
-
-#define WN_switch_num_cases(wn) WN_num_entries(wn)
-#define WN_switch_has_default_case(wn) (WN_kid_count(wn) == 3)
-
-#define WN_is_constant_expr(wn) \
-   (WN_operator(wn) == OPR_INTCONST || WN_operator(wn) == OPR_CONST)
 
 #define INTR_is_adrtmp(intrn) \
    ((intrn) == INTRN_U4I1ADRTMP || \
@@ -273,21 +168,10 @@ WN_intrinsic_return_ty(const WN *call);
 extern BOOL 
 WN_intrinsic_return_to_param(TY_IDX return_ty);
 
-//***************************************************************************
-
-
-// Given a WN, return true if this is an ARRAY reference of some type.
-// In other words, we look for an idiom of the forms:
-//   ISTORE      or    ILOAD
-//     ARRAY             ARRAY
-// An ISTORE is interpreted as a handle for an lvalue; an ILOAD as a
-// handle for an rvalue.
-extern bool 
-WN_isArrayRef(WN* wn);
 
 extern WN *
 WN_Get_PtrAdd_Intconst(WN* wn0, WN* wn1, TY_IDX pointed_ty);
 
 //***************************************************************************
 
-#endif /* wn_attr_INCLUDED */
+#endif 

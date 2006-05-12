@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Makefile.am,v 1.1 2005/06/10 17:44:32 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Makefile.am,v 1.2 2006/05/12 16:12:23 utke Exp $
 
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -66,11 +66,11 @@ MYSOURCES = \
 	Args.h Args.cxx \
 	\
 	xaif2whirl.h xaif2whirl.cxx \
-	xaif2whirl_stmt.h xaif2whirl_stmt.cxx \
-	xaif2whirl_expr.h xaif2whirl_expr.cxx \
+	XlateStmt.h XlateStmt.cxx \
+	XlateExpression.h XlateExpression.cxx \
 	XlationContext.h XlationContext.cxx \
+	PUXlationContext.h PUXlationContext.cxx \
 	\
-	XAIF_SAXHandler.h XAIF_SAXHandler.cxx \
 	XAIF_DOMErrorHandler.h XAIF_DOMErrorHandler.cxx \
 	XAIF_DOMFilters.h XAIF_DOMFilters.cxx \
 	XercesStrX.h XercesStrX.cxx

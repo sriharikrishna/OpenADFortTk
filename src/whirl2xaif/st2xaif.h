@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.15 2005/06/10 15:59:06 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.h,v 1.16 2006/05/12 16:12:23 utke Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -87,7 +87,7 @@
 //*************************** User Include Files ****************************
 
 #include <lib/support/xmlostream.h>
-#include "XlationContext.h"
+#include "PUXlationContext.h"
 
 //************************** Forward Declarations ***************************
 
@@ -101,31 +101,30 @@ namespace whirl2xaif {
 
   extern void 
   xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
-		     ScalarizedRefTab_W2X* nonscalarsymtab, 
-		     XlationContext& ctxt);
+		     fortTk::ScalarizedRefTab_W2X* nonscalarsymtab, 
+		     PUXlationContext& ctxt);
   
   extern void 
-  xlate_SYMTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
-	       XlationContext& ctxt);
+  xlate_SYMTAB(xml::ostream& xos, 
+	       SYMTAB_IDX symtab_lvl, 
+	       PUXlationContext& ctxt);
   
   extern void 
-  xlate_ScalarizedRefTab(xml::ostream& xos, ScalarizedRefTab_W2X* symtab, 
-			XlationContext& ctxt);
+  xlate_ScalarizedRefTab(xml::ostream& xos, 
+			 fortTk::ScalarizedRefTab_W2X* symtab, 
+			PUXlationContext& ctxt);
   
   extern void 
   xlate_ArrayBounds(xml::ostream& xos, 
 		    TY_IDX ty_idx, 
-		    XlationContext& ctxt);
+		    PUXlationContext& ctxt);
 
   extern void 
-  TranslateSTDecl(xml::ostream& xos, ST* st, XlationContext& ctxt);
+  TranslateSTDecl(xml::ostream& xos, ST* st, PUXlationContext& ctxt);
   
   extern void 
-  TranslateSTUse(xml::ostream& xos, ST* st, XlationContext& ctxt);
+  TranslateSTUse(xml::ostream& xos, ST* st, PUXlationContext& ctxt);
   
-}; /* namespace whirl2xaif */
-
-
 #include <string>
 
 // FIXME/REMOVE
@@ -140,7 +139,7 @@ TCON2F_translate(TCON tvalue, BOOL is_logical);
 
 
 extern void 
-ST2F_deref_translate(xml::ostream& xos, ST* st, XlationContext& ctxt);
+ST2F_deref_translate(xml::ostream& xos, ST* st, PUXlationContext& ctxt);
 
 extern void 
 ST2F_Declare_Tempvar(TY_IDX ty, UINT idx);
@@ -153,4 +152,8 @@ ST2F_Declare_Tempvar(TY_IDX ty, UINT idx);
     (Func_Return_Character(funtype)? 2 : 1) : 0)
 
 #endif /* st2xaif_INCLUDED */
+
+}; /* namespace whirl2xaif */
+
+
 

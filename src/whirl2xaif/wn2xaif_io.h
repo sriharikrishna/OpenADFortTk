@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.h,v 1.6 2004/02/19 22:02:30 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_io.h,v 1.7 2006/05/12 16:12:23 utke Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -61,8 +61,8 @@
 
 //*************************** User Include Files ****************************
 
-#include "whirl2xaif.i"
-#include "XlationContext.h"
+#include "whirl2xaif.h"
+#include "PUXlationContext.h"
 
 //************************** Forward Declarations ***************************
 
@@ -70,11 +70,11 @@
 
 namespace whirl2xaif {
 
-  extern whirl2xaif::status 
-  xlate_IO(xml::ostream& xos, WN *wn, XlationContext& context);
+  extern void 
+  xlate_IO(xml::ostream& xos, WN *wn, PUXlationContext& context);
   
   extern BOOL
-  xlate_IO_ITEM(xml::ostream& xos, WN *wn, XlationContext& context);
+  xlate_IO_ITEM(xml::ostream& xos, WN *wn, PUXlationContext& context);
 
 }; /* namespace whirl2xaif */
 

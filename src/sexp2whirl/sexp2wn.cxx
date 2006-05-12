@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.9 2006/03/14 01:09:15 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.10 2006/05/12 16:12:22 utke Exp $
 
 //***************************************************************************
 //
@@ -795,7 +795,12 @@ sexp2whirl::xlate_LDID_STID(sexp_t* sx)
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
 
   OPERATOR opr = OPCODE_operator(opc);
-  FORTTK_ASSERT(opr == OPR_LDID || opr == OPR_STID, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(opr == OPR_LDID 
+		|| 
+		opr == OPR_STID
+		|| 
+		opr == OPR_PSTID, 
+		FORTTK_UNEXPECTED_INPUT);
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* st_idx_sx = get_elem0(attrs_sx);
@@ -814,6 +819,10 @@ sexp2whirl::xlate_LDID_STID(sexp_t* sx)
   if (opr == OPR_STID) {
     WN* kidWN = TranslateWN(get_wnast_kid0(sx)); // KID 0
     wn = WN_CreateStid(opc, ofst, st_idx, ty_idx, kidWN, fldid);
+  }
+  else if (opr == OPR_PSTID) { 
+    WN* kidWN = TranslateWN(get_wnast_kid0(sx)); // KID 0
+    wn = WN_CreatePStid(opc, ofst, st_idx, ty_idx, kidWN, fldid);
   }
   else {
     wn = WN_CreateLdid(opc, ofst, st_idx, ty_idx, fldid);
@@ -888,15 +897,6 @@ sexp2whirl::xlate_xLOADx_xSTOREx(sexp_t* sx)
   
   return wn;
 }
-
-
-WN*
-sexp2whirl::xlate_PSTID(sexp_t* sx)
-{
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
-  return NULL;
-}
-
 
 WN*
 sexp2whirl::xlate_PSTORE(sexp_t* sx)
@@ -1268,7 +1268,7 @@ WNXlationTable::InitEntry WNXlationTable::initTable[] = {
   { OPR_ISTOREX,              &xlate_xLOADx_xSTOREx },
   { OPR_MSTORE,               &xlate_xLOADx_xSTOREx },
 
-  { OPR_PSTID,                &xlate_PSTID },   // Pseudo-registers 
+  { OPR_PSTID,                &xlate_LDID_STID }, // pointer version of STID 
   { OPR_PSTORE,               &xlate_PSTORE },
 
   // Type conversion

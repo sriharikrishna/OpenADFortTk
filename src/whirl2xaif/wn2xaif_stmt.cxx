@@ -1,65 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.43 2006/04/27 17:47:59 utke Exp $
-
-// * BeginCopyright *********************************************************
-/*
-  Copyright (C) 2000, 2001 Silicon Graphics, Inc.  All Rights Reserved.
-
-  This program is free software; you can redistribute it and/or modify it
-  under the terms of version 2 of the GNU General Public License as
-  published by the Free Software Foundation.
-
-  This program is distributed in the hope that it would be useful, but
-  WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-  Further, this software is distributed without any warranty that it is
-  free of the rightful claim of any third person regarding infringement 
-  or the like.  Any license provided herein, whether implied or 
-  otherwise, applies only to this software file.  Patent licenses, if 
-  any, provided herein do not apply to combinations of this program with 
-  other software, or any other product whatsoever.  
-
-  You should have received a copy of the GNU General Public License along
-  with this program; if not, write the Free Software Foundation, Inc., 59
-  Temple Place - Suite 330, Boston MA 02111-1307, USA.
-
-  Contact information:  Silicon Graphics, Inc., 1600 Amphitheatre Pky,
-  Mountain View, CA 94043, or:
-
-  http://www.sgi.com
-
-  For further information regarding this notice, see:
-
-  http://oss.sgi.com/projects/GenInfo/NoticeExplan
-*/
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-// Based on Open64 be/whirl2f/wn2f_stmt.cxx
-//
-//***************************************************************************
-
-//************************** System Include Files ***************************
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_stmt.cxx,v 1.44 2006/05/12 16:12:23 utke Exp $
 
 #include <alloca.h>
-#include <sstream> //FIXME
+#include <sstream> 
 
-//************************** Open64 Include Files ***************************
 
-#include <include/Open64BasicTypes.h>
-
-//*************************** User Include Files ****************************
+#include "include/Open64BasicTypes.h"
+#include "lib/support/IntrinsicXlationTable.h"
 
 #include "wn2xaif.h"
 #include "wn2xaif_stmt.h"
@@ -68,14 +15,10 @@
 #include "st2xaif.h"
 #include "ty2xaif.h"
 
-//************************** Forward Declarations ***************************
 
 using namespace whirl2xaif;
 using namespace xml; // for xml::ostream, etc
 
-//************************** Forward Declarations ***************************
-
-//***************************************************************************
 
 static BOOL WN2F_Skip_Stmt(WN *wn) { return FALSE; /* FIXME */ }
 
@@ -84,8 +27,8 @@ static BOOL WN2F_Skip_Stmt(WN *wn) { return FALSE; /* FIXME */ }
 // Passive Statements
 //***************************************************************************
 
-whirl2xaif::status 
-whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   OPERATOR opr = WN_operator(wn);
   
@@ -105,14 +48,14 @@ whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   // FIXME: cleanup AGOTO, RETURN, RETURN_VAL, PRAGMA, COMMENT, USE
   //  INTRN_CASSIGNSTMT, INTRN_STOP, INTRN_STOP_F90, IO
   
-  WNId stmtid = ctxt.FindWNId(wn);
+  WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [passive: " << OPERATOR_name(opr) << "]" << EndAttr
       << EndElem;
   
-  return whirl2xaif::good;
+  
 }
 
 
@@ -121,63 +64,63 @@ whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 //   superceded by construction of the control flow graph.
 //***************************************************************************
 
-whirl2xaif::status 
-whirl2xaif::xlate_BLOCK(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_BLOCK(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_BLOCK, FORTTK_UNEXPECTED_INPUT); 
   
   FORTTK_DIE(FORTTK_UNIMPLEMENTED);
-  return whirl2xaif::good;
+  
 }
 
 
-whirl2xaif::status 
-whirl2xaif::WN2F_region(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_region(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_REGION, FORTTK_UNEXPECTED_INPUT); 
 
   FORTTK_DIE(FORTTK_UNIMPLEMENTED);
-  return whirl2xaif::good;
+  
 }
 
 
-whirl2xaif::status 
-whirl2xaif::xlate_DO_LOOP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_DO_LOOP(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_DO_LOOP, FORTTK_UNEXPECTED_INPUT); 
   
   FORTTK_DIE(FORTTK_UNIMPLEMENTED);
-  return whirl2xaif::good;
+  
 }
 
 
-whirl2xaif::status 
-whirl2xaif::xlate_DO_WHILE(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_DO_WHILE(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_DO_WHILE, FORTTK_UNEXPECTED_INPUT); 
 
   FORTTK_DIE(FORTTK_UNIMPLEMENTED);
-  return whirl2xaif::good;
+  
 }
 
 
-whirl2xaif::status 
-whirl2xaif::xlate_WHILE_DO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_WHILE_DO(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_WHILE_DO, FORTTK_UNEXPECTED_INPUT); 
   
   FORTTK_DIE(FORTTK_UNIMPLEMENTED);
-  return whirl2xaif::good;
+  
 }
 
 
-whirl2xaif::status 
-whirl2xaif::xlate_IF(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_IF(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_IF, FORTTK_UNEXPECTED_INPUT); 
   
   FORTTK_DIE(FORTTK_UNIMPLEMENTED);
-  return whirl2xaif::good;
+  
 }
 
 
@@ -185,16 +128,17 @@ whirl2xaif::xlate_IF(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 // Unstructured Control Flow Statements
 //***************************************************************************
 
-whirl2xaif::status 
-whirl2xaif::WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_implied_do(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   // REMOVE
-  FORTTK_ASSERT(XlationContext_io_stmt(ctxt), FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(ctxt.currentXlationContext().isFlag(XlationContext::IO_STMT), 
+		FORTTK_UNEXPECTED_INPUT); 
   
   /* This is a fortran implied do_loop, which can only occur as an
    * an OPR_IO_ITEM.  We should always be able to regenerate
    * an implied do-loop from this WHIRL tree, and we should safely
-   * be able to assert that XlationContext_io_stmt is TRUE.  Strictly
+   * be able to assert that IO_STMT is TRUE.  Strictly
    * speaking this can be viewed as an expression, rather than as a
    * statement, but due to the commonality with regular do-loops
    * we handle it in this module.
@@ -227,12 +171,12 @@ whirl2xaif::WN2F_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   /* Terminate the implied do-loop expression */
   xos << ')';
   
-  return whirl2xaif::good;
+  
 } /* WN2F_implied_do */
 
 
-whirl2xaif::status
-whirl2xaif::WN2F_noio_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void
+whirl2xaif::WN2F_noio_implied_do(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   xos << "(";
   TranslateWN(xos,WN_kid0(wn),ctxt);
@@ -248,39 +192,37 @@ whirl2xaif::WN2F_noio_implied_do(xml::ostream& xos, WN *wn, XlationContext& ctxt
   }
   
   xos << ")";
-  return whirl2xaif::good;
+  
 }
 
 
-whirl2xaif::status 
-whirl2xaif::xlate_GOTO(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_GOTO(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_GOTO ||
 		WN_operator(wn) == OPR_REGION_EXIT, FORTTK_UNEXPECTED_INPUT); 
   
-  WNId stmtid = ctxt.FindWNId(wn);
+  WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << StmtGotoAnnotVal(WN_label_number(wn)) << EndAttr
       << EndElem;
-  
-  return whirl2xaif::good;
 }
 
 
-whirl2xaif::status
-whirl2xaif::xlate_SWITCH(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void
+whirl2xaif::xlate_SWITCH(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_SWITCH, FORTTK_UNEXPECTED_INPUT); 
 
   FORTTK_DIE(FORTTK_UNIMPLEMENTED);
-  return whirl2xaif::good;
+  
 }
 
 
-whirl2xaif::status
-whirl2xaif::WN2F_casegoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void
+whirl2xaif::WN2F_casegoto(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   // REMOVE
   ST *st;
@@ -293,54 +235,16 @@ whirl2xaif::WN2F_casegoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   std::string val = TCON2F_translate(Host_To_Targ(MTYPE_I4,WN_const_val(wn)),
 				     FALSE);
   xos << " .EQ. " << val << ')' << " GO TO " << WN_label_number(wn);
-  return whirl2xaif::good;
+  
 }
 
-
-whirl2xaif::status 
-whirl2xaif::WN2F_compgoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
-{
-  // REMOVE
-  FORTTK_ASSERT(WN_operator(wn) == OPR_COMPGOTO, FORTTK_UNEXPECTED_INPUT); 
-
-  WN         *goto_stmt;
-  
-  /* Calculate the computed goto for the given cases */
-  if (WN_compgoto_num_cases(wn) > 0) {
-    xos << std::endl << "GO TO(";
-    goto_stmt = WN_first(WN_compgoto_table(wn));
-    for (INT32 goto_entry = 0;
-	 goto_entry < WN_compgoto_num_cases(wn); 
-	 goto_entry++) {
-      xos << WN_label_number(goto_stmt);
-      if (goto_entry+1 < WN_compgoto_num_cases(wn))
-	xos << ',';
-      goto_stmt = WN_next(goto_stmt);
-    }
-    xos << "),";
-    
-    /* Need to add one to the controlling expression, since it is
-     * zero-based in WHIRL and 1-based in Fortran.
-     */
-    TranslateWN(xos, WN_compgoto_idx(wn), ctxt);
-    xos << "+1";
-  }
-  
-  /* Handle the default case as just a regular goto statement */
-  if (WN_compgoto_has_default_case(wn))
-    xlate_GOTO(xos, WN_kid(wn,2), ctxt);
-  
-  return whirl2xaif::good;
-} /* WN2F_compgoto */
-
-
-whirl2xaif::status 
-whirl2xaif::WN2F_agoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_agoto(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   // REMOVE
   FORTTK_ASSERT(WN_operator(wn) == OPR_AGOTO, FORTTK_UNEXPECTED_INPUT); 
 
-  WNId stmtid = ctxt.FindWNId(wn);
+  WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker())
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -350,67 +254,67 @@ whirl2xaif::WN2F_agoto(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   xos << std::endl << "GO TO";
   TranslateWN(xos, WN_kid0(wn), ctxt); // FIXME
   
-  return whirl2xaif::good;
+  
 } /* WN2F_agoto */
 
 
-whirl2xaif::status 
-whirl2xaif::xlate_condBR(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_condBR(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   OPERATOR opr = WN_operator(wn);
   FORTTK_ASSERT(opr == OPR_TRUEBR || opr == OPR_FALSEBR,
 		FORTTK_UNEXPECTED_INPUT);
   
   FORTTK_DIE(FORTTK_UNIMPLEMENTED);
-  return whirl2xaif::good;
+  
 }
 
 
-whirl2xaif::status 
-whirl2xaif::xlate_RETURN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_RETURN(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_RETURN, FORTTK_UNEXPECTED_INPUT); 
   
-  WNId stmtid = ctxt.FindWNId(wn);
+  WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [return]" << EndAttr
       << EndElem;
   
-  return whirl2xaif::good;
+  
 }
 
 
-whirl2xaif::status 
-whirl2xaif::xlate_RETURN_VAL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_RETURN_VAL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_RETURN_VAL, FORTTK_UNEXPECTED_INPUT); 
   
-  WNId stmtid = ctxt.FindWNId(wn);
+  WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [return_val]" << EndAttr
       << EndElem;
   
-  return whirl2xaif::good;
+  
 }
 
 
-whirl2xaif::status 
-whirl2xaif::xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_LABEL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_LABEL, FORTTK_UNEXPECTED_INPUT); 
   
-  WNId stmtid = ctxt.FindWNId(wn);
+  WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker())
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << StmtLabelAnnotVal(WN_label_number(wn)) << EndAttr
       << EndElem;
   
-  return whirl2xaif::good;
+  
 }
 
 
@@ -418,8 +322,8 @@ whirl2xaif::xlate_LABEL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 // Calls
 //***************************************************************************
 
-whirl2xaif::status 
-whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   // XAIF distinguishes between a subroutine call (statement) and
   // function call (expression).
@@ -454,10 +358,10 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     if (strcmp(nm, "_ALLOCATE") == 0) {
       is_allocate_stmt = TRUE;
     } else if (strcmp(nm, "_DEALLOCATE") == 0) {
-      set_XlationContext_has_no_arr_elmt(ctxt);
+      ctxt.currentXlationContext().setFlag(XlationContext::HAS_NO_ARR_ELMT);
       is_allocate_stmt = TRUE;
     } else if (strcmp(nm, "PRESENT") == 0) {
-      set_XlationContext_has_no_arr_elmt(ctxt);
+      ctxt.currentXlationContext().setFlag(XlationContext::HAS_NO_ARR_ELMT);
     }
   } else if (opr == OPR_PICCALL) {
     is_user_call = TRUE;
@@ -473,43 +377,43 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     // xlate_INTRINSIC_CALL() has already handled certain intrinsics (FIXME)
     // ... only consider returns through a first non-string parameter here
 
-    const char* inm = INTRINSIC_basename(WN_intrinsic(wn));
-    IntrinsicXlationTable::XAIFInfo* info 
-      = IntrinsicTable.FindXAIFInfo(opr, inm);
-    FORTTK_ASSERT(info, "Unknown intrinsic '" << inm << "'");
-
+    const char* inm = fortTkSupport::IntrinsicXlationTable::intrinsicBasename(WN_intrinsic(wn));
+    fortTkSupport::IntrinsicXlationTable::XAIFInfoPair infoPair(Whirl2Xaif::getIntrinsicXlationTable().findXAIFInfo(opr, inm));
     xlate_as = 2; // intrinsic
-    targid = ctxt.GetNewVId();
+    targid = ctxt.currentXlationContext().getNewVertexId();
     xos << BegElem("xaif:Intrinsic") 
-	<< Attr("vertex_id", targid) << Attr("name", info->name)
+	<< Attr("vertex_id", targid) << Attr("name", infoPair.second.name)
 	<< Attr("type", "***") << EndElem;
 
   } else {
     // Could translate as an XAIF SubroutineCall, FunctionCall or Intrinsic
-
     // OPR_ICALL: TranslateWN(xos, WN_kid(wn, WN_kid_count(wn) - 1), ctxt);
     ST* st = WN_st(wn);
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-    SymTabId scopeid = ctxt.FindSymTabId(sttab);
-    
+    SymTabId scopeid = ctxt.findSymTabId(sttab);
     const char* funcNm = ST_name(st);
-
-    IntrinsicXlationTable::XAIFInfo* info
-      = IntrinsicTable.FindXAIFInfo(opr, funcNm);
-    if (info) {
+    fortTkSupport::IntrinsicXlationTable::XAIFInfoPair infoPair(Whirl2Xaif::getIntrinsicXlationTable().
+								findXAIFInfo(opr, 
+									     funcNm,
+									     false)); // don't complain if it is not there
+    if (infoPair.first) {
       // Intrinsic
       xlate_as = 2; // intrinsic
-      targid = ctxt.GetNewVId();
+      targid = ctxt.currentXlationContext().getNewVertexId();
       xos << BegElem("xaif:Intrinsic")
-	  << Attr("vertex_id", targid) << Attr("name", info->name)
+	  << Attr("vertex_id", targid) << Attr("name", infoPair.second.name)
 	  << Attr("type", "***");
-      if (info->key) { xos << IntrinsicKeyAnnot(info->key); }
+      if (infoPair.second.key) { xos << IntrinsicKeyAnnot(infoPair.second.key); }
       xos << EndElem;
     } else if (return_ty != (TY_IDX)0 && TY_kind(return_ty) != KIND_VOID) {
       // FunctionCall
       xlate_as = 1; // function
+      // JU: for now: 
+      FORTTK_DIE("whirl2xaif::xlate_CALL: call to function: " << funcNm 
+		 << " is not supported! This should either be recognized as an intrinsic or should have been canonicalized into a subroutine call"); 
+      // we leave the rest of the code as is...
       xos << BegElem("xaif:FunctionCall") 
-	  << Attr("vertex_id", ctxt.GetNewVId())
+	  << Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
 	  << Attr("scope_id", scopeid) << AttrSymId(st);
     } else {
       // SubroutineCall
@@ -517,7 +421,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       USRCPOS_srcpos(srcpos) = WN_Get_Linenum(wn);
       xlate_as = 0; // subroutine
       xos << BegElem("xaif:SubroutineCall")
-	  << Attr("statement_id", ctxt.FindWNId(wn))
+	  << Attr("statement_id", ctxt.findWNId(wn))
 	  << Attr("scope_id", scopeid) 
 	  << Attr("lineNumber",USRCPOS_linenum(srcpos))
 	  << AttrSymId(st);
@@ -617,7 +521,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	xos << BegElem("xaif:Argument");
 	if (xlate_as == 0) { xos << Attr("position", position); }
 	// JU-begin
-	// ctxt.CreateContext(XlationContext::VARREF, wn);// implicit for Argument
+	// ctxt.createXlationContext(PUXlationContext::VARREF, wn);// implicit for Argument
 	// JU-end
       }
 
@@ -629,7 +533,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	 * %val() qualifier. */
 	first_nonemptyarg = TRUE;
 
-	srcid = ctxt.PeekVId(); // used for intrinsics
+	srcid = ctxt.currentXlationContext().peekVertexId(); // used for intrinsics
 	TranslateWN(xos, WN_kid(wn, arg_idx), ctxt);
 
       } else if ((WN_operator(kidofparm) != OPR_CALL 
@@ -665,7 +569,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	  has_stat = FALSE;
 	
 	first_nonemptyarg = TRUE;
-	srcid=ctxt.PeekVId();
+	srcid=ctxt.currentXlationContext().peekVertexId();
 	WN2F_String_Argument(xos, WN_kid(wn, cur_idx), /* string base */
 			     WN_kid(wn, len_idx), /* string length */
 			     ctxt);
@@ -682,7 +586,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	if ( !(first_nonemptyarg && !has_stat) )
 	  has_stat = FALSE;
 	first_nonemptyarg = TRUE;
-	srcid = ctxt.PeekVId(); 
+	srcid = ctxt.currentXlationContext().peekVertexId(); 
 	TranslateWN(xos, WN_kid(wn, arg_idx), ctxt);
 
 
@@ -697,7 +601,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 	  has_stat = FALSE;
 	
 	first_nonemptyarg = TRUE;
-	srcid = ctxt.PeekVId(); 
+	srcid = ctxt.currentXlationContext().peekVertexId(); 
 	xlate_MemRef(xos, 
 			   WN_kid(wn, arg_idx), /* address expression */
 			   arg_ty,              /* address type */
@@ -721,30 +625,30 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, XlationContext& ctxt)
       if (xlate_as == 0 || xlate_as == 1) { 
 	// SubroutineCall, FunctionCall
 	// JU-begin
-	// ctxt.DeleteContext(); // end VARREF context
+	// ctxt.deleteXlationContext(); // end VARREF context
 	// JU-end
 	xos << EndElem; // End Argument
       } else {
 	// Intrinsic: create an edge
-	DumpExprGraphEdge(xos, ctxt.GetNewEId(), srcid, targid, position);
+	DumpExprGraphEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), srcid, targid, position);
       }
       
     }
   }
   
-  reset_XlationContext_has_no_arr_elmt(ctxt);
+  ctxt.currentXlationContext().unsetFlag(XlationContext::HAS_NO_ARR_ELMT);
   
   if (xlate_as == 0 || xlate_as == 1) {
     xos << EndElem; // SubroutineCall or FunctionCall
   }
   
-  return whirl2xaif::good;
+  
 } /* xlate_CALL */
 
 
-whirl2xaif::status 
+void 
 whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
-				 XlationContext& ctxt)
+				 PUXlationContext& ctxt)
 {
   // Handles all intrinsics that are translated into XAIF statements
 
@@ -756,7 +660,7 @@ whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
   INT  str_kid, length_kid, first_length_kid;
   BOOL regular_call = FALSE; /* Specially treated intrinsic call? */
   
-  WNId wnid = ctxt.FindWNId(wn);
+  WNId wnid = ctxt.findWNId(wn);
 
   switch (WN_intrinsic(wn)) {
   case INTRN_CONCATEXPR:    
@@ -809,7 +713,7 @@ whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
     break;
   }
   
-  return whirl2xaif::good;
+  
 } /* xlate_INTRINSIC_CALL */
 
 
@@ -817,8 +721,8 @@ whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
 // Other Statements
 //***************************************************************************
 
-whirl2xaif::status
-whirl2xaif::WN2F_eval(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void
+whirl2xaif::WN2F_eval(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   /* This generates code that will not recompile.  Short of
    * some kind of surrounding statement there is no way to do 
@@ -830,54 +734,54 @@ whirl2xaif::WN2F_eval(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TranslateWN(xos, WN_kid0(wn), ctxt);
   xos << ')';
   
-  return whirl2xaif::good;
+  
 } /* WN2F_eval */
 
 
-whirl2xaif::status
-whirl2xaif::xlate_PRAGMA(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void
+whirl2xaif::xlate_PRAGMA(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_PRAGMA ||
 		WN_operator(wn) == OPR_XPRAGMA, FORTTK_UNEXPECTED_INPUT); 
   
   // switch (WN_pragma(apragma))
-  WNId stmtid = ctxt.FindWNId(wn);
+  WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [pragma]" << EndAttr << EndElem;
   
-  return whirl2xaif::good;
+  
 }
 
 
-whirl2xaif::status 
-whirl2xaif::xlate_PREFETCH(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_PREFETCH(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_PREFETCH ||
 		WN_operator(wn) == OPR_PREFETCHX, FORTTK_UNEXPECTED_INPUT); 
   
-  return whirl2xaif::good;
+  
 }
 
 
-whirl2xaif::status 
-whirl2xaif::xlate_COMMENT(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_COMMENT(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_COMMENT, FORTTK_UNEXPECTED_INPUT); 
   
   // Note: Index_To_Str(WN_GetComment(wn)) returns comment text
-  WNId stmtid = ctxt.FindWNId(wn);
+  WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [comment]" << EndAttr << EndElem;
   
-  return whirl2xaif::good;
+  
 }
 
-whirl2xaif::status 
-whirl2xaif::WN2F_dealloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_dealloca(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_DEALLOCA, FORTTK_UNEXPECTED_INPUT); 
 
@@ -893,28 +797,28 @@ whirl2xaif::WN2F_dealloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   }
   xos << ")";
    
-  return whirl2xaif::good;
+  
 } /* WN2F_dealloca */
 
 
-whirl2xaif::status
-whirl2xaif::xlate_USE(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void
+whirl2xaif::xlate_USE(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_USE, FORTTK_UNEXPECTED_INPUT); 
   
-  WNId stmtid = ctxt.FindWNId(wn);
+  WNId stmtid = ctxt.findWNId(wn);
   const char* nm = ST_name(WN_st(wn));
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [use " << nm << "]" << EndAttr << EndElem;
   
-  return whirl2xaif::good;
+  
 }
 
 
-whirl2xaif::status
-whirl2xaif::WN2F_namelist_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void
+whirl2xaif::WN2F_namelist_stmt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_NAMELIST, FORTTK_UNEXPECTED_INPUT); 
   
@@ -935,20 +839,20 @@ whirl2xaif::WN2F_namelist_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     }
   }
   
-  return whirl2xaif::good;
+  
 } //WN2F_namelist_stmt
 
 
-whirl2xaif::status
-whirl2xaif::WN2F_implicit_bnd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void
+whirl2xaif::WN2F_implicit_bnd(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   xos << "[+-+]";
-  return whirl2xaif::good;
+  
 }
 
 
-whirl2xaif::status
-whirl2xaif::WN2F_nullify_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void
+whirl2xaif::WN2F_nullify_stmt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_NULLIFY, FORTTK_UNEXPECTED_INPUT); 
 
@@ -966,12 +870,12 @@ whirl2xaif::WN2F_nullify_stmt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   }
   xos << ")";
   
-  return whirl2xaif::good;
+  
 } //WN2F_namelist_stmt
 
 
-whirl2xaif::status
-whirl2xaif::WN2F_interface_blk(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void
+whirl2xaif::WN2F_interface_blk(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_INTERFACE, FORTTK_UNEXPECTED_INPUT); 
 
@@ -1155,11 +1059,11 @@ static const char unnamed_interface[] = "unnamed interface";
     xos << std::endl;    
   }
   
-  return whirl2xaif::good;
+  
 } //WN2F_interface_blk
 
-whirl2xaif::status
-whirl2xaif::WN2F_ar_construct(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void
+whirl2xaif::WN2F_ar_construct(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   xos << "(/";
   for (INT kid = 0; kid < WN_kid_count(wn); kid++) {
@@ -1169,6 +1073,6 @@ whirl2xaif::WN2F_ar_construct(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   }
   xos << "/)";
   
-  return whirl2xaif::good;
+  
 }
 

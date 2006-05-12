@@ -7,9 +7,9 @@ import fortExp  as fe
 from   fortContextFile import SymEntry
 from intrinsic import is_intrinsic
 
-__tmp_prefix   = 'ad_ctmp'
-__call_prefix  = 'ad_s_'
-__slice_prefix = 'ad_slc'
+__tmp_prefix   = 'oad_ctmp'
+__call_prefix  = 'oad_s_'
+__slice_prefix = 'oad_slc'
 
 def new_call(a,v,polyfix=''):
     '''from an app term, and a new var v,

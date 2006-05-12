@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.29 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif_expr.cxx,v 1.30 2006/05/12 16:12:23 utke Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -71,19 +71,19 @@ using namespace xml; // for xml::ostream, etc
 
 //************************** Forward Declarations ***************************
 
-static whirl2xaif::status 
+static void 
 xlate_UnaryOpUsingIntrinsicTable(xml::ostream& xos, OPCODE opcode, 
 				 TY_IDX result_ty,
-				 WN* wn, XlationContext& ctxt);
+				 WN* wn, PUXlationContext& ctxt);
 
-static whirl2xaif::status 
+static void 
 xlate_BinaryOpUsingIntrinsicTable(xml::ostream& xos, OPCODE opcode, 
 				  TY_IDX result_ty,
-				  WN *wn0, WN *wn1, XlationContext& ctxt);
+				  WN *wn0, WN *wn1, PUXlationContext& ctxt);
 
-static whirl2xaif::status 
+static void 
 xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty, BOOL callByValue,
-	      XlationContext& ctxt);
+	      PUXlationContext& ctxt);
 
 //***************************************************************************
 
@@ -263,8 +263,8 @@ InitConvOpMap() // FIXME
   }
 }
 
-whirl2xaif::status 
-whirl2xaif::WN2F_cvt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_cvt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_CVT, FORTTK_UNEXPECTED_INPUT); 
 
@@ -276,11 +276,11 @@ whirl2xaif::WN2F_cvt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 */
 //   WN2F_Convert(xos, WN_desc(wn), WN_rtype(wn));
 
-  return whirl2xaif::good;
+  
 }
 
-whirl2xaif::status 
-whirl2xaif::WN2F_cvtl(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_cvtl(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_CVTL, FORTTK_UNEXPECTED_INPUT); 
 
@@ -297,11 +297,11 @@ whirl2xaif::WN2F_cvtl(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   } else {
     TranslateWN(xos, WN_kid0(wn), ctxt);
   }
-  return whirl2xaif::good;
+  
 }
 
-whirl2xaif::status 
-whirl2xaif::WN2F_tas(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_tas(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_TAS, FORTTK_UNEXPECTED_INPUT); 
   
@@ -317,42 +317,42 @@ whirl2xaif::WN2F_tas(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 
 // xlate_INTCONST: Translate a WHIRL integer constant into an XAIF
 // constant.
-whirl2xaif::status 
-whirl2xaif::xlate_INTCONST(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_INTCONST(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_INTCONST, FORTTK_UNEXPECTED_INPUT); 
   
   // FIXME: use xlate_CONST
   TCON tval = Host_To_Targ(WN_rtype(wn), WN_const_val(wn));
-  bool logical = XlationContext_is_logical_arg(ctxt);
+  bool logical = ctxt.currentXlationContext().isFlag(XlationContext::IS_LOGICAL_ARG);
   std::string val = TCON2F_translate(tval, logical);  
   const char* ty_str = (logical) ? "bool" : "integer";
   
-  xos << BegElem("xaif:Constant") << Attr("vertex_id", ctxt.GetNewVId()) 
+  xos << BegElem("xaif:Constant") << Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId()) 
       << Attr("type", ty_str) << Attr("value", val) << EndElem;
   
-  return whirl2xaif::good;
+  
 }
 
 // xlate_CONST: Translate a WHIRL constant (string, floating point,
 // etc.) into an XAIF constant.
-whirl2xaif::status 
-whirl2xaif::xlate_CONST(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_CONST(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_CONST, FORTTK_UNEXPECTED_INPUT); 
 
   TY_IDX ty_idx = ST_type(WN_st(wn));
   
-  BOOL logical = (TY_is_logical(ty_idx) || XlationContext_is_logical_arg(ctxt));
+  BOOL logical = (TY_is_logical(ty_idx) || ctxt.currentXlationContext().isFlag(XlationContext::IS_LOGICAL_ARG));
   std::string val = TCON2F_translate(STC_val(WN_st(wn)), logical);
 
   const char* ty_str = TranslateTYToSymType(ty_idx); // FIXME: logical
   if (!ty_str) { ty_str = "***"; }  
 
-  xos << BegElem("xaif:Constant") << Attr("vertex_id", ctxt.GetNewVId())
+  xos << BegElem("xaif:Constant") << Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
       << Attr("type", ty_str) << Attr("value", val) << EndElem;
   
-  return whirl2xaif::good;
+  
 }
 
 
@@ -360,28 +360,23 @@ whirl2xaif::xlate_CONST(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 // Expression Operators: Unary Operations
 //***************************************************************************
 
-whirl2xaif::status
-whirl2xaif::xlate_UnaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void
+whirl2xaif::xlate_UnaryOp(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   OPERATOR opr = WN_operator(wn);
   OPCODE opc = WN_opcode(wn);
   FORTTK_ASSERT(WN_kid_count(wn) == 1, 
 		FORTTK_UNEXPECTED_INPUT << OPERATOR_name(opr));
-  
-  if (IntrinsicTable.FindXAIFInfo(opr, NULL)) {
-    xlate_UnaryOpUsingIntrinsicTable(xos, opc, WN_Tree_Type(wn), 
-				     WN_kid0(wn), ctxt);
-  } 
-  else {
-    FORTTK_DIE("Unknown intrinsic '" << OPERATOR_name(opr) << "'");
-  }
-  
-  return whirl2xaif::good;
+  xlate_UnaryOpUsingIntrinsicTable(xos, 
+				   opc, 
+				   WN_Tree_Type(wn), 
+				   WN_kid0(wn), 
+				   ctxt);
 }
 
 
-whirl2xaif::status 
-whirl2xaif::WN2F_rsqrt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_rsqrt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_RSQRT, FORTTK_UNEXPECTED_INPUT);
   
@@ -392,12 +387,12 @@ whirl2xaif::WN2F_rsqrt(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		!TY_Is_Character_Reference(result_ty), ctxt);
   xos << "))";
   
-  return whirl2xaif::good;
+  
 } /* WN2F_rsqrt */
 
 
-whirl2xaif::status 
-whirl2xaif::WN2F_realpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_realpart(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_REALPART, FORTTK_UNEXPECTED_INPUT);
    
@@ -420,12 +415,12 @@ whirl2xaif::WN2F_realpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TranslateWN(xos, WN_kid0(wn), ctxt);
   xos << ")";
   
-  return whirl2xaif::good;
+  
 } /* WN2F_realpart */
 
 
-whirl2xaif::status 
-whirl2xaif::WN2F_imagpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_imagpart(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_IMAGPART, FORTTK_UNEXPECTED_INPUT);
   
@@ -447,12 +442,12 @@ whirl2xaif::WN2F_imagpart(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TranslateWN(xos, WN_kid0(wn), ctxt);
   xos << "imagpart)";
   
-  return whirl2xaif::good;
+  
 } /* WN2F_imagpart */
 
 
-whirl2xaif::status 
-whirl2xaif::xlate_PAREN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_PAREN(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_PAREN, FORTTK_UNEXPECTED_INPUT);
 
@@ -460,8 +455,8 @@ whirl2xaif::xlate_PAREN(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 }
 
 
-whirl2xaif::status 
-whirl2xaif::xlate_RECIP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_RECIP(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_RECIP, FORTTK_UNEXPECTED_INPUT);
 
@@ -491,12 +486,12 @@ whirl2xaif::xlate_RECIP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    
    WN_DELETE_Tree(wn_one);
    
-   return whirl2xaif::good;
+   
 }
 
 
-whirl2xaif::status 
-whirl2xaif::WN2F_parm(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_parm(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   /* TODO: handle opcode parms properly, i.e. take some advantage
    * of the information provided in this packaging of argument 
@@ -504,21 +499,21 @@ whirl2xaif::WN2F_parm(xml::ostream& xos, WN *wn, XlationContext& ctxt)
    */
   FORTTK_ASSERT(WN_operator(wn) == OPR_PARM, FORTTK_UNEXPECTED_INPUT);
   if (TY_is_logical(Ty_Table[WN_ty(wn)]) || 
-      XlationContext_is_logical_arg(ctxt)) { //fzhao Jan
-    set_XlationContext_has_logical_arg(ctxt);
+      ctxt.currentXlationContext().isFlag(XlationContext::IS_LOGICAL_ARG)) { //fzhao Jan
+    ctxt.currentXlationContext().setFlag(XlationContext::HAS_LOGICAL_ARG);
     TranslateWN(xos, WN_kid0(wn), ctxt);
-    reset_XlationContext_has_logical_arg(ctxt);
+    ctxt.currentXlationContext().unsetFlag(XlationContext::HAS_LOGICAL_ARG);
   } 
   else {
     TranslateWN(xos, WN_kid0(wn), ctxt);
   }
-  return whirl2xaif::good;
+  
 
 } /* WN2F_parm */
 
 
-whirl2xaif::status 
-whirl2xaif::WN2F_alloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_alloca(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_ALLOCA, FORTTK_UNEXPECTED_INPUT);
   
@@ -526,7 +521,7 @@ whirl2xaif::WN2F_alloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TranslateWN(xos,WN_kid0(wn),ctxt);
   xos << ")";
   
-  return whirl2xaif::good;
+  
 } /* WN2F_alloca */
 
 
@@ -534,30 +529,25 @@ whirl2xaif::WN2F_alloca(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 // Expression Operators: Binary Operations
 //***************************************************************************
 
-whirl2xaif::status
-whirl2xaif::xlate_BinaryOp(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void
+whirl2xaif::xlate_BinaryOp(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   OPERATOR opr = WN_operator(wn);
   OPCODE opc = WN_opcode(wn);
   FORTTK_ASSERT(WN_kid_count(wn) == 2, 
 		FORTTK_UNEXPECTED_INPUT << OPERATOR_name(opr));
-  
-  if (IntrinsicTable.FindXAIFInfo(opr, NULL)) {
-    xlate_BinaryOpUsingIntrinsicTable(xos, opc, WN_Tree_Type(wn), 
-				      WN_kid0(wn), WN_kid1(wn), ctxt);
-  } 
-  else {
-    FORTTK_DIE("Unknown intrinsic '" << OPERATOR_name(opr) << "'");
-  }
-  
-  reset_XlationContext_is_logical_operation(ctxt);
-  
-  return whirl2xaif::good;
+  xlate_BinaryOpUsingIntrinsicTable(xos, 
+				    opc, 
+				    WN_Tree_Type(wn), 
+				    WN_kid0(wn), 
+				    WN_kid1(wn), 
+				    ctxt);
+  ctxt.currentXlationContext().unsetFlag(XlationContext::IS_LOGICAL_OPERATION);
 }
 
 
-whirl2xaif::status 
-whirl2xaif::WN2F_complex(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_complex(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_COMPLEX, FORTTK_UNEXPECTED_INPUT);
   
@@ -582,12 +572,12 @@ whirl2xaif::WN2F_complex(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TranslateWN(xos, WN_kid1(wn), ctxt);
   xos << ")";
   
-  return whirl2xaif::good;
+  
 }
 
 
-whirl2xaif::status 
-whirl2xaif::WN2F_bnor(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_bnor(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_BNOR, FORTTK_UNEXPECTED_INPUT);
 
@@ -601,12 +591,12 @@ whirl2xaif::WN2F_bnor(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		!TY_Is_Character_Reference(result_ty), ctxt);
   xos << "))";
   
-  return  whirl2xaif::good;
+  
 } /* WN2F_bnor */
 
 
-whirl2xaif::status 
-whirl2xaif::WN2F_lshr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_lshr(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_LSHR, FORTTK_UNEXPECTED_INPUT);
   
@@ -620,7 +610,7 @@ whirl2xaif::WN2F_lshr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		!TY_Is_Character_Reference(result_ty), ctxt);
   xos << "))";
   
-  return  whirl2xaif::good;
+  
 } /* WN2F_lshr */
 
 
@@ -628,8 +618,8 @@ whirl2xaif::WN2F_lshr(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 // Expression Operators: Ternary Operations; N-ary Operations
 //***************************************************************************
 
-whirl2xaif::status 
-whirl2xaif::WN2F_select(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_select(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   /* SELECT is almost the same as the F90 MERGE intrinsic, 
      so I will output it that way for now */
@@ -643,12 +633,12 @@ whirl2xaif::WN2F_select(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   TranslateWN(xos, WN_kid0(wn), ctxt);  
   xos << ")";
 
-  return whirl2xaif::good;
+  
 } /* WN2F_select */
 
 
-whirl2xaif::status 
-whirl2xaif::WN2F_madd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_madd(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_MADD, FORTTK_UNEXPECTED_INPUT);
 
@@ -665,12 +655,12 @@ whirl2xaif::WN2F_madd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		!TY_Is_Character_Reference(result_ty), ctxt);
   xos << ")";
   
-  return  whirl2xaif::good;
+  
 } /* WN2F_madd */
 
 
-whirl2xaif::status 
-whirl2xaif::WN2F_msub(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_msub(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_MSUB, FORTTK_UNEXPECTED_INPUT);
 
@@ -687,12 +677,12 @@ whirl2xaif::WN2F_msub(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		!TY_Is_Character_Reference(result_ty), ctxt);
   xos << ")";
   
-  return  whirl2xaif::good;
+  
 } /* WN2F_msub */
 
 
-whirl2xaif::status 
-whirl2xaif::WN2F_nmadd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_nmadd(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_NMADD, FORTTK_UNEXPECTED_INPUT);
 
@@ -709,12 +699,12 @@ whirl2xaif::WN2F_nmadd(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		!TY_Is_Character_Reference(result_ty), ctxt);
   xos << ")";
   
-  return  whirl2xaif::good;
+  
 } /* WN2F_nmadd */
 
 
-whirl2xaif::status 
-whirl2xaif::WN2F_nmsub(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::WN2F_nmsub(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_NMSUB, FORTTK_UNEXPECTED_INPUT);
   
@@ -731,7 +721,7 @@ whirl2xaif::WN2F_nmsub(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 		!TY_Is_Character_Reference(result_ty), ctxt);
   xos << ")";
   
-  return  whirl2xaif::good;
+  
 } /* WN2F_nmsub */
 
 
@@ -739,13 +729,13 @@ whirl2xaif::WN2F_nmsub(xml::ostream& xos, WN *wn, XlationContext& ctxt)
 // Expression Operators: N-ary Operations
 //***************************************************************************
 
-static whirl2xaif::status 
+static void 
 WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
 		  INT begArgIdx, INT endArgIdx, BOOL callByValue, 
-		  XlationContext& ctxt);
+		  PUXlationContext& ctxt);
 
-whirl2xaif::status 
-whirl2xaif::xlate_INTRINSIC_OP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
+void 
+whirl2xaif::xlate_INTRINSIC_OP(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   // An intrinsic operator expression (function call). This call is
   // not related to the call-info generated by PUinfo.  Note that
@@ -758,11 +748,8 @@ whirl2xaif::xlate_INTRINSIC_OP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
   INT begArgIdx = 0; // Assume we never return to first argument
   INT endArgIdx = WN_kid_count(wn) - 1;
   
-  const char* inm = INTRINSIC_basename(intrn);
-  IntrinsicXlationTable::XAIFInfo* info
-    = IntrinsicTable.FindXAIFInfo(opr, inm);
-  FORTTK_ASSERT(info, "Unknown intrinsic '" << inm << "'");
-  
+  const char* inm = fortTkSupport::IntrinsicXlationTable::intrinsicBasename(intrn);
+  fortTkSupport::IntrinsicXlationTable::XAIFInfoPair infoPair(Whirl2Xaif::getIntrinsicXlationTable().findXAIFInfo(opr, inm));
   if ((strcmp(inm, "ADRTMP") == 0) || (strcmp(inm, "VALTMP") == 0)) {
     // Special cases:
     //   ADRTMP: Call-by-reference.  Emit the dereferenced parameter.
@@ -771,18 +758,18 @@ whirl2xaif::xlate_INTRINSIC_OP(xml::ostream& xos, WN *wn, XlationContext& ctxt)
     TranslateWN(xos, WN_kid0(wn), ctxt);
   } else {
     // General case
-    WN2F_Intr_Funcall(xos, wn, info->name, 
+    WN2F_Intr_Funcall(xos, wn, infoPair.second.name, 
 		      begArgIdx, endArgIdx, by_value, ctxt);
   }
   
-  return whirl2xaif::good;
+  
 } /* xlate_INTRINSIC_OP */
 
 
-static whirl2xaif::status 
+static void 
 WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
 		  INT begArgIdx, INT endArgIdx, BOOL callByValue, 
-		  XlationContext& ctxt)
+		  PUXlationContext& ctxt)
 {
   /* An intrinsic operator expression to be emitted with function
    * call syntax.  All arguments are passed by value or by reference,
@@ -810,7 +797,7 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
   }
   
   // Emit Intrinsic name
-  UINT targid = ctxt.GetNewVId();
+  UINT targid = ctxt.currentXlationContext().getNewVertexId();
   xos << BegElem("xaif:Intrinsic") 
       << Attr("vertex_id", targid) << Attr("name", intrnNm)
       << Attr("type", "***") << EndElem;
@@ -828,7 +815,7 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
       opnd_type = WN_Tree_Type(WN_kid(wn, argIdx));
       
       position++;
-      srcid = ctxt.PeekVId();
+      srcid = ctxt.currentXlationContext().peekVertexId();
       if (TY_Is_Character_Reference(opnd_type) ||
 	  TY_Is_Chararray_Reference(opnd_type)) {
 	WN2F_String_Argument(xos, WN_kid(wn, argIdx) /* string base */,
@@ -836,15 +823,15 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
       } else {
 	xlate_Operand(xos, WN_kid(wn, argIdx), opnd_type, callByValue, ctxt);
       }
-      DumpExprGraphEdge(xos, ctxt.GetNewEId(), srcid, targid, position);
+      DumpExprGraphEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), srcid, targid, position);
     }
     
-    set_XlationContext_has_logical_arg(ctxt);
+    ctxt.currentXlationContext().setFlag(XlationContext::HAS_LOGICAL_ARG);
     position++;
-    srcid = ctxt.PeekVId();
+    srcid = ctxt.currentXlationContext().peekVertexId();
     xlate_Operand(xos, WN_kid(wn, endArgIdx), opnd_type, callByValue, ctxt);
-    reset_XlationContext_has_logical_arg(ctxt);
-    DumpExprGraphEdge(xos, ctxt.GetNewEId(), srcid, targid, position);
+    ctxt.currentXlationContext().unsetFlag(XlationContext::HAS_LOGICAL_ARG);
+    DumpExprGraphEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), srcid, targid, position);
     break;
   }
   default: {
@@ -854,7 +841,7 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
       opnd_type = WN_Tree_Type(WN_kid(wn, argIdx));
       
       position++;
-      srcid = ctxt.PeekVId();
+      srcid = ctxt.currentXlationContext().peekVertexId();
       if (TY_Is_Character_Reference(opnd_type) ||
 	  TY_Is_Chararray_Reference(opnd_type)) {
 	implicit_args++;
@@ -864,14 +851,14 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
       } else {
 	xlate_Operand(xos, WN_kid(wn, argIdx), opnd_type, callByValue, ctxt);
       }
-      DumpExprGraphEdge(xos, ctxt.GetNewEId(), srcid, targid, position);
+      DumpExprGraphEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), srcid, targid, position);
 
     }
     break;
   }
   } /* switch */
   
-  return whirl2xaif::good;
+  
 } /* WN2F_Intr_Funcall */
 
 
@@ -879,24 +866,27 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
 // Helpers
 //***************************************************************************
 
-static whirl2xaif::status
-xlate_UnaryOpUsingIntrinsicTable(xml::ostream& xos, OPCODE opcode, 
+static void
+xlate_UnaryOpUsingIntrinsicTable(xml::ostream& xos, 
+				 OPCODE opcode, 
 				 TY_IDX result_ty,
-				 WN* wn, XlationContext& ctxt)
+				 WN* wn, 
+				 PUXlationContext& ctxt)
 {
   xlate_BinaryOpUsingIntrinsicTable(xos, opcode, result_ty, wn, NULL, ctxt);
-  return whirl2xaif::good;
+  
 }
 
 
 // xlate_BinaryOpUsingIntrinsicTable: 
-static whirl2xaif::status
-xlate_BinaryOpUsingIntrinsicTable(xml::ostream& xos, OPCODE opcode, 
+static void
+xlate_BinaryOpUsingIntrinsicTable(xml::ostream& xos, 
+				  OPCODE opcode, 
 				  TY_IDX result_ty,
-				  WN* wn0, WN* wn1, XlationContext& ctxt)
-{
+				  WN* wn0, 
+				  WN* wn1, 
+				  PUXlationContext& ctxt) {
   BOOL is_binary_op = (wn1 != NULL);
-  
   // Get the expected types for the two operands, dependent on whether
   // or not we have a descriptor type.
   TY_IDX wn0_ty, wn1_ty;
@@ -907,62 +897,60 @@ xlate_BinaryOpUsingIntrinsicTable(xml::ostream& xos, OPCODE opcode,
   }
   
   OPERATOR opr = OPCODE_operator(opcode);
-  IntrinsicXlationTable::XAIFInfo* info // FIXME (perhaps pass?)
-    = IntrinsicTable.FindXAIFInfo(opr, NULL);
-  FORTTK_ASSERT(info, "Unknown intrinsic '" << OPERATOR_name(opr) << "'");
-  
+  fortTkSupport::IntrinsicXlationTable::XAIFInfoPair infoPair(Whirl2Xaif::getIntrinsicXlationTable().findXAIFInfo(opr, NULL));
   UINT targid, srcid0, srcid1;
   
   // Get XAIF operator type
   const char* opStr = NULL;
   const char* typeStr = NULL;
-  switch (info->opr) {
-  case IntrinsicXlationTable::XAIFIntrin: {
+  switch (infoPair.second.opr) {
+  case fortTkSupport::IntrinsicXlationTable::XAIFIntrin: {
     opStr = "xaif:Intrinsic";
     typeStr = "***";
     break;
   }
-  case IntrinsicXlationTable::XAIFBoolOp: {
+  case fortTkSupport::IntrinsicXlationTable::XAIFBoolOp: {
     opStr = "xaif:BooleanOperation";
     break;
   }
   default:
-    FORTTK_DIE("Unknown XAIFOpr");
+    FORTTK_DIE("xlate_BinaryOpUsingIntrinsicTable: no logic to handle: " 
+	       << fortTkSupport::IntrinsicXlationTable::toString(infoPair.second.opr).c_str());
   }
   
   // Operation
-  targid = ctxt.GetNewVId();
+  targid = ctxt.currentXlationContext().getNewVertexId();
   xos << BegElem(opStr) << Attr("vertex_id", targid)
-      << Attr("name", info->name);
+      << Attr("name", infoPair.second.name);
   if (typeStr) {
     xos << Attr("type", typeStr);
   }
   xos << EndElem;
   
   // First operand
-  srcid0 = ctxt.PeekVId();
+  srcid0 = ctxt.currentXlationContext().peekVertexId();
   xlate_Operand(xos, wn0, wn0_ty, TRUE/*call-by-value*/, ctxt);
   
   // Second operand (only for binary op)
   if (is_binary_op) {
-    srcid1 = ctxt.PeekVId();
+    srcid1 = ctxt.currentXlationContext().peekVertexId();
     xlate_Operand(xos, wn1, wn1_ty, TRUE/*call-by-value*/, ctxt);
   }
   
   // Edges
-  DumpExprGraphEdge(xos, ctxt.GetNewEId(), srcid0, targid, 1);
+  DumpExprGraphEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), srcid0, targid, 1);
   if (is_binary_op) { 
-    DumpExprGraphEdge(xos, ctxt.GetNewEId(), srcid1, targid, 2); 
+    DumpExprGraphEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), srcid1, targid, 2); 
   }
   
-  return whirl2xaif::good;
+  
 }
 
 
 // xlate_Operand: Translate a WHIRL operand (from an operator) to XAIF.
-static whirl2xaif::status
+static void
 xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty, 
-	      BOOL callByValue, XlationContext& ctxt)
+	      BOOL callByValue, PUXlationContext& ctxt)
 {
   // Translate an operand to a function or built-in operator invocation,
   // based on whether the ctxt indicates that we have call-by-value
@@ -986,6 +974,6 @@ xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty,
     TranslateWN(xos, opnd, ctxt);
   }
   
-  return whirl2xaif::good;
+  
 }
 

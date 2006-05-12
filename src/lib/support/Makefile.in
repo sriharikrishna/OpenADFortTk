@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Makefile.am,v 1.2 2005/07/28 16:47:45 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Makefile.am,v 1.2.2.1 2006/04/10 16:17:02 utke Exp $
 
 #############################################################################
 #
@@ -117,6 +117,7 @@ libsupport_a_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__objects_1 = libsupport_a-IntrinsicXlationTable.$(OBJEXT) \
 	libsupport_a-Open64IRInterface.$(OBJEXT) \
 	libsupport_a-OAMaps.$(OBJEXT) libsupport_a-SymTab.$(OBJEXT) \
+	libsupport_a-ScalarizedRef.$(OBJEXT) \
 	libsupport_a-ScalarizedRefTab.$(OBJEXT) \
 	libsupport_a-WhirlGlobalStateUtils.$(OBJEXT) \
 	libsupport_a-WhirlIDMaps.$(OBJEXT) \
@@ -131,7 +132,6 @@ am__objects_1 = libsupport_a-IntrinsicXlationTable.$(OBJEXT) \
 	libsupport_a-XAIFStrings.$(OBJEXT) \
 	libsupport_a-CmdLineParser.$(OBJEXT) \
 	libsupport_a-Exception.$(OBJEXT) \
-	libsupport_a-XlationCtxt.$(OBJEXT) \
 	libsupport_a-diagnostics.$(OBJEXT)
 am_libsupport_a_OBJECTS = $(am__objects_1)
 libsupport_a_OBJECTS = $(am_libsupport_a_OBJECTS)
@@ -302,6 +302,7 @@ MYSOURCES = \
 	Open64IRInterface.hpp Open64IRInterface.cpp \
 	OAMaps.h OAMaps.cxx \
 	SymTab.h SymTab.cxx \
+	ScalarizedRef.h ScalarizedRef.cxx \
 	ScalarizedRefTab.h ScalarizedRefTab.cxx \
 	WhirlGlobalStateUtils.h WhirlGlobalStateUtils.cxx \
 	WhirlIDMaps.h WhirlIDMaps.cxx \
@@ -320,7 +321,6 @@ MYSOURCES = \
 	\
 	BaseMap.h \
 	Exception.h Exception.cxx \
-	XlationCtxt.h XlationCtxt.cxx \
 	diagnostics.h diagnostics.cxx 
 
 
@@ -408,6 +408,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-IntrinsicXlationTable.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-OAMaps.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-Open64IRInterface.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-ScalarizedRef.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-ScalarizedRefTab.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-SexpTags.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-SymTab.Po@am__quote@
@@ -416,7 +417,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-WhirlIO.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-WhirlParentize.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-XAIFStrings.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-XlationCtxt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-diagnostics.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-sexpostream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-sexputil.Po@am__quote@
@@ -493,6 +493,20 @@ libsupport_a-SymTab.obj: SymTab.cxx
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='SymTab.cxx' object='libsupport_a-SymTab.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -c -o libsupport_a-SymTab.obj `if test -f 'SymTab.cxx'; then $(CYGPATH_W) 'SymTab.cxx'; else $(CYGPATH_W) '$(srcdir)/SymTab.cxx'; fi`
+
+libsupport_a-ScalarizedRef.o: ScalarizedRef.cxx
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -MT libsupport_a-ScalarizedRef.o -MD -MP -MF "$(DEPDIR)/libsupport_a-ScalarizedRef.Tpo" -c -o libsupport_a-ScalarizedRef.o `test -f 'ScalarizedRef.cxx' || echo '$(srcdir)/'`ScalarizedRef.cxx; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libsupport_a-ScalarizedRef.Tpo" "$(DEPDIR)/libsupport_a-ScalarizedRef.Po"; else rm -f "$(DEPDIR)/libsupport_a-ScalarizedRef.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='ScalarizedRef.cxx' object='libsupport_a-ScalarizedRef.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -c -o libsupport_a-ScalarizedRef.o `test -f 'ScalarizedRef.cxx' || echo '$(srcdir)/'`ScalarizedRef.cxx
+
+libsupport_a-ScalarizedRef.obj: ScalarizedRef.cxx
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -MT libsupport_a-ScalarizedRef.obj -MD -MP -MF "$(DEPDIR)/libsupport_a-ScalarizedRef.Tpo" -c -o libsupport_a-ScalarizedRef.obj `if test -f 'ScalarizedRef.cxx'; then $(CYGPATH_W) 'ScalarizedRef.cxx'; else $(CYGPATH_W) '$(srcdir)/ScalarizedRef.cxx'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libsupport_a-ScalarizedRef.Tpo" "$(DEPDIR)/libsupport_a-ScalarizedRef.Po"; else rm -f "$(DEPDIR)/libsupport_a-ScalarizedRef.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='ScalarizedRef.cxx' object='libsupport_a-ScalarizedRef.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -c -o libsupport_a-ScalarizedRef.obj `if test -f 'ScalarizedRef.cxx'; then $(CYGPATH_W) 'ScalarizedRef.cxx'; else $(CYGPATH_W) '$(srcdir)/ScalarizedRef.cxx'; fi`
 
 libsupport_a-ScalarizedRefTab.o: ScalarizedRefTab.cxx
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -MT libsupport_a-ScalarizedRefTab.o -MD -MP -MF "$(DEPDIR)/libsupport_a-ScalarizedRefTab.Tpo" -c -o libsupport_a-ScalarizedRefTab.o `test -f 'ScalarizedRefTab.cxx' || echo '$(srcdir)/'`ScalarizedRefTab.cxx; \
@@ -689,20 +703,6 @@ libsupport_a-Exception.obj: Exception.cxx
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='Exception.cxx' object='libsupport_a-Exception.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -c -o libsupport_a-Exception.obj `if test -f 'Exception.cxx'; then $(CYGPATH_W) 'Exception.cxx'; else $(CYGPATH_W) '$(srcdir)/Exception.cxx'; fi`
-
-libsupport_a-XlationCtxt.o: XlationCtxt.cxx
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -MT libsupport_a-XlationCtxt.o -MD -MP -MF "$(DEPDIR)/libsupport_a-XlationCtxt.Tpo" -c -o libsupport_a-XlationCtxt.o `test -f 'XlationCtxt.cxx' || echo '$(srcdir)/'`XlationCtxt.cxx; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libsupport_a-XlationCtxt.Tpo" "$(DEPDIR)/libsupport_a-XlationCtxt.Po"; else rm -f "$(DEPDIR)/libsupport_a-XlationCtxt.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='XlationCtxt.cxx' object='libsupport_a-XlationCtxt.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -c -o libsupport_a-XlationCtxt.o `test -f 'XlationCtxt.cxx' || echo '$(srcdir)/'`XlationCtxt.cxx
-
-libsupport_a-XlationCtxt.obj: XlationCtxt.cxx
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -MT libsupport_a-XlationCtxt.obj -MD -MP -MF "$(DEPDIR)/libsupport_a-XlationCtxt.Tpo" -c -o libsupport_a-XlationCtxt.obj `if test -f 'XlationCtxt.cxx'; then $(CYGPATH_W) 'XlationCtxt.cxx'; else $(CYGPATH_W) '$(srcdir)/XlationCtxt.cxx'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libsupport_a-XlationCtxt.Tpo" "$(DEPDIR)/libsupport_a-XlationCtxt.Po"; else rm -f "$(DEPDIR)/libsupport_a-XlationCtxt.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='XlationCtxt.cxx' object='libsupport_a-XlationCtxt.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -c -o libsupport_a-XlationCtxt.obj `if test -f 'XlationCtxt.cxx'; then $(CYGPATH_W) 'XlationCtxt.cxx'; else $(CYGPATH_W) '$(srcdir)/XlationCtxt.cxx'; fi`
 
 libsupport_a-diagnostics.o: diagnostics.cxx
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -MT libsupport_a-diagnostics.o -MD -MP -MF "$(DEPDIR)/libsupport_a-diagnostics.Tpo" -c -o libsupport_a-diagnostics.o `test -f 'diagnostics.cxx' || echo '$(srcdir)/'`diagnostics.cxx; \

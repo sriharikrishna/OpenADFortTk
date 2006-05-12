@@ -1,287 +1,169 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.17 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v 1.18 2006/05/12 16:12:23 utke Exp $
 
-// * BeginCopyright *********************************************************
-/*
-  Copyright (C) 2000, 2001 Silicon Graphics, Inc.  All Rights Reserved.
-
-  This program is free software; you can redistribute it and/or modify it
-  under the terms of version 2 of the GNU General Public License as
-  published by the Free Software Foundation.
-
-  This program is distributed in the hope that it would be useful, but
-  WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-  Further, this software is distributed without any warranty that it is
-  free of the rightful claim of any third person regarding infringement 
-  or the like.  Any license provided herein, whether implied or 
-  otherwise, applies only to this software file.  Patent licenses, if 
-  any, provided herein do not apply to combinations of this program with 
-  other software, or any other product whatsoever.  
-
-  You should have received a copy of the GNU General Public License along
-  with this program; if not, write the Free Software Foundation, Inc., 59
-  Temple Place - Suite 330, Boston MA 02111-1307, USA.
-
-  Contact information:  Silicon Graphics, Inc., 1600 Amphitheatre Pky,
-  Mountain View, CA 94043, or:
-
-  http://www.sgi.com
-
-  For further information regarding this notice, see:
-
-  http://oss.sgi.com/projects/GenInfo/NoticeExplan
-*/
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/XlationContext.cxx,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-// Based on Open64 be/whirl2f/wn2f.cxx
-//
-//***************************************************************************
-
-//************************** System Include Files ***************************
 
 #include <stdio.h>
-
-//************************** Open64 Include Files ***************************
-
-//*************************** User Include Files ****************************
-
+#include "lib/support/SymTab.h"
+#include "lib/support/diagnostics.h"
 #include "XlationContext.h"
-#include <lib/support/SymTab.h>
 
-//************************** Forward Declarations ***************************
+namespace whirl2xaif{
 
-//***************************************************************************
-
-//***************************************************************************
-// XlationContext
-//***************************************************************************
-
-XlationContext::XlationContext()
-  : flags(0), 
-    wnParentMap(NULL), stab2idMap(NULL), pu2idMap(NULL), wn2idMap(NULL),
-    nssymtab(NULL)
-{
-  ctxtstack.push_front(Ctxt());
-}
-
-XlationContext::~XlationContext()
-{
-  ctxtstack.clear(); // clear the stack
-}
-
-
-// -------------------------------------------------------
-// Context manipulation (Create, Delete...)
-// -------------------------------------------------------
-
-XlationContext&
-XlationContext::CreateContext()
-{
-  return Ctor(NOFLAG, NULL);
-}
-
-XlationContext&
-XlationContext::CreateContext(uint32_t flags_)
-{
-  return Ctor(flags_, NULL);
-}
-
-XlationContext&
-XlationContext::CreateContext(uint32_t flags_, WN* wn_)
-{
-  return Ctor(flags_, wn_);
-}
-
-XlationContext&
-XlationContext::Ctor(uint32_t flags_, WN* wn_)
-{
-  // If available, get enclosing context
-  const Ctxt* enclCtxt = NULL;
-  if (ctxtstack.size() > 0) {
-    enclCtxt = &(ctxtstack.front());
-  }
-  
-  // Create new context
-  ctxtstack.push_front(Ctxt());
-  CurContext().SetFlags(flags_);
-  CurContext().SetWN(wn_);
-
-  // Set inherited flags from enclosing context
-  Ctxt& curCtxt = CurContext();
-  if (enclCtxt->AreFlags(ASSIGN)) { curCtxt.SetFlags(ASSIGN); }
-  if (enclCtxt->AreFlags(VARREF)) { curCtxt.SetFlags(VARREF); }
-  
-  return (*this);
-}
-
-XlationContext&
-XlationContext::DeleteContext()
-{
-  if (ctxtstack.size() > 1) {
-    // maintain invariant that there is at least one context
-    ctxtstack.pop_front();
-  }
-  return (*this);
-}
-
-
-// -------------------------------------------------------
-// 
-// -------------------------------------------------------
-
-WN* 
-XlationContext::GetWN_MR()
-{
-  for (XlationContextIterator it(*this); it.IsValid(); ++it) {
-    Ctxt* ctxt = it.Current();
-    WN* wn = ctxt->GetWN();
-    if (wn) { return wn; }
-  }
-  return NULL;
-}
-
-
-// -------------------------------------------------------
-// Procedure-level maps/data
-// -------------------------------------------------------
-
-WN*
-XlationContext::FindParentWN(WN* wn)
-{
-  if (wnParentMap) { return (wnParentMap->Find(wn)); }
-  return NULL;
-}
-
-WN*
-XlationContext::FindParentBlockWN(WN* wn)
-{
-  if (wnParentMap) { return (wnParentMap->FindBlock(wn)); }
-  return NULL;
-}
-
-SymTabId
-XlationContext::FindSymTabId(ST_TAB* stab)
-{
-  if (stab2idMap) { return (stab2idMap->Find(stab, true /*mustfind*/)); }
-  return 0;
-}
-
-PUId
-XlationContext::FindPUId(PU_Info* pu)
-{
-  if (pu2idMap) { return (pu2idMap->Find(pu)); }
-  return 0;
-}
-
-WNId
-XlationContext::FindWNId(WN* wn)
-{
-  if (wn2idMap) { return wn2idMap->Find(wn); }
-  return 0;
-}
-
-int
-XlationContext::FindUDDUChainId(WN* wnexpr)
-{
-  if (!udduchains.ptrEqual(NULL)) { 
-    OA::MemRefHandle h((OA::irhandle_t)wnexpr);
-    return udduchains->getUDDUChainId(h);
-  }
-  return 0;
-}
-
-ScalarizedRef* 
-XlationContext::FindScalarizedRef(WN* wn)
-{
-  if (nssymtab) { return nssymtab->Find(wn); }
-  return NULL;
-}
-
-
-// -------------------------------------------------------
-// Misc
-// -------------------------------------------------------
-
-void 
-XlationContext::Dump(std::ostream& o, const char* pre) const
-{
-  o << "(";
-
-  // FIXME: convert to member functions
-  if (IsDerefAddr())                           o << " deref";
-  if (XlationContext_has_logical_arg(*this))   o << " logical_arg";
-  if (XlationContext_io_stmt(*this))           o << " in_io";
-  if (XlationContext_deref_io_item(*this))     o << " deref_io";
-  if (XlationContext_origfmt_ioctrl(*this))    o << " varfmt";
-  if (XlationContext_fmt_io(*this))            o << " formatted io";
-  if (XlationContext_cray_io(*this))           o << " craylib";
-  o << ")\n";
-
-  // Skeleton code for iterating through context stack
-  for (XlationContextIterator it(*this); it.IsValid(); ++it) {
-    Ctxt* ctxt = it.Current();
-    ctxt->Dump();
+  XlationContext::XlationContext(unsigned int aStackPosition) : 
+    myWNp(0), 
+    myNextVertexId(0), 
+    myNextEdgeId(0),
+    myFlags(0),
+    myStackPosition(aStackPosition) {
   }
 
-}
+  XlationContext::~XlationContext() {
+  }
 
-void 
-XlationContext::DDump() const
-{
-  Dump(std::cerr);
-}
+  WN* XlationContext::getWN() const { 
+    if (!myWNp)
+      FORTTK_DIE("XlationContext::getWN: myWNp not set");
+    return myWNp; 
+  }
 
+  bool XlationContext::hasWN() const { 
+    return (myWNp)?true:false; 
+  }
 
-//***************************************************************************
-// XlationContext::Ctxt
-//***************************************************************************
+  void XlationContext::setWN(WN* aWNp) { 
+    if (!aWNp)
+      FORTTK_DIE("XlationContext::setWN: null pointer passed");
+    if (myWNp)
+      FORTTK_MSG(4,"XlationContext::setWN: already set to " << myWNp << " new " << aWNp);
+    myWNp = aWNp; 
+  }
 
-XlationContext::Ctxt::Ctxt()
-  : wn(NULL), nextVId(0), nextEId(0)
-{
-}
+  unsigned int XlationContext::getNewVertexId() { 
+    return ++myNextVertexId; 
+  }
 
-XlationContext::Ctxt::~Ctxt()
-{
-}
+  unsigned int XlationContext::getVertexId() const { 
+    if (!myNextVertexId)
+      FORTTK_DIE("XlationContext::getVertexId: invalid use");
+    return myNextVertexId; 
+  } 
 
-void 
-XlationContext::Ctxt::Dump(std::ostream& o) const
-{
-  o << "{context}";
-  CtxtFlags::Dump(o);
-}
+  unsigned int XlationContext::peekVertexId() const { 
+    return myNextVertexId + 1; 
+  } 
 
-void 
-XlationContext::Ctxt::DDump() const
-{
-  Dump(std::cerr);
-}
+  unsigned int XlationContext::getNewEdgeId() { 
+    return ++myNextEdgeId; 
+  }
 
+  unsigned int XlationContext::getEdgeId() const { 
+    if (!myNextEdgeId)
+      FORTTK_DIE("XlationContext::getEdgeId: invalid use");
+    return myNextEdgeId; 
+  }
 
-//***************************************************************************
-// XlationContextIterator
-//***************************************************************************
+  unsigned int XlationContext::peekEdgeId() const { 
+    return myNextEdgeId + 1; 
+  }
 
-XlationContextIterator::XlationContextIterator(const XlationContext& x)
-  : xctxt(x)
-{
-  Reset();
-}
+  bool XlationContext::isFlag(XlationContext::Flags_E f) const { 
+    return (myFlags & f); 
+  }
+  void XlationContext::setFlag(XlationContext::Flags_E f) { 
+    FORTTK_MSG(2,"XlationContext::setFlag: " 
+	       << flagToString(f).c_str() 
+	       << " for " 
+	       << toString().c_str());
+    myFlags = myFlags | f; 
+  }
+  void XlationContext::unsetFlag(XlationContext::Flags_E f) { 
+    FORTTK_MSG(2,"XlationContext::unsetFlag: " 
+	       << flagToString(f).c_str() 
+	       << " for " 
+	       << toString().c_str());
+    myFlags = myFlags & ~f; 
+  }
 
-XlationContextIterator::~XlationContextIterator()
-{
+  void XlationContext::inheritFlags(const XlationContext& parentContext) { 
+    // only ASSIGN and VARREF are inherited
+    myFlags = myFlags | (parentContext.myFlags & (ASSIGN|VARREF|HAS_NO_ARR_ELMT)); 
+  }
+
+  std::string XlationContext::flagToString(XlationContext::Flags_E aFlag) { 
+    std::string returnString;
+    switch (aFlag) { 
+    case NOFLAG:
+      returnString="";
+      break;
+    case ASSIGN:
+      returnString="assign";
+      break;
+    case VARREF:
+      returnString="varref";
+      break;
+    case DEREF_ADDR:
+      returnString="deref_addr";
+      break;
+    case HAS_LOGICAL_ARG:
+      returnString="has_logical_arg";
+      break;
+    case IS_LOGICAL_ARG:
+      returnString="is_logical_arg";
+      break;
+    case IS_LOGICAL_OPERATION:
+      returnString="is_logical_operation";
+      break;
+    case IO_STMT:
+      returnString="io_stmt";
+      break;
+    case DEREF_IO_ITEM:
+      returnString="deref_io_item";
+      break;
+    case ORIGFMT_IOCTRL:
+      returnString="origfmt_ioctrl";
+      break;
+    case FMT_IO:
+      returnString="fmt_io";
+      break;
+    case CRAY_IO:
+      returnString="cray_io";
+      break;
+    case HAS_NO_ARR_ELMT:
+      returnString="has_no_arr_elmt";
+      break;
+    default: 
+      FORTTK_DIE("XlationContext::flagToString: unexpected input " << aFlag );
+      break; 
+    }
+    return returnString;
+  }
+
+  std::string XlationContext::toString()const { 
+    ostringstream o; 
+    o << "(" << myStackPosition << ",wn=" << myWNp;
+    if (isFlag(ASSIGN))              o << flagToString(ASSIGN).c_str();
+    if (isFlag(VARREF))              o << flagToString(VARREF).c_str();
+    if (isFlag(DEREF_ADDR))          o << flagToString(DEREF_ADDR).c_str();
+    if (isFlag(HAS_LOGICAL_ARG))     o << flagToString(HAS_LOGICAL_ARG).c_str();
+    if (isFlag(IS_LOGICAL_ARG))      o << flagToString(IS_LOGICAL_ARG).c_str();
+    if (isFlag(IS_LOGICAL_OPERATION))o << flagToString(IS_LOGICAL_OPERATION).c_str();
+    if (isFlag(IO_STMT))             o << flagToString(IO_STMT).c_str();
+    if (isFlag(DEREF_IO_ITEM))       o << flagToString(DEREF_IO_ITEM).c_str();
+    if (isFlag(ORIGFMT_IOCTRL))      o << flagToString(ORIGFMT_IOCTRL).c_str();
+    if (isFlag(FMT_IO))              o << flagToString(FMT_IO).c_str();
+    if (isFlag(CRAY_IO))             o << flagToString(CRAY_IO).c_str();
+    if (isFlag(HAS_NO_ARR_ELMT))     o << flagToString(HAS_NO_ARR_ELMT).c_str();
+    o << ")" << std::ends;
+    return o.str();
+  } 
+
+  void XlationContext::dump(std::ostream& o, const std::string& indent) const {
+    o << indent.c_str() << toString().c_str() << std::endl;
+  }
+
+  void 
+  XlationContext::ddump() const {
+    dump(std::cerr,"");
+  }
+
 }

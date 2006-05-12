@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.14 2006/04/17 18:27:08 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.15 2006/05/12 16:12:23 utke Exp $
 
 //***************************************************************************
 //
@@ -697,7 +697,12 @@ whirl2sexp::status
 whirl2sexp::xlate_LDID_STID(sexp::ostream& sos, WN* wn)
 {
   OPERATOR opr = WN_operator(wn);
-  FORTTK_ASSERT(opr == OPR_LDID || opr == OPR_STID, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(opr == OPR_LDID 
+		|| 
+		opr == OPR_STID
+		||
+		opr == OPR_PSTID, 
+		FORTTK_UNEXPECTED_INPUT);
   
   ST_IDX    st_idx = WN_st_idx(wn);
   WN_OFFSET ofst   = WN_offset(wn); // WN_load_offset, WN_store_offset
@@ -707,7 +712,7 @@ whirl2sexp::xlate_LDID_STID(sexp::ostream& sos, WN* wn)
   sos << BegList << GenSexpWNOpr(wn); // WN_OPR
   sos << BegList << GenSexpSymRef(st_idx) << Atom(ofst) 
       << GenSexpTyUse(ty_idx) << Atom(fldid) << EndList; // WN_ATTRS
-  if (opr == OPR_STID) {
+  if (opr == OPR_STID || opr == OPR_PSTID) {
     sos << EndLine;
     TranslateWN(sos, WN_kid0(wn)); // KID 0
   }
@@ -771,16 +776,6 @@ whirl2sexp::xlate_xLOADx_xSTOREx(sexp::ostream& sos, WN* wn)
 
   return whirl2sexp::good;
 }
-
-
-whirl2sexp::status
-whirl2sexp::xlate_PSTID(sexp::ostream& sos, WN* wn)
-{
-  FORTTK_ASSERT(WN_operator(wn) == OPR_PSTID, FORTTK_UNEXPECTED_INPUT);
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
-  return whirl2sexp::good;
-}
-
 
 whirl2sexp::status
 whirl2sexp::xlate_PSTORE(sexp::ostream& sos, WN* wn)
@@ -1118,8 +1113,8 @@ WNXlationTable::InitEntry WNXlationTable::initTable[] = {
   { OPR_ISTOREX,              &xlate_xLOADx_xSTOREx },
   { OPR_MSTORE,               &xlate_xLOADx_xSTOREx },
 
-  { OPR_PSTID,                &xlate_PSTID },   // Pseudo-registers 
-  { OPR_PSTORE,               &xlate_PSTORE },
+  { OPR_PSTID,                &xlate_LDID_STID }, // pointer version of STID 
+  { OPR_PSTORE,               &xlate_PSTORE },// pointer version of STORE
 
   // Type conversion
   { OPR_CVT,                  &xlate_CVT_CVTL },

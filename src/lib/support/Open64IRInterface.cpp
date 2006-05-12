@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.15 2006/01/19 19:53:19 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.16 2006/05/12 16:12:22 utke Exp $
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Nathan Tallent, Michelle Strout
-  \version $Id: Open64IRInterface.cpp,v 1.15 2006/01/19 19:53:19 utke Exp $
+  \version $Id: Open64IRInterface.cpp,v 1.16 2006/05/12 16:12:22 utke Exp $
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -21,12 +21,6 @@ static bool debug = false;
 #include <list>
 #include <climits>
 #include <cassert>
-//using std::list;
-
-//************************ OpenAnalysis Include Files ***********************
-
-//************************** Open64 Include Files ***************************
-
 #include <include/Open64BasicTypes.h>
 #include "ir_reader.h" // for fdump_wn()
 
@@ -850,10 +844,9 @@ Open64IRInterface::getCFGStmtType(OA::StmtHandle h)
   case OPR_ISTBITS:
   case OPR_USE: // FIXME: how are these ordered?
   case OPR_INTERFACE: 
-  //case OPR_PSTID: FIXME: want this to fail because don't handle pointers yet
+  case OPR_PSTID: 
     ty = OA::CFG::SIMPLE;
     break;
-
   // Bother.
   default: 
     // FIXME: OPR_ASSERT, OPR_GOTO_OUTER_BLOCK, OPR_TRAP, 
@@ -2296,6 +2289,7 @@ Open64IRMemRefIterator::findTopMemRefs(WN* wn, list<WN*>& topMemRefs)
       
     // Special base and recursive case
     case OPR_STID: 
+    case OPR_PSTID: 
     case OPR_STBITS:
     case OPR_ISTORE:
     case OPR_ISTOREX:
@@ -2357,113 +2351,155 @@ Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs(WN* wn)
     used within the top-most mem-ref-expr of the mem-ref.  Outside
     callers of this routine should pass a recursion level 'lvl' of 0
     and flags 'flags' of 0.
-
     Note: The returned information is consumed by recursive calls and
     will not be of interest to others.  The returned information
     should be *copied* if it is to be used.)
 */
 list<Open64IRMemRefIterator::MemRefExprInfo>
 Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs(WN* wn, 
-                                  list<OA::MemRefHandle>& memRefs,
-	                          unsigned lvl, unsigned flags)
-{
+							  list<OA::MemRefHandle>& memRefs,
+							  unsigned aCallLevel, 
+							  unsigned flags) {
   Language = LANG_F90; // FIXME: Open64's global var Language isn't set
-
-  enum { 
-    flags_NONE              = 0x00000000,
-    flags_EXPECT_ARRAY_BASE = 0x00000001, // passed down the call stack
-    flags_EXPECT_FUNC_BASE  = 0x00000002, // passed down the call stack
-
-    // FIXME: come up with a better name
-    flags_STORE_PARENT     = 0x00000004  // passed down the call stack
-  };
-
-  using namespace OA;
-
-  bool isFortran = (Language == LANG_F77 || Language == LANG_F90);
-  bool isMemRefExprXXX = true;
-  
   // A list of mem-ref infos, *some* of which correspond to
   // mem-ref-handles added to 'memRefs' for this WHIRL node.
   list<MemRefExprInfo> curMemRefExprInfos;  
-  
-  // -------------------------------------------------------
-  // 0. Special base cases
-  // -------------------------------------------------------
-  if (!wn) { return curMemRefExprInfos; }
-  
+  // shouldn't have this:
+  if (!wn) { 
+    FORTTK_DIE("Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs: null WHIRL node passed");
+    //    return curMemRefExprInfos; 
+  }
   OPERATOR opr = WN_operator(wn);
-  
-  // must never see within a WHIRL memory reference (cannot handle recursion)
-  if (opr == OPR_BLOCK) { return curMemRefExprInfos; } 
-  
+  // must never see this within a WHIRL memory reference
+  if (opr == OPR_BLOCK) {
+    FORTTK_DIE("Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs: not implemented for WHIRL operator " << OPERATOR_name(opr));
+    //    return curMemRefExprInfos; 
+  } 
+  // the flags to be passed down the callstack
+  enum { 
+    // init value: 
+    flags_NONE              = 0x00000000,
+    // for array and arraysect operators
+    flags_EXPECT_ARRAY_BASE = 0x00000001, 
+    // calls to virtual functions and via function pointers
+    flags_EXPECT_FUNC_BASE  = 0x00000002,
+    // if the whirlnode is the top of one of the idioms: 
+    //   ISTORE/ILOAD (source code: A(j) or a%v)
+    //     ARRAY
+    flags_STORE_PARENT      = 0x00000004,
+    flags_EXPECT_STRCT_BASE = 0x00000008,
+    // indicates the kid is a pointer assignment RHS 
+    flags_POINTERASG_RHS    = 0x00000010
+  };
+  // we may set this to false if this wn is 
+  // really the store/load of an array 
+  // which we would recusivly descend to
+  bool isMemRefExprAtRecursionTop = true;
   // -------------------------------------------------------
   // 1. General recursive case
+  // Find all mem-ref-expr within the current mem-ref
   // -------------------------------------------------------
-
-  // Find all mem-ref-expr within the current mem-ref, saving the
-  // returned mem-ref-expr if they are related to the mem-ref-expr for
-  // mem-ref.  Set flags to pass information about the current
-  // surrounding context.
+  // save the returned mem-ref-expr if they are related 
+  // to the mem-ref-expr for mem-ref. 
   list<MemRefExprInfo> childInfos;
-  
-  if (OPERATOR_is_store(opr)) {
-    if (WN_kid_count(wn) >= 2) {
-      unsigned mylvl = lvl + 1;
-      if (WN_isArrayRef(wn)) {
-	mylvl = lvl;
+  // Set flags to pass information about the current
+  // surrounding context.
+  if (OPERATOR_is_store(opr) && (opr!=OPR_PSTID)) { // this means we look at an assignment, except for pointer stores
+    if (WN_kid_count(wn) >= 2) { 
+      // in the recursion we are accessing the 2nd kid (kid1) node
+      // because that is where the value will be stored
+      // the first kid (kid0) computes the value
+      unsigned thisLevel = aCallLevel + 1;
+      if (opr == OPR_ISTORE // indirect store, address is being computed by kid1
+	  && 
+	  (WN_operator(WN_kid1(wn)) == OPR_ARRAY || WN_operator(WN_kid1(wn)) == OPR_STRCTFLD)) {
+	thisLevel = aCallLevel;  // the top level isn't a memRefExpr itself so don't count up
 	flags |= flags_STORE_PARENT;
-	isMemRefExprXXX = false; // use info from ARRAY
+	isMemRefExprAtRecursionTop = false; // this is a store, use info from ARRAY or STRCTFLD
       }    
-      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid1(wn), memRefs, mylvl, flags);
+      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid1(wn), memRefs, thisLevel, flags);
+    }
+    else { 
+      // e.g. OPR_STID
+      FORTTK_MSG(2,"Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs: no recursion for store WHIRL operator " << OPERATOR_name(opr));
     }
   } 
-  else if (OPERATOR_is_load(opr)) {
+  else if (OPERATOR_is_load(opr) && (opr!=OPR_STRCTFLD)) { // this means we look at a variable being accessed
     if (WN_kid_count(wn) >= 1) {
-      unsigned mylvl = lvl + 1;
-      if (WN_isArrayRef(wn)) {
-	mylvl = lvl;
-	isMemRefExprXXX = false; // use info from ARRAY
+      unsigned thisLevel = aCallLevel + 1;
+      if (opr == OPR_ILOAD // indirect store, address is being computed by kid1
+	  && 
+	  (WN_operator(WN_kid0(wn)) == OPR_ARRAY )) {
+	thisLevel = aCallLevel; // the top level isn't a memRefExpr anyway
+	isMemRefExprAtRecursionTop = false; // use info from ARRAY
       }
-      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), memRefs, mylvl, flags);
+      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), memRefs, thisLevel, flags);
+    }
+    else { 
+      // e.g. OPR_LDID
+      FORTTK_MSG(2,"Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs: no recursion for load WHIRL operator " << OPERATOR_name(opr));
     }
   } 
   else {
-    
-    bool kidInfosUsedForCurrentMemRefExpr = false;
-    bool kidsAreDistinctExpr = false;
+    bool kidInfosUsedForCurrentMemRefExpr = false; 
+    // this remains false for all special cases listed below. 
+    bool kidsAreDistinctExpr = false; 
+    // this becomes true if we look at array index expressions which are seen as separate
     INT kid_end = WN_kid_count(wn) - 1;
     INT kid_beg = kid_end + 1; // by default do not examine kids
-    
     switch(opr) {
       // Arrays: we want the return value when recuring on the array
       // reference, but do not care about it for the index expressions.
       // We do not even recur on dimension information.
-      case OPR_ARRAY: // recur on array indices
-      case OPR_ARRSECTION: {
-        flags |= flags_EXPECT_ARRAY_BASE;
-        childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), memRefs, lvl + 1, flags);
-
-	    kidsAreDistinctExpr = true; // index expressions are distinct
-        INT dim = kid_end / 2;
-        kid_beg = dim + 1; // index expr are dim+1 ... 2*dim
-        break;
-      }
-      case OPR_ARRAYEXP: {
-        childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), memRefs, lvl + 1, flags);
-	break;
-      }
-	
-      // Calls (indirect): recur on the function pointer expression
-      case OPR_ICALL:
-      case OPR_VFCALL: { // recur on kid n-1
-	flags |= flags_EXPECT_FUNC_BASE;
-	int k = WN_kid_count(wn) - 1;
-	childInfos = 
-	  findAllMemRefsAndMapToMemRefExprs(WN_kid(wn, k), memRefs, lvl + 1, flags);
-	break;
-      }
-	
+    case OPR_ARRAY: // recur on array indices
+    case OPR_ARRSECTION: {
+      flags |= flags_EXPECT_ARRAY_BASE;
+      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), 
+						     memRefs, 
+						     aCallLevel + 1, 
+						     flags);
+      // index expressions are distinct because OA doesn't handle array sections yet
+      kidsAreDistinctExpr = true; 
+      INT dim = kid_end / 2; // the first half of the kids carriess dimension data 
+      kid_beg = dim + 1; // index expr are dim+1 ... 2*dim (the second half)
+      break;
+    }
+    case OPR_ARRAYEXP: {
+      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), 
+						     memRefs, 
+						     aCallLevel + 1, 
+						     flags);
+      break;
+    }
+    case OPR_STRCTFLD: 
+      // we are in a strct field like  x%v
+      // what comes below refers to x via an LDA
+      // unless x is a pointer we don't want to see it. 
+      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), 
+						     memRefs, 
+						     aCallLevel + 1, 
+						     flags | flags_EXPECT_STRCT_BASE);
+      break;
+    case OPR_PSTID: 
+      // pointer assignment.
+      // the kid0 is the thing that we take an address of
+      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), 
+						     memRefs, 
+						     aCallLevel + 1, 
+						     flags | flags_POINTERASG_RHS);
+      break;
+      // indirect calls via function pointer:
+    case OPR_ICALL:
+      // virtual function calls:
+    case OPR_VFCALL: { // recur on kid n-1
+      flags |= flags_EXPECT_FUNC_BASE;
+      int k = WN_kid_count(wn) - 1;
+      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid(wn, k), 
+						     memRefs, 
+						     aCallLevel + 1, 
+						     flags);
+      break;
+    }
     default:
       // We need to recur on children and use child mem-expr. E.g., 
       //  I4I4ILOAD 0 T<4,.predef_I4,4> T<41,anon_ptr.,8> <-- top mem ref WN
@@ -2474,16 +2510,14 @@ Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs(WN* wn,
       kid_beg = 0;
       kidInfosUsedForCurrentMemRefExpr = true;
       break;
-    }
-
-
-    unsigned kid_lvl = lvl + 1;
+    } // end switch
+    unsigned kid_lvl = aCallLevel + 1;
     unsigned kid_flags = flags;
     if (kidsAreDistinctExpr) { // expect completely distinct expressions
+      // so we have to reset everything
       kid_lvl = 0;   // reset level 
-      kid_flags = 0; // reset flags
+      kid_flags = flags_NONE; // reset flags
     }
-    
     for (INT kidno = kid_beg; kidno <= kid_end; ++kidno) {
       WN* kid = WN_kid(wn, kidno);
       list<MemRefExprInfo> infos = 
@@ -2491,110 +2525,109 @@ Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs(WN* wn,
       if (kidInfosUsedForCurrentMemRefExpr) {
 	childInfos.splice(childInfos.end(), infos);
       }
+      else {
+	// diagnostic, done e.g. for constants in OPR_INTCONST
+	FORTTK_MSG(2,"Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs: dropping memrefinfos for opr " << OPERATOR_name(WN_operator(kid)));
+      }
     }    
-  }
-  
-  // By default, we ensure a null MemRefExprInfo exists
+  }// end of all recursion cases
+  // By default, we ensure that at least a null MemRefExprInfo exists
   if (childInfos.size() == 0) {
     childInfos.push_back(MemRefExprInfo(0, OA::SymHandle(0)));
   }
-  
   // -------------------------------------------------------
   // 2. General base case 
   // -------------------------------------------------------
-
   // For each child mem-ref-expr create a mem-ref-expr based on 'wn'
   for (list<MemRefExprInfo>::iterator it = childInfos.begin(); 
        it != childInfos.end(); ++it) {
-    
     MemRefExprInfo childInfo = (*it);
-    unsigned childDerefs = childInfo.first;
+    unsigned derefs = childInfo.first;
     OA::SymHandle childSH = childInfo.second;
-
     // -------------------------------------------------------
     // a. Info about the MemRefExpr
     // -------------------------------------------------------
-
     // Sometimes -- e.g. because of the context -- a WHIRL node that
     // would typically be a mem-ref-expr should not be considered one.
     // However, we may use its info to create a location block.
-    bool isMemRefExpr = isMemRefExprXXX;
-    
+    bool isMemRefExpr = isMemRefExprAtRecursionTop;
     // Assume a source-ref-expr if level 0.  This will be corrected, if
     // necessary, below.
     OA::MemRefExpr::MemRefType hty;
-    if (lvl == 0) {
-      hty = (flags & flags_STORE_PARENT) ? OA::MemRefExpr::DEF: 
+    if (aCallLevel == 0) {
+      hty = (flags & flags_STORE_PARENT) ? OA::MemRefExpr::DEF: // a store means an assignment
 	                                   OA::MemRefExpr::USE;
     }
-
-    unsigned derefs = childDerefs;
     bool isAddrOf = false;
     bool fullAccuracy = false;
-    
-    // Location block
-    //LocBlock* locblk = NULL;
     OA::SymHandle locSH;
-    bool hasNestedProc = (PU_Info_child(Current_PU_Info) != NULL);
+    // flags to decide on the kind of memory reference later on:
     bool isLocal = false;
     bool isNamed = false;
     bool isUnique = false;
-
     // -------------------------------------------------------
     // b. Gather information about the mem-ref
     // -------------------------------------------------------
-    ST* st = NULL;
     TY_IDX base_ty = 0, ref_ty = 0;
     WN_OFFSET offset = 0;
-    UINT field_id = 0; 
-    
-    if (OPERATOR_is_load(opr) || opr == OPR_LDA || opr == OPR_LDMA) {
+    if (OPERATOR_is_load(opr) // a variable 
+	|| 
+	opr == OPR_LDA  // load address
+	|| 
+	opr == OPR_LDMA) { // load mutable address
       base_ty = WN_GetBaseObjType(wn);
       ref_ty = WN_GetRefObjType(wn);
-      if ((flags & flags_EXPECT_ARRAY_BASE) 
-	  || (flags & flags_EXPECT_FUNC_BASE)) {
+      if (flags & (flags_EXPECT_ARRAY_BASE 
+		   | 
+		   flags_EXPECT_FUNC_BASE 
+		   | 
+		   flags_EXPECT_STRCT_BASE)) {
 	isMemRefExpr = false;
       }
-      offset = WN_load_offset(wn); // == WN_lda_offset()
+      offset = WN_load_offset(wn); 
     } 
     else if (OPERATOR_is_store(opr)) {
-      if (lvl == 0) { hty = OA::MemRefExpr::DEF; }
+      if (aCallLevel == 0) { 
+	hty = OA::MemRefExpr::DEF; 
+      }
       base_ty = WN_GetBaseObjType(wn);
       ref_ty = WN_GetRefObjType(wn);
       offset = WN_store_offset(wn);
     }
-    
+    unsigned field_id = 0; 
     if (OPERATOR_has_field_id(opr)) {
       field_id = WN_field_id(wn);
     }
-    
+    ST* st = NULL; // some have a symbol table entry
     // special cases
     switch (opr) {
-      // NOTE: MLOAD, MSTORE
-      
       // LOADs represent an rvalue
-      case OPR_LDA:
-      case OPR_LDMA:
-        st = WN_st(wn);
-        if (!isFortran) {
-          isAddrOf = true;
-        }
-        if ((flags & flags_EXPECT_ARRAY_BASE)) {
-          ref_ty = (TY_Is_Pointer(ref_ty)) ? TY_pointed(ref_ty) : base_ty;
-          isAddrOf = false; // implicitly dereference the address
-        }
-        break;
-	
-      case OPR_LDID:
-      case OPR_LDBITS:
-	st = WN_st(wn);
-	break;
-	
-      case OPR_ILOAD:
-      case OPR_ILOADX:
-	if (!isFortran) { derefs++; }
+    case OPR_LDA: // load address
+    case OPR_LDMA: // load mutable address
+      st = WN_st(wn);
+      if (!(Language == LANG_F77 || Language == LANG_F90)) {
+	isAddrOf = true;
+      }
+      if ((flags & flags_EXPECT_ARRAY_BASE)) {
+	ref_ty = (TY_Is_Pointer(ref_ty)) ? TY_pointed(ref_ty) : base_ty;
+	isAddrOf = false; // implicitly dereference the address
+      }
+      break;
+    case OPR_STRCTFLD: // struct field
+      break;
+    case OPR_LDID:
+    case OPR_LDBITS:
+      if (flags & flags_POINTERASG_RHS) { 
+	// we are in the rhs of a pointer assignment
+	isAddrOf = true; 
+	hty = OA::MemRefExpr::USE;
+      }
+      st = WN_st(wn);
+      break;
+    case OPR_ILOAD:
+    case OPR_ILOADX:
+	if (!(Language == LANG_F77 || Language == LANG_F90)) { derefs++; }
 	break; // use loc block obtained above from kid0
-	
       // ARRAYs
       case OPR_ARRAY:
       case OPR_ARRSECTION:
@@ -2602,30 +2635,29 @@ Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs(WN* wn,
       case OPR_ARRAYEXP:
 	isMemRefExpr = false;
 	break; // use loc block obtained above from kid0
-      
       // CALLs (indirect)
       case OPR_ICALL:
       case OPR_VFCALL:
-	if (!isFortran) { derefs++; }
+	if (!(Language == LANG_F77 || Language == LANG_F90)) { derefs++; }
 	break; // use loc block obtained above from kid n-1
-      
       // STOREs represent an lvalue
       case OPR_STID:
       case OPR_STBITS:
 	st = WN_st(wn);
 	break;
+      case OPR_PSTID:
+	st = WN_st(wn);
+	break;
       case OPR_ISTORE:
       case OPR_ISTOREX:
       case OPR_ISTBITS: {
-	if (!isFortran) { derefs++; }
+	if (!(Language == LANG_F77 || Language == LANG_F90)) { derefs++; }
 	break; // use loc block obtained above from kid1
       }
-      
       default:
 	isMemRefExpr = false;
 	break;
     }
-  
     // -------------------------------------------------------
     // c. Compute mem-ref-expr information and add to 'memRefs'
     // -------------------------------------------------------
@@ -2636,19 +2668,20 @@ Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs(WN* wn,
       // Note: This should simulate most of the info in OPR_PARM nodes
       bool isLocalInParam = ((ST_sclass(st) == SCLASS_FORMAL || 
 			      ST_sclass(st) == SCLASS_FORMAL_REF) 
-			     && ST_is_intent_in_argument(st));
-      
-      isLocal = (!hasNestedProc &&
-		 (isLocalInParam || (ST_level(st) == CURRENT_SYMTAB)));
+			     && 
+			     ST_is_intent_in_argument(st));
+      isLocal = ((PU_Info_child(Current_PU_Info) == NULL) && // has no nested child procedures
+		 (isLocalInParam 
+		  || 
+		  (ST_level(st) == CURRENT_SYMTAB)));
       isNamed = (ST_sclass(st) != SCLASS_UNKNOWN &&
 		 ST_sclass(st) != SCLASS_EXTERN);
       isUnique = isLocal;
-      locSH = OA::SymHandle((irhandle_t)st);
+      locSH = OA::SymHandle((OA::irhandle_t)st);
     } 
     else if (childSH) {
       locSH = childSH; 
     }
-    
     // Set accuracy
     if (offset == 0 && field_id == 0) { // we do not have a structure ref
       if (derefs > 0) { 
@@ -2660,39 +2693,36 @@ Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs(WN* wn,
 	fullAccuracy = true;
       }
     }
-    
     // Create mem-ref-expr and add to list
     if (isMemRefExpr) {
       // currently only handling named memory references
       // FIXME: need to handle malloc's at some point
-      
       // if there are 0 derefs then just create a NamedRef
       OA::OA_ptr<OA::MemRefExpr> mre;
       if (derefs==0) {
-        mre = new NamedRef(isAddrOf,fullAccuracy,hty,locSH);
+        mre = new OA::NamedRef(isAddrOf,fullAccuracy,hty,locSH);
       } else {
         // create base named reference with no address of and full accuracy
         // and then a Deref
-        mre = new NamedRef(false, true, hty, locSH);
-        mre = new Deref(mre,derefs);
+        mre = new OA::NamedRef(false, true, hty, locSH);
+        mre = new OA::Deref(mre,derefs);
         // if the reference isn't accurate then set partial accuracy on the deref
-        if (!fullAccuracy) { mre->setPartialAccuracy(); }
+        if (!fullAccuracy) { 
+	  mre->setPartialAccuracy(); 
+	}
       }
-
       // mapping of MemRefHandle to MemRefExprs
-      Open64IRInterface::sMemref2mreSetMap[OA::MemRefHandle((irhandle_t)wn)].insert(mre);
+      Open64IRInterface::sMemref2mreSetMap[OA::MemRefHandle((OA::irhandle_t)wn)].insert(mre);
+//       std::cout << "made a memerefexpr" << std::endl;
+//       std::cout << "for  memeref" << std::endl;
+//       Open64IRInterface::DumpWN(wn,std::cout);
+//       std::cout << std::endl;
       // list of MemRefHandles we are building
-      memRefs.push_back(OA::MemRefHandle((irhandle_t)wn));
-      
-      //memRefExprs.push_back(OA::MemRefExprBasic(OA::MemRefHandle((irhandle_t)wn), 
-//							    hty, locSH, derefs,
-//							    isAddrOf, acc));
+      memRefs.push_back(OA::MemRefHandle((OA::irhandle_t)wn));
     } 
-    
     // Save mem-ref-expr info
     curMemRefExprInfos.push_back(MemRefExprInfo(derefs, locSH));
   }
-  
   return curMemRefExprInfos;
 }
 
@@ -2772,6 +2802,13 @@ Open64IRInterface::DumpWN(WN* wn, ostream& os)
   case OPR_STID:
     DumpWNLeaf(wn, os);
     os << " = ";
+    DumpWN(WN_kid0(wn), os);
+    break;
+
+   // pointer assignment
+  case OPR_PSTID:
+    DumpWNLeaf(wn, os);
+    os << " => ";
     DumpWN(WN_kid0(wn), os);
     break;
 
@@ -3078,7 +3115,6 @@ print_generic_binary:
   }
 }
 
-
 void 
 Open64IRInterface::DumpWNLeaf(WN* wn, ostream& os) 
 {
@@ -3110,7 +3146,6 @@ Open64IRInterface::DumpWNMemRef(WN* wn, ostream& os)
     DumpWN(wn, os);
   }
 }
-
 
 void 
 Open64IRInterface::DumpWNMemRefLeaf(WN* wn, ostream& os) 
@@ -3163,67 +3198,6 @@ void Open64IRInterface::setCurrentProcToProcContext(OA::IRHandle h)
       }
     }
 }
-
-/*! Helper class to initProcContext.  Finds all handles within
-    an expression and maps them to the given procedure context.
-*/
-/*
-class InitContextVisitor : public OA::ExprTreeVisitor {
-  public:
-    InitContextVisitor(OA::ProcHandle proc) : mProc(proc) {}
-    ~InitContextVisitor() {}
-
-    void visitExprTreeBefore(OA::ExprTree&) {}
-    void visitExprTreeAfter(OA::ExprTree&) {}
-    
-    //---------------------------------------
-    // method for each ExprTree::Node subclass
-    //---------------------------------------
-    // default base class so that visitors can handle unknown
-    // node sub-classes in a generic fashion
-    void visitNode(OA::ExprTree::Node&) {}
-
-    void visitOpNode(OA::ExprTree::OpNode& n)
-    {
-        Open64IRInterface::sProcContext[n.getHandle()] = mProc;
-
-        // visit each child
-        OA::OA_ptr<OA::ExprTree::Node> cetNodePtr;
-        OA::ExprTree::ChildNodesIterator cNodesIter(n);
-        for ( ; cNodesIter.isValid(); cNodesIter++ ) {
-            cetNodePtr = cNodesIter.current();
-            cetNodePtr->acceptVisitor(*this);
-        }
-
-    }
-
-    void visitCallNode(OA::ExprTree::CallNode& n)
-    {
-        // do nothing because have other routines that saw all calls
-        // in a statement
-    }
-
-    void visitMemRefNode(OA::ExprTree::MemRefNode& n)
-    {
-        // do nothing because have other routines that saw all mem refs
-        // in a statement
-    }
-
-    void visitConstSymNode(OA::ExprTree::ConstSymNode& n)
-    {
-        Open64IRInterface::sProcContext[n.getHandle()] = mProc;
-    }
-
-    void visitConstValNode(OA::ExprTree::ConstValNode& n)
-    {
-        Open64IRInterface::sProcContext[n.getHandle()] = mProc;
-    }
-
-  private:
-    OA::ProcHandle mProc;
-};
-*/
-
 
 /*! only call if the symbol is in a module or a common block
 */

@@ -1,5 +1,5 @@
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Makefile.am,v 1.2 2005/07/28 16:47:45 eraxxon Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Makefile.am,v 1.3 2006/05/12 16:12:22 utke Exp $
 
 ## * BeginRiceCopyright *****************************************************
 ## 
@@ -66,6 +66,7 @@ MYSOURCES = \
 	Open64IRInterface.hpp Open64IRInterface.cpp \
 	OAMaps.h OAMaps.cxx \
 	SymTab.h SymTab.cxx \
+	ScalarizedRef.h ScalarizedRef.cxx \
 	ScalarizedRefTab.h ScalarizedRefTab.cxx \
 	WhirlGlobalStateUtils.h WhirlGlobalStateUtils.cxx \
 	WhirlIDMaps.h WhirlIDMaps.cxx \
@@ -84,7 +85,6 @@ MYSOURCES = \
 	\
 	BaseMap.h \
 	Exception.h Exception.cxx \
-	XlationCtxt.h XlationCtxt.cxx \
 	diagnostics.h diagnostics.cxx 
 
 # FileUtil.h FileUtil.cxx
