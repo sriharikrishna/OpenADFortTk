@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.15 2006/05/12 16:12:23 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.cxx,v 1.16 2006/07/06 18:38:41 utke Exp $
 
 //***************************************************************************
 //
@@ -919,9 +919,8 @@ whirl2sexp::status
 whirl2sexp::xlate_STRCTFLD(sexp::ostream& sos, WN* wn)
 {
   OPERATOR opr = WN_operator(wn);
-// JU: temporarily disable until merge
-//  FORTTK_ASSERT(opr == OPR_STRCTFLD,
-//		FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(opr == OPR_STRCTFLD,
+		FORTTK_UNEXPECTED_INPUT);
   
   FORTTK_ASSERT(WN_kid_count(wn) == 1, 
 		FORTTK_UNEXPECTED_INPUT << OPERATOR_name(opr));
@@ -1141,8 +1140,7 @@ WNXlationTable::InitEntry WNXlationTable::initTable[] = {
   { OPR_LNOT,                 &xlate_UnaryOp },
   // FIXME: LOWPART, HIGHPART, MINPART, MAXPART, ILDA, EXTRACT_BITS
   // structure field access: 
-// JU: temporarily comment out until merge
- //  { OPR_STRCTFLD,             &xlate_STRCTFLD },
+  { OPR_STRCTFLD,             &xlate_STRCTFLD },
   // parameter:
   { OPR_PARM,                 &xlate_PARM },
   // FIXME: ASM_INPUT
