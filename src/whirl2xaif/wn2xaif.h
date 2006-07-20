@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.33 2006/05/12 16:12:23 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.h,v 1.34 2006/07/19 19:48:19 utke Exp $
 
 #ifndef wn2xaif_h
 #define wn2xaif_h
@@ -258,9 +258,9 @@ namespace whirl2xaif {
   }
 
   inline AttrAnnotInfo_<const char*>
-  IntrinsicKeyAnnot(const std::string& val_)
+  IntrinsicKeyAnnot(const char* const & val_)
   {
-    return AttrAnnot(XAIFStrings.tag_IntrinsicKey(), val_.c_str());
+    return AttrAnnot(XAIFStrings.tag_IntrinsicKey(), val_);
   }
 
   template<class T>
