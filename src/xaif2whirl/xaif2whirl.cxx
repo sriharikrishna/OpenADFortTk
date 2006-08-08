@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.73 2006/05/12 16:12:24 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.74 2006/08/07 20:20:25 utke Exp $
 
 #include <stdlib.h> // ANSI: cstdlib // for strtol
 #include <string.h> // ANSI: cstring // for strcmp, etc.
@@ -2243,7 +2243,7 @@ namespace xaif2whirl {
 	     ++ndimIndex,
 	       dbElem = GetNextSiblingElement(dbElem, &dbFilt)) {
 	  if (ndimIndex==ndim) { 
-	    FORTTK_DIE("Cannot have more DimensionBounds than data type allows");
+	    FORTTK_DIE("Cannot have more DimensionBounds than data type allows (" << ndim << ") for variable " << nm );
 	  }
 	  const XMLCh* lowerX = dbElem->getAttribute(XAIFStrings.attr_lower_x());
 	  XercesStrX lowerS = XercesStrX(lowerX);
