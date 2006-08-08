@@ -8,7 +8,7 @@
 
 #include "xercesc/dom/DOMDocument.hpp"
 
-#include "include/Open64BasicTypes.h"
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 #include "PUXlationContext.h"
 

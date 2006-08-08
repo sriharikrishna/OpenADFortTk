@@ -1,35 +1,11 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.h,v 1.8 2005/02/01 22:03:18 eraxxon Exp $
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
 #ifndef symtab2sexp_h
 #define symtab2sexp_h
 
-//************************** System Include Files ***************************
+#include "Open64IRInterface/Open64BasicTypes.h"
 
-//************************** Open64 Include Files ***************************
-
-#include <include/Open64BasicTypes.h>
-
-//*************************** User Include Files ****************************
-
-#include <lib/support/sexpostream.h>
-
-//************************** Forward Declarations ***************************
-
-//***************************************************************************
+#include "sexpostream.h"
 
 //***************************************************************************
 // Translate symbol tables

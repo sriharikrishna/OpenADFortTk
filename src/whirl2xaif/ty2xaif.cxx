@@ -39,7 +39,7 @@
 #include <sstream> //FIXME
 
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 
 #include "wn2xaif.h"
@@ -317,7 +317,7 @@ namespace whirl2xaif {
      * uttmost importance.  The best path is returned, while the other
      * on is freed up.
      */
-    FORTTK_ASSERT(path1 && path2, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(path1 && path2, fortTkSupport::Diagnostics::UnexpectedInput);
    
     FLD_PATH_INFO *best_path;
     mUINT64        offs1, offs2;
@@ -789,13 +789,13 @@ namespace whirl2xaif {
   static void
   TY2F_invalid(xml::ostream& xos, TY_IDX ty, PUXlationContext& ctxt)
   {
-    FORTTK_DIE(FORTTK_UNEXPECTED_INPUT << TY_kind(Ty_Table[ty]));
+    FORTTK_DIE(fortTkSupport::Diagnostics::UnexpectedInput << TY_kind(Ty_Table[ty]));
   }
 
   static void
   TY2F_scalar(xml::ostream& xos, TY_IDX ty_idx, PUXlationContext& ctxt)
   {
-    FORTTK_ASSERT(TY_kind(ty_idx) == KIND_SCALAR, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(TY_kind(ty_idx) == KIND_SCALAR, fortTkSupport::Diagnostics::UnexpectedInput);
   
     TY&   ty = Ty_Table[ty_idx];
     MTYPE mt = TY_mtype(ty);
@@ -873,7 +873,7 @@ namespace whirl2xaif {
   {
     TY& ty = Ty_Table[ty_idx];
 
-    FORTTK_ASSERT(TY_kind(ty) == KIND_ARRAY, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(TY_kind(ty) == KIND_ARRAY, fortTkSupport::Diagnostics::UnexpectedInput);
 
     xos << xml::BegElem("xaif:Property") << xml::Attr("id", ctxt.currentXlationContext().getNewVertexId()) 
 	<< xml::Attr("name", "whirlkind") << xml::Attr("value", "array") << xml::EndElem;
@@ -970,7 +970,7 @@ namespace whirl2xaif {
   {
     TY& ty = Ty_Table[ty_idx] ;
 
-    FORTTK_ASSERT(TY_kind(ty) == KIND_ARRAY, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(TY_kind(ty) == KIND_ARRAY, fortTkSupport::Diagnostics::UnexpectedInput);
   
     if (TY_is_character(ty)) {
       /* A character string...
@@ -1050,7 +1050,7 @@ namespace whirl2xaif {
      * TY2F_Translate_Structure().
      */
     TY& ty_rt = Ty_Table[ty];
-    FORTTK_ASSERT(TY_kind(ty_rt) == KIND_STRUCT, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(TY_kind(ty_rt) == KIND_STRUCT, fortTkSupport::Diagnostics::UnexpectedInput);
   
     xos << "(" << TY_name(ty) << ")" << "TYPE";
   
@@ -1072,7 +1072,7 @@ namespace whirl2xaif {
      * TY2F_Translate_Structure().
      */
     TY & ty_rt = Ty_Table[ty];
-    FORTTK_ASSERT(TY_kind(ty_rt) == KIND_STRUCT, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(TY_kind(ty_rt) == KIND_STRUCT, fortTkSupport::Diagnostics::UnexpectedInput);
 
 #if 0 // see Open64 stab_attr.cxx; if needed simulate thru PUXlationContext
     if (!TY_is_translated_to_c(ty)) {
@@ -1113,7 +1113,7 @@ namespace whirl2xaif {
   TY2F_void(xml::ostream& xos, TY_IDX ty_idx, PUXlationContext& ctxt)
   {
     TY& ty = Ty_Table[ty_idx];
-    FORTTK_ASSERT(TY_kind(ty) == KIND_VOID, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(TY_kind(ty) == KIND_VOID, fortTkSupport::Diagnostics::UnexpectedInput);
     xos << std::endl << "! <Void Type>";
   }
 
@@ -1129,7 +1129,7 @@ namespace whirl2xaif {
 			  STAB_OFFSET  arr_ofst)
   {  
     FORTTK_ASSERT(TY_Is_Array(arr_ty_idx), 
-		  FORTTK_UNEXPECTED_INPUT << TY_kind(arr_ty_idx));
+		  fortTkSupport::Diagnostics::UnexpectedInput << TY_kind(arr_ty_idx));
  
     STAB_OFFSET  idx;
     ARB_HANDLE   arb;
@@ -1185,7 +1185,7 @@ namespace whirl2xaif {
     BOOL is_equiv = FALSE;
   
     FORTTK_ASSERT(TY_kind(ty) == KIND_STRUCT, 
-		  FORTTK_UNEXPECTED_INPUT << TY_kind(ty));
+		  fortTkSupport::Diagnostics::UnexpectedInput << TY_kind(ty));
 
     // Emit specification statements for every element of the common
     // block, including equivalences.
@@ -1222,7 +1222,7 @@ namespace whirl2xaif {
     BOOL is_equiv;
    
     FORTTK_ASSERT(TY_kind(ty) == KIND_STRUCT, 
-		  FORTTK_UNEXPECTED_INPUT << TY_kind(ty));
+		  fortTkSupport::Diagnostics::UnexpectedInput << TY_kind(ty));
 
     if (alt_return) {
       first_fld = FLD_next(TY_flist(ty)); /* skip func_entry return var */
@@ -1268,7 +1268,7 @@ namespace whirl2xaif {
     FLD_ITER fld_iter;
 
     FORTTK_ASSERT(TY_kind(s_ty) == KIND_STRUCT, 
-		  FORTTK_UNEXPECTED_INPUT << TY_kind(s_ty));
+		  fortTkSupport::Diagnostics::UnexpectedInput << TY_kind(s_ty));
   
     /* Get the best matching field path into fld_path2 */
     fld_iter = Make_fld_iter(TY_flist(s_ty));

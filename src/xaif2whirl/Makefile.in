@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 # -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Makefile.am,v 1.1.6.1 2006/04/10 16:17:02 utke Exp $
+# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Makefile.am,v 1.2 2006/05/12 16:12:23 utke Exp $
 
 #############################################################################
 #
@@ -271,7 +271,7 @@ OPENADFORTTK = @abs_top_srcdir@
 ############################################################
 # Local includes
 ############################################################
-OPENADFORTTK_IFLAGS = -I$(OPENADFORTTK)/src
+OPENADFORTTK_IFLAGS = -I$(OPENADFORTTK)/src/lib/support
 
 ############################################################
 # Local libraries

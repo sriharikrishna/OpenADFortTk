@@ -8,7 +8,7 @@
 #include <list>   // STL
 
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 
 #include <OpenAnalysis/CFG/CFGStandard.hpp> // for DGraphStandard, CFG::Edge
@@ -16,8 +16,8 @@
 
 #include "whirl2xaif.h"
 #include "PUXlationContext.h"
-#include <lib/support/xmlostream.h>
-#include <lib/support/XAIFStrings.h>
+#include <xmlostream.h>
+#include <XAIFStrings.h>
 
 
 namespace whirl2xaif {
@@ -150,10 +150,10 @@ namespace whirl2xaif {
     // are not in the symbol table. (Also, a ST_name(st) on a CONST is
     // not valid.)
     FORTTK_ASSERT(ST_class(st) != CLASS_CONST,
-		  "Attempting to generate a symbol_id for a CONST. ST level/index = " << (SymTabId)ST_level(st) << ", " << (SymId)ST_index(st));
+		  "Attempting to generate a symbol_id for a CONST. ST level/index = " << (fortTkSupport::SymTabId)ST_level(st) << ", " << (fortTkSupport::SymId)ST_index(st));
 
     const char* st_name = ST_name(st);
-    SymId st_id = (SymId)ST_index(st);
+    fortTkSupport::SymId st_id = (fortTkSupport::SymId)ST_index(st);
   
     xos << xml::BegAttr(XAIFStrings.attr_symId())
 	<< st_name << "_" << st_id

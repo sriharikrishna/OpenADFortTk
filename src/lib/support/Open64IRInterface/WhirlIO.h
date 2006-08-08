@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.h,v 1.4 2004/02/23 18:17:48 eraxxon Exp $
+// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/WhirlIO.h,v 1.1.1.1 2004/04/16 15:58:28 mstrout Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -7,7 +7,7 @@
 //***************************************************************************
 //
 // File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.h,v $
+//   $Source: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/WhirlIO.h,v $
 //
 // Purpose:
 //   [The purpose of this file]
@@ -24,11 +24,11 @@
 
 //************************** Open64 Include Files ***************************
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 //*************************** User Include Files ****************************
 
-#include "WhirlGlobalStateUtils.h"
+#include "Open64IRInterface/WhirlGlobalStateUtils.h"
 
 //************************** Forward Declarations ***************************
 

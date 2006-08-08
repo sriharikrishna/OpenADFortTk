@@ -1,41 +1,13 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.h,v 1.8 2005/02/01 22:03:18 eraxxon Exp $
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
 #ifndef sexp2symtab_h
 #define sexp2symtab_h
 
-//************************** System Include Files ***************************
-
-//*************************** Sexp Include Files ****************************
-
 #include <sexp.h>
 
-//************************** Open64 Include Files ***************************
+#include "Open64IRInterface/Open64BasicTypes.h"
 
-#include <include/Open64BasicTypes.h>
-
-//*************************** User Include Files ****************************
-
-//************************** Forward Declarations ***************************
-
-//***************************************************************************
-
-//***************************************************************************
-// Translate symbol tables
-//***************************************************************************
+#include "Diagnostics.h"
 
 namespace sexp2whirl {
 

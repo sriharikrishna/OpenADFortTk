@@ -26,7 +26,7 @@
 
 //*************************** User Include Files ****************************
 
-#include "diagnostics.h"
+#include "Diagnostics.h"
 
 //************************** Forward Declarations ***************************
 
@@ -34,7 +34,7 @@
 // BaseMap
 //***************************************************************************
 
-namespace FortTk {
+namespace fortTkSupport {
 
 // BaseMap: abstract map routines
 // Note: FromTy and ToTy should be pointers (or unsigned integers)!

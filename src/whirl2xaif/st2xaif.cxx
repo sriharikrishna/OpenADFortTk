@@ -87,7 +87,7 @@
 
 // ************************** Open64 Include Files ***************************
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 // *************************** User Include Files ****************************
 
@@ -95,7 +95,7 @@
 #include "st2xaif.h"
 #include "ty2xaif.h"
 
-#include <lib/support/SymTab.h>
+#include "Open64IRInterface/SymTab.h"
 
 // ************************** Forward Declarations ***************************
 
@@ -281,7 +281,7 @@ namespace whirl2xaif {
 
   void 
   whirl2xaif::xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
-				 fortTk::ScalarizedRefTab_W2X* nonscalarsymtab, 
+				 fortTkSupport::ScalarizedRefTab_W2X* nonscalarsymtab, 
 				 PUXlationContext& ctxt)
   {
     xos << xml::BegElem("xaif:SymbolTable") << xml::EndAttrs;
@@ -372,15 +372,15 @@ namespace whirl2xaif {
 
   void
   whirl2xaif::xlate_ScalarizedRefTab(xml::ostream& xos, 
-				     fortTk::ScalarizedRefTab_W2X* symtab, 
+				     fortTkSupport::ScalarizedRefTab_W2X* symtab, 
 				     PUXlationContext& ctxt)
   {
     if (!symtab) { return; }
   
-    for (fortTk::ScalarizedRefTab_W2X::ScalarizedRefPoolTy::iterator it 
+    for (fortTkSupport::ScalarizedRefTab_W2X::ScalarizedRefPoolTy::iterator it 
 	   = symtab->RefPoolBegin(); 
 	 it != symtab->RefPoolEnd(); ++it) {
-      fortTk::ScalarizedRef* sym = (*it);
+      fortTkSupport::ScalarizedRef* sym = (*it);
     
       WN* wn = sym->getWN();
       TY_IDX ty = WN_Tree_Type(wn);
@@ -458,7 +458,7 @@ namespace whirl2xaif {
   static void 
   xlate_STDecl_VAR(xml::ostream& xos, ST *st, PUXlationContext& ctxt)
   {  
-    FORTTK_ASSERT(ST_class(st) == CLASS_VAR, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(ST_class(st) == CLASS_VAR, fortTkSupport::Diagnostics::UnexpectedInput);
 
     const char* st_name = ST_name(st);
     ST* base = ST_base(st);
@@ -512,7 +512,7 @@ namespace whirl2xaif {
       }
 
     
-      SymId st_id = (SymId)ST_index(st);
+      fortTkSupport::SymId st_id = (fortTkSupport::SymId)ST_index(st);
       xos << xml::BegElem("xaif:Symbol") << AttrSymId(st)
 	  << xml::Attr("kind", "variable") << xml::Attr("type", ty_str)
 	  << xml::Attr("shape", shape_str) << SymIdAnnot(st_id)
@@ -623,9 +623,9 @@ namespace whirl2xaif {
   {
     // This only makes sense for "external" functions in Fortran,
     // while we should not do anything for other functions.
-    FORTTK_ASSERT(ST_class(st) == CLASS_FUNC, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(ST_class(st) == CLASS_FUNC, fortTkSupport::Diagnostics::UnexpectedInput);
 
-    SymId st_id = (SymId)ST_index(st);
+    fortTkSupport::SymId st_id = (fortTkSupport::SymId)ST_index(st);
     xos << xml::BegElem("xaif:Symbol") << AttrSymId(st)
 	<< xml::Attr("kind", "subroutine") << xml::Attr("type", "void")
 	<< SymIdAnnot(st_id) << xml::EndElem;
@@ -652,7 +652,7 @@ namespace whirl2xaif {
       return; // skip [FIXME -- better hope this is not used!]
     }
   
-    SymId st_id = (SymId)ST_index(st);
+    fortTkSupport::SymId st_id = (fortTkSupport::SymId)ST_index(st);
     xos << xml::BegElem("xaif:Symbol") << AttrSymId(st)
 	<< xml::Attr("kind", "variable") << xml::Attr("type", ty_str)
 	<< xml::Attr("shape", "scalar") << SymIdAnnot(st_id)
@@ -674,7 +674,7 @@ namespace whirl2xaif {
   static void 
   xlate_STDecl_TYPE(xml::ostream& xos, ST *st, PUXlationContext& ctxt)
   {
-    FORTTK_ASSERT(ST_class(st) == CLASS_TYPE, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(ST_class(st) == CLASS_TYPE, fortTkSupport::Diagnostics::UnexpectedInput);
 
     const char  *st_name = ST_name(st);
     TY_IDX       ty_rt = ST_type(st);
@@ -698,7 +698,7 @@ namespace whirl2xaif {
   static void 
   xlate_STUse_VAR(xml::ostream& xos, ST *st, PUXlationContext& ctxt)
   {
-    FORTTK_ASSERT(ST_class(st) == CLASS_VAR, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(ST_class(st) == CLASS_VAR, fortTkSupport::Diagnostics::UnexpectedInput);
 
     // Note: for functions, check that st is a return var using
     //   ST_is_return_var(st)) (cf. whirl2f)
@@ -721,7 +721,7 @@ namespace whirl2xaif {
   
     // FIXME: abstract
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-    SymTabId scopeid = ctxt.findSymTabId(sttab);
+   fortTkSupport::SymTabId scopeid = ctxt.findSymTabId(sttab);
   
     xos << xml::BegElem("xaif:SymbolReference") 
 	<< xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
@@ -732,7 +732,7 @@ namespace whirl2xaif {
   static void 
   xlate_STUse_CONST(xml::ostream& xos, ST *st, PUXlationContext& ctxt)
   {
-    FORTTK_ASSERT(ST_class(st) == CLASS_CONST, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(ST_class(st) == CLASS_CONST, fortTkSupport::Diagnostics::UnexpectedInput);
   
     // A CLASS_CONST symbol never has a name, so just emit the value.
     TY_IDX ty_idx = ST_type(st);
@@ -758,7 +758,7 @@ namespace whirl2xaif {
   {
     /* with f90 at -O2, CLASS_BLOCK can appear on LDAs etc. in IO */
     /* put out something, so whirlbrowser doesn't fall over       */
-    FORTTK_ASSERT(ST_class(st) == CLASS_BLOCK, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(ST_class(st) == CLASS_BLOCK, fortTkSupport::Diagnostics::UnexpectedInput);
   
     xos << xml::BegElem("***use_block") << xml::Attr("id", ctxt.currentXlationContext().getNewVertexId()) 
 	<< xml::Attr("_type", -1) << xml::Attr("value", ST_name(st)) << xml::EndElem;
@@ -777,7 +777,7 @@ namespace whirl2xaif {
     FORTTK_ASSERT(ST_sym_class(st)==CLASS_VAR && 
 		  TY_Is_Pointer(ST_type(st)) &&
 		  !Stab_Is_Based_At_Common_Or_Equivalence(st), 
-		  FORTTK_UNEXPECTED_INPUT << ST_class(st));
+		  fortTkSupport::Diagnostics::UnexpectedInput << ST_class(st));
   
     /* reference to the pointer value; cf. W2CF_Symtab_Nameof_St_Pointee */
     xos << "{deref***} " << "deref_" << ST_name(st);

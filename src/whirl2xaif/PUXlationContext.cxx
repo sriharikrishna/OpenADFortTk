@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 #include "PUXlationContext.h"
-#include "lib/support/SymTab.h"
-#include "lib/support/diagnostics.h"
+#include "Open64IRInterface/SymTab.h"
+#include "Diagnostics.h"
 
 namespace whirl2xaif { 
   
@@ -91,13 +91,13 @@ namespace whirl2xaif {
     return (myWNParentMapP->FindBlock(wn)); 
   }
 
-  WhirlParentMap* PUXlationContext::getWNParentMap() const { 
+  fortTkSupport::WhirlParentMap* PUXlationContext::getWNParentMap() const { 
     if (!myWNParentMapP)
       FORTTK_DIE("PUXlationContext::getWNParentMap: myWNParentMapP not set");
     return myWNParentMapP; 
   }
 
-  void PUXlationContext::setWNParentMap(WhirlParentMap* aWhirlParentMapP) { 
+  void PUXlationContext::setWNParentMap(fortTkSupport::WhirlParentMap* aWhirlParentMapP) { 
     if (!aWhirlParentMapP)
       FORTTK_DIE("PUXlationContext::setWNParentMap: null pointer passed");
     // JU: this appears to be reset, HMMM
@@ -115,7 +115,7 @@ namespace whirl2xaif {
     myWNParentMapP = aWhirlParentMapP; 
   }
 
-  SymTabId PUXlationContext::findSymTabId(ST_TAB* stab) {
+ fortTkSupport::SymTabId PUXlationContext::findSymTabId(ST_TAB* stab) {
     if (!myStab2idMapP)
       FORTTK_DIE("PUXlationContext::findSymTabId: myStab2idMapP not set");
     if (!stab)
@@ -123,13 +123,13 @@ namespace whirl2xaif {
     return (myStab2idMapP->Find(stab, true /*mustfind*/)); 
   }
 
-  SymTabToSymTabIdMap* PUXlationContext::getSymTabToIdMap() const { 
+  fortTkSupport::SymTabToSymTabIdMap* PUXlationContext::getSymTabToIdMap() const { 
     if (!myStab2idMapP)
       FORTTK_DIE("PUXlationContext::getSymTabToIdMap: myStab2idMapP not set");
     return myStab2idMapP; 
   }
 
-  void PUXlationContext::setSymTabToIdMap(SymTabToSymTabIdMap* aSymTabToSymTabIdMapP) { 
+  void PUXlationContext::setSymTabToIdMap(fortTkSupport::SymTabToSymTabIdMap* aSymTabToSymTabIdMapP) { 
     if (!aSymTabToSymTabIdMapP)
       FORTTK_DIE("PUXlationContext::setSymTabToIdMap: null pointer passed");
     if (myStab2idMapP)
@@ -137,7 +137,7 @@ namespace whirl2xaif {
     myStab2idMapP = aSymTabToSymTabIdMapP; 
   }
   
-  PUId PUXlationContext::findPUId(PU_Info* pu) {
+  fortTkSupport::PUId PUXlationContext::findPUId(PU_Info* pu) {
     if (!myPU2idMapP)
       FORTTK_DIE("PUXlationContext::findPUId: myPU2idMapP not set");
     if (!pu)
@@ -145,13 +145,13 @@ namespace whirl2xaif {
     return (myPU2idMapP->Find(pu));
   }
 
-  PUToPUIdMap* PUXlationContext::getPUToIdMap() const { 
+  fortTkSupport::PUToPUIdMap* PUXlationContext::getPUToIdMap() const { 
     if (!myPU2idMapP)
       FORTTK_DIE("PUXlationContext::getPUToIdMap: myPU2idMapP not set");
     return myPU2idMapP; 
   }
 
-  void PUXlationContext::setPUToIdMap(PUToPUIdMap* aPUToPUIdMapP) {
+  void PUXlationContext::setPUToIdMap(fortTkSupport::PUToPUIdMap* aPUToPUIdMapP) {
     if (!aPUToPUIdMapP)
       FORTTK_DIE("PUXlationContext::setPUToIdMap: null pointer passed");
     if (myPU2idMapP)
@@ -159,7 +159,7 @@ namespace whirl2xaif {
     myPU2idMapP = aPUToPUIdMapP; 
   }
 
-  WNId PUXlationContext::findWNId(WN* wn) {
+  fortTkSupport::WNId PUXlationContext::findWNId(WN* wn) {
     if (!myWN2idMapP)
       FORTTK_DIE("PUXlationContext::findWNId: myWN2idMapP not set");
     if (!wn)
@@ -167,13 +167,13 @@ namespace whirl2xaif {
     return myWN2idMapP->Find(wn);
   }
 
-  WNToWNIdMap* PUXlationContext::getWNToIdMap() const { 
+  fortTkSupport::WNToWNIdMap* PUXlationContext::getWNToIdMap() const { 
     if (!myWN2idMapP)
       FORTTK_DIE("PUXlationContext::getWNToIdMap: myWN2idMapP not set");
     return myWN2idMapP; 
   }
 
-  void PUXlationContext::setWNToIdMap(WNToWNIdMap* aWNToWNIdMapP) { 
+  void PUXlationContext::setWNToIdMap(fortTkSupport::WNToWNIdMap* aWNToWNIdMapP) { 
     if (!aWNToWNIdMapP)
       FORTTK_DIE("PUXlationContext::setWNToIdMap: null pointer passed");
     // JU: this is being reset hmm
@@ -224,7 +224,7 @@ namespace whirl2xaif {
     myUdduchains = aUdduchainsMap; 
   }
 
-  fortTk::ScalarizedRef* PUXlationContext::findScalarizedRef(WN* wn) {
+  fortTkSupport::ScalarizedRef* PUXlationContext::findScalarizedRef(WN* wn) {
     if (!myScalarizedRefTab_W2Xp)
       FORTTK_DIE("PUXlationContext::findScalarizedRef: myScalarizedRefTab_W2Xp not set");
     if (!wn)
@@ -232,7 +232,7 @@ namespace whirl2xaif {
     return myScalarizedRefTab_W2Xp->Find(wn);
   }
 
-  void PUXlationContext::setScalarizedRefTab(fortTk::ScalarizedRefTab_W2X* aScalarizedRefTab_W2Xp) { 
+  void PUXlationContext::setScalarizedRefTab(fortTkSupport::ScalarizedRefTab_W2X* aScalarizedRefTab_W2Xp) { 
     if (!aScalarizedRefTab_W2Xp)
       FORTTK_DIE("PUXlationContext::setScalarizedRefTab: null pointer passed");
     // JU: this is being reset hmm
@@ -250,7 +250,7 @@ namespace whirl2xaif {
     myScalarizedRefTab_W2Xp = aScalarizedRefTab_W2Xp; 
   }
 
-  fortTk::ScalarizedRefTab_W2X* PUXlationContext::getScalarizedRefTab() const { 
+  fortTkSupport::ScalarizedRefTab_W2X* PUXlationContext::getScalarizedRefTab() const { 
     if (!myScalarizedRefTab_W2Xp)
       FORTTK_DIE("PUXlationContext::getScalarizedRefTab: not set");
     return myScalarizedRefTab_W2Xp; 

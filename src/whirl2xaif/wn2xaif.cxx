@@ -38,16 +38,15 @@
 
 #include <alloca.h>
 #include <stdlib.h> 
-
 #include <string>   
 #include <set> 
 #include <vector> 
 
-#include <include/Open64BasicTypes.h>
+#include "OpenAnalysis/CFG/ManagerCFGStandard.hpp"
 
-#include <OpenAnalysis/CFG/ManagerCFGStandard.hpp>
-
-#include <lib/support/Open64IRInterface.hpp>
+#include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64IRInterface/SymTab.h"
+#include "Open64IRInterface/Open64IRInterface.hpp"
 
 #include "wn2xaif.i"
 #include "wn2xaif.h"
@@ -58,11 +57,7 @@
 #include "st2xaif.h"
 #include "ty2xaif.h"
 
-#include <lib/support/SymTab.h>
     
-// using namespace xml; // for xml::ostream, etc
-
-
 namespace whirl2xaif { 
 
   static void
@@ -169,7 +164,7 @@ namespace whirl2xaif {
   
 #if 0
     //xos << BegComment << "Translating " << OPERATOR_name(opr) << EndComment;
-    WNId id = ctxt.findWNId(wn);
+    fortTkSupport::WNId id = ctxt.findWNId(wn);
 #endif
   
     // Determine whether we are in a context where we expect this
@@ -216,7 +211,7 @@ namespace whirl2xaif {
     using namespace OA::CFG;
     using namespace OA::DGraph;
 
-    FORTTK_ASSERT(WN_operator(wn) == OPR_FUNC_ENTRY, FORTTK_UNEXPECTED_INPUT); 
+    FORTTK_ASSERT(WN_operator(wn) == OPR_FUNC_ENTRY, fortTkSupport::Diagnostics::UnexpectedInput); 
   
     WN* fbody = WN_func_body(wn);
 
@@ -225,23 +220,23 @@ namespace whirl2xaif {
     // -------------------------------------------------------
   
     // 0. WHIRL parent map (FIXME: compute at callgraph)
-    WhirlParentMap wnParentMap(wn);
+    fortTkSupport::WhirlParentMap wnParentMap(wn);
     ctxt.setWNParentMap(&wnParentMap);
 
     // 1. OpenAnalysis info
     OA::ProcHandle proc((OA::irhandle_t)Current_PU_Info);
 
-    OAAnalInfo* oaAnal = Whirl2Xaif::getOAAnalMap().Find(Current_PU_Info);
+    fortTkSupport::OAAnalInfo* oaAnal = Whirl2Xaif::getOAAnalMap().Find(Current_PU_Info);
     OA::OA_ptr<OA::CFG::Interface> cfg = 
       Whirl2Xaif::getOAAnalMap().GetCFGEach()->getCFGResults(proc);
     ctxt.setUDDUChains(oaAnal->GetUDDUChainsXAIF());
   
     // 2. Non-scalar symbol table
-    fortTk::ScalarizedRefTab_W2X* tab = Whirl2Xaif::getScalarizedRefTableMap().Find(Current_PU_Info);
+    fortTkSupport::ScalarizedRefTab_W2X* tab = Whirl2Xaif::getScalarizedRefTableMap().Find(Current_PU_Info);
     ctxt.setScalarizedRefTab(tab);
   
     // 3. WHIRL<->ID maps
-    WNToWNIdMap* wnmap = Whirl2Xaif::getWNToWNIdTableMap().Find(Current_PU_Info);
+    fortTkSupport::WNToWNIdMap* wnmap = Whirl2Xaif::getWNToWNIdTableMap().Find(Current_PU_Info);
     ctxt.setWNToIdMap(wnmap);
   
     // -------------------------------------------------------
@@ -270,13 +265,13 @@ namespace whirl2xaif {
     // try a BFS iterator.  too bad for dead code. (actually DFS-- BFS
     // not yet implmented) -- toposort FIXME
     std::set<OA::OA_ptr<OA::CFG::Interface::Node> > usedNodes;
-    OA::OA_ptr<OA::CFG::Interface::DFSIterator> nodeItPtr = cfg->getDFSIterator();
+    OA::OA_ptr<OA::CFG::Interface::NodesIterator> nodeItPtr = cfg->getDFSIterator();
     for (; nodeItPtr->isValid(); ++(*nodeItPtr)) {
       OA::OA_ptr<OA::CFG::Interface::Node> n = nodeItPtr->current();
       usedNodes.insert(n);
       // n->longdump(&cfg, std::cerr); std::cerr << endl;
-      const char* vtype = GetCFGVertexType(cfg, n);
-      SymTabId scopeId = ctxt.findSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
+      const char* vtype = fortTkSupport::GetCFGVertexType(cfg, n);
+      fortTkSupport::SymTabId scopeId = ctxt.findSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
       std::string ids = GetIDsForStmtsInBB(n, ctxt);
       // 1. BB element begin tag
       xos << xml::BegElem(vtype) << xml::Attr("vertex_id", n->getId());
@@ -363,7 +358,7 @@ namespace whirl2xaif {
   xlate_ALTENTRY(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   {
     // Similar to a FUNC_ENTRY, but without the function body.
-    FORTTK_ASSERT(WN_operator(wn) == OPR_ALTENTRY, FORTTK_UNEXPECTED_INPUT); 
+    FORTTK_ASSERT(WN_operator(wn) == OPR_ALTENTRY, fortTkSupport::Diagnostics::UnexpectedInput); 
   
     // Translate the function entry point (FIXME)
     xlate_EntryPoint(xos, wn, ctxt);
@@ -384,7 +379,7 @@ namespace whirl2xaif {
 		 WN *wn, 
 		 PUXlationContext& ctxt) {
     OPERATOR opr = WN_operator(wn);
-    FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
+    FORTTK_DIE(fortTkSupport::Diagnostics::UnexpectedOpr << OPERATOR_name(opr));
   }
 
   // xlate_unknown:
@@ -394,8 +389,8 @@ namespace whirl2xaif {
     // Warn about opcodes we cannot translate, but keep translating.
     OPERATOR opr = WN_operator(wn);
   
-    //  FORTTK_DEVMSG(0, FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
-    FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
+    //  FORTTK_DEVMSG(0, fortTkSupport::Diagnostics::UnexpectedOpr << OPERATOR_name(opr));
+    FORTTK_DIE(fortTkSupport::Diagnostics::UnexpectedOpr << OPERATOR_name(opr));
 
     xos << xml::BegComment << "*** Unknown WHIRL operator: " << OPERATOR_name(opr)
 	<< " ***" << xml::EndComment;
@@ -463,7 +458,7 @@ namespace whirl2xaif {
     }
 
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-    SymTabId scopeid = ctxt.findSymTabId(sttab);
+    fortTkSupport::SymTabId scopeid = ctxt.findSymTabId(sttab);
 
     xos << xml::BegElem("xaif:SymbolReference") 
 	<< xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
@@ -574,32 +569,32 @@ namespace whirl2xaif {
     // IsRefSimple*() functions.  Things are a little more complicated
     // with sub-var-refs; hence the need for two tests in each 'if'.
 
-    fortTk::ScalarizedRef* sym = ctxt.findScalarizedRef(ref_wn);
+    fortTkSupport::ScalarizedRef* sym = ctxt.findScalarizedRef(ref_wn);
     if (sym) { 
       // 1. A scalarized symbol
       ST_TAB* sttab = Scope_tab[CURRENT_SYMTAB].st_tab;
-      SymTabId scopeid = ctxt.findSymTabId(sttab);
+      fortTkSupport::SymTabId scopeid = ctxt.findSymTabId(sttab);
     
       xos << xml::BegElem("xaif:SymbolReference") 
 	  << xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
 	  << xml::Attr("scope_id", scopeid) 
 	  << xml::Attr("symbol_id", sym->getName()) << xml::EndElem;
     } 
-    else if (fortTk::ScalarizedRef::isRefScalar(base_ty, ref_ty) 
+    else if (fortTkSupport::ScalarizedRef::isRefScalar(base_ty, ref_ty) 
 	     || 
-	     fortTk::ScalarizedRef::isRefSimpleScalar(ref_wn)) {
+	     fortTkSupport::ScalarizedRef::isRefSimpleScalar(ref_wn)) {
       // 2. Reference to a scalar symbol (==> offset into 'base_st' is zero)
       translate_var_ref(xos, base_st, ctxt);
     } 
     else if (TY_Is_Array(ref_ty) 
 	     || 
-	     fortTk::ScalarizedRef::isRefSimpleArray(ref_wn)) {
+	     fortTkSupport::ScalarizedRef::isRefSimpleArray(ref_wn)) {
       // 3. Reference to an array of scalars
       translate_var_ref(xos, base_st, ctxt);
     }
     else if (TY_Is_Array(base_ty) 
 	     || 
-	     fortTk::ScalarizedRef::isRefSimpleArrayElem(ref_wn)) {
+	     fortTkSupport::ScalarizedRef::isRefSimpleArrayElem(ref_wn)) {
       // 4. Array element reference to a scalar
       translate_var_ref(xos, base_st, ctxt);
       if (!ctxt.currentXlationContext().isFlag(XlationContext::HAS_NO_ARR_ELMT)) { // FIXME: we expect arr elmt!
@@ -735,7 +730,7 @@ namespace whirl2xaif {
   
     // FIXME: for now, make sure this is only used for data refs 
     if (TY_kind(base_ty) == KIND_FUNCTION) {
-      FORTTK_DIE(FORTTK_UNIMPLEMENTED << "memref FIXME");
+      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "memref FIXME");
     }
 
 
@@ -753,20 +748,20 @@ namespace whirl2xaif {
     } 
     else {
 
-      fortTk::ScalarizedRef* sym = ctxt.findScalarizedRef(ref_wn);
+      fortTkSupport::ScalarizedRef* sym = ctxt.findScalarizedRef(ref_wn);
       if (sym) { 
 	// 1. A scalarized symbol
 	ST_TAB* sttab = Scope_tab[CURRENT_SYMTAB].st_tab;
-	SymTabId scopeid = ctxt.findSymTabId(sttab);
+	fortTkSupport::SymTabId scopeid = ctxt.findSymTabId(sttab);
       
 	xos << xml::BegElem("xaif:SymbolReference") 
 	    << xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
 	    << xml::Attr("scope_id", scopeid) 
 	    << xml::Attr("symbol_id", sym->getName()) << xml::EndElem;
       } 
-      else if (fortTk::ScalarizedRef::isRefScalar(base_ty, ref_ty) 
+      else if (fortTkSupport::ScalarizedRef::isRefScalar(base_ty, ref_ty) 
 	       || 
-	       fortTk::ScalarizedRef::isRefSimpleScalar(ref_wn)) {
+	       fortTkSupport::ScalarizedRef::isRefSimpleScalar(ref_wn)) {
 	// 2. Reference to a scalar symbol (==> offset into 'base_st' is zero)
 	TranslateWN(xos, addr, ctxt);
       } 
@@ -947,7 +942,7 @@ namespace whirl2xaif {
 	break;
 
       default:
-	FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
+	FORTTK_DIE(fortTkSupport::Diagnostics::UnexpectedOpr << OPERATOR_name(opr));
 	break;
       }
     return;
@@ -1098,7 +1093,7 @@ namespace whirl2xaif {
     // out since they are not in the XAIF symbol table.
     ST* st = (ST*)theNamedLoc->getSymHandle().hval();
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-    SymTabId scopeid = ctxt.findSymTabId(sttab);
+    fortTkSupport::SymTabId scopeid = ctxt.findSymTabId(sttab);
 
     if (ST_class(st) == CLASS_CONST) {
       return;
@@ -1187,12 +1182,12 @@ namespace whirl2xaif {
       }
       else { 
 	theLocation->dump(std::cout);
-	FORTTK_DIE(FORTTK_UNIMPLEMENTED << "side effect list contains a subsetloc that has no named location");
+	FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "side effect list contains a subsetloc that has no named location");
       }
     }
     else { 
       theLocation->dump(std::cout);
-      FORTTK_DIE(FORTTK_UNIMPLEMENTED << "side effect list contains a location that is not a named location");
+      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "side effect list contains a location that is not a named location");
     }
   } 
 
@@ -1204,7 +1199,7 @@ namespace whirl2xaif {
   {
     OPERATOR opr = WN_operator(wn);
     FORTTK_ASSERT(opr == OPR_ALTENTRY || opr == OPR_FUNC_ENTRY,
-		  FORTTK_UNEXPECTED_INPUT);
+		  fortTkSupport::Diagnostics::UnexpectedInput);
   
     ST* func_st = &St_Table[WN_entry_name(wn)];
     TY_IDX func_ty = ST_pu_type(func_st);
@@ -1233,7 +1228,7 @@ namespace whirl2xaif {
     
       if (!ST_is_return_var(parm_st)) {
 	ST_TAB* sttab = Scope_tab[ST_level(parm_st)].st_tab;
-	SymTabId scopeid = ctxt.findSymTabId(sttab);
+	fortTkSupport::SymTabId scopeid = ctxt.findSymTabId(sttab);
 	xos << xml::BegElem("xaif:ArgumentSymbolReference")
 	    << xml::Attr("position", position) 
 	    << xml::Attr("scope_id", scopeid) 
@@ -1376,7 +1371,7 @@ namespace whirl2xaif {
   
     // If a structured statement, it must be translated specially.
     // Otherwise simply dispatch to TranslateWN(...).
-    const char* vty = GetCFGControlFlowVertexType(wn);
+    const char* vty = fortTkSupport::GetCFGControlFlowVertexType(wn);
     OPERATOR opr = WN_operator(wn);
     const char* opr_str = OPERATOR_name(opr);
   
@@ -1397,7 +1392,7 @@ namespace whirl2xaif {
       else if (opr == OPR_SWITCH || opr == OPR_COMPGOTO) {
 	condWN = WN_switch_test(wn);
       }
-      FORTTK_ASSERT(condWN, FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
+      FORTTK_ASSERT(condWN, fortTkSupport::Diagnostics::UnexpectedOpr << OPERATOR_name(opr));
       xlate_CFCondition(xos, condWN, ctxt);
     } 
     else if (vty == XAIFStrings.elem_BBEndBranch() ||
@@ -1466,7 +1461,7 @@ namespace whirl2xaif {
     for (; stmtIt->isValid(); ++(*stmtIt)) {
       OA::StmtHandle st = stmtIt->current();
       WN* wstmt = (WN*)st.hval();
-      const char* vty = GetCFGControlFlowVertexType(wstmt);
+      const char* vty = fortTkSupport::GetCFGControlFlowVertexType(wstmt);
       if (vty == XAIFStrings.elem_BBForLoop()) { 
 	loopWN = wstmt;
 	break;
@@ -1507,7 +1502,7 @@ namespace whirl2xaif {
       = node->getNodeStatementsIterator();
     for (; stmtItPtr->isValid(); ++(*stmtItPtr)) {
       WN* wstmt = (WN *)stmtItPtr->current().hval();
-      WNId id = ctxt.findWNId(wstmt);
+      fortTkSupport::WNId id = ctxt.findWNId(wstmt);
     
       // Skip statements without a valid id
       if (id == 0) { continue; }
@@ -1553,10 +1548,10 @@ namespace whirl2xaif {
       else if (opr == OPR_GOTO) { // from an OPR_COMPGOTO
 	// to find condVal, must find parent COMPGOTO and then find the
 	// index of this GOTO in the jumptable.
-	FORTTK_DIE(FORTTK_UNIMPLEMENTED << "Conditions for COMPGOTO");
+	FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "Conditions for COMPGOTO");
       } 
       else {
-	FORTTK_DIE(FORTTK_UNIMPLEMENTED << "Unknown multiway branch");
+	FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "Unknown multiway branch");
       }
     }
     return pair<bool, INT64>(hasCondVal, condVal);

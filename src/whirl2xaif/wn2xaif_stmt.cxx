@@ -5,8 +5,8 @@
 #include <sstream> 
 
 
-#include "include/Open64BasicTypes.h"
-#include "lib/support/IntrinsicXlationTable.h"
+#include "Open64IRInterface/Open64BasicTypes.h"
+#include "IntrinsicXlationTable.h"
 
 #include "wn2xaif.h"
 #include "wn2xaif_stmt.h"
@@ -48,7 +48,7 @@ whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   // FIXME: cleanup AGOTO, RETURN, RETURN_VAL, PRAGMA, COMMENT, USE
   //  INTRN_CASSIGNSTMT, INTRN_STOP, INTRN_STOP_F90, IO
   
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -67,9 +67,9 @@ whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_BLOCK(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_BLOCK, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_BLOCK, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -77,9 +77,9 @@ whirl2xaif::xlate_BLOCK(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_region(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_REGION, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_REGION, fortTkSupport::Diagnostics::UnexpectedInput); 
 
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -87,9 +87,9 @@ whirl2xaif::WN2F_region(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_DO_LOOP(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_DO_LOOP, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_DO_LOOP, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -97,9 +97,9 @@ whirl2xaif::xlate_DO_LOOP(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_DO_WHILE(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_DO_WHILE, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_DO_WHILE, fortTkSupport::Diagnostics::UnexpectedInput); 
 
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -107,9 +107,9 @@ whirl2xaif::xlate_DO_WHILE(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_WHILE_DO(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_WHILE_DO, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_WHILE_DO, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -117,9 +117,9 @@ whirl2xaif::xlate_WHILE_DO(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_IF(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_IF, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_IF, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -133,7 +133,7 @@ whirl2xaif::WN2F_implied_do(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   // REMOVE
   FORTTK_ASSERT(ctxt.currentXlationContext().isFlag(XlationContext::IO_STMT), 
-		FORTTK_UNEXPECTED_INPUT); 
+		fortTkSupport::Diagnostics::UnexpectedInput); 
   
   /* This is a fortran implied do_loop, which can only occur as an
    * an OPR_IO_ITEM.  We should always be able to regenerate
@@ -200,9 +200,9 @@ void
 whirl2xaif::xlate_GOTO(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_GOTO ||
-		WN_operator(wn) == OPR_REGION_EXIT, FORTTK_UNEXPECTED_INPUT); 
+		WN_operator(wn) == OPR_REGION_EXIT, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -214,9 +214,9 @@ whirl2xaif::xlate_GOTO(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void
 whirl2xaif::xlate_SWITCH(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_SWITCH, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_SWITCH, fortTkSupport::Diagnostics::UnexpectedInput); 
 
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -242,9 +242,9 @@ void
 whirl2xaif::WN2F_agoto(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   // REMOVE
-  FORTTK_ASSERT(WN_operator(wn) == OPR_AGOTO, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_AGOTO, fortTkSupport::Diagnostics::UnexpectedInput); 
 
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker())
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -263,9 +263,9 @@ whirl2xaif::xlate_condBR(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   OPERATOR opr = WN_operator(wn);
   FORTTK_ASSERT(opr == OPR_TRUEBR || opr == OPR_FALSEBR,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -273,9 +273,9 @@ whirl2xaif::xlate_condBR(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_RETURN(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_RETURN, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_RETURN, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -289,9 +289,9 @@ whirl2xaif::xlate_RETURN(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_RETURN_VAL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_RETURN_VAL, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_RETURN_VAL, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -305,9 +305,9 @@ whirl2xaif::xlate_RETURN_VAL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_LABEL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_LABEL, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_LABEL, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker())
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -341,7 +341,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   
   // We can't handle ICALLs yet
   OPERATOR opr = WN_operator(wn);
-  FORTTK_ASSERT(opr != OPR_ICALL, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(opr != OPR_ICALL, fortTkSupport::Diagnostics::UnexpectedInput); 
   
   // -------------------------------------------------------
   // Gather info...
@@ -390,7 +390,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
     // OPR_ICALL: TranslateWN(xos, WN_kid(wn, WN_kid_count(wn) - 1), ctxt);
     ST* st = WN_st(wn);
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-    SymTabId scopeid = ctxt.findSymTabId(sttab);
+    fortTkSupport::SymTabId scopeid = ctxt.findSymTabId(sttab);
     const char* funcNm = ST_name(st);
     fortTkSupport::IntrinsicXlationTable::XAIFInfoPair infoPair(Whirl2Xaif::getIntrinsicXlationTable().
 								findXAIFInfo(opr, 
@@ -653,14 +653,14 @@ whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
   // Handles all intrinsics that are translated into XAIF statements
 
   FORTTK_ASSERT(WN_operator(wn) == OPR_INTRINSIC_CALL, 
-		FORTTK_UNEXPECTED_INPUT); 
+		fortTkSupport::Diagnostics::UnexpectedInput); 
 
   WN   *arg_expr;
   TY_IDX arg_ty;
   INT  str_kid, length_kid, first_length_kid;
   BOOL regular_call = FALSE; /* Specially treated intrinsic call? */
   
-  WNId wnid = ctxt.findWNId(wn);
+  fortTkSupport::WNId wnid = ctxt.findWNId(wn);
 
   switch (WN_intrinsic(wn)) {
   case INTRN_CONCATEXPR:    
@@ -728,7 +728,7 @@ whirl2xaif::WN2F_eval(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
    * some kind of surrounding statement there is no way to do 
    * this in Fortran-77.
    */
-  FORTTK_ASSERT(WN_operator(wn) == OPR_EVAL, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_EVAL, fortTkSupport::Diagnostics::UnexpectedInput); 
   
   xos << "CALL _EVAL(";
   TranslateWN(xos, WN_kid0(wn), ctxt);
@@ -742,10 +742,10 @@ void
 whirl2xaif::xlate_PRAGMA(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_PRAGMA ||
-		WN_operator(wn) == OPR_XPRAGMA, FORTTK_UNEXPECTED_INPUT); 
+		WN_operator(wn) == OPR_XPRAGMA, fortTkSupport::Diagnostics::UnexpectedInput); 
   
   // switch (WN_pragma(apragma))
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -759,7 +759,7 @@ void
 whirl2xaif::xlate_PREFETCH(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_PREFETCH ||
-		WN_operator(wn) == OPR_PREFETCHX, FORTTK_UNEXPECTED_INPUT); 
+		WN_operator(wn) == OPR_PREFETCHX, fortTkSupport::Diagnostics::UnexpectedInput); 
   
   
 }
@@ -768,10 +768,10 @@ whirl2xaif::xlate_PREFETCH(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_COMMENT(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_COMMENT, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_COMMENT, fortTkSupport::Diagnostics::UnexpectedInput); 
   
   // Note: Index_To_Str(WN_GetComment(wn)) returns comment text
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -783,7 +783,7 @@ whirl2xaif::xlate_COMMENT(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_dealloca(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_DEALLOCA, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_DEALLOCA, fortTkSupport::Diagnostics::UnexpectedInput); 
 
   INT16 n,i;
   n = WN_kid_count(wn);
@@ -804,9 +804,9 @@ whirl2xaif::WN2F_dealloca(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void
 whirl2xaif::xlate_USE(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_USE, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_USE, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   const char* nm = ST_name(WN_st(wn));
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
@@ -820,7 +820,7 @@ whirl2xaif::xlate_USE(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void
 whirl2xaif::WN2F_namelist_stmt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_NAMELIST, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_NAMELIST, fortTkSupport::Diagnostics::UnexpectedInput); 
   
   const char *st_name =  ST_name(WN_st(wn));
   if (ST_is_external(WN_st(wn))) {
@@ -854,7 +854,7 @@ whirl2xaif::WN2F_implicit_bnd(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void
 whirl2xaif::WN2F_nullify_stmt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_NULLIFY, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_NULLIFY, fortTkSupport::Diagnostics::UnexpectedInput); 
 
   int k ;  
   const char *st_name;
@@ -877,7 +877,7 @@ whirl2xaif::WN2F_nullify_stmt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void
 whirl2xaif::WN2F_interface_blk(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_INTERFACE, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_INTERFACE, fortTkSupport::Diagnostics::UnexpectedInput); 
 
   int           k ;
   ST            **param_st;

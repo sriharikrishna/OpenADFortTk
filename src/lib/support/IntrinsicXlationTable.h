@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.h,v 1.8 2006/05/12 16:12:22 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/IntrinsicXlationTable.h,v 1.8 2006/05/12 16:12:22 utke Exp $
 
 
 #ifndef IntrinsicXlationTable_H 
@@ -8,7 +8,7 @@
 #include <iostream>
 #include <vector>
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 
 namespace fortTkSupport { 

@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.cpp,v 1.16 2006/05/12 16:12:22 utke Exp $
+// $Header$
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Nathan Tallent, Michelle Strout
-  \version $Id: Open64IRInterface.cpp,v 1.16 2006/05/12 16:12:22 utke Exp $
+  \version $Id$
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -21,15 +21,21 @@ static bool debug = false;
 #include <list>
 #include <climits>
 #include <cassert>
-#include <include/Open64BasicTypes.h>
+//using std::list;
+
+//************************ OpenAnalysis Include Files ***********************
+
+//************************** Open64 Include Files ***************************
+
+#include "Open64IRInterface/Open64BasicTypes.h"
 #include "ir_reader.h" // for fdump_wn()
 
 //*************************** User Include Files ****************************
 
-#include "Open64IRInterface.hpp"
-#include "SymTab.h"
-#include "wn_attr.h"
-#include "stab_attr.h"
+#include "Open64IRInterface/Open64IRInterface.hpp"
+#include "Open64IRInterface/SymTab.h"
+#include "Open64IRInterface/wn_attr.h"
+#include "Open64IRInterface/stab_attr.h"
 
 //************************** Forward Declarations ***************************
 
@@ -56,7 +62,17 @@ std::map<OA::SymHandle,OA::ProcHandle> Open64IRInterface::sCallSymToProc;
 std::map<fully_qualified_name,
          std::set<OA::SymHandle> > Open64IRInterface::sGlobalVarMap;
 
+std::map<fully_qualified_name,std::map<OA::ProcHandle,OA::SymHandle> >
+      Open64IRInterface::sFQNToProcToLocalSymMap;
+
+std::map<OA::SymHandle,fully_qualified_name> Open64IRInterface::sSymToFQNMap;
+
 std::map<OA::SymHandle,std::string> Open64IRInterface::sSymToVarStringMap;
+
+std::map<OA::ExprHandle,OA::CallHandle> Open64IRInterface::sParamToCallMap;
+
+std::map<OA::ProcHandle,std::set<OA::SymHandle> > 
+    Open64IRInterface::sProcToSymRefSetMap;
 
 //***************************************************************************
 // Iterators
@@ -296,8 +312,8 @@ Open64IRMemRefIterator::reset()
   mBegin = mMemRefList.begin();
 }
 
-/*! this method sets up sMemRef2StmtMap, sStmt2MemRefSet?, and 
-    sMemRef2mreSetMap?
+/*! this method sets up sMemRef2StmtMap, sStmt2MemRefSet, and 
+    sMemRef2mreSetMap
     Is only way to get MemRefHandle's therefore no queries should
     be logically made on MemRefHandle's before one of these
     iterators has been requested.
@@ -305,41 +321,6 @@ Open64IRMemRefIterator::reset()
 void 
 Open64IRMemRefIterator::create(OA::StmtHandle stmt)
 {
-  Open64IRInterface::setCurrentProcToProcContext(stmt);
-
-  // NOTE: this could be a little more efficient
-  WN* wn = (WN*)stmt.hval();
-  if (!wn) { return; }
-
-  // if haven't already determined the set of memrefs for this stmt
-  // then do so by finding all the top memory references and then
-  // initializing the mapping of MemRefHandle's to a set of MemRefExprs,
-  // and based off that map get all the MemRefHandle's
-  if (Open64IRInterface::sStmt2allMemRefsMap[stmt].empty() ) {
-  
-    // get all the top memory references
-    list<WN*>* topMemRefs = findTopMemRefs(wn);
-    for (list<WN*>::iterator it = topMemRefs->begin(); 
-         it != topMemRefs->end(); ++it)
-    {
-      WN* memrefWN = (*it);
-
-      // get all the sub memory references including top memory reference
-      list<OA::MemRefHandle>* subMemRefList 
-        = findAllMemRefsAndMapToMemRefExprs(memrefWN);
-
-      // put those memory references in the static mapping of statements to 
-      // the set of all memory references
-      list<OA::MemRefHandle>::iterator mrIter;
-      for (mrIter=subMemRefList->begin(); mrIter!=subMemRefList->end(); 
-           mrIter++)
-      {
-          Open64IRInterface::sStmt2allMemRefsMap[stmt].insert(*mrIter);
-          Open64IRInterface::sMemRef2StmtMap[*mrIter] = stmt;
-      }
-    }
-  }
-
   // loop through MemRefHandle's for this statement and for now put them
   // into our own list
   std::set<OA::MemRefHandle>::iterator setIter;
@@ -413,13 +394,20 @@ Open64IRSymIterator::create(PU_Info* pu)
     if (OPERATOR_has_sym(opr)) {
       ST* st = WN_st(curWN);
       if (ST_level(st) == GLOBAL_SYMTAB) {
-	symlist.push_back(st);
+        symlist.push_back(st);
       }
     }
   }
 
 }
 
+//---------------------------------------------------------------------------
+// Open64PtrAssignPairStmtIterator
+//---------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------
+// Open64ParamBindPtrAssignIterator
+//---------------------------------------------------------------------------
 
 //***************************************************************************
 // Abstract Interfaces
@@ -536,6 +524,22 @@ Open64IRInterface::toString(const OA::ConstValHandle h)
   return oss.str();
 }
 
+std::string 
+Open64IRInterface::toString(const OA::CallHandle h) 
+{
+  setCurrentProcToProcContext(h);
+  WN* wn = (WN*)h.hval();
+
+  std::ostringstream oss;
+  if (wn==0) {
+    oss << "CallHandle(0)";
+  } else {
+    DumpWN(wn, oss);
+  }
+  return oss.str();
+}
+
+
 void 
 Open64IRInterface::dump(OA::StmtHandle stmt, std::ostream& os)
 { 
@@ -620,7 +624,7 @@ Open64IRInterface::getCallsites(OA::StmtHandle h)
 //---------------------------------------------------------------------------
 // !Get IRCallsiteParamIterator for a callsite. 
 OA::OA_ptr<OA::IRCallsiteParamIterator> 
-Open64IRInterface::getCallsiteParams(OA::ExprHandle h) {
+Open64IRInterface::getCallsiteParams(OA::CallHandle h) {
   setCurrentProcToProcContext(h);
   WN* wn = (WN*)h.hval();
   OA::OA_ptr<OA::IRCallsiteParamIterator> retval;
@@ -630,36 +634,51 @@ Open64IRInterface::getCallsiteParams(OA::ExprHandle h) {
 
 bool Open64IRInterface::isRefParam(OA::SymHandle sym)
 {
-  setCurrentProcToProcContext(sym);
   // "X"  inout: C_VAR S_FORMAL_REF (flg 0x80 0x0)
   // "Y"  inout: C_VAR S_FORMAL_REF (flg 0x80 0x0)
   // "AA" in   : C_VAR S_FORMAL_REF (flg 0x80 0x20[in])
   // "BB" out  : C_VAR S_FORMAL_REF (flg 0x80 0x40[out])
 
+  // save off the current context and then switch to one for this sym
+  OA::ProcHandle currContext = getCurrentProcContext();
+  setCurrentProcToProcContext(sym);
+
   ST* st = (ST*)sym.hval();
   ST_SCLASS sclass = ST_sclass(st);
+  bool retval;
   
   if (ST_is_intent_out_argument(st)) {
-    return true; // parameter: intent(out)
+    retval = true; // parameter: intent(out)
   }
   else if (ST_is_intent_in_argument(st)) {
-    return false; // parameter: intent(in)
+    retval = false; // parameter: intent(in)
+    //return true; // when modeling reference params with ptrs, on 1/9/06
+                 // Jean came up with example where need to model intent(in)
+                 // as pass by reference, MMS
+                 // yeah but I can't find this example!!
   }
   else if (sclass == SCLASS_FORMAL_REF) {
-    return true; // pass-by-ref parameter
+    retval = true; // pass-by-ref parameter
   }
   else if (sclass == SCLASS_FORMAL) {
-    return true; // may be pass-by-ref in the source language
+    // FIXME: this is going to be wrong for C, but flags aren't set to
+    // indicate fortran correctly and when pass arrays by ref for some
+    // reason the formal isn't set to SCLASS_FORMAL_REF in Whirl
+    retval = true; // may be pass-by-ref in the source language
   }
   else {
-    return false; // not a parameter at all
+    retval = false; // not a parameter at all
   }
+
+  // reset the context
+  setCurrentProcContext(currContext);
+  return retval;
 }
                
 //! return the formal parameter that an actual parameter is associated with.
 OA::SymHandle 
 Open64IRInterface::getFormalForActual(OA::ProcHandle caller, 
-                                      OA::ExprHandle call, 
+                                      OA::CallHandle call, 
                                       OA::ProcHandle callee, 
                                       OA::ExprHandle param)
 {
@@ -844,9 +863,10 @@ Open64IRInterface::getCFGStmtType(OA::StmtHandle h)
   case OPR_ISTBITS:
   case OPR_USE: // FIXME: how are these ordered?
   case OPR_INTERFACE: 
-  case OPR_PSTID: 
+  //case OPR_PSTID: FIXME: want this to fail because don't handle pointers yet
     ty = OA::CFG::SIMPLE;
     break;
+
   // Bother.
   default: 
     // FIXME: OPR_ASSERT, OPR_GOTO_OUTER_BLOCK, OPR_TRAP, 
@@ -1279,10 +1299,408 @@ OA::OA_ptr<OA::MemRefHandleIterator>
 Open64IRInterface::getMemRefIterator(OA::StmtHandle h) 
 {
   setCurrentProcToProcContext(h);
+  
+  // if haven't already determined the set of memrefs for this stmt
+  // initializing the mapping of MemRefHandle's to a set of MemRefExprs,
+  // and based off that map get all the MemRefHandle's
+  if (sStmt2allMemRefsMap[h].empty() ) {
+      
+    // first loop through call sites for this statement
+    // to create a map of actual parameters (OPR_PARMs WNs)
+    // to the call handle
+    OA::OA_ptr<OA::IRCallsiteIterator> callIter = getCallsites(h);
+    for ( ; callIter->isValid(); (*callIter)++ ) {
+        OA::CallHandle call = callIter->current();
+        OA::OA_ptr<OA::IRCallsiteParamIterator> paramIter 
+            = getCallsiteParams(call);
+        for ( ; paramIter->isValid(); (*paramIter)++ ) {
+            OA::ExprHandle param = paramIter->current();
+            sParamToCallMap[param] = call;
+        }
+    }
+ 
+    findAllMemRefsAndMapToMemRefExprs(h,(WN*)h.hval(),0,0);
+  }
+
   OA::OA_ptr<OA::MemRefHandleIterator> retval;
   retval = new Open64IRMemRefIterator(h);
   return retval;
 }
+
+// Given WHIRL statements (including control flow
+// statements representing embedded expressions, but not statements),
+// recursively find the memory-references in the statement and create
+// OA::MemRefExprs to model them to OA.  Note: Memory
+// references will generally be WHIRL expressions; however STORES --
+// WHIRL *statements* -- are returned to represent a left-hand-side
+// reference; and indirect CALLS are returned to represent a function
+// pointer reference.
+// Also map each MemRefHandle to a set of MemRefExprs in sMemRef2mreSetMap
+// and map each stmt to all MemRefHandles for that statement 
+// in sStmt2allMemRefsMap.
+void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
+        WN* wn, unsigned lvl, unsigned flags)
+{
+  if (debug) {
+      std::cout << "======== findAllMemRefsAndMapToMemRefExprs" << std::endl;
+      std::cout << "\tWN =";
+      Open64IRInterface::DumpWNMemRef(wn,std::cout);
+      std::cout << std::endl;
+      std::cout << "\tfdump_tree = " << std::endl;
+      fdump_tree(stdout,wn);
+      std::cout << std::endl;
+  }
+
+  // flags to pass down recursive call stack
+  enum { 
+    flags_NONE              = 0x00000000,
+    flags_EXPECT_ARRAY_BASE = 0x00000001, 
+    flags_EXPECT_FUNC_BASE  = 0x00000002, 
+
+    flags_HAVE_STORE_PARENT = 0x00000004, 
+
+    flags_PASS_BY_REF       = 0x00000008,
+    flags_EXPECT_STRCT_BASE = 0x00000010
+  };
+
+
+  // If we know the language is F90 or FORTRAN then we can get more
+  // precise MemRefExprs
+  Language = LANG_F90; // FIXME: Open64's global var Language isn't set
+  
+  using namespace OA;
+
+  bool isFortran = (Language == LANG_F77 || Language == LANG_F90);
+
+  // Base case
+  if (!wn) { return; }
+  
+  OPERATOR opr = WN_operator(wn);
+	
+  // -------------------------------------------------------
+  // Gather information about this mem-ref
+  // -------------------------------------------------------
+  TY_IDX base_ty = 0, ref_ty = 0;
+  WN_OFFSET offset = 0;
+  UINT field_id = 0; 
+  if (OPERATOR_is_load(opr) || opr == OPR_LDA || opr == OPR_LDMA) {
+      offset = WN_load_offset(wn); // == WN_lda_offset()
+  }
+  // Set accuracy
+  bool fullAccuracy = false;
+  // These only work on loads and stores
+  // FIXME: asserts in wn_attr.cpp code on MLOADS
+  if (opr!=OPR_MLOAD && opr!=OPR_MSTORE && 
+      (OPERATOR_is_store(opr) || OPERATOR_is_load(opr) 
+      || opr==OPR_LDA || opr==OPR_LDMA)) 
+  {
+      base_ty = WN_GetBaseObjType(wn);
+      ref_ty = WN_GetRefObjType(wn);
+      if (OPERATOR_has_field_id(opr)) {
+          field_id = WN_field_id(wn);
+      }
+      if (offset == 0 && field_id == 0) { // we do not have a structure ref
+        if (base_ty != 0 && WN2F_Can_Assign_Types(base_ty, ref_ty)) {
+          // If assigning to same object, we have full accuracy
+          fullAccuracy = true;
+        }
+      }
+  } 
+
+  // Determination of these is the same for most, exceptions dealt with
+  // in the big switch stmt
+  MemRefExpr::MemRefType hty;
+  if (lvl==0 && ((flags & flags_HAVE_STORE_PARENT) || OPERATOR_is_store(opr))) {
+      hty = MemRefExpr::DEF;
+  } else {
+      hty = MemRefExpr::USE;
+  }
+  bool isAddrOf = false;
+  // if in the parent we determined that this was a pass
+  // by reference actual then need to take the address
+  if (flags & flags_PASS_BY_REF) {
+      isAddrOf = true;
+  }
+  
+  // -------------------------------------------------------
+  // Gather information from children and generate MRE(s)
+  // -------------------------------------------------------
+  WN* subMemRef;
+  // Large switch statement based on operator that current node represents
+  switch (opr) {
+    // NOTE: MLOAD, MSTORE?  FIXME?: we don't handle these, should we?
+    
+    case OPR_LDID:
+    case OPR_LDBITS: 
+      createAndMapNamedRef(stmt, wn, WN_st(wn), isAddrOf, fullAccuracy, hty);
+      break;
+
+    case OPR_LDA:
+    case OPR_LDMA:
+      if (!isFortran) { isAddrOf = true; }
+      // if accessing an array the no address taken
+      // FIXME: what if indirectly accessing an array in C?
+//      if ((flags & flags_EXPECT_ARRAY_BASE)) {
+//        ref_ty = (TY_Is_Pointer(ref_ty)) ? TY_pointed(ref_ty) : base_ty;
+//        isAddrOf = false; // implicitly dereference the address
+//        fullAccuracy = false;  // don't know what part of array referencing
+//      }
+      createAndMapNamedRef(stmt, wn, WN_st(wn), isAddrOf, fullAccuracy, hty);
+      break;
+
+    case OPR_ILOAD:
+    case OPR_ILOADX:
+      assert(OPERATOR_is_load(opr));
+      // don't need to put in a dereference if something is an array
+      // won't have MemRefHandle for this wn but will for array access
+      // the array access should be given the same level 
+      // FIXME: does WHIRL represent array accesses to int ptrs in C this way?
+      if ((WN_operator(WN_kid0(wn)) == OPR_ARRAY) 
+          || (WN_operator(WN_kid0(wn)) == OPR_ARRAYEXP)  
+          || (WN_operator(WN_kid0(wn)) == OPR_STRCTFLD) ) 
+      {
+          findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid0(wn), lvl, flags); 
+          // do not create MRE for this wn
+
+      // FIXME: don't create MRE in this case?
+      } else if ((flags & flags_EXPECT_ARRAY_BASE) 
+	             || (flags & flags_EXPECT_FUNC_BASE)) {
+          // do nothing?
+
+      // actually make this a MemRefHandle and create a deref
+      } else {
+          // first recur on any sub memory reference
+          subMemRef = WN_kid0(wn);
+          findAllMemRefsAndMapToMemRefExprs(stmt,subMemRef, lvl+1, flags); 
+          createAndMapDerefs(stmt,wn, subMemRef, hty);
+      }
+      break;
+
+    // At this point an array reference looks something like this for X(1):
+    //  U8ARRAY 1 16                           <-- MRE associated with this wn
+    //   U8U8LDID 0 <2,1,X> T<32,anon_ptr.,8>  
+    //   I4INTCONST 2 (0x2)
+    //   I4INTCONST 1 (0x1)
+    // Therefore at ARRAY don't actually create an MRE.
+    case OPR_ARRAY:
+    case OPR_ARRSECTION: 
+      {
+        // get symbol for array
+        ST* st = findBaseSymbol(WN_kid0(wn));
+        fullAccuracy = false;
+        createAndMapNamedRef(stmt, wn, st, isAddrOf, fullAccuracy, hty);
+
+        // reset flags and lvl for index expressions because they are separate
+        flags = 0; lvl = 0;
+        // index expr are dim+1 ... 2*dim, dim = WN_kid_count(wn)-1 / 2
+        for (INT kidno=(WN_kid_count(wn)-1)/2 +1; 
+             kidno<=WN_kid_count(wn)-1; kidno++) 
+        {
+          findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl,flags);
+        }
+      }
+      break;
+
+    case OPR_MLOAD:
+    case OPR_MSTORE:
+      {
+        ST* st = findBaseSymbol(WN_kid0(wn));
+        fullAccuracy = false;
+        createAndMapNamedRef(stmt, wn, st, isAddrOf, fullAccuracy, hty);
+      }
+      break;
+
+    case OPR_ARRAYEXP:
+      findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid0(wn), lvl, flags); 
+      // don't actually create an MRE for this wn
+      return;
+
+    case OPR_STRCTFLD:
+      //  U8U8STRCTFLD T<11,.predef_F8,8> T<29,MYTYPE,8> <field_id:1> <--MRE
+      //   U8LDA 0 <2,2,TYPED_Y> T<31,anon_ptr.,8>
+      // we are in a strct field like  x%v
+      // what comes below refers to x via an LDA
+      // unless x is a pointer we don't want to see it. 
+      {
+        // get symbol for array
+        ST* st = findBaseSymbol(WN_kid0(wn));
+        fullAccuracy = false;
+        createAndMapNamedRef(stmt, wn, st, isAddrOf, fullAccuracy, hty);
+      }
+      break;
+
+    case OPR_PARM:
+      // this operator just indicates an actual param, do not create
+      // a MemRefHandle for it, however determine if the parameter is
+      // pass by reference and if so set flags for its child
+      if (isPassByReference(wn)) {
+        flags |= flags_PASS_BY_REF;
+      }    
+      findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid0(wn), lvl+1, flags); 
+      return;
+
+    // function references
+    case OPR_ICALL:
+    case OPR_VFCALL:
+      flags |= flags_EXPECT_FUNC_BASE;
+      // kid n-1 is the address of the procedure being called
+      subMemRef = WN_kid(wn,WN_kid_count(wn)-1);
+      findAllMemRefsAndMapToMemRefExprs(stmt, subMemRef, lvl+1,flags);
+      // create MRE for this guy
+      createAndMapDerefs(stmt, wn, subMemRef, hty);
+      
+      // recur on parameters (kids 0 ... n-2) to find other MemRefHandles
+      for (INT kidno=0; kidno<=WN_kid_count(wn)-2; kidno++) {
+          findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl+1,flags);
+      }
+      break;
+      
+    // Store operators
+    case OPR_STID: 
+    case OPR_STBITS:
+      assert(OPERATOR_is_store(opr));
+      createAndMapNamedRef(stmt, wn, WN_st(wn), isAddrOf, fullAccuracy, hty );
+      findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid0(wn),lvl,0); // recur on RHS
+      break;
+
+    // Indirect store operator
+    case OPR_ISTOREX:
+    case OPR_ISTBITS:
+    case OPR_ISTORE:
+      assert(OPERATOR_is_store(opr));
+
+      // don't need to put in a dereference if something is an array
+      // won't have MemRefHandle for this wn but will for array access
+      // the array access should be given the same level and an indication
+      // that it is from a store parent
+      // FIXME: does WHIRL represent array accesses to int ptrs in C this way?
+      if ((WN_operator(WN_kid1(wn)) == OPR_ARRAY)
+          || (WN_operator(WN_kid1(wn)) == OPR_ARRAYEXP)   
+          || (WN_operator(WN_kid1(wn)) == OPR_STRCTFLD) ) 
+      {
+          flags |= flags_HAVE_STORE_PARENT;
+          findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid1(wn), lvl, flags); 
+
+      // actually make this a MemRefHandle and create a deref
+      } else {
+          // first recur on any sub memory reference
+          WN *subMemRef = WN_kid1(wn);
+          findAllMemRefsAndMapToMemRefExprs(stmt,subMemRef, lvl+1, flags); 
+          createAndMapDerefs(stmt, wn, subMemRef, hty);
+     }
+
+      // recur on RHS
+      findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid0(wn),lvl,0); 
+      break;
+      
+    case OPR_BLOCK:
+    case OPR_REGION:
+      return; // Do not recur into BLOCKs
+
+    case OPR_DO_LOOP:
+      // loop test expression          
+      findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid(wn,2),lvl,0);
+      break;
+
+
+    // General recursive case
+    default:
+      // Special case: examine only condition of control flow statements
+      if (OPERATOR_is_scf(opr) || OPERATOR_is_non_scf(opr)) {
+          findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid(wn,0),lvl,0);
+
+      // General case: recur on parameters (kids 0 ... n-1) 
+      } else {
+
+        for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++) {
+          findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid(wn,kidno),lvl+1,flags);
+        }
+
+      }
+
+      // some asserts to catch cases I don't expect to land here
+      assert(!OPERATOR_is_store(opr));
+      assert(!OPERATOR_is_load(opr));
+      break; 
+  }
+
+}
+
+ST* Open64IRInterface::findBaseSymbol(WN* wn)
+{
+  ST* retval = NULL;
+  OPERATOR opr = WN_operator(wn);
+  switch (opr) {
+    case OPR_ARRAYEXP:
+    case OPR_ARRAY:
+    case OPR_ARRSECTION:
+        retval = findBaseSymbol(WN_kid0(wn));
+        break;
+    case OPR_LDID:
+    case OPR_LDBITS:
+    case OPR_LDA:
+    case OPR_LDMA:
+        retval = WN_st(wn);
+        break;
+    default:
+        assert(0);  // don't expect to get here
+  }
+  return retval;
+}
+
+void Open64IRInterface::createAndMapDerefs(OA::StmtHandle stmt, 
+    WN* wn, WN* subMemRef, OA::MemRefExpr::MemRefType hty)
+{   
+    using namespace OA;
+    // get all MREs for subMemRef
+    set<OA_ptr<MemRefExpr> >::iterator mreIter;
+    for (mreIter=sMemref2mreSetMap[MemRefHandle((irhandle_t)subMemRef)].begin();
+         mreIter!=sMemref2mreSetMap[MemRefHandle((irhandle_t)subMemRef)].end();
+         mreIter++ )
+    {   
+        OA_ptr<MemRefExpr> submre = *mreIter; 
+        OA_ptr<MemRefExpr> mre; 
+        mre = new Deref(false, submre->hasFullAccuracy(), hty, submre, 1);
+        sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(mre);
+        sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+    }
+}
+
+void Open64IRInterface::createAndMapNamedRef(OA::StmtHandle stmt, WN* wn, 
+    ST* st, bool isAddrOf, bool fullAccuracy, OA::MemRefExpr::MemRefType hty)
+{
+    using namespace OA;
+    OA::OA_ptr<OA::MemRefExpr> mre;
+
+    // get symbol handle, need to use representative if a global or
+    // module var.  Going to use first sym in set as representative.
+    SymHandle sym = SymHandle((irhandle_t)st);
+    if (Stab_Is_Based_At_Common_Block(st) || Stab_Is_In_Module(st)) {
+        std::set<SymHandle>::iterator setIter;
+        fully_qualified_name fqn = sSymToFQNMap[sym];
+        // store the local incarnation of the global sym for this procedure
+        sFQNToProcToLocalSymMap[fqn][getCurrentProcContext()] = sym;
+        // use the first symhandle in the set as a representative
+        setIter = sGlobalVarMap[fqn].begin();
+        sym = *setIter;
+    }
+
+    // modeling accesses to reference parameters as derefs to pointers
+    if (isRefParam(sym)) {
+        if (isAddrOf==true) { // deref and addressOf cancel
+          isAddrOf = false;
+          mre = new NamedRef(isAddrOf, fullAccuracy, hty, sym);
+        } else {
+          mre = new NamedRef(isAddrOf, fullAccuracy, OA::MemRefExpr::USE, sym);
+          mre = new Deref(false, fullAccuracy, hty, mre, 1);
+        }
+    } else {
+        mre = new NamedRef(isAddrOf, fullAccuracy, hty, sym);
+    }
+    sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(mre);
+    sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+}
+
 
 OA::Alias::IRStmtType 
 Open64IRInterface::getAliasStmtType(OA::StmtHandle h)
@@ -1321,6 +1739,101 @@ Open64IRInterface::getAliasStmtType(OA::StmtHandle h)
   
   return OA::Alias::ANY_STMT;
 }
+
+OA::OA_ptr<OA::Alias::ParamBindPtrAssignIterator>
+Open64IRInterface::getParamBindPtrAssignIterator(OA::CallHandle call)
+{   
+    // FIXME: for now just assuming Fortran
+    bool isFortran = true;
+
+    // Setup context for caller
+    setCurrentProcToProcContext(call);
+
+    OA::OA_ptr<Open64ParamBindPtrAssignIterator> retval;
+    retval = new Open64ParamBindPtrAssignIterator;
+
+    // start at 0 because that is how Open64 starts counting
+    int count = 0;
+    // iterate over all the parameters for this call site
+    // and count off parameters
+    OA::OA_ptr<OA::IRCallsiteParamIterator> paramIter = getCallsiteParams(call);
+    for ( ; paramIter->isValid(); (*paramIter)++ ) {
+        OA::ExprHandle param = paramIter->current();
+
+        OA::OA_ptr<OA::ExprTree> eTreePtr = getExprTree(param);
+        OA::EvalToMemRefVisitor evalVisitor;
+        eTreePtr->acceptVisitor(evalVisitor);
+        if ( evalVisitor.isMemRef() ) {
+          OA::MemRefHandle memref = evalVisitor.getMemRef();
+
+          // get the MREs for this memref
+          OA::OA_ptr<OA::MemRefExprIterator> mreIter 
+              = getMemRefExprIterator(memref);
+          for ( ; mreIter->isValid(); (*mreIter)++ ) {
+              OA::OA_ptr<OA::MemRefExpr> mre = mreIter->current();
+
+              // if there is an address computation them we have a
+              // pointer assignment happening at parameter bind time
+              if (mre->hasAddressTaken()) {
+                  retval->insertParamBindPair(count,mre);
+
+              // if it is a named ref to a reference param in 
+              // the caller then we also have a ParamBindPair
+              } else if (mre->isaNamed()) {
+                  OA::OA_ptr<OA::NamedRef> nref = mre.convert<OA::NamedRef>();
+                  OA::SymHandle sym = nref->getSymHandle();
+                  if (isRefParam(sym)) {
+                      retval->insertParamBindPair(count,mre);
+                  }
+              }
+
+          } 
+
+          count++;
+        } // iterate over actuals
+
+    }
+ 
+    return retval;
+}
+
+OA::SymHandle Open64IRInterface::getFormalSym(OA::ProcHandle proc, int formalID)
+{
+    PU_Info* procPU = (PU_Info*)proc.hval();
+    OA::SymHandle retval;
+
+    PU_SetGlobalState(procPU);
+  
+    WN* wn_pu = PU_Info_tree_ptr(procPU);
+    int numParamsProc = WN_num_formals(wn_pu);  
+    if (formalID >= numParamsProc) {
+        retval = OA::SymHandle(0);
+    } else {
+        WN* formalWN = WN_formal(wn_pu, formalID);
+        if (!formalWN) {
+            retval = OA::SymHandle(0);
+        } else {
+            ST* formalST = WN_st(formalWN);
+            retval = (OA::irhandle_t)formalST;
+        }
+    }
+
+    return retval;
+}
+
+//! Given a procedure call create a memory reference expression
+//! to describe that call.  For example, a normal call is
+//! a NamedRef.  A call involving a function ptr is a Deref.
+OA::OA_ptr<OA::MemRefExpr> 
+Open64IRInterface::getCallMemRefExpr(OA::CallHandle h)
+{ 
+    // FIXME: this is not sufficient for function pointers
+    OA::OA_ptr<OA::MemRefExpr> retval; 
+    OA::SymHandle sym = getSymHandle(h);
+    retval = new OA::NamedRef(OA::MemRefExpr::USE,sym);
+    return retval; 
+}
+
 
 //-------------------------------------------------------------------------
 // ActivityIRInterface
@@ -1825,7 +2338,7 @@ bool Open64IRInterface::isParam(OA::SymHandle anOASymbolHandle){
 	  || 
 	  (ST_sclass(anOpen64Symbol_p)==SCLASS_FORMAL_REF)); 
 } 
-  
+
 //---------------------------------------------------------------------------
 // LocationIRShortCircuit
 //---------------------------------------------------------------------------
@@ -1833,29 +2346,63 @@ bool Open64IRInterface::isParam(OA::SymHandle anOASymbolHandle){
 //! For the given symbol create a Location that indicates statically
 //! overlapping locations and information about whether the location
 //! is local or not, local means visible in only this procedure
+//! If the symbol is not visible within the current procedure then
+//! a null location is returned.
 //! FIXME: does Fortran90 allow nested procedures?  if so then
 //! variables visible to a nested procedure should not be labeled local
 OA::OA_ptr<OA::Location> 
 Open64IRInterface::getLocation(OA::ProcHandle p, OA::SymHandle s)
 {
+    OA::OA_ptr<OA::NamedLoc> retval;
+    if (s==OA::SymHandle(0)) {
+        retval = NULL;
+        return retval;
+    }
+
+    if (debug) {
+      std::cout << std::endl << "mIR->toString(p) = " << toString(p) 
+              << ", <hval=" << p.hval() << std::endl;
+      std::cout << "mIR->toString(s) = " << toString(s) 
+              << ", <hval=" << s.hval() << std::endl;
+    }
+    // save off old context 
+    OA::ProcHandle currContext = getCurrentProcContext();
+
+    // change to context for the sym so can determine if it is global
     setCurrentProcToProcContext(s);
+
+    // if this symbol is global then it is a representative for all the 
+    // symbols in each different procedure for the same global
+    // need to get symbol specific to this procedure
+    ST* st = (ST*)s.hval();
+    if (Stab_Is_Based_At_Common_Block(st) || Stab_Is_In_Module(st)) {
+        fully_qualified_name fqn = sSymToFQNMap[s];
+        s = sFQNToProcToLocalSymMap[fqn][p];
+        // need context for this procedure now
+        setCurrentProcContext(p);
+    }
+    
     bool isLocal, isUnique;
     bool hasNestedProc = (PU_Info_child(Current_PU_Info) != NULL);
-    OA::OA_ptr<OA::NamedLoc> retval;
 
+    // check that SymHandle isn't null
     if (s!=OA::SymHandle(0)) {
-      isLocal = (!hasNestedProc) && (ST_level((ST*)s.hval()) == CURRENT_SYMTAB);
-      isUnique = isLocal;
+      // make sure the symbol is visible within procedure
+      if (sProcToSymRefSetMap[p].find(s)==sProcToSymRefSetMap[p].end()) {
+        retval = NULL;
+      } else {
 
-      retval = new OA::NamedLoc(s, isLocal);
-      
-      // if it is a common block variable then need to make sure the same var
-      // name within the same common block indicates the other symbol handles
-      // for that same var name and common block that fully overlap
-      ST* st = (ST*)s.hval();
-      if (Stab_Is_Based_At_Common_Block(st) || Stab_Is_In_Module(st)) 
-      {
-          fully_qualified_name fqn = create_fqn(s);
+        isLocal = (!hasNestedProc) && (ST_level((ST*)s.hval()) == CURRENT_SYMTAB);
+        isUnique = isLocal;
+
+        retval = new OA::NamedLoc(s, isLocal);
+        
+        // if it is a common block variable then need to make sure the same var
+        // name within the same common block indicates the other symbol handles
+        // for that same var name and common block that fully overlap
+        if (Stab_Is_Based_At_Common_Block(st) || Stab_Is_In_Module(st)) 
+        {
+          fully_qualified_name fqn = sSymToFQNMap[s];
           if (sGlobalVarMap[fqn].empty()) {
             assert(0); // this symbol should have been put in there
                        // around line 3233
@@ -1874,19 +2421,15 @@ Open64IRInterface::getLocation(OA::ProcHandle p, OA::SymHandle s)
               //          << ") = " << toString(*setIter) << std::endl;
               retval->addFullOverlap(*setIter);
           }
-          
+        } 
       }
 
     } else {
-      // getting a 0 SymbolHandle doesn't make sense 
-      // this must be some logic flaw
-      ST* pu_st = ST_ptr(PU_Info_proc_sym(Current_PU_Info));
-      const char* pu_name = ST_name(pu_st);
-      std::cout << "FortTk: FATAL ERROR: trying to get a location for 0 symbol handle in " 
-		<< pu_name 
-		<< std::endl;
-      assert(0);
+      retval = NULL;
     }
+    // reset the context
+    setCurrentProcContext(currContext);
+
     return retval;
 }
 
@@ -1943,6 +2486,7 @@ Open64IRInterface::initContextState(PU_Info* pu_forest)
     Open64IRProcIterator procIt(pu_forest);
     Open64IRInterface::initProcContext(pu_forest, procIt);
     Open64IRInterface::initCallSymToProcMap(procIt);
+    Open64IRInterface::initProcToSymRefSetMap(procIt);
   }
 }
 
@@ -2242,489 +2786,47 @@ Open64IRInterface::getConstValBasicFromST(ST* st)
   return cvb;
 }
 
-
-// findTopMemRefs: Given WHIRL statements (including control flow
-// statements representing embedded expressions, but not statements),
-// recursively find the top memory-references in the statement.  Note: Memory
-// references will generally be WHIRL expressions; however STORES --
-// WHIRL *statements* -- are returned to represent a left-hand-side
-// reference; and indirect CALLS are returned to represent a function
-// pointer reference.
-list<WN*>*
-Open64IRMemRefIterator::findTopMemRefs(WN* wn)
+bool Open64IRInterface::isPassByReference(WN* opr_parm_wn) 
 {
-  list<WN*>* topMemRefs = new list<WN*>;
-  findTopMemRefs(wn, *topMemRefs);
-  return topMemRefs;
+    bool retval;
+    assert(opr_parm_wn!=0);
+
+    OA::ExprHandle opr_parm = ((OA::irhandle_t)opr_parm_wn);
+
+    // if this is a call to an undefined function then just return true
+    // to be conservatively correct, don't know if the parameter is a
+    // reference or not
+    OA::ProcHandle callee = getProcHandle( 
+                                getSymHandle( sParamToCallMap[opr_parm]));
+    if (callee == OA::ProcHandle(0)) {
+        return true;
+    }
+
+    // get the formal symbol for this actual parameter
+    // we stored which call this is associated with mapped
+    // to the wn for the opr_parm
+    OA::SymHandle formal = getFormalForActual(
+                              sProcContext[opr_parm],
+                              sParamToCallMap[opr_parm],
+                              callee,
+                              opr_parm );
+
+    // the symbol table entry for the formal parameter
+    setCurrentProcToProcContext(formal);
+
+    // FIXME: this might be overly conservative in C programs
+    // because of how isRefParam is implemented
+    if (isRefParam(formal)) {
+        retval= true;
+    } else {
+        retval= false;
+    }
+ 
+    // set context back to caller
+    setCurrentProcToProcContext(opr_parm);
+    return retval;
 }
 
-
-void 
-Open64IRMemRefIterator::findTopMemRefs(WN* wn, list<WN*>& topMemRefs)
-{
-  // Base case
-  if (!wn) { return; }
-  
-  // Base case
-  OPERATOR opr = WN_operator(wn);
-  switch (opr) {
-    // NOTE: MLOAD, MSTORE
-    
-    case OPR_LDA:
-    case OPR_LDMA:
-    case OPR_LDID:
-    case OPR_LDBITS: 
-    case OPR_ILOAD:
-    case OPR_ILOADX:
-    case OPR_ARRAY:
-    case OPR_ARRSECTION: 
-    case OPR_ARRAYEXP:
-      topMemRefs.push_back(wn);
-      return;
-
-    case OPR_ICALL:
-    case OPR_VFCALL:
-      topMemRefs.push_back(wn); // represents function reference
-      break; // recur on parameters (kids 0 ... n-2) below
-      
-    // Special base and recursive case
-    case OPR_STID: 
-    case OPR_PSTID: 
-    case OPR_STBITS:
-    case OPR_ISTORE:
-    case OPR_ISTOREX:
-    case OPR_ISTBITS:
-      topMemRefs.push_back(wn); // represents LHS
-      findTopMemRefs(WN_kid0(wn), topMemRefs); // recur on RHS
-      return;
-      
-    case OPR_BLOCK:
-    case OPR_REGION:
-      return; // Do not recur into BLOCKs
-
-    default:
-      break; // fallthrough -- examine innards of control flow statements
-  }
-
-  // General recursive case
-  INT kid_beg = 0;
-  INT kid_end = WN_kid_count(wn) - 1;
-    
-  // Special case: examine only condition of control flow statements
-  if (kid_end >= 0 && (OPERATOR_is_scf(opr) || OPERATOR_is_non_scf(opr))) {
-    if (opr == OPR_DO_LOOP) {
-      kid_beg = kid_end = 2; // loop test expression
-    }
-    else {
-      kid_end = 0; // condition expression
-    }
-  }
-  if (opr == OPR_ICALL || opr == OPR_VFCALL) {
-    kid_end--; // kid n-2
-  }
-  
-  for (INT kidno = kid_beg; kidno <= kid_end; ++kidno) {
-    WN* kid = WN_kid(wn, kidno);
-    findTopMemRefs(kid, topMemRefs);
-  }
-}
-
-
-/*! Given a mem-ref, find all mem-ref-exprs and sub mem-refs
-    and return a list of them, also maps MemRefHandle's to a set of MemRefExpr's
-    describing them for OA.
-*/
-list<OA::MemRefHandle>*
-Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs(WN* wn)
-{
-  list<OA::MemRefHandle>* memRefs;
-  memRefs = new list<OA::MemRefHandle>;
-  findAllMemRefsAndMapToMemRefExprs(wn, *memRefs, 0, 0);
-  return memRefs;
-}
-
-
-/*! Given a memory-reference WN, find all MemRefHandles
-    contained within and place them in 'memRefs'.  
-    Also map each MemRefHandle to a set of MemRefExprs in sMemRef2mreSetMap.
-    Returns the number of dereferences within the mem-ref and the location block
-    used within the top-most mem-ref-expr of the mem-ref.  Outside
-    callers of this routine should pass a recursion level 'lvl' of 0
-    and flags 'flags' of 0.
-    Note: The returned information is consumed by recursive calls and
-    will not be of interest to others.  The returned information
-    should be *copied* if it is to be used.)
-*/
-list<Open64IRMemRefIterator::MemRefExprInfo>
-Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs(WN* wn, 
-							  list<OA::MemRefHandle>& memRefs,
-							  unsigned aCallLevel, 
-							  unsigned flags) {
-  Language = LANG_F90; // FIXME: Open64's global var Language isn't set
-  // A list of mem-ref infos, *some* of which correspond to
-  // mem-ref-handles added to 'memRefs' for this WHIRL node.
-  list<MemRefExprInfo> curMemRefExprInfos;  
-  // shouldn't have this:
-  if (!wn) { 
-    FORTTK_DIE("Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs: null WHIRL node passed");
-    //    return curMemRefExprInfos; 
-  }
-  OPERATOR opr = WN_operator(wn);
-  // must never see this within a WHIRL memory reference
-  if (opr == OPR_BLOCK) {
-    FORTTK_DIE("Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs: not implemented for WHIRL operator " << OPERATOR_name(opr));
-    //    return curMemRefExprInfos; 
-  } 
-  // the flags to be passed down the callstack
-  enum { 
-    // init value: 
-    flags_NONE              = 0x00000000,
-    // for array and arraysect operators
-    flags_EXPECT_ARRAY_BASE = 0x00000001, 
-    // calls to virtual functions and via function pointers
-    flags_EXPECT_FUNC_BASE  = 0x00000002,
-    // if the whirlnode is the top of one of the idioms: 
-    //   ISTORE/ILOAD (source code: A(j) or a%v)
-    //     ARRAY
-    flags_STORE_PARENT      = 0x00000004,
-    flags_EXPECT_STRCT_BASE = 0x00000008,
-    // indicates the kid is a pointer assignment RHS 
-    flags_POINTERASG_RHS    = 0x00000010
-  };
-  // we may set this to false if this wn is 
-  // really the store/load of an array 
-  // which we would recusivly descend to
-  bool isMemRefExprAtRecursionTop = true;
-  // -------------------------------------------------------
-  // 1. General recursive case
-  // Find all mem-ref-expr within the current mem-ref
-  // -------------------------------------------------------
-  // save the returned mem-ref-expr if they are related 
-  // to the mem-ref-expr for mem-ref. 
-  list<MemRefExprInfo> childInfos;
-  // Set flags to pass information about the current
-  // surrounding context.
-  if (OPERATOR_is_store(opr) && (opr!=OPR_PSTID)) { // this means we look at an assignment, except for pointer stores
-    if (WN_kid_count(wn) >= 2) { 
-      // in the recursion we are accessing the 2nd kid (kid1) node
-      // because that is where the value will be stored
-      // the first kid (kid0) computes the value
-      unsigned thisLevel = aCallLevel + 1;
-      if (opr == OPR_ISTORE // indirect store, address is being computed by kid1
-	  && 
-	  (WN_operator(WN_kid1(wn)) == OPR_ARRAY || WN_operator(WN_kid1(wn)) == OPR_STRCTFLD)) {
-	thisLevel = aCallLevel;  // the top level isn't a memRefExpr itself so don't count up
-	flags |= flags_STORE_PARENT;
-	isMemRefExprAtRecursionTop = false; // this is a store, use info from ARRAY or STRCTFLD
-      }    
-      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid1(wn), memRefs, thisLevel, flags);
-    }
-    else { 
-      // e.g. OPR_STID
-      FORTTK_MSG(2,"Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs: no recursion for store WHIRL operator " << OPERATOR_name(opr));
-    }
-  } 
-  else if (OPERATOR_is_load(opr) && (opr!=OPR_STRCTFLD)) { // this means we look at a variable being accessed
-    if (WN_kid_count(wn) >= 1) {
-      unsigned thisLevel = aCallLevel + 1;
-      if (opr == OPR_ILOAD // indirect store, address is being computed by kid1
-	  && 
-	  (WN_operator(WN_kid0(wn)) == OPR_ARRAY )) {
-	thisLevel = aCallLevel; // the top level isn't a memRefExpr anyway
-	isMemRefExprAtRecursionTop = false; // use info from ARRAY
-      }
-      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), memRefs, thisLevel, flags);
-    }
-    else { 
-      // e.g. OPR_LDID
-      FORTTK_MSG(2,"Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs: no recursion for load WHIRL operator " << OPERATOR_name(opr));
-    }
-  } 
-  else {
-    bool kidInfosUsedForCurrentMemRefExpr = false; 
-    // this remains false for all special cases listed below. 
-    bool kidsAreDistinctExpr = false; 
-    // this becomes true if we look at array index expressions which are seen as separate
-    INT kid_end = WN_kid_count(wn) - 1;
-    INT kid_beg = kid_end + 1; // by default do not examine kids
-    switch(opr) {
-      // Arrays: we want the return value when recuring on the array
-      // reference, but do not care about it for the index expressions.
-      // We do not even recur on dimension information.
-    case OPR_ARRAY: // recur on array indices
-    case OPR_ARRSECTION: {
-      flags |= flags_EXPECT_ARRAY_BASE;
-      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), 
-						     memRefs, 
-						     aCallLevel + 1, 
-						     flags);
-      // index expressions are distinct because OA doesn't handle array sections yet
-      kidsAreDistinctExpr = true; 
-      INT dim = kid_end / 2; // the first half of the kids carriess dimension data 
-      kid_beg = dim + 1; // index expr are dim+1 ... 2*dim (the second half)
-      break;
-    }
-    case OPR_ARRAYEXP: {
-      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), 
-						     memRefs, 
-						     aCallLevel + 1, 
-						     flags);
-      break;
-    }
-    case OPR_STRCTFLD: 
-      // we are in a strct field like  x%v
-      // what comes below refers to x via an LDA
-      // unless x is a pointer we don't want to see it. 
-      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), 
-						     memRefs, 
-						     aCallLevel + 1, 
-						     flags | flags_EXPECT_STRCT_BASE);
-      break;
-    case OPR_PSTID: 
-      // pointer assignment.
-      // the kid0 is the thing that we take an address of
-      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid0(wn), 
-						     memRefs, 
-						     aCallLevel + 1, 
-						     flags | flags_POINTERASG_RHS);
-      break;
-      // indirect calls via function pointer:
-    case OPR_ICALL:
-      // virtual function calls:
-    case OPR_VFCALL: { // recur on kid n-1
-      flags |= flags_EXPECT_FUNC_BASE;
-      int k = WN_kid_count(wn) - 1;
-      childInfos = findAllMemRefsAndMapToMemRefExprs(WN_kid(wn, k), 
-						     memRefs, 
-						     aCallLevel + 1, 
-						     flags);
-      break;
-    }
-    default:
-      // We need to recur on children and use child mem-expr. E.g., 
-      //  I4I4ILOAD 0 T<4,.predef_I4,4> T<41,anon_ptr.,8> <-- top mem ref WN
-      //   U8MIN                                          <-- current WN
-      //    U8U8ILOAD 0 T<41,anon_ptr.,8> T<42,anon_ptr.,8>
-      //     U8U8LDID 0 <2,6,q> T<42,anon_ptr.,8>
-      //    U8U8LDID 0 <2,5,r> T<41,anon_ptr.,8>
-      kid_beg = 0;
-      kidInfosUsedForCurrentMemRefExpr = true;
-      break;
-    } // end switch
-    unsigned kid_lvl = aCallLevel + 1;
-    unsigned kid_flags = flags;
-    if (kidsAreDistinctExpr) { // expect completely distinct expressions
-      // so we have to reset everything
-      kid_lvl = 0;   // reset level 
-      kid_flags = flags_NONE; // reset flags
-    }
-    for (INT kidno = kid_beg; kidno <= kid_end; ++kidno) {
-      WN* kid = WN_kid(wn, kidno);
-      list<MemRefExprInfo> infos = 
-	findAllMemRefsAndMapToMemRefExprs(kid, memRefs, kid_lvl, kid_flags);
-      if (kidInfosUsedForCurrentMemRefExpr) {
-	childInfos.splice(childInfos.end(), infos);
-      }
-      else {
-	// diagnostic, done e.g. for constants in OPR_INTCONST
-	FORTTK_MSG(2,"Open64IRMemRefIterator::findAllMemRefsAndMapToMemRefExprs: dropping memrefinfos for opr " << OPERATOR_name(WN_operator(kid)));
-      }
-    }    
-  }// end of all recursion cases
-  // By default, we ensure that at least a null MemRefExprInfo exists
-  if (childInfos.size() == 0) {
-    childInfos.push_back(MemRefExprInfo(0, OA::SymHandle(0)));
-  }
-  // -------------------------------------------------------
-  // 2. General base case 
-  // -------------------------------------------------------
-  // For each child mem-ref-expr create a mem-ref-expr based on 'wn'
-  for (list<MemRefExprInfo>::iterator it = childInfos.begin(); 
-       it != childInfos.end(); ++it) {
-    MemRefExprInfo childInfo = (*it);
-    unsigned derefs = childInfo.first;
-    OA::SymHandle childSH = childInfo.second;
-    // -------------------------------------------------------
-    // a. Info about the MemRefExpr
-    // -------------------------------------------------------
-    // Sometimes -- e.g. because of the context -- a WHIRL node that
-    // would typically be a mem-ref-expr should not be considered one.
-    // However, we may use its info to create a location block.
-    bool isMemRefExpr = isMemRefExprAtRecursionTop;
-    // Assume a source-ref-expr if level 0.  This will be corrected, if
-    // necessary, below.
-    OA::MemRefExpr::MemRefType hty;
-    if (aCallLevel == 0) {
-      hty = (flags & flags_STORE_PARENT) ? OA::MemRefExpr::DEF: // a store means an assignment
-	                                   OA::MemRefExpr::USE;
-    }
-    bool isAddrOf = false;
-    bool fullAccuracy = false;
-    OA::SymHandle locSH;
-    // flags to decide on the kind of memory reference later on:
-    bool isLocal = false;
-    bool isNamed = false;
-    bool isUnique = false;
-    // -------------------------------------------------------
-    // b. Gather information about the mem-ref
-    // -------------------------------------------------------
-    TY_IDX base_ty = 0, ref_ty = 0;
-    WN_OFFSET offset = 0;
-    if (OPERATOR_is_load(opr) // a variable 
-	|| 
-	opr == OPR_LDA  // load address
-	|| 
-	opr == OPR_LDMA) { // load mutable address
-      base_ty = WN_GetBaseObjType(wn);
-      ref_ty = WN_GetRefObjType(wn);
-      if (flags & (flags_EXPECT_ARRAY_BASE 
-		   | 
-		   flags_EXPECT_FUNC_BASE 
-		   | 
-		   flags_EXPECT_STRCT_BASE)) {
-	isMemRefExpr = false;
-      }
-      offset = WN_load_offset(wn); 
-    } 
-    else if (OPERATOR_is_store(opr)) {
-      if (aCallLevel == 0) { 
-	hty = OA::MemRefExpr::DEF; 
-      }
-      base_ty = WN_GetBaseObjType(wn);
-      ref_ty = WN_GetRefObjType(wn);
-      offset = WN_store_offset(wn);
-    }
-    unsigned field_id = 0; 
-    if (OPERATOR_has_field_id(opr)) {
-      field_id = WN_field_id(wn);
-    }
-    ST* st = NULL; // some have a symbol table entry
-    // special cases
-    switch (opr) {
-      // LOADs represent an rvalue
-    case OPR_LDA: // load address
-    case OPR_LDMA: // load mutable address
-      st = WN_st(wn);
-      if (!(Language == LANG_F77 || Language == LANG_F90)) {
-	isAddrOf = true;
-      }
-      if ((flags & flags_EXPECT_ARRAY_BASE)) {
-	ref_ty = (TY_Is_Pointer(ref_ty)) ? TY_pointed(ref_ty) : base_ty;
-	isAddrOf = false; // implicitly dereference the address
-      }
-      break;
-    case OPR_STRCTFLD: // struct field
-      break;
-    case OPR_LDID:
-    case OPR_LDBITS:
-      if (flags & flags_POINTERASG_RHS) { 
-	// we are in the rhs of a pointer assignment
-	isAddrOf = true; 
-	hty = OA::MemRefExpr::USE;
-      }
-      st = WN_st(wn);
-      break;
-    case OPR_ILOAD:
-    case OPR_ILOADX:
-	if (!(Language == LANG_F77 || Language == LANG_F90)) { derefs++; }
-	break; // use loc block obtained above from kid0
-      // ARRAYs
-      case OPR_ARRAY:
-      case OPR_ARRSECTION:
-	break; // use loc block obtained above from kid0
-      case OPR_ARRAYEXP:
-	isMemRefExpr = false;
-	break; // use loc block obtained above from kid0
-      // CALLs (indirect)
-      case OPR_ICALL:
-      case OPR_VFCALL:
-	if (!(Language == LANG_F77 || Language == LANG_F90)) { derefs++; }
-	break; // use loc block obtained above from kid n-1
-      // STOREs represent an lvalue
-      case OPR_STID:
-      case OPR_STBITS:
-	st = WN_st(wn);
-	break;
-      case OPR_PSTID:
-	st = WN_st(wn);
-	break;
-      case OPR_ISTORE:
-      case OPR_ISTOREX:
-      case OPR_ISTBITS: {
-	if (!(Language == LANG_F77 || Language == LANG_F90)) { derefs++; }
-	break; // use loc block obtained above from kid1
-      }
-      default:
-	isMemRefExpr = false;
-	break;
-    }
-    // -------------------------------------------------------
-    // c. Compute mem-ref-expr information and add to 'memRefs'
-    // -------------------------------------------------------
-    // Create location block 
-    // FIXME: not as accurate as it could be
-    // FIXME: What to do with alloc?
-    if (st) {
-      // Note: This should simulate most of the info in OPR_PARM nodes
-      bool isLocalInParam = ((ST_sclass(st) == SCLASS_FORMAL || 
-			      ST_sclass(st) == SCLASS_FORMAL_REF) 
-			     && 
-			     ST_is_intent_in_argument(st));
-      isLocal = ((PU_Info_child(Current_PU_Info) == NULL) && // has no nested child procedures
-		 (isLocalInParam 
-		  || 
-		  (ST_level(st) == CURRENT_SYMTAB)));
-      isNamed = (ST_sclass(st) != SCLASS_UNKNOWN &&
-		 ST_sclass(st) != SCLASS_EXTERN);
-      isUnique = isLocal;
-      locSH = OA::SymHandle((OA::irhandle_t)st);
-    } 
-    else if (childSH) {
-      locSH = childSH; 
-    }
-    // Set accuracy
-    if (offset == 0 && field_id == 0) { // we do not have a structure ref
-      if (derefs > 0) { 
-	// A plain deref always has full accuracy
-	fullAccuracy = true;
-      }
-      if (base_ty != 0 && WN2F_Can_Assign_Types(base_ty, ref_ty)) {
-	// If assigning to same object, we have full accuracy
-	fullAccuracy = true;
-      }
-    }
-    // Create mem-ref-expr and add to list
-    if (isMemRefExpr) {
-      // currently only handling named memory references
-      // FIXME: need to handle malloc's at some point
-      // if there are 0 derefs then just create a NamedRef
-      OA::OA_ptr<OA::MemRefExpr> mre;
-      if (derefs==0) {
-        mre = new OA::NamedRef(isAddrOf,fullAccuracy,hty,locSH);
-      } else {
-        // create base named reference with no address of and full accuracy
-        // and then a Deref
-        mre = new OA::NamedRef(false, true, hty, locSH);
-        mre = new OA::Deref(mre,derefs);
-        // if the reference isn't accurate then set partial accuracy on the deref
-        if (!fullAccuracy) { 
-	  mre->setPartialAccuracy(); 
-	}
-      }
-      // mapping of MemRefHandle to MemRefExprs
-      Open64IRInterface::sMemref2mreSetMap[OA::MemRefHandle((OA::irhandle_t)wn)].insert(mre);
-//       std::cout << "made a memerefexpr" << std::endl;
-//       std::cout << "for  memeref" << std::endl;
-//       Open64IRInterface::DumpWN(wn,std::cout);
-//       std::cout << std::endl;
-      // list of MemRefHandles we are building
-      memRefs.push_back(OA::MemRefHandle((OA::irhandle_t)wn));
-    } 
-    // Save mem-ref-expr info
-    curMemRefExprInfos.push_back(MemRefExprInfo(derefs, locSH));
-  }
-  return curMemRefExprInfos;
-}
 
 /*!
    constant symbols get their strings from the TCON table?
@@ -2802,13 +2904,6 @@ Open64IRInterface::DumpWN(WN* wn, ostream& os)
   case OPR_STID:
     DumpWNLeaf(wn, os);
     os << " = ";
-    DumpWN(WN_kid0(wn), os);
-    break;
-
-   // pointer assignment
-  case OPR_PSTID:
-    DumpWNLeaf(wn, os);
-    os << " => ";
     DumpWN(WN_kid0(wn), os);
     break;
 
@@ -3115,6 +3210,7 @@ print_generic_binary:
   }
 }
 
+
 void 
 Open64IRInterface::DumpWNLeaf(WN* wn, ostream& os) 
 {
@@ -3146,6 +3242,7 @@ Open64IRInterface::DumpWNMemRef(WN* wn, ostream& os)
     DumpWN(wn, os);
   }
 }
+
 
 void 
 Open64IRInterface::DumpWNMemRefLeaf(WN* wn, ostream& os) 
@@ -3182,6 +3279,32 @@ void Open64IRInterface::initCallSymToProcMap(Open64IRProcIterator &procIter)
     }
 }
 
+/*! creates a mapping of procedure handles to the set of symbols
+    referenced in that procedure
+    // get a set of all referenced symbols in this procedure
+    // Using this to approximate what is visible in F90 because Open64
+    // module scoping is messed up and all module variables are put
+    // in the global scope
+ */
+void Open64IRInterface::initProcToSymRefSetMap(Open64IRProcIterator &procIter)
+{
+    // create an instance of Open64IRInterface so that we have access
+    // to all methods
+    Open64IRInterface tempIR;
+    
+    // Iterate over procedures in program
+    OA::ProcHandle proc;
+    for (procIter.reset(); procIter.isValid(); procIter++) {
+        proc = procIter.current();
+        OA::OA_ptr<OA::IRSymIterator> symIter = tempIR.getRefSymIterator(proc);
+        std::set<OA::SymHandle> refSet;
+        for ( ; symIter->isValid(); (*symIter)++ ) {
+            sProcToSymRefSetMap[proc].insert(symIter->current());
+        }
+    }
+}
+
+
 	
 /*! 
    Determines the current context for given handle and makes sure that
@@ -3198,6 +3321,81 @@ void Open64IRInterface::setCurrentProcToProcContext(OA::IRHandle h)
       }
     }
 }
+
+OA::ProcHandle Open64IRInterface::getCurrentProcContext()
+{
+    return (OA::irhandle_t)Current_PU_Info;
+}
+
+void Open64IRInterface::setCurrentProcContext(OA::ProcHandle proc)
+{
+    PU_Info *pu = (PU_Info*)proc.hval();
+    // have to check what Open64 thinks is current context
+    if ( Current_PU_Info  != pu && pu != NULL ) {
+        PU_SetGlobalState(pu);
+    }
+}
+
+/*! Helper class to initProcContext.  Finds all handles within
+    an expression and maps them to the given procedure context.
+*/
+/*
+class InitContextVisitor : public OA::ExprTreeVisitor {
+  public:
+    InitContextVisitor(OA::ProcHandle proc) : mProc(proc) {}
+    ~InitContextVisitor() {}
+
+    void visitExprTreeBefore(OA::ExprTree&) {}
+    void visitExprTreeAfter(OA::ExprTree&) {}
+    
+    //---------------------------------------
+    // method for each ExprTree::Node subclass
+    //---------------------------------------
+    // default base class so that visitors can handle unknown
+    // node sub-classes in a generic fashion
+    void visitNode(OA::ExprTree::Node&) {}
+
+    void visitOpNode(OA::ExprTree::OpNode& n)
+    {
+        Open64IRInterface::sProcContext[n.getHandle()] = mProc;
+
+        // visit each child
+        OA::OA_ptr<OA::ExprTree::Node> cetNodePtr;
+        OA::ExprTree::ChildNodesIterator cNodesIter(n);
+        for ( ; cNodesIter.isValid(); cNodesIter++ ) {
+            cetNodePtr = cNodesIter.current();
+            cetNodePtr->acceptVisitor(*this);
+        }
+
+    }
+
+    void visitCallNode(OA::ExprTree::CallNode& n)
+    {
+        // do nothing because have other routines that saw all calls
+        // in a statement
+    }
+
+    void visitMemRefNode(OA::ExprTree::MemRefNode& n)
+    {
+        // do nothing because have other routines that saw all mem refs
+        // in a statement
+    }
+
+    void visitConstSymNode(OA::ExprTree::ConstSymNode& n)
+    {
+        Open64IRInterface::sProcContext[n.getHandle()] = mProc;
+    }
+
+    void visitConstValNode(OA::ExprTree::ConstValNode& n)
+    {
+        Open64IRInterface::sProcContext[n.getHandle()] = mProc;
+    }
+
+  private:
+    OA::ProcHandle mProc;
+};
+*/
+
 
 /*! only call if the symbol is in a module or a common block
 */
@@ -3264,7 +3462,8 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
     // Iterate over procedures in program
     bool globalSymsVisitFlag = false;
     OA::ProcHandle proc;
-    for ( ; procIter.isValid(); procIter++) {
+    procIter.reset();
+    for (; procIter.isValid(); procIter++) {
         proc = procIter.current();
         PU_Info* pu = (PU_Info*)proc.hval();
         WN *wn_pu = PU_Info_tree_ptr(pu);
@@ -3309,11 +3508,17 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
             // if they are module or common block variables
             if (Stab_Is_Based_At_Common_Block(st) || Stab_Is_In_Module(st)) 
             {
-                sGlobalVarMap[create_fqn(sym)].insert(sym);
+                fully_qualified_name fqn = create_fqn(sym);
+                sGlobalVarMap[fqn].insert(sym);
+                sSymToFQNMap[sym] = fqn;
                 if (debug) {
-                    fully_qualified_name fqn = create_fqn(sym);
                     std::cout << "create_fqn(" << createCharStarForST(st) << ") = "
                               << fqn.mVar << ", " << fqn.mContext << std::endl;
+                    std::cout << "\tsym = " << tempIR.toString(sym)
+                              << ", hval= " << sym.hval()
+                              << ", st = " << (unsigned int)st << std::endl;
+                    std::cout << "\tproc = " << tempIR.toString(proc)
+                              << ", hval= " << proc.hval();
                 }
             }
         }

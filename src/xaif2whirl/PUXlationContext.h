@@ -7,10 +7,11 @@
 #include <list> 
 #include <iostream>
 
-#include "include/Open64BasicTypes.h"
-#include "lib/support/WhirlParentize.h"
-#include "lib/support/WhirlIDMaps.h"
-#include "lib/support/SymTab.h"
+#include "Open64IRInterface/Open64BasicTypes.h"
+#include "WhirlParentize.h"
+#include "WhirlIDMaps.h"
+#include "Symbol.h"
+#include "XAIFSymToSymbolMap.h"
 #include "XlationContext.h"
 
 namespace xaif2whirl {
@@ -84,28 +85,28 @@ namespace xaif2whirl {
 
     WN* findParentWN(WN*);
     WN* findParentBlockWN(WN*);
-    WhirlParentMap* getWNParentMap() const;
-    void setWNParentMap(WhirlParentMap* aWhirlParentMapP);
+    fortTkSupport::WhirlParentMap* getWNParentMap() const;
+    void setWNParentMap(fortTkSupport::WhirlParentMap* aWhirlParentMapP);
   
-    std::pair<ST_TAB*, PU_Info*> findSymTab(SymTabId stabId);
-    SymTabIdToSymTabMap* getSymTabIdToSymTabMap() const;
-    void setSymTabIdToSymTabMap(SymTabIdToSymTabMap* aSymTabIdToSymTabMapP);
+    std::pair<ST_TAB*, PU_Info*> findSymTab(fortTkSupport::SymTabId stabId);
+    fortTkSupport::SymTabIdToSymTabMap* getSymTabIdToSymTabMap() const;
+    void setSymTabIdToSymTabMap(fortTkSupport::SymTabIdToSymTabMap* aSymTabIdToSymTabMapP);
   
-    PU_Info* findPU(PUId aPUid);
-    PUIdToPUMap* getPUIdToPUMap() const;
-    void setPUIdToPUMap(PUIdToPUMap* aPUIdToPUMapP);
+    PU_Info* findPU(fortTkSupport::PUId aPUid);
+    fortTkSupport::PUIdToPUMap* getPUIdToPUMap() const;
+    void setPUIdToPUMap(fortTkSupport::PUIdToPUMap* aPUIdToPUMapP);
 
-    WNId findWNId(WN* wn);
-    WNToWNIdMap* getWNToWNIdMap() const;
-    void setWNToWNIdMap(WNToWNIdMap* aWNToWNIdMapP);
+    fortTkSupport::WNId findWNId(WN* wn);
+    fortTkSupport::WNToWNIdMap* getWNToWNIdMap() const;
+    void setWNToWNIdMap(fortTkSupport::WNToWNIdMap* aWNToWNIdMapP);
 
-    WN* findWN(WNId aWNId, bool mustFind = false);
-    WNIdToWNMap* getWNIdToWNMap() const;
-    void setWNIdToWNMap(WNIdToWNMap* aWNIdToWNMapP);
+    WN* findWN(fortTkSupport::WNId aWNId, bool mustFind = false);
+    fortTkSupport::WNIdToWNMap* getWNIdToWNMap() const;
+    void setWNIdToWNMap(fortTkSupport::WNIdToWNMap* aWNIdToWNMapP);
 
-    Symbol* findSym(const std::string& scopeid, const std::string& symid);
-    XAIFSymToSymbolMap* getXAIFSymToSymbolMap() const;
-    void setXAIFSymToSymbolMap(XAIFSymToSymbolMap* aXAIFSymToSymbolMapP);
+    fortTkSupport::Symbol* findSym(const std::string& scopeid, const std::string& symid);
+    fortTkSupport::XAIFSymToSymbolMap* getXAIFSymToSymbolMap() const;
+    void setXAIFSymToSymbolMap(fortTkSupport::XAIFSymToSymbolMap* aXAIFSymToSymbolMapP);
     
     // -------------------------------------------------------
     // Misc
@@ -136,32 +137,32 @@ namespace xaif2whirl {
     /**
      * we don't own this
      */
-    WhirlParentMap* myWNParentMapP;
+    fortTkSupport::WhirlParentMap* myWNParentMapP;
 
     /**
      * we don't own this
      */
-    SymTabIdToSymTabMap* mySymTabIdToSymTabMapP;
+    fortTkSupport::SymTabIdToSymTabMap* mySymTabIdToSymTabMapP;
 
     /**
      * we don't own this
      */
-    PUIdToPUMap* myPUIdToPUMapP;
+    fortTkSupport::PUIdToPUMap* myPUIdToPUMapP;
 
     /**
      * we don't own this
      */
-    WNToWNIdMap* myWNToWNIdMapP;
+    fortTkSupport::WNToWNIdMap* myWNToWNIdMapP;
   
     /**
      * we don't own this
      */
-    WNIdToWNMap* myWNIdToWNMapP;
+    fortTkSupport::WNIdToWNMap* myWNIdToWNMapP;
   
     /**
      * we don't own this
      */
-    XAIFSymToSymbolMap* myXAIFSymToSymbolMapP;
+    fortTkSupport::XAIFSymToSymbolMap* myXAIFSymToSymbolMapP;
 
     // a globally defined prefix for all newly created symbols
     static std::string ourPrefix;

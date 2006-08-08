@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.cxx,v 1.15 2005/07/28 15:46:51 eraxxon Exp $
+// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/SymTab.cpp,v 1.2 2006/03/16 03:48:55 mstrout Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -7,7 +7,7 @@
 //***************************************************************************
 //
 // File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SymTab.cxx,v $
+//   $Source: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/SymTab.cpp,v $
 //
 // Purpose:
 //   [The purpose of this file]
@@ -21,105 +21,18 @@
 
 //************************** Open64 Include Files ***************************
 
-#include <include/Open64BasicTypes.h>
+#include "Open64BasicTypes.h"
 
 //*************************** User Include Files ****************************
 
-#include "SymTab.h"
+#include "Open64IRInterface/SymTab.h"
 
-#include "stab_attr.h"
-#include "wn_attr.h"
-#include "diagnostics.h"
+#include "Open64IRInterface/stab_attr.h"
+#include "Open64IRInterface/wn_attr.h"
+#include "Open64IRInterface/diagnostics.h"
 
 //************************** Forward Declarations ***************************
 
-//***************************************************************************
-// XAIFSymToSymbolMap
-//***************************************************************************
-
-XAIFSymToSymbolMap::XAIFSymToSymbolMap()
-{
-}
-
-XAIFSymToSymbolMap::~XAIFSymToSymbolMap()
-{
-  // Clear table
-  StringToSymMapIt it = strToSymMap.begin();
-  for ( ; it != strToSymMap.end(); ++it) {
-    delete (*it).second; // Symbol*
-  }
-  strToSymMap.clear();
-}
-
-Symbol*
-XAIFSymToSymbolMap::Find(const char* scopeid, const char* symid) const
-{
-  std::string key = MakeKey(scopeid, symid);
-  
-  StringToSymMapItC it = strToSymMap.find(key);
-  Symbol* sym = (it == strToSymMap.end()) ? NULL : (*it).second;
-  return sym;
-}
-
-bool
-XAIFSymToSymbolMap::Insert(const char* scopeid, const char* symid, 
-			   const Symbol* sym_)
-{
-  std::string key = MakeKey(scopeid, symid);
-  Symbol* sym = const_cast<Symbol*>(sym_); // the map uses non const types
-  
-  StringToSymMapVal val = StringToSymMapVal(key, sym);
-  pair<StringToSymMapIt, bool> p = strToSymMap.insert(val);
-  return p.second;
-}
-
-std::string 
-XAIFSymToSymbolMap::MakeKey(const char* scopeid, const char* symid)
-{
-  // Reserve enough space for null terminators and concatination char
-  std::string key;
-  key.reserve(strlen(scopeid) + strlen(symid) + 3);
-
-  key += scopeid;
-  key += ".";
-  key += symid;
-  return key;
-}
-
-//***************************************************************************
-// Symbol
-//***************************************************************************
-
-Symbol::Symbol()
-  : st(NULL), active(false)
-{
-}
-
-Symbol::Symbol(const ST* st_, WNId wnid_, bool act_)
-{
-  SetST(st_);
-  SetPathVorlage(wnid_);
-  SetActive(act_);
-}
-
-Symbol::~Symbol()
-{
-}
-
-void 
-Symbol::Dump(std::ostream& o) const
-{
-  o << "Symbol\n";
-}
-
-void 
-Symbol::DDump() const
-{
-  Dump(std::cerr);
-}
-
-//***************************************************************************
-// Stuff copied from SymTab.cpp in UseNewOA-Open64
 //***************************************************************************
 
 // FIXME
@@ -177,9 +90,6 @@ IsVarRefTranslatableToXAIF(const WN* wn)
   case OPR_ARRSECTION: // FIXME: can we do arrsection?
   case OPR_ARRAYEXP:
     return true;
-
-  default:
-    break; // fall through
     
   } // switch
 
@@ -251,21 +161,17 @@ IsNonScalarRef(const WN* wn)
     // Kid 0 is an LDA or LDID which represents the base of the array
     // being referenced or defined. Kids 1..n are dimensions; Kids
     // n+1..2n are the index expressions.
-    //WN* base = WN_kid0(wn);
-    //ASSERT_FATAL(WN_operator(base) == OPR_LDA || WN_operator(base) == OPR_LDID,
-    //             (DIAG_A_STRING, "Error!"));
+    WN* base = WN_kid0(wn);
+    ASSERT_FATAL(WN_operator(base) == OPR_LDA || WN_operator(base) == OPR_LDID,
+		 (DIAG_A_STRING, "Error!"));
     return true;
   }
 
   case OPR_ARRAYEXP: // FIXME
     return true;
-
-  default: 
-    break; // fall through
     
   } // switch
 
   return false;
 }
-
 

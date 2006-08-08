@@ -1,11 +1,10 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.h,v 1.12 2006/05/12 16:12:22 utke Exp $
+// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/wn_attr.h,v 1.2 2006/03/16 03:48:55 mstrout Exp $
 
 #ifndef wn_attr_INCLUDED
 #define wn_attr_INCLUDED
 
-
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 
   /**

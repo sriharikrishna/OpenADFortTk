@@ -26,7 +26,7 @@
 
 //*************************** User Include Files ****************************
 
-#include <lib/support/CmdLineParser.h>
+#include <CmdLineParser.h>
 #include "xaif2whirl.h"
 
 //*************************** Forward Declarations ***************************

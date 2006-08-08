@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlGlobalStateUtils.h,v 1.5 2005/01/12 20:00:27 eraxxon Exp $
+// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/WhirlGlobalStateUtils.h,v 1.1.1.1 2004/04/16 15:58:28 mstrout Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -7,7 +7,7 @@
 //***************************************************************************
 //
 // File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlGlobalStateUtils.h,v $
+//   $Source: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/WhirlGlobalStateUtils.h,v $
 //
 // Purpose:
 //   [The purpose of this file]
@@ -53,11 +53,9 @@
 
 //************************** Open64 Include Files ***************************
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 //*************************** User Include Files ****************************
-
-#include "diagnostics.h"
 
 //************************** Forward Declarations ***************************
 
@@ -76,7 +74,6 @@ extern PUToScopedSymTabMap PUToScopeTabMap;
 //   - Current_PU_Info
 //   - CURRENT_SYMTAB == Current_scope
 //   - Scope_tab
-//   ? Current_DST
 void
 PU_SetGlobalState(PU_Info* pu);
 

@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlGlobalStateUtils.cxx,v 1.4 2005/01/12 20:00:27 eraxxon Exp $
+// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/WhirlGlobalStateUtils.cpp,v 1.1.1.1 2004/04/16 15:58:28 mstrout Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -7,7 +7,7 @@
 //***************************************************************************
 //
 // File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlGlobalStateUtils.cxx,v $
+//   $Source: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/WhirlGlobalStateUtils.cpp,v $
 //
 // Purpose:
 //   [The purpose of this file]
@@ -23,9 +23,7 @@
 
 //*************************** User Include Files ****************************
 
-#include "WhirlGlobalStateUtils.h"
-
-#include "diagnostics.h"
+#include "Open64IRInterface/WhirlGlobalStateUtils.h"
 
 //************************** Forward Declarations ***************************
 
@@ -46,7 +44,6 @@ PU_SetGlobalState(PU_Info* pu)
   Current_PU_Info = pu;
   CURRENT_SYMTAB = PU_lexical_level(*Current_pu); // == Current_scope
   Scope_tab = PUToScopeTabMap.Find(pu);
-  //Current_DST
   assert(Scope_tab);
 }
 

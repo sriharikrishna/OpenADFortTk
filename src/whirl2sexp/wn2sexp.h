@@ -1,39 +1,17 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.h,v 1.7 2005/02/01 00:42:51 eraxxon Exp $
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
 #ifndef wn2sexp_h
 #define wn2sexp_h
-
-//************************** System Include Files ***************************
 
 #include <vector> // STL
 #include <list>   // STL
 
-//************************** Open64 Include Files ***************************
+#include "Open64IRInterface/Open64BasicTypes.h"
 
-#include <include/Open64BasicTypes.h>
-
-//*************************** User Include Files ****************************
+#include "sexpostream.h"
+#include "SexpTags.h"
 
 #include "whirl2sexp.i"
-
-#include <lib/support/sexpostream.h>
-#include <lib/support/SexpTags.h>
-
-//************************** Forward Declarations ***************************
 
 //***************************************************************************
 // Commonly used WHIRL translation functions

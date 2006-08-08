@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v 1.10 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/WhirlIO.cpp,v 1.2 2004/04/16 17:34:32 mstrout Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -38,7 +38,7 @@
 //***************************************************************************
 //
 // File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIO.cxx,v $
+//   $Source: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/WhirlIO.cpp,v $
 //
 // Purpose:
 //   [The purpose of this file]
@@ -52,7 +52,7 @@
 
 //************************** Open64 Include Files ***************************
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 #include "ir_bread.h"	   // Read_Global_Info(), etc.
 #include "ir_bwrite.h"	   // Write_Global_Info(), etc.
@@ -70,11 +70,11 @@
 
 //*************************** User Include Files ****************************
 
-#include "WhirlIO.h"
-#include "WhirlGlobalStateUtils.h"
-#include "Open64IRInterface.hpp"
+#include "Open64IRInterface/WhirlIO.h"
+#include "Open64IRInterface/WhirlGlobalStateUtils.h"
+#include "Open64IRInterface/Open64IRInterface.hpp"
 
-#include "diagnostics.h"
+#include "Open64IRInterface/diagnostics.h"
 
 //************************** Forward Declarations ***************************
 

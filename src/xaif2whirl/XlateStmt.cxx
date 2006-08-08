@@ -8,16 +8,15 @@
 #include <xercesc/dom/DOMNode.hpp>
 #include <xercesc/dom/DOMElement.hpp>
 
+#include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64IRInterface/Open64IRInterface.hpp"
+#include "Open64IRInterface/SymTab.h"
+#include "Open64IRInterface/wn_attr.h"
+#include "Open64IRInterface/stab_attr.h"
 
-#include <include/Open64BasicTypes.h>
-
-#include <lib/support/Open64IRInterface.hpp>
-#include <lib/support/SymTab.h> // for XAIFSymToWhirlSymMap
-#include <lib/support/WhirlIDMaps.h>
-#include <lib/support/wn_attr.h>   // for WN_Tree_Type
-#include <lib/support/stab_attr.h> // for TY_Is_*
-#include <lib/support/XAIFStrings.h>
-#include <lib/support/diagnostics.h>
+#include <WhirlIDMaps.h>
+#include <XAIFStrings.h>
+#include "Diagnostics.h"
 
 #include "xaif2whirl.h"
 #include "XlateStmt.h"
@@ -197,7 +196,7 @@ namespace xaif2whirl {
     // 3. Create function call
     // -------------------------------------------------------
     TYPE_ID rtype = MTYPE_V; // void type for subroutine call
-    Symbol* sym = GetSymbol(elem, ctxt);
+    fortTkSupport::Symbol* sym = GetSymbol(elem, ctxt);
     WN* callWN = WN_Call(rtype, MTYPE_V, numArgs + numiArgs, sym->GetST());
     WN_Set_Call_Default_Flags(callWN); // set conservative assumptions
     for (unsigned i = 0; i < numArgs; ++i) {
@@ -264,7 +263,7 @@ namespace xaif2whirl {
     // Create placeholder nodes for arguments not found above
     for (unsigned int i = 0; i < args_wn.size(); ++i) {
       if (!args_wn[i]) { 
-	Symbol* sym = GetOrCreateBogusTmpSymbol(ctxt);
+	fortTkSupport::Symbol* sym = GetOrCreateBogusTmpSymbol(ctxt);
 	ST* st = sym->GetST();
 	TYPE_ID rty = ST_mtype(st), dty = ST_mtype(st);
 	args_wn[i] = WN_CreateLdid(OPR_LDID, rty, dty, 0, st, ST_type(st), 0);
@@ -393,7 +392,7 @@ namespace xaif2whirl {
 		       || iostmt == IOS_CR_FRF || iostmt == IOS_CR_FRU
 		       || iostmt == IOS_CR_OPEN || iostmt == IOS_CR_CLOSE
 		       || iostmt == IOS_INQUIRE || iostmt == IOS_CR_INQUIRE,
-		       FORTTK_UNEXPECTED_INPUT << IOSTATEMENT_name(iostmt));
+		       fortTkSupport::Diagnostics::UnexpectedInput << IOSTATEMENT_name(iostmt));
     // Iterate over IO_ITEMs and translate IOLs (io lists)
     for (INT kidno = 0; kidno < WN_kid_count(wn); ++kidno) {
       WN* kid = WN_kid(wn, kidno);
@@ -430,7 +429,7 @@ namespace xaif2whirl {
     case IOL_DOPE:    // skip
       break;
     default:
-      FORTTK_DIE(FORTTK_UNEXPECTED_OPR << IOITEM_name(kind));
+      FORTTK_DIE(fortTkSupport::Diagnostics::UnexpectedOpr << IOITEM_name(kind));
       break;
     }
   }

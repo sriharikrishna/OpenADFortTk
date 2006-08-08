@@ -1,32 +1,12 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.h,v 1.4 2005/08/15 20:17:25 utke Exp $
 
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
 #ifndef OAMaps_INCLUDED_h
 #define OAMaps_INCLUDED_h
 
-//************************* System Include Files ****************************
-
 #include <iostream>
 
-//************************** Open64 Include Files ***************************
-
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 //************************ OpenAnalysis Include Files ***********************
 
@@ -35,7 +15,10 @@
 #include <OpenAnalysis/CFG/EachCFGStandard.hpp>
 #include <OpenAnalysis/Alias/ManagerAliasMapBasic.hpp>
 #include <OpenAnalysis/Alias/ManagerInterAliasMapBasic.hpp>
-#include <OpenAnalysis/Alias/ManagerNoAddressOf.hpp>
+// #include <OpenAnalysis/Alias/ManagerNoAddressOf.hpp>
+// replacing the above with:
+#include <OpenAnalysis/Alias/ManagerFIAliasAliasMap.hpp>
+
 #include <OpenAnalysis/ReachDefs/ManagerReachDefsStandard.hpp>
 #include <OpenAnalysis/SideEffect/ManagerSideEffectStandard.hpp>
 #include <OpenAnalysis/SideEffect/InterSideEffectStandard.hpp>
@@ -48,17 +31,19 @@
 #include <OpenAnalysis/XAIF/ManagerUDDUChainsXAIF.hpp>
 #include <OpenAnalysis/XAIF/ManagerAliasMapXAIF.hpp>
 #include <OpenAnalysis/DataFlow/ManagerParamBindings.hpp>
-#include <OpenAnalysis/Alias/ManagerSymAliasSetsBottom.hpp>
-#include <OpenAnalysis/Alias/ManagerInsNoPtrInterAliasMap.hpp>
+  // #include <OpenAnalysis/Alias/ManagerSymAliasSetsBottom.hpp>
+  // #include <OpenAnalysis/Alias/ManagerInsNoPtrInterAliasMap.hpp>
 #include <OpenAnalysis/ICFG/ManagerICFGStandard.hpp>
 
 
 //*************************** User Include Files ****************************
 
-#include "Open64IRInterface.hpp"
+#include "Open64IRInterface/Open64IRInterface.hpp"
 
 #include "BaseMap.h"
-#include "diagnostics.h"
+#include "Diagnostics.h"
+
+namespace fortTkSupport {
 
 //************************** Forward Declarations ***************************
 
@@ -81,7 +66,7 @@ GetCFGControlFlowVertexType(WN* wstmt);
 class OAAnalInfo;
 
 class PUToOAAnalInfoMap 
-  : public FortTk::BaseMap<PU_Info*, OAAnalInfo*>
+  : public fortTkSupport::BaseMap<PU_Info*, OAAnalInfo*>
 {
 public:  
   PUToOAAnalInfoMap() { }
@@ -118,10 +103,9 @@ public:
     paramBindings = x; 
   }
   
-  // Inter Alias
-  OA::OA_ptr<OA::Alias::ManagerInsNoPtrInterAliasMap> GetInterAlias()
+  OA::OA_ptr<OA::Alias::ManagerFIAliasAliasMap> GetInterAlias()
     { return interaliasmapman; }
-  void SetInterAlias(OA::OA_ptr<OA::Alias::ManagerInsNoPtrInterAliasMap> m, 
+  void SetInterAlias(OA::OA_ptr<OA::Alias::ManagerFIAliasAliasMap> m, 
 		     OA::OA_ptr<OA::Alias::InterAliasMap> x) 
     { interaliasmapman = m; interAlias = x; }
 
@@ -150,7 +134,7 @@ private:
   OA::OA_ptr<OA::CFG::ManagerStandard> cfgman;
   OA::OA_ptr<OA::CFG::EachCFGInterface> cfgeach;
   
-  OA::OA_ptr<OA::Alias::ManagerInsNoPtrInterAliasMap> interaliasmapman;
+  OA::OA_ptr<OA::Alias::ManagerFIAliasAliasMap> interaliasmapman;
   OA::OA_ptr<OA::Alias::InterAliasMap> interAlias;
 
   OA::OA_ptr<OA::SideEffect::ManagerStandard> sideeffectman;
@@ -235,4 +219,6 @@ private:
 
 //***************************************************************************
 
-#endif /* OAMaps_INLUCDED_h */
+}
+
+#endif 

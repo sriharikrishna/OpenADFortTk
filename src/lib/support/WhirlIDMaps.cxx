@@ -21,10 +21,12 @@
 
 //*************************** User Include Files ****************************
 
+#include "Open64IRInterface/Open64IRInterface.hpp"
 #include "WhirlIDMaps.h"
-#include "Open64IRInterface.hpp"
 
 //************************** Forward Declarations ***************************
+
+namespace fortTkSupport { 
 
 //***************************************************************************
 // ST_TAB <-> SymTabId maps
@@ -216,3 +218,5 @@ CreateWhirlIdMaps(WN* wn, WNToWNIdMap* x, WNIdToWNMap* y)
 }
 
 //***************************************************************************
+ 
+}

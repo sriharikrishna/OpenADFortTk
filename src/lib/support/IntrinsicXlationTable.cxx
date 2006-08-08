@@ -6,8 +6,8 @@
 
 
 #include "IntrinsicXlationTable.h"
-#include "wn_attr.h" // for WN_intrinsic_name()
-#include "diagnostics.h"
+#include "Open64IRInterface/wn_attr.h"
+#include "Diagnostics.h"
 
 namespace fortTkSupport { 
 

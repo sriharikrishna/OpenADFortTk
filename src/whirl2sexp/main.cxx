@@ -1,42 +1,22 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/main.cxx,v 1.2 2004/08/23 18:44:42 eraxxon Exp $
 
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/main.cxx,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************** System Include Files ***************************
-
 #include <iostream>
-using std::endl;
-using std::cout;
 #include <string>
 
-//************************** Open64 Include Files ***************************
-
-#include <include/Open64BasicTypes.h>
-
+#include "Open64IRInterface/Open64BasicTypes.h"
 #include "cmplrs/rcodes.h"  // return codes
 #include "tracing.h"        // trace routines
 #include "ir_reader.h"      // fdump_tree
+#include "Open64IRInterface/WhirlIO.h"
+#include "Open64IRInterface/diagnostics.h"
 
-//*************************** User Include Files ****************************
+#include "Diagnostics.h"
+#include "sexpostream.h"
 
 #include "Args.h"
 #include "whirl2sexp.h"
-
-#include <lib/support/sexpostream.h>
-#include <lib/support/Exception.h>
-#include <lib/support/WhirlIO.h>
+#include "Exception.h"
 
 //************************** Forward Declarations ***************************
 
@@ -68,7 +48,7 @@ main(int argc, char **argv)
     e.Report(cerr); // fatal error
     exit(1);
   }
-  catch (FortTk::BaseException& e) {
+  catch (fortTkSupport::BaseException& e) {
     e.Report(cerr);
     exit(1);
   }
@@ -118,7 +98,7 @@ real_main(int argc, char **argv)
   
   Args args(argc, argv);
   std::ostream* os = InitOutputStream(args);
-  FortTk_SetDiagnosticFilterLevel(args.debug);
+  fortTkSupport::Diagnostics::setDiagnosticFilterLevel(args.debug);
   
   // -------------------------------------------------------
   // 3. Read WHIRL and Translate into S-expressions
@@ -155,7 +135,7 @@ InitOutputStream(Args& args)
 {
   if (args.sexpFileNm.empty()) {
     // Use cout
-    return &(cout);
+    return &(std::cout);
   } else {
     ofstream* ofs = new ofstream;
     OpenFile(*ofs, args.sexpFileNm.c_str());
@@ -166,7 +146,7 @@ InitOutputStream(Args& args)
 static void
 FiniOutputStream(std::ostream* os)
 {
-  if (os != &cout) {
+  if (os != &std::cout) {
     delete os;
   }
 }
