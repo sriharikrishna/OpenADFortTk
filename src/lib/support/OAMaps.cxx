@@ -199,7 +199,9 @@ namespace fortTkSupport {
     procIt->reset();
     for ( ; procIt->isValid(); ++(*procIt)) { 
       PU_Info* pu = (PU_Info*)procIt->current().hval();
-    
+      ST* st = ST_ptr(PU_Info_proc_sym(pu));
+      const char* nm = ST_name(st);
+      FORTTK_MSG(1, "progress: analysing SUBROUTINE " << nm );
       OAAnalInfo* info = new OAAnalInfo(pu, x);
       x->Insert(pu, info);
     }
