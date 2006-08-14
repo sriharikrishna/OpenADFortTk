@@ -182,8 +182,10 @@ namespace fortTkSupport {
     OA::OA_ptr<OA::Activity::ManagerICFGActive> activeman;
     activeman = new OA::Activity::ManagerICFGActive(irIF);
     OA::OA_ptr<OA::Activity::InterActive> active;
-    active = activeman->performAnalysis(cgraph, icfg, parambind,
-					interAlias, interSE, cfgeach);
+    active = activeman->performAnalysis(icfg, 
+					parambind,
+					interAlias, 
+					interSE);
 
     MassageActivityInfo(active, irIF);
   

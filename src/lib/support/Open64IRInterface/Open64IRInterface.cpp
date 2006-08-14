@@ -478,7 +478,256 @@ Open64IRInterface::toString(const OA::OpHandle h)
   WN* wn = (WN*)h.hval();
 
   std::ostringstream oss;
-  oss << wn;
+  if (wn==0) {
+    oss << "OpHandle(0)";
+  } else {
+    //    DumpWN(wn, oss);
+    //oss << OPCODE_name(WN_opcode(wn));
+    
+    OPERATOR opr = WN_operator(wn);
+    string op;
+    switch (opr) {
+      // Unary expression operations.
+    case OPR_CVT:
+    case OPR_CVTL:
+    case OPR_TAS:
+      oss << OPCODE_name(WN_opcode(wn)) << "(";
+      //    DumpWN(WN_kid0(wn), os);
+      oss << ")";
+      break;
+    case OPR_PARM:
+      if (WN_flag(wn) & WN_PARM_BY_REFERENCE)
+        oss << "&"; 
+      //DumpWN(WN_kid0(wn), os);
+      break;
+    case OPR_ABS:
+      oss << "ABS(";
+      //DumpWN(WN_kid0(wn), os);
+      oss << ")";
+      break;
+    case OPR_SQRT:
+      oss << "SQRT(";
+      //DumpWN(WN_kid0(wn), os);
+      oss << ")";
+      break;
+    case OPR_RSQRT:
+      oss << "RSQRT(";
+      //DumpWN(WN_kid0(wn), os);
+      oss << ")";
+      break;
+    case OPR_RECIP:
+      oss << "RECIP(";
+      //DumpWN(WN_kid0(wn), os);
+      oss << ")";
+      break;
+    case OPR_PAREN:
+      oss << "(";
+      //DumpWN(WN_kid0(wn), os);
+      oss << ")";
+      break;
+    case OPR_RND:
+      oss << "RND(";
+      //DumpWN(WN_kid0(wn), os);
+      oss << ")";
+      break;
+    case OPR_TRUNC:
+      oss << "TRUNC(";
+      //DumpWN(WN_kid0(wn), os);
+      oss << ")";
+      break;
+    case OPR_CEIL:
+      oss << "CEIL(";
+      //DumpWN(WN_kid0(wn), os);
+      oss << ")";
+      break;
+    case OPR_FLOOR:
+      oss << "FLOOR(";
+      //DumpWN(WN_kid0(wn), os);
+      oss << ")";
+      break;
+    case OPR_NEG:
+      op = "-";
+      goto print_generic_unary;
+    case OPR_BNOT:
+      op = "~";
+      goto print_generic_unary;
+    case OPR_LNOT:
+      op = "!";
+      goto print_generic_unary;
+    print_generic_unary:
+      oss << op;
+      //DumpWN(WN_kid0(wn), os);
+      break;
+
+      // Binary expression operations.
+    case OPR_ADD:
+      op = "+";
+      goto print_generic_binary;
+    case OPR_SUB:
+      op = "-";
+      goto print_generic_binary;
+    case OPR_MPY:
+      op = "*";
+      goto print_generic_binary;
+    case OPR_DIV:
+      op = "/";
+      goto print_generic_binary;
+    case OPR_MOD:
+      oss << "MOD(";
+      //DumpWN(WN_kid0(wn), os);
+      //oss << ",";
+      //DumpWN(WN_kid1(wn), os);
+      oss << ")";
+      break;
+    case OPR_REM:
+      op = "%";
+      goto print_generic_binary;
+    case OPR_EQ:
+      op = "==";
+      goto print_generic_binary;
+    case OPR_NE:
+      op = "!=";
+      goto print_generic_binary;
+    case OPR_GE:
+      op = ">=";
+      goto print_generic_binary;
+    case OPR_LE:
+      op = "<=";
+      goto print_generic_binary;
+    case OPR_GT:
+      op = '>';
+      goto print_generic_binary;
+    case OPR_LT:
+      op = '<';
+      goto print_generic_binary;
+    case OPR_MAX:
+      oss << "MAX(";
+      //DumpWN(WN_kid0(wn), os);
+      //oss << ",";
+      //DumpWN(WN_kid1(wn), os);
+      oss << ")";
+      break;
+    case OPR_MIN:
+      oss << "MIN(";
+      //DumpWN(WN_kid0(wn), os);
+      oss << ",";
+      //DumpWN(WN_kid1(wn), os);
+      oss << ")";
+      break;
+    case OPR_SHL:
+      op = "<<";
+      goto print_generic_binary;
+    case OPR_ASHR:
+    case OPR_LSHR:
+      op = ">>";
+      goto print_generic_binary;
+    case OPR_LAND:
+      op = "&&";
+      goto print_generic_binary;
+    case OPR_LIOR:
+      op = "||";
+      goto print_generic_binary;
+    case OPR_BAND:
+      op = "&";
+      goto print_generic_binary;
+    case OPR_BIOR:
+      op = "|";
+      goto print_generic_binary;
+    case OPR_BXOR:
+      op = "^";
+    print_generic_binary:
+      //DumpWN(WN_kid0(wn), os);
+      oss << op;
+      //DumpWN(WN_kid1(wn), os);
+      break;
+      
+      // Ternary operations.
+    case OPR_SELECT:
+      //DumpWN(WN_kid0(wn), os);
+      oss << " ? "; 
+      //DumpWN(WN_kid1(wn), os);
+      oss << " : "; 
+      //DumpWN(WN_kid2(wn), os);
+      break;
+    case OPR_MADD:
+      oss << "(";
+      //DumpWN(WN_kid0(wn), os);
+      oss << "*";
+      //DumpWN(WN_kid1(wn), os);
+      oss << ")+";
+      //DumpWN(WN_kid2(wn), os);
+      break;
+    case OPR_MSUB:
+      oss << "(";
+      //DumpWN(WN_kid0(wn), os);
+      oss << "*";
+      //DumpWN(WN_kid1(wn), os);
+      oss << ")-";
+      //DumpWN(WN_kid2(wn), os);
+      break;
+    case OPR_NMADD:
+      oss << "-((";
+      //DumpWN(WN_kid0(wn), os);
+      oss << "*";
+      //DumpWN(WN_kid1(wn), os);
+      oss << ")+";
+      //DumpWN(WN_kid2(wn), os);
+      oss << ")";
+      break;
+    case OPR_NMSUB:
+      oss << "-((";
+      //DumpWN(WN_kid0(wn), os);
+      oss << "*";
+      //DumpWN(WN_kid1(wn), os);
+      oss << ")-";
+      //DumpWN(WN_kid2(wn), os);
+      oss << ")";
+      break;
+      
+      /* Don't know about these ...  
+    // N-ary operations.
+    case OPR_ARRAY: {
+      int ndims = WN_kid_count(wn) >> 1;
+      DumpWN(WN_kid0(wn), os);
+      os << "(";
+      for (int i = 0; i < ndims; i++) {
+        DumpWN(WN_kid(wn, i+ndims+1), os);
+        if (i < ndims-1) 
+          os << ",";
+      }
+      os << ")";
+      break;
+    }
+    case OPR_TRIPLET: // Output as LB:UB:STRIDE
+      DumpWN(WN_kid0(wn), os);
+      os << ":";
+      DumpWN(WN_kid2(wn), os);
+      os << ":";
+      DumpWN(WN_kid1(wn), os);
+      break; 
+    case OPR_ARRAYEXP:
+      DumpWN(WN_kid0(wn), os);
+      break; 
+    case OPR_ARRSECTION: {
+      int ndims = WN_kid_count(wn) >> 1;
+      DumpWN(WN_kid0(wn), os);
+      os << "(";
+      for (int i = 0; i < ndims; i++) {
+        DumpWN(WN_kid(wn, i+ndims+1), os);
+        if (i < ndims-1) 
+          os << ",";
+      }
+      os << ")";
+      break;
+    }
+      * Don't know about the above ...
+      */
+
+    default:
+      DumpWN(wn, oss);
+      break;
+    }
+  }
   return oss.str();
 }
 
@@ -511,7 +760,15 @@ Open64IRInterface::toString(const OA::ConstSymHandle h)
 {
   setCurrentProcToProcContext(h);
   std::ostringstream oss;
-  oss << h.hval();
+  //  oss << h.hval();
+
+  WN* wn = (WN*)h.hval();
+  if (wn==0) {
+    oss << "ConstSymHandle(0)";
+  } else {
+    DumpWN(wn, oss);
+  }
+
   return oss.str();
 }
 
@@ -519,8 +776,17 @@ std::string
 Open64IRInterface::toString(const OA::ConstValHandle h) 
 {
   setCurrentProcToProcContext(h);
+  WN* wn = (WN*)h.hval();
+
   std::ostringstream oss;
-  oss << h.hval();
+  //oss << h.hval();
+
+  if (wn==0) {
+    oss << "ConstValHandle(0)";
+  } else {
+    DumpWN(wn, oss);
+  }
+  
   return oss.str();
 }
 
@@ -1840,15 +2106,16 @@ Open64IRInterface::getCallMemRefExpr(OA::CallHandle h)
 //-------------------------------------------------------------------------
   
 //! Return an iterator over all independent locations for given proc
-OA::OA_ptr<OA::LocIterator> 
-Open64IRInterface::getIndepLocIter(OA::ProcHandle h)
+OA::OA_ptr<OA::MemRefExprIterator> 
+Open64IRInterface::getIndepMemRefExprIter(OA::ProcHandle h)
 {
   PU_Info* pu = (PU_Info*)h.hval();
   currentProc(h);
-
+  OA::OA_ptr<OA::MemRefExpr> mre;
+  
   // Get independent variables
-  OA::OA_ptr<OA::LocSet> indepSet;
-  indepSet = new OA::LocSet;
+  OA::OA_ptr<std::list<OA::OA_ptr<OA::MemRefExpr> > > indepList;
+  indepList = new std::list<OA::OA_ptr<OA::MemRefExpr> >;
   
   WN* pragmaBlk = WN_func_pragmas(PU_Info_tree_ptr(pu));
   for (WN* wn = WN_first(pragmaBlk); wn != NULL; wn = WN_next(wn)) {
@@ -1857,38 +2124,110 @@ Open64IRInterface::getIndepLocIter(OA::ProcHandle h)
     }
     
     WN_PRAGMA_ID prag = (WN_PRAGMA_ID)WN_pragma(wn);
+
     if (prag == WN_PRAGMA_OPENAD_INDEPENDENT) {
       ST* st = WN_st(wn);
-      OA::OA_ptr<OA::Location> loc;
-      loc = getLocation((OA::irhandle_t)pu, (OA::irhandle_t)st);
-      indepSet->insert(loc);
+      OA::SymHandle sym = OA::SymHandle((OA::irhandle_t)st);
+      bool isAddrOf, fullAccuracy;
+      OA::MemRefExpr::MemRefType hty;
+      
+      isAddrOf = false;
+      hty = OA::MemRefExpr::USE;
+
+      switch (TY_kind(ST_type(st))) {
+      case KIND_SCALAR:
+        if (debug) {
+          std::cout << "KIND_SCALAR: Sym(" << toString(sym) << ")\n";
+        }       
+        fullAccuracy = true;
+        break;
+      case KIND_ARRAY:
+        if (debug) {
+          std::cout << "KIND_ARRAY: Sym(" << toString(sym) << ")\n";
+        }
+        fullAccuracy = false;
+        break;
+      case KIND_STRUCT:
+        if (debug) {
+          std::cout << "KIND_STRUCT: Sym(" << toString(sym) << ")\n";
+        }       
+        fullAccuracy = false;
+        break;
+      case KIND_POINTER:
+        if (debug) {
+          std::cout << "KIND_POINTER: Sym(" << toString(sym) << ")\n";
+        }
+        fullAccuracy = false;  // arrays are appearing as KIND_POINTER
+        break;
+      case KIND_FUNCTION:
+        if (debug) {
+          std::cout << "KIND_FUNCTION: Sym(" << toString(sym) << ")\n";
+        }
+        assert(0);
+        // this type not handled correctly yet
+        fullAccuracy = false;
+        break;
+      case KIND_VOID:
+        if (debug) {
+          std::cout << "KIND_VOID: Sym(" << toString(sym) << ")\n";
+        }
+        assert(0);
+        // this type not handled correctly yet
+        fullAccuracy = false;
+        break;
+      case KIND_INVALID:
+        if (debug) {
+          std::cout << "KIND_INVALID: Sym(" << toString(sym) << ")\n";
+        }
+        assert(0);
+        //this type not handled correctly yet
+        fullAccuracy = false;
+        break;
+      default:
+        if (debug) {
+          std::cout << "KIND_??? hit default: Sym(" << toString(sym) << ")\n";
+        }
+        assert(0);
+        // shouldn't get here
+        fullAccuracy = false;
+        break;
+      }
+      
+      if (isRefParam(sym)) {
+
+        if (isAddrOf==true) { // deref and addressOf cancel
+          isAddrOf = false;
+          mre = new OA::NamedRef(isAddrOf, fullAccuracy, hty, sym);
+        } else {
+          mre = new OA::NamedRef(isAddrOf,fullAccuracy,OA::MemRefExpr::USE,sym);
+          mre = new OA::Deref(false, fullAccuracy, hty, mre, 1);
+        }
+      } else {
+        mre = new OA::NamedRef(isAddrOf, fullAccuracy, hty, sym);
+      }
+
+      indepList->push_back(mre);
     }
   }
 
-  // if set is empty then none were specified for this procedure
-  // so must put UknownLoc in set
-  /*
-  if (indepSet->empty()) {
-    OA::OA_ptr<OA::Location> unknownLoc; 
-    unknownLoc = new OA::UnknownLoc;
-    indepSet->insert(unknownLoc);
-  }
-*/
-  OA::OA_ptr<OA::LocSetIterator> indepIter;
-  indepIter = new OA::LocSetIterator(indepSet);
+  OA::OA_ptr<OA::MemRefExprIterator> indepIter;
+  indepIter = new Open64MemRefExprIterator(indepList);
   return indepIter;
+
 }
   
-//! Return an iterator over all dependent locations for given proc
-OA::OA_ptr<OA::LocIterator> 
-Open64IRInterface::getDepLocIter(OA::ProcHandle h)
+//! Return an iterator over all dependent MemRefExpr's for given proc
+OA::OA_ptr<OA::MemRefExprIterator> 
+Open64IRInterface::getDepMemRefExprIter(OA::ProcHandle h)
 {
+
   PU_Info* pu = (PU_Info*)h.hval();
   currentProc(h);
+  OA::OA_ptr<OA::MemRefExpr> mre;
 
   // Get dependent variables
-  OA::OA_ptr<OA::LocSet> depSet;
-  depSet = new OA::LocSet;
+  OA::OA_ptr<std::list<OA::OA_ptr<OA::MemRefExpr> > > depList;
+  depList = new std::list<OA::OA_ptr<OA::MemRefExpr> >;
   
   WN* pragmaBlk = WN_func_pragmas(PU_Info_tree_ptr(pu));
   for (WN* wn = WN_first(pragmaBlk); wn != NULL; wn = WN_next(wn)) {
@@ -1900,14 +2239,91 @@ Open64IRInterface::getDepLocIter(OA::ProcHandle h)
     
     if (prag == WN_PRAGMA_OPENAD_DEPENDENT) {
       ST* st = WN_st(wn);
-      OA::OA_ptr<OA::Location> loc;
-      loc = getLocation((OA::irhandle_t)pu, (OA::irhandle_t)st);
-      depSet->insert(loc);
+      OA::SymHandle sym = OA::SymHandle((OA::irhandle_t)st);
+      bool isAddrOf, fullAccuracy;
+      OA::MemRefExpr::MemRefType hty;
+
+      isAddrOf = false;
+      hty = OA::MemRefExpr::USE;
+
+      switch (TY_kind(ST_type(st))) {
+      case KIND_SCALAR:
+        if (debug) {
+          std::cout << "KIND_SCALAR: Sym(" << toString(sym) << ")\n";
+        }       
+        fullAccuracy = true;
+        break;
+      case KIND_ARRAY:
+        if (debug) {
+          std::cout << "KIND_ARRAY: Sym(" << toString(sym) << ")\n";
+        }
+        fullAccuracy = false;
+        break;
+      case KIND_STRUCT:
+        if (debug) {
+          std::cout << "KIND_STRUCT: Sym(" << toString(sym) << ")\n";
+        }       
+        fullAccuracy = false;
+        break;
+      case KIND_POINTER:
+        if (debug) {
+          std::cout << "KIND_POINTER: Sym(" << toString(sym) << ")\n";
+        }
+        fullAccuracy = false;  // arrays are appearing as KIND_POINTER
+        break;
+      case KIND_FUNCTION:
+        if (debug) {
+          std::cout << "KIND_FUNCTION: Sym(" << toString(sym) << ")\n";
+        }
+        assert(0);
+        // this type not handled correctly yet
+        fullAccuracy = false;
+        break;
+      case KIND_VOID:
+        if (debug) {
+          std::cout << "KIND_VOID: Sym(" << toString(sym) << ")\n";
+        }
+        assert(0);
+        // this type not handled correctly yet
+        fullAccuracy = false;
+        break;
+      case KIND_INVALID:
+        if (debug) {
+          std::cout << "KIND_INVALID: Sym(" << toString(sym) << ")\n";
+        }
+        assert(0);
+        //this type not handled correctly yet
+        fullAccuracy = false;
+        break;
+      default:
+        if (debug) {
+          std::cout << "KIND_??? hit default: Sym(" << toString(sym) << ")\n";
+        }
+        assert(0);
+        // shouldn't get here
+        fullAccuracy = false;
+        break;
+      }
+
+      if (isRefParam(sym)) {
+        
+        if (isAddrOf==true) { // deref and addressOf cancel
+          isAddrOf = false;
+          mre = new OA::NamedRef(isAddrOf, fullAccuracy, hty, sym);
+        } else { 
+          mre = new OA::NamedRef(isAddrOf,fullAccuracy,OA::MemRefExpr::USE,sym);
+          mre = new OA::Deref(false, fullAccuracy, hty, mre, 1);
+        }
+      } else {
+        mre = new OA::NamedRef(isAddrOf, fullAccuracy, hty, sym);
+      }
+
+      depList->push_back(mre);
     }
   }
 
-  OA::OA_ptr<OA::LocSetIterator> depIter;
-  depIter = new OA::LocSetIterator(depSet);
+  OA::OA_ptr<OA::MemRefExprIterator> depIter;
+  depIter = new Open64MemRefExprIterator(depList);
   return depIter;
 }
  
@@ -2334,9 +2750,14 @@ Open64IRInterface::getExprTree(OA::ExprHandle h)
 //! returns true if given symbol is a parameter 
 bool Open64IRInterface::isParam(OA::SymHandle anOASymbolHandle){ 
   ST* anOpen64Symbol_p = (ST*)anOASymbolHandle.hval();
-  return ((ST_sclass(anOpen64Symbol_p)==SCLASS_FORMAL) 
-	  || 
-	  (ST_sclass(anOpen64Symbol_p)==SCLASS_FORMAL_REF)); 
+  return (((ST_sclass(anOpen64Symbol_p)==SCLASS_FORMAL) 
+           || 
+           (ST_sclass(anOpen64Symbol_p)==SCLASS_FORMAL_REF))
+          &&
+          (ST_level(anOpen64Symbol_p) == CURRENT_SYMTAB)); 
+  // BK:  added the &&(CURRENT_SYMTAB) to distinguish between parameters
+  //      in a global/enclosing subroutine versus a local parameters
+  //      now:  answers false for the former, and still true for the latter
 } 
 
 //---------------------------------------------------------------------------
