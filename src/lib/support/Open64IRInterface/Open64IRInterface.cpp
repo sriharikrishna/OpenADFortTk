@@ -2658,6 +2658,71 @@ Open64IRInterface::getConstValBasic (unsigned int val) {
 }
 
 //---------------------------------------------------------------------------
+// LinearityIRInterface.hpp
+//---------------------------------------------------------------------------
+
+//! gets the operation type and returns a LinOpType
+OA::Linearity::LinOpType
+Open64IRInterface::getLinearityOpType(OA::OpHandle op)
+{ 
+  setCurrentProcToProcContext(op);
+
+  OA::Linearity::LinOpType opt;
+  
+  
+  WN* wn = (WN*)op.hval();
+  OPERATOR opr = WN_operator(wn); 
+
+switch (opr) {
+  // Unary expression operations.
+  case OPR_NEG:
+      opt = OA::Linearity::OPR_LINEAR;
+      break;
+      
+  // Binary expression operations.
+  case OPR_ADD:
+  case OPR_SUB:
+      opt = OA::Linearity::OPR_ADDSUB;
+      break;
+  case OPR_MPY:
+  case OPR_DIV:
+      opt = OA::Linearity::OPR_MPYDIV;
+      break;
+  case OPR_CALL:
+//    os << createCharStarForST(WN_st (wn)) << "(";
+    opt = OA::Linearity::OPR_NONLINEAR;
+    break;
+  case OPR_INTRINSIC_CALL:
+  case OPR_INTRINSIC_OP:
+//    os << INTRINSIC_name ((INTRINSIC) WN_intrinsic (wn)) << "(";
+    opt = OA::Linearity::OPR_NONLINEAR;
+    break;
+  default:
+    opt = OA::Linearity::OPR_NONLINEAR;
+    break;
+  }
+
+  
+  return opt;
+  //return (int)opr;
+}
+
+OA::Linearity::IRStmtType 
+Open64IRInterface::getLinearityStmtType(OA::StmtHandle h)
+{
+  setCurrentProcToProcContext(h);
+  WN* wn = (WN*)h.hval();
+  if (!wn) { return OA::Linearity::NONE; }
+  
+  OPERATOR opr = WN_operator(wn);
+  if (OPERATOR_is_store(opr)) { // cf. findExprStmtPairs
+    return OA::Linearity::EXPR_STMT;
+  } else {
+    return OA::Linearity::ANY_STMT;
+  }
+}
+
+//---------------------------------------------------------------------------
 // InterSideEffectIRInterface.hpp
 //---------------------------------------------------------------------------
 
@@ -2945,7 +3010,7 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
 	 || OPERATOR_is_expression(opr)) ) {
     return root;
   }
-  
+
   // 1a. FIXME: For now, eliminate PARM nodes from tree.
   if (opr == OPR_PARM) {
     if (WN_kid_count(wn) == 0) {
@@ -2961,7 +3026,7 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
   // classified as calls instead of mem-refs.
   bool bypassRecursion = false;
   if (OPERATOR_is_call(opr)) {
-    OA::ExprHandle h((OA::irhandle_t)wn);
+    OA::CallHandle h((OA::irhandle_t)wn);
     root = new OA::ExprTree::CallNode(h);
   }
   else if (opr == OPR_CONST || opr == OPR_INTCONST) {
@@ -3029,7 +3094,6 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
     if ( !(OPERATOR_is_leaf(opr) || opr == OPR_STID) ) {
       for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
         WN* kid_wn = WN_kid(wn, kidno);
-	
         OA::OA_ptr<OA::ExprTree::Node> child = createExprTree(tree, kid_wn);
         if (! child.ptrEqual(NULL)) {
           tree->connect(root, child);

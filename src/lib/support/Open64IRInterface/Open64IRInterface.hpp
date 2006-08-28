@@ -44,6 +44,7 @@
 #include <OpenAnalysis/IRInterface/ActivityIRInterface.hpp>
 #include <OpenAnalysis/IRInterface/ParamBindingsIRInterface.hpp>
 #include <OpenAnalysis/IRInterface/ICFGIRInterface.hpp>
+#include <OpenAnalysis/IRInterface/LinearityIRInterface.hpp>
 
 #include <OpenAnalysis/ExprTree/ExprTreeVisitor.hpp>
 #include <OpenAnalysis/ExprTree/EvalToMemRefVisitor.hpp>
@@ -502,7 +503,8 @@ class Open64IRInterface
     public OA::SideEffect::InterSideEffectIRInterfaceDefault,
     public virtual OA::DataFlow::ParamBindingsIRInterface,
     public virtual OA::ICFG::ICFGIRInterface,
-    public virtual OA::Activity::ActivityIRInterface
+    public virtual OA::Activity::ActivityIRInterface,
+    public virtual OA::Linearity::LinearityIRInterface
 {
 public:
   Open64IRInterface();
@@ -769,6 +771,18 @@ public:
   //! FIXME: temporary routine to find things out
   //! should be removed after testing
   int returnOpEnumValInt(OA::OpHandle op);
+
+  //---------------------------------------------------------------------------
+  // LinearityIRInterface.hpp
+  //---------------------------------------------------------------------------
+
+  //! get the operation type and returns a LinOpType
+  OA::Linearity::LinOpType
+      Open64IRInterface::getLinearityOpType(OA::OpHandle op);
+
+  OA::Linearity::IRStmtType 
+      Open64IRInterface::getLinearityStmtType(OA::StmtHandle h);
+
 
   //-------------------------------------------------------------------------
   // InterSideEffectIRInterface
