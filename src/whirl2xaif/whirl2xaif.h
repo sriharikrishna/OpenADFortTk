@@ -59,7 +59,7 @@ namespace whirl2xaif {
 				  PUXlationContext& ctxt);
 
     static void translatePU(xml::ostream& xos, 
-			    OA::OA_ptr<OA::CallGraph::CallGraphStandard::Node> n, 
+			    OA::OA_ptr<OA::CallGraph::Node> n, 
 			    UINT32 vertexId, 
 			    PUXlationContext& ctxt);
 

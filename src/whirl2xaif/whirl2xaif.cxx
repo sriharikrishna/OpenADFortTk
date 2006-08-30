@@ -69,7 +69,7 @@ namespace whirl2xaif {
     // -------------------------------------------------------
     // 2. Generate XAIF CallGraph
     // -------------------------------------------------------
-    OA::OA_ptr<OA::CallGraph::CallGraphStandard> cgraph = 
+    OA::OA_ptr<OA::CallGraph::CallGraph> cgraph = 
       ourOAAnalMap.GetCallGraph();
     // CallGraph header info
     xos << xml::BegElem("xaif:CallGraph")
@@ -89,9 +89,9 @@ namespace whirl2xaif {
     for (DGraphNodeVec::iterator nodeIt = nodes->begin();
 	 nodeIt != nodes->end(); ++nodeIt) {
       ctxt.createXlationContext();
-      OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = *nodeIt;
-      OA::OA_ptr<CallGraphStandard::Node> n = 
-	ntmp.convert<CallGraphStandard::Node>();
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = *nodeIt;
+      OA::OA_ptr<Node> n = 
+	ntmp.convert<Node>();
       translatePU(xos, n, n->getId(), ctxt);
       ctxt.deleteXlationContext();
     }
@@ -100,9 +100,9 @@ namespace whirl2xaif {
     DGraphEdgeVec* edges = SortDGraphEdges(cgraph);
     for (DGraphEdgeVec::iterator edgeIt = edges->begin(); 
 	 edgeIt != edges->end(); ++edgeIt) {
-      OA::OA_ptr<OA::DGraph::Interface::Edge> e = (*edgeIt);
-      OA::OA_ptr<OA::DGraph::Interface::Node> n1 = e->source();
-      OA::OA_ptr<OA::DGraph::Interface::Node> n2 = e->sink();
+      OA::OA_ptr<OA::DGraph::EdgeInterface> e = (*edgeIt);
+      OA::OA_ptr<OA::DGraph::NodeInterface> n1 = e->source();
+      OA::OA_ptr<OA::DGraph::NodeInterface> n2 = e->sink();
       DumpCallGraphEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), n1->getId(), n2->getId());
     }
     delete edges;
@@ -238,7 +238,7 @@ namespace whirl2xaif {
   }
 
   void Whirl2Xaif::translatePU(xml::ostream& xos, 
-			       OA::OA_ptr<OA::CallGraph::CallGraphStandard::Node> n, 
+			       OA::OA_ptr<OA::CallGraph::Node> n, 
 			       UINT32 vertexId, 
 			       PUXlationContext& ctxt) {
     // FIXME: A more general test will be needed

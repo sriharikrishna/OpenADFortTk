@@ -42,7 +42,7 @@
 #include <set> 
 #include <vector> 
 
-#include "OpenAnalysis/CFG/ManagerCFGStandard.hpp"
+#include "OpenAnalysis/CFG/ManagerCFG.hpp"
 
 #include "Open64IRInterface/Open64BasicTypes.h"
 #include "Open64IRInterface/SymTab.h"
@@ -84,29 +84,29 @@ namespace whirl2xaif {
 
   static void
   DumpCFGraphEdge(xml::ostream& xos, UINT eid, 
-		  OA::OA_ptr<OA::CFG::Interface::Edge> edge);
+		  OA::OA_ptr<OA::CFG::EdgeInterface> edge);
 
   //*************************** Forward Declarations ***************************
 
   static const char*
-  GetLoopReversalType(OA::OA_ptr<OA::CFG::Interface> cfg, 
-		      OA::OA_ptr<OA::CFG::Interface::Node> n);
+  GetLoopReversalType(OA::OA_ptr<OA::CFG::CFGInterface> cfg, 
+		      OA::OA_ptr<OA::CFG::NodeInterface> n);
 
   static std::string
-  GetIDsForStmtsInBB(OA::OA_ptr<OA::CFG::Interface::Node> node, 
+  GetIDsForStmtsInBB(OA::OA_ptr<OA::CFG::NodeInterface> node, 
 		     PUXlationContext& ctxt);
 
   // NOTE: removed static for Sun's compiler (supposed to be in unnamed
   // namespace now)
   pair<bool, INT64>
-  GetCFGEdgeCondVal(const OA::OA_ptr<OA::CFG::Interface::Edge> edge);
+  GetCFGEdgeCondVal(const OA::OA_ptr<OA::CFG::EdgeInterface> edge);
 
   // lt_CFGEdge: Used to sort CFG::Edges by src, sink and condition value.
   struct lt_CFGEdge
   {
     // return true if e1 < e2; false otherwise
-    bool operator()(const OA::OA_ptr<OA::CFG::Interface::Edge> e1, 
-		    const OA::OA_ptr<OA::CFG::Interface::Edge> e2) const
+    bool operator()(const OA::OA_ptr<OA::CFG::EdgeInterface> e1, 
+		    const OA::OA_ptr<OA::CFG::EdgeInterface> e2) const
     {
       unsigned int src1 = e1->source()->getId();
       unsigned int src2 = e2->source()->getId();
@@ -117,7 +117,7 @@ namespace whirl2xaif {
 	  pair<bool, INT64> ret1 = GetCFGEdgeCondVal(e1);
 	  bool hasCondVal1 = ret1.first;
 	  INT64 condVal1 = ret1.second;
-
+    
 	  pair<bool, INT64> ret2 = GetCFGEdgeCondVal(e2);
 	  bool hasCondVal2 = ret2.first;
 	  INT64 condVal2 = ret2.second;
@@ -227,7 +227,7 @@ namespace whirl2xaif {
     OA::ProcHandle proc((OA::irhandle_t)Current_PU_Info);
 
     fortTkSupport::OAAnalInfo* oaAnal = Whirl2Xaif::getOAAnalMap().Find(Current_PU_Info);
-    OA::OA_ptr<OA::CFG::Interface> cfg = 
+    OA::OA_ptr<OA::CFG::CFGInterface> cfg = 
       Whirl2Xaif::getOAAnalMap().GetCFGEach()->getCFGResults(proc);
     ctxt.setUDDUChains(oaAnal->GetUDDUChainsXAIF());
   
@@ -264,10 +264,11 @@ namespace whirl2xaif {
   
     // try a BFS iterator.  too bad for dead code. (actually DFS-- BFS
     // not yet implmented) -- toposort FIXME
-    std::set<OA::OA_ptr<OA::CFG::Interface::Node> > usedNodes;
-    OA::OA_ptr<OA::CFG::Interface::NodesIterator> nodeItPtr = cfg->getDFSIterator();
+    std::set<OA::OA_ptr<OA::CFG::NodeInterface> > usedNodes;
+    OA::OA_ptr<OA::DGraph::NodesIteratorInterface> nodeItPtr = cfg->getDFSIterator();
     for (; nodeItPtr->isValid(); ++(*nodeItPtr)) {
-      OA::OA_ptr<OA::CFG::Interface::Node> n = nodeItPtr->current();
+      OA::OA_ptr<OA::DGraph::NodeInterface> dn = nodeItPtr->current();
+      OA::OA_ptr<OA::CFG::Node> n = dn.convert<OA::CFG::Node>();
       usedNodes.insert(n);
       // n->longdump(&cfg, std::cerr); std::cerr << endl;
       const char* vtype = fortTkSupport::GetCFGVertexType(cfg, n);
@@ -290,7 +291,7 @@ namespace whirl2xaif {
 	  vtype == XAIFStrings.elem_BBBranch()) { 
 	// to get the line number we need to get  
 	// the whirl node which appears to be quite a chore
-	OA::OA_ptr<OA::CFG::Interface::NodeStatementsIterator> stmtIt = n->getNodeStatementsIterator();
+	OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtIt = n->getNodeStatementsIterator();
 	bool found=false;
 	for (; stmtIt->isValid() && !found; ++(*stmtIt)) {
 	  OA::StmtHandle st = stmtIt->current();
@@ -316,7 +317,7 @@ namespace whirl2xaif {
       }
       // 2. BB element contents
       ctxt.createXlationContext();
-      OA::OA_ptr<OA::CFG::Interface::NodeStatementsIterator> stmtItPtr
+      OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtItPtr
 	= n->getNodeStatementsIterator();
       for (; stmtItPtr->isValid(); ++(*stmtItPtr)) {
 	WN* wstmt = (WN *)stmtItPtr->current().hval();
@@ -334,9 +335,12 @@ namespace whirl2xaif {
     CFGEdgeVec* edges = SortCFGEdges(cfg);
     for (CFGEdgeVec::iterator edgeIt = edges->begin(); 
 	 edgeIt != edges->end(); ++edgeIt) {
-      OA::OA_ptr<OA::CFG::Interface::Edge> e = (*edgeIt);
-      OA::OA_ptr<OA::CFG::Interface::Node> src = e->source();
-      OA::OA_ptr<OA::CFG::Interface::Node> snk = e->sink();
+      OA::OA_ptr<OA::CFG::EdgeInterface> e = (*edgeIt);
+      
+      OA::OA_ptr<OA::DGraph::NodeInterface> dsrc = e->source();
+      OA::OA_ptr<OA::CFG::Node> src = dsrc.convert<OA::CFG::Node>();
+      OA::OA_ptr<OA::DGraph::NodeInterface> dsnk = e->sink();
+      OA::OA_ptr<OA::CFG::Node> snk = dsnk.convert<OA::CFG::Node>();
       if (usedNodes.find(src) != usedNodes.end() && 
 	  usedNodes.find(snk) != usedNodes.end()) {
 	DumpCFGraphEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), e);
@@ -991,47 +995,47 @@ namespace whirl2xaif {
   }
 
   DGraphNodeVec*
-  SortDGraphNodes(OA::OA_ptr<OA::DGraph::Interface> g)
+  SortDGraphNodes(OA::OA_ptr<OA::DGraph::DGraphInterface> g)
   {
     DGraphNodeVec* vec = new DGraphNodeVec(g->getNumNodes());
 
-    OA::OA_ptr<OA::DGraph::Interface::NodesIterator> it = g->getNodesIterator();
+    OA::OA_ptr<OA::DGraph::NodesIteratorInterface> it = g->getNodesIterator();
     for (int i = 0; it->isValid(); ++(*it), ++i) {
       (*vec)[i] = it->current();
     }
   
     // Sort by id (ascending)
     //std::sort(vec->begin(), vec->end(), (*(g->getNodeCompare())));
-    std::sort(vec->begin(), vec->end(), OA::DGraph::DGraphStandard::lt_Node());
+    std::sort(vec->begin(), vec->end(), OA::DGraph::lt_Node());
   
     return vec;
   }
 
   DGraphEdgeVec*
-  SortDGraphEdges(OA::OA_ptr<OA::DGraph::Interface> g)
+  SortDGraphEdges(OA::OA_ptr<OA::DGraph::DGraphInterface> g)
   {
     DGraphEdgeVec* vec = new DGraphEdgeVec(g->getNumEdges());
 
-    OA::OA_ptr<OA::DGraph::Interface::EdgesIterator> it = g->getEdgesIterator();
+    OA::OA_ptr<OA::DGraph::EdgesIteratorInterface> it = g->getEdgesIterator();
     for (int i = 0; it->isValid(); ++(*it), ++i) {
       (*vec)[i] = it->current();
     }
   
     // Sort by source/target node ids (ascending)
-    std::sort(vec->begin(), vec->end(), OA::DGraph::DGraphStandard::lt_Edge()); 
+    std::sort(vec->begin(), vec->end(), OA::DGraph::lt_Edge()); 
   
     return vec;
   }
 
 
   CFGEdgeVec*
-  SortCFGEdges(OA::OA_ptr<OA::CFG::Interface> g)
+  SortCFGEdges(OA::OA_ptr<OA::CFG::CFGInterface> g)
   {
     CFGEdgeVec* vec = new CFGEdgeVec(g->getNumEdges());
 
-    OA::OA_ptr<OA::CFG::Interface::EdgesIterator> it = g->getEdgesIterator();
+    OA::OA_ptr<OA::DGraph::EdgesIteratorInterface> it = g->getEdgesIterator();
     for (int i = 0; it->isValid(); ++(*it), ++i) {
-      (*vec)[i] = it->current();
+      (*vec)[i] = it->current().convert<OA::CFG::Edge>();
     }
   
     // Sort by source/target node ids (ascending)
@@ -1059,12 +1063,14 @@ namespace whirl2xaif {
   // DumpCFGraphEdge: Dump a CFG edge
   static void
   DumpCFGraphEdge(xml::ostream& xos, UINT eid, 
-		  OA::OA_ptr<OA::CFG::Interface::Edge> edge)
+		  OA::OA_ptr<OA::CFG::EdgeInterface> edge)
   {
     using namespace OA::CFG;
 
-    OA::OA_ptr<OA::CFG::Interface::Node> n1 = edge->source();
-    OA::OA_ptr<OA::CFG::Interface::Node> n2 = edge->sink();
+    OA::OA_ptr<OA::DGraph::NodeInterface> dn1 = edge->source();
+    OA::OA_ptr<OA::CFG::Node> n1 = dn1.convert<OA::CFG::Node>();
+    OA::OA_ptr<OA::DGraph::NodeInterface> dn2 = edge->sink();
+    OA::OA_ptr<OA::CFG::Node> n2 = dn2.convert<OA::CFG::Node>();
   
     pair<bool, INT64> ret = GetCFGEdgeCondVal(edge);
     bool hasCondVal = ret.first;
@@ -1449,14 +1455,14 @@ namespace whirl2xaif {
 
   // GetLoopReversalType:
   static const char*
-  GetLoopReversalType(OA::OA_ptr<OA::CFG::Interface> cfg, 
-		      OA::OA_ptr<OA::CFG::Interface::Node> n)
+  GetLoopReversalType(OA::OA_ptr<OA::CFG::CFGInterface> cfg, 
+		      OA::OA_ptr<OA::CFG::NodeInterface> n)
   {
     const char* loopTy = "anonymous";
 
     // Find the WN corresponding to xaif:ForLoop
     WN* loopWN = NULL;
-    OA::OA_ptr<OA::CFG::Interface::NodeStatementsIterator> stmtIt
+    OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtIt
       = n->getNodeStatementsIterator();
     for (; stmtIt->isValid(); ++(*stmtIt)) {
       OA::StmtHandle st = stmtIt->current();
@@ -1490,7 +1496,7 @@ namespace whirl2xaif {
   // statements within the basic block.  In the event that a statement
   // id maps to zero, it is *not* included in the list.
   static std::string
-  GetIDsForStmtsInBB(OA::OA_ptr<OA::CFG::Interface::Node> node, 
+  GetIDsForStmtsInBB(OA::OA_ptr<OA::CFG::NodeInterface> node, 
 		     PUXlationContext& ctxt)
   {
     using namespace OA::CFG;
@@ -1498,7 +1504,7 @@ namespace whirl2xaif {
     std::string idstr;
     bool emptystr = true;
   
-    OA::OA_ptr<OA::CFG::Interface::NodeStatementsIterator> stmtItPtr
+    OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtItPtr
       = node->getNodeStatementsIterator();
     for (; stmtItPtr->isValid(); ++(*stmtItPtr)) {
       WN* wstmt = (WN *)stmtItPtr->current().hval();
@@ -1526,20 +1532,20 @@ namespace whirl2xaif {
   // (There is no reserved NULL value for the condition value; it should
   // only be used when the first part of the pair is true!)
   pair<bool, INT64>
-  GetCFGEdgeCondVal(const OA::OA_ptr<OA::CFG::Interface::Edge> edge)
+  GetCFGEdgeCondVal(const OA::OA_ptr<OA::CFG::EdgeInterface> edge)
   {
     using namespace OA::CFG;
   
-    Interface::EdgeType ety = edge->getType();
+    EdgeType ety = edge->getType();
     WN* eexpr = (WN*)edge->getExpr().hval();
   
     bool hasCondVal = false;
     INT64 condVal = 0;
-    if (ety == Interface::TRUE_EDGE) {
+    if (ety == TRUE_EDGE) {
       hasCondVal = true;
       condVal = 1;
     } 
-    else if (ety == Interface::MULTIWAY_EDGE && eexpr) {
+    else if (ety == MULTIWAY_EDGE && eexpr) {
       hasCondVal = true;
       OPERATOR opr = WN_operator(eexpr);
       if (opr == OPR_CASEGOTO) { // from an OPR_SWITCH

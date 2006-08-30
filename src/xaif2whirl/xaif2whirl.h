@@ -9,8 +9,9 @@
 
 #include "xercesc/dom/DOMDocument.hpp"
 
-#include "OpenAnalysis/CFG/CFGStandard.hpp" // for DGraphStandard, CFG::Edge
-#include "OpenAnalysis/Utils/DGraph/DGraphInterfaceIterators.hpp" 
+#include "OpenAnalysis/CFG/CFG.hpp" // for DGraphStandard, CFG::Edge
+//#include "OpenAnalysis/Utils/DGraph/DGraphInterfaceIterators.hpp" 
+#include "OpenAnalysis/Utils/DGraph/DGraphInterface.hpp"
 
 #include "Open64IRInterface/Open64BasicTypes.h"
 
@@ -174,7 +175,7 @@ namespace xaif2whirl {
   // MyDGNode, MyDGEdge: Used to create graph structures from XAIF
   // graphs (lists of nodes and edges)
   // ---------------------------------------------------------
-  class MyDGNode : public OA::DGraph::DGraphStandard::Node {
+  class MyDGNode : public OA::DGraph::NodeImplement {
   public:
     MyDGNode(const xercesc::DOMElement* e_) : e(e_) { Ctor(); }
     virtual ~MyDGNode() { }
@@ -194,12 +195,12 @@ namespace xaif2whirl {
     unsigned int id; // 0 is reserved; first instance is 1
   };
 
-  class MyDGEdge : public OA::DGraph::DGraphStandard::Edge {
+  class MyDGEdge : public OA::DGraph::EdgeImplement {
   public:
-    MyDGEdge(OA::OA_ptr<OA::DGraph::DGraphStandard::Node> source_, 
-	     OA::OA_ptr<OA::DGraph::DGraphStandard::Node> sink_, 
+    MyDGEdge(OA::OA_ptr<OA::DGraph::NodeImplement> source_, 
+	     OA::OA_ptr<OA::DGraph::NodeImplement> sink_, 
 	     const xercesc::DOMElement* e_) 
-      : OA::DGraph::DGraphStandard::Edge(source_, sink_), e(e_) { }
+      : OA::DGraph::EdgeImplement(source_, sink_), e(e_) { }
     virtual ~MyDGEdge() { }
   
     xercesc::DOMElement* GetElem() const { return const_cast<xercesc::DOMElement*>(e); }

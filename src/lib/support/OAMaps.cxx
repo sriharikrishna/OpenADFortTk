@@ -19,13 +19,13 @@ namespace fortTkSupport {
   static void
   CreateOAAnalInfo(PU_Info* pu, PUToOAAnalInfoMap* inter, OAAnalInfo* x);
 
-  OA::OA_ptr<OA::CFG::Interface>
+  OA::OA_ptr<OA::CFG::CFGInterface>
   CreateCFG(PU_Info* pu, OA::OA_ptr<OA::CFG::EachCFGInterface> cfgeach,
 	    OA::OA_ptr<Open64IRInterface> irIF);
 
 
   static void
-  MassageOACallGraphIntoXAIFCallGraph(OA::OA_ptr<OA::CallGraph::CallGraphStandard> cg);
+  MassageOACallGraphIntoXAIFCallGraph(OA::OA_ptr<OA::CallGraph::CallGraph> cg);
 
   static void
   AddControlFlowEndTags(PU_Info* pu, WhirlParentMap* wnParentMap, 
@@ -33,7 +33,7 @@ namespace fortTkSupport {
 
 
   static void
-  MassageOACFGIntoXAIFCFG(OA::OA_ptr<OA::CFG::CFGStandard> cfg,
+  MassageOACFGIntoXAIFCFG(OA::OA_ptr<OA::CFG::CFG> cfg,
 			  OA::OA_ptr<Open64IRInterface> irIF);
 
   static void
@@ -86,14 +86,14 @@ namespace fortTkSupport {
   
     // Create CFGs [FIXME: and perform MemRefExprKludge]
     // first Create CFG 'manager' (compute CFG on demand)
-    OA::OA_ptr<OA::CFG::ManagerStandard> cfgman;
-    cfgman = new OA::CFG::ManagerStandard(irIF);
+    OA::OA_ptr<OA::CFG::ManagerCFGStandard> cfgman;
+    cfgman = new OA::CFG::ManagerCFGStandard(irIF);
     OA::OA_ptr<OA::CFG::EachCFGInterface> cfgeach;
     cfgeach = new OA::CFG::EachCFGStandard(cfgman);
     FORTTK_MSG(1, "progress: CreateCFG");
     for ( ; procIt->isValid(); ++(*procIt)) { 
       PU_Info* pu = (PU_Info*)procIt->current().hval();
-      OA::OA_ptr<OA::CFG::Interface> cfg = CreateCFG(pu, cfgeach, irIF);
+      OA::OA_ptr<OA::CFG::CFGInterface> cfg = CreateCFG(pu, cfgeach, irIF);
     }
     // For each proc 
     x->SetCFGEach(cfgman, cfgeach);
@@ -110,9 +110,9 @@ namespace fortTkSupport {
     FORTTK_MSG(1, "progress: call graph: performAnalysis");
     // Create call graph (massage OA version into XAIF version below)
     procIt->reset();
-    OA::OA_ptr<OA::CallGraph::ManagerStandard> cgraphman;
-    cgraphman = new OA::CallGraph::ManagerStandard(irIF);
-    OA::OA_ptr<OA::CallGraph::CallGraphStandard> cgraph = 
+    OA::OA_ptr<OA::CallGraph::ManagerCallGraphStandard> cgraphman;
+    cgraphman = new OA::CallGraph::ManagerCallGraphStandard(irIF);
+    OA::OA_ptr<OA::CallGraph::CallGraph> cgraph = 
       cgraphman->performAnalysis(procIt,interAlias);
     if (0) { cgraph->dump(std::cout, irIF); }
     x->SetCallGraph(cgraphman, cgraph);
@@ -155,8 +155,8 @@ namespace fortTkSupport {
 
     // Side Effect
     FORTTK_MSG(1, "progress: side effect: performAnalysis");
-    OA::OA_ptr<OA::SideEffect::ManagerStandard> sideeffectman;
-    sideeffectman = new OA::SideEffect::ManagerStandard(irIF);
+    OA::OA_ptr<OA::SideEffect::ManagerSideEffectStandard> sideeffectman;
+    sideeffectman = new OA::SideEffect::ManagerSideEffectStandard(irIF);
 
     x->SetSideEffect(sideeffectman);
 
@@ -174,7 +174,7 @@ namespace fortTkSupport {
     FORTTK_MSG(1, "progress: icfg standard: performAnalysis");
     OA::OA_ptr<OA::ICFG::ManagerICFGStandard> icfgman;
     icfgman = new OA::ICFG::ManagerICFGStandard(irIF);
-    OA::OA_ptr<OA::ICFG::ICFGStandard> icfg 
+    OA::OA_ptr<OA::ICFG::ICFG> icfg 
       = icfgman->performAnalysis(procIt,cfgeach,cgraph);
 
     // Activity Analysis
@@ -216,7 +216,7 @@ namespace fortTkSupport {
   }
 
 
-  OA::OA_ptr<OA::CFG::Interface>
+  OA::OA_ptr<OA::CFG::CFGInterface>
   CreateCFG(PU_Info* pu, OA::OA_ptr<OA::CFG::EachCFGInterface> cfgeach,
 	    OA::OA_ptr<Open64IRInterface> irIF)
   {
@@ -233,8 +233,8 @@ namespace fortTkSupport {
   
     // Force computation of CFG
     //OA::CFG::resetIds();
-    OA::OA_ptr<OA::CFG::Interface> cfgIF = cfgeach->getCFGResults(proc);
-    OA::OA_ptr<OA::CFG::CFGStandard> cfg = cfgIF.convert<OA::CFG::CFGStandard>();
+    OA::OA_ptr<OA::CFG::CFGInterface> cfgIF = cfgeach->getCFGResults(proc);
+    OA::OA_ptr<OA::CFG::CFG> cfg = cfgIF.convert<OA::CFG::CFG>();
     if (0) { cfg->dump(std::cout, irIF); }
   
     // Massage CFG
@@ -251,7 +251,7 @@ namespace fortTkSupport {
   {
     OA::ProcHandle proc((OA::irhandle_t)pu);
     OA::OA_ptr<Open64IRInterface> irIF = inter->GetIRInterface();
-    OA::OA_ptr<OA::CFG::Interface> cfg = 
+    OA::OA_ptr<OA::CFG::CFGInterface> cfg = 
       inter->GetCFGEach()->getCFGResults(proc);
     OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> interSideEffect = 
       inter->GetInterSideEffect();
@@ -271,8 +271,8 @@ namespace fortTkSupport {
   
     // ReachDefs
     FORTTK_MSG(1, "progress: reach defs: performAnalysis");
-    OA::OA_ptr<OA::ReachDefs::ManagerStandard> rdman;
-    rdman = new OA::ReachDefs::ManagerStandard(irIF);
+    OA::OA_ptr<OA::ReachDefs::ManagerReachDefsStandard> rdman;
+    rdman = new OA::ReachDefs::ManagerReachDefsStandard(irIF);
     OA::OA_ptr<OA::ReachDefs::ReachDefsStandard> rds 
       = rdman->performAnalysis(proc, cfg, alias, interSideEffect);
   
@@ -280,8 +280,8 @@ namespace fortTkSupport {
 
     // UDDU chains
     FORTTK_MSG(1, "progress: uddu: performAnalysis");
-    OA::OA_ptr<OA::UDDUChains::ManagerStandard> udman;
-    udman = new OA::UDDUChains::ManagerStandard(irIF);
+    OA::OA_ptr<OA::UDDUChains::ManagerUDDUChainsStandard> udman;
+    udman = new OA::UDDUChains::ManagerUDDUChainsStandard(irIF);
     OA::OA_ptr<OA::UDDUChains::UDDUChainsStandard> udduchains 
       = udman->performAnalysis(proc, alias, rds, interSideEffect);
     if (0) { udduchains->dump(std::cout, irIF); }
@@ -321,7 +321,7 @@ namespace fortTkSupport {
   //   - need to figure out what to do with non-inlinable intrinsics
   //  
   static void
-  MassageOACallGraphIntoXAIFCallGraph(OA::OA_ptr<OA::CallGraph::CallGraphStandard> cg)
+  MassageOACallGraphIntoXAIFCallGraph(OA::OA_ptr<OA::CallGraph::CallGraph> cg)
   {
     using namespace OA::CallGraph;
   
@@ -330,9 +330,20 @@ namespace fortTkSupport {
     // -------------------------------------------------------
   
     DGraphNodeList toRemove; // holds basic blocks made empty
-  
-    for (CallGraphStandard::NodesIterator it(*cg); it.isValid(); ++it) {
-      OA::OA_ptr<CallGraphStandard::Node> n = it.current();
+
+    
+    
+    OA::OA_ptr<OA::DGraph::NodesIteratorInterface> it = cg->getNodesIterator();
+
+    /*! commented out by PLM 08/26/06
+    for (NodesIterator it(*cg); it.isValid(); ++it) {
+    */
+
+    for( ; it->isValid(); ++(*it))
+    {
+      OA::OA_ptr<OA::DGraph::NodeInterface> dn = it->current();
+
+      OA::OA_ptr<Node> n = dn.convert<Node>();
       if (n->getProc().hval() == 0) {
 	FORTTK_DIAGIF_DEV(2) {
 	  ST* st = (ST*)n->getProcSym().hval();
@@ -346,7 +357,7 @@ namespace fortTkSupport {
     for (DGraphNodeList::iterator it = toRemove.begin(); 
 	 it != toRemove.end(); ++it) 
       {
-	OA::OA_ptr<OA::DGraph::Interface::Node> n = (*it);
+	OA::OA_ptr<OA::DGraph::NodeInterface> n = (*it);
 	cg->removeNode(n);
       }
     toRemove.clear();
@@ -499,10 +510,12 @@ namespace fortTkSupport {
   // split any would in them into BasicBlocks.
   // 
   static void
-  MassageOACFGIntoXAIFCFG(OA::OA_ptr<OA::CFG::CFGStandard> cfg,
+  MassageOACFGIntoXAIFCFG(OA::OA_ptr<OA::CFG::CFG> cfg,
 			  OA::OA_ptr<Open64IRInterface> irIF)
   {
-    using namespace OA::CFG;
+   /* commented out by PLM 08/27/06
+    * using namespace OA::CFG;
+    */
 
     typedef std::list< pair<CFGNodeList::iterator, WN*> > MySplitList;
 
@@ -510,8 +523,8 @@ namespace fortTkSupport {
     CFGNodeList workList;  
     MySplitList toSplit; // nodes to split
 
-    OA::OA_ptr<OA::CFG::Interface::NodesIterator> nodeIt;
-    OA::OA_ptr<OA::CFG::CFGStandard::NodesIterator> nodeItTmp; 
+    OA::OA_ptr<OA::CFG::NodesIteratorInterface> nodeIt;
+    OA::OA_ptr<OA::DGraph::NodesIteratorInterface> nodeItTmp; 
 
     // -------------------------------------------------------
     // 1. Find BBs with conditionals and split them
@@ -519,9 +532,10 @@ namespace fortTkSupport {
 
     // a. Collect all BBs with more that one stmt into 'workList'
     nodeItTmp = cfg->getNodesIterator();
-    nodeIt = nodeItTmp.convert<OA::CFG::Interface::NodesIterator>();
+    nodeIt = nodeItTmp.convert<OA::CFG::NodesIteratorInterface>();
     for ( ; nodeIt->isValid(); ++(*nodeIt)) {
-      OA::OA_ptr<OA::CFG::Interface::Node> n = nodeIt->current();
+      OA::OA_ptr<OA::DGraph::NodeInterface> dn = nodeIt->current();
+      OA::OA_ptr<OA::CFG::NodeInterface> n = dn.convert<OA::CFG::NodeInterface>();
       if ( (n->size() > 1) ) { 
 	workList.push_back(n);
       }
@@ -532,20 +546,20 @@ namespace fortTkSupport {
     // split it.  A block will only need to be split at most once.
     for (CFGNodeList::iterator wnodeIt = workList.begin(); 
 	 wnodeIt != workList.end(); ++wnodeIt) {
-      OA::OA_ptr<OA::CFG::Interface::Node> n = (*wnodeIt);
+      OA::OA_ptr<OA::CFG::NodeInterface> n = (*wnodeIt);
       // n->longdump(cfg, std::cerr);
     
-      OA::OA_ptr<OA::CFG::Interface::NodeStatementsIterator> stmtItPtr
+      OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtItPtr
 	= n->getNodeStatementsIterator();
       for (; stmtItPtr->isValid(); ++(*stmtItPtr)) {
 	OA::StmtHandle stmt = stmtItPtr->current();
 
-	IRStmtType ty = irIF->getCFGStmtType(stmt);
-	if (ty == STRUCT_TWOWAY_CONDITIONAL
-	    || ty == USTRUCT_TWOWAY_CONDITIONAL_T
-	    || ty == USTRUCT_TWOWAY_CONDITIONAL_F
-	    || ty == STRUCT_MULTIWAY_CONDITIONAL
-	    || ty == USTRUCT_MULTIWAY_CONDITIONAL) {
+    OA::CFG::IRStmtType ty = irIF->getCFGStmtType(stmt);
+	if (ty == OA::CFG::STRUCT_TWOWAY_CONDITIONAL
+	    || ty == OA::CFG::USTRUCT_TWOWAY_CONDITIONAL_T
+	    || ty == OA::CFG::USTRUCT_TWOWAY_CONDITIONAL_F
+	    || ty == OA::CFG::STRUCT_MULTIWAY_CONDITIONAL
+	    || ty == OA::CFG::USTRUCT_MULTIWAY_CONDITIONAL) {
 	  toSplit.push_back(make_pair(wnodeIt, (WN*)stmt.hval()));
 	  break;
 	}
@@ -555,14 +569,14 @@ namespace fortTkSupport {
     // c. Split blocks
     for (MySplitList::iterator it = toSplit.begin(); it != toSplit.end(); ++it) {
       CFGNodeList::iterator wnodeIt = (*it).first;
-      OA::OA_ptr<OA::CFG::Interface::Node> ntmp = *wnodeIt;
-      OA::OA_ptr<OA::CFG::CFGStandard::Node> n 
-	= ntmp.convert<OA::CFG::CFGStandard::Node>();
+      OA::OA_ptr<OA::CFG::NodeInterface> ntmp = *wnodeIt;
+      OA::OA_ptr<OA::CFG::Node> n 
+	= ntmp.convert<OA::CFG::Node>();
       WN* startWN = (*it).second;
     
       OA::StmtHandle stmt((OA::irhandle_t)startWN);
-      OA::OA_ptr<OA::CFG::CFGStandard::Node> newblock = cfg->splitBlock(n, stmt);
-      cfg->connect(n, newblock, Interface::FALLTHROUGH_EDGE);
+      OA::OA_ptr<OA::CFG::Node> newblock = cfg->splitBlock(n, stmt);
+      cfg->connect(n, newblock, OA::CFG::FALLTHROUGH_EDGE);
       //n->longdump(cfg);
       //newblock->longdump(cfg);
     }
@@ -581,9 +595,10 @@ namespace fortTkSupport {
   
   
     nodeItTmp = cfg->getNodesIterator();
-    nodeIt = nodeItTmp.convert<OA::CFG::Interface::NodesIterator>();
+//    nodeIt = nodeItTmp.convert<OA::CFG::NodesIteratorInterface>();
     for ( ; nodeIt->isValid(); ++(*nodeIt)) {
-      OA::OA_ptr<OA::CFG::Interface::Node> n = nodeIt->current();
+      OA::OA_ptr<OA::DGraph::NodeInterface> dn = nodeIt->current();
+      OA::OA_ptr<OA::CFG::Node> n = dn.convert<OA::CFG::Node>();
 
       // Use CFG nodes representing the OPR_DO_LOOP condition to find
       // initialization and update information.  With this info, remove
@@ -593,7 +608,7 @@ namespace fortTkSupport {
       // FIXME: use a better classification method 
       if (GetCFGVertexType(cfg, n) == XAIFStrings.elem_BBForLoop()) {
 	assert(n->size() == 1);
-	OA::OA_ptr<OA::CFG::Interface::NodeStatementsIterator> stmtItPtr
+	OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtItPtr
 	  = n->getNodeStatementsIterator();
 	OA::StmtHandle loopStmt = stmtItPtr->current();
 	WN* loopWN = (WN *)loopStmt.hval();
@@ -603,12 +618,12 @@ namespace fortTkSupport {
       
 	// FIXME: this is a terrible way of doing this, but the point is
 	// to test correctness for now.
-	OA::OA_ptr<OA::CFG::CFGStandard::NodesIterator> nodeIt1Ptr 
+	OA::OA_ptr<OA::DGraph::NodesIteratorInterface> nodeIt1Ptr 
 	  = cfg->getNodesIterator();
 	for (; nodeIt1Ptr->isValid(); ++(*nodeIt1Ptr)) {
-	  OA::OA_ptr<OA::CFG::CFGStandard::Node> n1 = nodeIt1Ptr->current();
-
-	  OA::OA_ptr<OA::CFG::Interface::NodeStatementsIterator> stmtIt1Ptr
+	  OA::OA_ptr<OA::DGraph::NodeInterface> dn1 = nodeIt1Ptr->current();
+      OA::OA_ptr<OA::CFG::Node> n1 = dn1.convert<OA::CFG::Node>();
+	  OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtIt1Ptr
 	    = n1->getNodeStatementsIterator();
 	  for (; stmtIt1Ptr->isValid(); ++(*stmtIt1Ptr)) {
 	    OA::StmtHandle st = stmtIt1Ptr->current();
@@ -628,25 +643,28 @@ namespace fortTkSupport {
     // Remove empty basic blocks
     for (CFGNodeList::iterator it = toRemove.begin(); 
 	 it != toRemove.end(); ++it) {
-      OA::OA_ptr<OA::CFG::Interface::Node> n = *it;
+      OA::OA_ptr<OA::CFG::NodeInterface> n = *it;
     
       // Find predecessor node.  If more than one, we cannot continue
       if (n->num_incoming() > 1) {
 	continue;
       } 
-      OA::OA_ptr<OA::CFG::Interface::NodesIterator> sourceItPtr
+      OA::OA_ptr<OA::DGraph::NodesIteratorInterface> sourceItPtr
 	= n->getSourceNodesIterator();
-      OA::OA_ptr<OA::CFG::Interface::Node> pred = sourceItPtr->current();
+      OA::OA_ptr<OA::DGraph::NodeInterface> dpred = sourceItPtr->current();
+      OA::OA_ptr<OA::CFG::Node> pred = dpred.convert<OA::CFG::Node>();
     
       // All outgoing edges of 'n' become outgoing edges of 'pred'
-      OA::OA_ptr<OA::CFG::Interface::EdgesIterator> outEdgeItPtr
+      OA::OA_ptr<OA::DGraph::EdgesIteratorInterface> outEdgeItPtr
 	= n->getOutgoingEdgesIterator();
       for ( ; outEdgeItPtr->isValid(); ++(*outEdgeItPtr)) {
-	OA::OA_ptr<OA::CFG::Interface::Edge> e = outEdgeItPtr->current();
-	OA::OA_ptr<OA::CFG::Interface::Node> snk = e->sink();
+	OA::OA_ptr<OA::DGraph::EdgeInterface> de = outEdgeItPtr->current();
+    OA::OA_ptr<OA::CFG::Edge> e = de.convert<OA::CFG::Edge>();
+	OA::OA_ptr<OA::DGraph::NodeInterface> dsnk = e->sink();
+    OA::OA_ptr<OA::CFG::Node> snk = dsnk.convert<OA::CFG::Node>();
 	cfg->connect(pred, snk, e->getType());
       }
-    
+   
       cfg->removeNode(n); // removes all outgoing and incoming edges
     }
     toRemove.clear();
@@ -671,10 +689,10 @@ namespace fortTkSupport {
   
     // a. Collect all BBs with more that one stmt into 'workList'
     nodeItTmp = cfg->getNodesIterator();
-    nodeIt = nodeItTmp.convert<OA::CFG::Interface::NodesIterator>();
+//    nodeIt = nodeItTmp.convert<OA::CFG::NodesIteratorInterface>();
     for ( ; nodeIt->isValid(); ++(*nodeIt)) {
-      OA::OA_ptr<OA::CFG::Interface::Node> n = nodeIt->current();
-    
+      OA::OA_ptr<OA::DGraph::NodeInterface> dn = nodeIt->current();
+      OA::OA_ptr<OA::CFG::Node> n = dn.convert<OA::CFG::Node>(); 
       if ( (n->size() > 1) ) { 
 	workList.push_back(n);
       }
@@ -686,9 +704,9 @@ namespace fortTkSupport {
     
       for (CFGNodeList::iterator wnodeIt = workList.begin(); 
 	   wnodeIt != workList.end(); ++wnodeIt) {
-	OA::OA_ptr<OA::CFG::Interface::Node> ntmp = *wnodeIt;
-	OA::OA_ptr<OA::CFG::CFGStandard::Node> n 
-	  = ntmp.convert<OA::CFG::CFGStandard::Node>();
+	OA::OA_ptr<OA::CFG::NodeInterface> ntmp = *wnodeIt;
+	OA::OA_ptr<OA::CFG::Node> n 
+	  = ntmp.convert<OA::CFG::Node>();
       
 	// 1. Find split-point for this node.  If there is none, remove it
 	// from 'workList'
@@ -696,7 +714,7 @@ namespace fortTkSupport {
       
 	WN* bbSplitPointWN = NULL; // start of new basic block
 	unsigned int stmtcount = 1;
-	OA::OA_ptr<OA::CFG::Interface::NodeStatementsIterator> stmtIt
+	OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtIt
 	  = n->getNodeStatementsIterator();
 	for (; stmtIt->isValid(); ++(*stmtIt), ++stmtcount) {
 	  OA::StmtHandle st = stmtIt->current();
@@ -733,14 +751,14 @@ namespace fortTkSupport {
       for (MySplitList::iterator it = toSplit.begin(); 
 	   it != toSplit.end(); ++it) {
 	CFGNodeList::iterator wnodeIt = (*it).first;
-	OA::OA_ptr<OA::CFG::Interface::Node> ntmp = *wnodeIt;
-	OA::OA_ptr<OA::CFG::CFGStandard::Node> n = 
-	  ntmp.convert<OA::CFG::CFGStandard::Node>();
+	OA::OA_ptr<OA::CFG::NodeInterface> ntmp = *wnodeIt;
+	OA::OA_ptr<OA::CFG::Node> n = 
+	  ntmp.convert<OA::CFG::Node>();
 	WN* startWN = (*it).second;
       
 	OA::StmtHandle stmt((OA::irhandle_t)startWN);
-	OA::OA_ptr<CFGStandard::Node> newblock = cfg->splitBlock(n, stmt);
-	cfg->connect(n, newblock, Interface::FALLTHROUGH_EDGE);
+	OA::OA_ptr<OA::CFG::Node> newblock = cfg->splitBlock(n, stmt);
+	cfg->connect(n, newblock, OA::CFG::FALLTHROUGH_EDGE);
 	//n->longdump(cfg);
 	//newblock->longdump(cfg);
 
@@ -859,14 +877,14 @@ namespace fortTkSupport {
   // FIXME: we know that loop and if BBs should only have one node in
   // them. because of MassageOA...
   const char*
-  GetCFGVertexType(OA::OA_ptr<OA::CFG::Interface> cfg, 
-		   OA::OA_ptr<OA::CFG::Interface::Node> n)
+  GetCFGVertexType(OA::OA_ptr<OA::CFG::CFGInterface> cfg, 
+		   OA::OA_ptr<OA::CFG::NodeInterface> n)
   {
     using namespace OA::CFG;
 
     // We know these are cheap so they can be recomputed each time we are called
-    OA::OA_ptr<Interface::Node> entry = cfg->getEntry();
-    OA::OA_ptr<Interface::Node> exit = cfg->getExit();
+    OA::OA_ptr<NodeInterface> entry = cfg->getEntry();
+    OA::OA_ptr<NodeInterface> exit = cfg->getExit();
   
     if (n == entry) {
       return XAIFStrings.elem_BBEntry();
@@ -876,7 +894,7 @@ namespace fortTkSupport {
   
     // FIXME: we do not need to iterate over all statements since
     // control flow statements contructs will be in their own xaif:BB.
-    OA::OA_ptr<OA::CFG::Interface::NodeStatementsIterator> stmtIt
+    OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtIt
       = n->getNodeStatementsIterator();
     for (; stmtIt->isValid(); ++(*stmtIt)) {
       OA::StmtHandle st = stmtIt->current();

@@ -11,8 +11,8 @@
 #include "Open64IRInterface/Open64BasicTypes.h"
 
 
-#include <OpenAnalysis/CFG/CFGStandard.hpp> // for DGraphStandard, CFG::Edge
-
+#include <OpenAnalysis/CFG/CFG.hpp> // for DGraphStandard, CFG::Edge
+#include <OpenAnalysis/Utils/DGraph/DGraphInterface.hpp>
 
 #include "whirl2xaif.h"
 #include "PUXlationContext.h"
@@ -66,28 +66,28 @@ namespace whirl2xaif {
   //typedef std::vector<OA::CFG::CFGStandard::Edge*> CFGEdgeVec;
   //typedef std::vector<OA::DGraph::DGraphStandard::Node> DGraphNodeVec;
   //typedef std::vector<OA::DGraph::DGraphStandard::Edge> DGraphEdgeVec;
-  typedef std::vector<OA::OA_ptr<OA::DGraph::Interface::Node> > DGraphNodeVec;
-  typedef std::vector<OA::OA_ptr<OA::DGraph::Interface::Edge> > DGraphEdgeVec;
+  typedef std::vector<OA::OA_ptr<OA::DGraph::NodeInterface> > DGraphNodeVec;
+  typedef std::vector<OA::OA_ptr<OA::DGraph::EdgeInterface> > DGraphEdgeVec;
   //typedef std::vector<OA::CFG::CFGStandard::Edge> CFGEdgeVec;
-  typedef std::vector<OA::OA_ptr<OA::CFG::Interface::Edge> > CFGEdgeVec;
+  typedef std::vector<OA::OA_ptr<OA::CFG::EdgeInterface> > CFGEdgeVec;
 
 
   // SortDGraphNodes: Sorts DGraph nodes.  User must deallocate returned
   // object.
   extern DGraphNodeVec*
-  SortDGraphNodes(OA::OA_ptr<OA::DGraph::Interface> g);
+  SortDGraphNodes(OA::OA_ptr<OA::DGraph::DGraphInterface> g);
   //SortDGraphNodes(OA::OA_ptr<OA::DGraph::DGraphStandard> g);
 
   // SortDGraphEdges: Sorts DGraph edges.  User must deallocate returned
   // object.
   extern DGraphEdgeVec*
-  SortDGraphEdges(OA::OA_ptr<OA::DGraph::Interface> g);
+  SortDGraphEdges(OA::OA_ptr<OA::DGraph::DGraphInterface> g);
   //SortDGraphEdges(OA::OA_ptr<OA::DGraph::DGraphStandard> g);
 
   // SortCFGEdges: Sorts CFG edges.  User must deallocate returned
   // object.
   extern CFGEdgeVec*
-  SortCFGEdges(OA::OA_ptr<OA::CFG::Interface> g);
+  SortCFGEdges(OA::OA_ptr<OA::CFG::CFGInterface> g);
   //SortCFGEdges(OA::OA_ptr<OA::CFG::CFGStandard> g);
 
 

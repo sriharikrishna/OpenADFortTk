@@ -19,6 +19,9 @@
 #include "Open64IRInterface/diagnostics.h"
 #include "Open64IRInterface/wn_attr.h"
 #include "Open64IRInterface/stab_attr.h"
+#include "OpenAnalysis/Utils/DGraph/DGraphInterface.hpp"
+#include "OpenAnalysis/Utils/DGraph/DGraphImplement.hpp"
+
 
 #include "WhirlIDMaps.h"
 #include "WhirlParentize.h"
@@ -70,7 +73,7 @@ namespace xaif2whirl {
   TranslateCFG(WN *wn_pu, const xercesc::DOMElement* cfgElem, PUXlationContext& ctxt);
 
   static WN*
-  xlate_CFG(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+  xlate_CFG(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 	    OA::OA_ptr<MyDGNode> root, PUXlationContext& ctxt, 
 	    bool structuredCF = false);
 
@@ -248,17 +251,17 @@ namespace xaif2whirl {
     bool ascending;
   };
 
-  static OA::OA_ptr<OA::DGraph::Interface> 
+  static OA::OA_ptr<OA::DGraph::DGraphInterface> 
   CreateCFGraph(const xercesc::DOMElement* elem);
 
   //static list<OA::OA_ptr<OA::DGraph::Interface::Node> >*
   //TopologicalSort(OA::OA_ptr<OA::DGraph::Interface> graph);
 
   static void
-  DDumpDotGraph(OA::OA_ptr<OA::DGraph::Interface> graph);
+  DDumpDotGraph(OA::OA_ptr<OA::DGraph::DGraphInterface> graph);
 
   static void
-  DumpDotGraph(std::ostream& os, OA::OA_ptr<OA::DGraph::Interface> graph);
+  DumpDotGraph(std::ostream& os, OA::OA_ptr<OA::DGraph::DGraphInterface> graph);
 
   // ****************************************************************************
 
@@ -539,7 +542,7 @@ namespace xaif2whirl {
     for (list<xercesc::DOMElement*>::iterator it = cfglist.begin(); 
 	 it != cfglist.end(); ++it) {
       xercesc::DOMElement* cfgelm = (*it);
-      OA::OA_ptr<OA::DGraph::Interface> cfg = CreateCFGraph(cfgelm);
+      OA::OA_ptr<OA::DGraph::DGraphInterface> cfg = CreateCFGraph(cfgelm);
     
       if (opt_algorithm == ALG_BB_PATCHING) { 
 	XAIF_BBElemFilter filt(false /* edges */);
@@ -549,10 +552,10 @@ namespace xaif2whirl {
 	}
       } 
       else {
-	OA::OA_ptr<OA::DGraph::Interface::NodesIterator> enodeIter
+	OA::OA_ptr<OA::DGraph::NodesIteratorInterface> enodeIter
 	  = cfg->getEntryNodesIterator();
 	assert(enodeIter->isValid());
-	OA::OA_ptr<OA::DGraph::Interface::Node> temp = enodeIter->current();
+	OA::OA_ptr<OA::DGraph::NodeInterface> temp = enodeIter->current();
 	OA::OA_ptr<MyDGNode> root = temp.convert<MyDGNode>();
 	(*enodeIter)++; assert(!enodeIter->isValid());
 	bool structuredCF = (opt_algorithm == ALG_STRUCTURED_CF);
@@ -619,17 +622,17 @@ namespace xaif2whirl {
   // [FIXME unstructured]
 
   static pair<WN*, OA::OA_ptr<MyDGNode> >
-  xlate_CFGstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+  xlate_CFGstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 		  OA::OA_ptr<MyDGNode> startNode, set<xercesc::DOMElement*>& xlated, 
 		  PUXlationContext& ctxt);
 
   static WN*
-  xlate_CFGunstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+  xlate_CFGunstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 		    OA::OA_ptr<MyDGNode> startNode, set<xercesc::DOMElement*>& xlated, 
 		    PUXlationContext& ctxt);
 
   static WN*
-  xlate_CFG(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+  xlate_CFG(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 	    OA::OA_ptr<MyDGNode> root, PUXlationContext& ctxt, 
 	    bool structuredCF)
   {
@@ -653,7 +656,7 @@ namespace xaif2whirl {
   // Return value: <new-WHIRL-stmt-block, ending-basic-block> (If the
   // latter is NULL, it means we saw the Exit basic block)
   static pair<WN*, OA::OA_ptr<MyDGNode> >
-  xlate_CFGstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+  xlate_CFGstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 		  OA::OA_ptr<MyDGNode> startNode, set<xercesc::DOMElement*>& xlated, 
 		  PUXlationContext& ctxt)
   {
@@ -668,10 +671,10 @@ namespace xaif2whirl {
     map<OA::OA_ptr<MyDGNode>, unsigned> nodeToLblMap;
   
     // Initialize label maps
-    OA::OA_ptr<OA::DGraph::Interface::NodesIterator> nodeIt 
+    OA::OA_ptr<OA::DGraph::NodesIteratorInterface> nodeIt 
       = cfg->getNodesIterator();
     for ( ; nodeIt->isValid(); ++(*nodeIt)) {
-      OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = nodeIt->current();
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = nodeIt->current();
       OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
 
       nodeToLblMap[n] = nextLblCntr++;
@@ -724,10 +727,10 @@ namespace xaif2whirl {
 	// sort two-way branches into true-false order.)
 	OA::OA_ptr<MyDGEdge> tmp; tmp = NULL;
 	vector<OA::OA_ptr<MyDGEdge> > outedges(numOutEdges, tmp);
-	OA::OA_ptr<OA::DGraph::Interface::EdgesIterator> it = 
+	OA::OA_ptr<OA::DGraph::EdgesIteratorInterface> it = 
 	  curNode->getOutgoingEdgesIterator();
 	for (int i = 0; it->isValid(); ++(*it), ++i) {
-	  OA::OA_ptr<OA::DGraph::Interface::Edge> etmp = it->current();
+	  OA::OA_ptr<OA::DGraph::EdgeInterface> etmp = it->current();
 	  outedges[i] = etmp.convert<MyDGEdge>();
 	}
 	std::sort(outedges.begin(), outedges.end(), 
@@ -737,7 +740,7 @@ namespace xaif2whirl {
 	vector<WN*> childblksWN(numOutEdges, NULL);
 	OA::OA_ptr<MyDGNode> endBrNode; endBrNode = NULL;
 	for (unsigned i = 0; i < outedges.size(); ++i) {
-	  OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = outedges[i]->sink();
+	  OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->sink();
 	  OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
 	  pair<WN*, OA::OA_ptr<MyDGNode> > p 
 	    = xlate_CFGstruct(wn_pu, cfg, n, xlated, ctxt);
@@ -757,7 +760,7 @@ namespace xaif2whirl {
 	
 	  // Add a LABEL/GOTO at the front/end of each successor block
 	  for (unsigned i = 0; i < outedges.size(); ++i) {
-	    OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = outedges[i]->sink();
+	    OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->sink();
 	    OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
 	    WN* nblkWN = childblksWN[i];
 	  
@@ -863,7 +866,7 @@ namespace xaif2whirl {
   // each basic block.  We do not worry about interfering with original
   // labels because we do not keep them.
   static WN*
-  xlate_CFGunstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+  xlate_CFGunstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 		    OA::OA_ptr<MyDGNode> startNode, set<xercesc::DOMElement*>& xlated, 
 		    PUXlationContext& ctxt)
   {
@@ -873,8 +876,13 @@ namespace xaif2whirl {
     WN* blkWN = WN_CreateBlock();
 
     // Topological sort to ensure that, e.g., the exit node is last
-    OA::OA_ptr<list<OA::OA_ptr<OA::DGraph::Interface::Node> > > topoSortedCFG 
-      = OA::DGraph::create_reverse_post_order_list(*cfg);
+    /*! commented out by PLM 08/26/06 
+    OA::OA_ptr<list<OA::OA_ptr<OA::DGraph::NodeInterface> > > topoSortedCFG; 
+      = OA::DGraph::::create_reverse_post_order_list(*cfg);
+      */
+
+    
+    
 
 #if 0
     std::cerr << "TopoSort: ";
@@ -895,10 +903,21 @@ namespace xaif2whirl {
     map<OA::OA_ptr<MyDGNode>, unsigned> nodeToLoopContLblMap;
   
     // Initialize label maps
-    for (list<OA::OA_ptr<OA::DGraph::Interface::Node> >::iterator it 
+/*! commented out by PLM 08/29/06
+ * for (list<OA::OA_ptr<OA::DGraph::NodeInterface> >::iterator it 
 	   = topoSortedCFG->begin(); 
 	 it != topoSortedCFG->end(); ++it) {
-      OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = *it;
+    std::set<OA::OA_ptr<OA::DGraph::NodeInterface> >::iterator it;
+    */
+   
+
+    
+    
+    OA::OA_ptr<OA::DGraph::NodesIteratorInterface> it;
+
+    for (it=cfg->getNodesIterator(); it->isValid(); ++(*it) ) {
+            
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = it->current();
       OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
       nodeToLblMap[n] = nextLblCntr++;
     
@@ -916,10 +935,15 @@ namespace xaif2whirl {
     // ---------------------------------------------------
     // Translate in topological order
     // ---------------------------------------------------
-    for (list<OA::OA_ptr<OA::DGraph::Interface::Node> >::iterator it 
+    /*! commented out by PLM 08/29/06
+    for (list<OA::OA_ptr<OA::DGraph::NodeInterface> >::iterator it 
 	   = topoSortedCFG->begin(); 
 	 it != topoSortedCFG->end(); ++it) {
-      OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = *it;
+     */
+    
+    for (it=cfg->getNodesIterator(); it->isValid(); ++(*it) ) {
+        
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = it->current();
       OA::OA_ptr<MyDGNode> curNode = ntmp.convert<MyDGNode>();
       xercesc::DOMElement* bbElem = curNode->GetElem();
       unsigned curLbl = nodeToLblMap[curNode];
@@ -957,10 +981,10 @@ namespace xaif2whirl {
 	// sort two-way branches into true-false order.)
 	OA::OA_ptr<MyDGEdge> tmp; tmp = NULL;
 	vector<OA::OA_ptr<MyDGEdge> > outedges(numOutEdges, tmp);
-	OA::OA_ptr<OA::DGraph::Interface::EdgesIterator> it
+	OA::OA_ptr<OA::DGraph::EdgesIteratorInterface> it
 	  = curNode->getOutgoingEdgesIterator();
 	for (int i = 0; it->isValid(); ++(*it), ++i) {
-	  OA::OA_ptr<OA::DGraph::Interface::Edge> etmp = it->current();
+	  OA::OA_ptr<OA::DGraph::EdgeInterface> etmp = it->current();
 	  outedges[i] = etmp.convert<MyDGEdge>();
 	}
 	std::sort(outedges.begin(), outedges.end(), 
@@ -973,7 +997,7 @@ namespace xaif2whirl {
 	  // Create GOTOs for each child block
 	  vector<WN*> childblksWN(numOutEdges, NULL);
 	  for (unsigned i = 0; i < outedges.size(); ++i) {
-	    OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = outedges[i]->sink();
+	    OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->sink();
 	    OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
 	    WN* gotoblkWN = WN_CreateBlock();
 	    WN* gotoWN = WN_CreateGoto(nodeToLblMap[n]);
@@ -1191,7 +1215,7 @@ namespace xaif2whirl {
     int defltIdx = -1;
     if (!GetHasConditionAttr(outedges[0]->GetElem())) {
       defltIdx = 0;
-      OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = outedges[0]->sink();
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[0]->sink();
       OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
       unsigned gotolbl = nodeToLblMap[n];
       defltWN = WN_CreateGoto(gotolbl);
@@ -1202,7 +1226,7 @@ namespace xaif2whirl {
     int numcases = outedges.size() - (defltIdx + 1);
     for (unsigned i = defltIdx + 1; i < outedges.size(); ++i) {
       xercesc::DOMElement* elemEdge = outedges[i]->GetElem();
-      OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = outedges[i]->sink();
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->sink();
       OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
     
       INT64 caseval = GetCondAttr(elemEdge);
@@ -2724,15 +2748,15 @@ namespace xaif2whirl {
     // We know there is one successor
     OA::OA_ptr<MyDGNode> succ; succ = NULL;
     if (succIsOutEdge) {
-      OA::OA_ptr<DGraphStandard::NodesIterator> it;
+      OA::OA_ptr<NodesIteratorInterface> it;
       it = node->getSinkNodesIterator();
-      OA::OA_ptr<DGraphStandard::Node> ntmp = it->current();
+      OA::OA_ptr<NodeInterface> ntmp = it->current();
       succ = ntmp.convert<MyDGNode>();
     }
     else {
-      OA::OA_ptr<DGraphStandard::NodesIterator> it;
+      OA::OA_ptr<NodesIteratorInterface> it;
       it = node->getSourceNodesIterator();
-      OA::OA_ptr<DGraphStandard::Node> ntmp = it->current();
+      OA::OA_ptr<NodeInterface> ntmp = it->current();
       succ = ntmp.convert<MyDGNode>();
     }
     return succ;
@@ -2749,16 +2773,16 @@ namespace xaif2whirl {
     int numSucc = (succIsOutEdge) ? node->num_outgoing() : node->num_incoming();
   
     if (succIsOutEdge) {
-      OA::OA_ptr<DGraphStandard::EdgesIterator> it;
+      OA::OA_ptr<EdgesIteratorInterface> it;
       it = node->getOutgoingEdgesIterator();
       for ( ; it->isValid(); ++(*it)) {
-	OA::OA_ptr<DGraphStandard::Edge> etmp = it->current();
+	OA::OA_ptr<EdgeInterface> etmp = it->current();
 	OA::OA_ptr<MyDGEdge> edge = etmp.convert<MyDGEdge>();
 	xercesc::DOMElement* e = edge->GetElem();
       
 	unsigned int cond = GetCondAttr(e);
 	if (condition == cond) {
-	  OA::OA_ptr<DGraphStandard::Node> ntmp = edge->sink();
+	  OA::OA_ptr<NodeInterface> ntmp = edge->sink();
 	  succ = ntmp.convert<MyDGNode>();
 	  break;
 	}
@@ -2773,14 +2797,14 @@ namespace xaif2whirl {
 
   // CreateCFGraph: Given an XAIF control flow graph, create and
   // return a CFG where CFG nodes point to XAIF CVG vertices.
-  static OA::OA_ptr<OA::DGraph::Interface> 
+  static OA::OA_ptr<OA::DGraph::DGraphInterface> 
   CreateCFGraph(const xercesc::DOMElement* cfgElem)
   {
     using namespace OA::DGraph;
   
     MyDGNode::resetIds();
-    OA::OA_ptr<OA::DGraph::DGraphStandard> g; 
-    g = new OA::DGraph::DGraphStandard();
+    OA::OA_ptr<OA::DGraph::DGraphImplement> g; 
+    g = new DGraphImplement();
     VertexIdToMyDGNodeMap m;
   
     // -------------------------------------------------------
@@ -2840,13 +2864,13 @@ namespace xaif2whirl {
   DumpDotGraph_GetNodeName(OA::OA_ptr<MyDGNode> n);
 
   static void
-  DDumpDotGraph(OA::OA_ptr<OA::DGraph::Interface> graph)
+  DDumpDotGraph(OA::OA_ptr<OA::DGraph::DGraphInterface> graph)
   {
     DumpDotGraph(std::cerr, graph);
   }
 
   static void
-  DumpDotGraph(std::ostream& os, OA::OA_ptr<OA::DGraph::Interface> graph)
+  DumpDotGraph(std::ostream& os, OA::OA_ptr<OA::DGraph::DGraphInterface> graph)
   {
     using namespace OA::DGraph;
     
@@ -2856,12 +2880,12 @@ namespace xaif2whirl {
        << "  edge [ ];\n"
        << std::endl;
   
-    OA::OA_ptr<Interface::EdgesIterator> edgesItPtr;
+    OA::OA_ptr<EdgesIteratorInterface> edgesItPtr;
     edgesItPtr = graph->getEdgesIterator();
     for (; edgesItPtr->isValid(); ++(*edgesItPtr)) {
-      OA::OA_ptr<OA::DGraph::Interface::Edge> e = edgesItPtr->current();
-      OA::OA_ptr<OA::DGraph::Interface::Node> srctmp = e->source();
-      OA::OA_ptr<OA::DGraph::Interface::Node> snktmp = e->sink();
+      OA::OA_ptr<OA::DGraph::EdgeInterface> e = edgesItPtr->current();
+      OA::OA_ptr<OA::DGraph::NodeInterface> srctmp = e->source();
+      OA::OA_ptr<OA::DGraph::NodeInterface> snktmp = e->sink();
       OA::OA_ptr<MyDGNode> src = srctmp.convert<MyDGNode>();
       OA::OA_ptr<MyDGNode> snk = snktmp.convert<MyDGNode>();
       std::string srcNm = DumpDotGraph_GetNodeName(src);

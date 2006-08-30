@@ -12,6 +12,9 @@
 
 #include "PUXlationContext.h"
 
+
+
+
 namespace xaif2whirl {
 
   class XlateExpression { 
@@ -72,26 +75,26 @@ namespace xaif2whirl {
 
   private:
 
-    static WN* xlate_Expression(OA::OA_ptr<OA::DGraph::DGraphStandard> g, 
+    static WN* xlate_Expression(OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
 				OA::OA_ptr<MyDGNode> n, 
 				PUXlationContext& ctxt);
 
     static WN* xlate_VarRef(const DOMElement* elem, 
 			    PUXlationContext& ctxt);
 
-    static WN* xlate_VarRef(OA::OA_ptr<OA::DGraph::DGraphStandard> g, 
+    static WN* xlate_VarRef(OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
 			    OA::OA_ptr<MyDGNode> n, 
 			    PUXlationContext& ctxt);
 
-    static WN* xlate_Intrinsic(OA::OA_ptr<OA::DGraph::DGraphStandard> g, 
+    static WN* xlate_Intrinsic(OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
 			       OA::OA_ptr<MyDGNode> n,
 			       PUXlationContext& ctxt);
 
-    static WN* xlate_FunctionCall(OA::OA_ptr<OA::DGraph::DGraphStandard> g, 
+    static WN* xlate_FunctionCall(OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
 				  OA::OA_ptr<MyDGNode> n, 
 				  PUXlationContext& ctxt);
 
-    static WN* xlate_BooleanOperation(OA::OA_ptr<OA::DGraph::DGraphStandard> g, 
+    static WN* xlate_BooleanOperation(OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
 				      OA::OA_ptr<MyDGNode> n, 
 				      PUXlationContext& ctxt);
 
@@ -103,7 +106,7 @@ namespace xaif2whirl {
      */
     static WN* xlate_ExprOpUsingIntrinsicTable(fortTkSupport::IntrinsicXlationTable::XAIFOpr xopr, 
 					       const char* xoprNm, const char* xIntrinKey,
-					       OA::OA_ptr<OA::DGraph::DGraphStandard> g, 
+					       OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
 					       OA::OA_ptr<MyDGNode> n, 
 					       PUXlationContext& ctxt);
 
@@ -126,7 +129,7 @@ namespace xaif2whirl {
     static WN* xlate_SymbolReferenceCollapsedPath(const DOMElement* elem, WN* pathVorlageWN,
 						  PUXlationContext& ctxt);
 
-    static WN* xlate_ArrayElementReference(OA::OA_ptr<OA::DGraph::DGraphStandard> g, 
+    static WN* xlate_ArrayElementReference(OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
 					   OA::OA_ptr<MyDGNode> n, 
 					   PUXlationContext& ctxt);
 
@@ -158,7 +161,7 @@ namespace xaif2whirl {
      *  SymbolReference: A
      *
      */    
-    static OA::OA_ptr<OA::DGraph::DGraphStandard> createExpressionGraph(const DOMElement* elem, 
+    static OA::OA_ptr<OA::DGraph::DGraphImplement> createExpressionGraph(const DOMElement* elem, 
 									bool varRef = false);
     
     /** 
