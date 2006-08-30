@@ -523,7 +523,6 @@ namespace fortTkSupport {
     CFGNodeList workList;  
     MySplitList toSplit; // nodes to split
 
-    OA::OA_ptr<OA::CFG::NodesIteratorInterface> nodeIt;
     OA::OA_ptr<OA::DGraph::NodesIteratorInterface> nodeItTmp; 
 
     // -------------------------------------------------------
@@ -532,9 +531,8 @@ namespace fortTkSupport {
 
     // a. Collect all BBs with more that one stmt into 'workList'
     nodeItTmp = cfg->getNodesIterator();
-    nodeIt = nodeItTmp.convert<OA::CFG::NodesIteratorInterface>();
-    for ( ; nodeIt->isValid(); ++(*nodeIt)) {
-      OA::OA_ptr<OA::DGraph::NodeInterface> dn = nodeIt->current();
+    for ( ; nodeItTmp->isValid(); ++(*nodeItTmp)) {
+      OA::OA_ptr<OA::DGraph::NodeInterface> dn = nodeItTmp->current();
       OA::OA_ptr<OA::CFG::NodeInterface> n = dn.convert<OA::CFG::NodeInterface>();
       if ( (n->size() > 1) ) { 
 	workList.push_back(n);
@@ -595,9 +593,8 @@ namespace fortTkSupport {
   
   
     nodeItTmp = cfg->getNodesIterator();
-//    nodeIt = nodeItTmp.convert<OA::CFG::NodesIteratorInterface>();
-    for ( ; nodeIt->isValid(); ++(*nodeIt)) {
-      OA::OA_ptr<OA::DGraph::NodeInterface> dn = nodeIt->current();
+    for ( ; nodeItTmp->isValid(); ++(*nodeItTmp)) {
+      OA::OA_ptr<OA::DGraph::NodeInterface> dn = nodeItTmp->current();
       OA::OA_ptr<OA::CFG::Node> n = dn.convert<OA::CFG::Node>();
 
       // Use CFG nodes representing the OPR_DO_LOOP condition to find
@@ -689,9 +686,8 @@ namespace fortTkSupport {
   
     // a. Collect all BBs with more that one stmt into 'workList'
     nodeItTmp = cfg->getNodesIterator();
-//    nodeIt = nodeItTmp.convert<OA::CFG::NodesIteratorInterface>();
-    for ( ; nodeIt->isValid(); ++(*nodeIt)) {
-      OA::OA_ptr<OA::DGraph::NodeInterface> dn = nodeIt->current();
+    for ( ; nodeItTmp->isValid(); ++(*nodeItTmp)) {
+      OA::OA_ptr<OA::DGraph::NodeInterface> dn = nodeItTmp->current();
       OA::OA_ptr<OA::CFG::Node> n = dn.convert<OA::CFG::Node>(); 
       if ( (n->size() > 1) ) { 
 	workList.push_back(n);

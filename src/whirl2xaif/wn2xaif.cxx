@@ -1087,6 +1087,23 @@ namespace whirl2xaif {
   }
 
 
+  void 
+  xlate_SideEffectLocationPrint(ST* st, 
+				fortTkSupport::SymTabId scopeid,
+				xml::ostream& xos) {
+    // the wrapper for the VariableReference: 
+    xos << xml::BegElem("xaif:SideEffectReference")
+	<< xml::Attr("vertex_id", "1");
+  
+    // the contents, i.e. the SymbolReference
+    xos << xml::BegElem("xaif:SymbolReference")
+	<< xml::Attr("vertex_id", "1")
+	<< xml::Attr("scope_id", scopeid) 
+	<< AttrSymId(st)
+	<< xml::EndElem;
+    xos << xml::EndElem;
+  } 
+
 
   void 
   xlate_SideEffectNamedLocation(OA::OA_ptr<OA::NamedLoc> theNamedLoc,
@@ -1135,18 +1152,7 @@ namespace whirl2xaif {
 	return;
       }
     }
-
-    // the wrapper for the VariableReference: 
-    xos << xml::BegElem("xaif:SideEffectReference")
-	<< xml::Attr("vertex_id", "1");
-  
-    // the contents, i.e. the SymbolReference
-    xos << xml::BegElem("xaif:SymbolReference")
-	<< xml::Attr("vertex_id", "1")
-	<< xml::Attr("scope_id", scopeid) 
-	<< AttrSymId(st)
-	<< xml::EndElem;
-    xos << xml::EndElem;
+    xlate_SideEffectLocationPrint(st,scopeid, xos);
   }
 
   void 
@@ -1165,6 +1171,15 @@ namespace whirl2xaif {
 				    ctxt,
 				    formalArgSymHandleI);
     }
+    if (theLocation->isaInvisible()) { 
+      // get the invisible location's symbol
+      OA::OA_ptr<OA::InvisibleLoc> theInvisibleLoc=
+	theLocation.convert<OA::InvisibleLoc>();
+      ST* st = (ST*)theInvisibleLoc->getBaseSym().hval();
+      ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
+      fortTkSupport::SymTabId scopeid = ctxt.findSymTabId(sttab);
+      xlate_SideEffectLocationPrint(st,scopeid, xos);
+    }
     else if (theLocation->isaSubSet()) { 
       OA::OA_ptr<OA::LocSubSet> subSetLoc=
 	theLocation.convert<OA::LocSubSet>();
@@ -1182,7 +1197,7 @@ namespace whirl2xaif {
 	// we cannot gracefully handle this:
 	ST* pu_st = ST_ptr(PU_Info_proc_sym(Current_PU_Info));
 	const char* pu_nm = ST_name(pu_st);
-	FORTTK_DIE("a side effect list contains a unknown location indicating there is function call within " 
+	FORTTK_DIE("a side effect list contains a unknown location indicating there is a function call within " 
 		   << pu_nm 
 		   << " for which OpenAnalysis cannot determine side effects"); 
       }
