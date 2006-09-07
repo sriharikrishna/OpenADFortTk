@@ -1171,7 +1171,7 @@ namespace whirl2xaif {
 				    ctxt,
 				    formalArgSymHandleI);
     }
-    if (theLocation->isaInvisible()) { 
+    else if (theLocation->isaInvisible()) { 
       // get the invisible location's symbol
       OA::OA_ptr<OA::InvisibleLoc> theInvisibleLoc=
 	theLocation.convert<OA::InvisibleLoc>();
