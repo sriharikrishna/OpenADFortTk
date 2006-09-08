@@ -59,7 +59,8 @@ namespace xaif2whirl {
     ctxt.createXlationContext(XlationContext::VARREF);
     OA::OA_ptr<OA::DGraph::DGraphImplement> g = 
       createExpressionGraph(elem, true /* varRef */);
-    OA::OA_ptr<OA::DGraph::NodeInterface> root = g->getRoot();
+//    OA::OA_ptr<OA::DGraph::NodeInterface> root = g->getRoot();
+    OA::OA_ptr<OA::DGraph::NodeInterface> root = getExprGraphRootNode(g);
     OA::OA_ptr<MyDGNode> n = root.convert<MyDGNode>();
     WN* wn = xlate_VarRef(g, n, ctxt);
     ctxt.deleteXlationContext();
