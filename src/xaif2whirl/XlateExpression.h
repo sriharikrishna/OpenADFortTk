@@ -12,15 +12,18 @@
 
 #include "PUXlationContext.h"
 
+#include "OpenAnalysis/Utils/DGraph/DGraphInterface.hpp"
+#include "OpenAnalysis/Utils/DGraph/DGraphImplement.hpp"
 
 
 
 namespace xaif2whirl {
 
+
   class XlateExpression { 
 
   public: 
-    
+
     /** 
      * the first node in an expression graph...  
      */

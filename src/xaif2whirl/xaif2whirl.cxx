@@ -52,6 +52,18 @@ namespace xaif2whirl {
   TY_IDX ActiveTypeTyIdx;            
   TY_IDX ActiveTypeInitializedTyIdx;
 
+ OA::OA_ptr<OA::DGraph::NodeInterface> getExprGraphRootNode(OA::OA_ptr<OA::DGraph::DGraphImplement> dg) {
+
+     OA::OA_ptr<OA::DGraph::NodesIteratorInterface> nodeIter
+           = dg->getNodesIterator();
+
+     OA::OA_ptr<OA::DGraph::NodeInterface> node = nodeIter->current();
+     assert( !node.ptrEqual(0) );
+     return node;
+
+  }
+
+
   // *************************** Forward Declarations ***************************
 
   static void

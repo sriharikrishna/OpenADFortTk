@@ -38,6 +38,8 @@ namespace xaif2whirl {
   extern fortTkSupport::IntrinsicXlationTable IntrinsicTable;
   extern fortTkSupport::WNIdToWNTabMap        WNIdToWNTableMap;
 
+   OA::OA_ptr<OA::DGraph::NodeInterface> getExprGraphRootNode(OA::OA_ptr<OA::DGraph::DGraphImplement> dg);
+
   void
   TranslateIR(PU_Info* pu_forest, const xercesc::DOMDocument* doc);
   

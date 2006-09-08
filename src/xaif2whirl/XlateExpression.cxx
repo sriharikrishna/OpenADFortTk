@@ -31,12 +31,14 @@ namespace xaif2whirl {
   extern TY_IDX ActiveTypeTyIdx;            // FIXME
   extern TY_IDX ActiveTypeInitializedTyIdx; // FIXME
 
+
   WN* XlateExpression::translateExpression(const DOMElement* elem, 
 					   PUXlationContext& ctxt) {
     FORTTK_ASSERT(elem, fortTkSupport::Diagnostics::UnexpectedInput);
     // Slurp expression into a graph (DAG) and translate it
     OA::OA_ptr<OA::DGraph::DGraphImplement> g = createExpressionGraph(elem);
-    OA::OA_ptr<OA::DGraph::NodeInterface> root = g->getRoot();
+   // OA::OA_ptr<OA::DGraph::NodeInterface> root = g->getRoot();
+    OA::OA_ptr<OA::DGraph::NodeInterface> root = getExprGraphRootNode(g);
     OA::OA_ptr<MyDGNode> n = root.convert<MyDGNode>();
     WN* wn = xlate_Expression(g, n, ctxt);
     return wn;
