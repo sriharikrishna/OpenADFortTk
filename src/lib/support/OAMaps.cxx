@@ -663,7 +663,7 @@ namespace fortTkSupport {
       for ( ; outEdgeItPtr->isValid(); ++(*outEdgeItPtr)) {
 	OA::OA_ptr<OA::DGraph::EdgeInterface> de = outEdgeItPtr->current();
     OA::OA_ptr<OA::CFG::Edge> e = de.convert<OA::CFG::Edge>();
-	OA::OA_ptr<OA::DGraph::NodeInterface> dsnk = e->sink();
+	OA::OA_ptr<OA::DGraph::NodeInterface> dsnk = e->getSink();
     OA::OA_ptr<OA::CFG::Node> snk = dsnk.convert<OA::CFG::Node>();
 	cfg->connect(pred, snk, e->getType());
       }
