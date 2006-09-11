@@ -187,6 +187,12 @@ namespace fortTkSupport {
 					interAlias, 
 					interSE);
 
+
+    FORTTK_MSG(1, "ICFG Active Output");
+    active->output(*irIF);   
+    FORTTK_MSG(1, "**************************************");
+
+
     MassageActivityInfo(active, irIF);
   
     x->SetInterActive(activeman, active);
