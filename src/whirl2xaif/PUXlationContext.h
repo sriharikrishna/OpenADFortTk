@@ -14,6 +14,8 @@
 #include "Open64IRInterface/SymTab.h"
 #include "ScalarizedRefTab.h"
 #include "XlationContext.h"
+#include <OpenAnalysis/Location/Location.hpp>
+
 
 namespace whirl2xaif {
 

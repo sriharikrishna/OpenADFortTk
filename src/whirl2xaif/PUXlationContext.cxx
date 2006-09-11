@@ -261,7 +261,68 @@ namespace whirl2xaif {
       FORTTK_DIE("PUXlationContext::IsActiveSym: myActivity not set");
     if (!st)
       FORTTK_DIE("PUXlationContext::IsActiveSym: null pointer passed");
+    
+    
+    /*! commented out by PLM 091106
     return myActivity->isActive(OA::SymHandle((OA::irhandle_t)st)); 
+    */
+
+    OA::SymHandle sym = OA::SymHandle((OA::irhandle_t)st) ; 
+
+    OA::ProcHandle proc((OA::irhandle_t)Current_PU_Info);
+
+
+    // Check if Reference Parameter
+    if(mIR->isRefParam(sym)) 
+    {
+       // get the Base Location
+        
+       OA::OA_ptr<OA::Location> baseSymLoc = mIR->getLocation(proc, sym);
+
+       // Check if Invisble Location
+       
+       if(baseSymLoc->isaInvisible())
+       {
+           OA::OA_ptr<OA::InvisibleLoc> nloc = baseSymLoc.convert<OA::InvisibleLoc>();
+
+           OA::OA_ptr<OA::MemRefExpr> mre = nloc->getMemRefExpr();
+
+           
+           OA::OA_ptr<OA::RefOp> refop;
+           if(mre->isaRefOp()) {
+               refop = mre.convert<OA::RefOp>();
+           } else {
+               assert(0);
+           }
+           
+           // get the Base Symbol
+                      
+           
+
+           OA::SymHandle formal =  refop->getBaseSym();
+
+           OA::OA_ptr<OA::SymHandleIterator> symIter = 
+                     myActivity->getActiveSymIterator();
+           
+           for ( ; symIter->isValid(); (*symIter)++) {
+               OA::SymHandle aSym = symIter->current();
+               
+               if(formal == aSym) {
+                  return true;
+               }
+           }
+
+       } else {
+           //error
+       }
+    }
+    else {
+ 
+       // Otherwise a Local Variable  
+        
+       return myActivity->isActive(sym);
+    }
+    
   }
 
   int PUXlationContext::isActiveStmt(PU_Info* pu, WN* wn) { 
