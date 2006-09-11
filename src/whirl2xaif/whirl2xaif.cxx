@@ -101,8 +101,8 @@ namespace whirl2xaif {
     for (DGraphEdgeVec::iterator edgeIt = edges->begin(); 
 	 edgeIt != edges->end(); ++edgeIt) {
       OA::OA_ptr<OA::DGraph::EdgeInterface> e = (*edgeIt);
-      OA::OA_ptr<OA::DGraph::NodeInterface> n1 = e->source();
-      OA::OA_ptr<OA::DGraph::NodeInterface> n2 = e->sink();
+      OA::OA_ptr<OA::DGraph::NodeInterface> n1 = e->getSource();
+      OA::OA_ptr<OA::DGraph::NodeInterface> n2 = e->getSink();
       DumpCallGraphEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), n1->getId(), n2->getId());
     }
     delete edges;

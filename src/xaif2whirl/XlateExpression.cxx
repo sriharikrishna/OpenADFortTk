@@ -333,7 +333,7 @@ namespace xaif2whirl {
     // 2. Translate each operand into a WHIRL expression tree
     vector<WN*> opnd_wn(info->numop, NULL); 
     for (unsigned i = 0; i < info->numop; ++i) {
-      OA::OA_ptr<NodeInterface> ntmp = opnd_edge[i]->source();
+      OA::OA_ptr<NodeInterface> ntmp = opnd_edge[i]->getSource();
       OA::OA_ptr<MyDGNode> opnd = ntmp.convert<MyDGNode>();
       opnd_wn[i] = xlate_Expression(g, opnd, ctxt);
     }       

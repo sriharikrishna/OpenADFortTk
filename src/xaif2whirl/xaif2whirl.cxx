@@ -752,7 +752,7 @@ namespace xaif2whirl {
 	vector<WN*> childblksWN(numOutEdges, NULL);
 	OA::OA_ptr<MyDGNode> endBrNode; endBrNode = NULL;
 	for (unsigned i = 0; i < outedges.size(); ++i) {
-	  OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->sink();
+	  OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->getSink();
 	  OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
 	  pair<WN*, OA::OA_ptr<MyDGNode> > p 
 	    = xlate_CFGstruct(wn_pu, cfg, n, xlated, ctxt);
@@ -772,7 +772,7 @@ namespace xaif2whirl {
 	
 	  // Add a LABEL/GOTO at the front/end of each successor block
 	  for (unsigned i = 0; i < outedges.size(); ++i) {
-	    OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->sink();
+	    OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->getSink();
 	    OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
 	    WN* nblkWN = childblksWN[i];
 	  
@@ -1009,7 +1009,7 @@ namespace xaif2whirl {
 	  // Create GOTOs for each child block
 	  vector<WN*> childblksWN(numOutEdges, NULL);
 	  for (unsigned i = 0; i < outedges.size(); ++i) {
-	    OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->sink();
+	    OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->getSink();
 	    OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
 	    WN* gotoblkWN = WN_CreateBlock();
 	    WN* gotoWN = WN_CreateGoto(nodeToLblMap[n]);
@@ -1227,7 +1227,7 @@ namespace xaif2whirl {
     int defltIdx = -1;
     if (!GetHasConditionAttr(outedges[0]->GetElem())) {
       defltIdx = 0;
-      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[0]->sink();
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[0]->getSink();
       OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
       unsigned gotolbl = nodeToLblMap[n];
       defltWN = WN_CreateGoto(gotolbl);
@@ -1238,7 +1238,7 @@ namespace xaif2whirl {
     int numcases = outedges.size() - (defltIdx + 1);
     for (unsigned i = defltIdx + 1; i < outedges.size(); ++i) {
       xercesc::DOMElement* elemEdge = outedges[i]->GetElem();
-      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->sink();
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->getSink();
       OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
     
       INT64 caseval = GetCondAttr(elemEdge);
@@ -2794,7 +2794,7 @@ namespace xaif2whirl {
       
 	unsigned int cond = GetCondAttr(e);
 	if (condition == cond) {
-	  OA::OA_ptr<NodeInterface> ntmp = edge->sink();
+	  OA::OA_ptr<NodeInterface> ntmp = edge->getSink();
 	  succ = ntmp.convert<MyDGNode>();
 	  break;
 	}
@@ -2896,8 +2896,8 @@ namespace xaif2whirl {
     edgesItPtr = graph->getEdgesIterator();
     for (; edgesItPtr->isValid(); ++(*edgesItPtr)) {
       OA::OA_ptr<OA::DGraph::EdgeInterface> e = edgesItPtr->current();
-      OA::OA_ptr<OA::DGraph::NodeInterface> srctmp = e->source();
-      OA::OA_ptr<OA::DGraph::NodeInterface> snktmp = e->sink();
+      OA::OA_ptr<OA::DGraph::NodeInterface> srctmp = e->getSource();
+      OA::OA_ptr<OA::DGraph::NodeInterface> snktmp = e->getSink();
       OA::OA_ptr<MyDGNode> src = srctmp.convert<MyDGNode>();
       OA::OA_ptr<MyDGNode> snk = snktmp.convert<MyDGNode>();
       std::string srcNm = DumpDotGraph_GetNodeName(src);

@@ -108,11 +108,11 @@ namespace whirl2xaif {
     bool operator()(const OA::OA_ptr<OA::CFG::EdgeInterface> e1, 
 		    const OA::OA_ptr<OA::CFG::EdgeInterface> e2) const
     {
-      unsigned int src1 = e1->source()->getId();
-      unsigned int src2 = e2->source()->getId();
+      unsigned int src1 = e1->getSource()->getId();
+      unsigned int src2 = e2->getSource()->getId();
       if (src1 == src2) { 
-	unsigned int sink1 = e1->sink()->getId();
-	unsigned int sink2 = e2->sink()->getId();
+	unsigned int sink1 = e1->getSink()->getId();
+	unsigned int sink2 = e2->getSink()->getId();
 	if (sink1 == sink2) {
 	  pair<bool, INT64> ret1 = GetCFGEdgeCondVal(e1);
 	  bool hasCondVal1 = ret1.first;
@@ -337,9 +337,9 @@ namespace whirl2xaif {
 	 edgeIt != edges->end(); ++edgeIt) {
       OA::OA_ptr<OA::CFG::EdgeInterface> e = (*edgeIt);
       
-      OA::OA_ptr<OA::DGraph::NodeInterface> dsrc = e->source();
+      OA::OA_ptr<OA::DGraph::NodeInterface> dsrc = e->getSource();
       OA::OA_ptr<OA::CFG::Node> src = dsrc.convert<OA::CFG::Node>();
-      OA::OA_ptr<OA::DGraph::NodeInterface> dsnk = e->sink();
+      OA::OA_ptr<OA::DGraph::NodeInterface> dsnk = e->getSink();
       OA::OA_ptr<OA::CFG::Node> snk = dsnk.convert<OA::CFG::Node>();
       if (usedNodes.find(src) != usedNodes.end() && 
 	  usedNodes.find(snk) != usedNodes.end()) {
@@ -1067,9 +1067,9 @@ namespace whirl2xaif {
   {
     using namespace OA::CFG;
 
-    OA::OA_ptr<OA::DGraph::NodeInterface> dn1 = edge->source();
+    OA::OA_ptr<OA::DGraph::NodeInterface> dn1 = edge->getSource();
     OA::OA_ptr<OA::CFG::Node> n1 = dn1.convert<OA::CFG::Node>();
-    OA::OA_ptr<OA::DGraph::NodeInterface> dn2 = edge->sink();
+    OA::OA_ptr<OA::DGraph::NodeInterface> dn2 = edge->getSink();
     OA::OA_ptr<OA::CFG::Node> n2 = dn2.convert<OA::CFG::Node>();
   
     pair<bool, INT64> ret = GetCFGEdgeCondVal(edge);
