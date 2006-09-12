@@ -84,9 +84,9 @@ namespace whirl2xaif {
   
   extern IntrinsicXlationTable   IntrinsicTable;
   
-  extern PUToOAAnalInfoMap       OAAnalMap;
-  extern ScalarizedRefTabMap_W2X ScalarizedRefTableMap;
-  extern WNToWNIdTabMap          WNToWNIdTableMap;
+//  extern PUToOAAnalInfoMap       OAAnalMap;
+//  extern ScalarizedRefTabMap_W2X ScalarizedRefTableMap;
+//  extern WNToWNIdTabMap          WNToWNIdTableMap;
   
 }; /* namespace whirl2xaif */
 

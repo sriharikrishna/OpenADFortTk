@@ -921,11 +921,8 @@ private:
   friend class Open64IRMemRefIterator;
   friend class InitContextVisitor;
 
-
 private:
-  //! returns true if given symbol is a pass by reference parameter 
-  bool isRefParam(OA::SymHandle);
-               
+
   //! return the formal parameter that an actual parameter is associated with.
   //! 'call' is a handle to the call node; 'param' is the actual
   //! parameter within the call node that we want info about.
@@ -942,6 +939,10 @@ private:
   }
  
 public:
+
+  //! returns true if given symbol is a pass by reference parameter 
+  bool isRefParam(OA::SymHandle);
+               
   //! User is responsible for doing this.  It should not be part of
   // the Open64IRProcIterator
   static void initContextState(PU_Info* pu_forest);

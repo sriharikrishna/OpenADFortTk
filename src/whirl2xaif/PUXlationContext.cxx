@@ -6,6 +6,7 @@
 #include "PUXlationContext.h"
 #include "Open64IRInterface/SymTab.h"
 #include "Diagnostics.h"
+#include "whirl2xaif.h"
 
 namespace whirl2xaif { 
   
@@ -261,68 +262,37 @@ namespace whirl2xaif {
       FORTTK_DIE("PUXlationContext::IsActiveSym: myActivity not set");
     if (!st)
       FORTTK_DIE("PUXlationContext::IsActiveSym: null pointer passed");
-    
-    
-    /*! commented out by PLM 091106
-    return myActivity->isActive(OA::SymHandle((OA::irhandle_t)st)); 
-    */
-
     OA::SymHandle sym = OA::SymHandle((OA::irhandle_t)st) ; 
-
     OA::ProcHandle proc((OA::irhandle_t)Current_PU_Info);
-
-
-    // Check if Reference Parameter
-    if(mIR->isRefParam(sym)) 
-    {
-       // get the Base Location
-        
-       OA::OA_ptr<OA::Location> baseSymLoc = mIR->getLocation(proc, sym);
-
-       // Check if Invisble Location
-       
-       if(baseSymLoc->isaInvisible())
-       {
-           OA::OA_ptr<OA::InvisibleLoc> nloc = baseSymLoc.convert<OA::InvisibleLoc>();
-
-           OA::OA_ptr<OA::MemRefExpr> mre = nloc->getMemRefExpr();
-
-           
-           OA::OA_ptr<OA::RefOp> refop;
-           if(mre->isaRefOp()) {
-               refop = mre.convert<OA::RefOp>();
-           } else {
-               assert(0);
-           }
-           
-           // get the Base Symbol
-                      
-           
-
-           OA::SymHandle formal =  refop->getBaseSym();
-
-           OA::OA_ptr<OA::SymHandleIterator> symIter = 
-                     myActivity->getActiveSymIterator();
-           
-           for ( ; symIter->isValid(); (*symIter)++) {
-               OA::SymHandle aSym = symIter->current();
-               
-               if(formal == aSym) {
-                  return true;
-               }
-           }
-
-       } else {
-           //error
-       }
+    OA::OA_ptr<Open64IRInterface> theIR=Whirl2Xaif::getOAAnalMap().GetIRInterface();
+    // Check if this symbol is a reference parameter
+    if(theIR->isRefParam(sym)) {
+      // get all active locations:
+      OA::OA_ptr<OA::LocIterator> locIt=myActivity->getActiveLocsIterator(proc);
+      for ( ; locIt->isValid(); ++(*locIt)) {
+	// there is an implicit assumption that all formal parameters 
+	// are implying passing by reference but since OA doesn't 
+	// distinguish passing by reference it models all formal parameters 
+	// as pointers to do pass by pointer. 
+	// consequently anything active wouldn't be the formal 
+	// paramter but the implied dereference to the location 
+	// passed in as an actual paramter which has to be invisible.
+	// See the section in the OA wiki.
+	if (locIt->current()->isaInvisible()) {
+	  OA::OA_ptr<OA::InvisibleLoc> theInvisibleLoc=
+	    locIt->current().convert<OA::InvisibleLoc>();
+	  ST* activeLocST_p = (ST*)theInvisibleLoc->getBaseSym().hval();
+	  if (activeLocST_p==st) 
+	    return true;
+	}
+      }
+      // didn't find it in all the active locations
+      return false;
     }
     else {
- 
-       // Otherwise a Local Variable  
-        
-       return myActivity->isActive(sym);
+      // Otherwise a Local Variable  
+      return myActivity->isActive(sym);
     }
-    
   }
 
   int PUXlationContext::isActiveStmt(PU_Info* pu, WN* wn) { 
