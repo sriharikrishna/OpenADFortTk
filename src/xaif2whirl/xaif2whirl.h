@@ -38,8 +38,6 @@ namespace xaif2whirl {
   extern fortTkSupport::IntrinsicXlationTable IntrinsicTable;
   extern fortTkSupport::WNIdToWNTabMap        WNIdToWNTableMap;
 
-   OA::OA_ptr<OA::DGraph::NodeInterface> getExprGraphRootNode(OA::OA_ptr<OA::DGraph::DGraphImplement> dg);
-
   void
   TranslateIR(PU_Info* pu_forest, const xercesc::DOMDocument* doc);
   
@@ -50,7 +48,11 @@ namespace xaif2whirl {
   const TYPE_ID DefaultMTypeInt = MTYPE_I8;
   const TYPE_ID DefaultMTypeUInt = MTYPE_U8;
 
+  void
+  DDumpDotGraph(OA::OA_ptr<OA::DGraph::DGraphInterface> graph);
 
+  void
+  DumpDotGraph(std::ostream& os, OA::OA_ptr<OA::DGraph::DGraphInterface> graph);
 
   fortTkSupport::Symbol*
   GetOrCreateSymbol(const char* sname, PUXlationContext& ctxt);

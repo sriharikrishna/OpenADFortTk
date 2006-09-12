@@ -37,8 +37,7 @@ namespace xaif2whirl {
     FORTTK_ASSERT(elem, fortTkSupport::Diagnostics::UnexpectedInput);
     // Slurp expression into a graph (DAG) and translate it
     OA::OA_ptr<OA::DGraph::DGraphImplement> g = createExpressionGraph(elem);
-   // OA::OA_ptr<OA::DGraph::NodeInterface> root = g->getRoot();
-    OA::OA_ptr<OA::DGraph::NodeInterface> root = getExprGraphRootNode(g);
+    OA::OA_ptr<OA::DGraph::NodeInterface> root = g->getExprGraphRootNode();
     OA::OA_ptr<MyDGNode> n = root.convert<MyDGNode>();
     WN* wn = xlate_Expression(g, n, ctxt);
     return wn;
@@ -59,8 +58,8 @@ namespace xaif2whirl {
     ctxt.createXlationContext(XlationContext::VARREF);
     OA::OA_ptr<OA::DGraph::DGraphImplement> g = 
       createExpressionGraph(elem, true /* varRef */);
-//    OA::OA_ptr<OA::DGraph::NodeInterface> root = g->getRoot();
-    OA::OA_ptr<OA::DGraph::NodeInterface> root = getExprGraphRootNode(g);
+    //    xaif2whirl::DDumpDotGraph(g);
+    OA::OA_ptr<OA::DGraph::NodeInterface> root = g->getExprGraphRootNode();
     OA::OA_ptr<MyDGNode> n = root.convert<MyDGNode>();
     WN* wn = xlate_VarRef(g, n, ctxt);
     ctxt.deleteXlationContext();

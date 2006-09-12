@@ -52,17 +52,6 @@ namespace xaif2whirl {
   TY_IDX ActiveTypeTyIdx;            
   TY_IDX ActiveTypeInitializedTyIdx;
 
- OA::OA_ptr<OA::DGraph::NodeInterface> getExprGraphRootNode(OA::OA_ptr<OA::DGraph::DGraphImplement> dg) {
-
-     OA::OA_ptr<OA::DGraph::NodesIteratorInterface> nodeIter
-           = dg->getNodesIterator();
-
-     OA::OA_ptr<OA::DGraph::NodeInterface> node = nodeIter->current();
-     assert( !node.ptrEqual(0) );
-     return node;
-
-  }
-
 
   // *************************** Forward Declarations ***************************
 
@@ -269,11 +258,6 @@ namespace xaif2whirl {
   //static list<OA::OA_ptr<OA::DGraph::Interface::Node> >*
   //TopologicalSort(OA::OA_ptr<OA::DGraph::Interface> graph);
 
-  static void
-  DDumpDotGraph(OA::OA_ptr<OA::DGraph::DGraphInterface> graph);
-
-  static void
-  DumpDotGraph(std::ostream& os, OA::OA_ptr<OA::DGraph::DGraphInterface> graph);
 
   // ****************************************************************************
 
@@ -2875,13 +2859,13 @@ namespace xaif2whirl {
   static std::string
   DumpDotGraph_GetNodeName(OA::OA_ptr<MyDGNode> n);
 
-  static void
+  void
   DDumpDotGraph(OA::OA_ptr<OA::DGraph::DGraphInterface> graph)
   {
     DumpDotGraph(std::cerr, graph);
   }
 
-  static void
+  void
   DumpDotGraph(std::ostream& os, OA::OA_ptr<OA::DGraph::DGraphInterface> graph)
   {
     using namespace OA::DGraph;
