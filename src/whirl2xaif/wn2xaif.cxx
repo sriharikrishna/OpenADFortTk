@@ -265,7 +265,9 @@ namespace whirl2xaif {
     // try a BFS iterator.  too bad for dead code. (actually DFS-- BFS
     // not yet implmented) -- toposort FIXME
     std::set<OA::OA_ptr<OA::CFG::NodeInterface> > usedNodes;
-    OA::OA_ptr<OA::DGraph::NodesIteratorInterface> nodeItPtr = cfg->getDFSIterator();
+    
+    OA::OA_ptr<OA::CFG::NodeInterface> entry = cfg->getEntry();
+    OA::OA_ptr<OA::DGraph::NodesIteratorInterface> nodeItPtr = cfg->getDFSIterator(entry);
     for (; nodeItPtr->isValid(); ++(*nodeItPtr)) {
       OA::OA_ptr<OA::DGraph::NodeInterface> dn = nodeItPtr->current();
       OA::OA_ptr<OA::CFG::Node> n = dn.convert<OA::CFG::Node>();
