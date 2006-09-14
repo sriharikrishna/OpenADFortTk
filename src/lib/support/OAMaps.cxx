@@ -255,6 +255,9 @@ namespace fortTkSupport {
   void
   CreateOAAnalInfo(PU_Info* pu, PUToOAAnalInfoMap* inter, OAAnalInfo* x)
   {
+    OA::OA_ptr<Open64IRProcIterator> procIt;
+    procIt = new Open64IRProcIterator(pu);
+
     OA::ProcHandle proc((OA::irhandle_t)pu);
     OA::OA_ptr<Open64IRInterface> irIF = inter->GetIRInterface();
     OA::OA_ptr<OA::CFG::CFGInterface> cfg = 
@@ -267,13 +270,24 @@ namespace fortTkSupport {
     // -------------------------------------------------------
   
     // Intra Alias
+   
+
+/*! commented out by PLM 09/13/06 
     FORTTK_MSG(1, "progress: intra alias: performAnalysis");
     OA::OA_ptr<OA::Alias::ManagerAliasMapBasic> aliasman;
     aliasman = new OA::Alias::ManagerAliasMapBasic(irIF);
     OA::OA_ptr<OA::Alias::AliasMap> alias = aliasman->performAnalysis(proc);
     if (0) { alias->dump(std::cout, irIF); }
+    */
+    FORTTK_MSG(1, "progress: inter alias: performAnalysis");
+    OA::OA_ptr<OA::Alias::ManagerFIAliasAliasMap> interaliasmapman;
+    interaliasmapman = new OA::Alias::ManagerFIAliasAliasMap(irIF);
+    OA::OA_ptr<OA::Alias::InterAliasMap> interAlias;
+    interAlias = interaliasmapman->performAnalysis(procIt);
+    OA::OA_ptr<OA::Alias::Interface> alias;
+    alias = interAlias->getAliasResults(proc);
+    x->SetAlias(interaliasmapman, alias);
 
-    x->SetAlias(aliasman, alias);   
   
     // ReachDefs
     FORTTK_MSG(1, "progress: reach defs: performAnalysis");
@@ -281,7 +295,6 @@ namespace fortTkSupport {
     rdman = new OA::ReachDefs::ManagerReachDefsStandard(irIF);
     OA::OA_ptr<OA::ReachDefs::ReachDefsStandard> rds 
       = rdman->performAnalysis(proc, cfg, alias, interSideEffect);
-  
     x->SetReachDefs(rdman, rds);
 
     // UDDU chains
@@ -304,7 +317,6 @@ namespace fortTkSupport {
       aliasmanXAIF->performAnalysis(proc, alias);
   
     x->SetAliasXAIF(aliasmanXAIF, aliasXAIF);
-
 
     FORTTK_MSG(1, "progress: ud to xaif : performAnalysis");
     OA::OA_ptr<OA::XAIF::ManagerStandard> udmanXAIF;

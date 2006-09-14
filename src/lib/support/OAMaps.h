@@ -169,10 +169,17 @@ public:
   void Create(PU_Info* pu, PUToOAAnalInfoMap* interInfo);
 
   // Intra Alias
-  OA::OA_ptr<OA::Alias::AliasMap> GetAlias() { return alias; }
+  OA::OA_ptr<OA::Alias::Interface> GetAlias() { return alias; }
+  /*! commented out by PLM 09/13/06
   void SetAlias(OA::OA_ptr<OA::Alias::ManagerAliasMapBasic> m, 
                 OA::OA_ptr<OA::Alias::AliasMap> x)
     { aliasman = m; alias = x; }
+    */
+ void SetAlias(OA::OA_ptr<OA::Alias::ManagerFIAliasAliasMap> m,
+                OA::OA_ptr<OA::Alias::Interface> x)
+    { aliasman = m; alias = x; }
+
+
   
   // ReachDefs
   OA::OA_ptr<OA::ReachDefs::ReachDefsStandard> GetReachDefs() { return rds; }
@@ -201,8 +208,8 @@ public:
     { udmanXAIF = m; udduchainsXAIF = x; }
   
 private:
-  OA::OA_ptr<OA::Alias::ManagerAliasMapBasic> aliasman;
-  OA::OA_ptr<OA::Alias::AliasMap> alias;
+  OA::OA_ptr<OA::Alias::ManagerFIAliasAliasMap> aliasman;
+  OA::OA_ptr<OA::Alias::Interface> alias;
   
   OA::OA_ptr<OA::SideEffect::InterSideEffectInterface> sideEffect;
     
