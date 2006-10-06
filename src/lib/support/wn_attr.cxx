@@ -437,10 +437,6 @@ WN_GetRefObjType(const WN* wn) {
     break;
   }
 
-  case OPR_LDBITS:
-    ty = WN_ty(wn);
-    break;
-      
   case OPR_ILOAD:   // type of referenced object
   case OPR_ILOADX:
     ty = WN_ty(wn);
