@@ -113,7 +113,6 @@ namespace fortTkSupport {
   unsigned int IntrinsicXlationTable::ourTableSize = 
     (sizeof(IntrinsicXlationTable::ourTable) / sizeof(IntrinsicXlationTable::Entry));
 
-
   const std::string IntrinsicXlationTable::toString(const WNOprClass& oprcl) {
     std::string retStr;
     switch (oprcl) {
@@ -370,73 +369,6 @@ namespace fortTkSupport {
 
   void IntrinsicXlationTable::ddump() const {
     dump(std::cerr);
-  }
-
-  const char* IntrinsicXlationTable::intrinsicBasename(INTRINSIC intrn) {
-    // almost none of the Open64 code uses std::string
-    const char* opc_str = WN_intrinsic_name(intrn); // INTRINSIC_name(intrn);
-    const char* opc_str_base = opc_str;
-    const int prefixLength(2);
-    // Test for two-character prefixes (up to two)
-    char buf[prefixLength+1];
-    for (int i = 0; i < 2; ++i) {
-      // If a prefix begins 'opc_str_base', shift pointer
-      strncpy(buf, opc_str_base, prefixLength); 
-      buf[prefixLength] = '\0';
-      bool pfix = lookupIntrinsicPrefix(buf);
-      if (pfix) { 
-	opc_str_base += prefixLength; 
-      } else {
-	break; // no need to continue
-      }
-    }
-    // Special case: test for one-character prefix
-    strncpy(buf, opc_str_base, 1); 
-    buf[1] = '\0';
-    bool pfix = lookupIntrinsicPrefix(buf);
-    if (pfix) {
-      // an exception
-      if ( !(strcmp(opc_str_base, "VALTMP") == 0) ) {
-	opc_str_base++;
-      }
-    }
-    return opc_str_base;
-  }
-
-  extern "C" typedef int (*compare_fn_t)(const void *, const void *);
-
-  extern "C" int prefixTableCmp(const char** e1, const char** e2) {
-    return strcmp(*e1, *e2);
-  }
-
-  bool IntrinsicXlationTable::lookupIntrinsicPrefix(const char* str) {
-    static const char* prefixTable[] = {
-      "V",                    // void
-      "I1", "I2", "I4", "I8", // integer
-      "U1", "U2", "U4", "U8", // unsigned integer
-      "F4", "F8", "FQ",       // floating point
-      "C4", "C8", "CQ"        // complex
-      // "C_" - C intrinsics
-      // "S_" - UPC intrinsics
-    }; 
-    static unsigned int prefixTableElemSz = sizeof(const char*);
-    static unsigned int prefixTableSz = (sizeof(prefixTable) / sizeof(const char*));
-    static bool prefixTableSorted = false;
-    // first sort it 
-    if (!prefixTableSorted) {
-      qsort(prefixTable, 
-	    prefixTableSz, 
-	    prefixTableElemSz, 
-	    (compare_fn_t)prefixTableCmp);
-      prefixTableSorted = true;
-    }
-    // Search for entry str
-    void* e = bsearch(&str, 
-		      prefixTable, 
-		      prefixTableSz, 
-		      prefixTableElemSz,
-		      (compare_fn_t)prefixTableCmp);
-    return (e != NULL);
   }
 
 }

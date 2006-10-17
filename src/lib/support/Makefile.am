@@ -64,6 +64,7 @@ include $(top_srcdir)/src/Makeinclude.config
 MYSOURCES = \
 Open64IRInterface/Open64BasicTypes.h \
 Open64IRInterface/Open64IRInterface.cpp Open64IRInterface/Open64IRInterface.hpp \
+Open64IRInterface/IntrinsicInfo.cpp Open64IRInterface/IntrinsicInfo.h \
 Open64IRInterface/SymTab.cpp Open64IRInterface/SymTab.h \
 Open64IRInterface/WhirlGlobalStateUtils.cpp Open64IRInterface/WhirlGlobalStateUtils.h \
 Open64IRInterface/WhirlIO.cpp Open64IRInterface/WhirlIO.h \

@@ -55,6 +55,7 @@
 //************************** Open64 Include Files ***************************
 
 #include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64IRInterface/IntrinsicInfo.h"
 
 //*************************** User Include Files ****************************
 
@@ -748,7 +749,7 @@ whirl2xaif::xlate_INTRINSIC_OP(xml::ostream& xos, WN *wn, PUXlationContext& ctxt
   INT begArgIdx = 0; // Assume we never return to first argument
   INT endArgIdx = WN_kid_count(wn) - 1;
   
-  const char* inm = fortTkSupport::IntrinsicXlationTable::intrinsicBasename(intrn);
+  const char* inm = IntrinsicInfo::intrinsicBaseName(intrn);
   fortTkSupport::IntrinsicXlationTable::XAIFInfoPair infoPair(Whirl2Xaif::getIntrinsicXlationTable().findXAIFInfo(opr, inm));
   if ((strcmp(inm, "ADRTMP") == 0) || (strcmp(inm, "VALTMP") == 0)) {
     // Special cases:

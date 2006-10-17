@@ -43,8 +43,6 @@ namespace fortTkSupport {
   class IntrinsicXlationTable {
   public:
   
-    static const char* intrinsicBasename(INTRINSIC opcode);
-
     enum TableType { 
       W2X, // A table optimized for WHIRL->XAIF lookups
       X2W  // A table optimized for XAIF->WHIRL lookups
@@ -206,12 +204,6 @@ namespace fortTkSupport {
   
     static Entry        ourTable[];
     static unsigned int ourTableSize;
-
-    /** 
-     * return  true if 'str' is a valid prefix for an intrinsic name; 
-     * false otherwise.
-     */
-    static bool lookupIntrinsicPrefix(const char* str);
 
   };
 

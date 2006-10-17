@@ -6,6 +6,7 @@
 
 
 #include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64IRInterface/IntrinsicInfo.h"
 #include "IntrinsicXlationTable.h"
 
 #include "wn2xaif.h"
@@ -377,7 +378,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
     // xlate_INTRINSIC_CALL() has already handled certain intrinsics (FIXME)
     // ... only consider returns through a first non-string parameter here
 
-    const char* inm = fortTkSupport::IntrinsicXlationTable::intrinsicBasename(WN_intrinsic(wn));
+    const char* inm = IntrinsicInfo::intrinsicBaseName(WN_intrinsic(wn));
     fortTkSupport::IntrinsicXlationTable::XAIFInfoPair infoPair(Whirl2Xaif::getIntrinsicXlationTable().findXAIFInfo(opr, inm));
     xlate_as = 2; // intrinsic
     targid = ctxt.currentXlationContext().getNewVertexId();
