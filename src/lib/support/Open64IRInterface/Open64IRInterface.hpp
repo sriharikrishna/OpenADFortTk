@@ -946,6 +946,7 @@ private:
 public:
 
   //! returns true if given symbol is a pass by reference parameter 
+  // JU: I need this to stay public because I use it in FortTk
   bool isRefParam(OA::SymHandle);
                
   //! User is responsible for doing this.  It should not be part of
