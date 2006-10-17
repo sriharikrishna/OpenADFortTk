@@ -1885,7 +1885,26 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
       } else {
 
         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++) {
-          findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid(wn,kidno),lvl+1,flags);
+
+            // any operations that don't have an lval will go to this 
+            // default case, if there is something
+            // being passed by reference that does not have an lval then 
+            // we need to generate an UnnamedRef set its address flag 
+            // for use as the parameter. 
+            // e.g. foo(n+1, k). We set UnnamedMemRef for (n+1)
+            
+           if (flags & flags_PASS_BY_REF) {
+
+             bool addressTaken = true;
+             bool accuracy = true;
+             OA::MemRefExpr::MemRefType mrType = OA::MemRefExpr::USE;
+             OA::OA_ptr<OA::MemRefExpr> lhs_tmp_mre;
+             lhs_tmp_mre = new OA::UnnamedRef(addressTaken, accuracy, mrType, stmt);
+ 
+             sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(lhs_tmp_mre);
+             sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+           }
+           findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid(wn,kidno),lvl+1,flags);
         }
 
       }
@@ -1933,6 +1952,7 @@ void Open64IRInterface::createAndMapDerefs(OA::StmtHandle stmt,
         OA_ptr<MemRefExpr> submre = *mreIter; 
         OA_ptr<MemRefExpr> mre; 
         mre = new Deref(false, submre->hasFullAccuracy(), hty, submre, 1);
+
         sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(mre);
         sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
     }
@@ -2028,8 +2048,10 @@ Open64IRInterface::getParamBindPtrAssignIterator(OA::CallHandle call)
     int count = 0;
     // iterate over all the parameters for this call site
     // and count off parameters
+    
     OA::OA_ptr<OA::IRCallsiteParamIterator> paramIter = getCallsiteParams(call);
     for ( ; paramIter->isValid(); (*paramIter)++ ) {
+
         OA::ExprHandle param = paramIter->current();
 
         OA::OA_ptr<OA::ExprTree> eTreePtr = getExprTree(param);
@@ -2065,7 +2087,7 @@ Open64IRInterface::getParamBindPtrAssignIterator(OA::CallHandle call)
         } // iterate over actuals
 
     }
- 
+
     return retval;
 }
 
@@ -3006,6 +3028,33 @@ Open64IRInterface::initContextState(PU_Info* pu_forest)
 
 // NOTE: Could be relocated to a more general library
 
+// This function will Call itself recursively until it finds
+// MemRefHandle mapped to sMemref2mreSetMap. 
+// For the case where ParamBinding returns &0:S2:0:anon_ptr
+// and we are looking for MemRefHandle = S2:0:anon_ptr mapped
+// to sMemref2mreSetMap. Please notice corresponding changes in
+// createExprTree in the switch option : OPERATOR_is_load(opr).
+// PLM 10/15/06
+
+OA::MemRefHandle Open64IRInterface::findTopMemRefHandle(WN *wn)
+{
+  OA::MemRefHandle h;
+  if (wn==0) {
+    return OA::MemRefHandle(0);
+  }
+
+  h = (OA::irhandle_t)WN_kid0(wn);
+
+  if(sMemref2mreSetMap[h].empty()) {
+      wn = h.hval();
+      findTopMemRefHandle(wn);
+  } else {
+       return h;
+  }
+ }
+
+ 
+
 // createExprTree: Given 'wn' return a possibly empty expression tree.
 OA::OA_ptr<OA::ExprTree>
 Open64IRInterface::createExprTree(WN* wn)
@@ -3023,6 +3072,8 @@ Open64IRInterface::createExprTree(WN* wn)
 OA::OA_ptr<OA::ExprTree::Node>
 Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
 {
+
+    
   OA::OA_ptr<OA::ExprTree::Node> root; root = NULL;
   if (!wn) { return root; }
   
@@ -3091,20 +3142,72 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
     } 
     else {
       // special case for ILOAD - ARRAY idiom
-      if (opr == OPR_ILOAD && WN_operator(WN_kid0(wn)) == OPR_ARRAY) {
-	h = (OA::irhandle_t)WN_kid0(wn);
-      }
-      root = new OA::ExprTree::MemRefNode(h);
+
+       /*! OPR_ILOAD can get WN_kid0 = OPR_LDA instead of OPR_ARRAY
+           and we need irhandle to its kid0. e.g.
+           (PARM U8 V ((oflg 0x8001) (ty ".predef_F8" 11 8))
+             (ILOAD F8 F8 (0 0 (ty ".predef_F8" 11 8) (ty "anon_ptr." 34 8))
+               (LDA U8 V ((st "S2" 2 20) 0 (ty "anon_ptr." 39 8) 0))))   
+
+            In this case, MemRefHandle(wn) where wn=ILOAD will give us 
+            &0:S2:0:anon_ptr and MemRefHandle to WN_kid0(wn) where wn=ILOAD
+            will give us MemRefHandle to S2:0:anon_ptr.
+            Please refer rung_kutta.f example for the case 
+            fun_(&H3:0:.predef_F8+T:0:.predef_F8, &0:NEW_Y_1:0:anon_ptr., 
+                  &0:S2:0:anon_ptr., &N:0:.predef_I4) where we missed
+            paramBinding Pairs because we did not find MemRefHandle for 
+            &0:S2:0:anon_ptr in the sMemref2mreSetMap.
+            findToMemRefHandle will call itself recursively to get correct 
+            MemRefHandle in sMemref2mreSetMap.
+            opr=OPR_ILOAD conditional is modifies as follows.
+            PLM 10/05/06
+
+           if (opr == OPR_ILOAD && WN_operator(WN_kid0(wn)) == OPR_ARRAY) {
+        	  h = (OA::irhandle_t)WN_kid0(wn);
+           }
+      */  
+      if (opr == OPR_ILOAD) {
+         OA::MemRefHandle m = findTopMemRefHandle(wn);
+         WN* wn = (WN*)h.hval();
+         if (wn!=0) {
+            root = new OA::ExprTree::MemRefNode(m);
+         } else {
+            root = new OA::ExprTree::MemRefNode(h);
+         }
+       } else {
+         root = new OA::ExprTree::MemRefNode(h);
+       }
+        
       bypassRecursion = true; // MemRefNodes are leaves
     }
+
     //
     // end of HACK!
   }
   else /*if ()*/ { 
-    // Note: for now we just make everything else an operator
-    // is expr, not a const, not a mem-ref (&& not a type conversion)
-    OA::OpHandle h((OA::irhandle_t)wn);
-    root = new OA::ExprTree::OpNode(h);
+    
+    // We had a problem where we did not get ParamBinding pairs for 
+    // the formal parameters passed as actuals in the expression.
+    // e.g. foo(n+1, k)
+    // In order to deal with this problem we made changes as below
+    // Before : 
+    //                  + (OpNode)
+    //               /     \
+    // (MemRefNode)n        1 (ConstNode) 
+    // After
+    //                  + (MemRefNode)
+    //               /     \
+    // (MemRefNode)n        1 (ConstNode)
+    // This is just a temporary change. This will be replaced by Assignment pairs
+    // in the future. 
+    
+    if(!(sMemref2mreSetMap[OA::MemRefHandle((OA::irhandle_t)wn)].empty())) {
+       OA::MemRefHandle h((OA::irhandle_t)wn);
+       root = new OA::ExprTree::MemRefNode(h);
+    } else { 
+       OA::OpHandle h((OA::irhandle_t)wn);
+       root = new OA::ExprTree::OpNode(h);
+    }
   }
   //else {
   //  root = Node();

@@ -891,6 +891,9 @@ private:
 
   static void DumpWNMemRefLeaf(WN* wn, ostream& os);
 
+  OA::MemRefHandle findTopMemRefHandle(WN *wn);
+
+
   OA::OA_ptr<OA::ExprTree> createExprTree(WN* wn);
 
   OA::OA_ptr<OA::ExprTree::Node> 
