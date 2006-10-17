@@ -115,6 +115,7 @@ ARFLAGS = cru
 am__DEPENDENCIES_1 =
 libsupport_a_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__objects_1 = libsupport_a-Open64IRInterface.$(OBJEXT) \
+	libsupport_a-IntrinsicInfo.$(OBJEXT) \
 	libsupport_a-SymTab.$(OBJEXT) \
 	libsupport_a-WhirlGlobalStateUtils.$(OBJEXT) \
 	libsupport_a-WhirlIO.$(OBJEXT) \
@@ -303,6 +304,7 @@ OPENADFORTTK_LIBSUPPORT = $(top_builddir)/src/lib/support/libsupport.a
 MYSOURCES = \
 Open64IRInterface/Open64BasicTypes.h \
 Open64IRInterface/Open64IRInterface.cpp Open64IRInterface/Open64IRInterface.hpp \
+Open64IRInterface/IntrinsicInfo.cpp Open64IRInterface/IntrinsicInfo.h \
 Open64IRInterface/SymTab.cpp Open64IRInterface/SymTab.h \
 Open64IRInterface/WhirlGlobalStateUtils.cpp Open64IRInterface/WhirlGlobalStateUtils.h \
 Open64IRInterface/WhirlIO.cpp Open64IRInterface/WhirlIO.h \
@@ -410,6 +412,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-CmdLineParser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-Diagnostics.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-Exception.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-IntrinsicInfo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-IntrinsicXlationTable.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-OAMaps.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-Open64IRInterface.Po@am__quote@
@@ -458,6 +461,20 @@ libsupport_a-Open64IRInterface.obj: Open64IRInterface/Open64IRInterface.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='Open64IRInterface/Open64IRInterface.cpp' object='libsupport_a-Open64IRInterface.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -c -o libsupport_a-Open64IRInterface.obj `if test -f 'Open64IRInterface/Open64IRInterface.cpp'; then $(CYGPATH_W) 'Open64IRInterface/Open64IRInterface.cpp'; else $(CYGPATH_W) '$(srcdir)/Open64IRInterface/Open64IRInterface.cpp'; fi`
+
+libsupport_a-IntrinsicInfo.o: Open64IRInterface/IntrinsicInfo.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -MT libsupport_a-IntrinsicInfo.o -MD -MP -MF "$(DEPDIR)/libsupport_a-IntrinsicInfo.Tpo" -c -o libsupport_a-IntrinsicInfo.o `test -f 'Open64IRInterface/IntrinsicInfo.cpp' || echo '$(srcdir)/'`Open64IRInterface/IntrinsicInfo.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libsupport_a-IntrinsicInfo.Tpo" "$(DEPDIR)/libsupport_a-IntrinsicInfo.Po"; else rm -f "$(DEPDIR)/libsupport_a-IntrinsicInfo.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='Open64IRInterface/IntrinsicInfo.cpp' object='libsupport_a-IntrinsicInfo.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -c -o libsupport_a-IntrinsicInfo.o `test -f 'Open64IRInterface/IntrinsicInfo.cpp' || echo '$(srcdir)/'`Open64IRInterface/IntrinsicInfo.cpp
+
+libsupport_a-IntrinsicInfo.obj: Open64IRInterface/IntrinsicInfo.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -MT libsupport_a-IntrinsicInfo.obj -MD -MP -MF "$(DEPDIR)/libsupport_a-IntrinsicInfo.Tpo" -c -o libsupport_a-IntrinsicInfo.obj `if test -f 'Open64IRInterface/IntrinsicInfo.cpp'; then $(CYGPATH_W) 'Open64IRInterface/IntrinsicInfo.cpp'; else $(CYGPATH_W) '$(srcdir)/Open64IRInterface/IntrinsicInfo.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libsupport_a-IntrinsicInfo.Tpo" "$(DEPDIR)/libsupport_a-IntrinsicInfo.Po"; else rm -f "$(DEPDIR)/libsupport_a-IntrinsicInfo.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='Open64IRInterface/IntrinsicInfo.cpp' object='libsupport_a-IntrinsicInfo.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -c -o libsupport_a-IntrinsicInfo.obj `if test -f 'Open64IRInterface/IntrinsicInfo.cpp'; then $(CYGPATH_W) 'Open64IRInterface/IntrinsicInfo.cpp'; else $(CYGPATH_W) '$(srcdir)/Open64IRInterface/IntrinsicInfo.cpp'; fi`
 
 libsupport_a-SymTab.o: Open64IRInterface/SymTab.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -MT libsupport_a-SymTab.o -MD -MP -MF "$(DEPDIR)/libsupport_a-SymTab.Tpo" -c -o libsupport_a-SymTab.o `test -f 'Open64IRInterface/SymTab.cpp' || echo '$(srcdir)/'`Open64IRInterface/SymTab.cpp; \
