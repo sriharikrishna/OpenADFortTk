@@ -46,6 +46,10 @@
 #include <OpenAnalysis/IRInterface/ICFGIRInterface.hpp>
 #include <OpenAnalysis/IRInterface/LinearityIRInterface.hpp>
 
+
+/*! Context-Sensitive and Flow-inSensitive Activity Analysis */
+#include <OpenAnalysis/IRInterface/DUGIRInterface.hpp>
+
 #include <OpenAnalysis/ExprTree/ExprTreeVisitor.hpp>
 #include <OpenAnalysis/ExprTree/EvalToMemRefVisitor.hpp>
 #include <OpenAnalysis/MemRefExpr/MemRefExpr.hpp>
@@ -504,7 +508,8 @@ class Open64IRInterface
     public virtual OA::DataFlow::ParamBindingsIRInterface,
     public virtual OA::ICFG::ICFGIRInterface,
     public virtual OA::Activity::ActivityIRInterface,
-    public virtual OA::Linearity::LinearityIRInterface
+    public virtual OA::Linearity::LinearityIRInterface,
+    public virtual OA::DUG::DUGIRInterface
 {
 public:
   Open64IRInterface();

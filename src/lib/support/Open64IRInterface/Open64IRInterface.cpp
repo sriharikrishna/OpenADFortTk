@@ -1723,7 +1723,8 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
       // FIXME: does WHIRL represent array accesses to int ptrs in C this way?
       if ((WN_operator(WN_kid0(wn)) == OPR_ARRAY) 
           || (WN_operator(WN_kid0(wn)) == OPR_ARRAYEXP)  
-          || (WN_operator(WN_kid0(wn)) == OPR_STRCTFLD) ) 
+          || (WN_operator(WN_kid0(wn)) == OPR_STRCTFLD)  
+          || (WN_operator(WN_kid0(wn)) == OPR_LDA) )
       {
           findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid0(wn), lvl, flags); 
           // do not create MRE for this wn
@@ -2380,8 +2381,11 @@ Open64IRInterface::getDefMemRefs(OA::StmtHandle stmt)
     {
         OA::OA_ptr<OA::MemRefExpr> mre = *mreIter;
 
-        // only map those MREs that do not involve an addressOf operation
-        // Added by PLM 09/14/06
+        //! ================================================
+        //! only map those MREs that do not involve an addressOf operation
+        //! added by PLM 09/14/06
+        //! ================================================
+
         if (mre->hasAddressTaken()) { continue; }
 
         if (mre->isDef()) {
@@ -2438,18 +2442,22 @@ Open64IRInterface::getUseMemRefs(OA::StmtHandle stmt)
   OA::OA_ptr<OA::MemRefHandleIterator> mIter = getMemRefIterator(stmt);
   for ( ; mIter->isValid(); (*mIter)++ ) {
     OA::MemRefHandle memref = mIter->current();
-
+    
     // loop over memory reference expressions for this memref handle
     set<OA::OA_ptr<OA::MemRefExpr> >::iterator mreIter;
     for (mreIter = sMemref2mreSetMap[memref].begin();
          mreIter != sMemref2mreSetMap[memref].end(); mreIter++ ) 
     {
         OA::OA_ptr<OA::MemRefExpr> mre = *mreIter;
-
-        // only map those MREs that do not involve an addressOf operation
-        // Added by PLM 09/14/06
-        if (mre->hasAddressTaken()) { continue; }
         
+        
+        //! ================================================ 
+        //! only map those MREs that do not involve an addressOf operation
+        //! added by PLM 09/14/06 
+        //! ================================================ 
+
+        if (mre->hasAddressTaken()) { continue; }
+          
         if (mre->isUse()) {
           retList->push_back(memref);
           break;
