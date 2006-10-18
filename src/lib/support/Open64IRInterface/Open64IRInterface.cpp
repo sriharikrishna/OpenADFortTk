@@ -36,7 +36,7 @@ static bool debug = false;
 #include "Open64IRInterface/SymTab.h"
 #include "Open64IRInterface/wn_attr.h"
 #include "Open64IRInterface/stab_attr.h"
-#include "Open64IRInterface/IntrinsicInfo.h"
+#include "Open64IRInterface/IntrinsicInfo.cpp"
 
 //************************** Forward Declarations ***************************
 
@@ -243,11 +243,7 @@ Open64IRCallsiteIterator::build_func_call_list(WN *wn)
   OPERATOR opr = WN_operator(wn);
 
   // Add calls to call list but filter out calls to intrinsics
-  if (opr != OPR_INTRINSIC_CALL 
-      && 
-      OPERATOR_is_call(opr)
-      && 
-      ! IntrinsicInfo::callIsIntrinsic(wn)) {
+  if (OPERATOR_is_call(opr) && !(IntrinsicInfo::isIntrinsic(wn)) ) {
     wnlist.push_back(wn);
   }
   
@@ -3046,7 +3042,7 @@ OA::MemRefHandle Open64IRInterface::findTopMemRefHandle(WN *wn)
   h = (OA::irhandle_t)WN_kid0(wn);
 
   if(sMemref2mreSetMap[h].empty()) {
-      wn = h.hval();
+      wn = (WN*)h.hval();
       findTopMemRefHandle(wn);
   } else {
        return h;
