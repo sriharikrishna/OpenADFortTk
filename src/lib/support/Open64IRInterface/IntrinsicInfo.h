@@ -12,9 +12,9 @@ class IntrinsicInfo {
 public:
   
   /** 
-   * for a call operator, is the called procedure an intrinsic?
+   * is this an intrinsic?
    */
-  static bool callIsIntrinsic(WN* aWN_p); 
+  static bool isIntrinsic(WN* aWN_p); 
 
   /** 
    * strips machine type information from the name
@@ -37,14 +37,36 @@ public:
     bool operator()(const Key& k1, const Key& k2) const; 
   };
 
+
+  /**
+   * type of intrinsic
+   */
+  enum IntrinsicType_E{ 
+    FLOAT_INTR,             // defined for float (incl. complex), may also be defined for integers
+    INTEGER_INTR,           // defined only for integers  
+    STRING_INTR,            // defined only for strings
+    BOOL_INTR,              // defined only for booleans
+    IO_INTR,                // I/O operations
+    ARRAY_INTR,             // array operations
+    COMPILER_INTERNAL_INTR, // compiler internal methods
+    UNDEFINED_INTR_TYPE     // value for default initializer
+  }; 
+
+
   /** 
    * additional information
    */
   struct Info {
-    Info(): myNumOp(0){};
-    Info(unsigned int aNumOp): myNumOp(aNumOp){};
+    Info(): myNumOp(0), myType(UNDEFINED_INTR_TYPE) {};
+    Info(unsigned int aNumOp,IntrinsicType_E aType): myNumOp(aNumOp), myType(aType){};
     unsigned int myNumOp; // number of operands to intrinsic
+    IntrinsicType_E myType; // the type of the intrinsic
   };
+
+  /** 
+   * if this is an intrinsic returns the info
+   */
+  static const Info&  getIntrinsicInfo(WN* aWN_p); 
 
   typedef std::map<Key,Info,KeyLT> IntrinsicMap;
 
@@ -71,6 +93,11 @@ private:
    * front end attaches to the intrinsic names.
    */
   static bool lookupIntrinsicPrefix(const char* str);
+
+  /** 
+   * internal lookup 
+   */
+  static bool lookupIntrinsicInfo(WN* aWN_p, const Info* anInfo); 
   
 }; 
 
