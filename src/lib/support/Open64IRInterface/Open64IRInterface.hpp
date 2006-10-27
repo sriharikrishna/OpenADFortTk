@@ -58,6 +58,7 @@
 //#include <OpenAnalysis/MemRefExpr/MemRefExprBasic.hpp>
 
 #include <OpenAnalysis/Utils/OA_ptr.hpp>
+#include "Open64IRInterface/IntrinsicInfo.h"
 
 //************************** Open64 Include Files ***************************
 

@@ -1626,8 +1626,11 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
 
     flags_HAVE_STORE_PARENT = 0x00000004, 
 
-    flags_PASS_BY_REF       = 0x00000008,
-    flags_EXPECT_STRCT_BASE = 0x00000010
+    flags_MODEL_PASS_BY_REF = 0x00000008,
+ 
+    flags_EXPECT_STRCT_BASE = 0x00000010,
+
+    flags_INTRINSIC_PARAM = 0x00000020
   };
 
 
@@ -1685,7 +1688,7 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
   bool isAddrOf = false;
   // if in the parent we determined that this was a pass
   // by reference actual then need to take the address
-  if (flags & flags_PASS_BY_REF) {
+  if (flags & flags_MODEL_PASS_BY_REF) { 
       isAddrOf = true;
   }
   
@@ -1801,8 +1804,10 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
       // this operator just indicates an actual param, do not create
       // a MemRefHandle for it, however determine if the parameter is
       // pass by reference and if so set flags for its child
-      if (isPassByReference(wn)) {
-        flags |= flags_PASS_BY_REF;
+
+      if(isPassByReference(wn) && !(flags & flags_INTRINSIC_PARAM) )
+      {
+        flags |= flags_MODEL_PASS_BY_REF;
       }    
       findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid0(wn), lvl+1, flags); 
       return;
@@ -1860,7 +1865,18 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
       // recur on RHS
       findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid0(wn),lvl,0); 
       break;
-      
+     
+    case OPR_INTRINSIC_CALL:
+    case OPR_CALL:
+       if (IntrinsicInfo::isIntrinsic(wn))  {
+           flags |= flags_INTRINSIC_PARAM;
+       }
+       // recur on parameters (kids 0 ... n-1) to find other MemRefHandles
+       for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++) {
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl+1,flags);
+       }
+       break;
+
     case OPR_BLOCK:
     case OPR_REGION:
       return; // Do not recur into BLOCKs
@@ -1889,7 +1905,7 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
             // for use as the parameter. 
             // e.g. foo(n+1, k). We set UnnamedMemRef for (n+1)
             
-           if (flags & flags_PASS_BY_REF) {
+            if(flags & flags_MODEL_PASS_BY_REF) {
 
              bool addressTaken = true;
              bool accuracy = true;
