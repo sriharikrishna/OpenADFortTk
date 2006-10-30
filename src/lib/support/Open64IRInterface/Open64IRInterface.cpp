@@ -1970,6 +1970,27 @@ void Open64IRInterface::createAndMapDerefs(OA::StmtHandle stmt,
     }
 }
 
+
+OA::OA_ptr<OA::MemRefExpr> Open64IRInterface::convertSymToMemRefExpr(OA::SymHandle sym)
+{
+    OA::OA_ptr<OA::MemRefExpr> mre;
+    bool isAddrOf = false;
+    bool fullAccuracy = false;
+    OA::MemRefExpr::MemRefType hty;
+    hty = OA::MemRefExpr::USE;
+
+    if (isRefParam(sym)) {
+          mre = new OA::NamedRef(isAddrOf, fullAccuracy, hty, sym);
+          mre = new OA::Deref(false, fullAccuracy, hty, mre, 1);
+    } else {
+          mre = new OA::NamedRef(isAddrOf, fullAccuracy, hty, sym);
+    }
+
+    return mre;
+}
+
+
+
 void Open64IRInterface::createAndMapNamedRef(OA::StmtHandle stmt, WN* wn, 
     ST* st, bool isAddrOf, bool fullAccuracy, OA::MemRefExpr::MemRefType hty)
 {
