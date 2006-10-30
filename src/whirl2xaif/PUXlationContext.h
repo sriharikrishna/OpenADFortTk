@@ -128,6 +128,7 @@ namespace whirl2xaif {
     int isActiveStmt(PU_Info* pu, WN* wn);
     int isActiveVarRef(PU_Info* pu, WN* wn); 
     void setActivity(OA::OA_ptr<OA::Activity::InterActive> anActivityMap);
+    void setAlias(OA::OA_ptr<OA::Alias::InterAliasMap> anAliasMap);
 
     // -------------------------------------------------------
     // Misc
@@ -180,6 +181,11 @@ namespace whirl2xaif {
      * we don't own this
      */
     OA::OA_ptr<OA::Activity::InterActive> myActivity;
+  
+    /**
+     * we don't own this
+     */
+    OA::OA_ptr<OA::Alias::InterAliasMap> myAlias;
   
     /**
      * we don't own this

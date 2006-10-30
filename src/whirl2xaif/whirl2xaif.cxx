@@ -64,6 +64,7 @@ namespace whirl2xaif {
     // Initialize and create inter/intra analysis information
     ourOAAnalMap.Create(pu_forest);
     ctxt.setActivity(ourOAAnalMap.GetInterActive());
+    ctxt.setAlias(ourOAAnalMap.GetInterAlias());
     // Create scalarized var reference table
     ourScalarizedRefTableMap.Create(pu_forest);
     // -------------------------------------------------------
