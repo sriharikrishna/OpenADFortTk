@@ -819,6 +819,10 @@ public:
 
   //-------------------------------------------------------------------------
 
+  // for Activity lookup
+  OA::OA_ptr<OA::MemRefExpr>
+   convertSymToMemRefExpr(OA::SymHandle sym);
+
 private:
   
   // assumption is that StmtHandles and MemRefHandles are unique across

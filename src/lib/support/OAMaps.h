@@ -106,8 +106,7 @@ public:
     paramBindings = x; 
   }
   
-  OA::OA_ptr<OA::Alias::ManagerFIAliasAliasMap> GetInterAlias()
-    { return interaliasmapman; }
+  OA::OA_ptr<OA::Alias::InterAliasMap> GetInterAlias() { return interAlias; }
   void SetInterAlias(OA::OA_ptr<OA::Alias::ManagerFIAliasAliasMap> m, 
 		     OA::OA_ptr<OA::Alias::InterAliasMap> x) 
     { interaliasmapman = m; interAlias = x; }

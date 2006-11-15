@@ -263,36 +263,22 @@ namespace whirl2xaif {
     if (!st)
       FORTTK_DIE("PUXlationContext::IsActiveSym: null pointer passed");
     OA::SymHandle sym = OA::SymHandle((OA::irhandle_t)st) ; 
-    OA::ProcHandle proc((OA::irhandle_t)Current_PU_Info);
     OA::OA_ptr<Open64IRInterface> theIR=Whirl2Xaif::getOAAnalMap().GetIRInterface();
-    // Check if this symbol is a reference parameter
-    if(theIR->isRefParam(sym)) {
-      // get all active locations:
-      OA::OA_ptr<OA::LocIterator> locIt=myActivity->getActiveLocsIterator(proc);
-      for ( ; locIt->isValid(); ++(*locIt)) {
-	// there is an implicit assumption that all formal parameters 
-	// are implying passing by reference but since OA doesn't 
-	// distinguish passing by reference it models all formal parameters 
-	// as pointers to do pass by pointer. 
-	// consequently anything active wouldn't be the formal 
-	// paramter but the implied dereference to the location 
-	// passed in as an actual paramter which has to be invisible.
-	// See the section in the OA wiki.
-	if (locIt->current()->isaInvisible()) {
-	  OA::OA_ptr<OA::InvisibleLoc> theInvisibleLoc=
-	    locIt->current().convert<OA::InvisibleLoc>();
-	  ST* activeLocST_p = (ST*)theInvisibleLoc->getBaseSym().hval();
-	  if (activeLocST_p==st) 
-	    return true;
+    OA::OA_ptr<OA::MemRefExpr> symMRE = theIR->convertSymToMemRefExpr(sym);
+    OA::ProcHandle proc((OA::irhandle_t)Current_PU_Info);
+    OA::OA_ptr<OA::LocIterator> symMRElocs_I = myAlias->getAliasResults(proc)->getMayLocs(*symMRE,proc);
+    // we now have the locations that may alias the symbol and  need to compare these 
+    // against the locations determined to be active by the activity analysis. 
+    for ( ; symMRElocs_I->isValid(); (*symMRElocs_I)++ ) {
+      OA::OA_ptr<OA::LocIterator> activeLoc_I = myActivity->getActiveLocsIterator(proc);
+      for ( ; activeLoc_I->isValid(); (*activeLoc_I)++ ) {
+	if (activeLoc_I->current()->mayOverlap(*(symMRElocs_I->current()))) {
+	  return true;
 	}
       }
-      // didn't find it in all the active locations
-      return false;
     }
-    else {
-      // Otherwise a Local Variable  
-      return myActivity->isActive(sym);
-    }
+    // didn't find it in all the active locations
+    return false;
   }
 
   int PUXlationContext::isActiveStmt(PU_Info* pu, WN* wn) { 
@@ -319,6 +305,14 @@ namespace whirl2xaif {
     if(!myActivity.ptrEqual(NULL))
       FORTTK_DIE("PUXlationContext::SetActivity: already set");
     myActivity = anActivityMap; 
+  }
+
+  void PUXlationContext::setAlias(OA::OA_ptr<OA::Alias::InterAliasMap> anAliasMap) { 
+    if(anAliasMap.ptrEqual(NULL))
+      FORTTK_DIE("PUXlationContext::SetAlias: null OA_ptr passed");
+    if(!myAlias.ptrEqual(NULL))
+      FORTTK_DIE("PUXlationContext::SetAlias: already set");
+    myAlias = anAliasMap; 
   }
 
   void PUXlationContext::dump(std::ostream& o, const std::string& indent) const {

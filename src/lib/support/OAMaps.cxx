@@ -192,9 +192,6 @@ namespace fortTkSupport {
     active->output(*irIF);   
     FORTTK_MSG(1, "**************************************");
 
-
-    MassageActivityInfo(active, irIF);
-  
     x->SetInterActive(activeman, active);
   
   
@@ -824,57 +821,6 @@ namespace fortTkSupport {
     std::map<std::string, ST*>* modSymNmMap; // map of bona-fide modules symbols
     std::set<ST*>* modSymDup;                // 'duplicated' module symbols
   };
-
-
-  // MassageActivityInfo: Finish activity information.
-  //
-  // Module variables are 'duplicated' in the global WHIRL symbol table
-  // so that a module variable 'X' appears once in global symbol table
-  // as a module symbol and a second time as an external module symbol.
-  // E.g. 
-  //  [21]: AGLOBAL   <1,21> C_VAR of type .predef_F8 (#11, F8)
-  //                  Address: 0(globals_<1,20>) / ST_IS_IN_MODULE
-  //
-  //  [23]: AGLOBAL   <1,23> C_VAR of type OpenADTy_active (#35, F8)
-  //                  Address: 0(head_<1,22>) / ST_IS_EXTERNAL,ST_IS_IN_MODULE
-  // Unfortunately, there is currently no way to find the original
-  // module symbol given the second external symbol (or vice-versa).
-  // 
-  // A subroutine that uses the module refers to the *second* X.  If the
-  // module has no statements that refer to the first 'X' then when
-  // activity analysis is performed only the second symbol will be
-  // tagged as active.  This will eventually cause a problem when the
-  // WHIRL is unparsed into source code.
-  //
-  // NOTE: A possibly better alternative: When OA asks for the Location
-  // data structure for the second symbol, give it a location the first
-  // symbol in the fully overlap set. Then the activity analysis results
-  // will include any symbols listed there.
-  static void
-  MassageActivityInfo(OA::OA_ptr<OA::Activity::InterActive> active,
-		      OA::OA_ptr<Open64IRInterface> irIF)
-  {
-    // Collect module variables
-    std::map<std::string, ST*> modSymNmMap; // map of bona-fide modules symbols
-    std::set<ST*> modSymDup;                // 'duplicated' module symbols
-    CollectModVars_ST_TAB collectModVars(&modSymNmMap, &modSymDup);
-    For_all(St_Table, GLOBAL_SYMTAB, collectModVars);
-  
-    // For each 'duplicated' module variable that is active, make sure
-    // the true module variable is activated.
-    std::set<ST*>::iterator it = modSymDup.begin();
-    for ( ; it != modSymDup.end(); ++it) {
-      ST* dup_st = *it;
-      if (active->isActive((OA::irhandle_t)dup_st)) {
-	std::string dup_nm = ST_name(dup_st);
-	ST* mod_st = modSymNmMap[dup_nm];
-	if (mod_st && !active->isActive((OA::irhandle_t)mod_st)) {
-	  active->setActive((OA::irhandle_t)mod_st); // make active
-	}
-      }
-    }
-  }
-
 
   // ***************************************************************************
 
