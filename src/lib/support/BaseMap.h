@@ -49,7 +49,7 @@ public:
   virtual ToTy 
   Find(const FromTy x, bool mustFind = false) const
   {
-    typename std::map<FromTy, ToTy>::const_iterator it = find(x);
+    typename std::map<FromTy, ToTy>::const_iterator it = std::map<FromTy, ToTy>::find(x);
     ToTy y = (it == this->end()) ? 0 /*NULL*/ : (*it).second;
     
     if (mustFind && y == 0 /*NULL*/) {

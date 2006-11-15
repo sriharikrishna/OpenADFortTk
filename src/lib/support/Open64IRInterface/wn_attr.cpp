@@ -422,9 +422,20 @@ WN_GetRefObjType(const WN* wn)
       break;
     
     case OPR_LDID:    // type of referenced object
-    case OPR_LDBITS:
+    case OPR_LDBITS: {
       ty = WN_ty(wn);
+      ST* st = WN_st(wn);
+      TY_IDX st_ty = ST_type(st);
+      if (st_ty != ty) {
+        // this can actually happen when we back-translate portions
+        // using WN sub trees from the original whirl (see the patchWN... methods) and the variable
+        // in question has become active which obviously not reflected in the original whirl
+        const char* nm=ST_name(st);
+        FORTTK_MSG(0, "Warning: WN_GetRefObjType: type mismatch detected for " << nm);
+        ty=st_ty;
+      }
       break;
+    }
       
     case OPR_ILOAD:   // type of referenced object
     case OPR_ILOADX:

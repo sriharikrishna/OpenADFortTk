@@ -280,9 +280,9 @@ namespace whirl2xaif {
   // usage: xlate_SymbolTables(xos, CURRENT_SYMTAB, symtab, ctxt);
 
   void 
-  whirl2xaif::xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
-				 fortTkSupport::ScalarizedRefTab_W2X* nonscalarsymtab, 
-				 PUXlationContext& ctxt)
+  xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
+				 fortTk::ScalarizedRefTab_W2X* nonscalarsymtab, 
+		     PUXlationContext& ctxt)
   {
     xos << xml::BegElem("xaif:SymbolTable") << xml::EndAttrs;
 
@@ -293,9 +293,9 @@ namespace whirl2xaif {
   }
 
   void 
-  whirl2xaif::xlate_ArrayBounds(xml::ostream& xos, 
-				TY_IDX ty_idx, 
-				PUXlationContext& ctxt) { 
+  xlate_ArrayBounds(xml::ostream& xos, 
+		    TY_IDX ty_idx, 
+		    PUXlationContext& ctxt) { 
     if (TY_kind(ty_idx) == KIND_ARRAY) {
       if (! TY_is_character(ty_idx)) { 
 	bool assumeBoundsAllConst=false;
@@ -352,8 +352,8 @@ namespace whirl2xaif {
   // an XAIF symbol table.  'symtab_lvl' is an index (lexical level) in
   // the current 'Scope_tab[]'.
   void 
-  whirl2xaif::xlate_SYMTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
-			   PUXlationContext& ctxt)
+  xlate_SYMTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
+	       PUXlationContext& ctxt)
   {
     // 'For_all' applies 'operator()' to every entry of St_Table.
     For_all(St_Table, symtab_lvl, xlate_ST_TAB(xos, symtab_lvl, ctxt));
@@ -361,8 +361,8 @@ namespace whirl2xaif {
 
 #if 0
   void 
-  whirl2xaif::xlate_PREGTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
-			    PUXlationContext& ctxt)
+  xlate_PREGTAB(xml::ostream& xos, SYMTAB_IDX symtab_lvl,
+		PUXlationContext& ctxt)
   {
     // 'For_all' applies 'operator()' to every entry of Preg_Table.
     For_all(Preg_Table, symtab_lvl, xlate_PREG_TAB(xos, symtab_lvl, ctxt));
@@ -371,9 +371,9 @@ namespace whirl2xaif {
 
 
   void
-  whirl2xaif::xlate_ScalarizedRefTab(xml::ostream& xos, 
-				     fortTkSupport::ScalarizedRefTab_W2X* symtab, 
-				     PUXlationContext& ctxt)
+  xlate_ScalarizedRefTab(xml::ostream& xos, 
+				     fortTk::ScalarizedRefTab_W2X* symtab, 
+			 PUXlationContext& ctxt)
   {
     if (!symtab) { return; }
   
@@ -433,13 +433,13 @@ namespace whirl2xaif {
   // ***************************************************************************
 
   void 
-  whirl2xaif::TranslateSTDecl(xml::ostream& xos, ST* st, PUXlationContext& ctxt)
+  TranslateSTDecl(xml::ostream& xos, ST* st, PUXlationContext& ctxt)
   { 
     XlateSTDecl_HandlerTable[ST_sym_class(st)](xos, st, ctxt);
   } 
 
   void 
-  whirl2xaif::TranslateSTUse(xml::ostream& xos, ST* st, PUXlationContext& ctxt)
+  TranslateSTUse(xml::ostream& xos, ST* st, PUXlationContext& ctxt)
   { 
     XlateSTUse_HandlerTable[ST_sym_class(st)](xos, st, ctxt);
   }

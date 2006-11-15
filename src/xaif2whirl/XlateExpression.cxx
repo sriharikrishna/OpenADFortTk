@@ -101,7 +101,7 @@ namespace xaif2whirl {
     WN* wn = WN_kid(parent, kidno);
     if (!wn) { return NULL; }
     OPERATOR opr = WN_operator(wn);
-    if (!OPERATOR_is_expression(opr)) { return parent; }
+    if (!OPERATOR_is_expression(opr) && !OPERATOR_is_call(opr)) { return parent; }
     // Base case: a variable reference
     if (fortTkSupport::ScalarizedRef::isRefTranslatableToXAIF(wn)) {
       TY_IDX ty = WN_GetBaseObjType(wn);
