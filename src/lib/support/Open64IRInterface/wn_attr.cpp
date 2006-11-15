@@ -431,7 +431,7 @@ WN_GetRefObjType(const WN* wn)
         // using WN sub trees from the original whirl (see the patchWN... methods) and the variable
         // in question has become active which obviously not reflected in the original whirl
         const char* nm=ST_name(st);
-        FORTTK_MSG(0, "Warning: WN_GetRefObjType: type mismatch detected for " << nm);
+        DBGMSG_PUB(0, "Warning: WN_GetRefObjType: type mismatch detected for %s\n", nm);
         ty=st_ty;
       }
       break;

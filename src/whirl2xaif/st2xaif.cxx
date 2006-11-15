@@ -281,7 +281,7 @@ namespace whirl2xaif {
 
   void 
   xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
-				 fortTk::ScalarizedRefTab_W2X* nonscalarsymtab, 
+		     fortTkSupport::ScalarizedRefTab_W2X* nonscalarsymtab, 
 		     PUXlationContext& ctxt)
   {
     xos << xml::BegElem("xaif:SymbolTable") << xml::EndAttrs;
@@ -372,7 +372,7 @@ namespace whirl2xaif {
 
   void
   xlate_ScalarizedRefTab(xml::ostream& xos, 
-				     fortTk::ScalarizedRefTab_W2X* symtab, 
+		         fortTkSupport::ScalarizedRefTab_W2X* symtab, 
 			 PUXlationContext& ctxt)
   {
     if (!symtab) { return; }
