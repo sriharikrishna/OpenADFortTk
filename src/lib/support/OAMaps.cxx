@@ -135,7 +135,7 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
   cgraphman = new OA::CallGraph::ManagerStandard(irIF);
   OA::OA_ptr<OA::CallGraph::CallGraphStandard> cgraph = 
     cgraphman->performAnalysis(procIt);
-  if (0) { cgraph->dump(std::cout, irIF); }
+  if (0) { cgraph->dumpdot(std::cout, irIF); }
   
   x->SetCallGraph(cgraphman, cgraph);
   
@@ -207,6 +207,30 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
   OA::OA_ptr<OA::ICFG::ICFGStandard> icfg 
       = icfgman->performAnalysis(procIt,cfgeach);
 
+  // Def-Use Graph
+  FORTTK_MSG(1, "progress: DUG standard: building Def-Use graph");
+  OA::OA_ptr<OA::DUG::ManagerDUGStandard> dugman;
+  dugman = new OA::DUG::ManagerDUGStandard(irIF, irIF);
+  OA::OA_ptr<OA::DUG::DUGStandard> dug
+      = dugman->performAnalysis(procIt, icfg, parambind, interAlias, cgraph);
+  dugman->transitiveClosureDepMatrix(cgraph);
+  // #define DEBUG_DUAA_LAST 1
+#ifdef DEBUG_DUAA_LAST
+  dug->dumpdot(cout, irIF);
+#endif
+
+  // Def-Use Activity Analysis
+  FORTTK_MSG(1, "progress: Def-Use activity: performAnalysis");
+  OA::OA_ptr<OA::Activity::ManagerDUActive> duactiveman;
+  duactiveman = new OA::Activity::ManagerDUActive(irIF, dug);
+  OA::OA_ptr<OA::Activity::InterActive> duactive;
+  duactive = duactiveman->performAnalysis(icfg, parambind, interAlias);
+
+#ifdef DEBUG_DUAA
+  duactive->dump(cout, irIF);
+#endif
+
+#if 0
   // Activity Analysis
   FORTTK_MSG(1, "progress: icfg activity: performAnalysis");
   OA::OA_ptr<OA::Activity::ManagerICFGActive> activeman;
@@ -214,10 +238,11 @@ CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
   OA::OA_ptr<OA::Activity::InterActive> active;
   active = activeman->performAnalysis(cgraph, icfg, parambind,
                 interAlias, interSE, cfgeach);
+#endif
 
-  MassageActivityInfo(active, irIF);
+  MassageActivityInfo(duactive, irIF);
   
-  x->SetInterActive(activeman, active);
+  x->SetInterActive(duactiveman, duactive);
   
   
   // -------------------------------------------------------

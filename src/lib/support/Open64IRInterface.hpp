@@ -44,6 +44,7 @@
 #include <OpenAnalysis/IRInterface/ActivityIRInterface.hpp>
 #include <OpenAnalysis/IRInterface/ParamBindingsIRInterface.hpp>
 #include <OpenAnalysis/IRInterface/ICFGIRInterface.hpp>
+#include <OpenAnalysis/IRInterface/DUGIRInterface.hpp>
 
 #include <OpenAnalysis/ExprTree/ExprTreeVisitor.hpp>
 #include <OpenAnalysis/MemRefExpr/MemRefExpr.hpp>
@@ -473,6 +474,7 @@ class Open64IRInterface
     public OA::SideEffect::InterSideEffectIRInterfaceDefault,
     public virtual OA::DataFlow::ParamBindingsIRInterface,
     public virtual OA::ICFG::ICFGIRInterface,
+    public virtual OA::DUG::DUGIRInterface,
     public virtual OA::Activity::ActivityIRInterface
 {
 public:

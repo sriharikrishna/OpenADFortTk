@@ -51,6 +51,8 @@
 #include <OpenAnalysis/Alias/ManagerSymAliasSetsBottom.hpp>
 #include <OpenAnalysis/Alias/ManagerInsNoPtrInterAliasMap.hpp>
 #include <OpenAnalysis/ICFG/ManagerICFGStandard.hpp>
+#include <OpenAnalysis/DUG/ManagerDUGStandard.hpp>
+#include <OpenAnalysis/duaa/ManagerDUActive.hpp>
 
 
 //*************************** User Include Files ****************************
@@ -137,7 +139,7 @@ public:
 
   // Activity
   OA::OA_ptr<OA::Activity::InterActive> GetInterActive() { return active; }
-  void SetInterActive(OA::OA_ptr<OA::Activity::ManagerICFGActive> m,
+  void SetInterActive(OA::OA_ptr<OA::Activity::ManagerDUActive> m,
 		      OA::OA_ptr<OA::Activity::InterActive> x) 
     { activeman = m; active = x; }
 
@@ -161,7 +163,7 @@ private:
   OA::OA_ptr<OA::SideEffect::ManagerInterSideEffectStandard> interSEman;
   OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> interSE;
   
-  OA::OA_ptr<OA::Activity::ManagerICFGActive> activeman;
+  OA::OA_ptr<OA::Activity::ManagerDUActive> activeman;
   OA::OA_ptr<OA::Activity::InterActive> active;  
 };
 
