@@ -57,6 +57,7 @@
 #include "wn2xaif_io.h"
 #include "st2xaif.h"
 #include "ty2xaif.h"
+#include "Args.h"
 
 #include <lib/support/SymTab.h>
     
@@ -1487,7 +1488,10 @@ namespace whirl2xaif {
 	}
       }
     }
-  
+
+    if (Args::ourSimpleLoopFlag)
+      loopTy = "explicit";
+
     return loopTy;
   }
 

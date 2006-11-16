@@ -45,18 +45,21 @@ static const char* usage_details =
 "                      is 'OpenAD_'\n"
 "  -V, --version       print version information\n"
 "  -h, --help          print this help\n"
+"  -s, --simpleLoop    force simple loop property on all loop constructs\n"
 "      --debug [lvl]   debug mode at level `lvl'\n";
 
+bool Args::ourSimpleLoopFlag=false;   // default: done't force it
 
 #define CLP CmdLineParser
 
 CmdLineParser::OptArgDesc Args::optArgs[] = {
   // Options
-  { 'o', "output",   CLP::ARG_REQ , CLP::DUPOPT_ERR,  NULL },
-  {  0 , "prefix",   CLP::ARG_OPT,  CLP::DUPOPT_CLOB, NULL },
-  { 'V', "version",  CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
-  { 'h', "help",     CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
-  {  0 , "debug",    CLP::ARG_OPT,  CLP::DUPOPT_CLOB, NULL },
+  { 'o', "output",      CLP::ARG_REQ , CLP::DUPOPT_ERR,  NULL },
+  {  0 , "prefix",      CLP::ARG_OPT,  CLP::DUPOPT_CLOB, NULL },
+  { 'V', "version",     CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
+  { 'h', "help",        CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
+  { 's', "simpleLoop",  CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
+  {  0 , "debug",       CLP::ARG_OPT,  CLP::DUPOPT_CLOB, NULL },
   CmdLineParser::OptArgDesc_NULL
 };
 
@@ -154,6 +157,9 @@ Args::Parse(int argc, const char* const argv[])
     }    
     if (parser.IsOpt("prefix")) { 
       tmpVarPrefix = parser.GetOptArg("prefix");
+    }
+    if (parser.IsOpt("simpleLoop")) { 
+      ourSimpleLoopFlag = true; 
     }
     
     // Check for required arguments

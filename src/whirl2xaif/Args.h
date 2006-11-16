@@ -65,6 +65,9 @@ public:
   // Parsed Data: arguments
   std::string whirlFileNm;
   
+  // force simple loop construct
+  static bool ourSimpleLoopFlag;
+  
 private:
   void Ctor();
 
