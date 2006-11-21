@@ -32,6 +32,8 @@ namespace whirl2xaif {
     static fortTk::ScalarizedRefTabMap_W2X& getScalarizedRefTableMap();
     static WNToWNIdTabMap& getWNToWNIdTableMap();
 
+    static void backSubstituteLoopBoundsPU_InfoForrest(PU_Info* aPU_InfoForrest_p);
+
   private:
 
     /** 
@@ -73,6 +75,10 @@ namespace whirl2xaif {
 			      PUXlationContext& ctxt);
 
     static void dumpTranslationHeaderComment(xml::ostream& xos);
+
+    static void backSubstituteLoopBoundsPU_InfoTree(PU_Info* aPU_InfoTree_p);
+
+    static void backSubstituteLoopBoundsPU_Info(PU_Info* aPU_Info_p);
 
   };
 

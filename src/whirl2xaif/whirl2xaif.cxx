@@ -312,4 +312,94 @@ namespace whirl2xaif {
 	<< xml::Comment(ourDividerComment.c_str()) << std::endl;
   }
 
+  void Whirl2Xaif::backSubstituteLoopBoundsPU_InfoForrest(PU_Info* aPU_InfoForrest_p) { 
+    Diag_Set_Phase("WHIRL to XAIF: backSubstituteLoopBounds");
+    if (!aPU_InfoForrest_p) { return; }
+    /* Loop thru all the PU_Infos */
+    PU_Info* aPU_InfoTree_p;
+    for (aPU_InfoTree_p=aPU_InfoForrest_p; aPU_InfoTree_p!= NULL; aPU_InfoTree_p=PU_Info_next(aPU_InfoTree_p)) {
+      backSubstituteLoopBoundsPU_InfoTree(aPU_InfoTree_p);
+    }
+  } 
+
+  void Whirl2Xaif::backSubstituteLoopBoundsPU_InfoTree(PU_Info* aPU_InfoTree_p) { 
+    if (!aPU_InfoTree_p) { return; }
+    backSubstituteLoopBoundsPU_Info(aPU_InfoTree_p);
+    for (PU_Info *aPU_Infosubtree_p = PU_Info_child(aPU_InfoTree_p); 
+	 aPU_Infosubtree_p != NULL; 
+	 aPU_Infosubtree_p = PU_Info_next(aPU_Infosubtree_p)) {
+      backSubstituteLoopBoundsPU_InfoTree(aPU_Infosubtree_p);
+    }
+  }
+
+  void Whirl2Xaif::backSubstituteLoopBoundsPU_Info(PU_Info* aPU_Info_p) { 
+    typedef std::map<ST*,WN*> STPtoWNPmap;
+    STPtoWNPmap tempMap; 
+    bool skipKids=false;
+    PU_SetGlobalState(aPU_Info_p);
+    WN* wn_pu = PU_Info_tree_ptr(aPU_Info_p);
+    WN* parentWN_p=0;
+    WN_TREE_CONTAINER<PRE_ORDER> aWNPtree(wn_pu);
+    WN_TREE_CONTAINER<PRE_ORDER>::iterator aWNPtreeIterator=aWNPtree.begin();
+    while (aWNPtreeIterator != aWNPtree.end()) { 
+      WN* curWN_p = aWNPtreeIterator.Wn();
+      OPERATOR opr = WN_operator(curWN_p);
+      if (opr==OPR_STID) {  // definitions
+	if (ST_is_temp_var(WN_st(curWN_p))) {
+	  ST* tempST_p=WN_st(curWN_p);
+	  // is it not in the set? 
+	  if (tempMap.find(tempST_p) == tempMap.end()) { //not found
+	    // add it
+	    tempMap.insert(std::pair<ST*,WN*>(tempST_p,WN_kid0(curWN_p)));
+	    
+	    const char* tmpName = ST_name(tempST_p); 
+	    ST* puST_p = ST_ptr(PU_Info_proc_sym(aPU_Info_p));
+	    const char* puName = ST_name(puST_p);
+	    std::cout << "JU: Whirl2Xaif::backSubstituteLoopBoundsPU_Info: recorded temporary " << tmpName << "  defined in " << puName << std::endl;
+	    
+	  }
+	  else { // this should not happen since these are supposed to be single assignment
+	    const char* tmpName = ST_name(tempST_p); 
+	    ST* puST_p = ST_ptr(PU_Info_proc_sym(aPU_Info_p));
+	    const char* puName = ST_name(puST_p);
+	    FORTTK_DIE("Whirl2Xaif::backSubstituteLoopBoundsPU_Info: temporary " << tmpName << " is redefined in " << puName);
+	  }
+	}
+      }
+      if (opr==OPR_LDID){ // uses
+	// if we refer to a temp variable
+	if (ST_is_temp_var(WN_st(curWN_p))) { 
+	  // that variable should have been added to the set
+	  // so find it: 
+	  ST* tempST_p=WN_st(curWN_p);
+	  STPtoWNPmap::iterator mapIter=tempMap.find(tempST_p);
+	  if (mapIter==tempMap.end()) { //not found
+	    // this shouldn't happen since we expect to have all of the definitions
+	    const char* tmpName = ST_name(tempST_p); 
+	    ST* puST_p = ST_ptr(PU_Info_proc_sym(aPU_Info_p));
+	    const char* puName = ST_name(puST_p);
+	    FORTTK_DIE("Whirl2Xaif::backSubstituteLoopBoundsPU_Info: no definition for temporary " << tmpName << " in " << puName);
+	  }
+	  // make sure the parent is set by now
+	  if (!aWNPtreeIterator.Get_parent_wn())
+	    FORTTK_DIE("Whirl2Xaif::backSubstituteLoopBoundsPU_Info: no parent set");
+	  // replace the current node within the parent
+	  WN_kid(aWNPtreeIterator.Get_parent_wn(),aWNPtreeIterator.Get_kid_index()) = WN_COPY_Tree((*mapIter).second);
+	  skipKids=true;
+	  const char* tmpName = ST_name(tempST_p); 
+	  ST* puST_p = ST_ptr(PU_Info_proc_sym(aPU_Info_p));
+	  const char* puName = ST_name(puST_p);
+	  std::cout << "JU: Whirl2Xaif::backSubstituteLoopBoundsPU_Info: substituted temporary " << tmpName << "  in " << puName << std::endl;
+	}
+      } 
+      // advance the iterator
+      if (skipKids){ 
+	aWNPtreeIterator.WN_TREE_next_skip();
+	skipKids=false;
+      }
+      else
+	++aWNPtreeIterator;
+    } // end while
+  } 
+
 }
