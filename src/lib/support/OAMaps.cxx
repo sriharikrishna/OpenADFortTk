@@ -37,13 +37,16 @@ namespace fortTkSupport {
 			  OA::OA_ptr<Open64IRInterface> irIF);
 
   static void
-  MassageActivityInfo(OA::OA_ptr<OA::Activity::InterActive> active,
-		      OA::OA_ptr<Open64IRInterface> irIF);
+  collectGlobalVarActivityInfo(OA::OA_ptr<OA::Activity::InterActive> active,
+			       OA::OA_ptr<Open64IRInterface> irIF,
+			       PU_Info* pu_forest);
 
 
   // ***************************************************************************
   // OAAnalInfo
   // ***************************************************************************
+
+  std::set<ST*> OAAnalInfo::ourActiveGlobalSTPSet;
 
   OAAnalInfo::~OAAnalInfo() 
   { 
@@ -191,10 +194,14 @@ namespace fortTkSupport {
     FORTTK_MSG(1, "ICFG Active Output");
     active->output(*irIF);   
     FORTTK_MSG(1, "**************************************");
+    
+    OAAnalInfo::collectGlobalSymbolActivityInfo(active,
+						interAlias,
+						irIF,
+						pu_forest);
 
     x->SetInterActive(activeman, active);
-  
-  
+    
     // -------------------------------------------------------
     // For each PU, compute intraprocedural analysis info
     // -------------------------------------------------------
@@ -917,5 +924,66 @@ namespace fortTkSupport {
   
     return NULL;
   }
+
+  void 
+  OAAnalInfo::collectGlobalSymbolActivityInfo(OA::OA_ptr<OA::Activity::InterActive> active,
+					      OA::OA_ptr<OA::Alias::InterAliasMap> interAlias,
+					      OA::OA_ptr<Open64IRInterface> irIF,
+					      PU_Info* pu_forest) {
+    // Collect module variables
+    std::map<std::string, ST*> modSymNmMap; // map of bona-fide modules symbols
+    std::set<ST*> modSymDup;                // 'duplicated' module symbols
+    CollectModVars_ST_TAB collectModVars(&modSymNmMap, &modSymDup);
+    For_all(St_Table, GLOBAL_SYMTAB, collectModVars);
+    // For each 'duplicated' module variable that is active, make sure
+    // the true module variable is activated.
+    std::map<std::string, ST*>::iterator it = modSymNmMap.begin();
+    // iterate through all global (module) variables
+    for ( ; it != modSymNmMap.end(); ++it) {
+      bool isActive=false;
+      ST* st_p = (*it).second;
+
+      // debug begin -----
+      char* symbolName = ST_name(st_p);
+      std::cout << "JU: OAAnalInfo::collectGlobalSymbolActivityInfo: for symbol name: " << symbolName << std::endl; 
+      // debug end ----
+
+      // make an memory reference expression from the given symbol
+      OA::SymHandle sym = OA::SymHandle((OA::irhandle_t)st_p) ; 
+      OA::OA_ptr<OA::MemRefExpr> symMRE = irIF->convertSymToMemRefExpr(sym);
+      // iterate through all PUs
+      OA::OA_ptr<Open64IRProcIterator> procIt;
+      procIt = new Open64IRProcIterator(pu_forest);
+      for ( ; procIt->isValid() && !isActive; ++(*procIt)) { 
+
+	// debug begin -----
+	ST* procST_p = ST_ptr(PU_Info_proc_sym((PU_Info*)procIt->current().hval()));
+	const char* procName = ST_name(procST_p);
+	std::cout << "JU: OAAnalInfo::collectGlobalSymbolActivityInfo: looking in: " << procName << " : "; 
+	// debug end -----
+	
+	OA::OA_ptr<OA::LocIterator> symMRElocs_I = 
+	  interAlias->getAliasResults(procIt->current())->getMayLocs(*symMRE,procIt->current());
+	// we now have the locations that may alias the symbol and  need to compare these 
+	// against the locations determined to be active by the activity analysis. 
+	for ( ; symMRElocs_I->isValid() && !isActive; (*symMRElocs_I)++ ) {
+	  OA::OA_ptr<OA::LocIterator> activeLoc_I = active->getActiveLocsIterator(procIt->current());
+	  for ( ; activeLoc_I->isValid() && !isActive; (*activeLoc_I)++ ) {
+	    if (activeLoc_I->current()->mayOverlap(*(symMRElocs_I->current()))) {
+	      ourActiveGlobalSTPSet.insert(st_p);
+	      isActive=true;
+	      std::cout << " active "; 
+	    }
+	  }
+	}
+	std::cout << std::endl; 
+      }
+    }
+  }
+
+  bool 
+  OAAnalInfo::isGlobalSymbolActive(ST* anST_p) {
+    return (ourActiveGlobalSTPSet.find(anST_p)!=ourActiveGlobalSTPSet.end());
+  } 
 
 }

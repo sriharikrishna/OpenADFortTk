@@ -262,6 +262,13 @@ namespace whirl2xaif {
       FORTTK_DIE("PUXlationContext::IsActiveSym: myActivity not set");
     if (!st)
       FORTTK_DIE("PUXlationContext::IsActiveSym: null pointer passed");
+    // see if this is a module variable
+    if (ST_is_in_module(st) && !ST_is_external(st)) { 
+      // try to find it in the global set
+      if (fortTkSupport::OAAnalInfo::isGlobalSymbolActive(st))
+	return true; 
+      // else look in the local information
+    }
     OA::SymHandle sym = OA::SymHandle((OA::irhandle_t)st) ; 
     OA::OA_ptr<Open64IRInterface> theIR=Whirl2Xaif::getOAAnalMap().GetIRInterface();
     OA::OA_ptr<OA::MemRefExpr> symMRE = theIR->convertSymToMemRefExpr(sym);

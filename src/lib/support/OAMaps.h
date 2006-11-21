@@ -206,7 +206,16 @@ public:
 			 OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> x) 
     { udmanXAIF = m; udduchainsXAIF = x; }
   
+  static bool isGlobalSymbolActive(ST* anST_p);
+
+
+  static void collectGlobalSymbolActivityInfo(OA::OA_ptr<OA::Activity::InterActive> active,
+					      OA::OA_ptr<OA::Alias::InterAliasMap> interAlias,
+					      OA::OA_ptr<Open64IRInterface> irIF,
+					      PU_Info* pu_forest); 
+
 private:
+
   OA::OA_ptr<OA::Alias::ManagerFIAliasAliasMap> aliasman;
   OA::OA_ptr<OA::Alias::Interface> alias;
   
@@ -224,6 +233,9 @@ private:
 
   OA::OA_ptr<OA::XAIF::ManagerStandard> udmanXAIF;
   OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchainsXAIF;
+
+  static std::set<ST*> ourActiveGlobalSTPSet;
+
 };
 
 //***************************************************************************
