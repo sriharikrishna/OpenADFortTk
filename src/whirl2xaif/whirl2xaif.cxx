@@ -351,18 +351,16 @@ namespace whirl2xaif {
 	  if (tempMap.find(tempST_p) == tempMap.end()) { //not found
 	    // add it
 	    tempMap.insert(std::pair<ST*,WN*>(tempST_p,WN_kid0(curWN_p)));
-	    
 	    const char* tmpName = ST_name(tempST_p); 
 	    ST* puST_p = ST_ptr(PU_Info_proc_sym(aPU_Info_p));
 	    const char* puName = ST_name(puST_p);
-	    std::cout << "JU: Whirl2Xaif::backSubstituteLoopBoundsPU_Info: recorded temporary " << tmpName << "  defined in " << puName << std::endl;
-	    
+	    FORTTK_MSG(2, "Whirl2Xaif::backSubstituteLoopBoundsPU_Info: recorded temporary " << tmpName << "  defined in " << puName);
 	  }
 	  else { // this should not happen since these are supposed to be single assignment
 	    const char* tmpName = ST_name(tempST_p); 
 	    ST* puST_p = ST_ptr(PU_Info_proc_sym(aPU_Info_p));
 	    const char* puName = ST_name(puST_p);
-	    FORTTK_DIE("Whirl2Xaif::backSubstituteLoopBoundsPU_Info: temporary " << tmpName << " is redefined in " << puName);
+	    FORTTK_MSG(0, "Whirl2Xaif::backSubstituteLoopBoundsPU_Info: recorded temporary " << tmpName << " is redefined in " << puName);
 	  }
 	}
       }
@@ -389,11 +387,12 @@ namespace whirl2xaif {
 	  const char* tmpName = ST_name(tempST_p); 
 	  ST* puST_p = ST_ptr(PU_Info_proc_sym(aPU_Info_p));
 	  const char* puName = ST_name(puST_p);
-	  std::cout << "JU: Whirl2Xaif::backSubstituteLoopBoundsPU_Info: substituted temporary " << tmpName << "  in " << puName << std::endl;
+	  FORTTK_MSG(2, "JU: Whirl2Xaif::backSubstituteLoopBoundsPU_Info: substituted temporary " << tmpName << "  in " << puName);
 	}
       } 
       // advance the iterator
-      if (skipKids){ 
+      if (skipKids || opr==OPR_XPRAGMA){
+	// XPRAGMAs may refer to temporaries before they are assigned
 	aWNPtreeIterator.WN_TREE_next_skip();
 	skipKids=false;
       }
