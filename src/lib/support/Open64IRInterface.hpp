@@ -748,6 +748,8 @@ public:
 
   //-------------------------------------------------------------------------
 
+  static void DumpWN(WN* wn, ostream& os);
+
 private:
   
   // assumption is that StmtHandles and MemRefHandles are unique across
@@ -789,8 +791,6 @@ private:
 
   //! use this to appropriately get a string for a symbol
   static char* createCharStarForST(ST*);
-
-  static void DumpWN(WN* wn, ostream& os);
 
   static void DumpWNMemRef(WN* wn, ostream& os);
 

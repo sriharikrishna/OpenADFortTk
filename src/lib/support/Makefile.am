@@ -69,6 +69,7 @@ MYSOURCES = \
 	ScalarizedRef.h ScalarizedRef.cxx \
 	ScalarizedRefTab.h ScalarizedRefTab.cxx \
 	WhirlGlobalStateUtils.h WhirlGlobalStateUtils.cxx \
+	BackSubstituteTemps.h BackSubstituteTemps.cxx \
 	WhirlIDMaps.h WhirlIDMaps.cxx \
 	WhirlIO.h WhirlIO.cxx \
 	WhirlParentize.h WhirlParentize.cxx \

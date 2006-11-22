@@ -20,6 +20,7 @@ using std::cout;
 #include <lib/support/xmlostream.h>
 #include <lib/support/Exception.h>
 #include <lib/support/WhirlIO.h>
+#include <lib/support/BackSubstituteTemps.h>
 
 static int
 real_main(int argc, char **argv);
@@ -111,7 +112,7 @@ real_main(int argc, char **argv)
 
   // this is back substituting the original references that 
   // were hoisted into temporaries by the front-end: 
-  whirl2xaif::Whirl2Xaif::backSubstituteLoopBoundsPU_InfoForrest(pu_forest);
+  FortTk::BackSubstituteTemps::forPUInfoForrest(pu_forest);
   
   // -------------------------------------------------------
   // 4. Translate WHIRL into XAIF

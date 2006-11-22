@@ -53,6 +53,8 @@ public:
     ToTy y = (it == this->end()) ? 0 /*NULL*/ : (*it).second;
     
     if (mustFind && y == 0 /*NULL*/) {
+      FORTTK_MSG(0,"BaseMap: Could not find entry for key '" << x << "' dumping map");
+      Dump();
       FORTTK_DIE("BaseMap: Could not find entry for key '" << x << "'");
     }
     
@@ -70,7 +72,7 @@ public:
   
   // Dump: Dump that integer values in the map
   virtual void Dump(std::ostream& o = std::cerr) const {
-    o << "{ Map:\n";
+    o << "{ Map (" << this << ")\n";
     for (typename std::map<FromTy, ToTy>::const_iterator it = this->begin(); 
 	 it != this->end(); ++it) {
       o << "(" << it->first << " --> " << it->second << ")\n";

@@ -660,6 +660,7 @@ whirl2sexp::xlate_xPRAGMA(sexp::ostream& sos, WN* wn)
   } 
   else {
     sos << EndList; // end WN_ATTRS
+    sos << EndLine;	
     TranslateWN(sos, WN_kid0(wn)); // KID 0
   }
   

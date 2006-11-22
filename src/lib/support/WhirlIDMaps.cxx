@@ -87,8 +87,12 @@ WNToWNIdTabMap::Create(PU_Info* pu_forest)
   for ( ; procIt.isValid(); ++procIt) { 
     PU_Info* pu = (PU_Info*)procIt.current().hval();
     WN* wn_pu = PU_Info_tree_ptr(pu);
-    
     WNToWNIdMap* tab = new WNToWNIdMap(wn_pu);
+#if 0 
+    ST* pu_st = ST_ptr(PU_Info_proc_sym(pu));
+    const char* pu_name = ST_name(pu_st);
+    std::cout << "JU: WNToWNIdTabMap::Create (" << tab << ") for " << pu_name << std::endl; 
+#endif
     Insert(pu, tab);
   }
 }
@@ -115,8 +119,12 @@ WNIdToWNTabMap::Create(PU_Info* pu_forest)
   for ( ; procIt.isValid(); ++procIt) { 
     PU_Info* pu = (PU_Info*)procIt.current().hval();
     WN* wn_pu = PU_Info_tree_ptr(pu);
-    
     WNIdToWNMap* tab = new WNIdToWNMap(wn_pu);
+#if 0 
+    ST* pu_st = ST_ptr(PU_Info_proc_sym(pu));
+    const char* pu_name = ST_name(pu_st);
+    std::cout << "JU: WNIdToWNTabMap::Create (" << tab << ") for " << pu_name << std::endl; 
+#endif
     Insert(pu, tab);
   }
 }
@@ -208,9 +216,19 @@ CreateWhirlIdMaps(WN* wn, WNToWNIdMap* x, WNIdToWNMap* y)
 
     if (x) {
       x->Insert(curWN, curId);
+#if 0 
+      std::cout << " JU: CreateWhirlIdMaps (" << x <<"): " << curWN << "(";
+      Open64IRInterface::DumpWN(curWN,std::cout);
+      std::cout << ")->" << curId << std::endl; 
+#endif
     }
     if (y) {
       y->Insert(curId, curWN);
+#if 0 
+      std::cout << " JU: CreateWhirlIdMaps (" << y <<"): " << curId << "->" <<  curWN << "(";
+      Open64IRInterface::DumpWN(curWN,std::cout);
+      std::cout << ")" << std::endl; 
+#endif
     }
   }
 }
