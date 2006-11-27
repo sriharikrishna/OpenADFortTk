@@ -65,6 +65,8 @@ MassageActivityInfo(OA::OA_ptr<OA::Activity::InterActive> active,
 // OAAnalInfo
 //***************************************************************************
 
+bool OAAnalInfo::ourDoNotFilterFlag=false; 
+
 OAAnalInfo::~OAAnalInfo() 
 { 
   // OA_ptr will clean up all Managers and analysis results once
@@ -75,6 +77,14 @@ void
 OAAnalInfo::Create(PU_Info* pu, PUToOAAnalInfoMap* interInfo)
 { 
   CreateOAAnalInfo(pu, interInfo, this);
+}
+
+void OAAnalInfo::setDoNotFilterFlag() { 
+  ourDoNotFilterFlag=true;
+}
+
+bool OAAnalInfo::getDoNotFilterFlag() { 
+  return ourDoNotFilterFlag;
 }
 
 //***************************************************************************
@@ -298,7 +308,9 @@ CreateCFG(PU_Info* pu, OA::OA_ptr<OA::CFG::EachCFGInterface> cfgeach,
 
 // Create OA analyses
 void
-CreateOAAnalInfo(PU_Info* pu, PUToOAAnalInfoMap* inter, OAAnalInfo* x)
+CreateOAAnalInfo(PU_Info* pu, 
+		 PUToOAAnalInfoMap* inter, 
+		 OAAnalInfo* x)
 {
   OA::ProcHandle proc((OA::irhandle_t)pu);
   OA::OA_ptr<Open64IRInterface> irIF = inter->GetIRInterface();
@@ -355,7 +367,7 @@ CreateOAAnalInfo(PU_Info* pu, PUToOAAnalInfoMap* inter, OAAnalInfo* x)
   OA::OA_ptr<OA::XAIF::ManagerStandard> udmanXAIF;
   udmanXAIF = new OA::XAIF::ManagerStandard(irIF);
   OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchainsXAIF 
-    = udmanXAIF->performAnalysis(proc, cfg, udduchains);
+    = udmanXAIF->performAnalysis(proc, cfg, udduchains,OAAnalInfo::getDoNotFilterFlag());
   if (0) { udduchainsXAIF->dump(std::cout, irIF); }
   
   x->SetUDDUChainsXAIF(udmanXAIF, udduchainsXAIF);

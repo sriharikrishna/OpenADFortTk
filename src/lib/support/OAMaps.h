@@ -215,6 +215,10 @@ public:
 			 OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> x) 
     { udmanXAIF = m; udduchainsXAIF = x; }
   
+  static void setDoNotFilterFlag();
+
+  static bool getDoNotFilterFlag();
+
 private:
   OA::OA_ptr<OA::Alias::ManagerAliasMapBasic> aliasman;
   OA::OA_ptr<OA::Alias::AliasMap> alias;
@@ -233,6 +237,13 @@ private:
 
   OA::OA_ptr<OA::XAIF::ManagerStandard> udmanXAIF;
   OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchainsXAIF;
+
+  /** 
+   * a flag to pass on to the OA analysis 
+   * whether or not to filter information 
+   * per basic block
+   */
+  static bool ourDoNotFilterFlag;
 };
 
 //***************************************************************************

@@ -46,9 +46,11 @@ static const char* usage_details =
 "  -V, --version       print version information\n"
 "  -h, --help          print this help\n"
 "  -s, --simpleLoop    force simple loop property on all loop constructs\n"
+"  -n, --noFilter      do not filter ud/du chains by current basic block\n"
 "      --debug [lvl]   debug mode at level `lvl'\n";
 
 bool Args::ourSimpleLoopFlag=false;   // default: done't force it
+bool Args::ourDoNotFilterFlag=false;   // default: filter it
 
 #define CLP CmdLineParser
 
@@ -59,6 +61,7 @@ CmdLineParser::OptArgDesc Args::optArgs[] = {
   { 'V', "version",     CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 'h', "help",        CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 's', "simpleLoop",  CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
+  { 'n', "noFilter",    CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
   {  0 , "debug",       CLP::ARG_OPT,  CLP::DUPOPT_CLOB, NULL },
   CmdLineParser::OptArgDesc_NULL
 };
@@ -160,6 +163,9 @@ Args::Parse(int argc, const char* const argv[])
     }
     if (parser.IsOpt("simpleLoop")) { 
       ourSimpleLoopFlag = true; 
+    }
+    if (parser.IsOpt("noFilter")) { 
+      ourDoNotFilterFlag = true; 
     }
     
     // Check for required arguments

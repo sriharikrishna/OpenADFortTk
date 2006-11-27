@@ -67,7 +67,10 @@ public:
   
   // force simple loop construct
   static bool ourSimpleLoopFlag;
-  
+
+  // do not filter uddu chains by basic block
+  static bool ourDoNotFilterFlag; 
+
 private:
   void Ctor();
 

@@ -10,6 +10,7 @@
 #include "whirl2xaif.h"
 #include "wn2xaif.h"
 #include "st2xaif.h"
+#include "Args.h"
 
 namespace whirl2xaif { 
 
@@ -43,6 +44,9 @@ namespace whirl2xaif {
     using namespace OA::CallGraph;
     Diag_Set_Phase("WHIRL to XAIF: translate IR");
     if (!pu_forest) { return; }
+    if (Args::ourDoNotFilterFlag) { 
+      OAAnalInfo::setDoNotFilterFlag();
+    }
     // -------------------------------------------------------
     // 1. Initialization (Much of this information must be collected
     // here because it is part of the CallGraph instead of a
