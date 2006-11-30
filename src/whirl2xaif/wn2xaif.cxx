@@ -1433,7 +1433,8 @@ namespace whirl2xaif {
   static void 
   xlate_LoopInitialization(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   {
-    xos << xml::BegElem("xaif:Initialization");
+    xos << xml::BegElem("xaif:Initialization")
+	<< xml::Attr("statement_id", ctxt.findWNId(wn));
     ctxt.createXlationContext(XlationContext::ASSIGN); // implicit for this element
     TranslateWN(xos, wn, ctxt);
     ctxt.deleteXlationContext();
@@ -1444,14 +1445,13 @@ namespace whirl2xaif {
   static void 
   xlate_LoopUpdate(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   {
-    xos << xml::BegElem("xaif:Update"); 
+    xos << xml::BegElem("xaif:Update")
+	<< xml::Attr("statement_id", ctxt.findWNId(wn));
     ctxt.createXlationContext(XlationContext::ASSIGN); // implicit for this element
     TranslateWN(xos, wn, ctxt);
     ctxt.deleteXlationContext();
     xos << xml::EndElem;
   }
-
-
 
   // GetLoopReversalType:
   static const char*
