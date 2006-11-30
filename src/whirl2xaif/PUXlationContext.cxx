@@ -182,7 +182,7 @@ namespace whirl2xaif {
 	FORTTK_MSG(2,"PUXlationContext::setWNToIdMap: already set to the same");
       }
       else { 
-	FORTTK_MSG(2,"PUXlationContext::setWNToIdMap: already set to " 
+	FORTTK_MSG(2,"PUXlationContext::setWNToIdMap: already set to "
 		    << myWN2idMapP  
 		    << " new " 
 		    << aWNToWNIdMapP);
@@ -197,7 +197,24 @@ namespace whirl2xaif {
     if (!wnexpr) 
       FORTTK_DIE("PUXlationContext::findUDDUChainId: null pointer passed");
     OA::MemRefHandle h((OA::irhandle_t)wnexpr);
-    return myUdduchains->getUDDUChainId(h);
+    int duudKey=myUdduchains->getUDDUChainId(h);
+    if (duudKey==0) {
+      // for character arrays there is some confusion if we should refer to the 
+      // ARRAY node or the child LDA node. In OA the information may be 
+      // associated with the parent ARRAY node
+      std::ostringstream ostr;
+      ostr << "JU: PUXlationContext::findUDDUChainId: 0 du_ud key for ref_wn: " << (int)wnexpr << ": "; 
+      Open64IRInterface::DumpWN(wnexpr, ostr);
+      ostr << " trying parent WN " << std::endl; 
+      FORTTK_MSG(1,ostr.str().c_str()); 
+      WN* parentWN_p=findParentWN(wnexpr);
+      OA::MemRefHandle parenth((OA::irhandle_t)parentWN_p);
+      duudKey=myUdduchains->getUDDUChainId(parenth);
+      if (duudKey==0) { 
+	FORTTK_MSG(0,"JU: PUXlationContext::findUDDUChainId: 0 du_ud key for parent ref_wn: " << (int)wnexpr); 
+      } 
+    }
+    return duudKey;
   }
 
   OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> PUXlationContext::getUDDUChains() const { 
