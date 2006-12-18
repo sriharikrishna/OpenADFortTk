@@ -834,7 +834,9 @@ Open64IRInterface::dump(OA::MemRefHandle h, std::ostream& os)
     if (WN_kid_count(wn) > 1) {
       DumpWN(WN_kid1(wn), os); // left-hand-side (FIXME: add offset!)
     } else {
+      std::cout << "before Open64IRInterface::dump" << std::endl;  
       std::string n = toString(OA::SymHandle((OA::irhandle_t)WN_st(wn)));
+      std::cout << "after Open64IRInterface::dump" << std::endl;
       os << n;
     } 
   } else {
@@ -918,7 +920,7 @@ bool Open64IRInterface::isRefParam(OA::SymHandle sym)
     retval = true; // parameter: intent(out)
   }
   else if (ST_is_intent_in_argument(st)) {
-    retval = false; // parameter: intent(in)
+    retval = true; // parameter: intent(in)
     //return true; // when modeling reference params with ptrs, on 1/9/06
                  // Jean came up with example where need to model intent(in)
                  // as pass by reference, MMS
@@ -1586,7 +1588,7 @@ Open64IRInterface::getMemRefIterator(OA::StmtHandle h)
         }
     }
  
-    findAllMemRefsAndMapToMemRefExprs(h,(WN*)h.hval(),0,0);
+    findAllMemRefsAndMapToMemRefExprs(h,(WN*)h.hval(),0);
   }
 
   OA::OA_ptr<OA::MemRefHandleIterator> retval;
@@ -1605,9 +1607,12 @@ Open64IRInterface::getMemRefIterator(OA::StmtHandle h)
 // Also map each MemRefHandle to a set of MemRefExprs in sMemRef2mreSetMap
 // and map each stmt to all MemRefHandles for that statement 
 // in sStmt2allMemRefsMap.
+
+
 void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
-        WN* wn, unsigned lvl, unsigned flags)
+        WN* wn, unsigned lvl)
 {
+   
   if (debug) {
       std::cout << "======== findAllMemRefsAndMapToMemRefExprs" << std::endl;
       std::cout << "\tWN =";
@@ -1621,8 +1626,6 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
   // flags to pass down recursive call stack
   enum { 
     flags_NONE              = 0x00000000,
-    flags_EXPECT_ARRAY_BASE = 0x00000001, 
-    flags_EXPECT_FUNC_BASE  = 0x00000002, 
 
     flags_HAVE_STORE_PARENT = 0x00000004, 
 
@@ -1630,7 +1633,6 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
  
     flags_EXPECT_STRCT_BASE = 0x00000010,
 
-    flags_INTRINSIC_PARAM = 0x00000020
   };
 
 
@@ -1646,7 +1648,7 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
   if (!wn) { return; }
   
   OPERATOR opr = WN_operator(wn);
-	
+    
   // -------------------------------------------------------
   // Gather information about this mem-ref
   // -------------------------------------------------------
@@ -1680,17 +1682,12 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
   // Determination of these is the same for most, exceptions dealt with
   // in the big switch stmt
   MemRefExpr::MemRefType hty;
-  if (lvl==0 && ((flags & flags_HAVE_STORE_PARENT) || OPERATOR_is_store(opr))) {
+  if (lvl==0 && (OPERATOR_is_store(opr))) {
       hty = MemRefExpr::DEF;
   } else {
       hty = MemRefExpr::USE;
   }
   bool isAddrOf = false;
-  // if in the parent we determined that this was a pass
-  // by reference actual then need to take the address
-  if (flags & flags_MODEL_PASS_BY_REF) { 
-      isAddrOf = true;
-  }
   
   // -------------------------------------------------------
   // Gather information from children and generate MRE(s)
@@ -1699,92 +1696,651 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
   // Large switch statement based on operator that current node represents
   switch (opr) {
     // NOTE: MLOAD, MSTORE?  FIXME?: we don't handle these, should we?
-    
+
+    case OPR_MPY:
+     {
+         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
+     }
+     break;
+
+    case OPR_ADD:
+     {
+         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
+     }
+     break;
+
+    case OPR_SUB:
+     {
+         
+         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
+     }
+     break;
+
+    case OPR_DIV:
+     {
+         
+         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
+     }
+     break;
+
+    case OPR_CVT:
+     {
+         
+         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
+     }
+     break;
+
+    case OPR_LE:
+     {
+         // arrays5 
+         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
+     }
+     break;
+
+    case OPR_GE:
+     {
+         // arrays5
+         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
+     }
+     break;
+
+    case OPR_EQ:
+     {
+         // functions1 
+         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
+     }
+     break;
+
+    case OPR_TRUNC:
+     {
+         
+         // functions1
+         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
+     }
+     break;
+
+     case OPR_LIOR:
+     {
+
+         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
+     }
+     break;
+
+     case OPR_RECIP:
+     {
+         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
+     }
+     break;
+
+     case OPR_PAREN:
+     {
+         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
+     }
+     break;
+
+     case OPR_NEG:
+     {
+         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
+     }
+     break;
+     
     case OPR_LDID:
     case OPR_LDBITS: 
-      createAndMapNamedRef(stmt, wn, WN_st(wn), isAddrOf, fullAccuracy, hty);
-      break;
-
-    case OPR_LDA:
-    case OPR_LDMA:
-      if (!isFortran) { isAddrOf = true; }
-      // if accessing an array the no address taken
-      // FIXME: what if indirectly accessing an array in C?
-//      if ((flags & flags_EXPECT_ARRAY_BASE)) {
-//        ref_ty = (TY_Is_Pointer(ref_ty)) ? TY_pointed(ref_ty) : base_ty;
-//        isAddrOf = false; // implicitly dereference the address
-//        fullAccuracy = false;  // don't know what part of array referencing
-//      }
-      createAndMapNamedRef(stmt, wn, WN_st(wn), isAddrOf, fullAccuracy, hty);
-      break;
-
-    case OPR_ILOAD:
-    case OPR_ILOADX:
-      assert(OPERATOR_is_load(opr));
-      // don't need to put in a dereference if something is an array
-      // won't have MemRefHandle for this wn but will for array access
-      // the array access should be given the same level 
-      // FIXME: does WHIRL represent array accesses to int ptrs in C this way?
-      if ((WN_operator(WN_kid0(wn)) == OPR_ARRAY) 
-          || (WN_operator(WN_kid0(wn)) == OPR_ARRAYEXP)  
-          || (WN_operator(WN_kid0(wn)) == OPR_STRCTFLD)  
-          || (WN_operator(WN_kid0(wn)) == OPR_LDA) )
       {
-          findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid0(wn), lvl, flags); 
-          // do not create MRE for this wn
+          
+         // 1. createAndMapNamedRef with hty=USE
+         // 2. createAndMapNamedRef will no longer treat arrays any different
+         //    than scalars.  
+         // 3. If a variables is a reference parameter then a 
+         //    deref is created. 
+         // 4. How About fullAccuracy ?  Should it be fullAccuracy = full ?                      
+         isAddrOf = false;
+         hty = MemRefExpr::USE;
+         fullAccuracy = true;
+       
+         createAndMapNamedRef(stmt, wn, WN_st(wn), isAddrOf, fullAccuracy, hty);
+      } 
+      break;
 
-      // FIXME: don't create MRE in this case?
-      } else if ((flags & flags_EXPECT_ARRAY_BASE) 
-	             || (flags & flags_EXPECT_FUNC_BASE)) {
-          // do nothing?
-
-      // actually make this a MemRefHandle and create a deref
-      } else {
-          // first recur on any sub memory reference
-          subMemRef = WN_kid0(wn);
-          findAllMemRefsAndMapToMemRefExprs(stmt,subMemRef, lvl+1, flags); 
-          createAndMapDerefs(stmt,wn, subMemRef, hty);
+    case OPR_STID:
+    case OPR_STBITS:
+      {  
+          
+         // 1. createAndMapNamedRef with hty=DEF
+         // 2. recurse on RHS
+         // 3. How About fullAccuracy ? Should it be fullAccuracy = full ?
+         assert(OPERATOR_is_store(opr));
+         hty = MemRefExpr::DEF;
+         fullAccuracy = true;
+         createAndMapNamedRef(stmt, wn, WN_st(wn), isAddrOf, fullAccuracy, hty );
+         findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid0(wn),lvl); 
       }
       break;
 
-    // At this point an array reference looks something like this for X(1):
-    //  U8ARRAY 1 16                           <-- MRE associated with this wn
-    //   U8U8LDID 0 <2,1,X> T<32,anon_ptr.,8>  
-    //   I4INTCONST 2 (0x2)
-    //   I4INTCONST 1 (0x1)
-    // Therefore at ARRAY don't actually create an MRE.
     case OPR_ARRAY:
-    case OPR_ARRSECTION: 
+    case OPR_ARRSECTION:
       {
-        // get symbol for array
-        ST* st = findBaseSymbol(WN_kid0(wn));
-        fullAccuracy = false;
-        createAndMapNamedRef(stmt, wn, st, isAddrOf, fullAccuracy, hty);
+         // 1. if topMemRefHandle is LDA  (Patterns 4, 
+         //     - steal the MemRefExpr and set addressOf to false 
+         //     (similar to ILOAD logic)
+         //     - set partial accuracy on stolen MemRefExpr
+         // 2. else
+         //     - changes MemRefExpr for topMemRefHandle to partial accuracy
+       
+         findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid0(wn),lvl);
 
-        // reset flags and lvl for index expressions because they are separate
-        flags = 0; lvl = 0;
-        // index expr are dim+1 ... 2*dim, dim = WN_kid_count(wn)-1 / 2
-        for (INT kidno=(WN_kid_count(wn)-1)/2 +1; 
-             kidno<=WN_kid_count(wn)-1; kidno++) 
-        {
-          findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl,flags);
-        }
-      }
-      break;
+         OA::MemRefHandle m = findTopMemRefHandle(wn);
+         WN* subMemRefExpr = WN_kid0(wn);
+         if( WN_operator(subMemRefExpr) == OPR_LDA ) {
 
-    case OPR_MLOAD:
-    case OPR_MSTORE:
-      {
-        ST* st = findBaseSymbol(WN_kid0(wn));
-        fullAccuracy = false;
-        createAndMapNamedRef(stmt, wn, st, isAddrOf, fullAccuracy, hty);
+           OA_ptr<MemRefExpr> newmre;
+           newmre = *(sMemref2mreSetMap[m].begin());
+           sMemref2mreSetMap.erase(m);
+           sStmt2allMemRefsMap[stmt].erase(m);
+           newmre->setAddressTaken(false);
+           newmre->setAccuracy(false);
+           sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
+           sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+           
+         } else if(WN_operator(subMemRefExpr) == OPR_LDID ) {
+             OA_ptr<MemRefExpr> newmre;
+             newmre = *(sMemref2mreSetMap[m].begin());
+             sMemref2mreSetMap.erase(m);
+             sStmt2allMemRefsMap[stmt].erase(m);
+             newmre->setAccuracy(false);
+             sMemref2mreSetMap[m].insert(newmre);
+             sStmt2allMemRefsMap[stmt].insert(m);
+           
+         } 
+
+         // reset flags and lvl for index expressions because they 
+         // are separate
+         //flags = 0; 
+         lvl = 0;
+         // index expr are dim+1 ... 2*dim, dim = WN_kid_count(wn)-1 / 2
+         for (INT kidno=(WN_kid_count(wn)-1)/2 +1;
+             kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
       }
       break;
 
     case OPR_ARRAYEXP:
-      findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid0(wn), lvl, flags); 
-      // don't actually create an MRE for this wn
-      return;
+      {
+        // 1. just recurse on kid0
+        // *. don't actually create an MRE for this wn
+        findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid0(wn), lvl);
+      }
+      break;
+
+    case OPR_LDA:
+    case OPR_LDMA:
+      {
+          
+        // if accessing an array the no address taken
+        // FIXME: what if indirectly accessing an array in C?
+        // if ((flags & flags_EXPECT_ARRAY_BASE)) {
+        // ref_ty = (TY_Is_Pointer(ref_ty)) ? TY_pointed(ref_ty) : base_ty;
+        // isAddrOf = false; // implicitly dereference the address
+        // fullAccuracy = false;  // don't know what part of array referencing
+        // }
+
+        // 1. creates NamedRef with createNamedRef 
+        // 2. then does an addressOf set
+        // *. LDA never shows up on a symbol for a reference parameter.
+        createAndMapNamedRef(stmt, wn, WN_st(wn), isAddrOf, fullAccuracy, hty);
+        if (!isFortran) { isAddrOf = true; }
+      }
+      break;
+
+    case OPR_ILOAD:
+    case OPR_ILOADX:
+      {
+        // 1. If ILOAD has a LDID with sym of type ARRAY or STRUCT, ARRAY, 
+        //    ARRSECTION, or STRCTFIELD  topMemRefHandle, then it steals the 
+        //    MemRefExpr from the topMemRefHandle.  
+        // 2. For LDA it steals and sets the addressOf to false.  
+        // 3. For everything else (LDID with a scalar sym type) it creates a 
+        //    Deref and points to topMemRefHandle's MemRefExpr.
+        
+          // default settings 
+          hty = MemRefExpr::USE;
+
+          // recurse on LHS
+          WN *subMemRef = WN_kid0(wn);
+          findAllMemRefsAndMapToMemRefExprs(stmt,subMemRef, lvl+1);
+
+          // get top MemRefHandle
+          OA::MemRefHandle m = findTopMemRefHandle(wn);
+
+          // if subMemRef is LDID with a scalar sym type and it is
+          // NOT a reference formal, 
+          if ( WN_operator(subMemRef) == OPR_LDID && 
+               ! isRefParam( SymHandle((irhandle_t)WN_st((WN *)m.hval()))) 
+               && TY_kind(ST_type(WN_st((WN *)m.hval()))) == KIND_SCALAR ) {
+              
+              // create a Deref and points to topMemRefHandle's MemRefExpr.
+              createAndMapDerefs(stmt,wn, (WN*)m.hval(), isAddrOf, 
+                      fullAccuracy, hty);
+
+          } else if ((WN_operator(subMemRef) == OPR_ARRAY) ||
+              (WN_operator(subMemRef) == OPR_ARRSECTION) ||
+              (WN_operator(subMemRef) == OPR_ARRAYEXP) ||
+              (WN_operator(WN_kid0(wn)) == OPR_STRCTFLD) ||
+              (WN_operator(WN_kid0(wn)) == OPR_LDA))
+          {
+
+             if( WN_operator((WN *)m.hval()) == OPR_LDID ) {
+               // LDID
+               OA_ptr<MemRefExpr> newmre;
+               newmre = *(sMemref2mreSetMap[m].begin());
+               sMemref2mreSetMap.erase(m);
+               sStmt2allMemRefsMap[stmt].erase(m);
+               newmre->setMemRefType(hty);
+               sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
+               sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+
+             } else {
+               // LDA
+               OA_ptr<MemRefExpr> newmre;
+               newmre = *(sMemref2mreSetMap[m].begin());
+               sMemref2mreSetMap.erase(m);
+               sStmt2allMemRefsMap[stmt].erase(m);
+               newmre->setMemRefType(hty);
+               newmre->setAddressTaken(false);
+               sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
+               sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+
+             }
+
+          }
+
+       } 
+
+       break;
+
+    case OPR_ISTOREX:
+    case OPR_ISTBITS:
+    case OPR_ISTORE:
+       {
+           
+         // 1. recurse on LHS
+         // 2. If ISTORE has a LDID with sym of type ARRAY or STRUCT, ARRAY,
+         //    ARRSECTION, or STRCTFIELD  topMemRefHandle, then it steals the
+         //    MemRefExpr from the topMemRefHandle.
+         // 3. For LDA it steals and sets the addressOf to false.
+         // 4. For everything else (LDID with a scalar sym type) it creates a
+         //    Deref and points to topMemRefHandle's MemRefExpr.
+         // 5. recurse on RHS
+
+          assert(OPERATOR_is_store(opr));
+          // default settings 
+          hty = MemRefExpr::DEF;
+
+
+          // recurse on LHS
+          WN *subMemRef = WN_kid1(wn);
+          findAllMemRefsAndMapToMemRefExprs(stmt,subMemRef, lvl+1);
+
+          // get top MemRefHandle 
+          OA::MemRefHandle m = findTopMemRefHandle(wn);
+
+          // if subMemRef is LDID with a scalar sym type and it is
+          // NOT a reference formal,
+          if ( WN_operator(subMemRef) == OPR_LDID &&
+               ! isRefParam( SymHandle((irhandle_t)WN_st((WN *)m.hval()))) 
+               && TY_kind(ST_type(WN_st((WN *)m.hval()))) == KIND_SCALAR ) {
+
+              // create a Deref and points to topMemRefHandle's MemRefExpr.
+              createAndMapDerefs(stmt,wn, (WN*)m.hval(), isAddrOf, 
+                      fullAccuracy, hty);
+
+          }
+          if ((WN_operator(subMemRef) == OPR_ARRAY) ||
+              (WN_operator(subMemRef) == OPR_ARRSECTION) ||
+              (WN_operator(subMemRef) == OPR_ARRAYEXP) ||
+              (WN_operator(WN_kid0(wn)) == OPR_STRCTFLD) ||
+              (WN_operator(WN_kid0(wn)) == OPR_LDA))
+          {
+            
+             if( WN_operator((WN *)m.hval()) == OPR_LDID ) {
+               // LDID
+               OA_ptr<MemRefExpr> newmre;
+               newmre = *(sMemref2mreSetMap[m].begin());
+               sMemref2mreSetMap.erase(m);
+               sStmt2allMemRefsMap[stmt].erase(m);
+               newmre->setMemRefType(hty);
+               sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
+               sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+
+             } else {
+               // LDA
+               OA_ptr<MemRefExpr> newmre;
+               newmre = *(sMemref2mreSetMap[m].begin());
+               sMemref2mreSetMap.erase(m);
+               sStmt2allMemRefsMap[stmt].erase(m);
+               newmre->setAddressTaken(false);
+               newmre->setMemRefType(hty);
+               sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
+               sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+
+             } 
+             
+          } 
+
+          // Recurse on RHS
+          findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid0(wn),lvl+1);
+
+        }
+        break;
+
+    case OPR_INTRINSIC_CALL:
+    case OPR_CALL:
+        {
+         
+          /*  
+          // 1. change the MemRefExpr for all of the parameters' 
+          //    topMemRefHandle 
+          //    by composing it with a Deref.  It should be a full accuracy 
+          //    Deref so that the addressOf computations cancel out.
+          //    ??? I did not understand why do we need Deref here ?
+
+          // recur on parameters (kids 0 ... n-1) to find other MemRefHandles
+          for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++) {
+
+            WN* subMemRef = WN_kid(wn,kidno);
+            findAllMemRefsAndMapToMemRefExprs(stmt, subMemRef, lvl+1, flags);
+            //OA::MemRefHandle m = findTopMemRefHandle(subMemRef);
+            //fullAccuracy = true;
+            //createAndMapDerefs(stmt,wn, (WN*)m.hval(), isAddrOf, 
+            //fullAccuracy, hty);
+          }
+          */
+
+
+
+          
+          for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++) {
+
+            WN* subMemRef = WN_kid(wn,kidno);
+            findAllMemRefsAndMapToMemRefExprs(stmt, subMemRef, lvl+1);
+                
+             if (IntrinsicInfo::isIntrinsic(wn))  {
+                 // We are modeling intrinsic calls as pass by value.
+                 // get the topMemRefHandle for all kids
+                 // create a Deref and composeWith the MemRefExpr for
+                 // the top MemRefHandle, reassign the
+                 // new MemRefExpr to the top MemRefHandle.
+                 // let mre be the mre from the top MemRefHandle
+
+                 OA::MemRefHandle m = findTopMemRefHandle(subMemRef);
+                 if( m != MemRefHandle(0) ) {
+                 OA_ptr<MemRefExpr> mre;
+
+                 mre = *(sMemref2mreSetMap[m].begin());
+                 
+                 isAddrOf = false;
+                 fullAccuracy = true;
+                 hty = OA::MemRefExpr::USE;
+                 int numDerefs = 1;
+
+                 OA::OA_ptr<OA::Deref> deref_mre;
+                 OA::OA_ptr<OA::MemRefExpr> nullMRE;
+                 deref_mre = new OA::Deref( isAddrOf,
+                               fullAccuracy,
+                               hty,
+                               nullMRE,
+                               numDerefs);
+                 OA::OA_ptr<OA::MemRefExpr> tmp_mre = mre->clone();
+                 OA::OA_ptr<OA::MemRefExpr> composed_mre;
+                 composed_mre = deref_mre->composeWith(tmp_mre);
+
+                 if(mre->isaUnnamed()) {
+
+                    WN* paramnode = (WN *)m.hval();
+                    WN* paramkid =  WN_kid0(paramnode);
+    
+                    sMemref2mreSetMap.erase(m);
+                    sStmt2allMemRefsMap[stmt].erase(m);
+
+                    OA::MemRefHandle param_mh = findTopMemRefHandle(paramkid);
+                    OA_ptr<MemRefExpr> sub_mre;
+
+                    sub_mre = *(sMemref2mreSetMap[param_mh].begin());
+                    
+                    if(sub_mre->isaUnnamed()) {
+                       sMemref2mreSetMap.erase(param_mh);
+                       sStmt2allMemRefsMap[stmt].erase(param_mh);
+                    }
+
+                 } else {
+
+                   sMemref2mreSetMap[m].erase(mre);
+                   sStmt2allMemRefsMap[stmt].erase(m);
+                   sMemref2mreSetMap[m].insert(composed_mre);
+                   sStmt2allMemRefsMap[stmt].insert(m);
+
+                 }
+                 
+               }
+             }
+           }
+
+        }
+        break;
+
+     case OPR_PARM:
+        {
+         
+            // 1. If there is no topMemRefHandle, then will need to make one 
+            //    and do the UnnamedRef thing which is now in the default case
+            // 2. else takes the MemRefExpr away from the topMemRefHandle and 
+            //    sets the addressTaken
+            findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid0(wn), lvl+1);
+            
+
+            OA::MemRefHandle m = findTopMemRefHandle(wn);
+            //WN*  subMemRef = (WN*)m.hval();
+
+
+            if( m == OA::MemRefHandle(0) ) {
+                  bool addressTaken = false;
+                  bool accuracy = true;
+                  OA::MemRefExpr::MemRefType mrType = OA::MemRefExpr::DEF;
+                  OA::OA_ptr<OA::MemRefExpr> lhs_tmp_mre;
+                  lhs_tmp_mre = new OA::UnnamedRef(addressTaken, accuracy, 
+                          mrType, stmt);
+
+                  sMemref2mreSetMap[MemRefHandle((irhandle_t)WN_kid0(wn))].insert(lhs_tmp_mre);
+                  sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)WN_kid0(wn)));  
+
+                  OA::OA_ptr<OA::MemRefExpr> tmp_mre;
+                  OA::OA_ptr<OA::MemRefExpr> opr_param_mre;
+                  tmp_mre = *(sMemref2mreSetMap[MemRefHandle((irhandle_t)WN_kid0(wn))].begin());
+
+                  opr_param_mre = tmp_mre->clone()->setAddressTaken();
+                  opr_param_mre->setMemRefType(OA::MemRefExpr::USE);
+                  sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(opr_param_mre);
+                  sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+                  
+                  //sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(lhs_tmp_mre);
+                  //sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+            } else {
+                OA_ptr<MemRefExpr> newmre;
+                WN* tempWN = (WN *)m.hval(); 
+         
+                if( WN_operator(tempWN) == OPR_ARRAY ) {
+                    WN* kidWN = WN_kid0(tempWN);
+                    if( isRefParam( SymHandle((irhandle_t)WN_st( kidWN )) ) )
+                    {
+                        
+                      isAddrOf = false;
+                      fullAccuracy = true; 
+                      hty = OA::MemRefExpr::USE; 
+                      newmre =  new NamedRef(isAddrOf, fullAccuracy, hty, 
+                                SymHandle((irhandle_t)WN_st((WN *)m.hval())) );
+                      sMemref2mreSetMap.erase(m);
+                      sStmt2allMemRefsMap[stmt].erase(m);
+                      sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
+                      sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+                    } 
+                    else {
+                      newmre = *(sMemref2mreSetMap[m].begin());
+                      sMemref2mreSetMap.erase(m);
+                      sStmt2allMemRefsMap[stmt].erase(m);
+                      newmre->setAddressTaken(true);
+                      sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
+                      sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+                    } 
+                    
+                 } else if( WN_operator( (WN *)m.hval() ) == OPR_LDID) {
+                    if( isRefParam( SymHandle((irhandle_t)WN_st( (WN *)m.hval() )) ) )
+                    {
+                      if( WN_operator(WN_kid0(wn)) == OPR_ILOAD )
+                      {
+                          
+                          
+                         if(TY_kind(ST_type(WN_st((WN *)m.hval()))) == KIND_SCALAR)                      { 
+                           isAddrOf = false;
+                         } else {
+                             
+                           isAddrOf = false;
+                         }
+                         fullAccuracy = true; 
+                         hty = OA::MemRefExpr::USE; 
+                         newmre =  new NamedRef(isAddrOf, fullAccuracy, hty, SymHandle((irhandle_t)WN_st((WN *)m.hval())) ); 
+                         sMemref2mreSetMap.erase(m);        
+                         sStmt2allMemRefsMap[stmt].erase(m);   
+                         sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);         
+                         sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));                            
+                      } else if ( WN_operator(WN_kid0(wn)) == OPR_ARRAY ) {
+                          
+                         newmre = *(sMemref2mreSetMap[m].begin());  
+                         sMemref2mreSetMap.erase(m);   
+                         sStmt2allMemRefsMap[stmt].erase(m); 
+                         newmre->setAddressTaken(true);
+                         sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre); 
+                         sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+                      } else {
+                          
+                         isAddrOf = false;
+                         fullAccuracy = true;
+                         hty = OA::MemRefExpr::USE;
+                         newmre =  new NamedRef(isAddrOf, fullAccuracy, hty,
+                                SymHandle((irhandle_t)WN_st((WN *)m.hval())) );
+                         sMemref2mreSetMap.erase(m);
+                         sStmt2allMemRefsMap[stmt].erase(m);
+                         sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
+                         sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+
+                      }
+                      
+                    } else {
+                        
+                      newmre = *(sMemref2mreSetMap[m].begin());
+                      sMemref2mreSetMap.erase(m);
+                      sStmt2allMemRefsMap[stmt].erase(m);
+                      newmre->setAddressTaken(true);
+                      sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
+                      sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+                    }
+                  
+                 } else if( WN_operator( (WN *)m.hval() ) == OPR_ILOAD ) {
+                      newmre = *(sMemref2mreSetMap[m].begin());
+                      sMemref2mreSetMap.erase(m);
+                      sStmt2allMemRefsMap[stmt].erase(m);
+                      newmre->setAccuracy(true);
+                      newmre->setAddressTaken(true);
+                      sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
+                      sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+                 } 
+            }
+        } 
+        break;
+
+    case OPR_MLOAD:
+    case OPR_MSTORE:
+        {
+            assert(0);
+        }     
+      break;
+
+    // function references
+    case OPR_ICALL:
+    case OPR_VFCALL:
+        { 
+            assert(0);
+        }
+      break;
+
 
     case OPR_STRCTFLD:
       //  U8U8STRCTFLD T<11,.predef_F8,8> T<29,MYTYPE,8> <field_id:1> <--MRE
@@ -1793,6 +2349,7 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
       // what comes below refers to x via an LDA
       // unless x is a pointer we don't want to see it. 
       {
+          
         // get symbol for array
         ST* st = findBaseSymbol(WN_kid0(wn));
         fullAccuracy = false;
@@ -1800,102 +2357,31 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
       }
       break;
 
-    case OPR_PARM:
-      // this operator just indicates an actual param, do not create
-      // a MemRefHandle for it, however determine if the parameter is
-      // pass by reference and if so set flags for its child
-
-      if(isPassByReference(wn) && !(flags & flags_INTRINSIC_PARAM) )
-      {
-        flags |= flags_MODEL_PASS_BY_REF;
-      }    
-      findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid0(wn), lvl+1, flags); 
-      return;
-
-    // function references
-    case OPR_ICALL:
-    case OPR_VFCALL:
-      flags |= flags_EXPECT_FUNC_BASE;
-      // kid n-1 is the address of the procedure being called
-      subMemRef = WN_kid(wn,WN_kid_count(wn)-1);
-      findAllMemRefsAndMapToMemRefExprs(stmt, subMemRef, lvl+1,flags);
-      // create MRE for this guy
-      createAndMapDerefs(stmt, wn, subMemRef, hty);
-      
-      // recur on parameters (kids 0 ... n-2) to find other MemRefHandles
-      for (INT kidno=0; kidno<=WN_kid_count(wn)-2; kidno++) {
-          findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl+1,flags);
-      }
-      break;
-      
-    // Store operators
-    case OPR_STID: 
-    case OPR_STBITS:
-      assert(OPERATOR_is_store(opr));
-      createAndMapNamedRef(stmt, wn, WN_st(wn), isAddrOf, fullAccuracy, hty );
-      findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid0(wn),lvl,0); // recur on RHS
-      break;
-
-    // Indirect store operator
-    case OPR_ISTOREX:
-    case OPR_ISTBITS:
-    case OPR_ISTORE:
-      assert(OPERATOR_is_store(opr));
-
-      // don't need to put in a dereference if something is an array
-      // won't have MemRefHandle for this wn but will for array access
-      // the array access should be given the same level and an indication
-      // that it is from a store parent
-      // FIXME: does WHIRL represent array accesses to int ptrs in C this way?
-      if ((WN_operator(WN_kid1(wn)) == OPR_ARRAY)
-          || (WN_operator(WN_kid1(wn)) == OPR_ARRAYEXP)   
-          || (WN_operator(WN_kid1(wn)) == OPR_STRCTFLD) ) 
-      {
-          flags |= flags_HAVE_STORE_PARENT;
-          findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid1(wn), lvl, flags); 
-
-      // actually make this a MemRefHandle and create a deref
-      } else {
-          // first recur on any sub memory reference
-          WN *subMemRef = WN_kid1(wn);
-          findAllMemRefsAndMapToMemRefExprs(stmt,subMemRef, lvl+1, flags); 
-          createAndMapDerefs(stmt, wn, subMemRef, hty);
-     }
-
-      // recur on RHS
-      findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid0(wn),lvl,0); 
-      break;
-     
-    case OPR_INTRINSIC_CALL:
-    case OPR_CALL:
-       if (IntrinsicInfo::isIntrinsic(wn))  {
-           flags |= flags_INTRINSIC_PARAM;
-       }
-       // recur on parameters (kids 0 ... n-1) to find other MemRefHandles
-       for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++) {
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl+1,flags);
-       }
-       break;
-
     case OPR_BLOCK:
     case OPR_REGION:
+      {
+      }
       return; // Do not recur into BLOCKs
 
     case OPR_DO_LOOP:
-      // loop test expression          
-      findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid(wn,2),lvl,0);
+      {
+         // loop test expression          
+         findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid(wn,2),lvl);
+      }
       break;
 
 
     // General recursive case
     default:
+
       // Special case: examine only condition of control flow statements
       if (OPERATOR_is_scf(opr) || OPERATOR_is_non_scf(opr)) {
-          findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid(wn,0),lvl,0);
+          findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid(wn,0),lvl);
 
       // General case: recur on parameters (kids 0 ... n-1) 
       } else {
 
+          /*
         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++) {
 
             // any operations that don't have an lval will go to this 
@@ -1917,8 +2403,9 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
              sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
            }
            findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid(wn,kidno),lvl+1,flags);
+           
         }
-
+          */
       }
 
       // some asserts to catch cases I don't expect to land here
@@ -1928,6 +2415,10 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
   }
 
 }
+
+
+
+
 
 ST* Open64IRInterface::findBaseSymbol(WN* wn)
 {
@@ -1951,20 +2442,25 @@ ST* Open64IRInterface::findBaseSymbol(WN* wn)
   return retval;
 }
 
-void Open64IRInterface::createAndMapDerefs(OA::StmtHandle stmt, 
-    WN* wn, WN* subMemRef, OA::MemRefExpr::MemRefType hty)
-{   
+
+
+void Open64IRInterface::createAndMapDerefs(OA::StmtHandle stmt,
+    WN* wn, WN* subMemRef, bool isAddrOf, bool fullAccuracy,
+    OA::MemRefExpr::MemRefType hty)
+{
     using namespace OA;
     // get all MREs for subMemRef
     set<OA_ptr<MemRefExpr> >::iterator mreIter;
     for (mreIter=sMemref2mreSetMap[MemRefHandle((irhandle_t)subMemRef)].begin();
          mreIter!=sMemref2mreSetMap[MemRefHandle((irhandle_t)subMemRef)].end();
          mreIter++ )
-    {   
-        OA_ptr<MemRefExpr> submre = *mreIter; 
-        OA_ptr<MemRefExpr> mre; 
-        mre = new Deref(false, submre->hasFullAccuracy(), hty, submre, 1);
-
+    {
+        OA_ptr<MemRefExpr> submre = *mreIter;
+        OA_ptr<MemRefExpr> mre;
+        mre = new Deref(false, fullAccuracy, hty, submre, 1);
+        if (isAddrOf) {
+            mre = mre->setAddressTaken();
+        }
         sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(mre);
         sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
     }
@@ -1980,7 +2476,7 @@ OA::OA_ptr<OA::MemRefExpr> Open64IRInterface::convertSymToMemRefExpr(OA::SymHand
     hty = OA::MemRefExpr::USE;
 
     if (isRefParam(sym)) {
-          mre = new OA::NamedRef(isAddrOf, fullAccuracy, hty, sym);
+          mre = new OA::NamedRef(isAddrOf, true, hty, sym);
           mre = new OA::Deref(false, fullAccuracy, hty, mre, 1);
     } else {
           mre = new OA::NamedRef(isAddrOf, fullAccuracy, hty, sym);
@@ -2253,20 +2749,21 @@ Open64IRInterface::getIndepMemRefExprIter(OA::ProcHandle h)
         fullAccuracy = false;
         break;
       }
-      
-      if (isRefParam(sym)) {
 
-        if (isAddrOf==true) { // deref and addressOf cancel
-          isAddrOf = false;
-          mre = new OA::NamedRef(isAddrOf, fullAccuracy, hty, sym);
-        } else {
-          mre = new OA::NamedRef(isAddrOf,fullAccuracy,OA::MemRefExpr::USE,sym);
-          mre = new OA::Deref(false, fullAccuracy, hty, mre, 1);
-        }
+
+      // if the symbol is a reference parameter, then the MemRefExpr
+      // for an access to the symbol needs a deref
+      if (isRefParam(sym)) {
+        mre = new OA::NamedRef(false,true,OA::MemRefExpr::USE,sym);
+        mre = new OA::Deref(false, fullAccuracy, OA::MemRefExpr::USE, mre, 1);
       } else {
+        // one case where we end up here is when passing an array as a parameter
+        // another is if we are just accessing a scalar that is not a
+        // reference parameter
         mre = new OA::NamedRef(isAddrOf, fullAccuracy, hty, sym);
       }
 
+      
       indepList->push_back(mre);
     }
   }
@@ -2366,16 +2863,15 @@ Open64IRInterface::getDepMemRefExprIter(OA::ProcHandle h)
         break;
       }
 
+      // if the symbol is a reference parameter, then the MemRefExpr
+      // for an access to the symbol needs a deref
       if (isRefParam(sym)) {
-        
-        if (isAddrOf==true) { // deref and addressOf cancel
-          isAddrOf = false;
-          mre = new OA::NamedRef(isAddrOf, fullAccuracy, hty, sym);
-        } else { 
-          mre = new OA::NamedRef(isAddrOf,fullAccuracy,OA::MemRefExpr::USE,sym);
-          mre = new OA::Deref(false, fullAccuracy, hty, mre, 1);
-        }
+        mre = new OA::NamedRef(false,true,OA::MemRefExpr::USE,sym);
+        mre = new OA::Deref(false, fullAccuracy, OA::MemRefExpr::USE, mre, 1);
       } else {
+        // one case where we end up here is when passing an array as a parameter
+        // another is if we are just accessing a scalar that is not a
+        // reference parameter
         mre = new OA::NamedRef(isAddrOf, fullAccuracy, hty, sym);
       }
 
@@ -2619,19 +3115,19 @@ Open64IRInterface::getReachConstsStmtType(OA::StmtHandle h)
   if (!wn) { return OA::ReachConsts::NONE; }
   
   OPERATOR opr = WN_operator(wn);
-  if (OPERATOR_is_store(opr)) { // cf. findExprStmtPairs
+  if (OPERATOR_is_store(opr)) { // cf. findAssignPairs
     return OA::ReachConsts::EXPR_STMT;
   } else {
     return OA::ReachConsts::ANY_STMT;
   }
 }
 
-OA::OA_ptr<OA::ExprStmtPairIterator> 
-Open64IRInterface::getExprStmtPairIterator(OA::StmtHandle h)
+OA::OA_ptr<OA::AssignPairIterator> 
+Open64IRInterface::getAssignPairIterator(OA::StmtHandle h)
 { 
   setCurrentProcToProcContext(h);
   WN* wn = (WN*)h.hval();
-  return findExprStmtPairs(wn);
+  return findAssignPairs(wn);
 }
 
 OA::OA_ptr<OA::ConstValBasicInterface> 
@@ -2793,7 +3289,7 @@ Open64IRInterface::getLinearityStmtType(OA::StmtHandle h)
   if (!wn) { return OA::Linearity::NONE; }
   
   OPERATOR opr = WN_operator(wn);
-  if (OPERATOR_is_store(opr)) { // cf. findExprStmtPairs
+  if (OPERATOR_is_store(opr)) { // cf. findAssignPairs
     return OA::Linearity::EXPR_STMT;
   } else {
     return OA::Linearity::ANY_STMT;
@@ -3071,22 +3567,58 @@ Open64IRInterface::initContextState(PU_Info* pu_forest)
 
 OA::MemRefHandle Open64IRInterface::findTopMemRefHandle(WN *wn)
 {
-  OA::MemRefHandle h;
+  OA::MemRefHandle h = OA::MemRefHandle(0);
+
   if (wn==0) {
+
     return OA::MemRefHandle(0);
+
   }
 
-  h = (OA::irhandle_t)WN_kid0(wn);
 
-  if(sMemref2mreSetMap[h].empty()) {
-      wn = (WN*)h.hval();
-      findTopMemRefHandle(wn);
+  h = (OA::irhandle_t)wn;
+
+  if(h == OA::MemRefHandle(0)) {
+     return OA::MemRefHandle(0);
+  }
+
+ if(sMemref2mreSetMap.find(h) == sMemref2mreSetMap.end()) {
+
+      if(WN_operator(wn) == OPR_ISTORE)
+      {
+
+         wn  =  WN_kid1(wn);
+      } else if ( (WN_operator(wn) == OPR_ILOAD) ||
+              (WN_operator(wn) == OPR_LDID)  ||
+              (WN_operator(wn) == OPR_STID)  ||
+              (WN_operator(wn) == OPR_ARRAY) ||
+              (WN_operator(wn) == OPR_ARRAYEXP) ||
+              (WN_operator(wn) == OPR_LDA) ||
+              (WN_operator(wn) == OPR_CALL) ||
+              (WN_operator(wn) == OPR_INTRINSIC_CALL) ||
+              (WN_operator(wn) == OPR_ISTORE) ||
+              (WN_operator(wn) == OPR_ARRAYEXP) ||
+              (WN_operator(wn) == OPR_ARRSECTION) ||
+              (WN_operator(wn) == OPR_PARM) ||
+              (WN_operator(wn) == OPR_STRCTFLD)
+            )
+      {
+         wn =  WN_kid0(wn);
+      } else {
+         // INTCONST, Parameter as expression
+        return OA::MemRefHandle(0);
+      }
+
+      h=findTopMemRefHandle(wn);
   } else {
-       return h;
+      return h;
   }
- }
 
- 
+ return h;
+}
+
+
+
 
 // createExprTree: Given 'wn' return a possibly empty expression tree.
 OA::OA_ptr<OA::ExprTree>
@@ -3097,6 +3629,9 @@ Open64IRInterface::createExprTree(WN* wn)
   createExprTree(exprTree, wn);
   return exprTree;
 }
+
+
+
 
 
 // createExprTree: Given a tree container 'tree' and 'wn', builds tree
@@ -3114,7 +3649,7 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
   // represents the LHS of the assignment.)
   OPERATOR opr = WN_operator(wn);
   if ( !(opr == OPR_STID || OPERATOR_is_call(opr) 
-	 || OPERATOR_is_expression(opr)) ) {
+     || OPERATOR_is_expression(opr)) ) {
     return root;
   }
 
@@ -3124,7 +3659,17 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
       return root;
     } 
     else {
-      return createExprTree(tree, WN_kid0(wn));
+      // dont want to recurse because we want only top MemRefHandle 
+
+      OA::MemRefHandle h((OA::irhandle_t)wn);
+      
+      if (sMemref2mreSetMap.find(h)!=sMemref2mreSetMap.end()) {
+        root = new OA::ExprTree::MemRefNode(h);
+        tree->addNode(root);
+        return root;  
+      }
+      else
+        return createExprTree(tree, WN_kid0(wn));
     }
   }
   
@@ -3132,7 +3677,11 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
   // is important here.  *Note* OPR_ICALL and OPR_VFCALL will be
   // classified as calls instead of mem-refs.
   bool bypassRecursion = false;
-  if (OPERATOR_is_call(opr)) {
+  if (IntrinsicInfo::isIntrinsic(wn)) {
+    OA::OpHandle h((OA::irhandle_t)wn);
+    root = new OA::ExprTree::OpNode(h);
+  }
+  else if (OPERATOR_is_call(opr)) {
     OA::CallHandle h((OA::irhandle_t)wn);
     root = new OA::ExprTree::CallNode(h);
   }
@@ -3145,8 +3694,8 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
     root = new OA::ExprTree::ConstSymNode(h);
   }
   else if (opr == OPR_STID || OPERATOR_is_load(opr)
-	   || opr == OPR_ARRAY || opr == OPR_ARRSECTION 
-	   || opr == OPR_ARRAYEXP) {
+       || opr == OPR_ARRAY || opr == OPR_ARRSECTION 
+       || opr == OPR_ARRAYEXP) {
     OA::MemRefHandle h((OA::irhandle_t)wn);
     // HACK! ALERT! BK:
     // mfef90 is not distributing the constant values beyond the
@@ -3196,7 +3745,7 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
             PLM 10/05/06
 
            if (opr == OPR_ILOAD && WN_operator(WN_kid0(wn)) == OPR_ARRAY) {
-        	  h = (OA::irhandle_t)WN_kid0(wn);
+              h = (OA::irhandle_t)WN_kid0(wn);
            }
       */  
       if (opr == OPR_ILOAD) {
@@ -3263,6 +3812,9 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
   
   return root;
 }
+
+
+
 
 
 #if 0 // eraxxon: save this for possible later use
@@ -3373,32 +3925,28 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree::ExprTree> tree, WN* w
 
 
 // Given an assignment statement --- an EXPR_STMT in the form <target
-// = expr> -- return an ExprStmtPairIterator.
-OA::OA_ptr<OA::ExprStmtPairIterator> 
-Open64IRInterface::findExprStmtPairs(WN* wn)
+// = expr> -- return an AssignPairIterator.
+OA::OA_ptr<OA::AssignPairIterator> 
+Open64IRInterface::findAssignPairs(WN* wn)
 {
   using namespace OA::ReachConsts;
   
-  OA::OA_ptr<ExprStmtPairList> lst; lst = new ExprStmtPairList;
-  OA::OA_ptr<OA::ExprStmtPairIterator> retval;
+  OA::OA_ptr<AssignPairList> lst; lst = new AssignPairList;
+  OA::OA_ptr<OA::AssignPairIterator> retval;
   
   OPERATOR opr = WN_operator(wn);
   if (OPERATOR_is_store(opr)) {
-    // Create the ExprStmtPair and add to the list (Note: STOREs
+    // Create the AssignPair and add to the list (Note: STOREs
     // represent lhs mem-refs)
  
     OA::MemRefHandle lhs;
 
-    // special case for array references
-    if (opr == OPR_ISTORE && WN_operator(WN_kid1(wn)) == OPR_ARRAY) {
-      lhs = (OA::irhandle_t)WN_kid1(wn);
-    } else {
-      lhs = (OA::irhandle_t)wn;
-    }
+    lhs = (OA::irhandle_t)wn;
+    
     OA::ExprHandle rhs((OA::irhandle_t)WN_kid0(wn));
-    lst->push_back(ExprStmtPair(lhs, rhs));
+    lst->push_back(AssignPair(lhs, rhs));
   }
-  retval = new Open64ExprStmtPairIterator(lst);
+  retval = new Open64AssignPairIterator(lst);
   return retval;
 }
 

@@ -56,7 +56,8 @@ namespace whirl2xaif {
     dumpTranslationHeaderComment(xos); // FIXME (optional)
     // Initialize global id maps
     // NOTE: Do this first so that ids will match in back-translation
-    fortTkSupport::SymTabToSymTabIdMap* stabmap = new fortTkSupport::SymTabToSymTabIdMap(pu_forest);
+    fortTkSupport::SymTabToSymTabIdMap* stabmap = 
+        new fortTkSupport::SymTabToSymTabIdMap(pu_forest);
     ctxt.setSymTabToIdMap(stabmap);
     fortTkSupport::PUToPUIdMap* pumap = new fortTkSupport::PUToPUIdMap(pu_forest);
     ctxt.setPUToIdMap(pumap);

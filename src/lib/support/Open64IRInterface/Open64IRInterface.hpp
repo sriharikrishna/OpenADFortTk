@@ -343,14 +343,14 @@ class Open64ParamBindPtrAssignIterator
 
 
 
-typedef std::pair<OA::MemRefHandle,OA::ExprHandle> ExprStmtPair;
-typedef std::list<ExprStmtPair> ExprStmtPairList;
-class Open64ExprStmtPairIterator 
-    : public OA::ExprStmtPairIterator {
+typedef std::pair<OA::MemRefHandle,OA::ExprHandle> AssignPair;
+typedef std::list<AssignPair> AssignPairList;
+class Open64AssignPairIterator 
+    : public OA::AssignPairIterator {
   public:
-    Open64ExprStmtPairIterator(OA::OA_ptr<ExprStmtPairList> pExprStmtList) 
-        : mExprStmtList(pExprStmtList) { reset(); }
-    virtual ~Open64ExprStmtPairIterator() {}
+    Open64AssignPairIterator(OA::OA_ptr<AssignPairList> pAssignList) 
+        : mAssignList(pAssignList) { reset(); }
+    virtual ~Open64AssignPairIterator() {}
 
     //! left hand side
     OA::MemRefHandle currentTarget() const 
@@ -361,15 +361,15 @@ class Open64ExprStmtPairIterator
       { if (isValid()) { return mIter->second; } 
         else { return OA::ExprHandle(0); } }
 
-    bool isValid() const { return mIter!=mExprStmtList->end(); }
+    bool isValid() const { return mIter!=mAssignList->end(); }
                     
     void operator++() { if (isValid()) mIter++; }
     void operator++(int) { ++*this; }
 
-    void reset() { mIter = mExprStmtList->begin(); }
+    void reset() { mIter = mAssignList->begin(); }
   private:
-    OA::OA_ptr<ExprStmtPairList> mExprStmtList;
-    ExprStmtPairList::iterator mIter;
+    OA::OA_ptr<AssignPairList> mAssignList;
+    AssignPairList::iterator mIter;
 };
 
 class Open64MemRefHandleIterator 
@@ -745,8 +745,8 @@ public:
   //! Given a statement return a list to the pairs of 
   //! target MemRefHandle, ExprHandle where
   //! target = expr
-  OA::OA_ptr<OA::ExprStmtPairIterator> 
-      getExprStmtPairIterator(OA::StmtHandle h); 
+  OA::OA_ptr<OA::AssignPairIterator> 
+      getAssignPairIterator(OA::StmtHandle h); 
   
   //! Given an OpHandle and two operands (unary ops will just
   //! use the first operand and the second operand should be NULL)
@@ -871,9 +871,10 @@ private:
 
   // helper functions for getMemRefIterator
   void findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
-    WN* wn, unsigned lvl, unsigned flags);
+    WN* wn, unsigned lvl);
   void createAndMapDerefs(OA::StmtHandle stmt, WN* wn, WN* subMemRef,
-    OA::MemRefExpr::MemRefType hty);
+                          bool isAddrOf, bool fullAccuracy,
+                          OA::MemRefExpr::MemRefType hty);
   void createAndMapNamedRef(OA::StmtHandle stmt, WN* wn, ST*, bool isAddrOf,
     bool fullAccuracy, OA::MemRefExpr::MemRefType hty);
   bool isPassByReference(WN*);
@@ -904,7 +905,7 @@ private:
   OA::OA_ptr<OA::ExprTree::Node> 
   createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn);
 
-  OA::OA_ptr<OA::ExprStmtPairIterator> findExprStmtPairs(WN* wn);
+  OA::OA_ptr<OA::AssignPairIterator> findAssignPairs(WN* wn);
 
   OA::OA_ptr<OA::ConstValBasicInterface> getConstValBasicFromST(ST* st);
 

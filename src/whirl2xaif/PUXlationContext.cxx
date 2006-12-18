@@ -273,17 +273,32 @@ namespace whirl2xaif {
     OA::OA_ptr<Open64IRInterface> theIR=Whirl2Xaif::getOAAnalMap().GetIRInterface();
     OA::OA_ptr<OA::MemRefExpr> symMRE = theIR->convertSymToMemRefExpr(sym);
     OA::ProcHandle proc((OA::irhandle_t)Current_PU_Info);
+    std::cout << "MemRefExpr" << std::endl;
+    symMRE->output(*theIR);
+    std::cout << "**********" << std::endl;
     OA::OA_ptr<OA::LocIterator> symMRElocs_I = myAlias->getAliasResults(proc)->getMayLocs(*symMRE,proc);
     // we now have the locations that may alias the symbol and  need to compare these 
     // against the locations determined to be active by the activity analysis. 
+
+    std::cout << "ActiveSym before for loop" << std::endl;
     for ( ; symMRElocs_I->isValid(); (*symMRElocs_I)++ ) {
-      OA::OA_ptr<OA::LocIterator> activeLoc_I = myActivity->getActiveLocsIterator(proc);
+        
+      std::cout << "ActiveSym inside for loop" << std::endl;  
+
+//      std::cout << "Procedure Name" << theIR->toString(proc) << std::endl;
+      OA::OA_ptr<OA::LocIterator> activeLoc_I = 
+          myActivity->getActiveLocsIterator(proc);
       for ( ; activeLoc_I->isValid(); (*activeLoc_I)++ ) {
-	if (activeLoc_I->current()->mayOverlap(*(symMRElocs_I->current()))) {
-	  return true;
-	}
+          std::cout << "Found Active Location" << std::endl;
+	   if (activeLoc_I->current()->mayOverlap(*(symMRElocs_I->current()))) {
+          std::cout << "Found Overlap, returning true" << std::endl;
+	      return true;
+	   }
       }
     }
+    
+
+    std::cout << "ActiveSym outside for loop" << std::endl;
     // didn't find it in all the active locations
     return false;
   }
