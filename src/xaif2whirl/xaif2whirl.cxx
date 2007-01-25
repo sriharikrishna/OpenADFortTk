@@ -2254,7 +2254,7 @@ namespace xaif2whirl {
 	}
     
 	if (ndimIndex>0 && ndimIndex!=ndim) { 
-	  FORTTK_DIE("Need to have all or no DimensionBounds specified (have only " << ndimIndex << " for " << shape.c_str() );
+	  FORTTK_DIE("Need to have all or no DimensionBounds specified (have only " << ndimIndex << " for " << shape.c_str() << ")");
 	}
     
 	bool haveDimensionBounds = false;
