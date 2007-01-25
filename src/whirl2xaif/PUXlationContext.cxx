@@ -211,7 +211,7 @@ namespace whirl2xaif {
       OA::MemRefHandle parenth((OA::irhandle_t)parentWN_p);
       duudKey=myUdduchains->getUDDUChainId(parenth);
       if (duudKey==0) { 
-	FORTTK_MSG(0,"JU: PUXlationContext::findUDDUChainId: 0 du_ud key for parent ref_wn: " << (int)wnexpr); 
+	FORTTK_MSG(1,"JU: PUXlationContext::findUDDUChainId: 0 du_ud key for parent ref_wn: " << (int)wnexpr); 
       } 
     }
     return duudKey;
