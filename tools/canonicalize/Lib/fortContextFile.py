@@ -181,13 +181,15 @@ def use_module(line,ctxtm):
     '''For a use statement, grab the module out of the toplevel
     module table (or print a warning stderr  if module is unavailable)
     '''
-    
+    from sys import stderr 
     ctxt    = ctxtm[0]
     modules = ctxt.toplev.modules
     mod     = line.name
     if mod not in modules:
-        print >> sys.stderr,'Parser: Warning: USE of unknown module named: ',mod
-        return line
+      if mod not in ctxt.toplev.missingModules:
+         print >> stderr,'Parser: Warning: USE of unknown module named: ',mod, ' (reported once for each unknown module)' 
+         ctxt.toplev.missingModules.append(mod)
+      return line
 
     modvars = modules[mod].vars
     ctxt.vars.update(modvars)
@@ -277,6 +279,7 @@ def _gen_context(parse_iter,hook=mapper.noop):
     toplev         = Struct()
     toplev.units   = dict()
     toplev.modules = dict()
+    toplev.missingModules = []
 
     ctxt         = Context(toplev,hook)
 
