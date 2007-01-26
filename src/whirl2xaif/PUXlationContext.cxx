@@ -205,7 +205,7 @@ namespace whirl2xaif {
       std::ostringstream ostr;
       ostr << "JU: PUXlationContext::findUDDUChainId: 0 du_ud key for ref_wn: " << (long)wnexpr << ": "; 
       Open64IRInterface::DumpWN(wnexpr, ostr);
-      ostr << " trying parent WN " << std::endl; 
+      ostr << " trying parent WN "; 
       FORTTK_MSG(1,ostr.str().c_str()); 
       WN* parentWN_p=findParentWN(wnexpr);
       OA::MemRefHandle parenth((OA::irhandle_t)parentWN_p);

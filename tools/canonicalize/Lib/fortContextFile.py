@@ -179,15 +179,14 @@ def assgn(line,ctxtm):
 
 def use_module(line,ctxtm):
     '''For a use statement, grab the module out of the toplevel
-    module table (or warn if module is unavailable
+    module table (or print a warning stderr  if module is unavailable)
     '''
-    from warnings import warn
     
     ctxt    = ctxtm[0]
     modules = ctxt.toplev.modules
     mod     = line.name
     if mod not in modules:
-        warn('module %s not seen' % mod)
+        print >> sys.stderr,'Parser: Warning: USE of unknown module named: ',mod
         return line
 
     modvars = modules[mod].vars
