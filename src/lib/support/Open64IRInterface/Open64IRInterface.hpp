@@ -817,6 +817,7 @@ public:
 
   //-------------------------------------------------------------------------
 
+  static void DumpWN(WN* wn, ostream& os);
   // for Activity lookup
   OA::OA_ptr<OA::MemRefExpr>
    convertSymToMemRefExpr(OA::SymHandle sym);
@@ -887,8 +888,6 @@ private:
 
   //! use this to appropriately get a string for a symbol
   static char* createCharStarForST(ST*);
-
-  static void DumpWN(WN* wn, ostream& os);
 
   static void DumpWNMemRef(WN* wn, ostream& os);
 
