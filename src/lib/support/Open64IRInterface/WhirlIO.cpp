@@ -52,7 +52,7 @@
 
 //************************** Open64 Include Files ***************************
 
-#include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64BasicTypes.h"
 
 #include "ir_bread.h"	   // Read_Global_Info(), etc.
 #include "ir_bwrite.h"	   // Write_Global_Info(), etc.
@@ -70,11 +70,11 @@
 
 //*************************** User Include Files ****************************
 
-#include "Open64IRInterface/WhirlIO.h"
-#include "Open64IRInterface/WhirlGlobalStateUtils.h"
-#include "Open64IRInterface/Open64IRInterface.hpp"
+#include "WhirlIO.h"
+#include "WhirlGlobalStateUtils.h"
+#include "Open64IRInterface.hpp"
 
-#include "Open64IRInterface/diagnostics.h"
+#include "diagnostics.h"
 
 //************************** Forward Declarations ***************************
 

@@ -4,7 +4,7 @@
 #ifndef wn_attr_INCLUDED
 #define wn_attr_INCLUDED
 
-#include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64BasicTypes.h"
 
 
   /**

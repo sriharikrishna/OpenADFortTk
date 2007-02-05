@@ -5,7 +5,7 @@
 
 //*************************** User Include Files ****************************
 
-#include "Open64IRInterface/stab_attr.h"
+#include "stab_attr.h"
 
 //************************** Forward Declarations ***************************
 

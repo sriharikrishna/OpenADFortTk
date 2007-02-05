@@ -5,7 +5,7 @@
 #define IntrinsicInfo_H
 
 #include <map>
-#include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64BasicTypes.h"
 
 class IntrinsicInfo {
 

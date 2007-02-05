@@ -1,6 +1,6 @@
-#include "Open64IRInterface/IntrinsicInfo.h"
-#include "Open64IRInterface/diagnostics.h"
-#include "Open64IRInterface/wn_attr.h"
+#include "IntrinsicInfo.h"
+#include "diagnostics.h"
+#include "wn_attr.h"
 
 IntrinsicInfo::IntrinsicMap IntrinsicInfo::ourIntrinsicInfoMap;
 bool IntrinsicInfo::ourInitFlag=false;

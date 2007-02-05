@@ -73,12 +73,12 @@
 
 //************************** Open64 Include Files ***************************
 
-#include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64BasicTypes.h"
 #include "file_util.h" 
 
 //*************************** User Include Files ****************************
 
-#include "Open64IRInterface/diagnostics.h"
+#include "diagnostics.h"
 
 //***************************************************************************
 

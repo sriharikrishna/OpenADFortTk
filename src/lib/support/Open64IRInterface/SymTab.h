@@ -28,7 +28,7 @@
 
 //************************** Open64 Include Files ***************************
 
-#include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64BasicTypes.h"
 
 //*************************** User Include Files ****************************
 
