@@ -750,6 +750,13 @@ Open64IRInterface::toString(const OA::SymHandle h)
   if (st) {
     setCurrentProcToProcContext(h);
     symnm = createCharStarForST(st);
+    PU_Info* origPU = Current_PU_Info;
+    if(origPU != NULL) {
+     ST_IDX idx = PU_Info_proc_sym(origPU);
+     std::string procname = ST_name(idx);
+     symnm = procname + "::" + symnm;
+    }
+
   } else {
     symnm = "<no-symbol>";
   }
@@ -834,9 +841,7 @@ Open64IRInterface::dump(OA::MemRefHandle h, std::ostream& os)
     if (WN_kid_count(wn) > 1) {
       DumpWN(WN_kid1(wn), os); // left-hand-side (FIXME: add offset!)
     } else {
-      std::cout << "before Open64IRInterface::dump" << std::endl;  
       std::string n = toString(OA::SymHandle((OA::irhandle_t)WN_st(wn)));
-      std::cout << "after Open64IRInterface::dump" << std::endl;
       os << n;
     } 
   } else {
@@ -1767,6 +1772,18 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
      }
      break;
 
+     case OPR_LT:
+     {
+         // arrays5
+         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
+     }
+     break;
+
     case OPR_GE:
      {
          // arrays5
@@ -1862,7 +1879,7 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
          isAddrOf = false;
          hty = MemRefExpr::USE;
          fullAccuracy = true;
-       
+      
          createAndMapNamedRef(stmt, wn, WN_st(wn), isAddrOf, fullAccuracy, hty);
       } 
       break;
@@ -1902,7 +1919,15 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
            newmre = *(sMemref2mreSetMap[m].begin());
            sMemref2mreSetMap.erase(m);
            sStmt2allMemRefsMap[stmt].erase(m);
-           newmre->setAddressTaken(false);
+
+           if(newmre->isaRefOp()) {
+              OA::OA_ptr<OA::RefOp> refOp = newmre.convert<OA::RefOp>();
+              assert(!refOp.ptrEqual(0));
+              if(refOp->isaAddressOf()) {
+                 newmre = refOp->getMemRefExpr();
+              }
+           } 
+ 
            newmre->setAccuracy(false);
            sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
            sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
@@ -1926,7 +1951,6 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
          for (INT kidno=(WN_kid_count(wn)-1)/2 +1;
              kidno<=WN_kid_count(wn)-1; kidno++)
          {
-
            findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
          }
 
@@ -1988,6 +2012,7 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
                && TY_kind(ST_type(WN_st((WN *)m.hval()))) == KIND_SCALAR ) {
               
               // create a Deref and points to topMemRefHandle's MemRefExpr.
+              
               createAndMapDerefs(stmt,wn, (WN*)m.hval(), isAddrOf, 
                       fullAccuracy, hty);
 
@@ -2015,7 +2040,15 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
                sMemref2mreSetMap.erase(m);
                sStmt2allMemRefsMap[stmt].erase(m);
                newmre->setMemRefType(hty);
-               newmre->setAddressTaken(false);
+               
+               if(newmre->isaRefOp()) {
+                  OA::OA_ptr<OA::RefOp> refOp = newmre.convert<OA::RefOp>();
+                  assert(!refOp.ptrEqual(0));
+                  if(refOp->isaAddressOf()) {
+                     newmre = refOp->getMemRefExpr();
+                  }
+               }
+               
                sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
                sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
 
@@ -2058,7 +2091,7 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
           if ( WN_operator(subMemRef) == OPR_LDID &&
                ! isRefParam( SymHandle((irhandle_t)WN_st((WN *)m.hval()))) 
                && TY_kind(ST_type(WN_st((WN *)m.hval()))) == KIND_SCALAR ) {
-
+              
               // create a Deref and points to topMemRefHandle's MemRefExpr.
               createAndMapDerefs(stmt,wn, (WN*)m.hval(), isAddrOf, 
                       fullAccuracy, hty);
@@ -2087,7 +2120,13 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
                newmre = *(sMemref2mreSetMap[m].begin());
                sMemref2mreSetMap.erase(m);
                sStmt2allMemRefsMap[stmt].erase(m);
-               newmre->setAddressTaken(false);
+               if(newmre->isaRefOp()) {
+                  OA::OA_ptr<OA::RefOp> refOp = newmre.convert<OA::RefOp>();
+                  assert(!refOp.ptrEqual(0));
+                  if(refOp->isaAddressOf()) {
+                     newmre = refOp->getMemRefExpr();
+                  }
+               } 
                newmre->setMemRefType(hty);
                sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
                sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
@@ -2129,10 +2168,8 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
 
           
           for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++) {
-
             WN* subMemRef = WN_kid(wn,kidno);
             findAllMemRefsAndMapToMemRefExprs(stmt, subMemRef, lvl+1);
-                
              if (IntrinsicInfo::isIntrinsic(wn))  {
                  // We are modeling intrinsic calls as pass by value.
                  // get the topMemRefHandle for all kids
@@ -2144,56 +2181,80 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
                  OA::MemRefHandle m = findTopMemRefHandle(subMemRef);
                  if( m != MemRefHandle(0) ) {
                  OA_ptr<MemRefExpr> mre;
-
                  mre = *(sMemref2mreSetMap[m].begin());
-                 
-                 isAddrOf = false;
-                 fullAccuracy = true;
-                 hty = OA::MemRefExpr::USE;
-                 int numDerefs = 1;
+                 OA::OA_ptr<OA::MemRefExpr> clone_mre = mre->clone();
 
-                 OA::OA_ptr<OA::Deref> deref_mre;
-                 OA::OA_ptr<OA::MemRefExpr> nullMRE;
-                 deref_mre = new OA::Deref( isAddrOf,
+                 
+                 if(mre->isaRefOp()) {
+                    OA::OA_ptr<OA::RefOp> refop = mre.convert<OA::RefOp>();
+                    if(!refop->isaAddressOf()) {
+                         OA::OA_ptr<OA::AddressOf> address_mre;
+                         OA::OA_ptr<OA::MemRefExpr> nullMRE;
+                         address_mre = new OA::AddressOf(
+                                              true,
+                                              OA::MemRefExpr::USE,
+                                              nullMRE);
+                         OA::OA_ptr<OA::MemRefExpr> tmp_mre = mre->clone();
+                         mre = address_mre->composeWith(tmp_mre);
+                         mre->setAccuracy(false);
+                         
+                    } else {
+                         isAddrOf = false;
+                         fullAccuracy = false;
+                         hty = OA::MemRefExpr::USE;
+                         int numDerefs = 1;
+                         OA::OA_ptr<OA::Deref> deref_mre;
+                         OA::OA_ptr<OA::MemRefExpr> nullMRE;
+                         deref_mre = new OA::Deref(
                                fullAccuracy,
                                hty,
                                nullMRE,
                                numDerefs);
-                 OA::OA_ptr<OA::MemRefExpr> tmp_mre = mre->clone();
-                 OA::OA_ptr<OA::MemRefExpr> composed_mre;
-                 composed_mre = deref_mre->composeWith(tmp_mre);
+                         OA::OA_ptr<OA::MemRefExpr> tmp_mre = mre->clone();
+                         mre = deref_mre->composeWith(tmp_mre);
+
+                    }
+                 } else {
+
+                         isAddrOf = false;
+                         fullAccuracy = false;
+                         hty = OA::MemRefExpr::USE;
+                         int numDerefs = 1;
+
+                         OA::OA_ptr<OA::Deref> deref_mre;
+                         OA::OA_ptr<OA::MemRefExpr> nullMRE;
+                         deref_mre = new OA::Deref(
+                               fullAccuracy,
+                               hty,
+                               nullMRE,
+                               numDerefs);
+                         OA::OA_ptr<OA::MemRefExpr> tmp_mre = mre->clone();
+                         mre = deref_mre->composeWith(tmp_mre);
+
+                 }
+
 
                  if(mre->isaUnnamed()) {
-
                     WN* paramnode = (WN *)m.hval();
                     WN* paramkid =  WN_kid0(paramnode);
-    
                     sMemref2mreSetMap.erase(m);
                     sStmt2allMemRefsMap[stmt].erase(m);
-
                     OA::MemRefHandle param_mh = findTopMemRefHandle(paramkid);
                     OA_ptr<MemRefExpr> sub_mre;
-
                     sub_mre = *(sMemref2mreSetMap[param_mh].begin());
-                    
                     if(sub_mre->isaUnnamed()) {
                        sMemref2mreSetMap.erase(param_mh);
                        sStmt2allMemRefsMap[stmt].erase(param_mh);
                     }
-
                  } else {
-
-                   sMemref2mreSetMap[m].erase(mre);
+                   sMemref2mreSetMap[m].erase(clone_mre);
                    sStmt2allMemRefsMap[stmt].erase(m);
-                   sMemref2mreSetMap[m].insert(composed_mre);
+                   sMemref2mreSetMap[m].insert(mre);
                    sStmt2allMemRefsMap[stmt].insert(m);
-
                  }
-                 
                }
              }
            }
-
         }
         break;
 
@@ -2216,23 +2277,25 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
                   bool accuracy = true;
                   OA::MemRefExpr::MemRefType mrType = OA::MemRefExpr::DEF;
                   OA::OA_ptr<OA::MemRefExpr> lhs_tmp_mre;
-                  lhs_tmp_mre = new OA::UnnamedRef(addressTaken, accuracy, 
-                          mrType, stmt);
-
+                  lhs_tmp_mre = new OA::UnnamedRef(accuracy,mrType, stmt);
                   sMemref2mreSetMap[MemRefHandle((irhandle_t)WN_kid0(wn))].insert(lhs_tmp_mre);
                   sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)WN_kid0(wn)));  
-
                   OA::OA_ptr<OA::MemRefExpr> tmp_mre;
                   OA::OA_ptr<OA::MemRefExpr> opr_param_mre;
                   tmp_mre = *(sMemref2mreSetMap[MemRefHandle((irhandle_t)WN_kid0(wn))].begin());
 
-                  opr_param_mre = tmp_mre->clone()->setAddressTaken();
+                  OA::OA_ptr<OA::AddressOf> address_mre;
+                  OA::OA_ptr<OA::MemRefExpr> nullMRE;
+                  address_mre = new OA::AddressOf(
+                                              true,
+                                              OA::MemRefExpr::USE,
+                                              nullMRE);
+                  opr_param_mre = address_mre->composeWith(tmp_mre->clone());
+
                   opr_param_mre->setMemRefType(OA::MemRefExpr::USE);
                   sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(opr_param_mre);
                   sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
                   
-                  //sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(lhs_tmp_mre);
-                  //sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
             } else {
                 OA_ptr<MemRefExpr> newmre;
                 WN* tempWN = (WN *)m.hval(); 
@@ -2241,11 +2304,10 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
                     WN* kidWN = WN_kid0(tempWN);
                     if( isRefParam( SymHandle((irhandle_t)WN_st( kidWN )) ) )
                     {
-                        
                       isAddrOf = false;
                       fullAccuracy = true; 
                       hty = OA::MemRefExpr::USE; 
-                      newmre =  new NamedRef(isAddrOf, fullAccuracy, hty, 
+                      newmre =  new NamedRef( fullAccuracy, hty,
                                 SymHandle((irhandle_t)WN_st((WN *)m.hval())) );
                       sMemref2mreSetMap.erase(m);
                       sStmt2allMemRefsMap[stmt].erase(m);
@@ -2256,45 +2318,54 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
                       newmre = *(sMemref2mreSetMap[m].begin());
                       sMemref2mreSetMap.erase(m);
                       sStmt2allMemRefsMap[stmt].erase(m);
-                      newmre->setAddressTaken(true);
+                      OA::OA_ptr<OA::AddressOf> address_mre;
+                      OA::OA_ptr<OA::MemRefExpr> nullMRE;
+                      address_mre = new OA::AddressOf(
+                                              true,
+                                              OA::MemRefExpr::USE,
+                                              nullMRE);
+                      newmre = address_mre->composeWith(newmre);
                       sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
                       sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
                     } 
                     
                  } else if( WN_operator( (WN *)m.hval() ) == OPR_LDID) {
+
                     if( isRefParam( SymHandle((irhandle_t)WN_st( (WN *)m.hval() )) ) )
                     {
                       if( WN_operator(WN_kid0(wn)) == OPR_ILOAD )
                       {
-                          
-                          
-                         if(TY_kind(ST_type(WN_st((WN *)m.hval()))) == KIND_SCALAR)                      { 
-                           isAddrOf = false;
-                         } else {
-                             
-                           isAddrOf = false;
-                         }
+                         isAddrOf = false;
                          fullAccuracy = true; 
                          hty = OA::MemRefExpr::USE; 
-                         newmre =  new NamedRef(isAddrOf, fullAccuracy, hty, SymHandle((irhandle_t)WN_st((WN *)m.hval())) ); 
+                         newmre =  new NamedRef(fullAccuracy,hty, 
+                                 SymHandle((irhandle_t)WN_st((WN *)m.hval())) );
                          sMemref2mreSetMap.erase(m);        
                          sStmt2allMemRefsMap[stmt].erase(m);   
                          sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);         
                          sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));                            
+                         
                       } else if ( WN_operator(WN_kid0(wn)) == OPR_ARRAY ) {
                           
                          newmre = *(sMemref2mreSetMap[m].begin());  
+                         OA::OA_ptr<OA::MemRefExpr> newmre_clone;
+                         newmre_clone = newmre->clone();
                          sMemref2mreSetMap.erase(m);   
                          sStmt2allMemRefsMap[stmt].erase(m); 
-                         newmre->setAddressTaken(true);
-                         sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre); 
+                         OA::OA_ptr<OA::AddressOf> address_mre;
+                         OA::OA_ptr<OA::MemRefExpr> nullMRE;
+                         address_mre = new OA::AddressOf(
+                                              true,
+                                              OA::MemRefExpr::USE,
+                                              nullMRE);
+                         newmre_clone = address_mre->composeWith(newmre_clone);
+                         sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre_clone); 
                          sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
                       } else {
-                          
                          isAddrOf = false;
                          fullAccuracy = true;
                          hty = OA::MemRefExpr::USE;
-                         newmre =  new NamedRef(isAddrOf, fullAccuracy, hty,
+                         newmre =  new NamedRef(fullAccuracy, hty,
                                 SymHandle((irhandle_t)WN_st((WN *)m.hval())) );
                          sMemref2mreSetMap.erase(m);
                          sStmt2allMemRefsMap[stmt].erase(m);
@@ -2304,11 +2375,16 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
                       }
                       
                     } else {
-                        
                       newmre = *(sMemref2mreSetMap[m].begin());
                       sMemref2mreSetMap.erase(m);
                       sStmt2allMemRefsMap[stmt].erase(m);
-                      newmre->setAddressTaken(true);
+                      OA::OA_ptr<OA::AddressOf> address_mre;
+                      OA::OA_ptr<OA::MemRefExpr> nullMRE;
+                      address_mre = new OA::AddressOf(
+                                              true,
+                                              OA::MemRefExpr::USE,
+                                              nullMRE);
+                      newmre = address_mre->composeWith(newmre);
                       sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
                       sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
                     }
@@ -2318,7 +2394,13 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
                       sMemref2mreSetMap.erase(m);
                       sStmt2allMemRefsMap[stmt].erase(m);
                       newmre->setAccuracy(true);
-                      newmre->setAddressTaken(true);
+                      OA::OA_ptr<OA::AddressOf> address_mre;
+                      OA::OA_ptr<OA::MemRefExpr> nullMRE;
+                      address_mre = new OA::AddressOf(
+                                              true,
+                                              OA::MemRefExpr::USE,
+                                              nullMRE);
+                      newmre = address_mre->composeWith(newmre);
                       sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
                       sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
                  } 
@@ -2377,36 +2459,8 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
       // Special case: examine only condition of control flow statements
       if (OPERATOR_is_scf(opr) || OPERATOR_is_non_scf(opr)) {
           findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid(wn,0),lvl);
-
-      // General case: recur on parameters (kids 0 ... n-1) 
-      } else {
-
-          /*
-        for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++) {
-
-            // any operations that don't have an lval will go to this 
-            // default case, if there is something
-            // being passed by reference that does not have an lval then 
-            // we need to generate an UnnamedRef set its address flag 
-            // for use as the parameter. 
-            // e.g. foo(n+1, k). We set UnnamedMemRef for (n+1)
-            
-            if(flags & flags_MODEL_PASS_BY_REF) {
-
-             bool addressTaken = true;
-             bool accuracy = true;
-             OA::MemRefExpr::MemRefType mrType = OA::MemRefExpr::USE;
-             OA::OA_ptr<OA::MemRefExpr> lhs_tmp_mre;
-             lhs_tmp_mre = new OA::UnnamedRef(addressTaken, accuracy, mrType, stmt);
- 
-             sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(lhs_tmp_mre);
-             sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
-           }
-           findAllMemRefsAndMapToMemRefExprs(stmt,WN_kid(wn,kidno),lvl+1,flags);
-           
-        }
-          */
-      }
+          // General case: recur on parameters (kids 0 ... n-1) 
+      } 
 
       // some asserts to catch cases I don't expect to land here
       assert(!OPERATOR_is_store(opr));
@@ -2415,10 +2469,6 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
   }
 
 }
-
-
-
-
 
 ST* Open64IRInterface::findBaseSymbol(WN* wn)
 {
@@ -2457,9 +2507,19 @@ void Open64IRInterface::createAndMapDerefs(OA::StmtHandle stmt,
     {
         OA_ptr<MemRefExpr> submre = *mreIter;
         OA_ptr<MemRefExpr> mre;
-        mre = new Deref(false, fullAccuracy, hty, submre, 1);
+
+        mre = new Deref(fullAccuracy, hty, submre, 1);
+        
         if (isAddrOf) {
-            mre = mre->setAddressTaken();
+
+            OA::OA_ptr<OA::AddressOf> address_mre;
+            OA::OA_ptr<OA::MemRefExpr> nullMRE;
+            address_mre = new OA::AddressOf(
+                                              true,
+                                              OA::MemRefExpr::USE,
+                                              nullMRE);
+            mre = address_mre->composeWith(mre);
+
         }
         sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(mre);
         sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
@@ -2467,7 +2527,11 @@ void Open64IRInterface::createAndMapDerefs(OA::StmtHandle stmt,
 }
 
 
-OA::OA_ptr<OA::MemRefExpr> Open64IRInterface::convertSymToMemRefExpr(OA::SymHandle sym)
+
+
+
+OA::OA_ptr<OA::MemRefExpr> 
+           Open64IRInterface::convertSymToMemRefExpr(OA::SymHandle sym)
 {
     OA::OA_ptr<OA::MemRefExpr> mre;
     bool isAddrOf = false;
@@ -2476,10 +2540,11 @@ OA::OA_ptr<OA::MemRefExpr> Open64IRInterface::convertSymToMemRefExpr(OA::SymHand
     hty = OA::MemRefExpr::USE;
 
     if (isRefParam(sym)) {
-          mre = new OA::NamedRef(isAddrOf, true, hty, sym);
-          mre = new OA::Deref(false, fullAccuracy, hty, mre, 1);
+          mre = new OA::NamedRef(fullAccuracy, hty, sym);
+          mre = new OA::Deref(fullAccuracy, hty, mre, 1);
+        
     } else {
-          mre = new OA::NamedRef(isAddrOf, fullAccuracy, hty, sym);
+          mre = new OA::NamedRef(fullAccuracy, hty, sym);
     }
 
     return mre;
@@ -2487,7 +2552,8 @@ OA::OA_ptr<OA::MemRefExpr> Open64IRInterface::convertSymToMemRefExpr(OA::SymHand
 
 
 
-void Open64IRInterface::createAndMapNamedRef(OA::StmtHandle stmt, WN* wn, 
+
+void Open64IRInterface::createAndMapNamedRef(OA::StmtHandle stmt, WN* wn,
     ST* st, bool isAddrOf, bool fullAccuracy, OA::MemRefExpr::MemRefType hty)
 {
     using namespace OA;
@@ -2506,21 +2572,73 @@ void Open64IRInterface::createAndMapNamedRef(OA::StmtHandle stmt, WN* wn,
         sym = *setIter;
     }
 
-    // modeling accesses to reference parameters as derefs to pointers
-    if (isRefParam(sym)) {
-        if (isAddrOf==true) { // deref and addressOf cancel
-          isAddrOf = false;
-          mre = new NamedRef(isAddrOf, fullAccuracy, hty, sym);
-        } else {
-          mre = new NamedRef(isAddrOf, fullAccuracy, OA::MemRefExpr::USE, sym);
-          mre = new Deref(false, fullAccuracy, hty, mre, 1);
-        }
+
+     // Michelle:  
+     // Jean says the newer version of Open64 does not need 
+     // the sSymToFQNMap anymore, you may need to upgrade Open64,
+     //  talk to Jean about it
+    
+     // modeling accesses to reference parameters as derefs to pointers
+     // if (isRefParam(sym) && TY_kind(ST_type(st))==KIND_SCALAR) {
+
+    if(isRefParam(sym))
+    {
+            if( isAddrOf == true  ) {
+                
+               mre = new NamedRef(fullAccuracy,
+                    OA::MemRefExpr::USE, sym);
+               OA::OA_ptr<OA::AddressOf> address_mre;
+               OA::OA_ptr<OA::MemRefExpr> nullMRE;
+               address_mre = new OA::AddressOf(
+                                              true,
+                                              OA::MemRefExpr::USE,
+                                              nullMRE);
+               mre = address_mre->composeWith(mre);
+
+            } else {
+
+               mre = new NamedRef(fullAccuracy,
+                    OA::MemRefExpr::USE, sym);
+
+            }
+        
+            // will still get a NamedRef from this call 
+            // if isAddrOf is true, which would be the case 
+            // if we were passing a formal parameter as an actual
+            
+            mre = new Deref(fullAccuracy, hty, mre, 1);
+            
+            // one case where we end up here is when passing an
+            // array as a parameter another is if we are just 
+            // accessing a scalar that is not a reference parameter
+
     } else {
-        mre = new NamedRef(isAddrOf, fullAccuracy, hty, sym);
-    }
+
+           if( isAddrOf == true  ) {
+
+               mre = new NamedRef(fullAccuracy,hty, sym);
+               OA::OA_ptr<OA::AddressOf> address_mre;
+               OA::OA_ptr<OA::MemRefExpr> nullMRE;
+               address_mre = new OA::AddressOf(
+                                              true,
+                                              OA::MemRefExpr::USE,
+                                              nullMRE);
+               mre = address_mre->composeWith(mre);
+
+            } else {
+
+               mre = new NamedRef(fullAccuracy,hty, sym);
+
+            }
+
+    }    
+
     sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(mre);
     sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
-}
+} 
+
+
+
 
 
 OA::Alias::IRStmtType 
@@ -2581,12 +2699,14 @@ Open64IRInterface::getParamBindPtrAssignIterator(OA::CallHandle call)
     OA::OA_ptr<OA::IRCallsiteParamIterator> paramIter = getCallsiteParams(call);
     for ( ; paramIter->isValid(); (*paramIter)++ ) {
 
+        
         OA::ExprHandle param = paramIter->current();
-
         OA::OA_ptr<OA::ExprTree> eTreePtr = getExprTree(param);
         OA::EvalToMemRefVisitor evalVisitor;
         eTreePtr->acceptVisitor(evalVisitor);
+        
         if ( evalVisitor.isMemRef() ) {
+            
           OA::MemRefHandle memref = evalVisitor.getMemRef();
 
           // get the MREs for this memref
@@ -2597,8 +2717,12 @@ Open64IRInterface::getParamBindPtrAssignIterator(OA::CallHandle call)
 
               // if there is an address computation them we have a
               // pointer assignment happening at parameter bind time
-              if (mre->hasAddressTaken()) {
-                  retval->insertParamBindPair(count,mre);
+              
+              if(mre->isaRefOp()) {
+                OA::OA_ptr<OA::RefOp> refop = mre.convert<OA::RefOp>();
+                if(refop->isaAddressOf()) {
+                   retval->insertParamBindPair(count,mre);
+                }
 
               // if it is a named ref to a reference param in 
               // the caller then we also have a ParamBindPair
@@ -2609,14 +2733,10 @@ Open64IRInterface::getParamBindPtrAssignIterator(OA::CallHandle call)
                       retval->insertParamBindPair(count,mre);
                   }
               }
-
           } 
-
           count++;
         } // iterate over actuals
-
     }
-
     return retval;
 }
 
@@ -2749,21 +2869,20 @@ Open64IRInterface::getIndepMemRefExprIter(OA::ProcHandle h)
         fullAccuracy = false;
         break;
       }
-
-
+     
       // if the symbol is a reference parameter, then the MemRefExpr
       // for an access to the symbol needs a deref
       if (isRefParam(sym)) {
-        mre = new OA::NamedRef(false,true,OA::MemRefExpr::USE,sym);
-        mre = new OA::Deref(false, fullAccuracy, OA::MemRefExpr::USE, mre, 1);
+        mre = new OA::NamedRef(true,OA::MemRefExpr::USE,sym);
+        mre = new OA::Deref(fullAccuracy, OA::MemRefExpr::USE, mre, 1);
+
       } else {
         // one case where we end up here is when passing an array as a parameter
-        // another is if we are just accessing a scalar that is not a
+        // another is if we are just accessing a scalar that is not a 
         // reference parameter
-        mre = new OA::NamedRef(isAddrOf, fullAccuracy, hty, sym);
-      }
 
-      
+        mre = new OA::NamedRef(fullAccuracy, hty, sym);
+      }
       indepList->push_back(mre);
     }
   }
@@ -2863,16 +2982,20 @@ Open64IRInterface::getDepMemRefExprIter(OA::ProcHandle h)
         break;
       }
 
+
       // if the symbol is a reference parameter, then the MemRefExpr
       // for an access to the symbol needs a deref
       if (isRefParam(sym)) {
-        mre = new OA::NamedRef(false,true,OA::MemRefExpr::USE,sym);
-        mre = new OA::Deref(false, fullAccuracy, OA::MemRefExpr::USE, mre, 1);
+
+        mre = new OA::NamedRef(true,OA::MemRefExpr::USE,sym);
+        mre = new OA::Deref(fullAccuracy, OA::MemRefExpr::USE, mre, 1);
+          
       } else {
         // one case where we end up here is when passing an array as a parameter
         // another is if we are just accessing a scalar that is not a
         // reference parameter
-        mre = new OA::NamedRef(isAddrOf, fullAccuracy, hty, sym);
+
+        mre = new OA::NamedRef(fullAccuracy, hty, sym);
       }
 
       depList->push_back(mre);
@@ -2942,7 +3065,12 @@ Open64IRInterface::getDefMemRefs(OA::StmtHandle stmt)
         //! added by PLM 09/14/06
         //! ================================================
 
-        if (mre->hasAddressTaken()) { continue; }
+        if(mre->isaRefOp()) {
+           OA::OA_ptr<OA::RefOp> refop = mre.convert<OA::RefOp>();
+           if(refop->isaAddressOf()) {
+              continue; 
+           }
+        }
 
         if (mre->isDef()) {
           retList->push_back(memref);
@@ -3012,7 +3140,12 @@ Open64IRInterface::getUseMemRefs(OA::StmtHandle stmt)
         //! added by PLM 09/14/06 
         //! ================================================ 
 
-        if (mre->hasAddressTaken()) { continue; }
+        if(mre->isaRefOp()) {
+           OA::OA_ptr<OA::RefOp> refop = mre.convert<OA::RefOp>();
+           if(refop->isaAddressOf()) {
+              continue;
+           }
+        }
           
         if (mre->isUse()) {
           retList->push_back(memref);
@@ -3508,12 +3641,14 @@ Open64IRInterface::getMemRefExprIterator(OA::MemRefHandle memref)
     // iterate over set of MemRefExpr's associated with
     // the given MemRefHandle and put them in our list
     set<OA::OA_ptr<OA::MemRefExpr> >::iterator mreIter;
+    
+
     for (mreIter = sMemref2mreSetMap[memref].begin();
          mreIter != sMemref2mreSetMap[memref].end(); mreIter++ ) 
     {
         retList->push_back(*mreIter);
     }
-
+    
     OA::OA_ptr<Open64MemRefExprIterator> retval;
     retval = new Open64MemRefExprIterator(retList);
     return retval;
@@ -3563,30 +3698,25 @@ Open64IRInterface::initContextState(PU_Info* pu_forest)
 // and we are looking for MemRefHandle = S2:0:anon_ptr mapped
 // to sMemref2mreSetMap. Please notice corresponding changes in
 // createExprTree in the switch option : OPERATOR_is_load(opr).
-// PLM 10/15/06
+
 
 OA::MemRefHandle Open64IRInterface::findTopMemRefHandle(WN *wn)
 {
   OA::MemRefHandle h = OA::MemRefHandle(0);
 
   if (wn==0) {
-
     return OA::MemRefHandle(0);
-
   }
-
-
   h = (OA::irhandle_t)wn;
-
+  
   if(h == OA::MemRefHandle(0)) {
      return OA::MemRefHandle(0);
   }
 
- if(sMemref2mreSetMap.find(h) == sMemref2mreSetMap.end()) {
+  if(sMemref2mreSetMap.find(h) == sMemref2mreSetMap.end()) {
 
       if(WN_operator(wn) == OPR_ISTORE)
       {
-
          wn  =  WN_kid1(wn);
       } else if ( (WN_operator(wn) == OPR_ILOAD) ||
               (WN_operator(wn) == OPR_LDID)  ||
@@ -3600,8 +3730,7 @@ OA::MemRefHandle Open64IRInterface::findTopMemRefHandle(WN *wn)
               (WN_operator(wn) == OPR_ARRAYEXP) ||
               (WN_operator(wn) == OPR_ARRSECTION) ||
               (WN_operator(wn) == OPR_PARM) ||
-              (WN_operator(wn) == OPR_STRCTFLD)
-            )
+              (WN_operator(wn) == OPR_STRCTFLD) )
       {
          wn =  WN_kid0(wn);
       } else {
@@ -3611,14 +3740,13 @@ OA::MemRefHandle Open64IRInterface::findTopMemRefHandle(WN *wn)
 
       h=findTopMemRefHandle(wn);
   } else {
-      return h;
+      return h; 
   }
 
  return h;
 }
 
-
-
+ 
 
 // createExprTree: Given 'wn' return a possibly empty expression tree.
 OA::OA_ptr<OA::ExprTree>
@@ -3629,9 +3757,6 @@ Open64IRInterface::createExprTree(WN* wn)
   createExprTree(exprTree, wn);
   return exprTree;
 }
-
-
-
 
 
 // createExprTree: Given a tree container 'tree' and 'wn', builds tree
@@ -3649,7 +3774,7 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
   // represents the LHS of the assignment.)
   OPERATOR opr = WN_operator(wn);
   if ( !(opr == OPR_STID || OPERATOR_is_call(opr) 
-     || OPERATOR_is_expression(opr)) ) {
+	 || OPERATOR_is_expression(opr)) ) {
     return root;
   }
 
@@ -3694,8 +3819,8 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
     root = new OA::ExprTree::ConstSymNode(h);
   }
   else if (opr == OPR_STID || OPERATOR_is_load(opr)
-       || opr == OPR_ARRAY || opr == OPR_ARRSECTION 
-       || opr == OPR_ARRAYEXP) {
+	   || opr == OPR_ARRAY || opr == OPR_ARRSECTION 
+	   || opr == OPR_ARRAYEXP) {
     OA::MemRefHandle h((OA::irhandle_t)wn);
     // HACK! ALERT! BK:
     // mfef90 is not distributing the constant values beyond the
@@ -3745,7 +3870,7 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
             PLM 10/05/06
 
            if (opr == OPR_ILOAD && WN_operator(WN_kid0(wn)) == OPR_ARRAY) {
-              h = (OA::irhandle_t)WN_kid0(wn);
+        	  h = (OA::irhandle_t)WN_kid0(wn);
            }
       */  
       if (opr == OPR_ILOAD) {
@@ -3812,9 +3937,6 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
   
   return root;
 }
-
-
-
 
 
 #if 0 // eraxxon: save this for possible later use
@@ -3942,7 +4064,7 @@ Open64IRInterface::findAssignPairs(WN* wn)
     OA::MemRefHandle lhs;
 
     lhs = (OA::irhandle_t)wn;
-    
+
     OA::ExprHandle rhs((OA::irhandle_t)WN_kid0(wn));
     lst->push_back(AssignPair(lhs, rhs));
   }
@@ -4054,6 +4176,17 @@ void
 Open64IRInterface::DumpWN(WN* wn, ostream& os)
 {
   if (!wn) { os << "NULL"; return; }
+
+  // Printing scope of WN i.e. Name of the procedure 
+  // it belongs to
+  /*
+  PU_Info* origPU = Current_PU_Info;
+  if(origPU != NULL) {
+     ST_IDX idx = PU_Info_proc_sym(origPU);
+     char* procname = ST_name(idx);
+     std::cout << std::endl << "ProcName" << procname << std::endl;
+  }
+  */
   
   OPERATOR opr = WN_operator(wn);
   string op;
