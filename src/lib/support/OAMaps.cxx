@@ -126,7 +126,7 @@ bool OAAnalInfo::getDoNotFilterFlag() {
     cgraphman = new OA::CallGraph::ManagerCallGraphStandard(irIF);
     OA::OA_ptr<OA::CallGraph::CallGraph> cgraph = 
       cgraphman->performAnalysis(procIt,interAlias);
-  if (0) { cgraph->dumpdot(std::cout, irIF); }
+    if (0) { cgraph->dump(std::cout, irIF); }
     x->SetCallGraph(cgraphman, cgraph);
   
   
@@ -224,20 +224,13 @@ bool OAAnalInfo::getDoNotFilterFlag() {
 					interSE);
 #endif
 
-  MassageActivityInfo(duactive, irIF);
-
-  x->SetInterActive(duactiveman, duactive);
-    FORTTK_MSG(1, "ICFG Active Output");
-    active->output(*irIF);   
-    FORTTK_MSG(1, "**************************************");
+    x->SetInterActive(duactiveman, duactive);
     
-    OAAnalInfo::collectGlobalSymbolActivityInfo(active,
+    OAAnalInfo::collectGlobalSymbolActivityInfo(duactive,
 						interAlias,
 						irIF,
 						pu_forest);
 
-    x->SetInterActive(activeman, active);
-    
     // -------------------------------------------------------
     // For each PU, compute intraprocedural analysis info
     // -------------------------------------------------------

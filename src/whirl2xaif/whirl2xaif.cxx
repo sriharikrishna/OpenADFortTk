@@ -45,7 +45,7 @@ namespace whirl2xaif {
     Diag_Set_Phase("WHIRL to XAIF: translate IR");
     if (!pu_forest) { return; }
     if (Args::ourDoNotFilterFlag) { 
-      OAAnalInfo::setDoNotFilterFlag();
+      fortTkSupport::OAAnalInfo::setDoNotFilterFlag();
     }
     // -------------------------------------------------------
     // 1. Initialization (Much of this information must be collected

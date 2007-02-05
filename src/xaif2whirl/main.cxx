@@ -26,7 +26,7 @@
 #include <Exception.h>
 #include "Open64IRInterface/WhirlIO.h"
 #include <XAIFStrings.h>
-#include <lib/support/BackSubstituteTemps.h>
+#include "BackSubstituteTemps.h"
 #include "Args.h"
 #include "xaif2whirl.h"
 #include "XAIF_DOMErrorHandler.h"

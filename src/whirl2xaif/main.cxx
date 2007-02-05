@@ -20,7 +20,7 @@ using std::cout;
 #include <xmlostream.h>
 #include <Exception.h>
 #include "Open64IRInterface/WhirlIO.h"
-#include <lib/support/BackSubstituteTemps.h>
+#include "BackSubstituteTemps.h"
 
 static int
 real_main(int argc, char **argv);

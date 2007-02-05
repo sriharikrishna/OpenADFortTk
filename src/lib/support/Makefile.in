@@ -118,7 +118,6 @@ am__objects_1 = libsupport_a-Open64IRInterface.$(OBJEXT) \
 	libsupport_a-IntrinsicInfo.$(OBJEXT) \
 	libsupport_a-SymTab.$(OBJEXT) \
 	libsupport_a-WhirlGlobalStateUtils.$(OBJEXT) \
-	libsupport_a-BackSubstituteTemps.$(OBJEXT) \
 	libsupport_a-WhirlIO.$(OBJEXT) \
 	libsupport_a-diagnostics.$(OBJEXT) \
 	libsupport_a-stab_attr.$(OBJEXT) \
@@ -130,6 +129,7 @@ am__objects_1 = libsupport_a-Open64IRInterface.$(OBJEXT) \
 	libsupport_a-OAMaps.$(OBJEXT) \
 	libsupport_a-ScalarizedRef.$(OBJEXT) \
 	libsupport_a-ScalarizedRefTab.$(OBJEXT) \
+	libsupport_a-BackSubstituteTemps.$(OBJEXT) \
 	libsupport_a-sexpostream.$(OBJEXT) \
 	libsupport_a-SexpTags.$(OBJEXT) \
 	libsupport_a-sexputil.$(OBJEXT) libsupport_a-Symbol.$(OBJEXT) \
@@ -322,7 +322,7 @@ OAMaps.h OAMaps.cxx \
 quad.h \
 ScalarizedRef.h ScalarizedRef.cxx \
 ScalarizedRefTab.h ScalarizedRefTab.cxx \
-	BackSubstituteTemps.h BackSubstituteTemps.cxx \
+BackSubstituteTemps.h BackSubstituteTemps.cxx \
 sexpostream.h sexpostream.cxx \
 SexpTags.h SexpTags.cxx \
 sexputil.h sexputil.cxx \
