@@ -58,7 +58,7 @@
 //#include <OpenAnalysis/MemRefExpr/MemRefExprBasic.hpp>
 
 #include <OpenAnalysis/Utils/OA_ptr.hpp>
-#include "Open64IRInterface/IntrinsicInfo.h"
+#include "IntrinsicInfo.h"
 
 //************************** Open64 Include Files ***************************
 
@@ -78,8 +78,8 @@
 
 //*************************** User Include Files ****************************
 
-#include "Open64IRInterface/WhirlGlobalStateUtils.h"
-#include "Open64IRInterface/diagnostics.h"
+#include "WhirlGlobalStateUtils.h"
+#include "diagnostics.h"
 
 //typedef std::pair<char*,char*> fully_qualified_name;
 struct fully_qualified_name {
@@ -783,11 +783,9 @@ public:
   //---------------------------------------------------------------------------
 
   //! get the operation type and returns a LinOpType
-  OA::Linearity::LinOpType
-      Open64IRInterface::getLinearityOpType(OA::OpHandle op);
+  OA::Linearity::LinOpType getLinearityOpType(OA::OpHandle op);
 
-  OA::Linearity::IRStmtType 
-      Open64IRInterface::getLinearityStmtType(OA::StmtHandle h);
+  OA::Linearity::IRStmtType getLinearityStmtType(OA::StmtHandle h);
 
 
   //-------------------------------------------------------------------------
@@ -872,8 +870,9 @@ private:
   // helper functions for getMemRefIterator
   void findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
     WN* wn, unsigned lvl);
-  void createAndMapDerefs(OA::StmtHandle stmt, WN* wn, WN* subMemRef,
-                          bool isAddrOf, bool fullAccuracy,
+
+  void createAndMapDerefs(OA::StmtHandle stmt, WN* wn, WN* subMemRef, 
+                          bool isAddrOf, bool fullAccuracy, 
                           OA::MemRefExpr::MemRefType hty);
   void createAndMapNamedRef(OA::StmtHandle stmt, WN* wn, ST*, bool isAddrOf,
     bool fullAccuracy, OA::MemRefExpr::MemRefType hty);
