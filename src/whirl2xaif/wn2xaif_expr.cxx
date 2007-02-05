@@ -54,7 +54,8 @@
 
 //************************** Open64 Include Files ***************************
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64IRInterface/IntrinsicInfo.h"
 
 //*************************** User Include Files ****************************
 
@@ -266,7 +267,7 @@ InitConvOpMap() // FIXME
 void 
 whirl2xaif::WN2F_cvt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_CVT, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_CVT, fortTkSupport::Diagnostics::UnexpectedInput); 
 
   InitConvOpMap();
   TranslateWN(xos, WN_kid0(wn), ctxt);
@@ -282,7 +283,7 @@ whirl2xaif::WN2F_cvt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_cvtl(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_CVTL, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_CVTL, fortTkSupport::Diagnostics::UnexpectedInput); 
 
   TY_IDX  rtype, dtype;
   InitConvOpMap();
@@ -303,7 +304,7 @@ whirl2xaif::WN2F_cvtl(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_tas(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_TAS, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_TAS, fortTkSupport::Diagnostics::UnexpectedInput); 
   
   // Just ignore TAS operators for now.  TODO: make sure this
   // is always ok.
@@ -320,7 +321,7 @@ whirl2xaif::WN2F_tas(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_INTCONST(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_INTCONST, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_INTCONST, fortTkSupport::Diagnostics::UnexpectedInput); 
   
   // FIXME: use xlate_CONST
   TCON tval = Host_To_Targ(WN_rtype(wn), WN_const_val(wn));
@@ -339,7 +340,7 @@ whirl2xaif::xlate_INTCONST(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_CONST(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_CONST, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_CONST, fortTkSupport::Diagnostics::UnexpectedInput); 
 
   TY_IDX ty_idx = ST_type(WN_st(wn));
   
@@ -366,7 +367,7 @@ whirl2xaif::xlate_UnaryOp(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   OPERATOR opr = WN_operator(wn);
   OPCODE opc = WN_opcode(wn);
   FORTTK_ASSERT(WN_kid_count(wn) == 1, 
-		FORTTK_UNEXPECTED_INPUT << OPERATOR_name(opr));
+		fortTkSupport::Diagnostics::UnexpectedInput << OPERATOR_name(opr));
   xlate_UnaryOpUsingIntrinsicTable(xos, 
 				   opc, 
 				   WN_Tree_Type(wn), 
@@ -378,7 +379,7 @@ whirl2xaif::xlate_UnaryOp(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_rsqrt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_RSQRT, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(WN_operator(wn) == OPR_RSQRT, fortTkSupport::Diagnostics::UnexpectedInput);
   
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
   
@@ -394,7 +395,7 @@ whirl2xaif::WN2F_rsqrt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_realpart(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_REALPART, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(WN_operator(wn) == OPR_REALPART, fortTkSupport::Diagnostics::UnexpectedInput);
    
   switch (WN_rtype(wn)) {
   case MTYPE_F4:
@@ -422,7 +423,7 @@ whirl2xaif::WN2F_realpart(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_imagpart(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_IMAGPART, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(WN_operator(wn) == OPR_IMAGPART, fortTkSupport::Diagnostics::UnexpectedInput);
   
   switch (WN_rtype(wn)) {
   case MTYPE_F4:
@@ -449,7 +450,7 @@ whirl2xaif::WN2F_imagpart(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_PAREN(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_PAREN, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(WN_operator(wn) == OPR_PAREN, fortTkSupport::Diagnostics::UnexpectedInput);
 
   return TranslateWN(xos, WN_kid0(wn), ctxt);
 }
@@ -458,7 +459,7 @@ whirl2xaif::xlate_PAREN(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_RECIP(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_RECIP, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(WN_operator(wn) == OPR_RECIP, fortTkSupport::Diagnostics::UnexpectedInput);
 
    const TY_IDX result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
    
@@ -497,7 +498,7 @@ whirl2xaif::WN2F_parm(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
    * of the information provided in this packaging of argument 
    * expressions.  For now, just skip these nodes.
    */
-  FORTTK_ASSERT(WN_operator(wn) == OPR_PARM, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(WN_operator(wn) == OPR_PARM, fortTkSupport::Diagnostics::UnexpectedInput);
   if (TY_is_logical(Ty_Table[WN_ty(wn)]) || 
       ctxt.currentXlationContext().isFlag(XlationContext::IS_LOGICAL_ARG)) { //fzhao Jan
     ctxt.currentXlationContext().setFlag(XlationContext::HAS_LOGICAL_ARG);
@@ -515,7 +516,7 @@ whirl2xaif::WN2F_parm(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_alloca(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_ALLOCA, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(WN_operator(wn) == OPR_ALLOCA, fortTkSupport::Diagnostics::UnexpectedInput);
   
   xos << "OPR_ALLOCA(";
   TranslateWN(xos,WN_kid0(wn),ctxt);
@@ -535,7 +536,7 @@ whirl2xaif::xlate_BinaryOp(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   OPERATOR opr = WN_operator(wn);
   OPCODE opc = WN_opcode(wn);
   FORTTK_ASSERT(WN_kid_count(wn) == 2, 
-		FORTTK_UNEXPECTED_INPUT << OPERATOR_name(opr));
+		fortTkSupport::Diagnostics::UnexpectedInput << OPERATOR_name(opr));
   xlate_BinaryOpUsingIntrinsicTable(xos, 
 				    opc, 
 				    WN_Tree_Type(wn), 
@@ -549,7 +550,7 @@ whirl2xaif::xlate_BinaryOp(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_complex(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_COMPLEX, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(WN_operator(wn) == OPR_COMPLEX, fortTkSupport::Diagnostics::UnexpectedInput);
   
   switch (WN_rtype(wn)) {
   case MTYPE_C4:
@@ -579,7 +580,7 @@ whirl2xaif::WN2F_complex(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_bnor(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_BNOR, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(WN_operator(wn) == OPR_BNOR, fortTkSupport::Diagnostics::UnexpectedInput);
 
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
   
@@ -598,7 +599,7 @@ whirl2xaif::WN2F_bnor(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_lshr(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_LSHR, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(WN_operator(wn) == OPR_LSHR, fortTkSupport::Diagnostics::UnexpectedInput);
   
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
   
@@ -623,7 +624,7 @@ whirl2xaif::WN2F_select(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   /* SELECT is almost the same as the F90 MERGE intrinsic, 
      so I will output it that way for now */
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
   xos << "MERGE(";
   TranslateWN(xos, WN_kid1(wn), ctxt);
@@ -640,7 +641,7 @@ whirl2xaif::WN2F_select(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_madd(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_MADD, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(WN_operator(wn) == OPR_MADD, fortTkSupport::Diagnostics::UnexpectedInput);
 
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
   
@@ -662,7 +663,7 @@ whirl2xaif::WN2F_madd(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_msub(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_MSUB, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(WN_operator(wn) == OPR_MSUB, fortTkSupport::Diagnostics::UnexpectedInput);
 
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
   
@@ -684,7 +685,7 @@ whirl2xaif::WN2F_msub(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_nmadd(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_NMADD, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(WN_operator(wn) == OPR_NMADD, fortTkSupport::Diagnostics::UnexpectedInput);
 
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
   
@@ -706,7 +707,7 @@ whirl2xaif::WN2F_nmadd(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_nmsub(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_NMSUB, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(WN_operator(wn) == OPR_NMSUB, fortTkSupport::Diagnostics::UnexpectedInput);
   
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
   
@@ -741,14 +742,14 @@ whirl2xaif::xlate_INTRINSIC_OP(xml::ostream& xos, WN *wn, PUXlationContext& ctxt
   // not related to the call-info generated by PUinfo.  Note that
   // either all or none of the arguments are call-by-value.
   OPERATOR opr = WN_operator(wn);
-  FORTTK_ASSERT(opr == OPR_INTRINSIC_OP, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(opr == OPR_INTRINSIC_OP, fortTkSupport::Diagnostics::UnexpectedInput);
   
   INTRINSIC intrn = WN_intrinsic(wn);
   BOOL by_value = INTRN_by_value(intrn);
   INT begArgIdx = 0; // Assume we never return to first argument
   INT endArgIdx = WN_kid_count(wn) - 1;
   
-  const char* inm = fortTkSupport::IntrinsicXlationTable::intrinsicBasename(intrn);
+  const char* inm = IntrinsicInfo::intrinsicBaseName(intrn);
   fortTkSupport::IntrinsicXlationTable::XAIFInfoPair infoPair(Whirl2Xaif::getIntrinsicXlationTable().findXAIFInfo(opr, inm));
   if ((strcmp(inm, "ADRTMP") == 0) || (strcmp(inm, "VALTMP") == 0)) {
     // Special cases:
@@ -961,7 +962,7 @@ xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty,
   // such expression will be dispatched to another. 
   FORTTK_ASSERT(!TY_Is_Character_Reference(assumed_ty) &&
 		!TY_Is_Chararray_Reference(assumed_ty),
-		FORTTK_UNEXPECTED_INPUT << "substring reference");
+		fortTkSupport::Diagnostics::UnexpectedInput << "substring reference");
   
   if (!callByValue) {
     xlate_MemRef(xos, opnd,              /* address expression */

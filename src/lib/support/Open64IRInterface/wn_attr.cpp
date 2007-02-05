@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v 1.18 2006/05/12 16:12:22 utke Exp $
+// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/wn_attr.cpp,v 1.4 2006/03/16 03:48:55 mstrout Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -38,7 +38,7 @@
 //***************************************************************************
 //
 // File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/wn_attr.cxx,v $
+//   $Source: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/wn_attr.cpp,v $
 //
 // Purpose:
 //   [The purpose of this file]
@@ -65,7 +65,7 @@
 
 //************************** Open64 Include Files ***************************
 
-#include <include/Open64BasicTypes.h>
+#include "Open64BasicTypes.h"
 
 //*************************** User Include Files ****************************
 
@@ -387,7 +387,7 @@ WN_Tree_Type(const WN* wn)
       break;
       
     default:
-      FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
+      ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
     } /* switch */
   }
    
@@ -398,8 +398,8 @@ WN_Tree_Type(const WN* wn)
 TY_IDX 
 Get_Field_Type(TY_IDX base, int field_id) 
 {
-  FORTTK_ASSERT(TY_Is_Structured(base), 
-		FORTTK_UNEXPECTED_INPUT << "non structured type");
+  ASSERT_FATAL(TY_Is_Structured(base), 
+	       (DIAG_A_STRING, "GET_FIELD_TYPE: non struct type"));
   
   UINT cur_fld_id = 0;
   FLD_HANDLE fh = FLD_get_to_field(base, field_id, cur_fld_id);
@@ -410,152 +410,153 @@ Get_Field_Type(TY_IDX base, int field_id)
 //***************************************************************************
 
 TY_IDX 
-WN_GetRefObjType(const WN* wn) {
-
+WN_GetRefObjType(const WN* wn)
+{
   TY_IDX ty = 0;
   OPERATOR opr = WN_operator(wn); 
   
   switch (opr) {
-  case OPR_LDA:     // type of referenced (returned) address
-  case OPR_LDMA:
-    ty = WN_ty(wn);
-    break;
+    case OPR_LDA:     // type of referenced (returned) address
+    case OPR_LDMA:
+      ty = WN_ty(wn);
+      break;
     
-  case OPR_LDID:    // type of referenced object
-  case OPR_LDBITS: {
-    ty = WN_ty(wn);
-    ST* st = WN_st(wn);
-    TY_IDX st_ty = ST_type(st);
-    if (st_ty != ty) {
-      // this can actually happen when we back-translate portions
-      // using WN sub trees from the original whirl (see the patchWN... methods) and the variable
-      // in question has become active which obviously not reflected in the original whirl
-      const char* nm=ST_name(st);
-      FORTTK_MSG(0, "Warning: WN_GetRefObjType: type mismatch detected for " << nm);
-      ty=st_ty;
+    case OPR_LDID:    // type of referenced object
+    case OPR_LDBITS: {
+      ty = WN_ty(wn);
+      ST* st = WN_st(wn);
+      TY_IDX st_ty = ST_type(st);
+      if (st_ty != ty) {
+        // this can actually happen when we back-translate portions
+        // using WN sub trees from the original whirl (see the patchWN... methods) and the variable
+        // in question has become active which obviously not reflected in the original whirl
+        const char* nm=ST_name(st);
+        DBGMSG_PUB(0, "Warning: WN_GetRefObjType: type mismatch detected for %s\n", nm);
+        ty=st_ty;
+      }
+      break;
     }
-    break;
-  }
 
-  case OPR_ILOAD:   // type of referenced object
-  case OPR_ILOADX:
-    ty = WN_ty(wn);
-    break;
+    case OPR_ILOAD:   // type of referenced object
+    case OPR_ILOADX:
+      ty = WN_ty(wn);
+      break;
     
     // STOREs represent the left-hand-side expression
-  case OPR_STID:    // type of referenced lhs object
-  case OPR_PSTID:
-  case OPR_STBITS:
-    ty = WN_ty(wn);
-    break;
+    case OPR_STID:    // type of referenced lhs object
+    case OPR_PSTID:
+    case OPR_STBITS:
+      ty = WN_ty(wn);
+      break;
       
-  case OPR_ISTORE:  // type of referenced lhs object
-  case OPR_ISTOREX:
-  case OPR_ISTBITS:
-    ty = TY_pointed(WN_ty(wn));
-    break;
-  
-  case OPR_STRCTFLD:
-    ty = WN_ty(wn);           
-    break;
+    case OPR_ISTORE:  // type of referenced lhs object
+    case OPR_ISTOREX:
+    case OPR_ISTBITS:
+      ty = TY_pointed(WN_ty(wn));
+      break;
+    
+    case OPR_STRCTFLD:
+      ty = WN_ty(wn);           
+      break;
 
-  default: 
-    // NOTE: MLOAD, MSTORE are not supported
-    FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
-    break;
+    default: 
+      // NOTE: MLOAD, MSTORE are not supported
+      ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
+      break;
   }
   return ty;
 }
 
 
 TY_IDX 
-WN_GetBaseObjType(const WN* wn) {
+WN_GetBaseObjType(const WN* wn)
+{
   TY_IDX ty = 0;
   OPERATOR opr = WN_operator(wn); 
 
   ST* st = NULL;
   switch (opr) {
-  case OPR_LDA:
-  case OPR_LDMA:
-    st = WN_st(wn);
-    ty = ST_type(st);
-    if (TY_is_f90_pointer(ty)) { ty = TY_pointed(ty); }
-    break;
+    case OPR_LDA:
+    case OPR_LDMA:
+      st = WN_st(wn);
+      ty = ST_type(st);
+      if (TY_is_f90_pointer(ty)) { ty = TY_pointed(ty); }
+      break;
     
-  case OPR_LDID:
-  case OPR_LDBITS:
-    st = WN_st(wn);
-    ty = ST_type(st);
-    break;
+    case OPR_LDID:
+    case OPR_LDBITS:
+      st = WN_st(wn);
+      ty = ST_type(st);
+      break;
       
-  case OPR_ILOAD:
-  case OPR_ILOADX: {
-    WN* baseptr = WN_kid0(wn); // address expression as WN
-    TY_IDX baseptr_ty = WN_Tree_Type(baseptr);
-    FORTTK_ASSERT((TY_kind(baseptr_ty) == KIND_POINTER),
-		  "Internal error: expected a pointer type");
-    ty = TY_pointed(baseptr_ty);
-    // Note: neither WN_ty() nor TY_pointed(WN_load_addr_ty(wn))
-    // always give the base object.  For example, for a reference
-    // like F(i)%v, both return the type of v and not the type of
-    // the structure.
-    break;
-  }
+    case OPR_ILOAD:
+    case OPR_ILOADX: {
+      WN* baseptr = WN_kid0(wn); // address expression as WN
+      TY_IDX baseptr_ty = WN_Tree_Type(baseptr);
+      ASSERT_FATAL((TY_kind(baseptr_ty) == KIND_POINTER),
+		   (DIAG_A_STRING, "Internal error: expected a pointer type"));
+      ty = TY_pointed(baseptr_ty);
+      // Note: neither WN_ty() nor TY_pointed(WN_load_addr_ty(wn))
+      // always give the base object.  For example, for a reference
+      // like F(i)%v, both return the type of v and not the type of
+      // the structure.
+      break;
+    }
       
     // ARRAYs
-  case OPR_ARRAY:
-    ty = WN_GetBaseObjType(WN_kid0(wn));
-    break;
+    case OPR_ARRAY:
+      ty = WN_GetBaseObjType(WN_kid0(wn));
+      break;
 
     // STOREs represent the left-hand-side expression
-  case OPR_STID: 
-  case OPR_PSTID: 
-  case OPR_STBITS:
-    st = WN_st(wn);
-    ty = ST_type(st);
-    break;
+    case OPR_STID: 
+    case OPR_PSTID: 
+    case OPR_STBITS:
+      st = WN_st(wn);
+      ty = ST_type(st);
+      break;
       
-  case OPR_ISTORE: 
-  case OPR_ISTOREX:
-  case OPR_ISTBITS: {
-    // Note: use WN_Tree_Type(baseptr) instead of WN_ty(wn) to find
-    // type of baseptr because the former will attempt to interpret
-    // pointer arithmetic, e.g., the this structure reference
-    // "X(1)%a%y = ..."
-    //   F8ISTORE 0 T<38,anon_ptr.,8>
-    //    ...
-    //    U8ADD
-    //     U8ARRAY 1 48
-    //      U8U8LDID 0 <2,3,X> T<35,anon_ptr.,8>
-    //      I4INTCONST 2 (0x2)
-    //      I4INTCONST 1 (0x1)
-    //     U8INTCONST 8 (0x8)
-    WN* baseptr = WN_kid1(wn); // address expression as WN
-    TY_IDX baseptr_ty = WN_Tree_Type(baseptr); // was: WN_ty(wn)
-    ty = TY_pointed(baseptr_ty);
-    // This assertion is not always true, e.g. given this Fortan:
-    //   F(i)%v = y
-    // and this WHIRL
-    //   F8ISTORE 0 T<29,anon_ptr.,8>
-    //    ...
-    //    U8ARRAY 1 16                          (lhs)
-    //     U8U8LDID 0 <2,3,F> T<57,anon_ptr.,8> (base)
-    //     ...
-    // because the baseptr_ty and baseptr types are different, the
-    // structure element reference will implicitly take place!
-    //FORTTK_ASSERT((baseptr_ty == WN_Tree_Type(baseptr)),
-    //              "Internal error: base pointer types are inconsistent");
-    break;
-  }
-    
-  case OPR_STRCTFLD:
-    ty = WN_load_addr_ty(wn);           
-    break;
+    case OPR_ISTORE: 
+    case OPR_ISTOREX:
+    case OPR_ISTBITS: {
+      // Note: use WN_Tree_Type(baseptr) instead of WN_ty(wn) to find
+      // type of baseptr because the former will attempt to interpret
+      // pointer arithmetic, e.g., the this structure reference
+      // "X(1)%a%y = ..."
+      //   F8ISTORE 0 T<38,anon_ptr.,8>
+      //    ...
+      //    U8ADD
+      //     U8ARRAY 1 48
+      //      U8U8LDID 0 <2,3,X> T<35,anon_ptr.,8>
+      //      I4INTCONST 2 (0x2)
+      //      I4INTCONST 1 (0x1)
+      //     U8INTCONST 8 (0x8)
+      WN* baseptr = WN_kid1(wn); // address expression as WN
+      TY_IDX baseptr_ty = WN_Tree_Type(baseptr); // was: WN_ty(wn)
+      ty = TY_pointed(baseptr_ty);
+      // This assertion is not always true, e.g. given this Fortan:
+      //   F(i)%v = y
+      // and this WHIRL
+      //   F8ISTORE 0 T<29,anon_ptr.,8>
+      //    ...
+      //    U8ARRAY 1 16                          (lhs)
+      //     U8U8LDID 0 <2,3,F> T<57,anon_ptr.,8> (base)
+      //     ...
+      // because the baseptr_ty and baseptr types are different, the
+      // structure element reference will implicitly take place!
+      //FORTTK_ASSERT((baseptr_ty == WN_Tree_Type(baseptr)),
+      //              "Internal error: base pointer types are inconsistent");
+      break;
+    }
 
-  default: 
-    // NOTE: MLOAD, MSTORE are not supported
-    FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
-    break;
+    case OPR_STRCTFLD:
+      ty = WN_load_addr_ty(wn);           
+      break;
+    
+    default: 
+      // NOTE: MLOAD, MSTORE are not supported
+      ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
+      break;
   }
   return ty;
 }
@@ -576,7 +577,7 @@ WN_Call_Type(const WN* wn)
     return ST_type(WN_st(wn));
   case OPR_INTRINSIC_CALL:
   default:
-    FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
+    ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
     return 0;
   }
 }
@@ -657,8 +658,8 @@ WN_intrinsic_return_ty(const WN* call)
   TY_IDX ret_ty = 0;
   
   OPERATOR opr = WN_operator(call);
-  FORTTK_ASSERT(opr == OPR_INTRINSIC_CALL || opr == OPR_INTRINSIC_OP,
-		FORTTK_UNEXPECTED_INPUT << OPERATOR_name(opr));
+  ASSERT_FATAL(opr == OPR_INTRINSIC_CALL || opr == OPR_INTRINSIC_OP,
+	       (DIAG_A_STRING, "Programming Error!"));
   
   INTRINSIC intr_opc = (INTRINSIC)WN_intrinsic(call);
   switch (INTRN_return_kind(intr_opc)) {
@@ -726,7 +727,7 @@ WN_intrinsic_return_ty(const WN* call)
     ret_ty = Stab_Mtype_To_Ty(MTYPE_M);
     break;
   default:
-    FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
+    ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
     ret_ty = Stab_Mtype_To_Ty(MTYPE_V);
     break;
   }

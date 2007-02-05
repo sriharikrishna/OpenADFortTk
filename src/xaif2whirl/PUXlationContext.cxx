@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 #include "PUXlationContext.h"
-#include "lib/support/SymTab.h"
-#include "lib/support/diagnostics.h"
+#include "Open64IRInterface/SymTab.h"
+#include "Diagnostics.h"
 
 namespace xaif2whirl { 
 
@@ -73,13 +73,13 @@ namespace xaif2whirl {
     return (myWNParentMapP->FindBlock(wn)); 
   }
 
-  WhirlParentMap* PUXlationContext::getWNParentMap() const { 
+  fortTkSupport::WhirlParentMap* PUXlationContext::getWNParentMap() const { 
     if (!myWNParentMapP)
       FORTTK_DIE("PUXlationContext::getWNParentMap: myWNParentMapP not set");
     return myWNParentMapP; 
   }
 
-  void PUXlationContext::setWNParentMap(WhirlParentMap* aWhirlParentMapP) { 
+  void PUXlationContext::setWNParentMap(fortTkSupport::WhirlParentMap* aWhirlParentMapP) { 
     if (!aWhirlParentMapP)
       FORTTK_DIE("PUXlationContext::setWNParentMap: null pointer passed");
     // JU: this appears to be reset, HMMM
@@ -97,19 +97,19 @@ namespace xaif2whirl {
     myWNParentMapP = aWhirlParentMapP; 
   }
 
-  std::pair<ST_TAB*, PU_Info*>  PUXlationContext::findSymTab(SymTabId stabId) {
+  std::pair<ST_TAB*, PU_Info*>  PUXlationContext::findSymTab(fortTkSupport::SymTabId stabId) {
     if (!mySymTabIdToSymTabMapP)
       FORTTK_DIE("PUXlationContext::findSymTab: mySymTabIdToSymTabMapP not set");
     return (mySymTabIdToSymTabMapP->Find(stabId, true /*mustfind*/)); 
   }
 
-  SymTabIdToSymTabMap* PUXlationContext::getSymTabIdToSymTabMap() const { 
+  fortTkSupport::SymTabIdToSymTabMap* PUXlationContext::getSymTabIdToSymTabMap() const { 
     if (!mySymTabIdToSymTabMapP)
       FORTTK_DIE("PUXlationContext::getSymTabIdToSymTabMap: mySymTabIdToSymTabMapP not set");
     return mySymTabIdToSymTabMapP; 
   }
 
-  void PUXlationContext::setSymTabIdToSymTabMap(SymTabIdToSymTabMap* aSymTabIdToSymTabMapP) { 
+  void PUXlationContext::setSymTabIdToSymTabMap(fortTkSupport::SymTabIdToSymTabMap* aSymTabIdToSymTabMapP) { 
     if (!aSymTabIdToSymTabMapP)
       FORTTK_DIE("PUXlationContext::setSymTabIdToSymTabMap: null pointer passed");
     if (mySymTabIdToSymTabMapP)
@@ -117,19 +117,19 @@ namespace xaif2whirl {
     mySymTabIdToSymTabMapP = aSymTabIdToSymTabMapP; 
   }
   
-  PU_Info* PUXlationContext::findPU(PUId aPUId) {
+  PU_Info* PUXlationContext::findPU(fortTkSupport::PUId aPUId) {
     if (!myPUIdToPUMapP)
       FORTTK_DIE("PUXlationContext::findPU: myPUIdToPUMapP not set");
     return (myPUIdToPUMapP->Find(aPUId));
   }
 
-  PUIdToPUMap* PUXlationContext::getPUIdToPUMap() const { 
+  fortTkSupport::PUIdToPUMap* PUXlationContext::getPUIdToPUMap() const { 
     if (!myPUIdToPUMapP)
       FORTTK_DIE("PUXlationContext::getPUToPUIdMap: myPUIdToPUMapP not set");
     return myPUIdToPUMapP; 
   }
 
-  void PUXlationContext::setPUIdToPUMap(PUIdToPUMap* aPUIdToPUMapP) {
+  void PUXlationContext::setPUIdToPUMap(fortTkSupport::PUIdToPUMap* aPUIdToPUMapP) {
     if (!aPUIdToPUMapP)
       FORTTK_DIE("PUXlationContext::setPUIdToPUMap: null pointer passed");
     if (myPUIdToPUMapP)
@@ -137,7 +137,7 @@ namespace xaif2whirl {
     myPUIdToPUMapP = aPUIdToPUMapP; 
   }
 
-  WNId PUXlationContext::findWNId(WN* aWNp) {
+  fortTkSupport::WNId PUXlationContext::findWNId(WN* aWNp) {
     if (!myWNToWNIdMapP)
       FORTTK_DIE("PUXlationContext::findWNId: myWNToWNIdMapP not set");
     if (!aWNp)
@@ -145,13 +145,13 @@ namespace xaif2whirl {
     return myWNToWNIdMapP->Find(aWNp);
   }
 
-  WNToWNIdMap* PUXlationContext::getWNToWNIdMap() const { 
+  fortTkSupport::WNToWNIdMap* PUXlationContext::getWNToWNIdMap() const { 
     if (!myWNToWNIdMapP)
       FORTTK_DIE("PUXlationContext::getWNToWNIdMap: myWNToWNIdMapP not set");
     return myWNToWNIdMapP; 
   }
 
-  void PUXlationContext::setWNToWNIdMap(WNToWNIdMap* aWNToWNIdMapP) { 
+  void PUXlationContext::setWNToWNIdMap(fortTkSupport::WNToWNIdMap* aWNToWNIdMapP) { 
     if (!aWNToWNIdMapP)
       FORTTK_DIE("PUXlationContext::setWNToWNIdMap: null pointer passed");
     // JU: this is being reset hmm
@@ -169,19 +169,19 @@ namespace xaif2whirl {
     myWNToWNIdMapP = aWNToWNIdMapP; 
   }
 
-  WN* PUXlationContext::findWN(WNId aWNId, bool mustFind) {
+  WN* PUXlationContext::findWN(fortTkSupport::WNId aWNId, bool mustFind) {
     if (!myWNIdToWNMapP)
       FORTTK_DIE("PUXlationContext::findWN: myWNIdToWNMapP not set");
     return myWNIdToWNMapP->Find(aWNId,mustFind);
   }
 
-  WNIdToWNMap* PUXlationContext::getWNIdToWNMap() const { 
+  fortTkSupport::WNIdToWNMap* PUXlationContext::getWNIdToWNMap() const { 
     if (!myWNIdToWNMapP)
       FORTTK_DIE("PUXlationContext::getWNIdToWNMap: myWNIdToWNMapP not set");
     return myWNIdToWNMapP; 
   }
 
-  void PUXlationContext::setWNIdToWNMap(WNIdToWNMap* aWNIdToWNMapP) { 
+  void PUXlationContext::setWNIdToWNMap(fortTkSupport::WNIdToWNMap* aWNIdToWNMapP) { 
     if (!aWNIdToWNMapP)
       FORTTK_DIE("PUXlationContext::setWNIdToWNMap: null pointer passed");
     // JU: this is being reset hmm
@@ -199,20 +199,20 @@ namespace xaif2whirl {
     myWNIdToWNMapP = aWNIdToWNMapP; 
   }
 
-  Symbol* PUXlationContext::findSym(const std::string& scopeid, 
+  fortTkSupport::Symbol* PUXlationContext::findSym(const std::string& scopeid, 
 				    const std::string& symid) { 
     if(!myXAIFSymToSymbolMapP)
       FORTTK_DIE("PUXlationContext::findSym: myXAIFSymToSymbolMapP not set");
     return (myXAIFSymToSymbolMapP->Find(scopeid.c_str(), symid.c_str())); 
   }
  
-  XAIFSymToSymbolMap* PUXlationContext::getXAIFSymToSymbolMap() const { 
+  fortTkSupport::XAIFSymToSymbolMap* PUXlationContext::getXAIFSymToSymbolMap() const { 
     if(!myXAIFSymToSymbolMapP)
       FORTTK_DIE("PUXlationContext::getXAIFSymToSymbolMap: myXAIFSymToSymbolMapP not set");
     return myXAIFSymToSymbolMapP;
   } 
 
-  void PUXlationContext::setXAIFSymToSymbolMap(XAIFSymToSymbolMap* aXAIFSymToSymbolMapP) { 
+  void PUXlationContext::setXAIFSymToSymbolMap(fortTkSupport::XAIFSymToSymbolMap* aXAIFSymToSymbolMapP) { 
     if (!aXAIFSymToSymbolMapP)
       FORTTK_DIE("PUXlationContext::setXAIFSymToSymbolMap: null pointer passed");
     if (myXAIFSymToSymbolMapP)

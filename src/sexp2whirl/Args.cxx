@@ -20,7 +20,7 @@
 
 //************************** Open64 Include Files ***************************
 
-#include <include/Open64BasicTypes.h> // FIXME 
+#include "Open64IRInterface/Open64BasicTypes.h"
 #include "file_util.h"      // New_Extension, Last_Pathname_Component
 
 //*************************** User Include Files ****************************

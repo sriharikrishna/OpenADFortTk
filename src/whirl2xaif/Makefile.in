@@ -272,7 +272,7 @@ OPENADFORTTK = @abs_top_srcdir@
 ############################################################
 # Local includes
 ############################################################
-OPENADFORTTK_IFLAGS = -I$(OPENADFORTTK)/src
+OPENADFORTTK_IFLAGS = -I$(OPENADFORTTK)/src/lib/support
 
 ############################################################
 # Local libraries

@@ -6,7 +6,7 @@ using std::endl;
 using std::cout;
 #include <string>
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 #include "cmplrs/rcodes.h"  // return codes
 #include "tracing.h"        // trace routines
@@ -17,9 +17,9 @@ using std::cout;
 #include "Args.h"
 #include "whirl2xaif.h"
 
-#include <lib/support/xmlostream.h>
-#include <lib/support/Exception.h>
-#include <lib/support/WhirlIO.h>
+#include <xmlostream.h>
+#include <Exception.h>
+#include "Open64IRInterface/WhirlIO.h"
 #include <lib/support/BackSubstituteTemps.h>
 
 static int
@@ -48,7 +48,7 @@ main(int argc, char **argv)
     e.Report(cerr); // fatal error
     exit(1);
   }
-  catch (FortTk::BaseException& e) {
+  catch (fortTkSupport::BaseException& e) {
     e.Report(cerr);
     exit(1);
   }
@@ -102,7 +102,7 @@ real_main(int argc, char **argv)
   
   Args args(argc, argv);
   std::ostream* os = InitOutputStream(args);
-  FortTk_SetDiagnosticFilterLevel(args.debug);
+  fortTkSupport::Diagnostics::setDiagnosticFilterLevel(args.debug);
   
   // -------------------------------------------------------
   // 3. Read WHIRL IR

@@ -11,16 +11,16 @@
 #include "xercesc/dom/DOMNode.hpp"
 #include "xercesc/dom/DOMElement.hpp"
 
-#include "include/Open64BasicTypes.h"
+#include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64IRInterface/Open64IRInterface.hpp"
+#include "Open64IRInterface/SymTab.h"
+#include "Open64IRInterface/wn_attr.h"
+#include "Open64IRInterface/stab_attr.h"
 
-#include "lib/support/Open64IRInterface.hpp"
-#include "lib/support/SymTab.h"    // for XAIFSymToWhirlSymMap
-#include "lib/support/ScalarizedRefTab.h"
-#include "lib/support/WhirlIDMaps.h"
-#include "lib/support/XAIFStrings.h"
-#include "lib/support/wn_attr.h"   // for WN_Tree_Type
-#include "lib/support/stab_attr.h" // for Stab_Pointer_To
-#include "lib/support/diagnostics.h"
+#include "ScalarizedRefTab.h"
+#include "WhirlIDMaps.h"
+#include "XAIFStrings.h"
+#include "Diagnostics.h"
 
 #include "xaif2whirl.h"
 #include "XlateExpression.h"
@@ -31,12 +31,13 @@ namespace xaif2whirl {
   extern TY_IDX ActiveTypeTyIdx;            // FIXME
   extern TY_IDX ActiveTypeInitializedTyIdx; // FIXME
 
+
   WN* XlateExpression::translateExpression(const DOMElement* elem, 
 					   PUXlationContext& ctxt) {
-    FORTTK_ASSERT(elem, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(elem, fortTkSupport::Diagnostics::UnexpectedInput);
     // Slurp expression into a graph (DAG) and translate it
-    OA::OA_ptr<OA::DGraph::DGraphStandard> g = createExpressionGraph(elem);
-    OA::OA_ptr<OA::BaseGraph::Node> root = g->getRoot();
+    OA::OA_ptr<OA::DGraph::DGraphImplement> g = createExpressionGraph(elem);
+    OA::OA_ptr<OA::DGraph::NodeInterface> root = g->getExprGraphRootNode();
     OA::OA_ptr<MyDGNode> n = root.convert<MyDGNode>();
     WN* wn = xlate_Expression(g, n, ctxt);
     return wn;
@@ -52,12 +53,13 @@ namespace xaif2whirl {
 
   WN* XlateExpression::translateVarRef(const DOMElement* elem, 
 				       PUXlationContext& ctxt) {
-    FORTTK_ASSERT(elem, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(elem, fortTkSupport::Diagnostics::UnexpectedInput);
     // Slurp expression into a graph (DAG) and translate it
     ctxt.createXlationContext(XlationContext::VARREF);
-    OA::OA_ptr<OA::DGraph::DGraphStandard> g = 
+    OA::OA_ptr<OA::DGraph::DGraphImplement> g = 
       createExpressionGraph(elem, true /* varRef */);
-    OA::OA_ptr<OA::BaseGraph::Node> root = g->getRoot();
+    //    xaif2whirl::DDumpDotGraph(g);
+    OA::OA_ptr<OA::DGraph::NodeInterface> root = g->getExprGraphRootNode();
     OA::OA_ptr<MyDGNode> n = root.convert<MyDGNode>();
     WN* wn = xlate_VarRef(g, n, ctxt);
     ctxt.deleteXlationContext();
@@ -78,7 +80,7 @@ namespace xaif2whirl {
 
   std::pair<ST*, WN_OFFSET> XlateExpression::translateVarRefSimple(const DOMElement* elem, 
 								   PUXlationContext& ctxt) {
-    FORTTK_ASSERT(elem, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(elem, fortTkSupport::Diagnostics::UnexpectedInput);
     // This must be a plain XAIF symbol reference (a one-vertex graph)
     const XMLCh* nameX = elem->getNodeName();
     if ( !(XMLString::equals(nameX, XAIFStrings.elem_SymRef_x()) &&
@@ -101,7 +103,7 @@ namespace xaif2whirl {
     OPERATOR opr = WN_operator(wn);
     if (!OPERATOR_is_expression(opr) && !OPERATOR_is_call(opr)) { return parent; }
     // Base case: a variable reference
-    if (fortTk::ScalarizedRef::isRefTranslatableToXAIF(wn)) {
+    if (fortTkSupport::ScalarizedRef::isRefTranslatableToXAIF(wn)) {
       TY_IDX ty = WN_GetBaseObjType(wn);
       if (TY_kind(ty) == KIND_ARRAY) {
 	ty = TY_etype(ty);
@@ -122,7 +124,7 @@ namespace xaif2whirl {
 
   WN* XlateExpression::translateConstant(const DOMElement* elem, 
 					 PUXlationContext& ctxt) {
-    FORTTK_ASSERT(elem, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(elem, fortTkSupport::Diagnostics::UnexpectedInput);
     const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
     const XMLCh* valX = elem->getAttribute(XAIFStrings.attr_value_x());
     XercesStrX type = XercesStrX(typeX);
@@ -164,7 +166,7 @@ namespace xaif2whirl {
     else if (strcmp(type.c_str(), "char") == 0) {
       // Character constant. Cf. cwh_stmt.cxx:349
       // wn = WN_CreateIntconst(OPC_I4INTCONST, (INT64)val);
-      FORTTK_DIE(FORTTK_UNIMPLEMENTED << "creation of character constant");
+      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "creation of character constant");
     } 
     else if (strcmp(type.c_str(), "string") == 0) {
       // String constant. A string constant reference to "S" looks like:
@@ -183,10 +185,10 @@ namespace xaif2whirl {
     return wn;
   }
 
-  WN* XlateExpression::xlate_Intrinsic(OA::OA_ptr<OA::DGraph::DGraphStandard> g, 
+  WN* XlateExpression::xlate_Intrinsic(OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
 				       OA::OA_ptr<MyDGNode> n, 
 				       PUXlationContext& ctxt) {
-    FORTTK_ASSERT(!g.ptrEqual(NULL) && !n.ptrEqual(NULL), FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(!g.ptrEqual(NULL) && !n.ptrEqual(NULL), fortTkSupport::Diagnostics::UnexpectedInput);
     DOMElement* elem = n->GetElem();
     const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
     XercesStrX nm = XercesStrX(nmX);
@@ -200,7 +202,7 @@ namespace xaif2whirl {
     return wn;
   }
 
-  WN* XlateExpression::xlate_Expression(OA::OA_ptr<OA::DGraph::DGraphStandard> g, 
+  WN* XlateExpression::xlate_Expression(OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
 					OA::OA_ptr<MyDGNode> n, 
 					PUXlationContext& ctxt) {
     // Recursively translate the DAG (tree) rooted at this node
@@ -235,7 +237,7 @@ namespace xaif2whirl {
   }
 
   WN* XlateExpression::xlate_VarRef(const DOMElement* elem, PUXlationContext& ctxt) {
-    FORTTK_ASSERT(elem, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(elem, fortTkSupport::Diagnostics::UnexpectedInput);
     // VariableReferenceType
     bool deriv = GetDerivAttr(elem);
     // skip the xaif:VariableReference node
@@ -246,10 +248,10 @@ namespace xaif2whirl {
     return wn;
   }
 
-  WN* XlateExpression::xlate_VarRef(OA::OA_ptr<OA::DGraph::DGraphStandard> g, 
+  WN* XlateExpression::xlate_VarRef(OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
 				    OA::OA_ptr<MyDGNode> n, 
 				    PUXlationContext& ctxt) {
-    FORTTK_ASSERT(!g.ptrEqual(NULL) && !n.ptrEqual(NULL), FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(!g.ptrEqual(NULL) && !n.ptrEqual(NULL), fortTkSupport::Diagnostics::UnexpectedInput);
     // Recursively translate the DAG (tree) rooted at this node
     DOMElement* elem = n->GetElem();
     FORTTK_ASSERT(elem, "Internal error: var-ref graph contains null DOM elem.");
@@ -269,20 +271,20 @@ namespace xaif2whirl {
     return wn;
   }
 
-  WN* XlateExpression::xlate_FunctionCall(OA::OA_ptr<OA::DGraph::DGraphStandard> g, 
+  WN* XlateExpression::xlate_FunctionCall(OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
 					  OA::OA_ptr<MyDGNode> n,
 					  PUXlationContext& ctxt) {
-    FORTTK_ASSERT(!g.ptrEqual(NULL) && !n.ptrEqual(NULL), FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(!g.ptrEqual(NULL) && !n.ptrEqual(NULL), fortTkSupport::Diagnostics::UnexpectedInput);
     DOMElement* elem = n->GetElem();
     // FIXME: children are expr; find num of args (use Intrinsic function above)
-    FORTTK_DIE(FORTTK_UNIMPLEMENTED << "xaif:FunctionCall");
+    FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "xaif:FunctionCall");
     return NULL;
   }
 
-  WN* XlateExpression::xlate_BooleanOperation(OA::OA_ptr<OA::DGraph::DGraphStandard> g, 
+  WN* XlateExpression::xlate_BooleanOperation(OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
 					      OA::OA_ptr<MyDGNode> n,
 					      PUXlationContext& ctxt) {
-    FORTTK_ASSERT(!g.ptrEqual(NULL) && !n.ptrEqual(NULL), FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(!g.ptrEqual(NULL) && !n.ptrEqual(NULL), fortTkSupport::Diagnostics::UnexpectedInput);
     DOMElement* elem = n->GetElem();
     const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
     XercesStrX nm = XercesStrX(nmX);
@@ -308,7 +310,7 @@ namespace xaif2whirl {
   WN* XlateExpression::xlate_ExprOpUsingIntrinsicTable(const fortTkSupport::IntrinsicXlationTable::XAIFOpr xopr, 
 						       const char* xoprNm, 
 						       const char* xIntrinKey,
-						       OA::OA_ptr<OA::DGraph::DGraphStandard> g, 
+						       OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
 						       OA::OA_ptr<MyDGNode> n, 
 						       PUXlationContext& ctxt) {
     using namespace OA::DGraph;
@@ -320,17 +322,17 @@ namespace xaif2whirl {
 		  << xoprNm  << "-" << xIntrinKey << "'");
     OA::OA_ptr<MyDGEdge> tmp; tmp = NULL;
     vector<OA::OA_ptr<MyDGEdge> > opnd_edge(info->numop, tmp);
-    OA::OA_ptr<Interface::IncomingEdgesIterator> itPtr 
+    OA::OA_ptr<EdgesIteratorInterface> itPtr 
       = n->getIncomingEdgesIterator();
     for (int i = 0; itPtr->isValid(); ++(*itPtr), ++i) {
-      OA::OA_ptr<OA::DGraph::Interface::Edge> etmp = itPtr->current();
+      OA::OA_ptr<OA::DGraph::EdgeInterface> etmp = itPtr->current();
       opnd_edge[i] = etmp.convert<MyDGEdge>();
     }
     std::sort(opnd_edge.begin(), opnd_edge.end(),XAIFEdgePositionCompare()); // ascending
     // 2. Translate each operand into a WHIRL expression tree
     vector<WN*> opnd_wn(info->numop, NULL); 
     for (unsigned i = 0; i < info->numop; ++i) {
-      OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = opnd_edge[i]->source();
+      OA::OA_ptr<NodeInterface> ntmp = opnd_edge[i]->getSource();
       OA::OA_ptr<MyDGNode> opnd = ntmp.convert<MyDGNode>();
       opnd_wn[i] = xlate_Expression(g, opnd, ctxt);
     }       
@@ -398,12 +400,12 @@ namespace xaif2whirl {
 
   WN* XlateExpression::xlate_SymbolReference(const DOMElement* elem, 
 					     PUXlationContext& ctxt) {
-    FORTTK_ASSERT(elem, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(elem, fortTkSupport::Diagnostics::UnexpectedInput);
     // -------------------------------------------------------
     // 0. Setup; Possibly redirect processing
     // -------------------------------------------------------
     WN* wn = NULL;
-    Symbol* sym = GetSymbol(elem, ctxt);
+    fortTkSupport::Symbol* sym = GetSymbol(elem, ctxt);
     if (sym->IsActive()) {
       ctxt.currentXlationContext().setFlag(XlationContext::ACTIVETYPE); // N.B. inherited up the ctxt stack
     }
@@ -462,7 +464,7 @@ namespace xaif2whirl {
 
   std::pair<ST*, WN_OFFSET> XlateExpression::xlate_SymbolReferenceSimple(const DOMElement* elem,
 									 PUXlationContext& ctxt) {
-    Symbol* sym = GetSymbol(elem, ctxt);
+    fortTkSupport::Symbol* sym = GetSymbol(elem, ctxt);
     ST* st = sym->GetST();
     WN_OFFSET oset = 0;
     if (ST_class(st) == CLASS_PREG) {
@@ -523,16 +525,16 @@ namespace xaif2whirl {
     default: 
       break; // fall through
     } // switch
-    FORTTK_ASSERT(wn, FORTTK_UNIMPLEMENTED << "Unable to recreate collapsed scalarized path.");
+    FORTTK_ASSERT(wn, fortTkSupport::Diagnostics::Unimplemented << "Unable to recreate collapsed scalarized path.");
     //if (!create_lda) {
     //}
     return wn;
   }
 
-  WN* XlateExpression::xlate_ArrayElementReference(OA::OA_ptr<OA::DGraph::DGraphStandard> g, 
+  WN* XlateExpression::xlate_ArrayElementReference(OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
 						   OA::OA_ptr<MyDGNode> n, 
 						   PUXlationContext& ctxt) {
-    FORTTK_ASSERT(!g.ptrEqual(NULL) && !n.ptrEqual(NULL), FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(!g.ptrEqual(NULL) && !n.ptrEqual(NULL), fortTkSupport::Diagnostics::UnexpectedInput);
     DOMElement* elem = n->GetElem();
     // -------------------------------------------------------
     // 1. Translate the index expression for each dimension
@@ -599,11 +601,11 @@ namespace xaif2whirl {
     return wn;
   }
 
-  OA::OA_ptr<OA::DGraph::DGraphStandard> XlateExpression::createExpressionGraph(const DOMElement* elem, 
+  OA::OA_ptr<OA::DGraph::DGraphImplement> XlateExpression::createExpressionGraph(const DOMElement* elem, 
 										bool varRef) {
     using namespace OA::DGraph;
     MyDGNode::resetIds();
-    OA::OA_ptr<DGraphStandard> g; g = new DGraphStandard;
+    OA::OA_ptr<DGraphImplement> g; g = new DGraphImplement();
     VertexIdToMyDGNodeMap m;
     // Setup variables
     XMLCh* edgeStr = NULL;
@@ -648,10 +650,16 @@ namespace xaif2whirl {
     // -------------------------------------------------------
     // Since the graph is connected, the root node is the first (only)
     // node without outgoing edges.
-    OA::OA_ptr<DGraphStandard::Node> root; root = NULL;
-    DGraphStandard::NodesIterator nIt(*g);
+    
+
+
+    
+    
+    /*! commented out by PLM 08/30/06, I dont think I need to set RootNode in the Graph 
+    OA::OA_ptr<NodeInterface> root; root = NULL;
+    DGraph::NodesIterator nIt(*g);
     for ( ; nIt.isValid(); ++nIt) {
-      OA::OA_ptr<DGraphStandard::Node> node = nIt.current();
+      OA::OA_ptr<NodeInterface> node = nIt.current();
       if (node->num_outgoing() == 0) {
 	root = node;
 	break;
@@ -660,6 +668,7 @@ namespace xaif2whirl {
     FORTTK_ASSERT(!root.ptrEqual(NULL), 
 		  "Unable to find root of expression graph:\n" << *elem);
     g->setRoot(root);
+    */
     return g;
   }
 
@@ -692,7 +701,7 @@ namespace xaif2whirl {
 
   TYPE_ID XlateExpression::getRTypeFromOpands(vector<WN*>& opands) {
     int opands_num = opands.size();
-    FORTTK_ASSERT(opands_num > 0, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(opands_num > 0, fortTkSupport::Diagnostics::UnexpectedInput);
     // 1. Gather types for operands
     vector<TY_IDX> opands_ty(opands_num);
     vector<TYPE_ID> opands_mty(opands_num);

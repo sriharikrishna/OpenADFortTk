@@ -7,13 +7,15 @@
 #include <list> 
 #include <iostream>
 
-#include "include/Open64BasicTypes.h"
-#include "lib/support/WhirlParentize.h"
-#include "lib/support/WhirlIDMaps.h"
-#include "lib/support/OAMaps.h"
-#include "lib/support/SymTab.h"
-#include "lib/support/ScalarizedRefTab.h"
+#include "Open64IRInterface/Open64BasicTypes.h"
+#include "WhirlParentize.h"
+#include "WhirlIDMaps.h"
+#include "OAMaps.h"
+#include "Open64IRInterface/SymTab.h"
+#include "ScalarizedRefTab.h"
 #include "XlationContext.h"
+#include <OpenAnalysis/Location/Location.hpp>
+
 
 namespace whirl2xaif {
 
@@ -99,33 +101,34 @@ namespace whirl2xaif {
 
     WN* findParentWN(WN*);
     WN* findParentBlockWN(WN*);
-    WhirlParentMap* getWNParentMap() const;
-    void setWNParentMap(WhirlParentMap* aWhirlParentMapP);
+    fortTkSupport::WhirlParentMap* getWNParentMap() const;
+    void setWNParentMap(fortTkSupport::WhirlParentMap* aWhirlParentMapP);
   
-    SymTabId findSymTabId(ST_TAB* stab);
-    SymTabToSymTabIdMap* getSymTabToIdMap() const;
-    void setSymTabToIdMap(SymTabToSymTabIdMap* aSymTabToSymTabIdMapP);
+    fortTkSupport::SymTabId findSymTabId(ST_TAB* stab);
+    fortTkSupport::SymTabToSymTabIdMap* getSymTabToIdMap() const;
+    void setSymTabToIdMap(fortTkSupport::SymTabToSymTabIdMap* aSymTabToSymTabIdMapP);
   
-    PUId findPUId(PU_Info* pu);
-    PUToPUIdMap* getPUToIdMap() const;
-    void setPUToIdMap(PUToPUIdMap* aPUToPUIdMapP);
+    fortTkSupport::PUId findPUId(PU_Info* pu);
+    fortTkSupport::PUToPUIdMap* getPUToIdMap() const;
+    void setPUToIdMap(fortTkSupport::PUToPUIdMap* aPUToPUIdMapP);
 
-    WNId findWNId(WN* wn);
-    WNToWNIdMap* getWNToIdMap() const;
-    void setWNToIdMap(WNToWNIdMap* x);
+    fortTkSupport::WNId findWNId(WN* wn);
+    fortTkSupport::WNToWNIdMap* getWNToIdMap() const;
+    void setWNToIdMap(fortTkSupport::WNToWNIdMap* x);
 
     int findUDDUChainId(WN* wnexpr);
     OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> getUDDUChains() const; 
     void setUDDUChains(OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> x);
 
-    fortTk::ScalarizedRef* findScalarizedRef(WN* wn);
-    fortTk::ScalarizedRefTab_W2X* getScalarizedRefTab() const;
-    void setScalarizedRefTab(fortTk::ScalarizedRefTab_W2X* aScalarizedRefTab_W2Xp);
+    fortTkSupport::ScalarizedRef* findScalarizedRef(WN* wn);
+    fortTkSupport::ScalarizedRefTab_W2X* getScalarizedRefTab() const;
+    void setScalarizedRefTab(fortTkSupport::ScalarizedRefTab_W2X* aScalarizedRefTab_W2Xp);
   
     int isActiveSym(ST* st);
     int isActiveStmt(PU_Info* pu, WN* wn);
     int isActiveVarRef(PU_Info* pu, WN* wn); 
     void setActivity(OA::OA_ptr<OA::Activity::InterActive> anActivityMap);
+    void setAlias(OA::OA_ptr<OA::Alias::InterAliasMap> anAliasMap);
 
     // -------------------------------------------------------
     // Misc
@@ -157,22 +160,22 @@ namespace whirl2xaif {
     /**
      * we don't own this
      */
-    WhirlParentMap* myWNParentMapP;
+    fortTkSupport::WhirlParentMap* myWNParentMapP;
 
     /**
      * we don't own this
      */
-    SymTabToSymTabIdMap* myStab2idMapP;
+    fortTkSupport::SymTabToSymTabIdMap* myStab2idMapP;
 
     /**
      * we don't own this
      */
-    PUToPUIdMap* myPU2idMapP;
+    fortTkSupport::PUToPUIdMap* myPU2idMapP;
 
     /**
      * we don't own this
      */
-    WNToWNIdMap* myWN2idMapP;
+    fortTkSupport::WNToWNIdMap* myWN2idMapP;
   
     /**
      * we don't own this
@@ -182,12 +185,17 @@ namespace whirl2xaif {
     /**
      * we don't own this
      */
+    OA::OA_ptr<OA::Alias::InterAliasMap> myAlias;
+  
+    /**
+     * we don't own this
+     */
     OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> myUdduchains;
 
     /**
      * we don't own this
      */
-    fortTk::ScalarizedRefTab_W2X* myScalarizedRefTab_W2Xp;
+    fortTkSupport::ScalarizedRefTab_W2X* myScalarizedRefTab_W2Xp;
 
   
     /** Use a list instead a stack so that we can easily examine

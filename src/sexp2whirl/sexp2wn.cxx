@@ -1,40 +1,18 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v 1.10 2006/05/12 16:12:22 utke Exp $
 
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.cxx,v $
-//
-// Purpose:
-//   Translate S-expression WHIRL AST nodes to WHIRL AST nodes.
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************** System Include Files ***************************
-
 #include <stdlib.h>
-
-//*************************** Sexp Include Files ****************************
 
 #include <sexp.h>
 
-//************************** Open64 Include Files ***************************
+#include "Open64IRInterface/Open64BasicTypes.h"
 
-#include <include/Open64BasicTypes.h>
-
-//*************************** User Include Files ****************************
-
+#include "Diagnostics.h"
 #include "sexp2wn.i"
 #include "sexp2wn.h"
 
-#include <lib/support/SexpTags.h>
-#include <lib/support/sexputil.h>
-
-//************************** Forward Declarations ***************************
+#include "SexpTags.h"
+#include "sexputil.h"
 
 using namespace sexp2whirl;
 
@@ -72,7 +50,7 @@ sexp2whirl::TranslateWNChildren(sexp_t* sx)
   using namespace sexp;
   
   // Sanity check
-  FORTTK_ASSERT(is_list(sx), FORTTK_UNEXPECTED_INPUT);  
+  FORTTK_ASSERT(is_list(sx), fortTkSupport::Diagnostics::UnexpectedInput);  
 
   // Translate all children
   std::vector<WN*> vecWN;
@@ -99,12 +77,12 @@ sexp2whirl::GetWhirlSym(sexp_t* sx)
   using namespace sexp;
   
   // Sanity check
-  FORTTK_ASSERT(is_list(sx), FORTTK_UNEXPECTED_INPUT);  
+  FORTTK_ASSERT(is_list(sx), fortTkSupport::Diagnostics::UnexpectedInput);  
   
   sexp_t* tag_sx = get_elem0(sx);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::ST) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
   // Convert st_idx
   sexp_t* lvl_st = get_elem1(sx);
@@ -123,12 +101,12 @@ sexp2whirl::GetWhirlTy(sexp_t* sx)
   using namespace sexp;
   
   // Sanity check
-  FORTTK_ASSERT(is_list(sx), FORTTK_UNEXPECTED_INPUT);  
+  FORTTK_ASSERT(is_list(sx), fortTkSupport::Diagnostics::UnexpectedInput);  
   
   sexp_t* tag_sx = get_elem0(sx);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::TY) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
   // Convert ty_idx
   // - ignore name
@@ -156,7 +134,7 @@ sexp2whirl::GetWhirlOpr(sexp_t* sx)
   static char* OPRNM = OPRNM_full+4;
   
   // Sanity check
-  FORTTK_ASSERT(is_list(sx), FORTTK_UNEXPECTED_INPUT);  
+  FORTTK_ASSERT(is_list(sx), fortTkSupport::Diagnostics::UnexpectedInput);  
   
   // Convert operator
   sexp_t* opr_sx = get_elem0(sx);
@@ -196,12 +174,12 @@ sexp2whirl::GetWhirlSymRef(sexp_t* sx)
   using namespace sexp;
 
   // Sanity check
-  FORTTK_ASSERT(is_list(sx), FORTTK_UNEXPECTED_INPUT);  
+  FORTTK_ASSERT(is_list(sx), fortTkSupport::Diagnostics::UnexpectedInput);  
   
   sexp_t* tag_sx = get_elem0(sx);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::ST) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
 
   // Convert st_idx
   // - ignore name
@@ -221,12 +199,12 @@ sexp2whirl::GetWhirlTyUse(sexp_t* sx)
   using namespace sexp;
 
   // Sanity check
-  FORTTK_ASSERT(is_list(sx), FORTTK_UNEXPECTED_INPUT);  
+  FORTTK_ASSERT(is_list(sx), fortTkSupport::Diagnostics::UnexpectedInput);  
   
   sexp_t* tag_sx = get_elem0(sx);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::TY) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
 
   // Convert ty_idx
   // - ignore name
@@ -249,16 +227,16 @@ sexp2whirl::GetWhirlFlg(sexp_t* sx)
   using namespace sexp;
   
   // Sanity check
-  FORTTK_ASSERT(is_list(sx), FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(is_list(sx), fortTkSupport::Diagnostics::UnexpectedInput);
   
   sexp_t* tag_sx = get_elem0(sx);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::FLG) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
   // Get the flag string
   sexp_t* flg_sx = get_elem1(sx);
-  FORTTK_ASSERT(flg_sx, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(flg_sx, fortTkSupport::Diagnostics::UnexpectedInput);
   
   const char* flg = get_value(flg_sx);
   return flg;
@@ -272,16 +250,16 @@ sexp2whirl::GetWhirlOpaqueFlg(sexp_t* sx)
   using namespace sexp;
   
   // Sanity check
-  FORTTK_ASSERT(is_list(sx), FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(is_list(sx), fortTkSupport::Diagnostics::UnexpectedInput);
   
   sexp_t* tag_sx = get_elem0(sx);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::OFLG) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
   // Get the flag string
   sexp_t* flg_sx = get_elem1(sx);
-  FORTTK_ASSERT(flg_sx, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(flg_sx, fortTkSupport::Diagnostics::UnexpectedInput);
   
   UINT64 flg = get_value_ui64(flg_sx);
   return flg;
@@ -301,7 +279,7 @@ sexp2whirl::xlate_FUNC_ENTRY(sexp_t* sx)
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
 
   FORTTK_ASSERT(OPCODE_operator(opc) == OPR_FUNC_ENTRY, 
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* st_idx_sx = get_elem0(attrs_sx);
@@ -329,7 +307,7 @@ sexp2whirl::xlate_BLOCK(sexp_t* sx)
   
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
 
-  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_BLOCK, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_BLOCK, fortTkSupport::Diagnostics::UnexpectedInput);
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
 
@@ -347,7 +325,7 @@ sexp2whirl::xlate_BLOCK(sexp_t* sx)
 WN* 
 sexp2whirl::xlate_REGION(sexp_t* sx)
 {
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   return NULL;
 }
 
@@ -362,7 +340,7 @@ sexp2whirl::xlate_structured_cf(sexp_t* sx)
   OPERATOR opr = OPCODE_operator(opc);
   FORTTK_ASSERT(opr == OPR_DO_LOOP || opr == OPR_DO_WHILE || 
 		opr == OPR_WHILE_DO || opr == OPR_IF, 
-		FORTTK_UNEXPECTED_INPUT); 
+		fortTkSupport::Diagnostics::UnexpectedInput); 
   
   std::vector<WN*> kids = TranslateWNChildren(sx); // KIDs
   WN* wn = WN_Create(opc, kids.size());
@@ -388,7 +366,7 @@ sexp2whirl::xlate_structured_cf(sexp_t* sx)
 WN*
 sexp2whirl::xlate_IMPLIED_DO(sexp_t* sx)
 {
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   return NULL;
 }
 
@@ -403,7 +381,7 @@ sexp2whirl::xlate_GOTOx_LABEL(sexp_t* sx)
   OPERATOR opr = OPCODE_operator(opc);
   FORTTK_ASSERT(opr == OPR_GOTO || opr == OPR_GOTO_OUTER_BLOCK ||
 		opr == OPR_REGION_EXIT || opr == OPR_LABEL, 
-		FORTTK_UNEXPECTED_INPUT); 
+		fortTkSupport::Diagnostics::UnexpectedInput); 
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* lbl_sx = get_elem0(attrs_sx); 
@@ -443,7 +421,7 @@ sexp2whirl::xlate_multiBR(sexp_t* sx)
   
   OPERATOR opr = OPCODE_operator(opc);
   FORTTK_ASSERT(opr == OPR_SWITCH || opr == OPR_COMPGOTO, 
-		FORTTK_UNEXPECTED_INPUT); 
+		fortTkSupport::Diagnostics::UnexpectedInput); 
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* nentries_sx = get_elem0(attrs_sx); 
@@ -471,7 +449,7 @@ sexp2whirl::xlate_CASEGOTO(sexp_t* sx)
   
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
 
-  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_CASEGOTO, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_CASEGOTO, fortTkSupport::Diagnostics::UnexpectedInput);
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* cval_sx = get_elem0(attrs_sx); 
@@ -488,7 +466,7 @@ sexp2whirl::xlate_CASEGOTO(sexp_t* sx)
 WN* 
 sexp2whirl::xlate_AGOTO(sexp_t* sx)
 {
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   return NULL;
 }
 
@@ -496,7 +474,7 @@ sexp2whirl::xlate_AGOTO(sexp_t* sx)
 WN*
 sexp2whirl::xlate_ALTENTRY(sexp_t* sx)
 {
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);  
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);  
   return NULL;
 }
 
@@ -510,7 +488,7 @@ sexp2whirl::xlate_condBR(sexp_t* sx)
 
   OPERATOR opr = OPCODE_operator(opc);
   FORTTK_ASSERT(opr == OPR_TRUEBR || opr == OPR_FALSEBR,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
 
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* lbl_sx = get_elem0(attrs_sx); 
@@ -534,7 +512,7 @@ sexp2whirl::xlate_RETURNx(sexp_t* sx)
   
   OPERATOR opr = OPCODE_operator(opc);
   FORTTK_ASSERT(opr == OPR_RETURN || opr == OPR_RETURN_VAL,
-		FORTTK_UNEXPECTED_INPUT); 
+		fortTkSupport::Diagnostics::UnexpectedInput); 
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   
@@ -566,7 +544,7 @@ sexp2whirl::xlate_xCALL(sexp_t* sx)
   FORTTK_ASSERT(opr == OPR_CALL || opr == OPR_ICALL || 
 		opr == OPR_VFCALL || opr == OPR_PICCALL ||
 		opr == OPR_INTRINSIC_CALL || opr == OPR_INTRINSIC_OP, 
-		FORTTK_UNEXPECTED_INPUT); 
+		fortTkSupport::Diagnostics::UnexpectedInput); 
   
   std::vector<WN*> kids = TranslateWNChildren(sx); // KIDs
   WN* wn = WN_Create(opc, kids.size());
@@ -608,7 +586,7 @@ sexp2whirl::xlate_IO(sexp_t* sx)
   
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
 
-  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_IO, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_IO, fortTkSupport::Diagnostics::UnexpectedInput);
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* ios_sx = get_elem0(attrs_sx); 
@@ -636,7 +614,7 @@ sexp2whirl::xlate_IO_ITEM(sexp_t* sx)
   
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
 
-  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_IO_ITEM, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_IO_ITEM, fortTkSupport::Diagnostics::UnexpectedInput);
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* ioi_sx = get_elem0(attrs_sx); 
@@ -677,7 +655,7 @@ sexp2whirl::xlate_misc_stmt(sexp_t* sx)
 		opr == OPR_USE || opr == OPR_NAMELIST || 
 		opr == OPR_IMPLICIT_BND || opr == OPR_NULLIFY || 
 		opr == OPR_INTERFACE || opr == OPR_ARRAY_CONSTRUCT,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
   std::vector<WN*> kids = TranslateWNChildren(sx); // KIDs
   WN* wn = WN_Create(opc, kids.size());
@@ -716,7 +694,7 @@ sexp2whirl::xlate_xPRAGMA(sexp_t* sx)
   
   OPERATOR opr = OPCODE_operator(opc);
   FORTTK_ASSERT(opr == OPR_PRAGMA || opr == OPR_XPRAGMA, 
-		FORTTK_UNEXPECTED_INPUT); 
+		fortTkSupport::Diagnostics::UnexpectedInput); 
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   
@@ -760,7 +738,7 @@ sexp2whirl::xlate_LDA_LDMA(sexp_t* sx)
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
   
   OPERATOR opr = OPCODE_operator(opc);
-  FORTTK_ASSERT(opr == OPR_LDA || opr == OPR_LDMA, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(opr == OPR_LDA || opr == OPR_LDMA, fortTkSupport::Diagnostics::UnexpectedInput);
 
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* st_idx_sx = get_elem0(attrs_sx);
@@ -800,7 +778,7 @@ sexp2whirl::xlate_LDID_STID(sexp_t* sx)
 		opr == OPR_STID
 		|| 
 		opr == OPR_PSTID, 
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* st_idx_sx = get_elem0(attrs_sx);
@@ -839,7 +817,7 @@ sexp2whirl::xlate_IDNAME(sexp_t* sx)
   
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
 
-  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_IDNAME, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_IDNAME, fortTkSupport::Diagnostics::UnexpectedInput);
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* st_idx_sx = get_elem0(attrs_sx);
@@ -863,7 +841,7 @@ sexp2whirl::xlate_xLOADx_xSTOREx(sexp_t* sx)
   OPERATOR opr = OPCODE_operator(opc);
   FORTTK_ASSERT(opr == OPR_ILOAD || opr == OPR_MLOAD || opr == OPR_ILOADX ||
 		opr == OPR_ISTORE || opr == OPR_MSTORE || opr == OPR_ISTOREX,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
 
   std::vector<WN*> kids = TranslateWNChildren(sx); // KIDs
   WN* wn = WN_Create(opc, kids.size());
@@ -901,7 +879,7 @@ sexp2whirl::xlate_xLOADx_xSTOREx(sexp_t* sx)
 WN*
 sexp2whirl::xlate_PSTORE(sexp_t* sx)
 {
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   return NULL;
 }
 
@@ -919,7 +897,7 @@ sexp2whirl::xlate_ARRAYx(sexp_t* sx)
   
   OPERATOR opr = OPCODE_operator(opc);
   FORTTK_ASSERT(opr == OPR_ARRAY || opr == OPR_ARRAYEXP || 
-		opr == OPR_ARRSECTION, FORTTK_UNEXPECTED_INPUT);
+		opr == OPR_ARRSECTION, fortTkSupport::Diagnostics::UnexpectedInput);
   
   std::vector<WN*> kids = TranslateWNChildren(sx); // KIDs
   WN* wn = WN_Create(opc, kids.size());
@@ -950,7 +928,7 @@ sexp2whirl::xlate_CVT_CVTL(sexp_t* sx)
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
   
   OPERATOR opr = OPCODE_operator(opc);
-  FORTTK_ASSERT(opr == OPR_CVT || opr == OPR_CVTL, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(opr == OPR_CVT || opr == OPR_CVTL, fortTkSupport::Diagnostics::UnexpectedInput);
   
   WN* wn = WN_Create(opc, 1);
   WN* kidWN = TranslateWN(get_wnast_kid0(sx)); // KID 0
@@ -974,7 +952,7 @@ sexp2whirl::xlate_TAS(sexp_t* sx)
   
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
   
-  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_BLOCK, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_BLOCK, fortTkSupport::Diagnostics::UnexpectedInput);
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* ty_idx_sx = get_elem0(attrs_sx);
@@ -999,7 +977,7 @@ sexp2whirl::xlate_INTCONST(sexp_t* sx)
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
   
   FORTTK_ASSERT(OPCODE_operator(opc) == OPR_INTCONST, 
-		FORTTK_UNEXPECTED_INPUT); 
+		fortTkSupport::Diagnostics::UnexpectedInput); 
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* val_sx = get_elem0(attrs_sx);
@@ -1017,7 +995,7 @@ sexp2whirl::xlate_CONST(sexp_t* sx)
   
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
   
-  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_CONST, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_CONST, fortTkSupport::Diagnostics::UnexpectedInput); 
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* st_idx_sx = get_elem0(attrs_sx);
@@ -1040,7 +1018,7 @@ sexp2whirl::xlate_UnaryOp(sexp_t* sx)
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
   
   FORTTK_ASSERT(OPCODE_nkids(opc) == 1, 
-		FORTTK_UNEXPECTED_INPUT << OPCODE_name(opc));
+		fortTkSupport::Diagnostics::UnexpectedInput << OPCODE_name(opc));
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   WN* kidWN = TranslateWN(get_wnast_kid0(sx)); // KID 0
@@ -1059,7 +1037,7 @@ sexp2whirl::xlate_STRCTFLD(sexp_t* sx)
   
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
   
-  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_STRCTFLD, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_STRCTFLD, fortTkSupport::Diagnostics::UnexpectedInput);
 
   std::vector<WN*> kids = TranslateWNChildren(sx); // KIDs
   WN* wn = WN_Create(opc, kids.size());
@@ -1091,7 +1069,7 @@ sexp2whirl::xlate_PARM(sexp_t* sx)
   
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
   
-  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_PARM, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(OPCODE_operator(opc) == OPR_PARM, fortTkSupport::Diagnostics::UnexpectedInput);
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* flags_sx = get_elem0(attrs_sx); 
@@ -1110,7 +1088,7 @@ sexp2whirl::xlate_PARM(sexp_t* sx)
 WN* 
 sexp2whirl::xlate_ALLOCA(sexp_t* sx)
 {
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   return NULL;
 }
 
@@ -1127,11 +1105,11 @@ sexp2whirl::xlate_BinaryOp(sexp_t* sx)
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
   
   FORTTK_ASSERT(OPCODE_nkids(opc) == 2, 
-		FORTTK_UNEXPECTED_INPUT << OPCODE_name(opc));
+		fortTkSupport::Diagnostics::UnexpectedInput << OPCODE_name(opc));
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   std::vector<WN*> kids = TranslateWNChildren(sx); // KIDs
-  FORTTK_ASSERT(kids.size() == 2, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(kids.size() == 2, fortTkSupport::Diagnostics::UnexpectedInput);
 
   // Use WN_Create() instead of distinguishing between WN_Binary() and
   // WN_Relational()
@@ -1155,11 +1133,11 @@ sexp2whirl::xlate_TernaryOp(sexp_t* sx)
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
   
   FORTTK_ASSERT(OPCODE_nkids(opc) == 2, 
-		FORTTK_UNEXPECTED_INPUT << OPCODE_name(opc));
+		fortTkSupport::Diagnostics::UnexpectedInput << OPCODE_name(opc));
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   std::vector<WN*> kids = TranslateWNChildren(sx); // KIDs
-  FORTTK_ASSERT(kids.size() == 3, FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(kids.size() == 3, fortTkSupport::Diagnostics::UnexpectedInput);
 
   WN* wn = WN_Create(opc, 3);
   WN_kid0(wn) = kids[0];
@@ -1180,7 +1158,7 @@ sexp2whirl::xlate_unknown(sexp_t* sx)
   // Warn about opcodes we cannot translate, but keep translating.
   OPERATOR opr = GetWhirlOpr(sx);
   
-  FORTTK_DEVMSG(0, FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
+  FORTTK_DEVMSG(0, fortTkSupport::Diagnostics::UnexpectedOpr << OPERATOR_name(opr));
   return NULL;
 }
 

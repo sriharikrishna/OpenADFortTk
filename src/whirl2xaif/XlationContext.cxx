@@ -3,8 +3,8 @@
 
 
 #include <stdio.h>
-#include "lib/support/SymTab.h"
-#include "lib/support/diagnostics.h"
+#include "Open64IRInterface/SymTab.h"
+#include "Diagnostics.h"
 #include "XlationContext.h"
 
 namespace whirl2xaif{

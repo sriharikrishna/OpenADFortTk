@@ -1,34 +1,14 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v 1.12 2005/02/01 22:03:18 eraxxon Exp $
 
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/symtab2sexp.cxx,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
+#include "Open64IRInterface/Open64BasicTypes.h"
 
-//************************** System Include Files ***************************
-
-//************************** Open64 Include Files ***************************
-
-#include <include/Open64BasicTypes.h>
-
-//*************************** User Include Files ****************************
+#include "quad.h"
+#include "SexpTags.h"
 
 #include "wn2sexp.h"
 #include "symtab2sexp.h"
 
-#include <include/quad.h>
-#include <lib/support/SexpTags.h>
-
-//************************** Forward Declarations ***************************
 
 using namespace whirl2sexp;
 using namespace sexp; // for sexp::ostream, etc

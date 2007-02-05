@@ -14,19 +14,19 @@
 #include <xercesc/dom/DOMImplementation.hpp>
 #include <xercesc/dom/DOMNodeIterator.hpp>
 
-#include <include/Open64BasicTypes.h>
+#include <OpenAnalysis/Utils/Exception.hpp>
+
+#include "Open64IRInterface/Open64BasicTypes.h"
 #include "cmplrs/rcodes.h"  // return codes
 #include "tracing.h"        // trace routines
 #include "ir_reader.h"      // fdump_tree
 #include "wn_simp.h"        // WN_Simplifier_Enable()
+#include "Open64IRInterface/diagnostics.h"
 
-#include <OpenAnalysis/Utils/Exception.hpp>
-
-#include <lib/support/Exception.h>
-#include <lib/support/WhirlIO.h>
-#include <lib/support/XAIFStrings.h>
+#include <Exception.h>
+#include "Open64IRInterface/WhirlIO.h"
+#include <XAIFStrings.h>
 #include <lib/support/BackSubstituteTemps.h>
-
 #include "Args.h"
 #include "xaif2whirl.h"
 #include "XAIF_DOMErrorHandler.h"
@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     e.Report(cerr); // fatal error
     exit(1);
   }
-  catch (FortTk::BaseException& e) {
+  catch (fortTkSupport::BaseException& e) {
     e.Report(cerr);
     exit(1);
   }
@@ -118,7 +118,7 @@ namespace xaif2whirl {
     Args args(argc, argv);
     opt_mode = args.mode; // FIXME
     opt_algorithm = args.algorithm; // FIXME
-    FortTk_SetDiagnosticFilterLevel(args.debug);
+    fortTkSupport::Diagnostics::setDiagnosticFilterLevel(args.debug);
   
     // -------------------------------------------------------
     // 3. Read WHIRL IR as basis for translation

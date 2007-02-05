@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.cxx,v 1.10 2005/03/19 22:54:51 eraxxon Exp $
+// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/diagnostics.cpp,v 1.1.1.1 2004/04/16 15:58:28 mstrout Exp $
 
 // * BeginCopyright *********************************************************
 /*
@@ -38,7 +38,7 @@
 //***************************************************************************
 //
 // File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.cxx,v $
+//   $Source: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/diagnostics.cpp,v $
 //
 // Purpose:
 //   [The purpose of this file]
@@ -73,7 +73,7 @@
 
 //************************** Open64 Include Files ***************************
 
-#include <include/Open64BasicTypes.h>
+#include "Open64BasicTypes.h"
 #include "file_util.h" 
 
 //*************************** User Include Files ****************************
@@ -82,10 +82,9 @@
 
 //***************************************************************************
 
-int FORTTK_DBG_LVL_PUB = 0;
+int DBG_LVL_PUB = 0;
 
-static const UINT  Diag_Phase_Name_Len = 80;
-static char        Diag_Phase_Name[Diag_Phase_Name_Len+1] = "";
+static char        Diag_Phase_Name[80] = "";
 static FILE       *Diag_File = NULL;
 static int         Diag_Max_Diags = 10;  /* Default */
 static int         Diag_Warn_Count = 0;
@@ -93,36 +92,6 @@ static const char *Diag_File_Location = NULL;
 static int         Diag_Line_Location = 0;
 
 static const char *Diag_Msg[DIAG_LAST+1];
-
-
-void 
-FortTk_SetDiagnosticFilterLevel(int lvl)
-{
-  FORTTK_DBG_LVL_PUB = lvl;
-}
-
-int
-FortTk_GetDiagnosticFilterLevel()
-{
-  return FORTTK_DBG_LVL_PUB;
-}
-
-void 
-FortTk_TheMostVisitedBreakpointInHistory(const char* filenm, 
-					 unsigned int lineno)
-{
-  // Prevent this routine from ever being inlined
-  static unsigned count = 0;
-  count++;
-}
-
-
-const char* FORTTK_UNIMPLEMENTED = 
-  "Unimplemented feature: ";
-const char* FORTTK_UNEXPECTED_INPUT = 
-  "Unexpected input: ";
-const char* FORTTK_UNEXPECTED_OPR = 
-  "Unexpected operator: ";
 
 
 void
@@ -238,8 +207,7 @@ void
 Diag_Set_Phase(const char *phase_name)
 {
   Set_Error_Phase(phase_name); /* Initiate the common error handler */
-  (void)strncpy(Diag_Phase_Name, phase_name, Diag_Phase_Name_Len);
-  Diag_Phase_Name[Diag_Phase_Name_Len] = '\0';
+  (void)strcpy(Diag_Phase_Name, phase_name);
 }
 
 

@@ -1,51 +1,22 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v 1.20 2005/03/31 03:44:33 utke Exp $
 
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/tester.cxx,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************* System Include Files ****************************
-
 #include <stdlib.h> // ANSI: cstdlib // for strtol
 #include <string.h> // ANSI: cstring // for strcmp, etc.
-
 #include <iostream>
 
-//************************** Open64 Include Files ***************************
+#include "OpenAnalysis/ExprTree/ExprTree.hpp"
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 #include "ir_reader.h"      // fdump_tree
 #include "w2f_driver.h"     // W2F_*
+#include "Open64IRInterface/Open64IRInterface.hpp"
+#include "Open64IRInterface/SymTab.h"
 
-//************************ OpenAnalysis Include Files ***********************
-
-//#include <OpenAnalysis/ValueNumbers/ExprTree.h>
-#include <OpenAnalysis/ExprTree/ExprTree.hpp>
-
-#include <lib/support/Open64IRInterface.hpp>
-
-//*************************** User Include Files ****************************
+#include "ScalarizedRefTab.h"
+#include "Diagnostics.h"
 
 #include "tester.h"
-
-#include <lib/support/SymTab.h>
-#include <lib/support/ScalarizedRefTab.h>
-#include <lib/support/diagnostics.h>
-
-//*************************** Forward Declarations ***************************
 
 using std::cerr;
 using std::endl;
@@ -55,12 +26,6 @@ DumpExprTree(std::ostream& os, WN* wn);
 
 static int
 DumpExprTree(std::ostream& os, OA::OA_ptr<OA::ExprTree> tree);
-
-//****************************************************************************
-
-//****************************************************************************
-// TestIR: 
-//****************************************************************************
 
 static int
 TestForEachPU(std::ostream& os, PU_Info* pu_forest);

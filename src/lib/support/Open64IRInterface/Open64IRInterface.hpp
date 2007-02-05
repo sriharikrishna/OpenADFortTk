@@ -1,12 +1,12 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Open64IRInterface.hpp,v 1.10 2005/08/15 20:17:25 utke Exp $
+// $Header$
 
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Michelle Strout, Nathan Tallent
-  \version $Id: Open64IRInterface.hpp,v 1.10 2005/08/15 20:17:25 utke Exp $
+  \version $Id$
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
@@ -44,15 +44,21 @@
 #include <OpenAnalysis/IRInterface/ActivityIRInterface.hpp>
 #include <OpenAnalysis/IRInterface/ParamBindingsIRInterface.hpp>
 #include <OpenAnalysis/IRInterface/ICFGIRInterface.hpp>
+#include <OpenAnalysis/IRInterface/LinearityIRInterface.hpp>
+
+
+/*! Context-Sensitive and Flow-inSensitive Activity Analysis */
 #include <OpenAnalysis/IRInterface/DUGIRInterface.hpp>
 
 #include <OpenAnalysis/ExprTree/ExprTreeVisitor.hpp>
+#include <OpenAnalysis/ExprTree/EvalToMemRefVisitor.hpp>
 #include <OpenAnalysis/MemRefExpr/MemRefExpr.hpp>
 
 // still needed for MemRefKludge
 //#include <OpenAnalysis/MemRefExpr/MemRefExprBasic.hpp>
 
 #include <OpenAnalysis/Utils/OA_ptr.hpp>
+#include "IntrinsicInfo.h"
 
 //************************** Open64 Include Files ***************************
 
@@ -68,12 +74,12 @@
 //   ConstSymHandle - ST*
 //   ConstValHandle - WN*
 
-#include <include/Open64BasicTypes.h>
+#include "Open64BasicTypes.h"
 
 //*************************** User Include Files ****************************
 
-#include <lib/support/WhirlGlobalStateUtils.h>
-#include <lib/support/diagnostics.h>
+#include "WhirlGlobalStateUtils.h"
+#include "diagnostics.h"
 
 //typedef std::pair<char*,char*> fully_qualified_name;
 struct fully_qualified_name {
@@ -188,7 +194,7 @@ public:
   Open64IRCallsiteIterator(WN *wn);
   virtual ~Open64IRCallsiteIterator();
   
-  virtual OA::ExprHandle current() const  
+  virtual OA::CallHandle current() const  
     { return (OA::irhandle_t)(*wnlist_iter); }
   virtual bool isValid () const { return (wnlist.end() != wnlist_iter); }
   virtual void operator++() { ++wnlist_iter; }
@@ -247,17 +253,6 @@ public:
 
 private:
   void create(OA::StmtHandle h);
-  list<WN*>* findTopMemRefs(WN* wn);
-  void findTopMemRefs(WN* wn, list<WN*>& topMemRefs);
-
-  list<OA::MemRefHandle>*
-  findAllMemRefsAndMapToMemRefExprs(WN* wn);
-
-  typedef std::pair<unsigned, OA::SymHandle> MemRefExprInfo;
-  list<Open64IRMemRefIterator::MemRefExprInfo>
-  findAllMemRefsAndMapToMemRefExprs(WN* wn, list<OA::MemRefHandle>& memRefs,
-	                                unsigned lvl, unsigned flags);
-
 private:
   std::list<OA::MemRefHandle> mMemRefList;
   
@@ -265,6 +260,7 @@ private:
   std::list<OA::MemRefHandle>::iterator mBegin;
   std::list<OA::MemRefHandle>::iterator mMemRefIter;
   bool mValid;
+  
 };
 
 
@@ -298,25 +294,63 @@ class Open64PtrAssignPairStmtIterator
     ~Open64PtrAssignPairStmtIterator() {}
 
     //! right hand side
-    OA::MemRefHandle currentSource() const { return OA::MemRefHandle(0); }
+    OA::OA_ptr<OA::MemRefExpr> currentSource() const
+      { OA::OA_ptr<OA::MemRefExpr> retval;  return retval; }
     //! left hand side
-    OA::MemRefHandle currentTarget() const { return OA::MemRefHandle(0); }
+    OA::OA_ptr<OA::MemRefExpr> currentTarget() const
+      { OA::OA_ptr<OA::MemRefExpr> retval;  return retval; }
 
     bool isValid() const  { return false; }
                     
     void operator++() {}
 };
 
-
-
-typedef std::pair<OA::MemRefHandle,OA::ExprHandle> ExprStmtPair;
-typedef std::list<ExprStmtPair> ExprStmtPairList;
-class Open64ExprStmtPairIterator 
-    : public OA::ExprStmtPairIterator {
+class Open64ParamBindPtrAssignIterator 
+    : public OA::Alias::ParamBindPtrAssignIterator {
   public:
-    Open64ExprStmtPairIterator(OA::OA_ptr<ExprStmtPairList> pExprStmtList) 
-        : mExprStmtList(pExprStmtList) { reset(); }
-    virtual ~Open64ExprStmtPairIterator() {}
+    Open64ParamBindPtrAssignIterator() { mIter = mPairList.begin(); }
+    ~Open64ParamBindPtrAssignIterator() {}
+
+    //! right hand side
+    OA::OA_ptr<OA::MemRefExpr> currentActual() const
+      { OA::OA_ptr<OA::MemRefExpr> retval;  
+        if (isValid()) { retval = mIter->second; }
+        return retval; 
+      }
+    //! left hand side
+    int currentFormalId() const { 
+        if (isValid()) { return mIter->first; }
+        else { return -1; }
+    }
+
+    bool isValid() const { return (mIter!=mPairList.end()); }
+
+    void operator++() { if (isValid()) { mIter++; } }
+
+    void reset() { mIter = mPairList.begin(); }
+
+    // construction methods
+    void insertParamBindPair(int formalID ,OA::OA_ptr<OA::MemRefExpr> actual)
+    {
+        mPairList.push_back(
+            std::pair<int,OA::OA_ptr<OA::MemRefExpr> >(formalID, actual) );
+        reset();
+    }
+  private:
+    std::list<std::pair<int,OA::OA_ptr<OA::MemRefExpr> > > mPairList;
+    std::list<std::pair<int,OA::OA_ptr<OA::MemRefExpr> > >::iterator mIter;
+};
+
+
+
+typedef std::pair<OA::MemRefHandle,OA::ExprHandle> AssignPair;
+typedef std::list<AssignPair> AssignPairList;
+class Open64AssignPairIterator 
+    : public OA::AssignPairIterator {
+  public:
+    Open64AssignPairIterator(OA::OA_ptr<AssignPairList> pAssignList) 
+        : mAssignList(pAssignList) { reset(); }
+    virtual ~Open64AssignPairIterator() {}
 
     //! left hand side
     OA::MemRefHandle currentTarget() const 
@@ -327,15 +361,15 @@ class Open64ExprStmtPairIterator
       { if (isValid()) { return mIter->second; } 
         else { return OA::ExprHandle(0); } }
 
-    bool isValid() const { return mIter!=mExprStmtList->end(); }
+    bool isValid() const { return mIter!=mAssignList->end(); }
                     
     void operator++() { if (isValid()) mIter++; }
     void operator++(int) { ++*this; }
 
-    void reset() { mIter = mExprStmtList->begin(); }
+    void reset() { mIter = mAssignList->begin(); }
   private:
-    OA::OA_ptr<ExprStmtPairList> mExprStmtList;
-    ExprStmtPairList::iterator mIter;
+    OA::OA_ptr<AssignPairList> mAssignList;
+    AssignPairList::iterator mIter;
 };
 
 class Open64MemRefHandleIterator 
@@ -470,12 +504,13 @@ class Open64IRInterface
     public virtual OA::ReachConsts::ReachConstsIRInterface,
     public virtual OA::XAIF::XAIFIRInterface,
     public virtual OA::SideEffect::SideEffectIRInterface,
-    public virtual OA::DataFlow::CallGraphDFProblemIRInterface,
+    //public virtual OA::DataFlow::CallGraphDFProblemIRInterface,
     public OA::SideEffect::InterSideEffectIRInterfaceDefault,
     public virtual OA::DataFlow::ParamBindingsIRInterface,
     public virtual OA::ICFG::ICFGIRInterface,
-    public virtual OA::DUG::DUGIRInterface,
-    public virtual OA::Activity::ActivityIRInterface
+    public virtual OA::Activity::ActivityIRInterface,
+    public virtual OA::Linearity::LinearityIRInterface,
+    public virtual OA::DUG::DUGIRInterface
 {
 public:
   Open64IRInterface();
@@ -496,7 +531,8 @@ public:
   std::string toString(const OA::SymHandle h);
   std::string toString(const OA::ConstSymHandle h);
   std::string toString(const OA::ConstValHandle h);
-  
+  std::string toString(const OA::CallHandle h);
+
   // Given a statement, pretty-print it to the output stream os.
   void dump(OA::StmtHandle stmt, std::ostream& os);
   
@@ -516,28 +552,27 @@ public:
   
   OA::SymHandle getProcSymHandle(OA::ProcHandle h);
   
+  /*
   OA::SymHandle getSymHandle(OA::ExprHandle h) {
     WN* wn = (WN*)h.hval(); 
-    ST* st = ((OPERATOR_has_sym(WN_operator(wn))) ? WN_st(wn) : NULL);
+    ST* st = NULL;
+    if (wn) {
+      st = ((OPERATOR_has_sym(WN_operator(wn))) ? WN_st(wn) : NULL);
+    }
     return (OA::irhandle_t)st;
   }
+  */
+
+ 
+
 
   //-------------------------------------------------------------------------
   // CallGraphDFProblemIRInterface
   //-------------------------------------------------------------------------
   // !Get IRCallsiteParamIterator for a callsite.
   // !Don't assume parameters are visited in any particular order
-  OA::OA_ptr<OA::IRCallsiteParamIterator> getCallsiteParams(OA::ExprHandle h);
+  OA::OA_ptr<OA::IRCallsiteParamIterator> getCallsiteParams(OA::CallHandle h);
 
-  //! returns true if given symbol is a pass by reference parameter 
-  bool isRefParam(OA::SymHandle);
-               
-  //! return the formal parameter that an actual parameter is associated with.
-  //! 'call' is a handle to the call node; 'param' is the actual
-  //! parameter within the call node that we want info about.
-  OA::SymHandle getFormalForActual(OA::ProcHandle caller, OA::ExprHandle call, 
-                                   OA::ProcHandle callee, OA::ExprHandle param);
- 
   //-------------------------------------------------------------------------
   // CFGIRInterface
   //-------------------------------------------------------------------------
@@ -617,13 +652,33 @@ public:
 
   //! If this is a PTR_ASSIGN_STMT then return an iterator over MemRefHandle
   //! pairs where there is a source and target such that target
-  //! FIXME: returning a bogus iterator with no pairs
+  //! FIXME: returning a bogus iterator with no pairs, will need this for F90
   OA::OA_ptr<OA::Alias::PtrAssignPairStmtIterator> 
       getPtrAssignStmtPairIterator(OA::StmtHandle stmt)
     {   OA::OA_ptr<OA::Alias::PtrAssignPairStmtIterator> retval;
         retval = new Open64PtrAssignPairStmtIterator;
         return retval;
     }
+  
+  //! Return an iterator over <int, MemRefExpr> pairs
+  //! where the integer represents which formal parameter 
+  //! and the MemRefExpr describes the corresponding actual argument. 
+  OA::OA_ptr<OA::Alias::ParamBindPtrAssignIterator>
+      getParamBindPtrAssignIterator(OA::CallHandle call);
+
+  //! Return the symbol handle for the nth formal parameter to proc
+  //! Number starts at 0 and implicit parameters should be given
+  //! a number in the order as well.  This number should correspond
+  //! to the number provided in getParamBindPtrAssign pairs
+  //! Should return SymHandle(0) if there is no formal parameter for 
+  //! given num
+  OA::SymHandle getFormalSym(OA::ProcHandle,int);
+
+  //! Given a procedure call create a memory reference expression
+  //! to describe that call.  For example, a normal call is
+  //! a NamedRef.  A call involving a function ptr is a Deref.
+  OA::OA_ptr<OA::MemRefExpr> getCallMemRefExpr(OA::CallHandle h);
+
 
   //! For the given symbol create a Location that indicates statically
   //! overlapping locations and information about whether the location
@@ -634,11 +689,15 @@ public:
   // ActivityIRInterface
   //-------------------------------------------------------------------------
   
-  //! Return an iterator over all independent locations for given proc
-  OA::OA_ptr<OA::LocIterator> getIndepLocIter(OA::ProcHandle h);
+  // Return an iterator over all independent locations for given proc
+  //OA::OA_ptr<OA::LocIterator> getIndepLocIter(OA::ProcHandle h);
+  //! Return an iterator over all independent MemRefExpr for given proc
+  OA::OA_ptr<OA::MemRefExprIterator> getIndepMemRefExprIter(OA::ProcHandle h);
   
-  //! Return an iterator over all dependent locations for given proc
-  OA::OA_ptr<OA::LocIterator> getDepLocIter(OA::ProcHandle h);
+  // Return an iterator over all dependent locations for given proc
+  //OA::OA_ptr<OA::LocIterator> getDepLocIter(OA::ProcHandle h);
+  //! Return an iterator over all dependent MemRefExpr for given proc
+  OA::OA_ptr<OA::MemRefExprIterator> getDepMemRefExprIter(OA::ProcHandle h);
  
   //! Given a statement, return its Activity::IRStmtType
   OA::Activity::IRStmtType getActivityStmtType(OA::StmtHandle h);
@@ -686,8 +745,8 @@ public:
   //! Given a statement return a list to the pairs of 
   //! target MemRefHandle, ExprHandle where
   //! target = expr
-  OA::OA_ptr<OA::ExprStmtPairIterator> 
-      getExprStmtPairIterator(OA::StmtHandle h); 
+  OA::OA_ptr<OA::AssignPairIterator> 
+      getAssignPairIterator(OA::StmtHandle h); 
   
   //! Given an OpHandle and two operands (unary ops will just
   //! use the first operand and the second operand should be NULL)
@@ -719,6 +778,16 @@ public:
   //! should be removed after testing
   int returnOpEnumValInt(OA::OpHandle op);
 
+  //---------------------------------------------------------------------------
+  // LinearityIRInterface.hpp
+  //---------------------------------------------------------------------------
+
+  //! get the operation type and returns a LinOpType
+  OA::Linearity::LinOpType getLinearityOpType(OA::OpHandle op);
+
+  OA::Linearity::IRStmtType getLinearityStmtType(OA::StmtHandle h);
+
+
   //-------------------------------------------------------------------------
   // InterSideEffectIRInterface
   //-------------------------------------------------------------------------
@@ -732,7 +801,7 @@ public:
 
   //! Given an ExprHandle, return an ExprTree* 
   OA::OA_ptr<OA::ExprTree> getExprTree(OA::ExprHandle h);
-
+  
   //! returns true if given symbol is a parameter 
   bool isParam(OA::SymHandle);
   
@@ -749,6 +818,9 @@ public:
   //-------------------------------------------------------------------------
 
   static void DumpWN(WN* wn, ostream& os);
+  // for Activity lookup
+  OA::OA_ptr<OA::MemRefExpr>
+   convertSymToMemRefExpr(OA::SymHandle sym);
 
 private:
   
@@ -768,11 +840,24 @@ private:
 
   // mapping of fully qualified global variable names to a set of SymHandles
   // that all have that fully qualified name
+  // the first symbol in the set will be used to represent all the others
   static std::map<fully_qualified_name,std::set<OA::SymHandle> > sGlobalVarMap;
+  // the fully qualified name and procedure mapped to the localy symbol
+  // for the particular procedure
+  static std::map<fully_qualified_name,std::map<OA::ProcHandle,OA::SymHandle> >
+      sFQNToProcToLocalSymMap;
+  // mapping of each symbol handle to its fully qualified name
+  static std::map<OA::SymHandle,fully_qualified_name> sSymToFQNMap;
 
   // mapping of symbol handles to strings used in getSideEffect
   static std::map<OA::SymHandle,std::string> sSymToVarStringMap;
 
+  // mapping of actual params (PR_PARMs WNs) to CallHandles
+  static std::map<OA::ExprHandle,OA::CallHandle> sParamToCallMap;
+
+  // mapping of proc handles to a set of referenced symbols
+ static std::map<OA::ProcHandle,std::set<OA::SymHandle> > 
+     sProcToSymRefSetMap;
 
   //***************************************************************************
   // Helpers
@@ -782,6 +867,18 @@ private:
   //! During its creation it also sets up sStmt2allMemRefs 
   //! and memRefs2mreSetMap.
   OA::OA_ptr<OA::MemRefHandleIterator> getMemRefIterator(OA::StmtHandle h); 
+
+  // helper functions for getMemRefIterator
+  void findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
+    WN* wn, unsigned lvl);
+
+  void createAndMapDerefs(OA::StmtHandle stmt, WN* wn, WN* subMemRef, 
+                          bool isAddrOf, bool fullAccuracy, 
+                          OA::MemRefExpr::MemRefType hty);
+  void createAndMapNamedRef(OA::StmtHandle stmt, WN* wn, ST*, bool isAddrOf,
+    bool fullAccuracy, OA::MemRefExpr::MemRefType hty);
+  bool isPassByReference(WN*);
+  ST* findBaseSymbol(WN*);
 
   void currentProc(OA::ProcHandle p) {
     assert(p!=OA::ProcHandle(0));
@@ -798,12 +895,15 @@ private:
 
   static void DumpWNMemRefLeaf(WN* wn, ostream& os);
 
+  OA::MemRefHandle findTopMemRefHandle(WN *wn);
+
+
   OA::OA_ptr<OA::ExprTree> createExprTree(WN* wn);
 
   OA::OA_ptr<OA::ExprTree::Node> 
   createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn);
 
-  OA::OA_ptr<OA::ExprStmtPairIterator> findExprStmtPairs(WN* wn);
+  OA::OA_ptr<OA::AssignPairIterator> findAssignPairs(WN* wn);
 
   OA::OA_ptr<OA::ConstValBasicInterface> getConstValBasicFromST(ST* st);
 
@@ -816,11 +916,16 @@ private:
   static void initProcContext(PU_Info* pu_forest, 
                               Open64IRProcIterator &procIter);
   static void setCurrentProcToProcContext(OA::IRHandle h);
+  static OA::ProcHandle getCurrentProcContext();
+  static void setCurrentProcContext(OA::ProcHandle);
 
   static fully_qualified_name create_fqn(OA::SymHandle sym);
 
   // mapping of calls to procs
   static void initCallSymToProcMap(Open64IRProcIterator &procIter);
+
+  // getting set of symbols that are referenced within a particul procedure
+  static void initProcToSymRefSetMap(Open64IRProcIterator &procIter);
 
   // context information is initialized and used within some of the iterators
   // so they need to be friends
@@ -828,9 +933,29 @@ private:
   friend class Open64IRMemRefIterator;
   friend class InitContextVisitor;
 
+private:
 
+  //! return the formal parameter that an actual parameter is associated with.
+  //! 'call' is a handle to the call node; 'param' is the actual
+  //! parameter within the call node that we want info about.
+  OA::SymHandle getFormalForActual(OA::ProcHandle caller, OA::CallHandle call, 
+                                   OA::ProcHandle callee, OA::ExprHandle param);
+
+  OA::SymHandle getSymHandle(OA::CallHandle h) {
+    WN* wn = (WN*)h.hval(); 
+    ST* st = NULL;
+    if (wn) {
+      st = ((OPERATOR_has_sym(WN_operator(wn))) ? WN_st(wn) : NULL);
+    }
+    return (OA::irhandle_t)st;
+  }
+ 
 public:
 
+  //! returns true if given symbol is a pass by reference parameter 
+  // JU: I need this to stay public because I use it in FortTk
+  bool isRefParam(OA::SymHandle);
+               
   //! User is responsible for doing this.  It should not be part of
   // the Open64IRProcIterator
   static void initContextState(PU_Info* pu_forest);
