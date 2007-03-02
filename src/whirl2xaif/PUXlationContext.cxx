@@ -339,7 +339,7 @@ namespace whirl2xaif {
 				OA::MemRefHandle((OA::irhandle_t)wn)); 
   }
 
-  void PUXlationContext::setActivity(OA::OA_ptr<OA::Activity::InterActive> anActivityMap) { 
+  void PUXlationContext::setActivity(OA::OA_ptr<OA::Activity::InterActiveFortran> anActivityMap) { 
     if(anActivityMap.ptrEqual(NULL))
       FORTTK_DIE("PUXlationContext::SetActivity: null OA_ptr passed");
     if(!myActivity.ptrEqual(NULL))
