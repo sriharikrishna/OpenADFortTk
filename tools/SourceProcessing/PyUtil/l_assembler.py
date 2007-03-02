@@ -15,6 +15,7 @@ from flatten import flatten
 class AssemblerException(Exception):
     '''class for exception for failure to assemble'''
     def __init__(self,msg,rest):
+        print "AssemblerException: msg=", msg, " rest=", rest
         self.msg  = msg
         self.rest = rest
 
