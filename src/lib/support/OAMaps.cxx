@@ -1,8 +1,8 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.cxx,v 1.9 2006/01/18 15:42:12 utke Exp $
-
+#include "OpenAnalysis/CSFIActivity/ManagerDUGStandard.hpp"
 
 #include "Open64IRInterface/Open64IRInterface.hpp"
+#include "OpenAnalysis/ICFG/ManagerICFG.hpp"
+
 #include "OAMaps.h"
 #include "WhirlParentize.h"
 #include "XAIFStrings.h"
@@ -13,14 +13,18 @@ namespace fortTkSupport {
   // persistent ID <-> PU_Info* maps.  PUIds are guaranteed to be unique
   // within the PU forest 'pu_forest'.
   static void
-  CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x);
+  CreatePUToOAAnalInfoMap(PU_Info* pu_forest, 
+			  PUToOAAnalInfoMap* x);
 
   // CreateOAAnalInfo
   static void
-  CreateOAAnalInfo(PU_Info* pu, PUToOAAnalInfoMap* inter, OAAnalInfo* x);
+  CreateOAAnalInfo(PU_Info* pu, 
+		   PUToOAAnalInfoMap* inter, 
+		   OAAnalInfo* x);
 
   OA::OA_ptr<OA::CFG::CFGInterface>
-  CreateCFG(PU_Info* pu, OA::OA_ptr<OA::CFG::EachCFGInterface> cfgeach,
+  CreateCFG(PU_Info* pu, 
+	    OA::OA_ptr<OA::CFG::EachCFGInterface> cfgeach,
 	    OA::OA_ptr<Open64IRInterface> irIF);
 
 
@@ -28,7 +32,8 @@ namespace fortTkSupport {
   MassageOACallGraphIntoXAIFCallGraph(OA::OA_ptr<OA::CallGraph::CallGraph> cg);
 
   static void
-  AddControlFlowEndTags(PU_Info* pu, WhirlParentMap* wnParentMap, 
+  AddControlFlowEndTags(PU_Info* pu, 
+			WhirlParentMap* wnParentMap, 
 			OA::OA_ptr<Open64IRInterface> irIF);
 
 
@@ -36,38 +41,31 @@ namespace fortTkSupport {
   MassageOACFGIntoXAIFCFG(OA::OA_ptr<OA::CFG::CFG> cfg,
 			  OA::OA_ptr<Open64IRInterface> irIF);
 
-  static void
-  collectGlobalVarActivityInfo(OA::OA_ptr<OA::Activity::InterActive> active,
-			       OA::OA_ptr<Open64IRInterface> irIF,
-			       PU_Info* pu_forest);
-
 
   // ***************************************************************************
   // OAAnalInfo
   // ***************************************************************************
 
   std::set<ST*> OAAnalInfo::ourActiveGlobalSTPSet;
-bool OAAnalInfo::ourDoNotFilterFlag=false; 
+  bool OAAnalInfo::ourDoNotFilterFlag=false; 
 
-  OAAnalInfo::~OAAnalInfo() 
-  { 
+  OAAnalInfo::~OAAnalInfo() { 
     // OA_ptr will clean up all Managers and analysis results once
     // they are no longer referenced
   }
 
   void
-  OAAnalInfo::Create(PU_Info* pu, PUToOAAnalInfoMap* interInfo)
-  { 
+  OAAnalInfo::Create(PU_Info* pu, PUToOAAnalInfoMap* interInfo) { 
     CreateOAAnalInfo(pu, interInfo, this);
   }
 
-void OAAnalInfo::setDoNotFilterFlag() { 
-  ourDoNotFilterFlag=true;
-}
-
-bool OAAnalInfo::getDoNotFilterFlag() { 
-  return ourDoNotFilterFlag;
-}
+  void OAAnalInfo::setDoNotFilterFlag() { 
+    ourDoNotFilterFlag=true;
+  }
+  
+  bool OAAnalInfo::getDoNotFilterFlag() { 
+    return ourDoNotFilterFlag;
+  }
 
   // ***************************************************************************
   // PUToOAAnalInfoMap
@@ -205,31 +203,33 @@ bool OAAnalInfo::getDoNotFilterFlag() {
   FORTTK_MSG(1, "progress: Def-Use activity: performAnalysis");
   OA::OA_ptr<OA::Activity::ManagerDUActive> duactiveman;
   duactiveman = new OA::Activity::ManagerDUActive(irIF, dug);
-  OA::OA_ptr<OA::Activity::InterActive> duactive;
+  OA::OA_ptr<OA::Activity::InterActiveFortran> duactive;
   duactive = duactiveman->performAnalysis(icfg, parambind, interAlias);
 
 #ifdef DEBUG_DUAA
   duactive->dump(cout, irIF);
 #endif
 
-#if 0
-    // Activity Analysis
-    FORTTK_MSG(1, "progress: icfg activity: performAnalysis");
-    OA::OA_ptr<OA::Activity::ManagerICFGActive> activeman;
-    activeman = new OA::Activity::ManagerICFGActive(irIF);
-    OA::OA_ptr<OA::Activity::InterActive> active;
-    active = activeman->performAnalysis(icfg, 
-					parambind,
-					interAlias, 
-					interSE);
-#endif
 
-    x->SetInterActive(duactiveman, duactive);
+//     // Activity Analysis
+//     FORTTK_MSG(1, "progress: icfg activity: performAnalysis");
+//     OA::OA_ptr<OA::Activity::ManagerICFGActive> activeman;
+//     activeman = new OA::Activity::ManagerICFGActive(irIF);
+//     OA::OA_ptr<OA::Activity::InterActive> active;
+//     active = activeman->performAnalysis(icfg, 
+// 					parambind,
+// 					interAlias, 
+// 					interSE);
+
+    x->SetInterActiveFortran(duactiveman, duactive);
     
-    OAAnalInfo::collectGlobalSymbolActivityInfo(duactive,
-						interAlias,
-						irIF,
-						pu_forest);
+
+//   // this is only for context sensitive analysis
+//     OAAnalInfo::collectGlobalSymbolActivityInfo(active,
+// 						interAlias,
+// 						irIF,
+// 						pu_forest);
+
 
     // -------------------------------------------------------
     // For each PU, compute intraprocedural analysis info
@@ -956,61 +956,61 @@ CreateOAAnalInfo(PU_Info* pu,
     return NULL;
   }
 
-  void 
-  OAAnalInfo::collectGlobalSymbolActivityInfo(OA::OA_ptr<OA::Activity::InterActive> active,
-					      OA::OA_ptr<OA::Alias::InterAliasMap> interAlias,
-					      OA::OA_ptr<Open64IRInterface> irIF,
-					      PU_Info* pu_forest) {
-    // Collect module variables
-    std::map<std::string, ST*> modSymNmMap; // map of bona-fide modules symbols
-    std::set<ST*> modSymDup;                // 'duplicated' module symbols
-    CollectModVars_ST_TAB collectModVars(&modSymNmMap, &modSymDup);
-    For_all(St_Table, GLOBAL_SYMTAB, collectModVars);
-    // For each 'duplicated' module variable that is active, make sure
-    // the true module variable is activated.
-    std::map<std::string, ST*>::iterator it = modSymNmMap.begin();
-    // iterate through all global (module) variables
-    for ( ; it != modSymNmMap.end(); ++it) {
-      bool isActive=false;
-      ST* st_p = (*it).second;
+//   void 
+//   OAAnalInfo::collectGlobalSymbolActivityInfo(OA::OA_ptr<OA::Activity::InterActiveFortran> active,
+// 					      OA::OA_ptr<OA::Alias::InterAliasMap> interAlias,
+// 					      OA::OA_ptr<Open64IRInterface> irIF,
+// 					      PU_Info* pu_forest) {
+//     // Collect module variables
+//     std::map<std::string, ST*> modSymNmMap; // map of bona-fide modules symbols
+//     std::set<ST*> modSymDup;                // 'duplicated' module symbols
+//     CollectModVars_ST_TAB collectModVars(&modSymNmMap, &modSymDup);
+//     For_all(St_Table, GLOBAL_SYMTAB, collectModVars);
+//     // For each 'duplicated' module variable that is active, make sure
+//     // the true module variable is activated.
+//     std::map<std::string, ST*>::iterator it = modSymNmMap.begin();
+//     // iterate through all global (module) variables
+//     for ( ; it != modSymNmMap.end(); ++it) {
+//       bool isActive=false;
+//       ST* st_p = (*it).second;
 
-      // debug begin -----
-      char* symbolName = ST_name(st_p);
-      std::cout << "JU: OAAnalInfo::collectGlobalSymbolActivityInfo: for symbol name: " << symbolName << std::endl; 
-      // debug end ----
+//       // debug begin -----
+//       char* symbolName = ST_name(st_p);
+//       std::cout << "JU: OAAnalInfo::collectGlobalSymbolActivityInfo: for symbol name: " << symbolName << std::endl; 
+//       // debug end ----
 
-      // make an memory reference expression from the given symbol
-      OA::SymHandle sym = OA::SymHandle((OA::irhandle_t)st_p) ; 
-      OA::OA_ptr<OA::MemRefExpr> symMRE = irIF->convertSymToMemRefExpr(sym);
-      // iterate through all PUs
-      OA::OA_ptr<Open64IRProcIterator> procIt;
-      procIt = new Open64IRProcIterator(pu_forest);
-      for ( ; procIt->isValid() && !isActive; ++(*procIt)) { 
+//       // make an memory reference expression from the given symbol
+//       OA::SymHandle sym = OA::SymHandle((OA::irhandle_t)st_p) ; 
+//       OA::OA_ptr<OA::MemRefExpr> symMRE = irIF->convertSymToMemRefExpr(sym);
+//       // iterate through all PUs
+//       OA::OA_ptr<Open64IRProcIterator> procIt;
+//       procIt = new Open64IRProcIterator(pu_forest);
+//       for ( ; procIt->isValid() && !isActive; ++(*procIt)) { 
 
-	// debug begin -----
-	ST* procST_p = ST_ptr(PU_Info_proc_sym((PU_Info*)procIt->current().hval()));
-	const char* procName = ST_name(procST_p);
-	std::cout << "JU: OAAnalInfo::collectGlobalSymbolActivityInfo: looking in: " << procName << " : "; 
-	// debug end -----
+// 	// debug begin -----
+// 	ST* procST_p = ST_ptr(PU_Info_proc_sym((PU_Info*)procIt->current().hval()));
+// 	const char* procName = ST_name(procST_p);
+// 	std::cout << "JU: OAAnalInfo::collectGlobalSymbolActivityInfo: looking in: " << procName << " : "; 
+// 	// debug end -----
 	
-	OA::OA_ptr<OA::LocIterator> symMRElocs_I = 
-	  interAlias->getAliasResults(procIt->current())->getMayLocs(*symMRE,procIt->current());
-	// we now have the locations that may alias the symbol and  need to compare these 
-	// against the locations determined to be active by the activity analysis. 
-	for ( ; symMRElocs_I->isValid() && !isActive; (*symMRElocs_I)++ ) {
-	  OA::OA_ptr<OA::LocIterator> activeLoc_I = active->getActiveLocsIterator(procIt->current());
-	  for ( ; activeLoc_I->isValid() && !isActive; (*activeLoc_I)++ ) {
-	    if (activeLoc_I->current()->mayOverlap(*(symMRElocs_I->current()))) {
-	      ourActiveGlobalSTPSet.insert(st_p);
-	      isActive=true;
-	      std::cout << " active "; 
-	    }
-	  }
-	}
-	std::cout << std::endl; 
-      }
-    }
-  }
+// 	OA::OA_ptr<OA::LocIterator> symMRElocs_I = 
+// 	  interAlias->getAliasResults(procIt->current())->getMayLocs(*symMRE,procIt->current());
+// 	// we now have the locations that may alias the symbol and  need to compare these 
+// 	// against the locations determined to be active by the activity analysis. 
+// 	for ( ; symMRElocs_I->isValid() && !isActive; (*symMRElocs_I)++ ) {
+// 	  OA::OA_ptr<OA::LocIterator> activeLoc_I = active->getActiveLocsIterator(procIt->current());
+// 	  for ( ; activeLoc_I->isValid() && !isActive; (*activeLoc_I)++ ) {
+// 	    if (activeLoc_I->current()->mayOverlap(*(symMRElocs_I->current()))) {
+// 	      ourActiveGlobalSTPSet.insert(st_p);
+// 	      isActive=true;
+// 	      std::cout << " active "; 
+// 	    }
+// 	  }
+// 	}
+// 	std::cout << std::endl; 
+//       }
+//     }
+//   }
 
   bool 
   OAAnalInfo::isGlobalSymbolActive(ST* anST_p) {

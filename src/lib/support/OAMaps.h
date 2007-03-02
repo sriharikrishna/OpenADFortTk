@@ -10,35 +10,24 @@
 
 //************************ OpenAnalysis Include Files ***********************
 
-#include <OpenAnalysis/CallGraph/ManagerCallGraph.hpp>
-
-#include <OpenAnalysis/CallGraph/CallGraph.hpp>
-#include <OpenAnalysis/CallGraph/CallGraphInterface.hpp>
-#include <OpenAnalysis/CFG/ManagerCFG.hpp>
-#include <OpenAnalysis/CFG/EachCFGStandard.hpp>
-#include <OpenAnalysis/Alias/ManagerAliasMapBasic.hpp>
-#include <OpenAnalysis/Alias/ManagerInterAliasMapBasic.hpp>
-// #include <OpenAnalysis/Alias/ManagerNoAddressOf.hpp>
-// replacing the above with:
-#include <OpenAnalysis/Alias/ManagerFIAliasAliasMap.hpp>
-
-#include <OpenAnalysis/ReachDefs/ManagerReachDefsStandard.hpp>
-#include <OpenAnalysis/SideEffect/ManagerSideEffectStandard.hpp>
-#include <OpenAnalysis/SideEffect/InterSideEffectStandard.hpp>
-#include <OpenAnalysis/SideEffect/ManagerInterSideEffectStandard.hpp>
-//#include <OpenAnalysis/ReachConsts/ManagerReachConstsStandard.hpp>
-#include <OpenAnalysis/UDDUChains/ManagerUDDUChainsStandard.hpp>
-#include <OpenAnalysis/Activity/ManagerActiveStandard.hpp>
-#include <OpenAnalysis/Activity/ManagerICFGActive.hpp>
-#include <OpenAnalysis/XAIF/UDDUChainsXAIF.hpp>
-#include <OpenAnalysis/XAIF/ManagerUDDUChainsXAIF.hpp>
-#include <OpenAnalysis/XAIF/ManagerAliasMapXAIF.hpp>
-#include <OpenAnalysis/DataFlow/ManagerParamBindings.hpp>
-  // #include <OpenAnalysis/Alias/ManagerSymAliasSetsBottom.hpp>
-  // #include <OpenAnalysis/Alias/ManagerInsNoPtrInterAliasMap.hpp>
-#include <OpenAnalysis/ICFG/ManagerICFG.hpp>
-#include <OpenAnalysis/DUG/ManagerDUGStandard.hpp>
-#include <OpenAnalysis/duaa/ManagerDUActive.hpp>
+#include "OpenAnalysis/CallGraph/ManagerCallGraph.hpp"
+#include "OpenAnalysis/CallGraph/CallGraph.hpp"
+#include "OpenAnalysis/CallGraph/CallGraphInterface.hpp"
+#include "OpenAnalysis/CFG/ManagerCFG.hpp"
+#include "OpenAnalysis/CFG/EachCFGStandard.hpp"
+#include "OpenAnalysis/Alias/ManagerAliasMapBasic.hpp"
+#include "OpenAnalysis/Alias/ManagerInterAliasMapBasic.hpp"
+#include "OpenAnalysis/Alias/ManagerFIAliasAliasMap.hpp"
+#include "OpenAnalysis/ReachDefs/ManagerReachDefsStandard.hpp"
+#include "OpenAnalysis/SideEffect/ManagerSideEffectStandard.hpp"
+#include "OpenAnalysis/SideEffect/InterSideEffectStandard.hpp"
+#include "OpenAnalysis/SideEffect/ManagerInterSideEffectStandard.hpp"
+#include "OpenAnalysis/UDDUChains/ManagerUDDUChainsStandard.hpp"
+#include "OpenAnalysis/CSFIActivity/ManagerDUActive.hpp"
+#include "OpenAnalysis/XAIF/UDDUChainsXAIF.hpp"
+#include "OpenAnalysis/XAIF/ManagerUDDUChainsXAIF.hpp"
+#include "OpenAnalysis/XAIF/ManagerAliasMapXAIF.hpp"
+#include "OpenAnalysis/DataFlow/ManagerParamBindings.hpp"
 
 
 //*************************** User Include Files ****************************
@@ -124,9 +113,9 @@ public:
     { interSEman = m; interSE = x; }
 
   // Activity
-  OA::OA_ptr<OA::Activity::InterActive> GetInterActive() { return active; }
-  void SetInterActive(OA::OA_ptr<OA::Activity::ManagerDUActive> m,
-		      OA::OA_ptr<OA::Activity::InterActive> x) 
+  OA::OA_ptr<OA::Activity::InterActiveFortran> GetInterActiveFortran() { return active; }
+  void SetInterActiveFortran(OA::OA_ptr<OA::Activity::ManagerDUActive> m,
+		      OA::OA_ptr<OA::Activity::InterActiveFortran> x) 
     { activeman = m; active = x; }
 
 private:
@@ -150,7 +139,7 @@ private:
   OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> interSE;
   
   OA::OA_ptr<OA::Activity::ManagerDUActive> activeman;
-  OA::OA_ptr<OA::Activity::InterActive> active;  
+  OA::OA_ptr<OA::Activity::InterActiveFortran> active;  
 };
 
 
@@ -213,11 +202,11 @@ public:
 
   static bool getDoNotFilterFlag();
 
-
-  static void collectGlobalSymbolActivityInfo(OA::OA_ptr<OA::Activity::InterActive> active,
-					      OA::OA_ptr<OA::Alias::InterAliasMap> interAlias,
-					      OA::OA_ptr<Open64IRInterface> irIF,
-					      PU_Info* pu_forest); 
+//   // this is only for context sensitive analysis
+//   static void collectGlobalSymbolActivityInfo(OA::OA_ptr<OA::Activity::InterActive> active,
+// 					      OA::OA_ptr<OA::Alias::InterAliasMap> interAlias,
+// 					      OA::OA_ptr<Open64IRInterface> irIF,
+// 					      PU_Info* pu_forest); 
 
 private:
 

@@ -817,10 +817,14 @@ public:
 
   //-------------------------------------------------------------------------
 
-  static void DumpWN(WN* wn, ostream& os);
   // for Activity lookup
   OA::OA_ptr<OA::MemRefExpr>
    convertSymToMemRefExpr(OA::SymHandle sym);
+
+  //***************************************************************************
+  // Helpers
+  //***************************************************************************
+  static void DumpWN(WN* wn, ostream& os);
 
 private:
   
@@ -856,13 +860,9 @@ private:
   static std::map<OA::ExprHandle,OA::CallHandle> sParamToCallMap;
 
   // mapping of proc handles to a set of referenced symbols
- static std::map<OA::ProcHandle,std::set<OA::SymHandle> > 
+  static std::map<OA::ProcHandle,std::set<OA::SymHandle> > 
      sProcToSymRefSetMap;
 
-  //***************************************************************************
-  // Helpers
-  //***************************************************************************
-private:
   //! Given a statement return an iterator over all memory references
   //! During its creation it also sets up sStmt2allMemRefs 
   //! and memRefs2mreSetMap.
@@ -896,7 +896,6 @@ private:
   static void DumpWNMemRefLeaf(WN* wn, ostream& os);
 
   OA::MemRefHandle findTopMemRefHandle(WN *wn);
-
 
   OA::OA_ptr<OA::ExprTree> createExprTree(WN* wn);
 

@@ -101,15 +101,14 @@ namespace whirl2xaif {
   void PUXlationContext::setWNParentMap(fortTkSupport::WhirlParentMap* aWhirlParentMapP) { 
     if (!aWhirlParentMapP)
       FORTTK_DIE("PUXlationContext::setWNParentMap: null pointer passed");
-    // JU: this appears to be reset, HMMM
     if (myWNParentMapP) {
       if (myWNParentMapP==aWhirlParentMapP) { 
 	FORTTK_MSG(2,"PUXlationContext::setWNParentMap: already set to the same");
       }
       else { 
-	FORTTK_MSG(2,"PUXlationContext::setWNParentMap: already set to " 
+	FORTTK_MSG(2,"PUXlationContext::setWNParentMap: was set to " 
 		    << myWNParentMapP 
-		    << " new " 
+		    << " new settting is " 
 		    << aWhirlParentMapP);
       }
     }
@@ -279,6 +278,11 @@ namespace whirl2xaif {
       FORTTK_DIE("PUXlationContext::IsActiveSym: myActivity not set");
     if (!st)
       FORTTK_DIE("PUXlationContext::IsActiveSym: null pointer passed");
+    // this works with Jaewook's analysis: 
+    return myActivity->isActive(OA::SymHandle((OA::irhandle_t)st)); 
+
+#if 0
+    // this is for context sensitive activity analysis
     // see if this is a module variable
     if (ST_is_in_module(st) && !ST_is_external(st)) { 
       // try to find it in the global set
@@ -296,28 +300,25 @@ namespace whirl2xaif {
     OA::OA_ptr<OA::LocIterator> symMRElocs_I = myAlias->getAliasResults(proc)->getMayLocs(*symMRE,proc);
     // we now have the locations that may alias the symbol and  need to compare these 
     // against the locations determined to be active by the activity analysis. 
-
     std::cout << "ActiveSym before for loop" << std::endl;
     for ( ; symMRElocs_I->isValid(); (*symMRElocs_I)++ ) {
-        
       std::cout << "ActiveSym inside for loop" << std::endl;  
-
-//      std::cout << "Procedure Name" << theIR->toString(proc) << std::endl;
+      // std::cout << "Procedure Name" << theIR->toString(proc) << std::endl;
       OA::OA_ptr<OA::LocIterator> activeLoc_I = 
           myActivity->getActiveLocsIterator(proc);
       for ( ; activeLoc_I->isValid(); (*activeLoc_I)++ ) {
-          std::cout << "Found Active Location" << std::endl;
-	   if (activeLoc_I->current()->mayOverlap(*(symMRElocs_I->current()))) {
+	std::cout << "Found Active Location" << std::endl;
+	if (activeLoc_I->current()->mayOverlap(*(symMRElocs_I->current()))) {
           std::cout << "Found Overlap, returning true" << std::endl;
-	      return true;
-	   }
+	  return true;
+	}
       }
     }
-    
-
     std::cout << "ActiveSym outside for loop" << std::endl;
     // didn't find it in all the active locations
     return false;
+#endif
+
   }
 
   int PUXlationContext::isActiveStmt(PU_Info* pu, WN* wn) { 

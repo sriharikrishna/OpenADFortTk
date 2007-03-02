@@ -127,7 +127,7 @@ namespace whirl2xaif {
     int isActiveSym(ST* st);
     int isActiveStmt(PU_Info* pu, WN* wn);
     int isActiveVarRef(PU_Info* pu, WN* wn); 
-    void setActivity(OA::OA_ptr<OA::Activity::InterActive> anActivityMap);
+    void setActivity(OA::OA_ptr<OA::Activity::InterActiveFortran> anActivityMap);
     void setAlias(OA::OA_ptr<OA::Alias::InterAliasMap> anAliasMap);
 
     // -------------------------------------------------------
@@ -180,7 +180,7 @@ namespace whirl2xaif {
     /**
      * we don't own this
      */
-    OA::OA_ptr<OA::Activity::InterActive> myActivity;
+    OA::OA_ptr<OA::Activity::InterActiveFortran> myActivity;
   
     /**
      * we don't own this
