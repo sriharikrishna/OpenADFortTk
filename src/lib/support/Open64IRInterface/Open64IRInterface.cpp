@@ -2450,6 +2450,10 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
       }
       break;
 
+    case OPR_CASEGOTO:
+      {
+      }
+      return; // only constants in here
 
     // General recursive case
     default:
