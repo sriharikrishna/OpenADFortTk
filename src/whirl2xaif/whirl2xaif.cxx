@@ -67,9 +67,7 @@ namespace whirl2xaif {
     ctxt.setPUToIdMap(pumap);
     ourWNToWNIdTableMap.Create(pu_forest); // Note: could make this local
     // Initialize and create inter/intra analysis information
-
     ourOAAnalMap.Create(pu_forest);
-    
     ctxt.setActivity(ourOAAnalMap.GetInterActiveFortran());
     ctxt.setAlias(ourOAAnalMap.GetInterAlias());
     // Create scalarized var reference table

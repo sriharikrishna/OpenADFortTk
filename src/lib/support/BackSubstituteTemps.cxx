@@ -73,11 +73,8 @@ namespace FortTk {
 	  if (!aWNPtreeIterator.Get_parent_wn())
 	    FORTTK_DIE("BackSubstituteTemps::forPUInfo: no parent set");
 	  // replace the current node within the parent
-      /*
 	  WN_kid(aWNPtreeIterator.Get_parent_wn(),aWNPtreeIterator.Get_kid_index()) = WN_COPY_Tree((*mapIter).second);
-      */
-
-      skipKids=true;
+	  skipKids=true;
 	  const char* tmpName = ST_name(tempST_p); 
 	  ST* puST_p = ST_ptr(PU_Info_proc_sym(aPUInfo_p));
 	  const char* puName = ST_name(puST_p);
