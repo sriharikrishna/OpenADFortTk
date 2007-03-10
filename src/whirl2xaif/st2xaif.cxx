@@ -496,12 +496,9 @@ namespace whirl2xaif {
 		    || strcmp(ty_str, "complex") == 0) ? 1 : 0; 
 #endif
 
-      std::cout << "before calling isActiveSym" << std::endl;
       int active = (ctxt.isActiveSym(st)) ? 1 : 0;
-      std::cout << "after calling isActiveSym" << active << std::endl;
       
       if (active && strcmp(ty_str, "integer") == 0) {
-          std::cout << "Active Symbol is integer, active is false" << std::endl;
 	active = false;
 	static const char* txt1 = "unactivating the activated symbol '";
 	static const char* txt2 = "' of integral type";
@@ -516,7 +513,6 @@ namespace whirl2xaif {
 	}
    }
 
-      std::cout << " active symbol not integer, active is true" << std::endl; 
       fortTkSupport::SymId st_id = (fortTkSupport::SymId)ST_index(st);
       xos << xml::BegElem("xaif:Symbol") << AttrSymId(st)
 	  << xml::Attr("kind", "variable") << xml::Attr("type", ty_str)

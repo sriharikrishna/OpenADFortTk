@@ -179,7 +179,7 @@ namespace fortTkSupport {
 					  interAlias, sideeffectman);
 
     x->SetInterSideEffect(interSEman, interSE);
-  
+ 
     // ICFG
     FORTTK_MSG(1, "progress: icfg standard: performAnalysis");
     OA::OA_ptr<OA::ICFG::ManagerICFGStandard> icfgman;
@@ -192,7 +192,7 @@ namespace fortTkSupport {
   OA::OA_ptr<OA::DUG::ManagerDUGStandard> dugman;
   dugman = new OA::DUG::ManagerDUGStandard(irIF, irIF);
   OA::OA_ptr<OA::DUG::DUGStandard> dug
-      = dugman->performAnalysis(procIt, icfg, parambind, interAlias, cgraph);
+      = dugman->performAnalysis(procIt, parambind, interAlias, cgraph);
   dugman->transitiveClosureDepMatrix(cgraph);
   // #define DEBUG_DUAA_LAST 1
 #ifdef DEBUG_DUAA_LAST
@@ -204,7 +204,10 @@ namespace fortTkSupport {
   OA::OA_ptr<OA::Activity::ManagerDUActive> duactiveman;
   duactiveman = new OA::Activity::ManagerDUActive(irIF, dug);
   OA::OA_ptr<OA::Activity::InterActiveFortran> duactive;
-  duactive = duactiveman->performAnalysis(icfg, parambind, interAlias);
+
+ 
+  
+  duactive = duactiveman->performAnalysis(parambind, interAlias);
 
 #ifdef DEBUG_DUAA
   duactive->dump(cout, irIF);
@@ -222,7 +225,7 @@ namespace fortTkSupport {
 // 					interSE);
 
     x->SetInterActiveFortran(duactiveman, duactive);
-    
+
 
 //   // this is only for context sensitive analysis
 //     OAAnalInfo::collectGlobalSymbolActivityInfo(active,
@@ -236,11 +239,17 @@ namespace fortTkSupport {
     // -------------------------------------------------------
     FORTTK_MSG(1, "progress: intraprocedural analysis");
     procIt->reset();
+   
+    procIt = new Open64IRProcIterator(pu_forest);
+
     for ( ; procIt->isValid(); ++(*procIt)) { 
       PU_Info* pu = (PU_Info*)procIt->current().hval();
       ST* st = ST_ptr(PU_Info_proc_sym(pu));
       const char* nm = ST_name(st);
       FORTTK_MSG(1, "progress: analysing SUBROUTINE " << nm );
+
+      
+
       OAAnalInfo* info = new OAAnalInfo(pu, x);
       x->Insert(pu, info);
     }
@@ -248,7 +257,7 @@ namespace fortTkSupport {
     // -------------------------------------------------------
     // Post-analysis
     // -------------------------------------------------------
-  
+ 
     // Now massage the Call Graph into something that XAIF can use
     FORTTK_MSG(1, "progress: call graph: massage for XAIF");
     MassageOACallGraphIntoXAIFCallGraph(cgraph);
@@ -314,6 +323,7 @@ CreateOAAnalInfo(PU_Info* pu,
     OA::OA_ptr<OA::Alias::AliasMap> alias = aliasman->performAnalysis(proc);
     if (0) { alias->dump(std::cout, irIF); }
     */
+
     FORTTK_MSG(1, "progress: inter alias: performAnalysis");
     OA::OA_ptr<OA::Alias::ManagerFIAliasAliasMap> interaliasmapman;
     interaliasmapman = new OA::Alias::ManagerFIAliasAliasMap(irIF);
@@ -323,7 +333,7 @@ CreateOAAnalInfo(PU_Info* pu,
     alias = interAlias->getAliasResults(proc);
     x->SetAlias(interaliasmapman, alias);
 
-  
+
     // ReachDefs
     FORTTK_MSG(1, "progress: reach defs: performAnalysis");
     OA::OA_ptr<OA::ReachDefs::ManagerReachDefsStandard> rdman;
@@ -332,6 +342,7 @@ CreateOAAnalInfo(PU_Info* pu,
       = rdman->performAnalysis(proc, cfg, alias, interSideEffect);
     x->SetReachDefs(rdman, rds);
 
+    
     // UDDU chains
     FORTTK_MSG(1, "progress: uddu: performAnalysis");
     OA::OA_ptr<OA::UDDUChains::ManagerUDDUChainsStandard> udman;
@@ -361,6 +372,7 @@ CreateOAAnalInfo(PU_Info* pu,
     if (0) { udduchainsXAIF->dump(std::cout, irIF); }
   
     x->SetUDDUChainsXAIF(udmanXAIF, udduchainsXAIF);
+
   }
 
 

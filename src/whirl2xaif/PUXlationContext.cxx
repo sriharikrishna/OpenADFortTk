@@ -274,6 +274,7 @@ namespace whirl2xaif {
   }
 
   int PUXlationContext::isActiveSym(ST* st) { 
+
     if(myActivity.ptrEqual(NULL))
       FORTTK_DIE("PUXlationContext::IsActiveSym: myActivity not set");
     if (!st)
@@ -292,29 +293,46 @@ namespace whirl2xaif {
     }
     OA::SymHandle sym = OA::SymHandle((OA::irhandle_t)st) ; 
     OA::OA_ptr<Open64IRInterface> theIR=Whirl2Xaif::getOAAnalMap().GetIRInterface();
-    OA::OA_ptr<OA::MemRefExpr> symMRE = theIR->convertSymToMemRefExpr(sym);
     OA::ProcHandle proc((OA::irhandle_t)Current_PU_Info);
-    std::cout << "MemRefExpr" << std::endl;
-    symMRE->output(*theIR);
-    std::cout << "**********" << std::endl;
+    OA::OA_ptr<OA::MemRefExpr> symMRE = theIR->convertSymToMemRefExpr(sym);
     OA::OA_ptr<OA::LocIterator> symMRElocs_I = myAlias->getAliasResults(proc)->getMayLocs(*symMRE,proc);
     // we now have the locations that may alias the symbol and  need to compare these 
     // against the locations determined to be active by the activity analysis. 
+<<<<<<< /home/malusare/cvs/OpenAD/OpenADFortTk/src/whirl2xaif/PUXlationContext.cxx
+
+=======
     std::cout << "ActiveSym before for loop" << std::endl;
+>>>>>>> /home/malusare/tmp/PUXlationContext.cxx~other.bZ65Od
     for ( ; symMRElocs_I->isValid(); (*symMRElocs_I)++ ) {
+<<<<<<< /home/malusare/cvs/OpenAD/OpenADFortTk/src/whirl2xaif/PUXlationContext.cxx
+        
+//      std::cout << "Procedure Name" << theIR->toString(proc) << std::endl;
+=======
       std::cout << "ActiveSym inside for loop" << std::endl;  
       // std::cout << "Procedure Name" << theIR->toString(proc) << std::endl;
+>>>>>>> /home/malusare/tmp/PUXlationContext.cxx~other.bZ65Od
       OA::OA_ptr<OA::LocIterator> activeLoc_I = 
           myActivity->getActiveLocsIterator(proc);
       for ( ; activeLoc_I->isValid(); (*activeLoc_I)++ ) {
+<<<<<<< /home/malusare/cvs/OpenAD/OpenADFortTk/src/whirl2xaif/PUXlationContext.cxx
+	   if (activeLoc_I->current()->mayOverlap(*(symMRElocs_I->current()))) {
+	      return true;
+	   }
+=======
 	std::cout << "Found Active Location" << std::endl;
 	if (activeLoc_I->current()->mayOverlap(*(symMRElocs_I->current()))) {
           std::cout << "Found Overlap, returning true" << std::endl;
 	  return true;
 	}
+>>>>>>> /home/malusare/tmp/PUXlationContext.cxx~other.bZ65Od
       }
     }
+<<<<<<< /home/malusare/cvs/OpenAD/OpenADFortTk/src/whirl2xaif/PUXlationContext.cxx
+    
+
+=======
     std::cout << "ActiveSym outside for loop" << std::endl;
+>>>>>>> /home/malusare/tmp/PUXlationContext.cxx~other.bZ65Od
     // didn't find it in all the active locations
     return false;
 #endif
