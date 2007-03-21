@@ -1,55 +1,6 @@
 // -*-Mode: C++;-*-
 // $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/diagnostics.h,v 1.1.1.1 2004/04/16 15:58:28 mstrout Exp $
 
-// * BeginCopyright *********************************************************
-/*
-  Copyright (C) 2000, 2001 Silicon Graphics, Inc.  All Rights Reserved.
-
-  This program is free software; you can redistribute it and/or modify it
-  under the terms of version 2 of the GNU General Public License as
-  published by the Free Software Foundation.
-
-  This program is distributed in the hope that it would be useful, but
-  WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-  Further, this software is distributed without any warranty that it is
-  free of the rightful claim of any third person regarding infringement 
-  or the like.  Any license provided herein, whether implied or 
-  otherwise, applies only to this software file.  Patent licenses, if 
-  any, provided herein do not apply to combinations of this program with 
-  other software, or any other product whatsoever.  
-
-  You should have received a copy of the GNU General Public License along
-  with this program; if not, write the Free Software Foundation, Inc., 59
-  Temple Place - Suite 330, Boston MA 02111-1307, USA.
-
-  Contact information:  Silicon Graphics, Inc., 1600 Amphitheatre Pky,
-  Mountain View, CA 94043, or:
-
-  http://www.sgi.com
-
-  For further information regarding this notice, see:
-
-  http://oss.sgi.com/projects/GenInfo/NoticeExplan
-*/
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/diagnostics.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-// Based on Open64 be/whirl2c/diagnostics.h
-//
-//***************************************************************************
-
 #ifndef diagnostics_INCLUDED
 #define diagnostics_INCLUDED
 /* ====================================================================
@@ -139,17 +90,6 @@
 
 #include <stdio.h>		    /* for stderr */
 
-//************************** Open64 Include Files ***************************
-
-//*************************** User Include Files ****************************
-
-//***************************************************************************
-
-// Debug messages (from csprof)
-
-// Debug and verbosity levels: higher level --> more info; 0 turns
-// respective messages off
-
 // Private debugging level: messages for in-house debugging [0-9]
 #define DBG_LVL 0
 
@@ -158,18 +98,18 @@ extern int DBG_LVL_PUB; // default: 0
 
 #define DBGMSG(level, ...)                                            \
   if (level <= DBG_LVL) {                                             \
-    fprintf(stderr, "dbg* [%d]: ", level);                            \
+    fprintf(stderr, "Open64IRInterface:[debuglevel=%d]: ", level);                            \
     fprintf(stderr, __VA_ARGS__); fputs("\n", stderr); }
 
 #define DBGMSG_PUB(level, ...)                                        \
   if (level <= DBG_LVL_PUB) {                                         \
-    fprintf(stderr, "dbg [%d]: ", level);                             \
+    fprintf(stderr, "Open64IRInterface:[debuglevel=%d]: ", level);                             \
     fprintf(stderr, __VA_ARGS__); fputs("\n", stderr); }
 
 #define ERRMSG(...)                                                   \
   { fputs("error", stderr);                                           \
     if (DBG_LVL) {                                                    \
-      fprintf(stderr, " [%s:%d]", __FILE__, __LINE__); }              \
+      fprintf(stderr, "Open64IRInterface: [%s:%d]", __FILE__, __LINE__); }              \
     fputs(": ", stderr); fprintf(stderr, __VA_ARGS__); fputs("\n", stderr); }
 
 #define DIE(...) ERRMSG(__VA_ARGS__); { exit(1); }
