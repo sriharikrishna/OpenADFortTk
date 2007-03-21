@@ -456,18 +456,16 @@ namespace whirl2xaif {
   }
 
   static void 
-  xlate_STDecl_VAR(xml::ostream& xos, ST *st, PUXlationContext& ctxt)
-  {  
+  xlate_STDecl_VAR(xml::ostream& xos, ST *st, PUXlationContext& ctxt) {  
     FORTTK_ASSERT(ST_class(st) == CLASS_VAR, fortTkSupport::Diagnostics::UnexpectedInput);
-
     const char* st_name = ST_name(st);
     ST* base = ST_base(st);
     TY_IDX ty = ST_type(st);
-  
     bool translatenow = false;
     if (Stab_Is_Common_Block(st)) {
       TY2F_Translate_Common(xos, st_name, ty); 
-    } else if (ST_sclass(st) == SCLASS_FORMAL && !ST_is_value_parm(st)) {
+    } 
+    else if (ST_sclass(st) == SCLASS_FORMAL && !ST_is_value_parm(st)) {
       // A procedure parameter (we expect a pointer TY to counteract the
       // Fortran call-by-reference semantics)
       FORTTK_ASSERT(TY_Is_Pointer(ty), "Unexpected type " << TY_kind(ty));
@@ -476,32 +474,22 @@ namespace whirl2xaif {
       if (TY_Is_Pointer(base_ty) && TY_ptr_as_array(Ty_Table[base_ty])) {
 	/* FIXME: Handle ptr as array parameters */ 
 	ty = Stab_Array_Of(TY_pointed(base_ty), 0/*size*/);
-      } else {
+      } 
+      else {
 	ty = base_ty;
       }
       translatenow = true;
-    
-    } else {
+    } 
+    else {
       translatenow = true;
     }
-
     if (translatenow) { // FIXME
       const char* ty_str = TranslateTYToSymType(ty);
       if (!ty_str) { ty_str = "***"; }
-    
       const char* shape_str = TranslateTYToSymShape(ty);
       if (!shape_str) { shape_str = "***"; }
-#if 0    
-      int active = (strcmp(ty_str, "real") == 0 // FIXME: see xlate_STDecl_VAR
-		    || strcmp(ty_str, "complex") == 0) ? 1 : 0; 
-#endif
-
-      std::cout << "before calling isActiveSym" << std::endl;
       int active = (ctxt.isActiveSym(st)) ? 1 : 0;
-      std::cout << "after calling isActiveSym" << active << std::endl;
-      
       if (active && strcmp(ty_str, "integer") == 0) {
-          std::cout << "Active Symbol is integer, active is false" << std::endl;
 	active = false;
 	static const char* txt1 = "unactivating the activated symbol '";
 	static const char* txt2 = "' of integral type";
@@ -514,9 +502,7 @@ namespace whirl2xaif {
 	  FORTTK_MSG(0, "warning: within " << ST_name(pu_st) << ": "
 		     << txt1 << ST_name(st) << txt2);
 	}
-   }
-
-      std::cout << " active symbol not integer, active is true" << std::endl; 
+      }
       fortTkSupport::SymId st_id = (fortTkSupport::SymId)ST_index(st);
       xos << xml::BegElem("xaif:Symbol") << AttrSymId(st)
 	  << xml::Attr("kind", "variable") << xml::Attr("type", ty_str)
@@ -525,9 +511,6 @@ namespace whirl2xaif {
       xlate_ArrayBounds(xos, ty, ctxt);
       xos << xml::EndElem;
     }
-
-    //FIXME: TY2F_translate(xos, ty, ctxt); // Add type specs
-
 #if 0 // FIXME
     /* Declare the variable */
   
@@ -620,7 +603,6 @@ namespace whirl2xaif {
 	INITO2F_translate(xos, inito); // Data_Stmt_Tokens
     }
 #endif
-
   }
 
   static void 
