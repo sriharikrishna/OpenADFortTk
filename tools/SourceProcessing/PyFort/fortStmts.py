@@ -286,8 +286,8 @@ class TypeDecl(Decl):
 
 ### FIXME: '::' is optional, so set flag to indicate presence ###
 #
-        ((typ,mod),attrs,decls) = v
-        return cls(mod,attrs,dc,decls)
+        ((typ,mod),attrs,dc,decls) = v
+        return cls(mod,attrs,decls)
 
     def __init__(self,mod,attrs,decls):
         self.mod   = mod
@@ -628,19 +628,23 @@ class BasicTypeDecl(TypeDecl):
                          ','.join([str(d).replace('()','') \
                                    for d in self.decls]))
 
-class RealStmt(BasicTypeDecl):
+# class RealStmt(BasicTypeDecl):
+class RealStmt(TypeDecl):
     kw = 'real'
     kw_str = kw
 
-class ComplexStmt(BasicTypeDecl):
+# class ComplexStmt(BasicTypeDecl):
+class ComplexStmt(TypeDecl):
     kw = 'complex'
     kw_str = kw
 
-class IntegerStmt(BasicTypeDecl):
+# class IntegerStmt(BasicTypeDecl):
+class IntegerStmt(TypeDecl):
     kw = 'integer'
     kw_str = kw
 
-class LogicalStmt(BasicTypeDecl):
+# class LogicalStmt(BasicTypeDecl):
+class LogicalStmt(TypeDecl):
     kw = 'logical'
     kw_str = kw
 
@@ -671,7 +675,8 @@ class F77Type(TypeDecl):
         return '%s  %s' % (self.__class__.kw_str,
                            ','.join([str(d) for d in self.decls]))
 
-class DoubleStmt(F77Type):
+# class DoubleStmt(F77Type):
+class DoubleStmt(TypeDecl):
     kw     = 'doubleprecision'
     kw_str = 'double precision'
 
