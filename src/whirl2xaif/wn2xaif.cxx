@@ -273,7 +273,7 @@ namespace whirl2xaif {
       OA::OA_ptr<OA::DGraph::NodeInterface> dn = nodeItPtr->current();
       OA::OA_ptr<OA::CFG::Node> n = dn.convert<OA::CFG::Node>();
       usedNodes.insert(n);
-      // n->longdump(&cfg, std::cerr); std::cerr << endl;
+      // std::cout << "visiting " << n->getId() << std::endl;
       const char* vtype = fortTkSupport::GetCFGVertexType(cfg, n);
       fortTkSupport::SymTabId scopeId = ctxt.findSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
       std::string ids = GetIDsForStmtsInBB(n, ctxt);
