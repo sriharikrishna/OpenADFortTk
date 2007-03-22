@@ -1,3 +1,5 @@
 (^|/)CVS($|/)
 (^|/)\.hg($|/)
 (^|/)\.hgtags($|/)
+build-x86-Linux/*
+OpenADFortTk-x86-Linux/*
