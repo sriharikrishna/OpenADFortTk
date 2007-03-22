@@ -142,7 +142,10 @@ public:
     ELEM_SymRef,
     ELEM_ArrayElemRef,
     
+    ELEM_IndexTriplet,
     ELEM_Index,
+    ELEM_Bound,
+    ELEM_Stride,
     
     ELEM_VarRefEdge,
     
@@ -377,8 +380,14 @@ public:
   const char* elem_ArrayElemRef() const { return c_strTbl[ELEM_ArrayElemRef]; }
   XMLCh*      elem_ArrayElemRef_x() const { return x_strTbl[ELEM_ArrayElemRef]; }
   
+  const char* elem_IndexTriplet() const { return c_strTbl[ELEM_IndexTriplet]; }
+  XMLCh*      elem_IndexTriplet_x() const { return x_strTbl[ELEM_IndexTriplet]; }
   const char* elem_Index() const { return c_strTbl[ELEM_Index]; }
   XMLCh*      elem_Index_x() const { return x_strTbl[ELEM_Index]; }
+  const char* elem_Bound() const { return c_strTbl[ELEM_Bound]; }
+  XMLCh*      elem_Bound_x() const { return x_strTbl[ELEM_Bound]; }
+  const char* elem_Stride() const { return c_strTbl[ELEM_Stride]; }
+  XMLCh*      elem_Stride_x() const { return x_strTbl[ELEM_Stride]; }
   
   const char* elem_VarRefEdge() const { return c_strTbl[ELEM_VarRefEdge]; }
   XMLCh*      elem_VarRefEdge_x() const { return x_strTbl[ELEM_VarRefEdge]; }
