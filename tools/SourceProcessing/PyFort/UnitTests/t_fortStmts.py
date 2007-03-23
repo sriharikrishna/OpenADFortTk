@@ -2,6 +2,7 @@ from Setup     import *
 from unittest  import *
 
 from fortStmts import *
+from fortStmts import _Kind
 from useparse  import *
 
 class C1(TestCase):
@@ -173,8 +174,47 @@ class C5(TestCase):
         a_(isinstance(ps,InterfaceStmt),'instance check')
         ae(str(ps),s)
 
-s    = makeSuite(C5)
-suite = asuite(C1,C2,C3,C4,C5)
+class C6(TestCase):
+    '''F90 style types
+    '''
+    def test1(self):
+        'real with attributes'
+        ae = self.assertEquals
+        a_ = self.assert_
+        s = 'real(3),dimension(aaa) :: x,y'
+        ps = pps(s)
+        a_(isinstance(ps,RealStmt))
+        a_(ps.attrs)
+        ae(len(ps.decls),2)
+
+    def test2(self):
+        'double precision with attributes'
+        ae = self.assertEquals
+        a_ = self.assert_
+        s = 'double precision,pointer,intent(inout) :: y'
+        ps = pps(s)
+        a_(isinstance(ps,DoubleStmt))
+        a_(ps.attrs)
+        ae(len(ps.attrs),2)
+        ae(str(ps.attrs[1]),str(App('intent',['inout'])))
+
+    def test3(self):
+        'string value of real stmt w attributes'
+        ae = self.assertEquals
+        a_ = self.assert_
+        vv = RealStmt([_Kind('4')],[App('intent',['in']),'allocatable'],['x','y',])
+        ae(str(vv),'real(4),intent(in),allocatable :: x,y')
+
+    def test4(self):
+        'string value of double stmt w attributes'
+        ae = self.assertEquals
+        a_ = self.assert_
+        vv = DoubleStmt([],[App('intent',['in']),'allocatable'],['x','y',])
+        ae(str(vv),'double precision,intent(in),allocatable :: x,y')
+
+s    = makeSuite(C6)
+
+suite = asuite(C1,C2,C3,C4,C5,C6)
 
 if __name__ == '__main__':
     runit(suite)

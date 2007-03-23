@@ -120,11 +120,12 @@ def fnunit(line,ctxtm):
         ctxt.vars[line.name] = SymEntry(typeof=ty,dims=(),external=True)
     return line
 
-def typesep(d):
+def typesep(dd):
     '''return name and dimensions for a given decl entry
     a type declaration will either be a simple var (string)
     or an App expression
     '''
+    d = dd.lhs
     return isinstance(d,str) and (d,()) or (d.head,tuple(d.args))
 
 def typedecl(line,ctxtm):

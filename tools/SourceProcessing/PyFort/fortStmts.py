@@ -120,8 +120,6 @@ type_attr_list = treat(type_attr_list,_ta_listify)
 class _Init(object):
     'general f90 init object'
 
-    pass
-
 class _NoInit(_Init):
     'no initialization'
     def __init__(self,lhs): self.lhs = lhs
@@ -255,11 +253,17 @@ class Marker(NonComment):
     def __init__(self):
         pass
 
+    def __str__(self):
+        return '!! %s (marker)' % self.ptxt
+
+    def __repr__(self):
+        return '%s()' % self.__class__.__name__
+
 class LastDecl(Marker):
-    pass
+    ptxt = 'last declaration'
 
 class FirstExec(Marker):
-    pass
+    ptxt = 'first executable follows'
 
 class Decl(NonComment):
     pass
