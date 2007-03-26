@@ -212,9 +212,53 @@ class C6(TestCase):
         vv = DoubleStmt([],[App('intent',['in']),'allocatable'],['x','y',])
         ae(str(vv),'double precision,intent(in),allocatable :: x,y')
 
-s    = makeSuite(C6)
+def _gt(decl):
+    'generate type reps f decl strings, using parser'
+    stmt = pps(decl + ' x')
+    return (stmt.__class__,stmt.mod)
 
-suite = asuite(C1,C2,C3,C4,C5,C6)
+class C7(TestCase):
+    '''Typing, and misc xform utilities
+    '''
+    def test1(self):
+        'kw2type'
+        ae = self.assertEquals
+        a_ = self.assert_
+        ae(kw2type('real'),RealStmt)
+        ae(kw2type('doubleprecision'),DoubleStmt)
+        ae(kw2type('integer'),IntegerStmt)
+        ae(kw2type('logical'),LogicalStmt)
+
+    def test2(self):
+        'lenfn'
+        ae = self.assertEquals
+        a_ = self.assert_
+        ae(str(lenfn(15)[0]),'*15')
+
+    def test3(self):
+        'typemerge'
+        ae = self.assertEquals
+        a_ = self.assert_
+
+        t1 = _gt('real')
+        t2 = _gt('real*4')
+        t3 = _gt('real*8')
+        t4 = _gt('double precision')
+        t5 = _gt('complex')
+        t6 = _gt('integer')
+
+        ae(typemerge([],t1),t1)
+        ae(typemerge([t2],t1),t2)
+        ae(typemerge([t1,t1,t1],t2),t1)
+        ae(typemerge([t1,t2,t1],t1),t2)
+        ae(typemerge([t1,t2,t1,t3],t1),t3)
+        ae(typemerge([t6,t6,t6,t1],t1),t1)
+        ae(typemerge([t3,t4,],t1),t4)
+        ae(typemerge([t1,t2,t3,t4,t5,t6],t1),t5)
+
+s1    = makeSuite(C7)
+
+suite = asuite(C1,C2,C3,C4,C5,C6,C7)
 
 if __name__ == '__main__':
     runit(suite)

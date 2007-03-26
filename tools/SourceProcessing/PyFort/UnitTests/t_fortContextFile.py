@@ -52,8 +52,38 @@ class C2(TestCase):
         ae = self.assertEquals
         a_ = self.assert_
         e  = fortContextFile(fname_t('simple_decls.f'))
+        (ty,mod) = e.lines[0].ctxt.lookup_type('x')
+        ae(ty.kw_str,'double precision')
+        a_(not mod)
+        (ty,mod) = e.lines[0].ctxt.lookup_type('y')
+        ae(ty.kw_str,'real')
+        a_(mod)
+        ae(str(mod[0]),'*8')
+        dims = e.lines[0].ctxt.lookup_dims('x')
+        a_(not dims)
+        dims = e.lines[0].ctxt.lookup_dims('y')
+        a_(dims)
+        ae(len(dims),2)
+        ae([str(d) for d in dims],['5','7'])
+
+    def test3(self):
+        'file w attr declarations'
+        ae = self.assertEquals
+        a_ = self.assert_
+        e  = fortContextFile(fname_t('attr_decls.f'))
+        (ty,mod) = e.lines[0].ctxt.lookup_type('x')
+        ae(ty.kw_str,'double precision')
+        a_(not mod)
+        dims = e.lines[0].ctxt.lookup_dims('x')
+        a_(dims)
+        ae(len(dims),1)
+        ae([str(d) for d in dims],['2'])
+        (ty,mod) = e.lines[0].ctxt.lookup_type('y')
+        ae(ty.kw_str,'real')
+        a_(not mod)
+        dims = e.lines[0].ctxt.lookup_dims('y')
+        a_(not dims)
 #        for l in e.lines: print l
-        a_(True)
 
 s1 = makeSuite(C2)
 

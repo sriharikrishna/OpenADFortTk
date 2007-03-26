@@ -1093,18 +1093,41 @@ def poly(s):
     return s.lower() in ('max',
                          'min',
                          )
+
+_modhash = { _Prec     : 0,
+             _Kind     : 1,
+             _ExplKind : 2,
+             }
+
+def modcompare(m1,m2):
+    'compare type modifiers'
+    if not m1: return m2
+    if not m2: return m1
+    mm1 = m1[0]
+    mm2 = m2[0]
+    c1  = mm1.__class__
+    c2  = mm2.__class__
+
+    if c1 == c2:
+        if mm1.mod >= mm2.mod: return m1
+        return m2
+
+    if _modhash[c1] >= _modhash[c2]: return m1
+    return m2
+
 def typecompare(t1,t2):
     mergeit = dict(character=0,
                    logical=1,
                    integer=2,
                    real=3,
-                   complex=4,
-                   doubleprecision=5,
+                   doubleprecision=4,
+                   complex=5,
                    doublecomplex=6,
                    )
 
+#    print 't1 = ',t1,'t2 = ',t2
     if t1[0] == t2[0]:
-        return(t1[0],max(t1[1],t2[1]))
+        return(t1[0],modcompare(t1[1],t2[1]))
 
     if mergeit[t1[0].kw] > mergeit[t2[0].kw]: return t1
 

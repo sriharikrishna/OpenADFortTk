@@ -120,13 +120,19 @@ def fnunit(line,ctxtm):
         ctxt.vars[line.name] = SymEntry(typeof=ty,dims=(),external=True)
     return line
 
-def typesep(dd):
+def typesep(dd,default_dims):
     '''return name and dimensions for a given decl entry
     a type declaration will either be a simple var (string)
     or an App expression
     '''
     d = dd.lhs
-    return isinstance(d,str) and (d,()) or (d.head,tuple(d.args))
+    return isinstance(d,str) and (d,default_dims) or (d.head,tuple(d.args))
+
+def default_dims(attrs_list):
+    for a in attrs_list:
+        if isinstance(a,fe.App) and a.head == 'dimension':
+            return tuple(a.args)
+    return ()
 
 def typedecl(line,ctxtm):
     'type declaration -- record type in symbol table'
@@ -137,8 +143,9 @@ def typedecl(line,ctxtm):
     kw_str  = line.kw_str
     mod     = line.mod
     lngth   = kw_str == 'character' and (mod and mod[0] or 1)
+    dflt_d  = default_dims(line.attrs)
     for d in line.decls:
-        (name,dims)     = typesep(d)
+        (name,dims)     = typesep(d,dflt_d)
         if name in ctxt.vars:
             ctxt.vars[name].typeof = typeof
             ctxt.vars[name].mod    = mod
