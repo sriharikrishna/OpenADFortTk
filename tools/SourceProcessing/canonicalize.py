@@ -18,15 +18,14 @@ def hook1(self):
 
 _verbose   = True
 
-f1 = fortContextFile(sys.argv[1],hook1)
-
-f1rw = f1.rewrite(canon_lexi).rewrite(decl_lexi)
-
-slcf = open('reslice.dat','w')
-pp = cp.Pickler(slcf)
-pp.dump(f1rw.lines[0].ctxt.toplev.slice_undo)
-slcf.close()
-
-f1rw.printit()
-
-
+if (len(sys.argv)!=2) :
+  print >>sys.stderr, "Error: missing argument!"
+  print >>sys.stderr, "Usage: ", sys.argv[0], " <input file name>"
+else :
+  f1 = fortContextFile(sys.argv[1],hook1)
+  f1rw = f1.rewrite(canon_lexi).rewrite(decl_lexi)
+  slcf = open('reslice.dat','w')
+  pp = cp.Pickler(slcf)
+  pp.dump(f1rw.lines[0].ctxt.toplev.slice_undo)
+  slcf.close()
+  f1rw.printit()

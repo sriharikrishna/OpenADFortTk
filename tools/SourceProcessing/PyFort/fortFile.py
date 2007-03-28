@@ -21,6 +21,11 @@ class Ffile(object):
 
     @staticmethod
     def file(name):
+        try:
+          file=open(name)
+        except IOError:
+          print >> sys.stderr, "Error cannot open file named:", name
+          raise IOError
         return Ffile(open(name))
 
     @staticmethod
