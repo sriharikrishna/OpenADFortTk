@@ -10,6 +10,7 @@ from cStringIO import StringIO
 from fortLine  import a_line
 from PyUtil.assembler import vgen
 from PyUtil.buf_iter  import buf_iter
+from PyUtil.errors import UserError
 
 def _ident(s):
     return [s]
@@ -24,8 +25,8 @@ class Ffile(object):
         try:
           file=open(name)
         except IOError:
-          print >> sys.stderr, "Error cannot open file named:", name
-          raise IOError
+          msg="Error cannot open file named: "+name
+          raise UserError(msg)
         return Ffile(open(name))
 
     @staticmethod
