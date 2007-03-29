@@ -9,7 +9,7 @@ from PyFort.fortContextFile import fortContextFile
 
 from Canon.canon import canon_lexi,decl_lexi,_verbose
 
-from PyUtil.errors import UserError
+from PyUtil.errors import UserError, ScanError
  
 def hook1(self):
     if hasattr(self.toplev,'_scnt'):
@@ -35,6 +35,11 @@ def main():
       f1rw.printit()
     except UserError,e : 
       print >>sys.stderr, "Error: ", e.msg
+      return -1 
+    except ScanError,e : 
+      print >>sys.stderr, "Error: scanner fails at line:", e.aFortLine.line
+      print >>sys.stderr, "   scanned: ", e.scanned
+      print >>sys.stderr, " unscanned: ", e.rest
       return -1 
     return 0
 
