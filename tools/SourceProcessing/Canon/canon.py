@@ -74,7 +74,7 @@ def gen_repl_fns(line):
                isinstance(e.args[0],fe.Ops) and \
                e.args[0].op == ':' :
                 if _verbose:
-                    print >> sys.stderr,'found a substring to replace:',e
+                    print >> sys.stderr,'Progress: found a substring to replace:',e
                 return True
 
         return isinstance(e,fe.Ops) and e.op == ':'
@@ -130,7 +130,7 @@ def canon_call(self):
     pre = []
     for c in self.ctxt.new_calls:
         pre.extend([l for l in self.same(c).map()])
-    
+
     pre.extend(new_assigns)
     pre.append(new_call)
 
@@ -189,7 +189,7 @@ def canon_PUstart(self):
     self.ctxt.repl_fns    = gen_repl_fns(self)
 
     if _verbose:
-        print >> sys.stderr, 'working on program unit ',self.ctxt.uname
+        print >> sys.stderr, 'Progress: working on program unit ',self.ctxt.uname
 
     return [self]
     
@@ -219,7 +219,7 @@ def declare_tmpvars(line):
     rv = []
     for (ty,tvar) in line.ctxt.new_vars:
         (cls,mod) = ty
-        decl = cls(mod,[tvar])
+        decl = cls(mod,[],[tvar])
         decl.lineno = False
         decl.lead   = line.lead
         decl.ctxt   = line.ctxt
