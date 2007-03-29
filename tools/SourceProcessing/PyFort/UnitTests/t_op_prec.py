@@ -1,6 +1,7 @@
-from Setup       import *
-from unittest    import *
-from l_assembler import *
+from Setup              import *
+from _Setup             import *
+from unittest           import *
+from PyUtil.l_assembler import *
 
 from op_prec import OpPrec
 

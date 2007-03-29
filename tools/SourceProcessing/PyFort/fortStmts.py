@@ -120,8 +120,6 @@ type_attr_list = treat(type_attr_list,_ta_listify)
 class _Init(object):
     'general f90 init object'
 
-    pass
-
 class _NoInit(_Init):
     'no initialization'
     def __init__(self,lhs): self.lhs = lhs
@@ -255,11 +253,17 @@ class Marker(NonComment):
     def __init__(self):
         pass
 
+    def __str__(self):
+        return '!! %s (marker)' % self.ptxt
+
+    def __repr__(self):
+        return '%s()' % self.__class__.__name__
+
 class LastDecl(Marker):
-    pass
+    ptxt = 'last declaration'
 
 class FirstExec(Marker):
-    pass
+    ptxt = 'first executable follows'
 
 class Decl(NonComment):
     pass
@@ -286,8 +290,8 @@ class TypeDecl(Decl):
 
 ### FIXME: '::' is optional, so set flag to indicate presence ###
 #
-        ((typ,mod),attrs,decls) = v
-        return cls(mod,attrs,dc,decls)
+        ((typ,mod),attrs,dc,decls) = v
+        return cls(mod,attrs,decls)
 
     def __init__(self,mod,attrs,decls):
         self.mod   = mod
@@ -628,19 +632,23 @@ class BasicTypeDecl(TypeDecl):
                          ','.join([str(d).replace('()','') \
                                    for d in self.decls]))
 
-class RealStmt(BasicTypeDecl):
+# class RealStmt(BasicTypeDecl):
+class RealStmt(TypeDecl):
     kw = 'real'
     kw_str = kw
 
-class ComplexStmt(BasicTypeDecl):
+# class ComplexStmt(BasicTypeDecl):
+class ComplexStmt(TypeDecl):
     kw = 'complex'
     kw_str = kw
 
-class IntegerStmt(BasicTypeDecl):
+# class IntegerStmt(BasicTypeDecl):
+class IntegerStmt(TypeDecl):
     kw = 'integer'
     kw_str = kw
 
-class LogicalStmt(BasicTypeDecl):
+# class LogicalStmt(BasicTypeDecl):
+class LogicalStmt(TypeDecl):
     kw = 'logical'
     kw_str = kw
 
@@ -671,7 +679,8 @@ class F77Type(TypeDecl):
         return '%s  %s' % (self.__class__.kw_str,
                            ','.join([str(d) for d in self.decls]))
 
-class DoubleStmt(F77Type):
+# class DoubleStmt(F77Type):
+class DoubleStmt(TypeDecl):
     kw     = 'doubleprecision'
     kw_str = 'double precision'
 
@@ -1084,18 +1093,41 @@ def poly(s):
     return s.lower() in ('max',
                          'min',
                          )
+
+_modhash = { _Prec     : 0,
+             _Kind     : 1,
+             _ExplKind : 2,
+             }
+
+def modcompare(m1,m2):
+    'compare type modifiers'
+    if not m1: return m2
+    if not m2: return m1
+    mm1 = m1[0]
+    mm2 = m2[0]
+    c1  = mm1.__class__
+    c2  = mm2.__class__
+
+    if c1 == c2:
+        if mm1.mod >= mm2.mod: return m1
+        return m2
+
+    if _modhash[c1] >= _modhash[c2]: return m1
+    return m2
+
 def typecompare(t1,t2):
     mergeit = dict(character=0,
                    logical=1,
                    integer=2,
                    real=3,
-                   complex=4,
-                   doubleprecision=5,
+                   doubleprecision=4,
+                   complex=5,
                    doublecomplex=6,
                    )
 
+#    print 't1 = ',t1,'t2 = ',t2
     if t1[0] == t2[0]:
-        return(t1[0],max(t1[1],t2[1]))
+        return(t1[0],modcompare(t1[1],t2[1]))
 
     if mergeit[t1[0].kw] > mergeit[t2[0].kw]: return t1
 
