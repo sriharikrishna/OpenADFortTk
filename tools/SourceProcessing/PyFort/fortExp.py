@@ -84,10 +84,10 @@ class App(_Exp):
     def map(self,fn):
         return App(self.head,[fn(a) for a in self.args])
 
-    def typeit(self,exptype,idchk,kw2type,lenfn,poly,typemerge):
+    def typeit(self,exptype,idchk,kw2type,lenfn,kindfn,poly,typemerge):
         headtype = idchk(self.head)
         if poly(self.head):
-            return typemerge([exptype(l,idchk,kw2type,lenfn,poly,typemerge) \
+            return typemerge([exptype(l,idchk,kw2type,lenfn,kindfn,poly,typemerge) \
                               for l in self.args],
                              headtype)
         return headtype
@@ -154,8 +154,8 @@ class Zslice(_Exp):
 class Unary(_Exp):
     _sons = ['exp']
 
-    def typeit(self,exptype,idchk,kw2type,lenfn,poly,typemerge):
-        return exptype(self.exp,idchk,kw2type,lenfn,poly,typemerge)
+    def typeit(self,exptype,idchk,kw2type,lenfn,kindfn,poly,typemerge):
+        return exptype(self.exp,idchk,kw2type,lenfn,kindfn,poly,typemerge)
     
 class Umi(Unary):
     'unary minus'
@@ -233,10 +233,10 @@ class Ops(_Exp):
     def map(self,fn):
         return Ops(self.op,fn(self.a1),fn(self.a2))
 
-    def typeit(self,exptype,idchk,kw2type,lenfn,poly,typemerge):
-        return typemerge([exptype(self.a1,idchk,kw2type,lenfn,
+    def typeit(self,exptype,idchk,kw2type,lenfn,kindfn,poly,typemerge):
+        return typemerge([exptype(self.a1,idchk,kw2type,lenfn,kindfn,
                                   poly,typemerge),
-                          exptype(self.a2,idchk,kw2type,lenfn,
+                          exptype(self.a2,idchk,kw2type,lenfn,kindfn,
                                   poly,typemerge)],'????')
 
 def is_id(t):
@@ -445,7 +445,7 @@ def const_type(e,kw2type,lenfn,kindfn):
         ty     = 'd' in v.group(1).lower() and 'doubleprecision' or \
                  'real'
         ty     = kw2type(ty)
-        kind   = v.group(2) and kindfn(v.group(3)) or []
+        kind   = v.group(2) and [ kindfn(v.group(3))] or []
         return (ty,kind)
     if _int_re.match(e):
         ty   = kw2type('integer')

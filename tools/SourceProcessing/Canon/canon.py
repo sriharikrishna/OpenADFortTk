@@ -13,6 +13,12 @@ __tmp_prefix   = 'ad_ctmp'
 __call_prefix  = 'ad_s_'
 __slice_prefix = 'ad_slc'
 
+_verbose = True
+
+def set_verbose(l):
+    global _verbose
+    _verbose = l
+    
 def new_call(a,v,polyfix=''):
     '''from an app term, and a new var v,
     generate a call to a related subroutine, with v as the last var
@@ -176,7 +182,6 @@ def canon_ifthen(self):
 
     return pre
 
-_verbose = True
 
 def canon_PUstart(self):
 
