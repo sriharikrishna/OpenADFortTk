@@ -954,8 +954,7 @@ OA::SymHandle
 Open64IRInterface::getFormalForActual(OA::ProcHandle caller, 
                                       OA::CallHandle call, 
                                       OA::ProcHandle callee, 
-                                      OA::ExprHandle param)
-{
+                                      OA::ExprHandle param) {
   // Setup context for caller
   setCurrentProcToProcContext(call);
 
@@ -963,9 +962,9 @@ Open64IRInterface::getFormalForActual(OA::ProcHandle caller,
   PU_Info* calleePU = (PU_Info*)callee.hval();
   WN* callWN = (WN*)call.hval();
   WN* parmWN = (WN*)param.hval();
-  WN *wn_pu, *formalWN;
-  int numParamsCallee;
-  
+
+
+
   //debugging ...
   //{ std::cout << "getFormalForActual:  caller='"
   //            << toString(caller) << "' called='"
@@ -985,20 +984,95 @@ Open64IRInterface::getFormalForActual(OA::ProcHandle caller,
       break;
     }
   }
-  if (parmIdx < 0) {
-    goto fini;
-  }
-  
+
+  if(parmIdx >= 0) {
   // Given the index of the actual parameter, find the formal parameter
   PU_SetGlobalState(calleePU);
   
-  wn_pu = PU_Info_tree_ptr(calleePU);
-  numParamsCallee = WN_num_formals(wn_pu);  
-  assert(numParamsCallee == numParamsCaller);
-  formalWN = WN_formal(wn_pu, parmIdx);
-  formalST = WN_st(formalWN);
+  WN* wn_pu = PU_Info_tree_ptr(calleePU);
+ 
+  /*! PLM Important node regarding Optional Parameters:
+      Reference :http://www.sesp.cse.clrc.ac.uk/Publications/felib90_design/design/node6.html 
 
- fini:  
+      Occasionally, not all arguments are required every time a 
+      procedure is used. Therefore some arguments may be specified 
+      as optional, using the OPTIONAL attribute:
+   
+      SUBROUTINE sub1(a, b, c, d) 
+         INTEGER, INTENT(INOUT):: a, b 
+         REAL, INTENT(IN), OPTIONAL :: c, d 
+           ... 
+      END SUBROUTINE sub1 
+
+      Here a and b are always required when calling sub1. 
+      The arguments c and d are optional and so sub1 may be
+      referenced by:
+
+      CALL sub1( a, b ) 
+      CALL sub1( a, b, c, d ) 
+      CALL sub1( a, b, c ) 
+
+      Note that the order in which arguments appear is important
+      (unless keyword arguments are used) so that it is not possible
+      to call sub1 with argument d but no argument c.
+
+      CALL sub1( a, b, d )   ! illegal 
+
+      Optional arguments must come after all arguments associated 
+      by position in a referencing statement and require an explicit
+      interface.
+  */
+
+  assert(parmIdx <= WN_num_formals(wn_pu));
+
+  /*! PLM : Places where explicit formal to actual matching needed.
+
+    * For functions excluding following cases:
+        1. PURE INTEGER FUNCTION
+        2. ELEMENTAL REAL
+        3. RECURSIVE FUNCTIONS WITH RESULT 
+           (mentioned explicitely in the prototype) 
+            WHERE RESULT IS SCALAR VARIABLE
+        4. RECURSIVE FUNCTIONS WITHOUT RESULT
+           (mentioned explicitely in the prototype)
+
+      Return type is one of the member of formal Parameter list.
+      It appears as the first argument in the formal Parameter list.
+      We need to match actual to formal starting from ParmIdx=1.
+   
+    * In case of Subroutine, we do not have Return-Type and therefore,
+      We need to match actual to formal starting from ParmIdx=0. 
+
+    The algorithm is as Follows:
+    - In the list of formal argument of callee proc, 
+         - Get the ST entry for the first argument.
+         - If the ST entry of the first argument is of "Return" type. 
+              start mapping from argument(1) in the parameter list
+         - else 
+              start mapping from argument(0) in the parameter list.
+   */
+
+  WN* maybeReturnVar = WN_formal(wn_pu, 0);
+  ST* returnVarST    = WN_st(maybeReturnVar);
+  bool isReturnVar = ST_is_return_var (*returnVarST) ;
+
+  WN  *formalWN=0;
+  if(isReturnVar == true) {
+     formalWN = WN_formal(wn_pu, parmIdx+1);
+  } else {
+     formalWN = WN_formal(wn_pu, parmIdx);
+  }
+
+  formalST = WN_st(formalWN);
+  assert(formalST);
+
+  /*! PLM more details:
+      in case of Indirect Function Calls
+      (e.g.  using function pointers),  function pointer is also one of
+      the member of parameter list.
+  */
+  }
+ 
   // Reset context for caller
   PU_SetGlobalState(callerPU);
   
@@ -1715,6 +1789,20 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
 
      }
      break;
+
+    
+    case OPR_INTRINSIC_OP:
+     {
+
+         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
+         {
+
+           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+         }
+
+     }
+     break;
+
 
     case OPR_ADD:
      {
