@@ -1779,174 +1779,20 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
     // NOTE: MLOAD, MSTORE?  FIXME?: we don't handle these, should we?
 
     case OPR_MPY:
-     {
-
-         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
-         {
-
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
-         }
-
-     }
-     break;
-
-    
     case OPR_INTRINSIC_OP:
-     {
-
-         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
-         {
-
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
-         }
-
-     }
-     break;
-
-
     case OPR_ADD:
-     {
-         
-         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
-         {
-
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
-         }
-
-     }
-     break;
-
     case OPR_SUB:
-     {
-         
-         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
-         {
-
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
-         }
-
-     }
-     break;
-
     case OPR_DIV:
-     {
-         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
-         {
-
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
-         }
-
-     }
-     break;
-
     case OPR_CVT:
-     {
-         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
-         {
-
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
-         }
-
-     }
-     break;
-
     case OPR_LE:
-     {
-         
-         // arrays5 
-         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
-         {
-
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
-         }
-
-     }
-     break;
-
-     case OPR_LT:
-     {
-         
-         // arrays5
-         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
-         {
-
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
-         }
-
-     }
-     break;
-
+    case OPR_LT:
     case OPR_GE:
-     {
-         
-         // arrays5
-         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
-         {
-
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
-         }
-
-     }
-     break;
-
     case OPR_EQ:
-     {
-         // functions1 
-         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
-         {
-
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
-         }
-
-     }
-     break;
-
     case OPR_TRUNC:
-     {
-         // functions1
-         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
-         {
-
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
-         }
-
-     }
-     break;
-
-     case OPR_LIOR:
-     {
-         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
-         {
-
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
-         }
-
-     }
-     break;
-
-     case OPR_RECIP:
-     {
-         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
-         {
-
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
-         }
-
-     }
-     break;
-
-     case OPR_PAREN:
-     {
-         for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
-         {
-
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
-         }
-
-     }
-     break;
-
-     case OPR_NEG:
+    case OPR_LIOR:
+    case OPR_RECIP:
+    case OPR_PAREN:
+    case OPR_NEG:
      {
          for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++)
          {
@@ -2200,6 +2046,10 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
           // get top MemRefHandle 
           OA::MemRefHandle m = findTopMemRefHandle(wn);
 
+          if( m == MemRefHandle(0) ) {
+              return; 
+          }
+          
           // PLM 1/23/07
           // changed according to the new pattern, Pattern 2
           if( (WN_operator((WN *)m.hval()) == OPR_ARRAY) ||
@@ -2402,7 +2252,8 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
             } else {
                 OA_ptr<MemRefExpr> newmre;
 
-                if( WN_operator((WN *)m.hval()) == OPR_ARRAY ) {
+                if( (WN_operator((WN *)m.hval()) == OPR_ARRAY) ||
+                    (WN_operator((WN *)m.hval()) == OPR_MLOAD) ) {
                       // PLM 1/23/07 checked for patten 8
 
                       newmre = *(sMemref2mreSetMap[m].begin());
@@ -2418,6 +2269,7 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
                                               nullMRE);
 
                       newmre = address_mre->composeWith(newmre);
+
                       sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
                       sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
                  } else if( WN_operator( (WN *)m.hval() ) == OPR_ILOAD ) {
@@ -2493,6 +2345,53 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
         break;
 
     case OPR_MLOAD:
+        {
+         // 1. if topMemRefHandle is LDA  (Patterns 4,
+         //     - steal the MemRefExpr and set addressOf to false
+         //     (similar to ILOAD logic)
+         //     - set partial accuracy on stolen MemRefExpr
+         // 2. else
+         //     - changes MemRefExpr for topMemRefHandle to partial accuracy
+
+         findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid0(wn),lvl);
+
+         OA::MemRefHandle m = findTopMemRefHandle(wn);
+         if( WN_operator((WN *)m.hval()) == OPR_LDA ) {
+
+           // PLM 1/23/07
+           // changed according to the new pattern
+           // pattern 4 and pattern 5 and pattern 6
+
+           OA_ptr<MemRefExpr> newmre;
+           newmre = *(sMemref2mreSetMap[m].begin());
+           sMemref2mreSetMap[m].erase(newmre);
+
+           if(newmre->isaRefOp()) {
+              OA::OA_ptr<OA::RefOp> refOp = newmre.convert<OA::RefOp>();
+              assert(!refOp.ptrEqual(0));
+              if(refOp->isaAddressOf()) {
+                 newmre = refOp->getMemRefExpr();
+              }
+           }
+
+
+           OA::OA_ptr<OA::SubSetRef> subset_mre;
+           OA::OA_ptr<OA::MemRefExpr> nullMRE;
+           OA::OA_ptr<OA::MemRefExpr> composed_mre;
+
+           subset_mre = new OA::SubSetRef(
+                                 OA::MemRefExpr::USE,
+                                 nullMRE
+                                );
+
+           newmre = subset_mre->composeWith(newmre->clone());
+
+           sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(newmre);
+           sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+         }
+        }
+        break;
+        
     case OPR_MSTORE:
         {
             assert(0);
@@ -3892,10 +3791,10 @@ OA::MemRefHandle Open64IRInterface::findTopMemRefHandle(WN *wn)
               (WN_operator(wn) == OPR_CALL) ||
               (WN_operator(wn) == OPR_INTRINSIC_CALL) ||
               (WN_operator(wn) == OPR_ISTORE) ||
-              (WN_operator(wn) == OPR_ARRAYEXP) ||
               (WN_operator(wn) == OPR_ARRSECTION) ||
               (WN_operator(wn) == OPR_PARM) ||
-              (WN_operator(wn) == OPR_STRCTFLD) )
+              (WN_operator(wn) == OPR_STRCTFLD) ||
+              (WN_operator(wn) == OPR_MLOAD) )
       {
          wn =  WN_kid0(wn);
       } else {
