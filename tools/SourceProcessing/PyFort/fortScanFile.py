@@ -4,6 +4,7 @@ a token list, line number representation as well as a rawline
 '''
 from _Setup import *
 from PyUtil.chomp import chomp
+from PyUtil.errors import ScanError
 
 import re
 _lineno_re = re.compile(r'(\d+)')
@@ -49,6 +50,8 @@ class fortScanLine(_fortScanLine):
         self.lineno          = m and int(m.group(1))
         self.lead            = _lead_re.match(line[6:]).group(1)
         (self.scan,self.rm)  = scan1.scan(line[6:])
+	if(self.rm) : 
+	  raise ScanError(m,fline,self.scan, self.rm)
 
     def __repr__(self):
         return '%s(%s)' % ('fortScanLine',self.scan)

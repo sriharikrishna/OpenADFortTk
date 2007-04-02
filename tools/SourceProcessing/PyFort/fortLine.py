@@ -72,7 +72,7 @@ def comment_p(l):
 
 def cont_p(l):
     '''given a line l, return true if l is a continuation line'''
-    contre = re.compile(r'''\s{5} \S''',re.X)
+    contre = re.compile(r'''\ {5} \S''',re.X)
     return contre.match(l)
 
 def stmt_p(l):

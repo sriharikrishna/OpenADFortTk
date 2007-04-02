@@ -1,4 +1,5 @@
 from Setup    import *
+from _Setup   import *
 from unittest import *
 from useparse import *
 
@@ -381,6 +382,91 @@ class C5(TestCase):
     'test unary operations from _unary_ops'
     pass
 
+# support fns for typing
+
+def kw2type(t): return t
+def lenfn(n): return 'Len(%s)' % str(n)
+def kindfn(s): return 'Kind(%s)' % str(s)
+def nopoly(s): return False
+def idchk(id):
+    tbl = dict(x=('real',[]),
+               y=('real',[]),
+               z=('doubleprecision',[]),
+               i=('integer',[]),
+               l=('logical',[])
+               )
+    return tbl[id]
+
+def tyc(t1,t2):
+    code = dict(logical=0,
+                integer=1,
+                real   =2,
+                doubleprecision=3,
+                )
+    if code[t1[0]] >= code[t2[0]]: return t1
+    return t2
+
+def typemerge(t1,oth):
+    if not t1: return oth
+    if len(t1) == 1: return t1[0]
+    tt = tyc(t1[0],t1[1])
+    for t in t1[2:]:
+        tt = tyc(tt,t)
+    return tt
+
+class C6(TestCase):
+    'test various type utilities'
+
+    def test1(self):
+        'test subst function'
+        ae = self.assertEquals
+        a_ = self.assert_
+
+        def pred(e):
+            return isinstance(e,App) and e.head == 'foo'
+
+        def repl(e):
+            return App('bar',e.args)
+
+        e = ep('x * baz(123,.TRUE.,7+foo(1,1))')
+        ae(repr(subst(e,pred,repl)),repr(ep('x * baz(123,.TRUE.,7+bar(1,1))')))
+
+    def test2(self):
+        'constant types'
+        ae = self.assertEquals
+        a_ = self.assert_
+
+        ae(const_type(ep('3.787'),kw2type,lenfn,kindfn),('real',[]))
+        ae(const_type(ep('3.787D00'),kw2type,lenfn,kindfn),('doubleprecision',[]))
+        ae(const_type(ep('3.787_foo'),kw2type,lenfn,kindfn),('real',['Kind(foo)']))
+        ae(const_type(ep('3'),kw2type,lenfn,kindfn),('integer',[]))
+        ae(const_type(ep('.true.'),kw2type,lenfn,kindfn),('logical',[]))
+        ae(const_type(ep(r"'food'"),kw2type,lenfn,kindfn),('character',['Len(4)']))
+
+    def test3(self):
+        'exptype function'
+        ae = self.assertEquals
+        a_ = self.assert_
+        e1 = ep('x * y')
+        t1 = exptype(e1,idchk,kw2type,lenfn,kindfn,nopoly,typemerge)
+        ae(t1,('real',[]))
+
+        e1 = ep('5.11d0 * 4.77d0')
+        t1 = exptype(e1,idchk,kw2type,lenfn,kindfn,nopoly,typemerge)
+        ae(t1,('doubleprecision',[]))
+
+        e1 = ep('i + 4')
+        t1 = exptype(e1,idchk,kw2type,lenfn,kindfn,nopoly,typemerge)
+        ae(t1,('integer',[]))
+
+        e1 = ep('z + 5.11d0 * 4.77d0')
+        t1 = exptype(e1,idchk,kw2type,lenfn,kindfn,nopoly,typemerge)
+        ae(t1,('doubleprecision',[]))
+
+        e1 = ep('x * 5.11d0 + i * 4.77')
+        t1 = exptype(e1,idchk,kw2type,lenfn,kindfn,nopoly,typemerge)
+        ae(t1,('doubleprecision',[]))
+
 def __mkt2(o):
     def __t(self):
         v = ep('xxx %s yyy' % o)
@@ -394,7 +480,9 @@ for o in [x for (op,p) in _optbl for x in op]:
     setattr(C4,'test%d' % __c,__mkt2(o))
     __c += 1
 
-suite = asuite(C1,C2,C3,C4)
+s1    = makeSuite(C6)
+
+suite = asuite(C1,C2,C3,C4,C6)
 
 if __name__ == '__main__':
     runit(suite)
