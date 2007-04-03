@@ -2544,32 +2544,10 @@ OA::OA_ptr<OA::MemRefExpr>
 
           mre = new OA::NamedRef(hty, sym);
           mre = new OA::Deref(hty, mre, 1);
-          OA::OA_ptr<OA::SubSetRef> subset_mre;
-          OA::OA_ptr<OA::MemRefExpr> nullMRE;
-          OA::OA_ptr<OA::MemRefExpr> composed_mre;
-
-          subset_mre = new OA::SubSetRef(
-                                 OA::MemRefExpr::USE,
-                                 nullMRE
-                                );
-
-          mre = subset_mre->composeWith(mre->clone());
-        
+          
     } else {
 
           mre = new OA::NamedRef(hty, sym);
-
-          OA::OA_ptr<OA::SubSetRef> subset_mre;
-          OA::OA_ptr<OA::MemRefExpr> nullMRE;
-          OA::OA_ptr<OA::MemRefExpr> composed_mre;
-
-          subset_mre = new OA::SubSetRef(
-                                 OA::MemRefExpr::USE,
-                                 nullMRE
-                                );
-
-          mre = subset_mre->composeWith(mre->clone());
-
     }
 
     return mre;
