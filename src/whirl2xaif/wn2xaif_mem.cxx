@@ -38,7 +38,7 @@ namespace whirl2xaif {
    : WN2F_OneInt_Ptr)
 
   static void 
-  WN2F_Arrsection_Slots(xml::ostream& xos, WN* wn, PUXlationContext& ctxt, BOOL parens);
+  WN2F_Arrsection_Slots(xml::ostream& xos, WN* wn, PUXlationContext& ctxt);
 
   static void 
   xlate_ArrayIndices(xml::ostream& xos, WN* wn, PUXlationContext& ctxt);
@@ -889,29 +889,17 @@ namespace whirl2xaif {
 
 
   void
-  WN2F_src_triplet(xml::ostream& xos, WN* wn, PUXlationContext& ctxt)
-  {
-    WN      *kid0;
-    WN      *kid1;
-    WN      *kid2;
-    kid0=WN_kid0(wn);
-    kid1=WN_kid1(wn);
-    kid2=WN_kid2(wn);
-    TranslateWN(xos, kid0, ctxt);
-    xos << ":";
-    TranslateWN(xos, kid1, ctxt); 
-  
-    if (WN_operator(kid2) == OPR_INTCONST &&
-	WN_const_val(kid2) == 1)
-      ;
-    else {
-      xos << ":";
-      TranslateWN(xos, kid2, ctxt); 
-    }
-  
-    
+  WN2F_src_triplet(xml::ostream& xos, WN* wn, PUXlationContext& ctxt) {
+    xos << xml::BegElem(XAIFStrings.elem_Index());
+    TranslateWN(xos, WN_kid0(wn), ctxt);
+    xos << xml::EndElem;
+    xos << xml::BegElem(XAIFStrings.elem_Bound());
+    TranslateWN(xos, WN_kid1(wn), ctxt); 
+    xos << xml::EndElem;
+    xos << xml::BegElem(XAIFStrings.elem_Stride());
+    TranslateWN(xos, WN_kid2(wn), ctxt); 
+    xos << xml::EndElem;
   }
-
 
   void
   WN2F_arrayexp(xml::ostream& xos, WN* wn, PUXlationContext& ctxt)
@@ -952,7 +940,7 @@ namespace whirl2xaif {
 	 OPR_ARRAY to generate bounds */
 
       TranslateWN(xos, kid, ctxt);
-      WN2F_Arrsection_Slots(xos,wn,ctxt,TRUE);
+      WN2F_Arrsection_Slots(xos,wn,ctxt);
     }
     else {
       array_ty = TY_pointed(ptr_ty); // base of OPR_ARRAY
@@ -1013,26 +1001,21 @@ namespace whirl2xaif {
 
 
   void
-  WN2F_Arrsection_Slots(xml::ostream& xos, WN* wn, PUXlationContext& ctxt, BOOL parens)
-  {
+  WN2F_Arrsection_Slots(xml::ostream& xos, WN* wn, PUXlationContext& ctxt) {
     INT32 dim;
     WN * kidz;
-    INT32 co_dim;
     INT32 array_dim;
     TY_IDX ttyy;
     ST * st;
     ARB_HANDLE arb_base;
     WN* kid;
-
     /* Gets bounds from the slots of an OPC_ARRSECTION node  */
-
     /* Append the "denormalized" indexing expressions in reverse order
      * of the way they occur in the indexing expression, since Fortran
      * employs column-major array layout, meaning the leftmost indexing
      * expression represents array elements laid out in contiguous
      * memory locations.
      */
-
     kidz = WN_kid0(wn);
     st  =  WN_st(kidz);
     ttyy = ST_type(st);
@@ -1040,71 +1023,22 @@ namespace whirl2xaif {
       ttyy=TY_pointed(ttyy);
     if (TY_is_f90_pointer(ttyy))
       ttyy = TY_pointed(ttyy);
-  
     arb_base = TY_arb(ttyy);
-  
-    dim =  ARB_dimension(arb_base);
-    co_dim = ARB_co_dimension(arb_base);
-    if (co_dim <= 0)
-      co_dim = 0;
-  
-    if (dim >  WN_num_dim(wn) ) {
-      array_dim = dim-co_dim;
-      co_dim = 0;
-    } else {
-      dim =  WN_num_dim(wn);
-      array_dim = dim;
-    }
-  
-    if (WN_operator(WN_array_index(wn, WN_num_dim(wn)-1))==OPR_SRCTRIPLET) 
-      kid = WN_kid2(WN_array_index(wn, WN_num_dim(wn)-1));
-  
+    array_dim =  ARB_dimension(arb_base);
     if (array_dim>0) {
-      if (parens) {
-	xos << "(";
-	//ctxt.currentXlationContext().setFlag(no_parenthesis);
-      }
-# if 0 /* original code without thinking about co_array */
+      xos << xml::BegElem(XAIFStrings.elem_ArrayElemRef());
       for (dim = WN_num_dim(wn)-1; dim >= 0; dim--) {
-	if (WN_operator(WN_array_index(wn, dim))==OPR_SRCTRIPLET) {
-	  TranslateWN(xos, WN_array_index(wn, dim), ctxt);    
-	} else {
-	  TranslateWN(xos, WN_array_index(wn, dim), ctxt);
-	}
-	if (dim > 0)
-	  xos << ",";
-      }
-# endif
-      for (dim = WN_num_dim(wn)-1; dim >= co_dim; dim--) {
+	xos << xml::BegElem(XAIFStrings.elem_IndexTriplet());
 	if (WN_operator(WN_array_index(wn, dim))==OPR_SRCTRIPLET) {
 	  TranslateWN(xos, WN_array_index(wn, dim), ctxt);
 	} else {
+	  xos << xml::BegElem(XAIFStrings.elem_Index());
 	  TranslateWN(xos, WN_array_index(wn, dim), ctxt);
+	  xos << xml::EndElem;
 	}
-	if (dim > co_dim)
-	  xos << ",";
+	xos << xml::EndElem;
       }
-      if (parens)
-	xos << ")";
-    }
-  
-    if (co_dim > 0) {
-    
-      if (parens)
-	xos << "[";
-    
-      for (dim = co_dim-1; dim >= 0; dim--) {
-	if (WN_operator(WN_array_index(wn, dim))==OPR_SRCTRIPLET) {
-	  TranslateWN(xos, WN_array_index(wn, dim), ctxt);
-	} else {
-	  TranslateWN(xos, WN_array_index(wn, dim), ctxt);
-	}
-	if (dim > 0)
-	  xos << ",";
-      }
-    
-      if (parens)
-	xos << "]";
+      xos << xml::EndElem;
     }
   }
 
@@ -1140,11 +1074,13 @@ namespace whirl2xaif {
     xos << xml::BegElem(XAIFStrings.elem_ArrayElemRef()) 
 	<< xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId());
     for (INT32 dim = array_dim - 1; dim >= 0; --dim) {
+      xos << xml::BegElem(XAIFStrings.elem_IndexTriplet());
       xos << xml::BegElem(XAIFStrings.elem_Index());
       ctxt.createXlationContext(); 
       ctxt.currentXlationContext().unsetFlag(XlationContext::VARREF); // elem_Index() contains ExpressionType
       TranslateWN(xos, WN_array_index(wn, dim), ctxt);
       ctxt.deleteXlationContext();
+      xos << xml::EndElem;
       xos << xml::EndElem;
     }
     xos << xml::EndElem;
@@ -1191,7 +1127,7 @@ namespace whirl2xaif {
 			 || TY_size(TY_AR_etype(array_ty)) == 0,
 			 "access/declaration mismatch in array element size");
     
-      WN2F_Arrsection_Slots(xos,wn,ctxt,TRUE);
+      WN2F_Arrsection_Slots(xos,wn,ctxt);
     
     } else { /* Normalize array access to assume a single dimension */
       FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
