@@ -168,7 +168,7 @@ xlate_PUTree(sexp_t* pu_tree_sx, int flags)
   PU_Info* cur_child = NULL;
   for (sexp_t* child_sx = get_elem2(pu_tree_sx); child_sx; 
        child_sx = get_next(child_sx)) {
-    PU_Info* child = xlate_PUTree(child_sx, flags);
+    PU_Info* child = xlate_PU(child_sx, flags);
     if (cur_child) {
       PU_Info_next(cur_child) = child;
     }

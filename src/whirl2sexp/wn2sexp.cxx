@@ -727,12 +727,14 @@ whirl2sexp::xlate_xLOADx_xSTOREx(sexp::ostream& sos, WN* wn)
 {
   OPERATOR opr = WN_operator(wn);
   FORTTK_ASSERT(opr == OPR_ILOAD || opr == OPR_MLOAD || opr == OPR_ILOADX ||
-		opr == OPR_ISTORE || opr == OPR_MSTORE || opr == OPR_ISTOREX,
+		opr == OPR_ISTORE || opr == OPR_MSTORE || opr == OPR_ISTOREX ||
+		opr == OPR_PSTORE,
 		fortTkSupport::Diagnostics::UnexpectedInput);
   
   // ILOAD:   ofst field_id ty_idx1 ty_idx2 kid0
   // MLOAD:   ofst field_id ty_idx          kid0 kid1  
   // ISTORE:  ofst field_id ty_idx          kid0 kid1
+  // PSTORE:  ofst field_id ty_idx          kid0 kid1
   // MSTORE:  ofst field_id ty_idx          kid0 kid1 kid2  
   // ILOADX:                ty_idx1 ty_idx2 kid0 kid1
   // ISTOREX:               ty_idx          kid0 kid1 kid2
@@ -743,7 +745,8 @@ whirl2sexp::xlate_xLOADx_xSTOREx(sexp::ostream& sos, WN* wn)
 
   sos << BegList;                     // WN_ATTRS
   if (opr == OPR_ILOAD || opr == OPR_MLOAD || 
-      opr == OPR_ISTORE || opr == OPR_MSTORE) {
+      opr == OPR_ISTORE || opr == OPR_MSTORE || 
+      opr == OPR_PSTORE) {
     WN_OFFSET ofst  = WN_load_offset(wn);
     UINT      fldid = WN_field_id(wn);
     sos << Atom(ofst) << Atom(fldid);
@@ -760,15 +763,6 @@ whirl2sexp::xlate_xLOADx_xSTOREx(sexp::ostream& sos, WN* wn)
 
   return whirl2sexp::good;
 }
-
-whirl2sexp::status
-whirl2sexp::xlate_PSTORE(sexp::ostream& sos, WN* wn)
-{
-  FORTTK_ASSERT(WN_operator(wn) == OPR_PSTORE, fortTkSupport::Diagnostics::UnexpectedInput);
-  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
-  return whirl2sexp::good;
-}
-
 
 //***************************************************************************
 // Array Operators (N-ary Operations)
@@ -1097,7 +1091,7 @@ WNXlationTable::InitEntry WNXlationTable::initTable[] = {
   { OPR_MSTORE,               &xlate_xLOADx_xSTOREx },
 
   { OPR_PSTID,                &xlate_LDID_STID }, // pointer version of STID 
-  { OPR_PSTORE,               &xlate_PSTORE },// pointer version of STORE
+  { OPR_PSTORE,               &xlate_xLOADx_xSTOREx },// pointer version of STORE
 
   // Type conversion
   { OPR_CVT,                  &xlate_CVT_CVTL },

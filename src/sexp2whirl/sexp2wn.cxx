@@ -286,6 +286,7 @@ sexp2whirl::xlate_FUNC_ENTRY(sexp_t* sx)
   ST_IDX st_idx = GetWhirlSymRef(st_idx_sx);
   
   std::vector<WN*> kids = TranslateWNChildren(sx); // KIDs
+
   INT16 nkids = (INT16)kids.size();
   WN* pragmasWN = kids[nkids-3];
   WN* varrefsWN = kids[nkids-2];
@@ -633,6 +634,47 @@ sexp2whirl::xlate_IO_ITEM(sexp_t* sx)
   return wn;
 }
 
+WN*
+sexp2whirl::xlate_INTERFACE(sexp_t* sx) {
+  using namespace sexp;
+  OPCODE opc = GetWhirlOpc(sx); // WN_OPR
+  OPERATOR opr = OPCODE_operator(opc);
+  FORTTK_ASSERT(opr == OPR_INTERFACE, fortTkSupport::Diagnostics::UnexpectedInput);
+  // FUNC_ENTRY nodes under interface look different!
+  std::vector<WN*> interfaceKids;
+  for (sexp_t* kid_sx = get_wnast_kid0(sx); 
+       kid_sx; 
+       kid_sx = get_next(kid_sx)) {
+    OPERATOR kid_opr = GetWhirlOpr(kid_sx);
+    WN* kidwn=0; 
+    // see if it is a FUNC_ENTRY: 
+    if (kid_opr == OPR_FUNC_ENTRY) { 
+      std::vector<WN*> formalArguments = TranslateWNChildren(kid_sx);
+      // make the FUNC_ENTRY: 
+      kidwn = WN_Create (OPC_FUNC_ENTRY, formalArguments.size());
+      sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
+      sexp_t* st_idx_sx = get_elem0(attrs_sx);
+      ST_IDX st_idx = GetWhirlSymRef(st_idx_sx);
+      WN_entry_name(kidwn) = st_idx;
+      for (INT i = 0; i < formalArguments.size(); ++i) {
+	WN_kid(kidwn,i) = formalArguments[i];
+      }
+    } 
+    else { 
+      kidwn = TranslateWN(kid_sx);
+    }
+    interfaceKids.push_back(kidwn);
+  }
+  WN* wn = WN_Create(opc, interfaceKids.size());
+  for (INT i = 0; i < interfaceKids.size(); ++i) {
+    WN_kid(wn,i) = interfaceKids[i];
+  }
+  sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
+  sexp_t* cur_sx = get_elem0(attrs_sx);
+  ST_IDX st_idx = GetWhirlSymRef(cur_sx);
+  WN_st_idx(wn) = st_idx;
+  return wn;
+}
 
 //***************************************************************************
 // Other Statements
@@ -840,7 +882,8 @@ sexp2whirl::xlate_xLOADx_xSTOREx(sexp_t* sx)
 
   OPERATOR opr = OPCODE_operator(opc);
   FORTTK_ASSERT(opr == OPR_ILOAD || opr == OPR_MLOAD || opr == OPR_ILOADX ||
-		opr == OPR_ISTORE || opr == OPR_MSTORE || opr == OPR_ISTOREX,
+		opr == OPR_ISTORE || opr == OPR_MSTORE || opr == OPR_ISTOREX ||
+		opr == OPR_PSTORE ,
 		fortTkSupport::Diagnostics::UnexpectedInput);
 
   std::vector<WN*> kids = TranslateWNChildren(sx); // KIDs
@@ -852,7 +895,8 @@ sexp2whirl::xlate_xLOADx_xSTOREx(sexp_t* sx)
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
   sexp_t* cur_sx = get_elem0(attrs_sx);
   if (opr == OPR_ILOAD || opr == OPR_MLOAD || 
-      opr == OPR_ISTORE || opr == OPR_MSTORE) {
+      opr == OPR_ISTORE || opr == OPR_MSTORE ||
+      opr == OPR_PSTORE) {
     sexp_t* ofst_sx = cur_sx;
     WN_OFFSET ofst = get_value_ui32(ofst_sx);
     WN_offset(wn) = ofst;
@@ -875,14 +919,6 @@ sexp2whirl::xlate_xLOADx_xSTOREx(sexp_t* sx)
   
   return wn;
 }
-
-WN*
-sexp2whirl::xlate_PSTORE(sexp_t* sx)
-{
-  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
-  return NULL;
-}
-
 
 //***************************************************************************
 // Array Operators (N-ary Operations)
@@ -1132,7 +1168,7 @@ sexp2whirl::xlate_TernaryOp(sexp_t* sx)
   
   OPCODE opc = GetWhirlOpc(sx); // WN_OPR
   
-  FORTTK_ASSERT(OPCODE_nkids(opc) == 2, 
+  FORTTK_ASSERT(OPCODE_nkids(opc) == 3, 
 		fortTkSupport::Diagnostics::UnexpectedInput << OPCODE_name(opc));
   
   sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
@@ -1229,7 +1265,7 @@ WNXlationTable::InitEntry WNXlationTable::initTable[] = {
   { OPR_NAMELIST,             &xlate_misc_stmt },
   { OPR_IMPLICIT_BND,         &xlate_misc_stmt },  
   { OPR_NULLIFY,              &xlate_misc_stmt },
-  { OPR_INTERFACE,            &xlate_misc_stmt },
+  { OPR_INTERFACE,            &xlate_INTERFACE },
   { OPR_ARRAY_CONSTRUCT,      &xlate_misc_stmt },
   
   // Memory Access (or assignment and variable references)
@@ -1247,7 +1283,7 @@ WNXlationTable::InitEntry WNXlationTable::initTable[] = {
   { OPR_MSTORE,               &xlate_xLOADx_xSTOREx },
 
   { OPR_PSTID,                &xlate_LDID_STID }, // pointer version of STID 
-  { OPR_PSTORE,               &xlate_PSTORE },
+  { OPR_PSTORE,               &xlate_xLOADx_xSTOREx }, // pointer version of store
 
   // Type conversion
   { OPR_CVT,                  &xlate_CVT_CVTL },

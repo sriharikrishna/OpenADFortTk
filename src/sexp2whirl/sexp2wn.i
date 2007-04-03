@@ -58,6 +58,9 @@ private:
 
 namespace sexp2whirl {
 
+  extern WN*
+  xlate_INTERFACE(sexp_t* sx);
+
   // ---------------------------------------------------------
   // Structured Control Flow Statements
   // ---------------------------------------------------------
