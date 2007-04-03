@@ -1089,11 +1089,20 @@ namespace whirl2xaif {
     xos << xml::EndElem;
   }
 
+  typedef std::set<ST *> SymbolPointerSet;
 
   void 
   xlate_SideEffectLocationPrint(ST* st, 
+				SymbolPointerSet& coveredSymbols,
 				fortTkSupport::SymTabId scopeid,
 				xml::ostream& xos) {
+    if (coveredSymbols.find(st)==coveredSymbols.end())
+      coveredSymbols.insert(st);
+    else { 
+      const char* nm=ST_name(st);
+      FORTTK_MSG(1, "xlate_SideEffectLocationPrint: ignoring duplicate symbol " << nm);
+      return; 
+    }
     // the wrapper for the VariableReference: 
     xos << xml::BegElem("xaif:SideEffectReference")
 	<< xml::Attr("vertex_id", "1");
@@ -1110,6 +1119,7 @@ namespace whirl2xaif {
 
   void 
   xlate_SideEffectNamedLocation(OA::OA_ptr<OA::NamedLoc> theNamedLoc,
+				SymbolPointerSet& coveredSymbols,
 				xml::ostream& xos, 
 				WN *wn, 
 				PUXlationContext& ctxt,
@@ -1155,11 +1165,12 @@ namespace whirl2xaif {
 	return;
       }
     }
-    xlate_SideEffectLocationPrint(st,scopeid, xos);
+    xlate_SideEffectLocationPrint(st,coveredSymbols,scopeid, xos);
   }
 
   void 
   xlate_SideEffectEntry(OA::OA_ptr<OA::Location> theLocation,
+			SymbolPointerSet& coveredSymbols,
 			xml::ostream& xos, 
 			WN *wn, 
 			PUXlationContext& ctxt,
@@ -1169,6 +1180,7 @@ namespace whirl2xaif {
       OA::OA_ptr<OA::NamedLoc> namedLoc=
 	theLocation.convert<OA::NamedLoc>();
       xlate_SideEffectNamedLocation(namedLoc,
+				    coveredSymbols,
 				    xos, 
 				    wn, 
 				    ctxt,
@@ -1181,7 +1193,7 @@ namespace whirl2xaif {
       ST* st = (ST*)theInvisibleLoc->getBaseSym().hval();
       ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
       fortTkSupport::SymTabId scopeid = ctxt.findSymTabId(sttab);
-      xlate_SideEffectLocationPrint(st,scopeid, xos);
+      xlate_SideEffectLocationPrint(st,coveredSymbols,scopeid, xos);
     }
     else if (theLocation->isaSubSet()) { 
       OA::OA_ptr<OA::LocSubSet> subSetLoc=
@@ -1191,6 +1203,7 @@ namespace whirl2xaif {
 	OA::OA_ptr<OA::NamedLoc> namedLoc=
 	  subSetLoc->getLoc().convert<OA::NamedLoc>();
 	xlate_SideEffectNamedLocation(namedLoc,
+				      coveredSymbols,
 				      xos, 
 				      wn, 
 				      ctxt,
@@ -1209,6 +1222,13 @@ namespace whirl2xaif {
 	FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "side effect list contains a subsetloc that has no named location");
       }
     }
+    else if (theLocation->isaUnnamed()) { 
+      OA::OA_ptr<OA::UnnamedLoc> theUnnamedLoc=
+	theLocation.convert<OA::UnnamedLoc>();
+      std::ostringstream oss;
+      Open64IRInterface::DumpWN((WN*)(theUnnamedLoc->getStmtHandle().hval()),oss);
+      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "side effect list contains an unnamed location:" << oss.str().c_str());
+    } 
     else { 
       theLocation->dump(std::cout);
       FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "side effect list contains a location that is not a named location");
@@ -1307,51 +1327,55 @@ namespace whirl2xaif {
     symHandleI->reset();
     xos << xml::BegElem("xaif:ModLocal");
     anOALocIterOAPtr = interSideEffects->getLMODIterator(proc);
+    SymbolPointerSet coveredSymbols;
     for ( ; anOALocIterOAPtr->isValid(); ++(*anOALocIterOAPtr) ) {
       xlate_SideEffectEntry(anOALocIterOAPtr->current(), 
+			    coveredSymbols,
 			    xos, 
 			    wn, 
 			    ctxt, 
 			    symHandleI);
     }
     xos << xml::EndElem; // xaif:ModLocal
-
+    coveredSymbols.clear();
     symHandleI->reset();
     xos << xml::BegElem("xaif:Mod");
     anOALocIterOAPtr = interSideEffects->getMODIterator(proc);
     for ( ; anOALocIterOAPtr->isValid(); ++(*anOALocIterOAPtr) ) {
       xlate_SideEffectEntry(anOALocIterOAPtr->current(), 
+			    coveredSymbols,
 			    xos, 
 			    wn, 
 			    ctxt, 
 			    symHandleI);
     }
     xos << xml::EndElem; // xaif:ModLocal
-
+    coveredSymbols.clear();
     symHandleI->reset();
     xos << xml::BegElem("xaif:ReadLocal");
     anOALocIterOAPtr = interSideEffects->getLUSEIterator(proc);
     for ( ; anOALocIterOAPtr->isValid(); ++(*anOALocIterOAPtr)) {
       xlate_SideEffectEntry(anOALocIterOAPtr->current(), 
+			    coveredSymbols,
 			    xos, 
 			    wn, 
 			    ctxt, 
 			    symHandleI);
     }
     xos << xml::EndElem; // xaif:ModLocal
-
+    coveredSymbols.clear();
     symHandleI->reset();
     xos << xml::BegElem("xaif:Read");
     anOALocIterOAPtr = interSideEffects->getUSEIterator(proc);
     for ( ; anOALocIterOAPtr->isValid(); ++(*anOALocIterOAPtr)) {
       xlate_SideEffectEntry(anOALocIterOAPtr->current(), 
+			    coveredSymbols,
 			    xos, 
 			    wn, 
 			    ctxt, 
 			    symHandleI);
     }
     xos << xml::EndElem; // xaif:ModLocal
-
   }
 
   // GetParamSymHandleSet: Return a set of SymHandles representing the
