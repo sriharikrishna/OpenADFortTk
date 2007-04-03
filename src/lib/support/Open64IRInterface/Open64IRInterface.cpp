@@ -1779,7 +1779,6 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
     // NOTE: MLOAD, MSTORE?  FIXME?: we don't handle these, should we?
 
     case OPR_MPY:
-    case OPR_INTRINSIC_OP:
     case OPR_ADD:
     case OPR_SUB:
     case OPR_DIV:
@@ -2076,6 +2075,7 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
 
     case OPR_INTRINSIC_CALL:
     case OPR_CALL:
+    case OPR_INTRINSIC_OP:
         {
         
           /*  
