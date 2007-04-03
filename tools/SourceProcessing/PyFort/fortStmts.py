@@ -9,6 +9,8 @@ from PyUtil.chomp        import chomp
 from fortLine     import flow_line
 from PyIR.mapper       import _Mappable
 from PyIR.mutable_tree import _Mutable_T
+from PyUtil.errors  import ParseError
+
 
 class _TypeMod(_Mutable_T):
     'modifier for type declaration'
@@ -567,7 +569,10 @@ class CharacterStmt(TypeDecl):
         p1 = seq(lit('character'),
                  zo1(disj(f77mod,f90mod)),
                  app_id_l)
-        ((dc,mod,decls),rest) = p1(scan)
+        try: 
+          ((dc,mod,decls),rest) = p1(scan)
+        except AssemblerException,e:
+          raise ParseError(scan,'character variable declaration')  
 
         return CharacterStmt(mod,decls)
 

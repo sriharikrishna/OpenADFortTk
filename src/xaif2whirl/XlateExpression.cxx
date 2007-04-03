@@ -544,15 +544,39 @@ namespace xaif2whirl {
     DOMElement* dim = GetFirstChildElement(elem);
     for (int i = 0; dim; dim = GetNextSiblingElement(dim), ++i) {
       const XMLCh* nmX = dim->getNodeName();
-      FORTTK_ASSERT(XMLString::equals(nmX, XAIFStrings.elem_Index_x()), 
-		    "Expected " << XAIFStrings.elem_Index() << "; found:\n"
+      FORTTK_ASSERT(XMLString::equals(nmX, XAIFStrings.elem_IndexTriplet_x()), 
+		    "Expected " << XAIFStrings.elem_IndexTriplet() << "; found:\n"
 		    << *dim);
-      DOMElement* indexExpr = GetFirstChildElement(dim);
-      ctxt.createXlationContext(XlationContext::ARRAYIDX);
-      WN* indexExprWN = translateExpression(indexExpr, ctxt);
-      ctxt.deleteXlationContext();
-      // Ensure an integer 4 type for the index expression
-      indices[i] = WN_Type_Conversion(indexExprWN, MTYPE_I4);
+      DOMElement* tripletElementExpr = GetFirstChildElement(dim);
+      UINT tripletElementCounter=0;
+      vector<WN*> triplet(3);
+      for (; tripletElementExpr; tripletElementExpr = GetNextSiblingElement(tripletElementExpr),++tripletElementCounter) {
+	ctxt.createXlationContext(XlationContext::ARRAYIDX);
+	WN* indexExprWN = translateExpression(GetFirstChildElement(tripletElementExpr), ctxt);
+	ctxt.deleteXlationContext();
+	const XMLCh* tripletElementnmX = tripletElementExpr->getNodeName();
+	if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Index_x()))
+	  triplet[0]=indexExprWN;
+	else if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Bound_x()))
+	  triplet[1]=indexExprWN;
+	else if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Stride_x()))
+	  triplet[2]=indexExprWN;
+	else
+	  FORTTK_DIE("unexpected element :" << *tripletElementExpr);
+      }
+      if (tripletElementCounter==1) 
+	indices[i] = WN_Type_Conversion(triplet[0],MTYPE_I4);
+      else if (tripletElementCounter==3) { 
+	WN* theSrcTriplet_p=WN_Create(OPR_SRCTRIPLET,
+				      MTYPE_I8, 
+				      MTYPE_V,
+				      tripletElementCounter);
+	for (int j=0; j<tripletElementCounter; ++j) 
+	  WN_kid(theSrcTriplet_p,j)=WN_Type_Conversion(triplet[j],MTYPE_I4);
+	indices[i] = theSrcTriplet_p;
+      } 
+      else 
+	FORTTK_DIE("missing elements in IndexTriplet, expect 3 found " << tripletElementCounter);
     }
     // -------------------------------------------------------
     // 2. Translate the array symbol reference
