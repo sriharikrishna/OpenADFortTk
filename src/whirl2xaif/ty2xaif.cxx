@@ -702,20 +702,7 @@ namespace whirl2xaif {
   static void
   TY2F_Translate_EquivCommon_PtrFld(xml::ostream& xos, FLD_HANDLE fld)
   {
-    PUXlationContext ctxt("TY2F_Translate_EquivCommon_PtrFld"); // FIXME
-
-    // Declare the pointee and the pointer field of the
-    // common/eqivalence block.
-    const char  *fld_name = TY2F_Fld_Name(fld, TRUE/*comm,equiv*/, 
-					  FALSE/*alt_ret_name*/);
-    const char *pointee_name = "dref_"; // W2CF_Symtab_Nameof_Fld_Pointee(fld);
-  
-    xos << pointee_name << fld_name;
-    TY2F_translate(xos, TY_pointed(FLD_type(fld)), ctxt);
-    xos << std::endl;
-  
-    /* Declare the pointer type */
-    xos << "POINTER(" << fld_name << ',' << pointee_name << fld_name << ')';
+    assert(0);
   }
 
   static void
@@ -724,37 +711,8 @@ namespace whirl2xaif {
 			   BOOL         alt_return, /* Alternate return points */
 			   BOOL        *is_equiv)   /* out */
   {
-    PUXlationContext ctxt("TY2F_Declare_Common_Flds"); //FIXME
-    FLD_ITER fld_iter = Make_fld_iter(fldlist);
-
-    /* Emit specification statements for every element of the
-     * common block, including equivalences. */  
-    do {
-      xos << std::endl;
-    
-      FLD_HANDLE fld (fld_iter);
-      TY_IDX ty = FLD_type(fld);
-    
-      /* Determine whether or not the common-block contains any
-       * equivalences (must all be at the top level). */    
-      *is_equiv = *is_equiv || FLD_equivalence(fld);
-    
-      /* Declare as specified in the symbol table */
-      if (TY_split(Ty_Table[ty])) {
-	/* Treat a full split element as a transparent data-structure */
-	TY2F_Declare_Common_Flds(xos, TY_flist(Ty_Table[ty]),
-				 alt_return, is_equiv);
-      }
-      else if (TY_Is_Pointer(ty)) {
-	TY2F_Translate_EquivCommon_PtrFld(xos, fld_iter);
-      }
-      else { /* Non-pointer common field */
-	xos << TY2F_Fld_Name(fld_iter, TRUE/*common/equivalence*/, 
-			     alt_return/*alt_ret_name*/);
-	TY2F_translate(xos, FLD_type(fld), ctxt);
-      }
-    } while (!FLD_last_field (fld_iter++)) ;
-  } /* TY2F_Declare_Common_Flds */
+    assert(0);
+  } 
 
   static void
   TY2F_List_Common_Flds(xml::ostream& xos, FLD_HANDLE fldlist)
@@ -1128,53 +1086,7 @@ namespace whirl2xaif {
 			  TY_IDX       arr_ty_idx,
 			  STAB_OFFSET  arr_ofst)
   {  
-    FORTTK_ASSERT(TY_Is_Array(arr_ty_idx), 
-		  fortTkSupport::Diagnostics::UnexpectedInput << TY_kind(arr_ty_idx));
- 
-    STAB_OFFSET  idx;
-    ARB_HANDLE   arb;
-    PUXlationContext ctxt("TY2F_Translate_ArrayElt"); // FIXME
-
-    xos << xml::BegElem("xaif:Property") << xml::Attr("id", ctxt.currentXlationContext().getNewVertexId())
-	<< xml::Attr("name", "arrayindex***") << xml::EndAttrs;
-
-    if (TY_Is_Character_String(arr_ty_idx)) { // FIXME
-      // Character strings can only be indexed using the substring notation
-      xos << Num2Str(arr_ofst+1, "%lld") << ':' << Num2Str(arr_ofst+1, "%lld");
-    } else { /* Regular array indexing */
-      /* Emit the indexing expressions for each dimension, taking note
-       * that Fortran employs column-major array layout, meaning the 
-       * leftmost indexing expression (dim==0) represents array elements
-       * layed out in contiguous memory locations.
-       */
-      ARB_HANDLE arb_base = TY_arb(arr_ty_idx);
-
-      INT32 dimUB = ARB_dimension(arb_base) - 1; /* dim, not size */
-      INT32 dim = 0;
-    
-      while (dim <= dimUB) {
-	ARB_HANDLE arb = arb_base[dim];
-    
-	const char* idx_str = NULL;
-	if (arr_ofst == 0) {
-	  idx_str = Num2Str(1LL, "%lld");
-	} else if (ARB_const_stride(arb)) { /* Constant stride */
-	  idx = arr_ofst/ARB_stride_val(arb) + 1;
-	  idx_str = Num2Str(idx, "%lld");
-	  arr_ofst -= (arr_ofst/ARB_stride_val(arb))*ARB_stride_val(arb);
-	} else {
-	  idx_str = "*";
-	} 
-
-	xos << xml::BegElem("xaif:Property") << xml::Attr("id", ctxt.currentXlationContext().getNewVertexId())
-	    << xml::Attr("name","dimindex") << xml::Attr("dim", dim)
-	    << xml::Attr("value", idx_str) << xml::EndElem;
-      
-	dim++;
-      }
-    }
-  
-    xos << xml::EndElem;
+    assert(0);
   }
 
 
