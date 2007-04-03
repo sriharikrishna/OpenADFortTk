@@ -50,7 +50,7 @@ namespace whirl2xaif {
      * the originator is some name that we can use 
      * for debugging purposes
      */
-    PUXlationContext(const std::string& anOriginator);
+    PUXlationContext(const std::string& anOriginator, Open64IRInterface& anIrInterface );
 
     ~PUXlationContext();
 
@@ -141,6 +141,8 @@ namespace whirl2xaif {
 
     void setF90(bool aFlag);
 
+    Open64IRInterface& getIrInterface();
+
   private: 
     /**
      * no def
@@ -221,6 +223,8 @@ namespace whirl2xaif {
     std::string myOriginator;
 
     bool myF90Flag;
+
+    Open64IRInterface& myIrInterface;
 
   };
 

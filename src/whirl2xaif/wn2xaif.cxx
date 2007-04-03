@@ -1225,9 +1225,7 @@ namespace whirl2xaif {
     else if (theLocation->isaUnnamed()) { 
       OA::OA_ptr<OA::UnnamedLoc> theUnnamedLoc=
 	theLocation.convert<OA::UnnamedLoc>();
-      std::ostringstream oss;
-      Open64IRInterface::DumpWN((WN*)(theUnnamedLoc->getStmtHandle().hval()),oss);
-      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "side effect list contains an unnamed location:" << oss.str().c_str());
+      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "side effect list contains an unnamed location:" << ctxt.getIrInterface().toString(theUnnamedLoc->getStmtHandle()));
     } 
     else { 
       theLocation->dump(std::cout);

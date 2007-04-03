@@ -52,11 +52,10 @@ namespace whirl2xaif {
     // here because it is part of the CallGraph instead of a
     // ControlFlowGraph)
     // -------------------------------------------------------
-    OA::OA_ptr<Open64IRInterface> irInterface;
-    irInterface = new Open64IRInterface;
+    Open64IRInterface irInterface;
     Open64IRInterface::initContextState(pu_forest);
     xml::ostream xos(os.rdbuf());
-    PUXlationContext ctxt("whirl2xaif::translateIR");
+    PUXlationContext ctxt("whirl2xaif::translateIR",irInterface);
     dumpTranslationHeaderComment(xos); // FIXME (optional)
     // Initialize global id maps
     // NOTE: Do this first so that ids will match in back-translation

@@ -10,14 +10,15 @@
 
 namespace whirl2xaif { 
   
-  PUXlationContext::PUXlationContext(const std::string& anOriginator) : 
+  PUXlationContext::PUXlationContext(const std::string& anOriginator, Open64IRInterface& anIrInterface) : 
     myWNParentMapP(NULL), 
     myStab2idMapP(NULL), 
     myPU2idMapP(NULL), 
     myWN2idMapP(NULL),
     myScalarizedRefTab_W2Xp(NULL),
     myOriginator(anOriginator),
-    myF90Flag(false) {
+    myF90Flag(false),
+    myIrInterface(anIrInterface) {
     myXlationContextStack.push_front(XlationContext(0));
   }
 
@@ -375,5 +376,9 @@ namespace whirl2xaif {
   void PUXlationContext::setF90(bool aFlag) { 
     myF90Flag=aFlag;
   }
+
+  Open64IRInterface& PUXlationContext::getIrInterface() { 
+    return myIrInterface;
+  } 
 
 }
