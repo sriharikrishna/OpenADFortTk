@@ -275,7 +275,7 @@ namespace whirl2xaif {
     for (; nodeItPtr->isValid(); ++(*nodeItPtr)) {
       OA::OA_ptr<OA::CFG::Interface::Node> n = nodeItPtr->current();
       usedNodes.insert(n);
-      // n->longdump(&cfg, std::cerr); std::cerr << endl;
+      //n->longdump(&cfg, std::cerr); std::cerr << endl;
       const char* vtype = GetCFGVertexType(cfg, n);
       SymTabId scopeId = ctxt.findSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
       std::string ids = GetIDsForStmtsInBB(n, ctxt);

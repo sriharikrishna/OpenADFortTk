@@ -145,7 +145,10 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "xaif:SymbolReference",
   "xaif:ArrayElementReference",
   
+  "xaif:IndexTriplet",
   "xaif:Index",
+  "xaif:Bound",
+  "xaif:Stride",
   
   "xaif:VariableReferenceEdge",
 
