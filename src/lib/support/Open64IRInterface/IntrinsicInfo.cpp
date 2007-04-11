@@ -52,8 +52,14 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CGTEXPR")    ]=Info(2,STRING_INTR);
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CLEEXPR")    ]=Info(2,STRING_INTR);
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CLTEXPR")    ]=Info(2,STRING_INTR);
+    
     // string assignment
-    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_CALL,"CASSIGNSTMT")]=Info(1,STRING_INTR);
+    // String Assigment is Treated as a special case of Intrinsic functions.
+    // We assume that Intrinsic Functions has no side Effects whereas 
+    // CASSIGNSTMT has side effects. Therefore, we expect its behaviuor to be similar
+    // to the AssignPair sattement. Therefore, Removed from list of Intrinsics.
+    //ourIntrinsicInfoMap[Key( OPR_INTRINSIC_CALL,"CASSIGNSTMT")]=Info(1,STRING_INTR);
+   
     // string length
     ourIntrinsicInfoMap[Key( OPR_CALL,          "LEN")        ]=Info(1,STRING_INTR);
     // rounding and conversion
@@ -109,6 +115,14 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
 bool IntrinsicInfo::lookupIntrinsicInfo(WN* aWN_p, const IntrinsicInfo::Info* anInfo) { 
   OPERATOR opr = WN_operator(aWN_p);
   IntrinsicMap::const_iterator finder;
+
+  /*! PLM : I see Intrinsic Call apperas only for CASSIGNSTMT
+            at this point. As CASSIGNSTMT is removed from the
+            list of Intrinsics. I am commenting out 
+            OPR_INTRINSIC_CALL test case, otherwise it gives
+            and error message on encountering OPR_INTRINSIC_CALL
+            for CASSIGNSTMT. 
+ 
   if (opr==OPR_INTRINSIC_CALL) { 
     // get the name and strip machine type information 
     const char* inm = intrinsicBaseName(WN_intrinsic(aWN_p));
@@ -117,7 +131,10 @@ bool IntrinsicInfo::lookupIntrinsicInfo(WN* aWN_p, const IntrinsicInfo::Info* an
       DIE("IntrinsicInfo::isIntrinsic: no entry for OPR_INTRINSIC_CALL %s ",inm);
     }
   }
-  else if (opr==OPR_INTRINSIC_OP) { 
+
+  */
+
+  if (opr==OPR_INTRINSIC_OP) { 
     // get the name and strip machine type information
     const char* inm = intrinsicBaseName(WN_intrinsic(aWN_p));
     finder=getMap().find(Key(opr,inm));
