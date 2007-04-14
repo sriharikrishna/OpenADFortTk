@@ -939,8 +939,12 @@ namespace whirl2xaif {
 	 optimization don't know base type, or anything else so use
 	 OPR_ARRAY to generate bounds */
 
+      UINT srcid = ctxt.currentXlationContext().peekVertexId();
       TranslateWN(xos, kid, ctxt);
+      // Array indexing
+      UINT targid = ctxt.currentXlationContext().peekVertexId();
       WN2F_Arrsection_Slots(xos,wn,ctxt);
+      DumpVarRefEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), srcid, targid);
     }
     else {
       array_ty = TY_pointed(ptr_ty); // base of OPR_ARRAY
@@ -974,13 +978,17 @@ namespace whirl2xaif {
 	/* Get the base of the object to be indexed into, still using
 	 * ctxt.currentXlationContext().isFlag(XlationContext::DEREF_ADDR).
 	 */
+	UINT srcid = ctxt.currentXlationContext().peekVertexId();
 	TranslateWN(xos, kid, ctxt);
 	ctxt.currentXlationContext().unsetFlag(XlationContext::DEREF_ADDR);
        
 	if ( ctxt.currentXlationContext().isFlag(XlationContext::HAS_NO_ARR_ELMT))
 	  ;
-	else
+	else { 
+	  UINT targid = ctxt.currentXlationContext().peekVertexId();
 	  WN2F_arrsection_bounds(xos,wn,array_ty,ctxt);
+	  DumpVarRefEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), srcid, targid);
+	}
       }
     }
     
@@ -1026,7 +1034,8 @@ namespace whirl2xaif {
     arb_base = TY_arb(ttyy);
     array_dim =  ARB_dimension(arb_base);
     if (array_dim>0) {
-      xos << xml::BegElem(XAIFStrings.elem_ArrayElemRef());
+      xos << xml::BegElem(XAIFStrings.elem_ArrayElemRef())
+	  << xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId());
       for (dim = WN_num_dim(wn)-1; dim >= 0; dim--) {
 	xos << xml::BegElem(XAIFStrings.elem_IndexTriplet());
 	if (WN_operator(WN_array_index(wn, dim))==OPR_SRCTRIPLET) {
