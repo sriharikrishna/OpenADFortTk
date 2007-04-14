@@ -9,12 +9,12 @@
 #include <list>
 #include <iostream>
 
-#include "include/Open64BasicTypes.h"
-#include "lib/support/WhirlParentize.h"
-#include "lib/support/WhirlIDMaps.h"
-#include "lib/support/OAMaps.h"
-#include "lib/support/SymTab.h"
-#include "lib/support/ScalarizedRefTab.h"
+#include "Open64IRInterface/Open64BasicTypes.h"
+#include "WhirlParentize.h"
+#include "WhirlIDMaps.h"
+#include "OAMaps.h"
+#include "Open64IRInterface/SymTab.h"
+#include "ScalarizedRefTab.h"
 
 namespace whirl2xaif{
 

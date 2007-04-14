@@ -9,14 +9,13 @@
 #include <string>
 #include <iostream>
 
-#include "include/Open64BasicTypes.h"
-
+#include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64IRInterface/Open64IRInterface.hpp"
 #include "BaseMap.h"
-#include "Open64IRInterface.hpp"
-#include "diagnostics.h"
+#include "Diagnostics.h"
 #include "ScalarizedRef.h"
 
-namespace fortTk { 
+namespace fortTkSupport { 
 
 class ScalarizedRefTab_Base
 {
@@ -70,7 +69,7 @@ protected:
 template <ScalarizedRefTab_Base::TableType TabTy>
 class ScalarizedRefTab 
   : public ScalarizedRefTab_Base,
-    public FortTk::BaseMap<void*, void*>
+    public BaseMap<void*, void*>
 {
 };
 
@@ -84,7 +83,7 @@ typedef ScalarizedRefTab<ScalarizedRefTab_Base::W2X>
 template <>
 class ScalarizedRefTab<ScalarizedRefTab_Base::W2X>
   : public ScalarizedRefTab_Base,
-    public FortTk::BaseMap<WN*, ScalarizedRef*> {
+    public BaseMap<WN*, ScalarizedRef*> {
 
 public:
   // Constructor allocates an empty data structure
@@ -98,14 +97,14 @@ public:
   // Find: 
   virtual ScalarizedRef* 
   Find(WN* x_, bool mustFind = false) const
-  { return FortTk::BaseMap<WN*, ScalarizedRef*>::Find(x_, mustFind); }
+  { return BaseMap<WN*, ScalarizedRef*>::Find(x_, mustFind); }
   
   // Find: a version with const params for convenience
   ScalarizedRef* 
   Find(const WN* x_, bool mustFind = false) const
   {
     WN* x = const_cast<WN*>(x_);
-    return FortTk::BaseMap<WN*, ScalarizedRef*>::Find(x, mustFind);
+    return BaseMap<WN*, ScalarizedRef*>::Find(x, mustFind);
   }
   
   
@@ -113,7 +112,7 @@ public:
   virtual bool 
   Insert(WN* x, ScalarizedRef* y) {
     InsertIntoPool(y);
-    return FortTk::BaseMap<WN*, ScalarizedRef*>::Insert(x, y);
+    return BaseMap<WN*, ScalarizedRef*>::Insert(x, y);
   }
   
   // Insert: a version with const params for convenience
@@ -145,7 +144,7 @@ private:
 // ---------------------------------------------------------
 
 class ScalarizedRefTabMap_W2X 
-  : public FortTk::BaseMap<PU_Info*, ScalarizedRefTab_W2X*> {
+  : public BaseMap<PU_Info*, ScalarizedRefTab_W2X*> {
 
 public:
   ScalarizedRefTabMap_W2X();

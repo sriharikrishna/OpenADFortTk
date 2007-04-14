@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v 1.12 2005/05/16 15:17:39 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/WhirlIDMaps.h,v 1.12 2005/05/16 15:17:39 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -7,7 +7,7 @@
 //***************************************************************************
 //
 // File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.h,v $
+//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/WhirlIDMaps.h,v $
 //
 // Purpose:
 //   [The purpose of this file]
@@ -29,14 +29,16 @@
 
 //************************** Open64 Include Files ***************************
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 //*************************** User Include Files ****************************
 
 #include "BaseMap.h"
-#include "diagnostics.h"
+#include "Diagnostics.h"
 
 //************************** Forward Declarations ***************************
+
+namespace fortTkSupport { 
 
 typedef UINT SymTabId;
 typedef UINT SymId;
@@ -71,7 +73,7 @@ public:
 //***************************************************************************
 
 class SymTabToSymTabIdMap 
-  : public FortTk::BaseMap<ST_TAB*, SymTabId>
+  : public BaseMap<ST_TAB*, SymTabId>
 {
 public:
   SymTabToSymTabIdMap() { }
@@ -143,7 +145,7 @@ public:
 //***************************************************************************
 
 class PUToPUIdMap 
-  : public FortTk::BaseMap<PU_Info*, PUId>
+  : public BaseMap<PU_Info*, PUId>
 {
 public:  
   PUToPUIdMap() { }
@@ -155,7 +157,7 @@ public:
 
 
 class PUIdToPUMap
-  : public FortTk::BaseMap<PUId, PU_Info*>
+  : public BaseMap<PUId, PU_Info*>
 {
 public:
   PUIdToPUMap() { }
@@ -171,7 +173,7 @@ public:
 //***************************************************************************
 
 class WNToWNIdMap 
-  : public FortTk::BaseMap<WN*, WNId>
+  : public BaseMap<WN*, WNId>
 {
 public:  
   WNToWNIdMap() { }
@@ -182,7 +184,7 @@ public:
 };
 
 class WNIdToWNMap 
-  : public FortTk::BaseMap<WNId, WN*>
+  : public BaseMap<WNId, WN*>
 {
 public:
   WNIdToWNMap() { }
@@ -199,7 +201,7 @@ public:
 
 // Note: Assumes ownership of the tables it creates
 class WNToWNIdTabMap 
-  : public FortTk::BaseMap<PU_Info*, WNToWNIdMap*> {
+  : public BaseMap<PU_Info*, WNToWNIdMap*> {
   
 public:
   WNToWNIdTabMap() { }
@@ -211,7 +213,7 @@ public:
 };
 
 class WNIdToWNTabMap 
-  : public FortTk::BaseMap<PU_Info*, WNIdToWNMap*> {
+  : public BaseMap<PU_Info*, WNIdToWNMap*> {
   
 public:
   WNIdToWNTabMap() { }
@@ -250,5 +252,7 @@ CreateWhirlIdMaps(WN* wn, WNToWNIdMap* x, WNIdToWNMap* y);
 
 
 //***************************************************************************
+
+}
 
 #endif /* WhirlIDMaps_INLUCDED_h */

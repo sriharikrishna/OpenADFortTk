@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/IntrinsicXlationTable.h,v 1.8 2006/05/12 16:12:22 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/IntrinsicXlationTable.h,v 1.8 2006/05/12 16:12:22 utke Exp $
 
 
 #ifndef IntrinsicXlationTable_H 
@@ -8,7 +8,7 @@
 #include <iostream>
 #include <vector>
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 
 namespace fortTkSupport { 
@@ -43,8 +43,6 @@ namespace fortTkSupport {
   class IntrinsicXlationTable {
   public:
   
-    static const char* intrinsicBasename(INTRINSIC opcode);
-
     enum TableType { 
       W2X, // A table optimized for WHIRL->XAIF lookups
       X2W  // A table optimized for XAIF->WHIRL lookups
@@ -206,12 +204,6 @@ namespace fortTkSupport {
   
     static Entry        ourTable[];
     static unsigned int ourTableSize;
-
-    /** 
-     * return  true if 'str' is a valid prefix for an intrinsic name; 
-     * false otherwise.
-     */
-    static bool lookupIntrinsicPrefix(const char* str);
 
   };
 

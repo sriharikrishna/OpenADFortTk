@@ -5,17 +5,17 @@
 
 #include "OpenAnalysis/ExprTree/ExprTree.hpp"
 
-#include "include/Open64BasicTypes.h"
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 #include "ir_reader.h"   
 
 
 #include "ScalarizedRefTab.h"
 
-#include "diagnostics.h"
+#include "Diagnostics.h"
 
 
-namespace fortTk { 
+namespace fortTkSupport { 
 
   ScalarizedRefTab_Base::ScalarizedRefTab_Base()
   {
@@ -165,7 +165,7 @@ namespace fortTk {
   AddToScalarizedRefTabOp(ScalarizedRefTab_W2X* tab_, PU_Info* curpu_)
     : tab(tab_), curpu(curpu_)
   { 
-    FORTTK_ASSERT(tab_, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(tab_, fortTkSupport::Diagnostics::UnexpectedInput);
     ir = new Open64IRInterface();
   }
 

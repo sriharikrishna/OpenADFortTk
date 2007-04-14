@@ -4,7 +4,7 @@
 #ifndef wn2xaif_mem_INCLUDED
 #define wn2xaif_mem_INCLUDED
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 #include "whirl2xaif.h"
 #include "PUXlationContext.h"

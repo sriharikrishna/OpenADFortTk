@@ -1,43 +1,17 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2whirl.cxx,v 1.5 2005/01/12 20:01:01 eraxxon Exp $
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2whirl.cxx,v $
-//
-// Purpose:
-//   Translate S-expression WHIRL to WHIRL.
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************** System Include Files ***************************
-
-//*************************** Sexp Include Files ****************************
-
 #include <sexp.h>
 
-//************************** Open64 Include Files ***************************
+#include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64IRInterface/WhirlGlobalStateUtils.h"
 
-#include <include/Open64BasicTypes.h>
-
-//*************************** User Include Files ****************************
+#include "SexpTags.h"
+#include "sexputil.h"
 
 #include "sexp2whirl.h"
 using sexp2whirl::ErrIR;
 #include "sexp2wn.h"
 #include "sexp2symtab.h"
-
-#include <lib/support/WhirlGlobalStateUtils.h>
-#include <lib/support/SexpTags.h>
-#include <lib/support/sexputil.h>
-
-//************************** Forward Declarations ***************************
-
-//***************************************************************************
 
 static PU_Info*
 xlate_IR(sexp_t* ir_sx, int flags);
@@ -106,20 +80,20 @@ xlate_IR(sexp_t* ir_sx, int flags)
   
   // Sanity check
   FORTTK_ASSERT(ir_sx && is_list(ir_sx), 
-		FORTTK_UNEXPECTED_INPUT << ErrIR(ir_sx));
+		fortTkSupport::Diagnostics::UnexpectedInput << ErrIR(ir_sx));
 
   sexp_t* tag_sx = get_elem0(ir_sx);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::WHIRL) == 0,
-		FORTTK_UNEXPECTED_INPUT << ErrIR(tag_sx));
+		fortTkSupport::Diagnostics::UnexpectedInput << ErrIR(tag_sx));
 
   // Translate GBL_SYMTAB and PU_FOREST
   sexp_t* gbl_symtab_sx = get_elem1(ir_sx);
   sexp_t* pu_forest_sx  = get_elem2(ir_sx);
   FORTTK_ASSERT(gbl_symtab_sx, 
-		FORTTK_UNEXPECTED_INPUT << ErrIR(gbl_symtab_sx));
+		fortTkSupport::Diagnostics::UnexpectedInput << ErrIR(gbl_symtab_sx));
   FORTTK_ASSERT(pu_forest_sx, 
-		FORTTK_UNEXPECTED_INPUT << ErrIR(pu_forest_sx));
+		fortTkSupport::Diagnostics::UnexpectedInput << ErrIR(pu_forest_sx));
   
   sexp2whirl::TranslateGlobalSymbolTables(gbl_symtab_sx, flags);
   PU_Info* pu_forest = xlate_PUForest(pu_forest_sx, flags);
@@ -137,12 +111,12 @@ xlate_PUForest(sexp_t* pu_forest_sx, int flags)
 
   // Sanity check
   FORTTK_ASSERT(pu_forest_sx && is_list(pu_forest_sx), 
-		FORTTK_UNEXPECTED_INPUT);  
+		fortTkSupport::Diagnostics::UnexpectedInput);  
   
   sexp_t* tag_sx = get_elem0(pu_forest_sx);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::PU_FOREST) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
 
   MEM_POOL_Push(MEM_pu_nz_pool_ptr);
   MEM_POOL_Push(MEM_pu_pool_ptr);
@@ -179,12 +153,12 @@ xlate_PUTree(sexp_t* pu_tree_sx, int flags)
   if (!pu_tree_sx) { return NULL; }
 
   // Sanity check
-  FORTTK_ASSERT(is_list(pu_tree_sx), FORTTK_UNEXPECTED_INPUT);  
+  FORTTK_ASSERT(is_list(pu_tree_sx), fortTkSupport::Diagnostics::UnexpectedInput);  
   
   sexp_t* tag_sx = get_elem0(pu_tree_sx);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::PU_TREE) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
   // Translate PU
   sexp_t*  pu_sx = get_elem1(pu_tree_sx);
@@ -219,12 +193,12 @@ xlate_PU(sexp_t* pu_sx, int flags)
   using namespace sexp;
 
   // Sanity check
-  FORTTK_ASSERT(pu_sx && is_list(pu_sx), FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(pu_sx && is_list(pu_sx), fortTkSupport::Diagnostics::UnexpectedInput);
   
   sexp_t* tag_sx = get_elem0(pu_sx);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::PU) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
 
   // Translate PU_SYMTAB and WHIRL_AST
   sexp_t* pu_sym_sx    = get_elem1(pu_sx);

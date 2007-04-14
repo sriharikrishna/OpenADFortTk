@@ -7,16 +7,16 @@
 
 #include <fstream>
 
-#include "include/Open64BasicTypes.h"
+#include "Open64IRInterface/Open64BasicTypes.h"
 
-#include "lib/support/xmlostream.h"
-#include "lib/support/IntrinsicXlationTable.h"
-#include "lib/support/OAMaps.h"
-#include "lib/support/ScalarizedRefTab.h"
-#include "lib/support/WhirlIDMaps.h"
-#include "lib/support/stab_attr.h"
-#include "lib/support/wn_attr.h"
-#include "lib/support/diagnostics.h"
+#include "xmlostream.h"
+#include "IntrinsicXlationTable.h"
+#include "OAMaps.h"
+#include "ScalarizedRefTab.h"
+#include "WhirlIDMaps.h"
+#include "Open64IRInterface/stab_attr.h"
+#include "Open64IRInterface/wn_attr.h"
+#include "Diagnostics.h"
 #include "PUXlationContext.h"
 
 namespace whirl2xaif {
@@ -28,9 +28,9 @@ namespace whirl2xaif {
 			    const char* tmpVarPrefix);
 
     static fortTkSupport::IntrinsicXlationTable& getIntrinsicXlationTable();
-    static PUToOAAnalInfoMap& getOAAnalMap();
-    static fortTk::ScalarizedRefTabMap_W2X& getScalarizedRefTableMap();
-    static WNToWNIdTabMap& getWNToWNIdTableMap();
+    static fortTkSupport::PUToOAAnalInfoMap& getOAAnalMap();
+    static fortTkSupport::ScalarizedRefTabMap_W2X& getScalarizedRefTableMap();
+    static fortTkSupport::WNToWNIdTabMap& getWNToWNIdTableMap();
 
   private:
 
@@ -41,9 +41,9 @@ namespace whirl2xaif {
 
     static fortTkSupport::IntrinsicXlationTable ourIntrinsicTable;
     static const std::string ourDividerComment;
-    static PUToOAAnalInfoMap ourOAAnalMap;
-    static fortTk::ScalarizedRefTabMap_W2X ourScalarizedRefTableMap;
-    static WNToWNIdTabMap ourWNToWNIdTableMap;
+    static fortTkSupport::PUToOAAnalInfoMap ourOAAnalMap;
+    static fortTkSupport::ScalarizedRefTabMap_W2X ourScalarizedRefTableMap;
+    static fortTkSupport::WNToWNIdTabMap ourWNToWNIdTableMap;
 
     static void translateScopeHierarchy(xml::ostream& xos, 
 					PU_Info* pu_forest, 
@@ -59,7 +59,7 @@ namespace whirl2xaif {
 				  PUXlationContext& ctxt);
 
     static void translatePU(xml::ostream& xos, 
-			    OA::OA_ptr<OA::CallGraph::CallGraphStandard::Node> n, 
+			    OA::OA_ptr<OA::CallGraph::Node> n, 
 			    UINT32 vertexId, 
 			    PUXlationContext& ctxt);
 

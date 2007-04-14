@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v 1.24 2006/01/15 05:57:26 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/XAIFStrings.h,v 1.24 2006/01/15 05:57:26 utke Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -7,7 +7,7 @@
 //***************************************************************************
 //
 // File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.h,v $
+//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/XAIFStrings.h,v $
 //
 // Purpose:
 //   [The purpose of this file]

@@ -9,7 +9,7 @@
 #include <list>
 #include <iostream>
 
-#include "include/Open64BasicTypes.h"
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 namespace xaif2whirl{
 
