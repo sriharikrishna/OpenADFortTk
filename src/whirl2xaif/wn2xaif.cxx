@@ -1227,7 +1227,7 @@ namespace whirl2xaif {
 	theLocation.convert<OA::UnnamedLoc>();
       // save the context because "toString" may change it
       PU_Info* thisPU=Current_PU_Info;
-      FORTTK_MSG(1,"xlate_SideEffectEntry: side effect list contains an unnamed location for: " << ctxt.getIrInterface().toString(theUnnamedLoc->getStmtHandle()));
+      FORTTK_MSG(1,"xlate_SideEffectEntry: side effect list contains an unnamed location for: " << ctxt.getIrInterface().toString(theUnnamedLoc->getExprHandle()));
       if (Current_PU_Info!=thisPU) 
         PU_SetGlobalState(thisPU);
     } 
@@ -1235,7 +1235,7 @@ namespace whirl2xaif {
       ST* pu_st = ST_ptr(PU_Info_proc_sym(Current_PU_Info));
       const char* pu_nm = ST_name(pu_st);
       theLocation->dump(std::cerr);
-      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "side effect list for " << pu_nm << " contains a location that is not a named location");
+      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "side effect list for " << pu_nm << " contains an unexpected location (see previous line)");
     }
   } 
 
