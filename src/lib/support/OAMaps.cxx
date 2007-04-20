@@ -72,24 +72,12 @@ namespace fortTkSupport {
   // ***************************************************************************
 
   void
-  PUToOAAnalInfoMap::Create(PU_Info* pu_forest)
-  {
-    CreatePUToOAAnalInfoMap(pu_forest, this);
-  }
-
-  // ***************************************************************************
-  // Optional routines for map creation
-  // ***************************************************************************
-
-  // CreatePUIdMaps: Create id's based on Open64IRProcIterator. 
-  void
-  CreatePUToOAAnalInfoMap(PU_Info* pu_forest, PUToOAAnalInfoMap* x)
-  {
+  PUToOAAnalInfoMap::Create(PU_Info* pu_forest) {
     if (!pu_forest) { return; }
   
     OA::OA_ptr<Open64IRInterface> irIF; irIF = new Open64IRInterface;
     Open64IRInterface::initContextState(pu_forest);
-    x->SetIRInterface(irIF);
+    this->SetIRInterface(irIF);
 
     OA::OA_ptr<Open64IRProcIterator> procIt;
     procIt = new Open64IRProcIterator(pu_forest);
@@ -106,7 +94,7 @@ namespace fortTkSupport {
       OA::OA_ptr<OA::CFG::CFGInterface> cfg = CreateCFG(pu, cfgeach, irIF);
     }
     // For each proc 
-    x->SetCFGEach(cfgman, cfgeach);
+    this->SetCFGEach(cfgman, cfgeach);
   
     // Inter Alias 
     FORTTK_MSG(1, "progress: inter alias: performAnalysis");
@@ -114,7 +102,7 @@ namespace fortTkSupport {
     interaliasmapman = new OA::Alias::ManagerFIAliasAliasMap(irIF);
     OA::OA_ptr<OA::Alias::InterAliasMap> interAlias;
     interAlias = interaliasmapman->performAnalysis(procIt);
-    x->SetInterAlias(interaliasmapman, interAlias);
+    this->SetInterAlias(interaliasmapman, interAlias);
   
     // Create call graph
     FORTTK_MSG(1, "progress: call graph: performAnalysis");
@@ -125,7 +113,7 @@ namespace fortTkSupport {
     OA::OA_ptr<OA::CallGraph::CallGraph> cgraph = 
       cgraphman->performAnalysis(procIt,interAlias);
     if (0) { cgraph->dump(std::cout, irIF); }
-    x->SetCallGraph(cgraphman, cgraph);
+    this->SetCallGraph(cgraphman, cgraph);
   
   
     // -------------------------------------------------------
@@ -161,14 +149,14 @@ namespace fortTkSupport {
     //   }
     //   // JU: end debugging stuff
 
-    x->SetParamBind(parambindman, parambind);
+    this->SetParamBind(parambindman, parambind);
 
     // Side Effect
     FORTTK_MSG(1, "progress: side effect: performAnalysis");
     OA::OA_ptr<OA::SideEffect::ManagerSideEffectStandard> sideeffectman;
     sideeffectman = new OA::SideEffect::ManagerSideEffectStandard(irIF);
 
-    x->SetSideEffect(sideeffectman);
+    this->SetSideEffect(sideeffectman);
 
     // Inter Side Effect
     FORTTK_MSG(1, "progress: inter side effect: performAnalysis");
@@ -178,7 +166,7 @@ namespace fortTkSupport {
     interSE = interSEman->performAnalysis(cgraph, parambind,
 					  interAlias, sideeffectman);
 
-    x->SetInterSideEffect(interSEman, interSE);
+    this->SetInterSideEffect(interSEman, interSE);
   
     // ICFG
     FORTTK_MSG(1, "progress: icfg standard: performAnalysis");
@@ -221,7 +209,7 @@ namespace fortTkSupport {
 // 					interAlias, 
 // 					interSE);
 
-    x->SetInterActiveFortran(duactiveman, duactive);
+    this->SetInterActiveFortran(duactiveman, duactive);
     
 
 //   // this is only for context sensitive analysis
@@ -241,8 +229,8 @@ namespace fortTkSupport {
       ST* st = ST_ptr(PU_Info_proc_sym(pu));
       const char* nm = ST_name(st);
       FORTTK_MSG(1, "progress: analysing SUBROUTINE " << nm );
-      OAAnalInfo* info = new OAAnalInfo(pu, x);
-      x->Insert(pu, info);
+      OAAnalInfo* info = new OAAnalInfo(pu, this);
+      this->Insert(pu, info);
     }
   
     // -------------------------------------------------------
