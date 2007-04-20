@@ -339,22 +339,17 @@ CreateOAAnalInfo(PU_Info* pu,
   // FIXME: assumes fully structured control flow???
   static void
   AddControlFlowEndTags(PU_Info* pu, WhirlParentMap* wnParentMap, 
-			OA::OA_ptr<Open64IRInterface> irIF)
-  {
+			OA::OA_ptr<Open64IRInterface> irIF) {
     // FIXME: we should be skipping most expression sub trees like
     // interface to NewOA.
-  
     WN* wn = PU_Info_tree_ptr(pu);
-
     WN_TREE_CONTAINER<PRE_ORDER> wtree(wn);
     WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
     for (it = wtree.begin(); it != wtree.end(); ++it) {
       WN* curWN = it.Wn();
       OPERATOR opr = WN_operator(curWN);
-    
       const char* vty = GetCFGControlFlowVertexType(curWN);
       if (!vty) { continue; }
-    
       // Find structured (and some unstructured) control flow and insert
       // placehoder statement.
       if (vty == XAIFStrings.elem_BBForLoop() || 
@@ -364,14 +359,15 @@ CreateOAAnalInfo(PU_Info* pu,
 	//   ...
 	// * EndLoop
 	// enddo
-	WN* blkWN = NULL;
+	WN* loopBodyWN = NULL;
 	if (opr == OPR_DO_LOOP) { 
-	  blkWN = WN_do_body(curWN); 
+	  loopBodyWN = WN_do_body(curWN); 
 	} else {
-	  blkWN = WN_while_body(curWN);
+	  loopBodyWN = WN_while_body(curWN);
 	}
 	WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndLoop());
-	WN_INSERT_BlockLast(blkWN, newWN);
+	WN_INSERT_BlockLast(loopBodyWN, newWN);
+	// the new WN must be added to the context map.
 	irIF->setContext((OA::irhandle_t)newWN, (OA::irhandle_t)pu);
       }
       else if (vty == XAIFStrings.elem_BBBranch()) {
@@ -402,7 +398,10 @@ CreateOAAnalInfo(PU_Info* pu,
 	if (ipWN) {
 	  WN* blkWN = wnParentMap->FindBlock(ipWN);
 	  WN* newWN = WN_CreateComment((char*)XAIFStrings.elem_BBEndBranch());
-	  WN_INSERT_BlockAfter(blkWN, ipWN, newWN); // 'newWN' after 'ipWN'
+	  // 'newWN' after 'ipWN' which is either the parent of the last label block 
+	  // or the parent of the branch. 
+	  WN_INSERT_BlockAfter(blkWN, ipWN, newWN); 
+	  // the new WN must be added to the context map.
 	  irIF->setContext((OA::irhandle_t)newWN, (OA::irhandle_t)pu);
 	}
       }
@@ -480,24 +479,15 @@ CreateOAAnalInfo(PU_Info* pu,
   // 
   static void
   MassageOACFGIntoXAIFCFG(OA::OA_ptr<OA::CFG::CFG> cfg,
-			  OA::OA_ptr<Open64IRInterface> irIF)
-  {
-   /* commented out by PLM 08/27/06
-    * using namespace OA::CFG;
-    */
-
+			  OA::OA_ptr<Open64IRInterface> irIF) {
     typedef std::list< pair<CFGNodeList::iterator, WN*> > MySplitList;
-
     //DGraphNodeList workList;  
     CFGNodeList workList;  
     MySplitList toSplit; // nodes to split
-
     OA::OA_ptr<OA::DGraph::NodesIteratorInterface> nodeItTmp; 
-
     // -------------------------------------------------------
     // 1. Find BBs with conditionals and split them
     // -------------------------------------------------------
-
     // a. Collect all BBs with more that one stmt into 'workList'
     nodeItTmp = cfg->getNodesIterator();
     for ( ; nodeItTmp->isValid(); ++(*nodeItTmp)) {
@@ -507,21 +497,17 @@ CreateOAAnalInfo(PU_Info* pu,
 	workList.push_back(n);
       }
     }
-  
     // b. Iterate over 'workList' nodes.  For each node examine the
     // statements.  If a conditional is found at the end of the BB,
     // split it.  A block will only need to be split at most once.
     for (CFGNodeList::iterator wnodeIt = workList.begin(); 
 	 wnodeIt != workList.end(); ++wnodeIt) {
       OA::OA_ptr<OA::CFG::NodeInterface> n = (*wnodeIt);
-      // n->longdump(cfg, std::cerr);
-    
       OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtItPtr
 	= n->getNodeStatementsIterator();
       for (; stmtItPtr->isValid(); ++(*stmtItPtr)) {
 	OA::StmtHandle stmt = stmtItPtr->current();
-
-    OA::CFG::IRStmtType ty = irIF->getCFGStmtType(stmt);
+	OA::CFG::IRStmtType ty = irIF->getCFGStmtType(stmt);
 	if (ty == OA::CFG::STRUCT_TWOWAY_CONDITIONAL
 	    || ty == OA::CFG::USTRUCT_TWOWAY_CONDITIONAL_T
 	    || ty == OA::CFG::USTRUCT_TWOWAY_CONDITIONAL_F
@@ -532,65 +518,49 @@ CreateOAAnalInfo(PU_Info* pu,
 	}
       }
     }
-  
     // c. Split blocks
     for (MySplitList::iterator it = toSplit.begin(); it != toSplit.end(); ++it) {
       CFGNodeList::iterator wnodeIt = (*it).first;
       OA::OA_ptr<OA::CFG::NodeInterface> ntmp = *wnodeIt;
-      OA::OA_ptr<OA::CFG::Node> n 
-	= ntmp.convert<OA::CFG::Node>();
+      OA::OA_ptr<OA::CFG::Node> n = ntmp.convert<OA::CFG::Node>();
       WN* startWN = (*it).second;
-    
       OA::StmtHandle stmt((OA::irhandle_t)startWN);
       OA::OA_ptr<OA::CFG::Node> newblock = cfg->splitBlock(n, stmt);
       cfg->connect(n, newblock, OA::CFG::FALLTHROUGH_EDGE);
-      //n->longdump(cfg);
-      //newblock->longdump(cfg);
     }
     toSplit.clear();
-  
     // d. clear 'workList'
     workList.clear();
-  
-  
     // -------------------------------------------------------
     // 2. Recover OPR_DO_LOOPs
     // -------------------------------------------------------
-  
     // This process can create empty basic blocks
     CFGNodeList toRemove; // basic blocks made empty (slated for removal)
-  
-  
     nodeItTmp = cfg->getNodesIterator();
     for ( ; nodeItTmp->isValid(); ++(*nodeItTmp)) {
       OA::OA_ptr<OA::DGraph::NodeInterface> dn = nodeItTmp->current();
       OA::OA_ptr<OA::CFG::Node> n = dn.convert<OA::CFG::Node>();
-
       // Use CFG nodes representing the OPR_DO_LOOP condition to find
       // initialization and update information.  With this info, remove
-      // the initialization and update statements from whatever BB they
-      // may be in.  New basic blocks are not created.
-
+      // the 'copied' initialization and update statements from whatever BB they
+      // may be in because the  original ones are loop node children anyway. 
+      // New basic blocks are not created.
       // FIXME: use a better classification method 
       if (GetCFGVertexType(cfg, n) == XAIFStrings.elem_BBForLoop()) {
 	assert(n->size() == 1);
-	OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtItPtr
-	  = n->getNodeStatementsIterator();
+	OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtItPtr = n->getNodeStatementsIterator();
 	OA::StmtHandle loopStmt = stmtItPtr->current();
 	WN* loopWN = (WN *)loopStmt.hval();
-
 	WN* initWN = WN_start(loopWN);
 	WN* updateWN = WN_step(loopWN);
-      
-	// FIXME: this is a terrible way of doing this, but the point is
-	// to test correctness for now.
-	OA::OA_ptr<OA::DGraph::NodesIteratorInterface> nodeIt1Ptr 
-	  = cfg->getNodesIterator();
+	// FIXME: this is a terrible way of doing this, because we 
+	// should only have to iterate over a subgraph but at least this 
+	// ensures  correctness
+	OA::OA_ptr<OA::DGraph::NodesIteratorInterface> nodeIt1Ptr = cfg->getNodesIterator();
 	for (; nodeIt1Ptr->isValid(); ++(*nodeIt1Ptr)) {
 	  OA::OA_ptr<OA::DGraph::NodeInterface> dn1 = nodeIt1Ptr->current();
-      OA::OA_ptr<OA::CFG::Node> n1 = dn1.convert<OA::CFG::Node>();
-	  OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtIt1Ptr
-	    = n1->getNodeStatementsIterator();
+	  OA::OA_ptr<OA::CFG::Node> n1 = dn1.convert<OA::CFG::Node>();
+	  OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtIt1Ptr = n1->getNodeStatementsIterator();
 	  for (; stmtIt1Ptr->isValid(); ++(*stmtIt1Ptr)) {
 	    OA::StmtHandle st = stmtIt1Ptr->current();
 	    WN* wn = (WN*)st.hval();
@@ -605,41 +575,31 @@ CreateOAAnalInfo(PU_Info* pu,
 	}
       }
     }
-
-    // Remove empty basic blocks
+    // Remove basic blocks 
     for (CFGNodeList::iterator it = toRemove.begin(); 
 	 it != toRemove.end(); ++it) {
       OA::OA_ptr<OA::CFG::NodeInterface> n = *it;
-    
-      // Find predecessor node.  If more than one, we cannot continue
+      // Find predecessor node.  If more than one, we cannot do it 
       if (n->num_incoming() > 1) {
 	continue;
       } 
-      OA::OA_ptr<OA::DGraph::NodesIteratorInterface> sourceItPtr
-	= n->getSourceNodesIterator();
-      OA::OA_ptr<OA::DGraph::NodeInterface> dpred = sourceItPtr->current();
-      OA::OA_ptr<OA::CFG::Node> pred = dpred.convert<OA::CFG::Node>();
-    
+      OA::OA_ptr<OA::DGraph::NodeInterface> predI = n->getSourceNodesIterator()->current();
+      OA::OA_ptr<OA::CFG::Node> pred = predI.convert<OA::CFG::Node>();
       // All outgoing edges of 'n' become outgoing edges of 'pred'
-      OA::OA_ptr<OA::DGraph::EdgesIteratorInterface> outEdgeItPtr
-	= n->getOutgoingEdgesIterator();
+      OA::OA_ptr<OA::DGraph::EdgesIteratorInterface> outEdgeItPtr = n->getOutgoingEdgesIterator();
       for ( ; outEdgeItPtr->isValid(); ++(*outEdgeItPtr)) {
 	OA::OA_ptr<OA::DGraph::EdgeInterface> de = outEdgeItPtr->current();
-    OA::OA_ptr<OA::CFG::Edge> e = de.convert<OA::CFG::Edge>();
+	OA::OA_ptr<OA::CFG::Edge> e = de.convert<OA::CFG::Edge>();
 	OA::OA_ptr<OA::DGraph::NodeInterface> dsnk = e->getSink();
-    OA::OA_ptr<OA::CFG::Node> snk = dsnk.convert<OA::CFG::Node>();
+	OA::OA_ptr<OA::CFG::Node> snk = dsnk.convert<OA::CFG::Node>();
 	cfg->connect(pred, snk, e->getType());
       }
-   
       cfg->removeNode(n); // removes all outgoing and incoming edges
     }
     toRemove.clear();
-  
-  
     // -------------------------------------------------------
     // 3. Split basic blocks with EndLoop and EndBranch tags
     // -------------------------------------------------------
-  
     // Notes:
     //  - EndBranch statments will be the first or second statment
     //   (switches) of a basic block; EndLoop at the end.
@@ -648,11 +608,9 @@ CreateOAAnalInfo(PU_Info* pu,
     //      EndBr
     //      Assignment
     //      EndLoop
-  
     // uses 'workList'
     // uses 'toSplit'
     std::list<CFGNodeList::iterator> toRem;
-  
     // a. Collect all BBs with more that one stmt into 'workList'
     nodeItTmp = cfg->getNodesIterator();
     for ( ; nodeItTmp->isValid(); ++(*nodeItTmp)) {
@@ -662,29 +620,22 @@ CreateOAAnalInfo(PU_Info* pu,
 	workList.push_back(n);
       }
     }
-  
     // b. Iterate until 'workList' is empty (fixed-point is reached).  
     // Each node in the worklist is guaranteed to have more than one stmt.
     while (!workList.empty()) {
-    
       for (CFGNodeList::iterator wnodeIt = workList.begin(); 
 	   wnodeIt != workList.end(); ++wnodeIt) {
 	OA::OA_ptr<OA::CFG::NodeInterface> ntmp = *wnodeIt;
-	OA::OA_ptr<OA::CFG::Node> n 
-	  = ntmp.convert<OA::CFG::Node>();
-      
+	OA::OA_ptr<OA::CFG::Node> n = ntmp.convert<OA::CFG::Node>();
 	// 1. Find split-point for this node.  If there is none, remove it
 	// from 'workList'
       restart_loop:
-      
 	WN* bbSplitPointWN = NULL; // start of new basic block
 	unsigned int stmtcount = 1;
-	OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtIt
-	  = n->getNodeStatementsIterator();
+	OA::OA_ptr<OA::CFG::NodeStatementsIteratorInterface> stmtIt = n->getNodeStatementsIterator();
 	for (; stmtIt->isValid(); ++(*stmtIt), ++stmtcount) {
 	  OA::StmtHandle st = stmtIt->current();
 	  WN* wn = (WN*)st.hval();
-	
 	  const char* vty = GetCFGControlFlowVertexType(wn);
 	  if (vty == XAIFStrings.elem_BBEndBranch()) {
 	    // If EndBranch is not the first stmt, move it to the
@@ -704,14 +655,12 @@ CreateOAAnalInfo(PU_Info* pu,
 	    break;
 	  }
 	}
-      
 	if (bbSplitPointWN) {
 	  toSplit.push_back(make_pair(wnodeIt, bbSplitPointWN));
 	} else {
 	  toRem.push_back(wnodeIt);
 	}
       }
-        
       // 2. Split basic blocks
       for (MySplitList::iterator it = toSplit.begin(); 
 	   it != toSplit.end(); ++it) {
@@ -720,13 +669,9 @@ CreateOAAnalInfo(PU_Info* pu,
 	OA::OA_ptr<OA::CFG::Node> n = 
 	  ntmp.convert<OA::CFG::Node>();
 	WN* startWN = (*it).second;
-      
 	OA::StmtHandle stmt((OA::irhandle_t)startWN);
 	OA::OA_ptr<OA::CFG::Node> newblock = cfg->splitBlock(n, stmt);
 	cfg->connect(n, newblock, OA::CFG::FALLTHROUGH_EDGE);
-	//n->longdump(cfg);
-	//newblock->longdump(cfg);
-
 	// Remove BBs with less than 1 stmt; add others
 	if (newblock->size() > 1) {
 	  workList.push_back(newblock);
@@ -736,7 +681,6 @@ CreateOAAnalInfo(PU_Info* pu,
 	}
       }
       toSplit.clear();
-
       // 3. Remove nodes from 'workList'
       for (std::list<CFGNodeList::iterator>::iterator it = toRem.begin(); 
 	   it != toRem.end(); ++it) {
@@ -744,7 +688,6 @@ CreateOAAnalInfo(PU_Info* pu,
       }
       toRem.clear();
     }
-  
   }
 
   // ***************************************************************************
