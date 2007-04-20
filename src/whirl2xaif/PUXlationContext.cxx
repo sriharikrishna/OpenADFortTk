@@ -203,17 +203,26 @@ namespace whirl2xaif {
       // for character arrays there is some confusion if we should refer to the 
       // ARRAY node or the child LDA node. In OA the information may be 
       // associated with the parent ARRAY node
-      std::ostringstream ostr;
-      ostr << "JU: PUXlationContext::findUDDUChainId: 0 du_ud key for ref_wn: " << (long)wnexpr << ": "; 
-      // Open64IRInterface::DumpWN(wnexpr, ostr);
-      ostr << " trying parent WN "; 
-      FORTTK_MSG(1,ostr.str().c_str()); 
       WN* parentWN_p=findParentWN(wnexpr);
       OA::MemRefHandle parenth((OA::irhandle_t)parentWN_p);
       duudKey=myUdduchains->getUDDUChainId(parenth);
+      std::ostringstream ostr;
+      ostr << "JU: PUXlationContext::findUDDUChainId: no key for: "; 
+      Open64IRInterface::DumpWN(wnexpr, ostr);
+      ostr << " trying "; 
+      Open64IRInterface::DumpWN(parentWN_p, ostr);
+      ostr << " found " << duudKey; 
+      FORTTK_MSG(1,ostr.str().c_str()); 
       if (duudKey==0) { 
 	FORTTK_MSG(1,"JU: PUXlationContext::findUDDUChainId: 0 du_ud key for parent ref_wn: " << (long)wnexpr); 
       } 
+    }
+    else { 
+      std::ostringstream ostr;
+      ostr << "JU: PUXlationContext::findUDDUChainId: for: "; 
+      Open64IRInterface::DumpWN(wnexpr, ostr);
+      ostr << " found " << duudKey; 
+      FORTTK_MSG(2,ostr.str().c_str()); 
     }
     return duudKey;
   }

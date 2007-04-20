@@ -304,16 +304,6 @@ CreateOAAnalInfo(PU_Info* pu,
     // Compute intraprocedural analysis info
     // -------------------------------------------------------
   
-    // Intra Alias
-   
-
-/*! commented out by PLM 09/13/06 
-    FORTTK_MSG(1, "progress: intra alias: performAnalysis");
-    OA::OA_ptr<OA::Alias::ManagerAliasMapBasic> aliasman;
-    aliasman = new OA::Alias::ManagerAliasMapBasic(irIF);
-    OA::OA_ptr<OA::Alias::AliasMap> alias = aliasman->performAnalysis(proc);
-    if (0) { alias->dump(std::cout, irIF); }
-    */
     FORTTK_MSG(1, "progress: inter alias: performAnalysis");
     OA::OA_ptr<OA::Alias::ManagerFIAliasAliasMap> interaliasmapman;
     interaliasmapman = new OA::Alias::ManagerFIAliasAliasMap(irIF);
@@ -323,7 +313,6 @@ CreateOAAnalInfo(PU_Info* pu,
     alias = interAlias->getAliasResults(proc);
     x->SetAlias(interaliasmapman, alias);
 
-  
     // ReachDefs
     FORTTK_MSG(1, "progress: reach defs: performAnalysis");
     OA::OA_ptr<OA::ReachDefs::ManagerReachDefsStandard> rdman;
@@ -339,7 +328,6 @@ CreateOAAnalInfo(PU_Info* pu,
     OA::OA_ptr<OA::UDDUChains::UDDUChainsStandard> udduchains 
       = udman->performAnalysis(proc, alias, rds, interSideEffect);
     if (0) { udduchains->dump(std::cout, irIF); }
-  
     x->SetUDDUChains(udman, udduchains);
 
     // -------------------------------------------------------
@@ -359,7 +347,6 @@ CreateOAAnalInfo(PU_Info* pu,
     OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchainsXAIF 
     = udmanXAIF->performAnalysis(proc, cfg, udduchains,OAAnalInfo::getDoNotFilterFlag());
     if (0) { udduchainsXAIF->dump(std::cout, irIF); }
-  
     x->SetUDDUChainsXAIF(udmanXAIF, udduchainsXAIF);
   }
 
