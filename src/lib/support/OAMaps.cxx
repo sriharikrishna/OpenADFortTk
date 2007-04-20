@@ -167,45 +167,49 @@ namespace fortTkSupport {
 #ifdef DEBUG_DUAA_LAST
     dug->dumpdot(cout, this->GetIRInterface());
 #endif
-  // Def-Use Activity Analysis
-  FORTTK_MSG(1, "progress: Def-Use activity: performAnalysis");
-  OA::OA_ptr<OA::Activity::ManagerDUActive> duactiveman;
-  duactiveman = new OA::Activity::ManagerDUActive(this->GetIRInterface(), dug);
-  OA::OA_ptr<OA::Activity::InterActiveFortran> duactive;
-  duactive = duactiveman->performAnalysis(parambind, interAlias);
+    // Def-Use Activity Analysis
+    FORTTK_MSG(1, "progress: Def-Use activity: performAnalysis");
+    OA::OA_ptr<OA::Activity::ManagerDUActive> duactiveman;
+    duactiveman = new OA::Activity::ManagerDUActive(this->GetIRInterface(), dug);
+    OA::OA_ptr<OA::Activity::InterActiveFortran> duactive;
+    duactive = duactiveman->performAnalysis(parambind, interAlias);
 #ifdef DEBUG_DUAA
-  duactive->dump(cout, this->GetIRInterface());
+    duactive->dump(cout, this->GetIRInterface());
 #endif
-  this->SetInterActiveFortran(duactiveman, duactive);
-    
-//   // this is only for context sensitive analysis
-//     OAAnalInfo::collectGlobalSymbolActivityInfo(active,
-// 						interAlias,
-// 						this->GetIRInterface(),
-// 						pu_forest);
-
-  
-  // -------------------------------------------------------
-  // For each PU, compute intraprocedural analysis info
-  // -------------------------------------------------------
-  FORTTK_MSG(1, "progress: intraprocedural analysis");
-  procIt->reset();
-  for ( ; procIt->isValid(); ++(*procIt)) { 
-    PU_Info* pu = (PU_Info*)procIt->current().hval();
-    ST* st = ST_ptr(PU_Info_proc_sym(pu));
-    const char* nm = ST_name(st);
-    FORTTK_MSG(1, "progress: analysing SUBROUTINE " << nm );
-    OAAnalInfo* info = new OAAnalInfo(pu, this);
-    this->Insert(pu, info);
-  }
-  
-  // -------------------------------------------------------
-  // Post-analysis
-  // -------------------------------------------------------
-  
-  // Now massage the Call Graph into something that XAIF can use
-  FORTTK_MSG(1, "progress: call graph: massage for XAIF");
-  MassageOACallGraphIntoXAIFCallGraph(cgraph);
+    this->SetInterActiveFortran(duactiveman, duactive);
+    //   // this is only for context sensitive analysis
+    //     OAAnalInfo::collectGlobalSymbolActivityInfo(active,
+    // 						interAlias,
+    // 						this->GetIRInterface(),
+    // 						pu_forest);
+    // -------------------------------------------------------
+    // For each PU, compute intraprocedural analysis info
+    // -------------------------------------------------------
+    FORTTK_MSG(1, "progress: intraprocedural analysis");
+    procIt->reset();
+    for ( ; procIt->isValid(); ++(*procIt)) { 
+      PU_Info* pu = (PU_Info*)procIt->current().hval();
+      ST* st = ST_ptr(PU_Info_proc_sym(pu));
+      const char* nm = ST_name(st);
+      FORTTK_MSG(1, "progress: analysing SUBROUTINE " << nm );
+      OAAnalInfo* info = new OAAnalInfo(pu, this);
+      this->Insert(pu, info);
+    }
+    // -------------------------------------------------------
+    // Post-analysis
+    // -------------------------------------------------------
+    // massage the Call Graph into something that XAIF can use
+    FORTTK_MSG(1, "progress: call graph: massage for XAIF");
+    MassageOACallGraphIntoXAIFCallGraph(cgraph);
+    // fix up the CFGs
+    procIt->reset();
+    for ( ; procIt->isValid(); ++(*procIt)) { 
+      PU_Info* pu = (PU_Info*)procIt->current().hval();
+      OA::ProcHandle proc((OA::irhandle_t)pu);
+      OA::OA_ptr<OA::CFG::CFGInterface> cfgIF = cfgeach->getCFGResults(proc);
+      OA::OA_ptr<OA::CFG::CFG> cfg = cfgIF.convert<OA::CFG::CFG>();
+      MassageOACFGIntoXAIFCFG(cfg,this->GetIRInterface());
+    }
   }
 
 
@@ -231,7 +235,7 @@ namespace fortTkSupport {
     if (0) { cfg->dump(std::cout, irIF); }
   
     // Massage CFG
-    MassageOACFGIntoXAIFCFG(cfg, irIF);
+    //MassageOACFGIntoXAIFCFG(cfg, irIF);
     if (0) { cfg->dump(std::cout, irIF); }
 
     return cfg;
