@@ -59,19 +59,18 @@ GetCFGControlFlowVertexType(WN* wstmt);
 
 class OAAnalInfo;
 
-class PUToOAAnalInfoMap 
-  : public fortTkSupport::BaseMap<PU_Info*, OAAnalInfo*>
-{
+class PUToOAAnalInfoMap : public fortTkSupport::BaseMap<PU_Info*, OAAnalInfo*> {
 public:  
   PUToOAAnalInfoMap() { }
-  PUToOAAnalInfoMap(PU_Info* pu_forest) { Create(pu_forest); }
+  //  PUToOAAnalInfoMap(PU_Info* pu_forest) { Create(pu_forest); }
   virtual ~PUToOAAnalInfoMap() { }
 
-  void Create(PU_Info* pu_forest);
+  void Create(PU_Info* pu_forest,
+	      OA::OA_ptr<Open64IRInterface> x);
 
   // IRInterface
-  OA::OA_ptr<Open64IRInterface> GetIRInterface() { return irIF; }
-  void SetIRInterface(OA::OA_ptr<Open64IRInterface> x) { irIF = x; }
+  OA::OA_ptr<Open64IRInterface> GetIRInterface() { return myIRIF; }
+  void SetIRInterface(OA::OA_ptr<Open64IRInterface> x) { myIRIF = x; }
 
   // CallGraph  
   OA::OA_ptr<OA::CallGraph::CallGraph> GetCallGraph() 
@@ -119,7 +118,7 @@ public:
     { activeman = m; active = x; }
 
 private:
-  OA::OA_ptr<Open64IRInterface> irIF;
+  OA::OA_ptr<Open64IRInterface> myIRIF;
   
   OA::OA_ptr<OA::CallGraph::ManagerCallGraphStandard> cgraphman;
   OA::OA_ptr<OA::CallGraph::CallGraph> cgraph;

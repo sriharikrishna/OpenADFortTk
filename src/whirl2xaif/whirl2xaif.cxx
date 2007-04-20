@@ -52,21 +52,20 @@ namespace whirl2xaif {
     // here because it is part of the CallGraph instead of a
     // ControlFlowGraph)
     // -------------------------------------------------------
-    Open64IRInterface irInterface;
+    OA::OA_ptr<Open64IRInterface> irInterface; irInterface=new Open64IRInterface; 
     Open64IRInterface::initContextState(pu_forest);
     xml::ostream xos(os.rdbuf());
-    PUXlationContext ctxt("whirl2xaif::translateIR",irInterface);
+    PUXlationContext ctxt("whirl2xaif::translateIR",*irInterface);
     dumpTranslationHeaderComment(xos); // FIXME (optional)
     // Initialize global id maps
     // NOTE: Do this first so that ids will match in back-translation
-    fortTkSupport::SymTabToSymTabIdMap* stabmap = 
-        new fortTkSupport::SymTabToSymTabIdMap(pu_forest);
-    ctxt.setSymTabToIdMap(stabmap);
-    fortTkSupport::PUToPUIdMap* pumap = new fortTkSupport::PUToPUIdMap(pu_forest);
-    ctxt.setPUToIdMap(pumap);
+    fortTkSupport::SymTabToSymTabIdMap stabmap(pu_forest);
+    ctxt.setSymTabToIdMap(&stabmap);
+    fortTkSupport::PUToPUIdMap pumap(pu_forest);
+    ctxt.setPUToIdMap(&pumap);
     ourWNToWNIdTableMap.Create(pu_forest); // Note: could make this local
     // Initialize and create inter/intra analysis information
-    ourOAAnalMap.Create(pu_forest);
+    ourOAAnalMap.Create(pu_forest,irInterface);
     ctxt.setActivity(ourOAAnalMap.GetInterActiveFortran());
     ctxt.setAlias(ourOAAnalMap.GetInterAlias());
     // Create scalarized var reference table
@@ -113,11 +112,6 @@ namespace whirl2xaif {
     delete edges;
     // Done!
     xos << xml::EndElem; /* xaif:CallGraph */
-    // -------------------------------------------------------
-    // 3. Cleanup
-    // -------------------------------------------------------
-    delete stabmap;
-    delete pumap;
   }
 
   void Whirl2Xaif::translateScopeHierarchy(xml::ostream& xos, 

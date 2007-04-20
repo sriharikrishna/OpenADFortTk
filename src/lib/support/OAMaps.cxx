@@ -27,7 +27,6 @@ namespace fortTkSupport {
 	    OA::OA_ptr<OA::CFG::EachCFGInterface> cfgeach,
 	    OA::OA_ptr<Open64IRInterface> irIF);
 
-
   static void
   MassageOACallGraphIntoXAIFCallGraph(OA::OA_ptr<OA::CallGraph::CallGraph> cg);
 
@@ -72,60 +71,50 @@ namespace fortTkSupport {
   // ***************************************************************************
 
   void
-  PUToOAAnalInfoMap::Create(PU_Info* pu_forest) {
-    if (!pu_forest) { return; }
-  
-    OA::OA_ptr<Open64IRInterface> irIF; irIF = new Open64IRInterface;
-    Open64IRInterface::initContextState(pu_forest);
+  PUToOAAnalInfoMap::Create(PU_Info* pu_forest, OA::OA_ptr<Open64IRInterface> irIF) {
+    assert(pu_forest);
     this->SetIRInterface(irIF);
-
     OA::OA_ptr<Open64IRProcIterator> procIt;
     procIt = new Open64IRProcIterator(pu_forest);
-  
     // Create CFGs [FIXME: and perform MemRefExprKludge]
     // first Create CFG 'manager' (compute CFG on demand)
     OA::OA_ptr<OA::CFG::ManagerCFGStandard> cfgman;
-    cfgman = new OA::CFG::ManagerCFGStandard(irIF);
+    cfgman = new OA::CFG::ManagerCFGStandard(this->GetIRInterface());
     OA::OA_ptr<OA::CFG::EachCFGInterface> cfgeach;
     cfgeach = new OA::CFG::EachCFGStandard(cfgman);
     FORTTK_MSG(1, "progress: CreateCFG");
     for ( ; procIt->isValid(); ++(*procIt)) { 
       PU_Info* pu = (PU_Info*)procIt->current().hval();
-      OA::OA_ptr<OA::CFG::CFGInterface> cfg = CreateCFG(pu, cfgeach, irIF);
+      OA::OA_ptr<OA::CFG::CFGInterface> cfg = CreateCFG(pu, cfgeach, this->GetIRInterface());
     }
-    // For each proc 
     this->SetCFGEach(cfgman, cfgeach);
-  
     // Inter Alias 
     FORTTK_MSG(1, "progress: inter alias: performAnalysis");
     OA::OA_ptr<OA::Alias::ManagerFIAliasAliasMap> interaliasmapman;
-    interaliasmapman = new OA::Alias::ManagerFIAliasAliasMap(irIF);
+    interaliasmapman = new OA::Alias::ManagerFIAliasAliasMap(this->GetIRInterface());
     OA::OA_ptr<OA::Alias::InterAliasMap> interAlias;
     interAlias = interaliasmapman->performAnalysis(procIt);
     this->SetInterAlias(interaliasmapman, interAlias);
-  
     // Create call graph
     FORTTK_MSG(1, "progress: call graph: performAnalysis");
     // Create call graph (massage OA version into XAIF version below)
     procIt->reset();
     OA::OA_ptr<OA::CallGraph::ManagerCallGraphStandard> cgraphman;
-    cgraphman = new OA::CallGraph::ManagerCallGraphStandard(irIF);
+    cgraphman = new OA::CallGraph::ManagerCallGraphStandard(this->GetIRInterface());
     OA::OA_ptr<OA::CallGraph::CallGraph> cgraph = 
       cgraphman->performAnalysis(procIt,interAlias);
-    if (0) { cgraph->dump(std::cout, irIF); }
+    if (0) { cgraph->dump(std::cout, this->GetIRInterface()); }
     this->SetCallGraph(cgraphman, cgraph);
-  
-  
     // -------------------------------------------------------
     // Compute interprocedural analysis info
     // -------------------------------------------------------
     FORTTK_MSG(1, "progress: parameter bindings: performAnalysis");
     // ParamBindings
     OA::OA_ptr<OA::DataFlow::ManagerParamBindings> parambindman;
-    parambindman = new OA::DataFlow::ManagerParamBindings(irIF);
+    parambindman = new OA::DataFlow::ManagerParamBindings(this->GetIRInterface());
     OA::OA_ptr<OA::DataFlow::ParamBindings> parambind
       = parambindman->performAnalysis(cgraph);
-
+    this->SetParamBind(parambindman, parambind);
     //   // JU: begin debugging stuff
     //   procIt->reset();
     //   for ( ; procIt->isValid(); ++(*procIt)) { 
@@ -148,98 +137,75 @@ namespace fortTkSupport {
     //     }
     //   }
     //   // JU: end debugging stuff
-
-    this->SetParamBind(parambindman, parambind);
-
     // Side Effect
     FORTTK_MSG(1, "progress: side effect: performAnalysis");
     OA::OA_ptr<OA::SideEffect::ManagerSideEffectStandard> sideeffectman;
-    sideeffectman = new OA::SideEffect::ManagerSideEffectStandard(irIF);
-
+    sideeffectman = new OA::SideEffect::ManagerSideEffectStandard(this->GetIRInterface());
     this->SetSideEffect(sideeffectman);
-
     // Inter Side Effect
     FORTTK_MSG(1, "progress: inter side effect: performAnalysis");
     OA::OA_ptr<OA::SideEffect::ManagerInterSideEffectStandard> interSEman;
-    interSEman = new OA::SideEffect::ManagerInterSideEffectStandard(irIF);
+    interSEman = new OA::SideEffect::ManagerInterSideEffectStandard(this->GetIRInterface());
     OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> interSE;
     interSE = interSEman->performAnalysis(cgraph, parambind,
 					  interAlias, sideeffectman);
-
     this->SetInterSideEffect(interSEman, interSE);
-  
     // ICFG
     FORTTK_MSG(1, "progress: icfg standard: performAnalysis");
     OA::OA_ptr<OA::ICFG::ManagerICFGStandard> icfgman;
-    icfgman = new OA::ICFG::ManagerICFGStandard(irIF);
+    icfgman = new OA::ICFG::ManagerICFGStandard(this->GetIRInterface());
     OA::OA_ptr<OA::ICFG::ICFG> icfg 
       = icfgman->performAnalysis(procIt,cfgeach,cgraph);
-
-  // Def-Use Graph
-  FORTTK_MSG(1, "progress: DUG standard: building Def-Use graph");
-  OA::OA_ptr<OA::DUG::ManagerDUGStandard> dugman;
-  dugman = new OA::DUG::ManagerDUGStandard(irIF, irIF);
-  OA::OA_ptr<OA::DUG::DUGStandard> dug
+    // Def-Use Graph
+    FORTTK_MSG(1, "progress: DUG standard: building Def-Use graph");
+    OA::OA_ptr<OA::DUG::ManagerDUGStandard> dugman;
+    dugman = new OA::DUG::ManagerDUGStandard(this->GetIRInterface(), this->GetIRInterface());
+    OA::OA_ptr<OA::DUG::DUGStandard> dug
       = dugman->performAnalysis(procIt, parambind, interAlias, cgraph);
-  dugman->transitiveClosureDepMatrix(cgraph);
-  // #define DEBUG_DUAA_LAST 1
+    dugman->transitiveClosureDepMatrix(cgraph);
+    // #define DEBUG_DUAA_LAST 1
 #ifdef DEBUG_DUAA_LAST
-  dug->dumpdot(cout, irIF);
+    dug->dumpdot(cout, this->GetIRInterface());
 #endif
-
   // Def-Use Activity Analysis
   FORTTK_MSG(1, "progress: Def-Use activity: performAnalysis");
   OA::OA_ptr<OA::Activity::ManagerDUActive> duactiveman;
-  duactiveman = new OA::Activity::ManagerDUActive(irIF, dug);
+  duactiveman = new OA::Activity::ManagerDUActive(this->GetIRInterface(), dug);
   OA::OA_ptr<OA::Activity::InterActiveFortran> duactive;
   duactive = duactiveman->performAnalysis(parambind, interAlias);
-
 #ifdef DEBUG_DUAA
-  duactive->dump(cout, irIF);
+  duactive->dump(cout, this->GetIRInterface());
 #endif
-
-
-//     // Activity Analysis
-//     FORTTK_MSG(1, "progress: icfg activity: performAnalysis");
-//     OA::OA_ptr<OA::Activity::ManagerICFGActive> activeman;
-//     activeman = new OA::Activity::ManagerICFGActive(irIF);
-//     OA::OA_ptr<OA::Activity::InterActive> active;
-//     active = activeman->performAnalysis(icfg, 
-// 					parambind,
-// 					interAlias, 
-// 					interSE);
-
-    this->SetInterActiveFortran(duactiveman, duactive);
+  this->SetInterActiveFortran(duactiveman, duactive);
     
-
 //   // this is only for context sensitive analysis
 //     OAAnalInfo::collectGlobalSymbolActivityInfo(active,
 // 						interAlias,
-// 						irIF,
+// 						this->GetIRInterface(),
 // 						pu_forest);
 
-
-    // -------------------------------------------------------
-    // For each PU, compute intraprocedural analysis info
-    // -------------------------------------------------------
-    FORTTK_MSG(1, "progress: intraprocedural analysis");
-    procIt->reset();
-    for ( ; procIt->isValid(); ++(*procIt)) { 
-      PU_Info* pu = (PU_Info*)procIt->current().hval();
-      ST* st = ST_ptr(PU_Info_proc_sym(pu));
-      const char* nm = ST_name(st);
-      FORTTK_MSG(1, "progress: analysing SUBROUTINE " << nm );
-      OAAnalInfo* info = new OAAnalInfo(pu, this);
-      this->Insert(pu, info);
-    }
   
-    // -------------------------------------------------------
-    // Post-analysis
-    // -------------------------------------------------------
+  // -------------------------------------------------------
+  // For each PU, compute intraprocedural analysis info
+  // -------------------------------------------------------
+  FORTTK_MSG(1, "progress: intraprocedural analysis");
+  procIt->reset();
+  for ( ; procIt->isValid(); ++(*procIt)) { 
+    PU_Info* pu = (PU_Info*)procIt->current().hval();
+    ST* st = ST_ptr(PU_Info_proc_sym(pu));
+    const char* nm = ST_name(st);
+    FORTTK_MSG(1, "progress: analysing SUBROUTINE " << nm );
+    OAAnalInfo* info = new OAAnalInfo(pu, this);
+    this->Insert(pu, info);
+  }
   
-    // Now massage the Call Graph into something that XAIF can use
-    FORTTK_MSG(1, "progress: call graph: massage for XAIF");
-    MassageOACallGraphIntoXAIFCallGraph(cgraph);
+  // -------------------------------------------------------
+  // Post-analysis
+  // -------------------------------------------------------
+  
+  // Now massage the Call Graph into something that XAIF can use
+  FORTTK_MSG(1, "progress: call graph: massage for XAIF");
+  MassageOACallGraphIntoXAIFCallGraph(cgraph);
   }
 
 
@@ -292,7 +258,7 @@ CreateOAAnalInfo(PU_Info* pu,
     // Compute intraprocedural analysis info
     // -------------------------------------------------------
   
-    FORTTK_MSG(1, "progress: inter alias: performAnalysis");
+    FORTTK_MSG(2, "progress: inter alias: performAnalysis");
     OA::OA_ptr<OA::Alias::ManagerFIAliasAliasMap> interaliasmapman;
     interaliasmapman = new OA::Alias::ManagerFIAliasAliasMap(irIF);
     OA::OA_ptr<OA::Alias::InterAliasMap> interAlias;
@@ -302,7 +268,7 @@ CreateOAAnalInfo(PU_Info* pu,
     x->SetAlias(interaliasmapman, alias);
 
     // ReachDefs
-    FORTTK_MSG(1, "progress: reach defs: performAnalysis");
+    FORTTK_MSG(2, "progress: reach defs: performAnalysis");
     OA::OA_ptr<OA::ReachDefs::ManagerReachDefsStandard> rdman;
     rdman = new OA::ReachDefs::ManagerReachDefsStandard(irIF);
     OA::OA_ptr<OA::ReachDefs::ReachDefsStandard> rds 
@@ -310,7 +276,7 @@ CreateOAAnalInfo(PU_Info* pu,
     x->SetReachDefs(rdman, rds);
 
     // UDDU chains
-    FORTTK_MSG(1, "progress: uddu: performAnalysis");
+    FORTTK_MSG(2, "progress: uddu: performAnalysis");
     OA::OA_ptr<OA::UDDUChains::ManagerUDDUChainsStandard> udman;
     udman = new OA::UDDUChains::ManagerUDDUChainsStandard(irIF);
     OA::OA_ptr<OA::UDDUChains::UDDUChainsStandard> udduchains 
@@ -321,7 +287,7 @@ CreateOAAnalInfo(PU_Info* pu,
     // -------------------------------------------------------
     // XAIF
     // -------------------------------------------------------
-    FORTTK_MSG(1, "progress: alias to xaif: performAnalysis");
+    FORTTK_MSG(2, "progress: alias to xaif: performAnalysis");
     OA::OA_ptr<OA::XAIF::ManagerAliasMapXAIF> aliasmanXAIF;
     aliasmanXAIF = new OA::XAIF::ManagerAliasMapXAIF(irIF);
     OA::OA_ptr<OA::XAIF::AliasMapXAIF> aliasXAIF = 
@@ -329,7 +295,7 @@ CreateOAAnalInfo(PU_Info* pu,
   
     x->SetAliasXAIF(aliasmanXAIF, aliasXAIF);
 
-    FORTTK_MSG(1, "progress: ud to xaif : performAnalysis");
+    FORTTK_MSG(2, "progress: ud to xaif : performAnalysis");
     OA::OA_ptr<OA::XAIF::ManagerStandard> udmanXAIF;
     udmanXAIF = new OA::XAIF::ManagerStandard(irIF);
     OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchainsXAIF 
@@ -338,39 +304,18 @@ CreateOAAnalInfo(PU_Info* pu,
     x->SetUDDUChainsXAIF(udmanXAIF, udduchainsXAIF);
   }
 
-
-  // ***************************************************************************
-  //
-  // ***************************************************************************
-
   // MassageOACallGraphIntoXAIFCallGraph: Process CallGraph to eliminate
   // synthetic edges.
   //   - eliminate special Open64 functions and inlinable intrinsics
   //   - need to figure out what to do with non-inlinable intrinsics
   //  
   static void
-  MassageOACallGraphIntoXAIFCallGraph(OA::OA_ptr<OA::CallGraph::CallGraph> cg)
-  {
+  MassageOACallGraphIntoXAIFCallGraph(OA::OA_ptr<OA::CallGraph::CallGraph> cg) {
     using namespace OA::CallGraph;
-  
-    // -------------------------------------------------------
-    // 1. For now we eliminate nodes without a definition.  
-    // -------------------------------------------------------
-  
-    DGraphNodeList toRemove; // holds basic blocks made empty
-
-    
-    
+    DGraphNodeList toRemove; 
     OA::OA_ptr<OA::DGraph::NodesIteratorInterface> it = cg->getNodesIterator();
-
-    /*! commented out by PLM 08/26/06
-    for (NodesIterator it(*cg); it.isValid(); ++it) {
-    */
-
-    for( ; it->isValid(); ++(*it))
-    {
+    for( ; it->isValid(); ++(*it)) {
       OA::OA_ptr<OA::DGraph::NodeInterface> dn = it->current();
-
       OA::OA_ptr<Node> n = dn.convert<Node>();
       if (n->getProc().hval() == 0) {
 	FORTTK_DIAGIF_DEV(2) {
@@ -380,14 +325,10 @@ CreateOAAnalInfo(PU_Info* pu,
 	toRemove.push_back(n);
       }
     }
-  
-    // Remove empty basic blocks
-    for (DGraphNodeList::iterator it = toRemove.begin(); 
-	 it != toRemove.end(); ++it) 
-      {
-	OA::OA_ptr<OA::DGraph::NodeInterface> n = (*it);
-	cg->removeNode(n);
-      }
+    for (DGraphNodeList::iterator it = toRemove.begin(); it != toRemove.end(); ++it) {
+      OA::OA_ptr<OA::DGraph::NodeInterface> n = (*it);
+      cg->removeNode(n);
+    }
     toRemove.clear();
   }
 
