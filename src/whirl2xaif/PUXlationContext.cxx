@@ -206,15 +206,14 @@ namespace whirl2xaif {
       WN* parentWN_p=findParentWN(wnexpr);
       OA::MemRefHandle parenth((OA::irhandle_t)parentWN_p);
       duudKey=myUdduchains->getUDDUChainId(parenth);
-      std::ostringstream ostr;
-      ostr << "JU: PUXlationContext::findUDDUChainId: no key for: "; 
-      Open64IRInterface::DumpWN(wnexpr, ostr);
-      ostr << " trying "; 
-      Open64IRInterface::DumpWN(parentWN_p, ostr);
-      ostr << " found " << duudKey; 
-      FORTTK_MSG(1,ostr.str().c_str()); 
       if (duudKey==0) { 
-	FORTTK_MSG(1,"JU: PUXlationContext::findUDDUChainId: 0 du_ud key for parent ref_wn: " << (long)wnexpr); 
+        std::ostringstream ostr;
+        ostr << "JU: PUXlationContext::findUDDUChainId: no key for >"; 
+        Open64IRInterface::DumpWN(wnexpr, ostr);
+        ostr << "< and no key for parent >"; 
+        Open64IRInterface::DumpWN(parentWN_p, ostr);
+        ostr << "< either!"; 
+        FORTTK_MSG(1,ostr.str().c_str()); 
       } 
     }
     else { 
