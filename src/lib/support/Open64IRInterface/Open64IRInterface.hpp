@@ -934,22 +934,20 @@ private:
 
 private:
 
+
+ 
+public:
+
   //! return the formal parameter that an actual parameter is associated with.
   //! 'call' is a handle to the call node; 'param' is the actual
   //! parameter within the call node that we want info about.
+  // BK: I need this to stay public for use in ManagerMPI_ICFG
   OA::SymHandle getFormalForActual(OA::ProcHandle caller, OA::CallHandle call, 
                                    OA::ProcHandle callee, OA::ExprHandle param);
-
-  OA::SymHandle getSymHandle(OA::CallHandle h) {
-    WN* wn = (WN*)h.hval(); 
-    ST* st = NULL;
-    if (wn) {
-      st = ((OPERATOR_has_sym(WN_operator(wn))) ? WN_st(wn) : NULL);
-    }
-    return (OA::irhandle_t)st;
-  }
- 
-public:
+  //! get callee SymHandle from CallHandle 
+  //! (outermost or first, if multiple calls)
+  // BK: I need this to stay public for use in ManagerMPI_ICFG
+  OA::SymHandle getSymHandle(OA::CallHandle h);
 
   //! returns true if given symbol is a pass by reference parameter 
   // JU: I need this to stay public because I use it in FortTk

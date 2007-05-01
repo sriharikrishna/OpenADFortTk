@@ -1082,6 +1082,17 @@ Open64IRInterface::getFormalForActual(OA::ProcHandle caller,
   return (OA::irhandle_t)formalST;
 }
 
+OA::SymHandle Open64IRInterface::getSymHandle(OA::CallHandle h) {
+  assert( h != OA::CallHandle(0));  
+  WN* wn = (WN*)h.hval(); 
+  ST* st = NULL;
+  if (wn) {
+    st = ((OPERATOR_has_sym(WN_operator(wn))) ? WN_st(wn) : NULL);
+  }
+  assert(st != NULL);
+  return (OA::irhandle_t)st;
+}
+
 //---------------------------------------------------------------------------
 // CFGIRInterfaceDefault
 //---------------------------------------------------------------------------
@@ -2292,7 +2303,8 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
                   OA::MemRefExpr::MemRefType mrType = OA::MemRefExpr::DEF;
                   OA::OA_ptr<OA::MemRefExpr> lhs_tmp_mre;
 
-                  OA::ExprHandle hm((OA::irhandle_t)wn);
+
+                  OA::ExprHandle hm((OA::irhandle_t)WN_kid0(wn));
                   lhs_tmp_mre = new OA::UnnamedRef(mrType,hm);
 
                   sMemref2mreSetMap[MemRefHandle((irhandle_t)WN_kid0(wn))].insert(lhs_tmp_mre);
