@@ -57,8 +57,9 @@ public:
    * additional information
    */
   struct Info {
-    Info(): myNumOp(0), myType(UNDEFINED_INTR_TYPE) {};
-    Info(unsigned int aNumOp,IntrinsicType_E aType): myNumOp(aNumOp), myType(aType){};
+    Info(): myVarOps(false), myNumOp(0), myType(UNDEFINED_INTR_TYPE) {};
+    Info(bool varOps, unsigned int aNumOp,IntrinsicType_E aType): myVarOps(varOps), myNumOp(aNumOp), myType(aType){};
+    bool myVarOps; // do we have variable number of arguments?
     unsigned int myNumOp; // number of operands to intrinsic
     IntrinsicType_E myType; // the type of the intrinsic
   };

@@ -8,106 +8,108 @@ bool IntrinsicInfo::ourInitFlag=false;
 const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() { 
   if (!ourInitFlag) { 
     // Common mathematical functions
-    ourIntrinsicInfoMap[Key( OPR_NEG,           NULL)         ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_ADD,           NULL)         ]=Info(2,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_SUB,           NULL)         ]=Info(2,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_MPY,           NULL)         ]=Info(2,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_DIV,           NULL)         ]=Info(2,FLOAT_INTR); 
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "SQRT")       ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "DSQRT")      ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_SQRT,          NULL)         ]=Info(1,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_NEG,           NULL)         ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_ADD,           NULL)         ]=Info(false,2,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_SUB,           NULL)         ]=Info(false,2,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_MPY,           NULL)         ]=Info(false,2,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_DIV,           NULL)         ]=Info(false,2,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "SQRT")       ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "DSQRT")      ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_SQRT,          NULL)         ]=Info(false,1,FLOAT_INTR); 
     // modulo/remainder
-    ourIntrinsicInfoMap[Key( OPR_MOD,           NULL)         ]=Info(2,FLOAT_INTR); 
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "MODULO")     ]=Info(2,FLOAT_INTR); 
-    ourIntrinsicInfoMap[Key( OPR_REM,           NULL)         ]=Info(2,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "AMOD")       ]=Info(2,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "DMOD")       ]=Info(2,FLOAT_INTR); 
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "MOD")        ]=Info(2,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_MOD,           NULL)         ]=Info(false,2,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "MODULO")     ]=Info(false,2,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_REM,           NULL)         ]=Info(false,2,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "AMOD")       ]=Info(false,2,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "DMOD")       ]=Info(false,2,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "MOD")        ]=Info(false,2,FLOAT_INTR); 
     // trigonometric
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "SIN")        ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "DSIN")       ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "COS")        ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "DCOS")       ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "TAN")        ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "DTAN")       ]=Info(1,FLOAT_INTR); 
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "ASIN")       ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "ACOS")       ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "ATAN")       ]=Info(1,FLOAT_INTR); 
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "SINH")       ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "DSINH")      ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "COSH")       ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "DCOSH")      ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "TANH")       ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "DTANH")      ]=Info(1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "SIN")        ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "DSIN")       ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "COS")        ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "DCOS")       ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "TAN")        ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "DTAN")       ]=Info(false,1,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "ASIN")       ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "ACOS")       ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "ATAN")       ]=Info(false,1,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "SINH")       ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "DSINH")      ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "COSH")       ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "DCOSH")      ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "TANH")       ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "DTANH")      ]=Info(false,1,FLOAT_INTR);
     // exp/log
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "EXP")        ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "DEXP")       ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "LOG")        ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "DLOG")       ]=Info(1,FLOAT_INTR); 
-    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "EXPEXPR")    ]=Info(2,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "EXP")        ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "DEXP")       ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "LOG")        ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "DLOG")       ]=Info(false,1,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "EXPEXPR")    ]=Info(false,2,FLOAT_INTR);
     // string ops
-    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CEQEXPR")    ]=Info(2,STRING_INTR);
-    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CNEEXPR")    ]=Info(2,STRING_INTR);
-    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CGEEXPR")    ]=Info(2,STRING_INTR);
-    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CGTEXPR")    ]=Info(2,STRING_INTR);
-    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CLEEXPR")    ]=Info(2,STRING_INTR);
-    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CLTEXPR")    ]=Info(2,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CEQEXPR")    ]=Info(false,2,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CNEEXPR")    ]=Info(false,2,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CGEEXPR")    ]=Info(false,2,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CGTEXPR")    ]=Info(false,2,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CLEEXPR")    ]=Info(false,2,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CLTEXPR")    ]=Info(false,2,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_CALL,"CONCATEXPR") ]=Info(true, 2,STRING_INTR);
     
     // string assignment
     // String Assigment is Treated as a special case of Intrinsic functions.
     // We assume that Intrinsic Functions has no side Effects whereas 
     // CASSIGNSTMT has side effects. Therefore, we expect its behaviuor to be similar
     // to the AssignPair sattement. Therefore, Removed from list of Intrinsics.
-    //ourIntrinsicInfoMap[Key( OPR_INTRINSIC_CALL,"CASSIGNSTMT")]=Info(1,STRING_INTR);
+    //ourIntrinsicInfoMap[Key( OPR_INTRINSIC_CALL,"CASSIGNSTMT")]=Info(false,1,STRING_INTR);
    
     // string length
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "LEN")        ]=Info(1,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "LEN")        ]=Info(false,1,STRING_INTR);
     // rounding and conversion
-    ourIntrinsicInfoMap[Key( OPR_ABS,           NULL)         ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "ABS")        ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "DABS")       ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "IABS")       ]=Info(1,INTEGER_INTR); 
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "SIGN")       ]=Info(2,FLOAT_INTR); 
-    ourIntrinsicInfoMap[Key( OPR_RND,           NULL)         ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_TRUNC,         NULL)         ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "INT")        ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "NINT")       ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CEIL,          NULL)         ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_FLOOR,         NULL)         ]=Info(1,FLOAT_INTR); 
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "REAL")       ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "FLOAT")      ]=Info(1,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "DBLE")       ]=Info(1,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_ABS,           NULL)         ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "ABS")        ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "DABS")       ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "IABS")       ]=Info(false,1,INTEGER_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "SIGN")       ]=Info(false,2,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_RND,           NULL)         ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_TRUNC,         NULL)         ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "INT")        ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "NINT")       ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CEIL,          NULL)         ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_FLOOR,         NULL)         ]=Info(false,1,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "REAL")       ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "FLOAT")      ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "DBLE")       ]=Info(false,1,FLOAT_INTR); 
     // logical (and bitwise logical) operations 
-    ourIntrinsicInfoMap[Key( OPR_BNOT,          NULL)         ]=Info(1,BOOL_INTR);
-    ourIntrinsicInfoMap[Key( OPR_BAND,          NULL)         ]=Info(2,BOOL_INTR);
-    ourIntrinsicInfoMap[Key( OPR_BIOR,          NULL)         ]=Info(2,BOOL_INTR);
-    ourIntrinsicInfoMap[Key( OPR_BXOR,          NULL)         ]=Info(2,BOOL_INTR); 
-    ourIntrinsicInfoMap[Key( OPR_LNOT,          NULL)         ]=Info(1,BOOL_INTR);
-    ourIntrinsicInfoMap[Key( OPR_LAND,          NULL)         ]=Info(2,BOOL_INTR);
-    ourIntrinsicInfoMap[Key( OPR_LIOR,          NULL)         ]=Info(2,BOOL_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CAND,          NULL)         ]=Info(2,BOOL_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CIOR,          NULL)         ]=Info(2,BOOL_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_BNOT,          NULL)         ]=Info(false,1,BOOL_INTR);
+    ourIntrinsicInfoMap[Key( OPR_BAND,          NULL)         ]=Info(false,2,BOOL_INTR);
+    ourIntrinsicInfoMap[Key( OPR_BIOR,          NULL)         ]=Info(false,2,BOOL_INTR);
+    ourIntrinsicInfoMap[Key( OPR_BXOR,          NULL)         ]=Info(false,2,BOOL_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_LNOT,          NULL)         ]=Info(false,1,BOOL_INTR);
+    ourIntrinsicInfoMap[Key( OPR_LAND,          NULL)         ]=Info(false,2,BOOL_INTR);
+    ourIntrinsicInfoMap[Key( OPR_LIOR,          NULL)         ]=Info(false,2,BOOL_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CAND,          NULL)         ]=Info(false,2,BOOL_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CIOR,          NULL)         ]=Info(false,2,BOOL_INTR); 
     // comparison operations
-    ourIntrinsicInfoMap[Key( OPR_EQ,            NULL)         ]=Info(2,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_NE,            NULL)         ]=Info(2,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_GT,            NULL)         ]=Info(2,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_GE,            NULL)         ]=Info(2,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_LT,            NULL)         ]=Info(2,FLOAT_INTR);
-    ourIntrinsicInfoMap[Key( OPR_LE,            NULL)         ]=Info(2,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_EQ,            NULL)         ]=Info(false,2,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_NE,            NULL)         ]=Info(false,2,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_GT,            NULL)         ]=Info(false,2,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_GE,            NULL)         ]=Info(false,2,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_LT,            NULL)         ]=Info(false,2,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_LE,            NULL)         ]=Info(false,2,FLOAT_INTR); 
     // max/min
-    ourIntrinsicInfoMap[Key( OPR_MAX,            NULL)        ]=Info(2,FLOAT_INTR); 
-    ourIntrinsicInfoMap[Key( OPR_MIN,            NULL)        ]=Info(2,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_MAX,            NULL)        ]=Info(false,2,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_MIN,            NULL)        ]=Info(false,2,FLOAT_INTR); 
     // array operations
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "LBOUND")     ]=Info(2,ARRAY_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "UBOUND")     ]=Info(2,ARRAY_INTR);
-    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "F90INDEX")   ]=Info(2,ARRAY_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "MAXVAL")     ]=Info(2,ARRAY_INTR);
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "MINVAL")     ]=Info(2,ARRAY_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "LBOUND")     ]=Info(false,2,ARRAY_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "UBOUND")     ]=Info(false,2,ARRAY_INTR);
+    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "F90INDEX")   ]=Info(false,2,ARRAY_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "MAXVAL")     ]=Info(false,2,ARRAY_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "MINVAL")     ]=Info(false,2,ARRAY_INTR);
     // shifting operations
-    ourIntrinsicInfoMap[Key( OPR_SHL,            NULL)        ]=Info(2,INTEGER_INTR);
-    ourIntrinsicInfoMap[Key( OPR_ASHR,           NULL)        ]=Info(2,INTEGER_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_SHL,            NULL)        ]=Info(false,2,INTEGER_INTR);
+    ourIntrinsicInfoMap[Key( OPR_ASHR,           NULL)        ]=Info(false,2,INTEGER_INTR); 
     // compiler internal routine for cleanup at the end of PROGRAM
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "_END")       ]=Info(0,COMPILER_INTERNAL_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "_END")       ]=Info(false,0,COMPILER_INTERNAL_INTR);
+    ourInitFlag = true;
   } 
   return ourIntrinsicInfoMap;
 } 
