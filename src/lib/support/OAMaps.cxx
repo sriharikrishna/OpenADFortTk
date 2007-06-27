@@ -147,8 +147,7 @@ namespace fortTkSupport {
     OA::OA_ptr<OA::SideEffect::ManagerInterSideEffectStandard> interSEman;
     interSEman = new OA::SideEffect::ManagerInterSideEffectStandard(this->GetIRInterface());
     OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> interSE;
-    interSE = interSEman->performAnalysis(cgraph, parambind,
-					  interAlias, sideeffectman);
+    interSE = interSEman->performAnalysis(cgraph, parambind, interAlias, sideeffectman, OA::DataFlow::ITERATIVE);
     this->SetInterSideEffect(interSEman, interSE);
     // ICFG
     FORTTK_MSG(1, "progress: icfg standard: performAnalysis");
@@ -276,7 +275,7 @@ CreateOAAnalInfo(PU_Info* pu,
     OA::OA_ptr<OA::ReachDefs::ManagerReachDefsStandard> rdman;
     rdman = new OA::ReachDefs::ManagerReachDefsStandard(irIF);
     OA::OA_ptr<OA::ReachDefs::ReachDefsStandard> rds 
-      = rdman->performAnalysis(proc, cfg, alias, interSideEffect);
+      = rdman->performAnalysis(proc, cfg, alias, interSideEffect,OA::DataFlow::ITERATIVE);
     x->SetReachDefs(rdman, rds);
 
     // UDDU chains

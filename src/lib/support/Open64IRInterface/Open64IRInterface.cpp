@@ -2638,6 +2638,11 @@ void Open64IRInterface::createAndMapNamedRef(OA::StmtHandle stmt, WN* wn,
     using namespace OA;
     OA::OA_ptr<OA::MemRefExpr> mre;
 
+    // do not want to create MemRefExpr if for Constants for Literals
+    if(ST_is_constant (st)){
+       return;
+    }
+
     // get symbol handle, need to use representative if a global or
     // module var.  Going to use first sym in set as representative.
     SymHandle sym = SymHandle((irhandle_t)st);
