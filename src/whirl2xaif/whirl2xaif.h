@@ -28,7 +28,7 @@ namespace whirl2xaif {
 			    const char* tmpVarPrefix);
 
     static fortTkSupport::IntrinsicXlationTable& getIntrinsicXlationTable();
-    static fortTkSupport::PUToOAAnalInfoMap& getOAAnalMap();
+    static fortTkSupport::InterOAInfoMap& getOAAnalMap();
     static fortTkSupport::ScalarizedRefTabMap_W2X& getScalarizedRefTableMap();
     static fortTkSupport::WNToWNIdTabMap& getWNToWNIdTableMap();
 
@@ -41,7 +41,7 @@ namespace whirl2xaif {
 
     static fortTkSupport::IntrinsicXlationTable ourIntrinsicTable;
     static const std::string ourDividerComment;
-    static fortTkSupport::PUToOAAnalInfoMap ourOAAnalMap;
+    static fortTkSupport::InterOAInfoMap ourOAAnalMap;
     static fortTkSupport::ScalarizedRefTabMap_W2X ourScalarizedRefTableMap;
     static fortTkSupport::WNToWNIdTabMap ourWNToWNIdTableMap;
 

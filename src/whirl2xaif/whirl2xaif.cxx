@@ -17,7 +17,7 @@ namespace whirl2xaif {
   fortTkSupport::IntrinsicXlationTable   
   Whirl2Xaif::ourIntrinsicTable(fortTkSupport::IntrinsicXlationTable::W2X);
 
-  fortTkSupport::PUToOAAnalInfoMap       Whirl2Xaif::ourOAAnalMap;
+  fortTkSupport::InterOAInfoMap       Whirl2Xaif::ourOAAnalMap;
   fortTkSupport::ScalarizedRefTabMap_W2X Whirl2Xaif::ourScalarizedRefTableMap;
   fortTkSupport::WNToWNIdTabMap          Whirl2Xaif::ourWNToWNIdTableMap;
   const std::string       Whirl2Xaif::ourDividerComment("********************************************************************");
@@ -26,7 +26,7 @@ namespace whirl2xaif {
     return ourIntrinsicTable;
   }
 
-  fortTkSupport::PUToOAAnalInfoMap& Whirl2Xaif::getOAAnalMap() { 
+  fortTkSupport::InterOAInfoMap& Whirl2Xaif::getOAAnalMap() { 
     return ourOAAnalMap;
   }
 
@@ -45,7 +45,7 @@ namespace whirl2xaif {
     Diag_Set_Phase("WHIRL to XAIF: translate IR");
     if (!pu_forest) { return; }
     if (Args::ourDoNotFilterFlag) { 
-      fortTkSupport::OAAnalInfo::setDoNotFilterFlag();
+      fortTkSupport::IntraOAInfo::setDoNotFilterFlag();
     }
     // -------------------------------------------------------
     // 1. Initialization (Much of this information must be collected
@@ -65,16 +65,16 @@ namespace whirl2xaif {
     ctxt.setPUToIdMap(&pumap);
     ourWNToWNIdTableMap.Create(pu_forest); // Note: could make this local
     // Initialize and create inter/intra analysis information
-    ourOAAnalMap.Create(pu_forest,irInterface);
-    ctxt.setActivity(ourOAAnalMap.GetInterActiveFortran());
-    ctxt.setAlias(ourOAAnalMap.GetInterAlias());
+    ourOAAnalMap.init(pu_forest,irInterface);
+    ctxt.setActivity(ourOAAnalMap.getInterActiveFortran());
+    ctxt.setAlias(ourOAAnalMap.getInterAlias());
     // Create scalarized var reference table
     ourScalarizedRefTableMap.Create(pu_forest);
     // -------------------------------------------------------
     // 2. Generate XAIF CallGraph
     // -------------------------------------------------------
     OA::OA_ptr<OA::CallGraph::CallGraph> cgraph = 
-      ourOAAnalMap.GetCallGraph();
+      ourOAAnalMap.getCallGraph();
     // CallGraph header info
     xos << xml::BegElem("xaif:CallGraph")
 	<< xml::Attr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
@@ -177,9 +177,9 @@ namespace whirl2xaif {
     // iterate over processed units
     for (int procCnt = 1; procIt.isValid(); ++procIt, ++procCnt) {
       PU_Info* pu = (PU_Info*)procIt.current().hval();
-      fortTkSupport::OAAnalInfo* oaAnal = ourOAAnalMap.Find(pu);
+      fortTkSupport::IntraOAInfo* oaAnal = ourOAAnalMap.Find(pu);
       fortTkSupport::WNToWNIdMap* wnmap = ourWNToWNIdTableMap.Find(pu);
-      OA::OA_ptr<OA::XAIF::AliasMapXAIF> aliasSets = oaAnal->GetAliasXAIF();
+      OA::OA_ptr<OA::XAIF::AliasMapXAIF> aliasSets = oaAnal->getAliasXAIF();
       OA::OA_ptr<OA::XAIF::IdIterator> aliasSetIdsIter = aliasSets->getIdIterator();
       // iterate over alias sets
       for ( ; aliasSetIdsIter->isValid(); ++(*aliasSetIdsIter)) {
@@ -205,9 +205,9 @@ namespace whirl2xaif {
     procIt.reset();
     for (int procCnt = 1; procIt.isValid(); ++procIt, ++procCnt) {
       PU_Info* pu = (PU_Info*)procIt.current().hval();
-      fortTkSupport::OAAnalInfo* oaAnal = ourOAAnalMap.Find(pu);
+      fortTkSupport::IntraOAInfo* oaAnal = ourOAAnalMap.Find(pu);
       fortTkSupport::WNToWNIdMap* wnmap = ourWNToWNIdTableMap.Find(pu);
-      OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchains = oaAnal->GetUDDUChainsXAIF();
+      OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchains = oaAnal->getUDDUChainsXAIF();
       OA::OA_ptr<OA::XAIF::UDDUChainsXAIF::ChainIterator> chainIter 
 	= udduchains->getChainIterator();
       for ( ; chainIter->isValid(); ++(*chainIter)) {

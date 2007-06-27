@@ -227,10 +227,10 @@ namespace whirl2xaif {
     // 1. OpenAnalysis info
     OA::ProcHandle proc((OA::irhandle_t)Current_PU_Info);
 
-    fortTkSupport::OAAnalInfo* oaAnal = Whirl2Xaif::getOAAnalMap().Find(Current_PU_Info);
+    fortTkSupport::IntraOAInfo* oaAnal = Whirl2Xaif::getOAAnalMap().Find(Current_PU_Info);
     OA::OA_ptr<OA::CFG::CFGInterface> cfg = 
-      Whirl2Xaif::getOAAnalMap().GetCFGEach()->getCFGResults(proc);
-    ctxt.setUDDUChains(oaAnal->GetUDDUChainsXAIF());
+      Whirl2Xaif::getOAAnalMap().getCFGEach()->getCFGResults(proc);
+    ctxt.setUDDUChains(oaAnal->getUDDUChainsXAIF());
   
     // 2. Non-scalar symbol table
     fortTkSupport::ScalarizedRefTab_W2X* tab = Whirl2Xaif::getScalarizedRefTableMap().Find(Current_PU_Info);
@@ -1308,7 +1308,7 @@ namespace whirl2xaif {
     // add the side effect lists here: 
     // the analysis result: 
     OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> interSideEffects=
-      Whirl2Xaif::getOAAnalMap().GetInterSideEffect();
+      Whirl2Xaif::getOAAnalMap().getInterSideEffect();
 
     // an iterator over locations: 
     OA::OA_ptr<OA::LocIterator> anOALocIterOAPtr;
@@ -1317,7 +1317,7 @@ namespace whirl2xaif {
     // symbol handle iterator from parameter bindings to distinguish the formal parameters 
     // from the strictly local variables 
     OA::OA_ptr<OA::SymHandleIterator> symHandleI=Whirl2Xaif::getOAAnalMap().
-      GetParamBindings()->getFormalIterator(proc);
+      getParamBindings()->getFormalIterator(proc);
 
     //   // begin debugging stuff
     //   ST* st = ST_ptr(PU_Info_proc_sym(Current_PU_Info));

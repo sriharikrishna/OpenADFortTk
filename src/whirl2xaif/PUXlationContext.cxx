@@ -295,7 +295,7 @@ namespace whirl2xaif {
     // see if this is a module variable
     if (ST_is_in_module(st) && !ST_is_external(st)) { 
       // try to find it in the global set
-      if (fortTkSupport::OAAnalInfo::isGlobalSymbolActive(st))
+      if (fortTkSupport::IntraOAInfo::isGlobalSymbolActive(st))
 	return true; 
       // else look in the local information
     }
