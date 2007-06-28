@@ -1,4 +1,4 @@
-# Doxyfile 1.4.4
+# Doxyfile 1.4.7
 
 # This file describes the settings to be used by the documentation system
 # doxygen (www.doxygen.org) for a project
@@ -115,7 +115,7 @@ FULL_PATH_NAMES        = YES
 # If left blank the directory from which doxygen is run is used as the 
 # path to strip.
 
-STRIP_FROM_PATH        = 
+STRIP_FROM_PATH        = $(OPENADROOT)
 
 # The STRIP_FROM_INC_PATH tag can be used to strip a user-defined part of 
 # the path mentioned in the documentation of a class, which tells 
@@ -161,13 +161,6 @@ DETAILS_AT_TOP         = NO
 
 INHERIT_DOCS           = YES
 
-# If member grouping is used in the documentation and the DISTRIBUTE_GROUP_DOC 
-# tag is set to YES, then doxygen will reuse the documentation of the first 
-# member in the group (if any) for the other members of the group. By default 
-# all members of a group must be documented explicitly.
-
-DISTRIBUTE_GROUP_DOC   = NO
-
 # If the SEPARATE_MEMBER_PAGES tag is set to YES, then doxygen will produce 
 # a new page for each member. If set to NO, the documentation of a member will 
 # be part of the file/class/namespace that contains it.
@@ -195,12 +188,28 @@ ALIASES                =
 
 OPTIMIZE_OUTPUT_FOR_C  = NO
 
-# Set the OPTIMIZE_OUTPUT_JAVA tag to YES if your project consists of Java sources 
-# only. Doxygen will then generate output that is more tailored for Java. 
+# Set the OPTIMIZE_OUTPUT_JAVA tag to YES if your project consists of Java 
+# sources only. Doxygen will then generate output that is more tailored for Java. 
 # For instance, namespaces will be presented as packages, qualified scopes 
 # will look different, etc.
 
 OPTIMIZE_OUTPUT_JAVA   = NO
+
+# If you use STL classes (i.e. std::string, std::vector, etc.) but do not want to 
+# include (a tag file for) the STL sources as input, then you should 
+# set this tag to YES in order to let doxygen match functions declarations and 
+# definitions whose arguments contain STL classes (e.g. func(std::string); v.s. 
+# func(std::string) {}). This also make the inheritance and collaboration 
+# diagrams that involve STL classes more complete and accurate.
+
+BUILTIN_STL_SUPPORT    = NO
+
+# If member grouping is used in the documentation and the DISTRIBUTE_GROUP_DOC 
+# tag is set to YES, then doxygen will reuse the documentation of the first 
+# member in the group (if any) for the other members of the group. By default 
+# all members of a group must be documented explicitly.
+
+DISTRIBUTE_GROUP_DOC   = NO
 
 # Set the SUBGROUPING tag to YES (the default) to allow class member groups of 
 # the same type (for instance a group of public functions) to be put as a 
@@ -376,7 +385,7 @@ SHOW_USED_FILES        = YES
 
 # If the sources in your project are distributed over multiple directories 
 # then setting the SHOW_DIRECTORIES tag to YES will show the directory hierarchy 
-# in the documentation. The default is YES.
+# in the documentation. The default is NO.
 
 SHOW_DIRECTORIES       = YES
 
@@ -385,7 +394,7 @@ SHOW_DIRECTORIES       = YES
 # version control system). Doxygen will invoke the program by executing (via 
 # popen()) the command <command> <input-file>, where <command> is the value of 
 # the FILE_VERSION_FILTER tag, and <input-file> is the name of an input file 
-# provided by doxygen. Whatever the progam writes to standard output 
+# provided by doxygen. Whatever the program writes to standard output 
 # is used as the file version. See the manual for examples.
 
 FILE_VERSION_FILTER    = 
@@ -450,21 +459,20 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = src 
+INPUT                  = src
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
 # and *.h) to filter out the source-files in the directories. If left 
 # blank the following patterns are tested: 
 # *.c *.cc *.cxx *.cpp *.c++ *.java *.ii *.ixx *.ipp *.i++ *.inl *.h *.hh *.hxx 
-# *.hpp *.h++ *.idl *.odl *.cs *.php *.php3 *.inc *.m *.mm
+# *.hpp *.h++ *.idl *.odl *.cs *.php *.php3 *.inc *.m *.mm *.py
 
 FILE_PATTERNS          = *.cpp \
                          *.hpp \
-			 *.h \
-			 *.cxx \
-			 *.i
- 			
+                         *.h \
+                         *.cxx \
+                         *.i
 
 # The RECURSIVE tag can be used to turn specify whether or not subdirectories 
 # should be searched for input files as well. Possible values are YES and NO. 
@@ -576,6 +584,13 @@ REFERENCED_BY_RELATION = YES
 # called/used by that function will be listed.
 
 REFERENCES_RELATION    = YES
+
+# If the REFERENCES_LINK_SOURCE tag is set to YES (the default)
+# and SOURCE_BROWSER tag is set to YES, then the hyperlinks from
+# functions in REFERENCES_RELATION and REFERENCED_BY_RELATION lists will
+# link to the source code.  Otherwise they will link to the documentstion.
+
+REFERENCES_LINK_SOURCE = YES
 
 # If the USE_HTAGS tag is set to YES then the references to source code 
 # will point to the HTML generated by the htags(1) tool instead of doxygen 
@@ -971,7 +986,7 @@ MACRO_EXPANSION        = NO
 
 # If the EXPAND_ONLY_PREDEF and MACRO_EXPANSION tags are both set to YES 
 # then the macro expansion is limited to the macros specified with the 
-# PREDEFINED and EXPAND_AS_PREDEFINED tags.
+# PREDEFINED and EXPAND_AS_DEFINED tags.
 
 EXPAND_ONLY_PREDEF     = NO
 
@@ -991,15 +1006,14 @@ INCLUDE_PATH           =
 # directories. If left blank, the patterns specified with FILE_PATTERNS will 
 # be used.
 
-INCLUDE_FILE_PATTERNS  = \
-$(OPENADROOT)/Open64/osprey1.0/include \
-$(OPENADROOT)/Open64/osprey1.0/common/com \
-$(OPENADROOT)/Open64/osprey1.0/common/com/ia64 \
-$(OPENADROOT)/Open64/osprey1.0/common/util \
-$(OPENADROOT)/Open64/osprey1.0/be/com \
-$(OPENADROOT)/Open64/osprey1.0/be/be \
-$(OPENADROOT)/Open64/osprey1.0/targ_ia32_ia64_linux/include \
-$(OPENADROOT)/OpenAnalysis/x86-Linux/include
+INCLUDE_FILE_PATTERNS  = $(OPENADROOT)/Open64/osprey1.0/include \
+                         $(OPENADROOT)/Open64/osprey1.0/common/com \
+                         $(OPENADROOT)/Open64/osprey1.0/common/com/ia64 \
+                         $(OPENADROOT)/Open64/osprey1.0/common/util \
+                         $(OPENADROOT)/Open64/osprey1.0/be/com \
+                         $(OPENADROOT)/Open64/osprey1.0/be/be \
+                         $(OPENADROOT)/Open64/osprey1.0/targ_ia32_ia64_linux/include \
+                         $(OPENADROOT)/OpenAnalysis/x86-Linux/include
 
 # The PREDEFINED tag can be used to specify one or more macro names that 
 # are defined before the preprocessor is started (similar to the -D option of 
@@ -1009,41 +1023,41 @@ $(OPENADROOT)/OpenAnalysis/x86-Linux/include
 # undefined via #undef or recursively expanded use the := operator 
 # instead of the = operator.
 
-PREDEFINED             = \ 
-STDC_HEADERS=1 \
-HAVE_SYS_TYPES_H=1 \
-HAVE_SYS_STAT_H=1 \
-HAVE_STDLIB_H=1 \
-HAVE_STRING_H=1 \
-HAVE_MEMORY_H=1 \
-HAVE_STRINGS_H=1 \
-HAVE_INTTYPES_H=1 \
-HAVE_STDINT_H=1 \
-HAVE_UNISTD_H=1 \
-HAVE_UNISTD_H=1 \
-HAVE_INTTYPES_H=1  \
-Is_True_On \
-_LEGO_CLONER \
-BACK_END \
-MONGOOSE_BE \
-longlong \
-_NEW_SYMTAB \
-BUILD_WHIRL2F \
-_LANGUAGE_C_PLUS_PLUS \
-OA_IRHANDLETYPE_UL \
-_DEBUG -fPIC \
-__GNU_BUG_WORKAROUND \
-_LINUX_LINUX \
-_SGI_SOURCE \
-_SVR4_SOURCE \
-TARG_IA64 \
-COMPILE_UPC \
-_MIPSEL \
-_LONGLONG \
-_MIPS_SZINT=32 i\
-_MIPS_SZPTR=32 i\
-_MIPS_SZLONG=32 \
-__MIPS_AND_IA64_ELF_H
+PREDEFINED             = STDC_HEADERS=1 \
+                         HAVE_SYS_TYPES_H=1 \
+                         HAVE_SYS_STAT_H=1 \
+                         HAVE_STDLIB_H=1 \
+                         HAVE_STRING_H=1 \
+                         HAVE_MEMORY_H=1 \
+                         HAVE_STRINGS_H=1 \
+                         HAVE_INTTYPES_H=1 \
+                         HAVE_STDINT_H=1 \
+                         HAVE_UNISTD_H=1 \
+                         HAVE_UNISTD_H=1 \
+                         HAVE_INTTYPES_H=1 \
+                         Is_True_On \
+                         _LEGO_CLONER \
+                         BACK_END \
+                         MONGOOSE_BE \
+                         longlong \
+                         _NEW_SYMTAB \
+                         BUILD_WHIRL2F \
+                         _LANGUAGE_C_PLUS_PLUS \
+                         OA_IRHANDLETYPE_UL \
+                         _DEBUG \
+                         -fPIC \
+                         __GNU_BUG_WORKAROUND \
+                         _LINUX_LINUX \
+                         _SGI_SOURCE \
+                         _SVR4_SOURCE \
+                         TARG_IA64 \
+                         COMPILE_UPC \
+                         _MIPSEL \
+                         _LONGLONG \
+                         _MIPS_SZINT=32 \
+                         _MIPS_SZPTR=32 \
+                         _MIPS_SZLONG=32 \
+                         __MIPS_AND_IA64_ELF_H
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then 
 # this tag can be used to specify a list of macro names that should be expanded. 
@@ -1152,7 +1166,7 @@ GROUP_GRAPHS           = YES
 # collaboration diagrams in a style similar to the OMG's Unified Modeling 
 # Language.
 
-UML_LOOK               = YES	
+UML_LOOK               = YES
 
 # If set to YES, the inheritance and collaboration graphs will show the 
 # relations between templates and their instances.
@@ -1180,6 +1194,14 @@ INCLUDED_BY_GRAPH      = YES
 # functions only using the \callgraph command.
 
 CALL_GRAPH             = YES
+
+# If the CALLER_GRAPH and HAVE_DOT tags are set to YES then doxygen will 
+# generate a caller dependency graph for every global function or class method. 
+# Note that enabling this option will significantly increase the time of a run. 
+# So in most cases it will be better to enable caller graphs for selected 
+# functions only using the \callergraph command.
+
+CALLER_GRAPH           = NO
 
 # If the GRAPHICAL_HIERARCHY and HAVE_DOT tags are set to YES then doxygen 
 # will graphical hierarchy of all classes instead of a textual one.
@@ -1272,4 +1294,4 @@ DOT_CLEANUP            = YES
 # The SEARCHENGINE tag specifies whether or not a search engine should be 
 # used. If set to NO the values of all tags below this one will be ignored.
 
-SEARCHENGINE           = NO
+SEARCHENGINE           = YES
