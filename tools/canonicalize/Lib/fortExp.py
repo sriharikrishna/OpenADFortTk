@@ -176,6 +176,20 @@ class Ops(_Exp):
                                   poly,typemerge),
                           exptype(self.a2,idchk,kw2type,lenfn,
                                   poly,typemerge)],'????')
+class StarExp(_Exp):
+    '* expression, as used for instance in array dimensions a(1:*)'
+    def __init__(self,exp):
+        self.exp = exp
+
+    def __repr__(self):
+        return 'StarExp(%s)' % (repr(self.exp),)
+
+    def __str__(self):
+        return '%s' % (str(self.exp),)
+
+    def map(self,fn):
+        return StarExp(fn(self.exp))
+
 
 def is_id(t):
     return _id_re.match(t)
@@ -239,6 +253,10 @@ def _mkparen(parn):
     (dc,e,dc2) = parn
     return ParenExp(e)
 
+def _mkstar(star):
+    'turn a recognized star expression into a StarExp object'
+    return StarExp(star)
+
 def _mkexp(e):
     'convert a recognized exp into an Ops object'
     (a,oplst) = e
@@ -254,7 +272,7 @@ unary   = pred(is_unary)
 
 def atom(scan):
     '''eta expansion, since letrec unavail in python'''
-    return disj(app,id,const,unaryExp,paren)(scan)
+    return disj(app,id,const,unaryExp,paren,starexp)(scan)
 
 Exp = OpPrec(atom,_optbl,('**',))
 Exp = treat(Exp,_mkexp)
@@ -275,6 +293,9 @@ unaryExp  = treat(unaryExp,_mkunary)
 
 paren     = seq(lit('('),Exp,lit(')'))
 paren     = treat(paren,_mkparen)
+
+starexp   = lit('*')
+starexp   = treat(starexp ,_mkstar)
 
 # utility list
 #
