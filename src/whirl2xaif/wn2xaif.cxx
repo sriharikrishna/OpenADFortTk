@@ -1231,6 +1231,14 @@ namespace whirl2xaif {
       if (Current_PU_Info!=thisPU) 
         PU_SetGlobalState(thisPU);
     } 
+    else if (theLocation->isaUnknown()) { 
+      ST* pu_st = ST_ptr(PU_Info_proc_sym(Current_PU_Info));
+      const char* pu_nm = ST_name(pu_st);
+      PU_Info* thisPU=Current_PU_Info;
+      FORTTK_MSG(2,"xlate_SideEffectEntry: side effect list for " << pu_nm << " contains an unknown location.");
+      if (Current_PU_Info!=thisPU) 
+        PU_SetGlobalState(thisPU);
+    } 
     else { 
       ST* pu_st = ST_ptr(PU_Info_proc_sym(Current_PU_Info));
       const char* pu_nm = ST_name(pu_st);
