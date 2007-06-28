@@ -59,25 +59,25 @@ class Context(object):
         hook(self)
 
     def lookup_var(self,v):
-        if v in self.vars:
-            return self.vars[v]
+        if v.upper() in self.vars:
+            return self.vars[v.upper()]
         return default_sym
 
     def lookup_type(self,v):
         try:
-            return self.vars[v].typeof
+            return self.vars[v.upper()].typeof
         except KeyError, AttributeError:
             return self.implicit[v[0].lower()]
 
     def lookup_dims(self,v):
         try:
-            return self.vars[v].dims
+            return self.vars[v.upper()].dims
         except KeyError, AttributeError:
             return ()
 
     def lookup_lngth(self,v):
         try:
-            return self.vars[v].lngth
+            return self.vars[v.upper()].lngth
         except KeyError, AttributeError:
             return False
 
@@ -116,7 +116,7 @@ def fnunit(line,ctxtm):
         ty       = fs.kwtbl[ty.lower()]
         ty       = (ty,mod)
 
-        ctxt.vars[line.name] = SymEntry(typeof=ty,dims=(),external=True)
+        ctxt.vars[line.name.upper()] = SymEntry(typeof=ty,dims=(),external=True)
     return line
 
 def typesep(d):
@@ -141,7 +141,7 @@ def typedecl(line,ctxtm):
             ctxt.vars[name].typeof = typeof
             ctxt.vars[name].mod    = mod
         else:
-            ctxt.vars[name] = SymEntry(typeof=(typeof,mod),
+            ctxt.vars[name.upper()] = SymEntry(typeof=(typeof,mod),
                                        kw_str=kw_str,
                                        dims=dims,
                                        vclass='local',
@@ -157,7 +157,7 @@ def dimen(line,ctxtm):
             ctxt.vars[name].dims = dims
         else:
             (typeof,kw_str,mod) = ctxt.typeof(name)
-            ctxt.vars[name] = SymEntry(typeof,kw_str,mod,dims)
+            ctxt.vars[name.upper()] = SymEntry(typeof,kw_str,mod,dims)
 
     return line
 
