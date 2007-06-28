@@ -489,18 +489,20 @@ namespace whirl2xaif {
       const char* shape_str = TranslateTYToSymShape(ty);
       if (!shape_str) { shape_str = "***"; }
       int active = (ctxt.isActiveSym(st)) ? 1 : 0;
-      if (active && strcmp(ty_str, "integer") == 0) {
+      if (active 
+	  && 
+	  (strcmp(ty_str, "integer") == 0
+	   ||
+	   strcmp(ty_str, "string") == 0)) {
 	active = false;
-	static const char* txt1 = "unactivating the activated symbol '";
-	static const char* txt2 = "' of integral type";
+	static const char* txt1 = "deactivating symbol >";
+	static const char* txt2 = "< of type ";
 	if (CURRENT_SYMTAB == GLOBAL_SYMTAB) {
-	  FORTTK_MSG(0, "warning: within global scope: " << txt1 << ST_name(st) 
-		     << txt2);
+	  FORTTK_MSG(0, "warning: within global scope: " << txt1 << ST_name(st) << txt2 << ty_str);
 	}
 	else {
 	  ST_IDX pu_st = PU_Info_proc_sym(Current_PU_Info);
-	  FORTTK_MSG(0, "warning: within " << ST_name(pu_st) << ": "
-		     << txt1 << ST_name(st) << txt2);
+	  FORTTK_MSG(0, "warning: within " << ST_name(pu_st) << ": " << txt1 << ST_name(st) << txt2  << ty_str);
 	}
       }
       fortTkSupport::SymId st_id = (fortTkSupport::SymId)ST_index(st);
