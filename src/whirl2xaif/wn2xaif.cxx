@@ -1169,7 +1169,8 @@ namespace whirl2xaif {
   }
 
   void 
-  xlate_SideEffectEntry(OA::OA_ptr<OA::Location> theLocation,
+  xlate_SideEffectEntry(OA::OA_ptr<OA::Location> theTopLocation,
+			OA::OA_ptr<OA::Location> theLocation,
 			SymbolPointerSet& coveredSymbols,
 			xml::ostream& xos, 
 			WN *wn, 
@@ -1198,29 +1199,13 @@ namespace whirl2xaif {
     else if (theLocation->isaSubSet()) { 
       OA::OA_ptr<OA::LocSubSet> subSetLoc=
 	theLocation.convert<OA::LocSubSet>();
-      if (subSetLoc->getLoc()->isaNamed()) { 
-	// get the named location
-	OA::OA_ptr<OA::NamedLoc> namedLoc=
-	  subSetLoc->getLoc().convert<OA::NamedLoc>();
-	xlate_SideEffectNamedLocation(namedLoc,
-				      coveredSymbols,
-				      xos, 
-				      wn, 
-				      ctxt,
-				      formalArgSymHandleI);
-      } 
-      else if (subSetLoc->getLoc()->isaUnknown()) { 
-	// we cannot gracefully handle this:
-	ST* pu_st = ST_ptr(PU_Info_proc_sym(Current_PU_Info));
-	const char* pu_nm = ST_name(pu_st);
-	FORTTK_DIE("a side effect list contains a unknown location indicating there is a function call within " 
-		   << pu_nm 
-		   << " for which OpenAnalysis cannot determine side effects"); 
-      }
-      else { 
-	theLocation->dump(std::cout);
-	FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "side effect list contains a subsetloc that has no named location");
-      }
+      xlate_SideEffectEntry(theTopLocation,
+			    subSetLoc->getLoc(),
+			    coveredSymbols,
+			    xos, 
+			    wn, 
+			    ctxt,
+			    formalArgSymHandleI);
     }
     else if (theLocation->isaUnnamed()) { 
       OA::OA_ptr<OA::UnnamedLoc> theUnnamedLoc=
@@ -1234,16 +1219,16 @@ namespace whirl2xaif {
     else if (theLocation->isaUnknown()) { 
       ST* pu_st = ST_ptr(PU_Info_proc_sym(Current_PU_Info));
       const char* pu_nm = ST_name(pu_st);
-      PU_Info* thisPU=Current_PU_Info;
       FORTTK_MSG(2,"xlate_SideEffectEntry: side effect list for " << pu_nm << " contains an unknown location.");
-      if (Current_PU_Info!=thisPU) 
-        PU_SetGlobalState(thisPU);
     } 
     else { 
       ST* pu_st = ST_ptr(PU_Info_proc_sym(Current_PU_Info));
       const char* pu_nm = ST_name(pu_st);
+      FORTTK_MSG(0,"xlate_SideEffectEntry: descended from top location:");
+      theTopLocation->dump(std::cerr);
+      FORTTK_MSG(0,"xlate_SideEffectEntry: down to locaton:");
       theLocation->dump(std::cerr);
-      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "side effect list for " << pu_nm << " contains an unexpected location (see previous line)");
+      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "side effect list for " << pu_nm << " contains an unexpected location (see location dumps above)");
     }
   } 
 
@@ -1251,8 +1236,7 @@ namespace whirl2xaif {
   // point, with parameter declarations.  
   // FIXME: XAIF doesn't support alt-entry.
   static void
-  xlate_EntryPoint(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
-  {
+  xlate_EntryPoint(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
     OPERATOR opr = WN_operator(wn);
     FORTTK_ASSERT(opr == OPR_ALTENTRY || opr == OPR_FUNC_ENTRY,
 		  fortTkSupport::Diagnostics::UnexpectedInput);
@@ -1341,7 +1325,8 @@ namespace whirl2xaif {
     anOALocIterOAPtr = interSideEffects->getLMODIterator(proc);
     SymbolPointerSet coveredSymbols;
     for ( ; anOALocIterOAPtr->isValid(); ++(*anOALocIterOAPtr) ) {
-      xlate_SideEffectEntry(anOALocIterOAPtr->current(), 
+      xlate_SideEffectEntry(anOALocIterOAPtr->current(),
+			    anOALocIterOAPtr->current(), 
 			    coveredSymbols,
 			    xos, 
 			    wn, 
@@ -1354,7 +1339,8 @@ namespace whirl2xaif {
     xos << xml::BegElem("xaif:Mod");
     anOALocIterOAPtr = interSideEffects->getMODIterator(proc);
     for ( ; anOALocIterOAPtr->isValid(); ++(*anOALocIterOAPtr) ) {
-      xlate_SideEffectEntry(anOALocIterOAPtr->current(), 
+      xlate_SideEffectEntry(anOALocIterOAPtr->current(),
+			    anOALocIterOAPtr->current(), 
 			    coveredSymbols,
 			    xos, 
 			    wn, 
@@ -1367,7 +1353,8 @@ namespace whirl2xaif {
     xos << xml::BegElem("xaif:ReadLocal");
     anOALocIterOAPtr = interSideEffects->getLUSEIterator(proc);
     for ( ; anOALocIterOAPtr->isValid(); ++(*anOALocIterOAPtr)) {
-      xlate_SideEffectEntry(anOALocIterOAPtr->current(), 
+      xlate_SideEffectEntry(anOALocIterOAPtr->current(),
+			    anOALocIterOAPtr->current(), 
 			    coveredSymbols,
 			    xos, 
 			    wn, 
@@ -1380,7 +1367,8 @@ namespace whirl2xaif {
     xos << xml::BegElem("xaif:Read");
     anOALocIterOAPtr = interSideEffects->getUSEIterator(proc);
     for ( ; anOALocIterOAPtr->isValid(); ++(*anOALocIterOAPtr)) {
-      xlate_SideEffectEntry(anOALocIterOAPtr->current(), 
+      xlate_SideEffectEntry(anOALocIterOAPtr->current(),
+			    anOALocIterOAPtr->current(), 
 			    coveredSymbols,
 			    xos, 
 			    wn, 
