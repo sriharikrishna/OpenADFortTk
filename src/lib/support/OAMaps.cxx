@@ -166,7 +166,7 @@ namespace fortTkSupport {
     OA::OA_ptr<OA::DUG::ManagerDUGStandard> dugman;
     dugman = new OA::DUG::ManagerDUGStandard(getIRInterface(), getIRInterface());
     OA::OA_ptr<OA::DUG::DUGStandard> dug
-      = dugman->performAnalysis(procIt, parambind, interAlias, cgraph);
+      = dugman->performAnalysis(procIt, parambind, cgraph);
     dugman->transitiveClosureDepMatrix(cgraph);
     // #define DEBUG_DUAA_LAST 1
 #ifdef DEBUG_DUAA_LAST
@@ -177,7 +177,7 @@ namespace fortTkSupport {
     OA::OA_ptr<OA::Activity::ManagerDUActive> duactiveman;
     duactiveman = new OA::Activity::ManagerDUActive(getIRInterface(), dug);
     OA::OA_ptr<OA::Activity::InterActiveFortran> duactive;
-    duactive = duactiveman->performAnalysis(parambind, interAlias);
+    duactive = duactiveman->performAnalysis(parambind);
 #ifdef DEBUG_DUAA
     duactive->dump(cout, getIRInterface());
 #endif

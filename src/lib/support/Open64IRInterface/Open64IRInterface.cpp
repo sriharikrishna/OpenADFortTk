@@ -2308,8 +2308,10 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
                   OA::OA_ptr<OA::MemRefExpr> lhs_tmp_mre;
 
 
+                  // get the current scope information
+                  OA::ProcHandle currContext = getCurrentProcContext();
                   OA::ExprHandle hm((OA::irhandle_t)WN_kid0(wn));
-                  lhs_tmp_mre = new OA::UnnamedRef(mrType,hm);
+                  lhs_tmp_mre = new OA::UnnamedRef(mrType,hm,currContext);
 
                   sMemref2mreSetMap[MemRefHandle((irhandle_t)WN_kid0(wn))].insert(lhs_tmp_mre);
                   sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)WN_kid0(wn)));
