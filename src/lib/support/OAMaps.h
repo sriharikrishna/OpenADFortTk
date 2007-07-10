@@ -1,251 +1,160 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.h,v 1.4 2005/08/15 20:17:25 utke Exp $
 
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/OAMaps.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
 #ifndef OAMaps_INCLUDED_h
 #define OAMaps_INCLUDED_h
 
-//************************* System Include Files ****************************
-
 #include <iostream>
 
-//************************** Open64 Include Files ***************************
-
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 //************************ OpenAnalysis Include Files ***********************
 
-#include <OpenAnalysis/CallGraph/ManagerCallGraphStandard.hpp>
-#include <OpenAnalysis/CFG/ManagerCFGStandard.hpp>
-#include <OpenAnalysis/CFG/EachCFGStandard.hpp>
-#include <OpenAnalysis/Alias/ManagerAliasMapBasic.hpp>
-#include <OpenAnalysis/Alias/ManagerInterAliasMapBasic.hpp>
-#include <OpenAnalysis/Alias/ManagerNoAddressOf.hpp>
-#include <OpenAnalysis/ReachDefs/ManagerReachDefsStandard.hpp>
-#include <OpenAnalysis/SideEffect/ManagerSideEffectStandard.hpp>
-#include <OpenAnalysis/SideEffect/InterSideEffectStandard.hpp>
-#include <OpenAnalysis/SideEffect/ManagerInterSideEffectStandard.hpp>
-#include <OpenAnalysis/ReachConsts/ManagerReachConstsStandard.hpp>
-#include <OpenAnalysis/UDDUChains/ManagerUDDUChainsStandard.hpp>
-#include <OpenAnalysis/Activity/ManagerActiveStandard.hpp>
-#include <OpenAnalysis/Activity/ManagerICFGActive.hpp>
-#include <OpenAnalysis/XAIF/UDDUChainsXAIF.hpp>
-#include <OpenAnalysis/XAIF/ManagerUDDUChainsXAIF.hpp>
-#include <OpenAnalysis/XAIF/ManagerAliasMapXAIF.hpp>
-#include <OpenAnalysis/DataFlow/ManagerParamBindings.hpp>
-#include <OpenAnalysis/Alias/ManagerSymAliasSetsBottom.hpp>
-#include <OpenAnalysis/Alias/ManagerInsNoPtrInterAliasMap.hpp>
-#include <OpenAnalysis/ICFG/ManagerICFGStandard.hpp>
-#include <OpenAnalysis/DUG/ManagerDUGStandard.hpp>
-#include <OpenAnalysis/duaa/ManagerDUActive.hpp>
+#include "OpenAnalysis/CallGraph/ManagerCallGraph.hpp"
+#include "OpenAnalysis/CallGraph/CallGraph.hpp"
+#include "OpenAnalysis/CallGraph/CallGraphInterface.hpp"
+#include "OpenAnalysis/CFG/ManagerCFG.hpp"
+#include "OpenAnalysis/CFG/EachCFGStandard.hpp"
+#include "OpenAnalysis/Alias/ManagerAliasMapBasic.hpp"
+#include "OpenAnalysis/Alias/ManagerInterAliasMapBasic.hpp"
+#include "OpenAnalysis/Alias/ManagerFIAliasAliasMap.hpp"
+#include "OpenAnalysis/ReachDefs/ManagerReachDefsStandard.hpp"
+#include "OpenAnalysis/SideEffect/ManagerSideEffectStandard.hpp"
+#include "OpenAnalysis/SideEffect/InterSideEffectStandard.hpp"
+#include "OpenAnalysis/SideEffect/ManagerInterSideEffectStandard.hpp"
+#include "OpenAnalysis/UDDUChains/ManagerUDDUChainsStandard.hpp"
+#include "OpenAnalysis/CSFIActivity/ManagerDUActive.hpp"
+#include "OpenAnalysis/XAIF/UDDUChainsXAIF.hpp"
+#include "OpenAnalysis/XAIF/ManagerUDDUChainsXAIF.hpp"
+#include "OpenAnalysis/XAIF/ManagerAliasMapXAIF.hpp"
+#include "OpenAnalysis/DataFlow/ManagerParamBindings.hpp"
 
 
 //*************************** User Include Files ****************************
 
-#include "Open64IRInterface.hpp"
+#include "Open64IRInterface/Open64IRInterface.hpp"
 
 #include "BaseMap.h"
-#include "diagnostics.h"
+#include "Diagnostics.h"
 
-//************************** Forward Declarations ***************************
+namespace fortTkSupport {
 
-typedef std::list<OA::OA_ptr<OA::CFG::Interface::Node> > CFGNodeList;
-typedef std::list<OA::OA_ptr<OA::DGraph::Interface::Node> > DGraphNodeList;
 
-const char*
-GetCFGVertexType(OA::OA_ptr<OA::CFG::Interface> cfg, 
-                 OA::OA_ptr<OA::CFG::Interface::Node> n);
-
-const char*
-GetCFGControlFlowVertexType(WN* wstmt);
-
-//***************************************************************************
-
-//***************************************************************************
-// PU <-> OAAnalInfo maps (global/interprocedural)
-//***************************************************************************
-
-class OAAnalInfo;
-
-class PUToOAAnalInfoMap 
-  : public FortTk::BaseMap<PU_Info*, OAAnalInfo*>
-{
-public:  
-  PUToOAAnalInfoMap() { }
-  PUToOAAnalInfoMap(PU_Info* pu_forest) { Create(pu_forest); }
-  virtual ~PUToOAAnalInfoMap() { }
-
-  void Create(PU_Info* pu_forest);
-
-  // IRInterface
-  OA::OA_ptr<Open64IRInterface> GetIRInterface() { return irIF; }
-  void SetIRInterface(OA::OA_ptr<Open64IRInterface> x) { irIF = x; }
-
-  // CallGraph  
-  OA::OA_ptr<OA::CallGraph::CallGraphStandard> GetCallGraph() 
-    { return cgraph; }
-  void SetCallGraph(OA::OA_ptr<OA::CallGraph::ManagerStandard> m, 
-		    OA::OA_ptr<OA::CallGraph::CallGraphStandard> x) 
-    { cgraphman = m; cgraph = x; }
-
-  // Each CFG 'manager'
-  OA::OA_ptr<OA::CFG::EachCFGInterface> GetCFGEach() 
-    { return cfgeach; }
-  void SetCFGEach(OA::OA_ptr<OA::CFG::ManagerStandard> m, 
-		  OA::OA_ptr<OA::CFG::EachCFGInterface> x) 
-    { cfgman = m; cfgeach = x; }
-
-  // Parameter Bindings
-  OA::OA_ptr<OA::DataFlow::ParamBindings> GetParamBindings() { 
-    return paramBindings; 
-  }
-  void SetParamBind(OA::OA_ptr<OA::DataFlow::ManagerParamBindings> m, 
-		     OA::OA_ptr<OA::DataFlow::ParamBindings> x) { 
-    paramBindingsman = m; 
-    paramBindings = x; 
-  }
+  typedef std::list<OA::OA_ptr<OA::CFG::NodeInterface> > CFGNodeList;
+  typedef std::list<OA::OA_ptr<OA::DGraph::NodeInterface> > DGraphNodeList;
   
-  // Inter Alias
-  OA::OA_ptr<OA::Alias::ManagerInsNoPtrInterAliasMap> GetInterAlias()
-    { return interaliasmapman; }
-  void SetInterAlias(OA::OA_ptr<OA::Alias::ManagerInsNoPtrInterAliasMap> m, 
-		     OA::OA_ptr<OA::Alias::InterAliasMap> x) 
-    { interaliasmapman = m; interAlias = x; }
+  const char*
+    GetCFGVertexType(OA::OA_ptr<OA::CFG::CFGInterface> cfg, 
+		     OA::OA_ptr<OA::CFG::NodeInterface> n);
 
-  // Inter Side Effect  
-  void SetSideEffect(OA::OA_ptr<OA::SideEffect::ManagerStandard> m) 
-    { sideeffectman = m; }
+  const char*
+    GetCFGControlFlowVertexType(WN* wstmt);
   
-  OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> GetInterSideEffect()
-    { return interSE; }
-  void SetInterSideEffect(OA::OA_ptr<OA::SideEffect::ManagerInterSideEffectStandard> m,
-			  OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> x) 
-    { interSEman = m; interSE = x; }
+  class IntraOAInfo;
+  
+  /** 
+   * PU to OAInfo maps (global/interprocedural)
+   */
+  class InterOAInfoMap : public fortTkSupport::BaseMap<PU_Info*, IntraOAInfo*> {
 
-  // Activity
-  OA::OA_ptr<OA::Activity::InterActive> GetInterActive() { return active; }
-  void SetInterActive(OA::OA_ptr<OA::Activity::ManagerDUActive> m,
-		      OA::OA_ptr<OA::Activity::InterActive> x) 
-    { activeman = m; active = x; }
+  public:  
+  
+    InterOAInfoMap() { }
+    virtual ~InterOAInfoMap() { }
 
-private:
-  OA::OA_ptr<Open64IRInterface> irIF;
-  
-  OA::OA_ptr<OA::CallGraph::ManagerStandard> cgraphman;
-  OA::OA_ptr<OA::CallGraph::CallGraphStandard> cgraph;
-  
-  OA::OA_ptr<OA::CFG::ManagerStandard> cfgman;
-  OA::OA_ptr<OA::CFG::EachCFGInterface> cfgeach;
-  
-  OA::OA_ptr<OA::Alias::ManagerInsNoPtrInterAliasMap> interaliasmapman;
-  OA::OA_ptr<OA::Alias::InterAliasMap> interAlias;
+    void init(PU_Info* pu_forest, OA::OA_ptr<Open64IRInterface> x);
 
-  OA::OA_ptr<OA::SideEffect::ManagerStandard> sideeffectman;
+    OA::OA_ptr<Open64IRInterface> getIRInterface() { return myIRIF; }
+    void setIRInterface(OA::OA_ptr<Open64IRInterface> x) { myIRIF = x; }
 
-  OA::OA_ptr<OA::DataFlow::ParamBindings> paramBindings;
-  OA::OA_ptr<OA::DataFlow::ManagerParamBindings> paramBindingsman;
-  
-  OA::OA_ptr<OA::SideEffect::ManagerInterSideEffectStandard> interSEman;
-  OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> interSE;
-  
-  OA::OA_ptr<OA::Activity::ManagerDUActive> activeman;
-  OA::OA_ptr<OA::Activity::InterActive> active;  
-};
+    OA::OA_ptr<OA::CallGraph::CallGraph> getCallGraph() { return myCGraph; }
+    void setCallGraph(OA::OA_ptr<OA::CallGraph::CallGraph> x) { myCGraph = x;}
 
+    OA::OA_ptr<OA::CFG::EachCFGInterface> getCFGEach() { return myCFGEach; }
+    void setCFGEach(OA::OA_ptr<OA::CFG::EachCFGInterface> x) { myCFGEach = x; }
 
-//***************************************************************************
-// OAAnalInfo
-//***************************************************************************
+    OA::OA_ptr<OA::DataFlow::ParamBindings> getParamBindings() {return myParamBindings;}
+    void setParamBind(OA::OA_ptr<OA::DataFlow::ParamBindings> x) {myParamBindings = x;}
+  
+    OA::OA_ptr<OA::Alias::InterAliasMap> getInterAlias() { return myInterAliasMap; }
+    void setInterAlias(OA::OA_ptr<OA::Alias::InterAliasMap> x) { myInterAliasMap = x; }
 
-// OAAnalInfo: OpenAnalysis Analyses info
-class OAAnalInfo
-{
-public:
-  OAAnalInfo() { }
-  OAAnalInfo(PU_Info* pu, PUToOAAnalInfoMap* interInfo) 
-    { Create(pu, interInfo); }
-  ~OAAnalInfo();
-  
-  void Create(PU_Info* pu, PUToOAAnalInfoMap* interInfo);
+    OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> getInterSideEffect() { return myInterSideEffect; }
+    void setInterSideEffect(OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> x) {myInterSideEffect = x; }
 
-  // Intra Alias
-  OA::OA_ptr<OA::Alias::AliasMap> GetAlias() { return alias; }
-  void SetAlias(OA::OA_ptr<OA::Alias::ManagerAliasMapBasic> m, 
-                OA::OA_ptr<OA::Alias::AliasMap> x)
-    { aliasman = m; alias = x; }
-  
-  // ReachDefs
-  OA::OA_ptr<OA::ReachDefs::ReachDefsStandard> GetReachDefs() { return rds; }
-  void SetReachDefs(OA::OA_ptr<OA::ReachDefs::ManagerStandard> m,
-		            OA::OA_ptr<OA::ReachDefs::ReachDefsStandard> x) 
-    { rdsman = m; rds = x; }
-  
-  // UDDU chains
-  OA::OA_ptr<OA::UDDUChains::UDDUChainsStandard> GetUDDUChains() 
-      { return udduchains; }
-  void SetUDDUChains(OA::OA_ptr<OA::UDDUChains::ManagerStandard> m,
-                     OA::OA_ptr<OA::UDDUChains::UDDUChainsStandard> x) 
-    { udman = m; udduchains = x; }
-  
-    
-  // XAIF
-  OA::OA_ptr<OA::XAIF::AliasMapXAIF> GetAliasXAIF() { return aliasXAIF; }
-  void SetAliasXAIF(OA::OA_ptr<OA::XAIF::ManagerAliasMapXAIF> m,
-		    OA::OA_ptr<OA::XAIF::AliasMapXAIF> x)
-    { aliasmanXAIF = m; aliasXAIF = x; }
-  
-  OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> GetUDDUChainsXAIF() 
-    { return udduchainsXAIF; }
-  void SetUDDUChainsXAIF(OA::OA_ptr<OA::XAIF::ManagerStandard> m,
-			 OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> x) 
-    { udmanXAIF = m; udduchainsXAIF = x; }
-  
-  static void setDoNotFilterFlag();
+    OA::OA_ptr<OA::Activity::InterActiveFortran> getInterActiveFortran() { return myInterActiveFortran; }
+    void setInterActiveFortran(OA::OA_ptr<OA::Activity::InterActiveFortran> x) {myInterActiveFortran = x; }
 
-  static bool getDoNotFilterFlag();
-
-private:
-  OA::OA_ptr<OA::Alias::ManagerAliasMapBasic> aliasman;
-  OA::OA_ptr<OA::Alias::AliasMap> alias;
-  
-  OA::OA_ptr<OA::SideEffect::InterSideEffectInterface> sideEffect;
-    
-  OA::OA_ptr<OA::ReachDefs::ManagerStandard> rdsman;
-  OA::OA_ptr<OA::ReachDefs::ReachDefsStandard> rds;
-  
-  OA::OA_ptr<OA::UDDUChains::ManagerStandard> udman;
-  OA::OA_ptr<OA::UDDUChains::UDDUChainsStandard> udduchains;
-  
-  
-  OA::OA_ptr<OA::XAIF::ManagerAliasMapXAIF> aliasmanXAIF;
-  OA::OA_ptr<OA::XAIF::AliasMapXAIF> aliasXAIF;
-
-  OA::OA_ptr<OA::XAIF::ManagerStandard> udmanXAIF;
-  OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchainsXAIF;
+  private:
+    OA::OA_ptr<Open64IRInterface> myIRIF;
+    OA::OA_ptr<OA::CallGraph::CallGraph> myCGraph;
+    OA::OA_ptr<OA::CFG::EachCFGInterface> myCFGEach;
+    OA::OA_ptr<OA::Alias::InterAliasMap> myInterAliasMap;
+    OA::OA_ptr<OA::DataFlow::ParamBindings> myParamBindings;
+    OA::OA_ptr<OA::SideEffect::InterSideEffectStandard> myInterSideEffect;
+    OA::OA_ptr<OA::Activity::InterActiveFortran> myInterActiveFortran;  
+  };
 
   /** 
-   * a flag to pass on to the OA analysis 
-   * whether or not to filter information 
-   * per basic block
+   * information per PU
    */
-  static bool ourDoNotFilterFlag;
-};
+  class IntraOAInfo {
+  public:
 
-//***************************************************************************
+    IntraOAInfo() {}
 
-#endif /* OAMaps_INLUCDED_h */
+    IntraOAInfo(PU_Info* pu, InterOAInfoMap* interInfo);
+
+    ~IntraOAInfo() {}
+  
+    OA::OA_ptr<OA::Alias::Interface> getAlias() { return myIntraAlias; }
+    void setAlias(OA::OA_ptr<OA::Alias::Interface> x) { myIntraAlias = x; }
+
+    OA::OA_ptr<OA::ReachDefs::ReachDefsStandard> getReachDefs() { return myReachDefs; }
+    void setReachDefs(OA::OA_ptr<OA::ReachDefs::ReachDefsStandard> x) { myReachDefs = x; }
+  
+    OA::OA_ptr<OA::UDDUChains::UDDUChainsStandard> getUDDUChains() { return myUDDUChains; }
+    void setUDDUChains(OA::OA_ptr<OA::UDDUChains::UDDUChainsStandard> x) { myUDDUChains = x; }
+      
+    OA::OA_ptr<OA::XAIF::AliasMapXAIF> getAliasXAIF() { return myAliasXaif; }
+    void setAliasXAIF(OA::OA_ptr<OA::XAIF::AliasMapXAIF> x) { myAliasXaif = x; }
+  
+    OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> getUDDUChainsXAIF() { return myUDDUChainsXAIF; }
+    void setUDDUChainsXAIF(OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> x) {myUDDUChainsXAIF = x; }
+  
+    static bool isGlobalSymbolActive(ST* anST_p);
+
+    //   // this is only for context sensitive analysis
+    //   static void collectGlobalSymbolActivityInfo(OA::OA_ptr<OA::Activity::InterActive> active,
+    // 					      OA::OA_ptr<OA::Alias::InterAliasMap> interAlias,
+    // 					      OA::OA_ptr<Open64IRInterface> irIF,
+    // 					      PU_Info* pu_forest); 
+
+    static void setDoNotFilterFlag();
+
+    static bool getDoNotFilterFlag();
+
+  private:
+
+    OA::OA_ptr<OA::Alias::Interface> myIntraAlias;
+    OA::OA_ptr<OA::ReachDefs::ReachDefsStandard> myReachDefs;
+    OA::OA_ptr<OA::UDDUChains::UDDUChainsStandard> myUDDUChains;
+    OA::OA_ptr<OA::XAIF::AliasMapXAIF> myAliasXaif;
+    OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> myUDDUChainsXAIF;
+    /** 
+     * this is for context sensitive analysis, not in use right now 
+     */
+    static std::set<ST*> ourActiveGlobalSTPSet;
+
+    /** 
+     * a flag to pass on to the OA analysis 
+     * whether or not to filter information 
+     * per basic block
+     */
+    static bool ourDoNotFilterFlag;
+
+  };
+  
+}
+
+#endif 

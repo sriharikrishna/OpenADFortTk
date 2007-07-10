@@ -1,37 +1,13 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.i,v 1.5 2006/03/14 01:09:15 utke Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/wn2sexp.i,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
 #ifndef wn2sexp_i
 #define wn2sexp_i
 
-//************************** System Include Files ***************************
+#include "Open64IRInterface/Open64BasicTypes.h"
 
-//************************** Open64 Include Files ***************************
-
-#include <include/Open64BasicTypes.h>
-
-//*************************** User Include Files ****************************
+#include "sexpostream.h"
 
 #include "whirl2sexp.i"
-#include <lib/support/sexpostream.h>
-
-//************************** Forward Declarations ***************************
 
 //***************************************************************************
 // WNXlationTable

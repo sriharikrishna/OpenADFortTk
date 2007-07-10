@@ -2,10 +2,10 @@
 #include <sstream>
 
 #include "ScalarizedRef.h"
-#include "stab_attr.h"
-#include "wn_attr.h"
+#include "Open64IRInterface/stab_attr.h"
+#include "Open64IRInterface/wn_attr.h"
 
-namespace fortTk { 
+namespace fortTkSupport { 
 
   unsigned int ScalarizedRef::ourNextId = 0; 
   const std::string ScalarizedRef::ourPrefix("oaScalRef");

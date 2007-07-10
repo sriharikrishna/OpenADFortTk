@@ -1,5 +1,6 @@
 #include "BackSubstituteTemps.h"
-#include "WhirlGlobalStateUtils.h"
+#include "Diagnostics.h"
+#include "Open64IRInterface/WhirlGlobalStateUtils.h"
 
 namespace FortTk {
 

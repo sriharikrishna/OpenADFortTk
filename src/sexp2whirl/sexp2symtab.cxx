@@ -1,42 +1,18 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.cxx,v 1.9 2005/02/01 22:03:18 eraxxon Exp $
 
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2symtab.cxx,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************** System Include Files ***************************
-
-//*************************** Sexp Include Files ****************************
-
 #include <sexp.h>
 
-//************************** Open64 Include Files ***************************
+#include "Open64IRInterface/Open64BasicTypes.h"
 
-#include <include/Open64BasicTypes.h>
-
-//*************************** User Include Files ****************************
+#include "quad.h"
+#include "SexpTags.h"
+#include "sexputil.h"
 
 #include "sexp2wn.h"
 #include "sexp2symtab.h"
 
-#include <include/quad.h>
-#include <lib/support/SexpTags.h>
-#include <lib/support/sexputil.h>
-
-//************************** Forward Declarations ***************************
-
 using namespace sexp2whirl;
-
 
 //***************************************************************************
 // Helper templates
@@ -50,12 +26,12 @@ xlate_SYMTAB(SEGMENTED_ARRAY<T, block_size>& table,
   using namespace sexp;
   
   // Sanity check
-  FORTTK_ASSERT(tab_sx && is_list(tab_sx), FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(tab_sx && is_list(tab_sx), fortTkSupport::Diagnostics::UnexpectedInput);
   
   sexp_t* tag_sx = get_elem0(tab_sx);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, table_nm) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
   // Translate each entry
   for (sexp_t* entry = get_elem1(tab_sx); entry; entry = get_next(entry)) {
@@ -74,12 +50,12 @@ xlate_SYMTAB(RELATED_SEGMENTED_ARRAY<T, block_size>& table,
   using namespace sexp;
     
   // Sanity check
-  FORTTK_ASSERT(tab_sx && is_list(tab_sx), FORTTK_UNEXPECTED_INPUT);  
+  FORTTK_ASSERT(tab_sx && is_list(tab_sx), fortTkSupport::Diagnostics::UnexpectedInput);  
   
   sexp_t* tag_sx = get_elem0(tab_sx);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, table_nm) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
   // Translate each entry
   for (sexp_t* entry = get_elem1(tab_sx); entry; entry = get_next(entry)) {
@@ -98,12 +74,12 @@ xlate_SYMTAB(sexp_t* str_tab, const char* table_nm,
   using namespace sexp;
   
   // Sanity check
-  FORTTK_ASSERT(str_tab && is_list(str_tab), FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(str_tab && is_list(str_tab), fortTkSupport::Diagnostics::UnexpectedInput);
   
   sexp_t* tag_sx = get_elem0(str_tab);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, table_nm) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
   // Translate each entry, building up buffer
   for (sexp_t* entry = get_elem1(str_tab); entry; entry = get_next(entry)) {
@@ -124,12 +100,12 @@ sexp2whirl::TranslateGlobalSymbolTables(sexp_t* gbl_symtab, int flags)
   if (!gbl_symtab) { return; }
 
   // Sanity check
-  FORTTK_ASSERT(is_list(gbl_symtab), FORTTK_UNEXPECTED_INPUT);  
+  FORTTK_ASSERT(is_list(gbl_symtab), fortTkSupport::Diagnostics::UnexpectedInput);  
   
   sexp_t* tag_sx = get_elem0(gbl_symtab);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::GBL_SYMTAB) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
   // Initialize WHIRL symbol tables
   Read_Global_Data = "bogus-value-as-argument-to-Initialize_Symbol_Tables";
@@ -220,12 +196,12 @@ sexp2whirl::TranslateLocalSymbolTables(sexp_t* pu_symtab, SYMTAB_IDX stab_lvl,
   if (!pu_symtab) { return; }
   
   // Sanity check
-  FORTTK_ASSERT(is_list(pu_symtab), FORTTK_UNEXPECTED_INPUT);  
+  FORTTK_ASSERT(is_list(pu_symtab), fortTkSupport::Diagnostics::UnexpectedInput);  
   
   sexp_t* tag_sx = get_elem0(pu_symtab);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::PU_SYMTAB) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
   // Initialize WHIRL symbol tables
   New_Scope(stab_lvl, Malloc_Mem_Pool, TRUE);
@@ -258,12 +234,12 @@ sexp2whirl::xlate_FILE_INFO(sexp_t* file_info)
   using namespace sexp;
 
   // Sanity check
-  FORTTK_ASSERT(file_info && is_list(file_info), FORTTK_UNEXPECTED_INPUT);
+  FORTTK_ASSERT(file_info && is_list(file_info), fortTkSupport::Diagnostics::UnexpectedInput);
   
   sexp_t* tag_sx = get_elem0(file_info);
   const char* tagstr = get_value(tag_sx);
   FORTTK_ASSERT(tag_sx && strcmp(tagstr, SexpTags::FILE_INFO) == 0,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
   // gp_group
   sexp_t* gp_sx = get_elem1(file_info);
@@ -289,7 +265,7 @@ void
 sexp2whirl::xlate_ST_TAB(sexp_t* st_tab, const SCOPE& scope)
 {
   // RELATED_SEGMENTED_ARRAY
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
 }
 
 

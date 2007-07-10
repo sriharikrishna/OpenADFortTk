@@ -7,7 +7,7 @@
 #include <strings.h>
 
 
-#include <include/Open64BasicTypes.h> /* Open64 basic types */
+#include "Open64IRInterface/Open64BasicTypes.h"
 #include "pf_cg.h"
 
 
@@ -99,7 +99,7 @@ namespace whirl2xaif {
 	WN_const_val(substring_size) != string_size) {
       FORTTK_MSG(0, 
 		 "warning: " 
-		 << FORTTK_UNEXPECTED_INPUT 
+		 << fortTkSupport::Diagnostics::UnexpectedInput 
 		 << " ignoring substring expression, assuming this was introduced by mfef90" );
      
       //       /* Need to generate substring expression "(l+1:l+size)" */
@@ -242,7 +242,7 @@ namespace whirl2xaif {
   void 
   xlate_LDA(xml::ostream& xos, WN* wn, PUXlationContext& ctxt)
   {
-    FORTTK_ASSERT(WN_operator(wn) == OPR_LDA, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(WN_operator(wn) == OPR_LDA, fortTkSupport::Diagnostics::UnexpectedInput);
     FORTTK_ASSERT(ST_class(WN_st(wn)) != CLASS_PREG, "Cannot LDA a PREG");
   
     // Base and referenced (some offset, possibly 0, from base) objects
@@ -269,7 +269,7 @@ namespace whirl2xaif {
   void 
   xlate_LDID(xml::ostream& xos, WN* wn, PUXlationContext& ctxt)
   {
-    FORTTK_ASSERT(WN_operator(wn) == OPR_LDID, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(WN_operator(wn) == OPR_LDID, fortTkSupport::Diagnostics::UnexpectedInput);
 
     // Base and referenced (some offset, possibly 0, from base) objects
     TY_IDX base_ty = WN_GetBaseObjType(wn);
@@ -342,7 +342,7 @@ namespace whirl2xaif {
   xlate_ILOAD(xml::ostream& xos, WN* wn, PUXlationContext& ctxt)
   {
     // Note that we handle this just like we do the lhs of an ISTORE.
-    FORTTK_ASSERT(WN_operator(wn) == OPR_ILOAD, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(WN_operator(wn) == OPR_ILOAD, fortTkSupport::Diagnostics::UnexpectedInput);
   
     // Base and referenced (some offset, possibly 0, from base) objects
     WN* baseptr = WN_kid0(wn); // address expression as WN
@@ -366,7 +366,7 @@ namespace whirl2xaif {
   void 
   xlate_ILOADX(xml::ostream& xos, WN* wn, PUXlationContext& ctxt)
   {
-    FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+    FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
     xos << OPCODE_name(WN_opcode(wn));
     
   }
@@ -377,7 +377,7 @@ namespace whirl2xaif {
   {
     // This should only appear the as the rhs of an ISTORE.  Treat
     // it just like an ILOAD.
-    FORTTK_ASSERT(WN_operator(wn) == OPR_MLOAD, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(WN_operator(wn) == OPR_MLOAD, fortTkSupport::Diagnostics::UnexpectedInput);
 
     // FIXME:
     
@@ -404,7 +404,7 @@ namespace whirl2xaif {
   void 
   xlate_STID(xml::ostream& xos, WN* wn, PUXlationContext& ctxt)
   {
-    FORTTK_ASSERT(WN_operator(wn) == OPR_STID, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(WN_operator(wn) == OPR_STID, fortTkSupport::Diagnostics::UnexpectedInput);
 
     // LHS base and referenced (some offset, possibly 0, from base) objects
     ST* base_st = WN_st(wn); // symbol for base object
@@ -462,7 +462,7 @@ namespace whirl2xaif {
   void 
   xlate_ISTORE(xml::ostream& xos, WN* wn, PUXlationContext& ctxt)
   {
-    FORTTK_ASSERT(WN_operator(wn) == OPR_ISTORE, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(WN_operator(wn) == OPR_ISTORE, fortTkSupport::Diagnostics::UnexpectedInput);
 
     // LHS base and referenced (some offset, possibly 0, from base) objects
     WN* baseptr = WN_kid1(wn); // address expression as WN
@@ -511,7 +511,7 @@ namespace whirl2xaif {
   void 
   xlate_ISTOREX(xml::ostream& xos, WN* wn, PUXlationContext& ctxt)
   {
-    FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+    FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
     xos << std::endl << OPCODE_name(WN_opcode(wn));
     
   }
@@ -527,10 +527,10 @@ namespace whirl2xaif {
      * and we cannot easily get around this like we do in C (i.e.
      * with cast expressions. (FIXME)
      */
-    FORTTK_ASSERT(WN_operator(wn) == OPR_MSTORE, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(WN_operator(wn) == OPR_MSTORE, fortTkSupport::Diagnostics::UnexpectedInput);
 #if 0
     FORTTK_ASSERT_WARN(WN_operator(WN_kid0(wn)) == OPR_MLOAD,
-		       FORTTK_UNEXPECTED_OPR << "rhs of WN2F_mstore");
+		       fortTkSupport::Diagnostics::UnexpectedOpr << "rhs of WN2F_mstore");
   
     //TODO: scalar expression allowed, but array/structure assignment assumed
     // with constant ie: should put out doloop?... call OFFSET_Memref?
@@ -562,7 +562,7 @@ namespace whirl2xaif {
   void
   WN2F_pstid(xml::ostream& xos, WN* wn, PUXlationContext& ctxt)
   {
-    FORTTK_ASSERT(WN_operator(wn) == OPR_PSTID, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(WN_operator(wn) == OPR_PSTID, fortTkSupport::Diagnostics::UnexpectedInput);
   
     /* Get the lhs of the assignment */
     xos << std::endl;
@@ -597,7 +597,7 @@ namespace whirl2xaif {
   WN2F_pstore(xml::ostream& xos, WN* wn, PUXlationContext& ctxt)
   {
     TY_IDX        base_ty;
-    FORTTK_ASSERT(WN_operator(wn) == OPR_PSTORE, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(WN_operator(wn) == OPR_PSTORE, fortTkSupport::Diagnostics::UnexpectedInput);
   
     /* Get the base address into which we are storing a value */
     base_ty = WN_Tree_Type(WN_kid1(wn));
@@ -649,7 +649,7 @@ namespace whirl2xaif {
     /* Note that array indices have been normalized to assume the
      * array is based at index zero.  Since a base at index 1 is
      * the default for Fortran, we denormalize to base 1 here. */
-    FORTTK_ASSERT(WN_operator(wn) == OPR_ARRAY, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(WN_operator(wn) == OPR_ARRAY, fortTkSupport::Diagnostics::UnexpectedInput);
 
     BOOL deref = ctxt.currentXlationContext().isFlag(XlationContext::DEREF_ADDR);
   
@@ -916,7 +916,7 @@ namespace whirl2xaif {
      * array is based at index zero.  Since a base at index 1 is
      * the default for Fortran, we denormalize to base 1 here.
      */
-    FORTTK_ASSERT(WN_operator(wn) == OPR_ARRSECTION, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(WN_operator(wn) == OPR_ARRSECTION, fortTkSupport::Diagnostics::UnexpectedInput);
 
     BOOL  deref = ctxt.currentXlationContext().isFlag(XlationContext::DEREF_ADDR);
     WN    * kid;
@@ -1142,7 +1142,7 @@ namespace whirl2xaif {
       WN2F_Arrsection_Slots(xos,wn,ctxt);
     
     } else { /* Normalize array access to assume a single dimension */
-      FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
       FORTTK_ASSERT_WARN(!TY_Is_Array(array_ty) || TY_AR_ndims(array_ty) == 1,
 			 "access/declaration mismatch in array dimensions");
       //FIXME: WN2F_Normalize_Idx_To_Onedim(xos, wn, ctxt);

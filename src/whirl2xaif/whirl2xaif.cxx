@@ -5,8 +5,8 @@
 #include <time.h>
 #include <fstream>
 
-#include "include/Open64BasicTypes.h"
-#include "lib/support/Open64IRInterface.hpp"
+#include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64IRInterface/Open64IRInterface.hpp"
 #include "whirl2xaif.h"
 #include "wn2xaif.h"
 #include "st2xaif.h"
@@ -17,24 +17,24 @@ namespace whirl2xaif {
   fortTkSupport::IntrinsicXlationTable   
   Whirl2Xaif::ourIntrinsicTable(fortTkSupport::IntrinsicXlationTable::W2X);
 
-  PUToOAAnalInfoMap       Whirl2Xaif::ourOAAnalMap;
-  fortTk::ScalarizedRefTabMap_W2X Whirl2Xaif::ourScalarizedRefTableMap;
-  WNToWNIdTabMap          Whirl2Xaif::ourWNToWNIdTableMap;
+  fortTkSupport::InterOAInfoMap       Whirl2Xaif::ourOAAnalMap;
+  fortTkSupport::ScalarizedRefTabMap_W2X Whirl2Xaif::ourScalarizedRefTableMap;
+  fortTkSupport::WNToWNIdTabMap          Whirl2Xaif::ourWNToWNIdTableMap;
   const std::string       Whirl2Xaif::ourDividerComment("********************************************************************");
 
   fortTkSupport::IntrinsicXlationTable& Whirl2Xaif::getIntrinsicXlationTable() { 
     return ourIntrinsicTable;
   }
 
-  PUToOAAnalInfoMap& Whirl2Xaif::getOAAnalMap() { 
+  fortTkSupport::InterOAInfoMap& Whirl2Xaif::getOAAnalMap() { 
     return ourOAAnalMap;
   }
 
-  fortTk::ScalarizedRefTabMap_W2X& Whirl2Xaif::getScalarizedRefTableMap() { 
+  fortTkSupport::ScalarizedRefTabMap_W2X& Whirl2Xaif::getScalarizedRefTableMap() { 
     return ourScalarizedRefTableMap;
   }
 
-  WNToWNIdTabMap& Whirl2Xaif::getWNToWNIdTableMap() { 
+  fortTkSupport::WNToWNIdTabMap& Whirl2Xaif::getWNToWNIdTableMap() { 
     return ourWNToWNIdTableMap;
   }
 
@@ -45,36 +45,36 @@ namespace whirl2xaif {
     Diag_Set_Phase("WHIRL to XAIF: translate IR");
     if (!pu_forest) { return; }
     if (Args::ourDoNotFilterFlag) { 
-      OAAnalInfo::setDoNotFilterFlag();
+      fortTkSupport::IntraOAInfo::setDoNotFilterFlag();
     }
     // -------------------------------------------------------
     // 1. Initialization (Much of this information must be collected
     // here because it is part of the CallGraph instead of a
     // ControlFlowGraph)
     // -------------------------------------------------------
-    OA::OA_ptr<Open64IRInterface> irInterface;
-    irInterface = new Open64IRInterface;
+    OA::OA_ptr<Open64IRInterface> irInterface; irInterface=new Open64IRInterface; 
     Open64IRInterface::initContextState(pu_forest);
     xml::ostream xos(os.rdbuf());
-    PUXlationContext ctxt("whirl2xaif::translateIR");
+    PUXlationContext ctxt("whirl2xaif::translateIR",*irInterface);
     dumpTranslationHeaderComment(xos); // FIXME (optional)
     // Initialize global id maps
     // NOTE: Do this first so that ids will match in back-translation
-    SymTabToSymTabIdMap* stabmap = new SymTabToSymTabIdMap(pu_forest);
-    ctxt.setSymTabToIdMap(stabmap);
-    PUToPUIdMap* pumap = new PUToPUIdMap(pu_forest);
-    ctxt.setPUToIdMap(pumap);
+    fortTkSupport::SymTabToSymTabIdMap stabmap(pu_forest);
+    ctxt.setSymTabToIdMap(&stabmap);
+    fortTkSupport::PUToPUIdMap pumap(pu_forest);
+    ctxt.setPUToIdMap(&pumap);
     ourWNToWNIdTableMap.Create(pu_forest); // Note: could make this local
     // Initialize and create inter/intra analysis information
-    ourOAAnalMap.Create(pu_forest);
-    ctxt.setActivity(ourOAAnalMap.GetInterActive());
+    ourOAAnalMap.init(pu_forest,irInterface);
+    ctxt.setActivity(ourOAAnalMap.getInterActiveFortran());
+    ctxt.setAlias(ourOAAnalMap.getInterAlias());
     // Create scalarized var reference table
     ourScalarizedRefTableMap.Create(pu_forest);
     // -------------------------------------------------------
     // 2. Generate XAIF CallGraph
     // -------------------------------------------------------
-    OA::OA_ptr<OA::CallGraph::CallGraphStandard> cgraph = 
-      ourOAAnalMap.GetCallGraph();
+    OA::OA_ptr<OA::CallGraph::CallGraph> cgraph = 
+      ourOAAnalMap.getCallGraph();
     // CallGraph header info
     xos << xml::BegElem("xaif:CallGraph")
 	<< xml::Attr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
@@ -93,9 +93,9 @@ namespace whirl2xaif {
     for (DGraphNodeVec::iterator nodeIt = nodes->begin();
 	 nodeIt != nodes->end(); ++nodeIt) {
       ctxt.createXlationContext();
-      OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = *nodeIt;
-      OA::OA_ptr<CallGraphStandard::Node> n = 
-	ntmp.convert<CallGraphStandard::Node>();
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = *nodeIt;
+      OA::OA_ptr<Node> n = 
+	ntmp.convert<Node>();
       translatePU(xos, n, n->getId(), ctxt);
       ctxt.deleteXlationContext();
     }
@@ -104,19 +104,14 @@ namespace whirl2xaif {
     DGraphEdgeVec* edges = SortDGraphEdges(cgraph);
     for (DGraphEdgeVec::iterator edgeIt = edges->begin(); 
 	 edgeIt != edges->end(); ++edgeIt) {
-      OA::OA_ptr<OA::DGraph::Interface::Edge> e = (*edgeIt);
-      OA::OA_ptr<OA::DGraph::Interface::Node> n1 = e->source();
-      OA::OA_ptr<OA::DGraph::Interface::Node> n2 = e->sink();
+      OA::OA_ptr<OA::DGraph::EdgeInterface> e = (*edgeIt);
+      OA::OA_ptr<OA::DGraph::NodeInterface> n1 = e->getSource();
+      OA::OA_ptr<OA::DGraph::NodeInterface> n2 = e->getSink();
       DumpCallGraphEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), n1->getId(), n2->getId());
     }
     delete edges;
     // Done!
     xos << xml::EndElem; /* xaif:CallGraph */
-    // -------------------------------------------------------
-    // 3. Cleanup
-    // -------------------------------------------------------
-    delete stabmap;
-    delete pumap;
   }
 
   void Whirl2Xaif::translateScopeHierarchy(xml::ostream& xos, 
@@ -127,7 +122,7 @@ namespace whirl2xaif {
     // there is one scope for each PU.
     xos << xml::BegElem("xaif:ScopeHierarchy");
     // translate global symbol table
-    SymTabId scopeId = ctxt.findSymTabId(Scope_tab[GLOBAL_SYMTAB].st_tab);
+   fortTkSupport::SymTabId scopeId = ctxt.findSymTabId(Scope_tab[GLOBAL_SYMTAB].st_tab);
     xos << xml::BegElem("xaif:Scope") << xml::Attr("vertex_id", scopeId)
 	<< SymTabIdAnnot(scopeId) << xml::EndAttrs;
     xlate_SymbolTables(xos, GLOBAL_SYMTAB, NULL, ctxt);
@@ -146,10 +141,10 @@ namespace whirl2xaif {
 					     PUXlationContext& ctxt) {
     PU_SetGlobalState(pu);
     // Need WHIRL<->ID maps for translating ScalarizedRefs
-    WNToWNIdMap* wnmap = ourWNToWNIdTableMap.Find(pu);
+    fortTkSupport::WNToWNIdMap* wnmap = ourWNToWNIdTableMap.Find(pu);
     ctxt.setWNToIdMap(wnmap);
-    fortTk::ScalarizedRefTab_W2X* tab = ourScalarizedRefTableMap.Find(pu);
-    SymTabId scopeId = ctxt.findSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);  
+    fortTkSupport::ScalarizedRefTab_W2X* tab = ourScalarizedRefTableMap.Find(pu);
+   fortTkSupport::SymTabId scopeId = ctxt.findSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);  
     // translate symbol tables 
     xos << xml::BegElem("xaif:Scope") << xml::Attr("vertex_id", scopeId) 
 	<< SymTabIdAnnot(scopeId) << xml::EndAttrs;
@@ -182,9 +177,9 @@ namespace whirl2xaif {
     // iterate over processed units
     for (int procCnt = 1; procIt.isValid(); ++procIt, ++procCnt) {
       PU_Info* pu = (PU_Info*)procIt.current().hval();
-      OAAnalInfo* oaAnal = ourOAAnalMap.Find(pu);
-      WNToWNIdMap* wnmap = ourWNToWNIdTableMap.Find(pu);
-      OA::OA_ptr<OA::XAIF::AliasMapXAIF> aliasSets = oaAnal->GetAliasXAIF();
+      fortTkSupport::IntraOAInfo* oaAnal = ourOAAnalMap.Find(pu);
+      fortTkSupport::WNToWNIdMap* wnmap = ourWNToWNIdTableMap.Find(pu);
+      OA::OA_ptr<OA::XAIF::AliasMapXAIF> aliasSets = oaAnal->getAliasXAIF();
       OA::OA_ptr<OA::XAIF::IdIterator> aliasSetIdsIter = aliasSets->getIdIterator();
       // iterate over alias sets
       for ( ; aliasSetIdsIter->isValid(); ++(*aliasSetIdsIter)) {
@@ -210,9 +205,9 @@ namespace whirl2xaif {
     procIt.reset();
     for (int procCnt = 1; procIt.isValid(); ++procIt, ++procCnt) {
       PU_Info* pu = (PU_Info*)procIt.current().hval();
-      OAAnalInfo* oaAnal = ourOAAnalMap.Find(pu);
-      WNToWNIdMap* wnmap = ourWNToWNIdTableMap.Find(pu);
-      OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchains = oaAnal->GetUDDUChainsXAIF();
+      fortTkSupport::IntraOAInfo* oaAnal = ourOAAnalMap.Find(pu);
+      fortTkSupport::WNToWNIdMap* wnmap = ourWNToWNIdTableMap.Find(pu);
+      OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchains = oaAnal->getUDDUChainsXAIF();
       OA::OA_ptr<OA::XAIF::UDDUChainsXAIF::ChainIterator> chainIter 
 	= udduchains->getChainIterator();
       for ( ; chainIter->isValid(); ++(*chainIter)) {
@@ -224,7 +219,7 @@ namespace whirl2xaif {
 	for ( ; siter->isValid(); (*siter)++ ) {
 	  OA::StmtHandle stmt = siter->current();
 	  WN* stmtWN = (WN*)(stmt.hval());
-	  WNId stmtid = wnmap->Find(stmtWN);
+	  fortTkSupport::WNId stmtid = wnmap->Find(stmtWN);
 	  xos << xml::BegElem("xaif:StatementId");
 	  if (stmtWN == NULL) {
 	    xos << xml::Attr("idRef", "");
@@ -242,12 +237,12 @@ namespace whirl2xaif {
   }
 
   void Whirl2Xaif::translatePU(xml::ostream& xos, 
-			       OA::OA_ptr<OA::CallGraph::CallGraphStandard::Node> n, 
+			       OA::OA_ptr<OA::CallGraph::Node> n, 
 			       UINT32 vertexId, 
 			       PUXlationContext& ctxt) {
     // FIXME: A more general test will be needed
     PU_Info* pu = (PU_Info*)n->getProc().hval();
-    FORTTK_ASSERT(pu, FORTTK_UNEXPECTED_INPUT << "PU is NULL");
+    FORTTK_ASSERT(pu, fortTkSupport::Diagnostics::UnexpectedInput << "PU is NULL");
     translatePU(xos, pu, n->getId(), ctxt);
     xos << std::endl;
     xos.flush();
@@ -272,10 +267,10 @@ namespace whirl2xaif {
     bool isProgram = PU_is_mainpu(real_pu);
     ST* st = ST_ptr(PU_Info_proc_sym(pu));
     WN *wn_pu = PU_Info_tree_ptr(pu);
-    PUId puId = ctxt.findPUId(pu);
+    fortTkSupport::PUId puId = ctxt.findPUId(pu);
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-    SymTabId scopeId = ctxt.findSymTabId(sttab);
-    SymTabId puScopeId = ctxt.findSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
+   fortTkSupport::SymTabId scopeId = ctxt.findSymTabId(sttab);
+   fortTkSupport::SymTabId puScopeId = ctxt.findSymTabId(Scope_tab[CURRENT_SYMTAB].st_tab);
     // Generate the CFG
     xos << xml::Comment(ourDividerComment.c_str());
     if (isProgram) { xos << xml::Comment("*** This is the PROGRAM routine ***"); }

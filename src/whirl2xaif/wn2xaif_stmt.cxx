@@ -5,8 +5,9 @@
 #include <sstream> 
 
 
-#include "include/Open64BasicTypes.h"
-#include "lib/support/IntrinsicXlationTable.h"
+#include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64IRInterface/IntrinsicInfo.h"
+#include "IntrinsicXlationTable.h"
 
 #include "wn2xaif.h"
 #include "wn2xaif_stmt.h"
@@ -48,7 +49,7 @@ whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   // FIXME: cleanup AGOTO, RETURN, RETURN_VAL, PRAGMA, COMMENT, USE
   //  INTRN_CASSIGNSTMT, INTRN_STOP, INTRN_STOP_F90, IO
   
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -67,9 +68,9 @@ whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_BLOCK(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_BLOCK, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_BLOCK, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -77,9 +78,9 @@ whirl2xaif::xlate_BLOCK(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_region(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_REGION, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_REGION, fortTkSupport::Diagnostics::UnexpectedInput); 
 
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -87,9 +88,9 @@ whirl2xaif::WN2F_region(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_DO_LOOP(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_DO_LOOP, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_DO_LOOP, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -97,9 +98,9 @@ whirl2xaif::xlate_DO_LOOP(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_DO_WHILE(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_DO_WHILE, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_DO_WHILE, fortTkSupport::Diagnostics::UnexpectedInput); 
 
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -107,9 +108,9 @@ whirl2xaif::xlate_DO_WHILE(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_WHILE_DO(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_WHILE_DO, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_WHILE_DO, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -117,9 +118,9 @@ whirl2xaif::xlate_WHILE_DO(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_IF(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_IF, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_IF, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -133,7 +134,7 @@ whirl2xaif::WN2F_implied_do(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   // REMOVE
   FORTTK_ASSERT(ctxt.currentXlationContext().isFlag(XlationContext::IO_STMT), 
-		FORTTK_UNEXPECTED_INPUT); 
+		fortTkSupport::Diagnostics::UnexpectedInput); 
   
   /* This is a fortran implied do_loop, which can only occur as an
    * an OPR_IO_ITEM.  We should always be able to regenerate
@@ -200,9 +201,9 @@ void
 whirl2xaif::xlate_GOTO(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_GOTO ||
-		WN_operator(wn) == OPR_REGION_EXIT, FORTTK_UNEXPECTED_INPUT); 
+		WN_operator(wn) == OPR_REGION_EXIT, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -214,9 +215,9 @@ whirl2xaif::xlate_GOTO(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void
 whirl2xaif::xlate_SWITCH(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_SWITCH, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_SWITCH, fortTkSupport::Diagnostics::UnexpectedInput); 
 
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -242,9 +243,9 @@ void
 whirl2xaif::WN2F_agoto(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   // REMOVE
-  FORTTK_ASSERT(WN_operator(wn) == OPR_AGOTO, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_AGOTO, fortTkSupport::Diagnostics::UnexpectedInput); 
 
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker())
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -263,9 +264,9 @@ whirl2xaif::xlate_condBR(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   OPERATOR opr = WN_operator(wn);
   FORTTK_ASSERT(opr == OPR_TRUEBR || opr == OPR_FALSEBR,
-		FORTTK_UNEXPECTED_INPUT);
+		fortTkSupport::Diagnostics::UnexpectedInput);
   
-  FORTTK_DIE(FORTTK_UNIMPLEMENTED);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
 }
 
@@ -273,9 +274,9 @@ whirl2xaif::xlate_condBR(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_RETURN(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_RETURN, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_RETURN, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -289,9 +290,9 @@ whirl2xaif::xlate_RETURN(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_RETURN_VAL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_RETURN_VAL, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_RETURN_VAL, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -305,9 +306,9 @@ whirl2xaif::xlate_RETURN_VAL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_LABEL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_LABEL, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_LABEL, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker())
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -323,14 +324,11 @@ whirl2xaif::xlate_LABEL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 //***************************************************************************
 
 void 
-whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
-{
+whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
   // XAIF distinguishes between a subroutine call (statement) and
   // function call (expression).
-  
   // FIXME: this is a nearly incomprehensible function.  I've cleaned
   // it up a little, but it needs a lot more work.
-
   /* Generates a function-call and ensures that the return value
    * is returned into the appropriate context, be it a variable
    * or a register.  Note that intrinsic calls are dispatched to
@@ -338,11 +336,9 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
    * Make sure the handling of instrinsic ops in wn2f_expr.c is
    * kept up to date with changes that occur here.
    */
-  
   // We can't handle ICALLs yet
   OPERATOR opr = WN_operator(wn);
-  FORTTK_ASSERT(opr != OPR_ICALL, FORTTK_UNEXPECTED_INPUT); 
-  
+  FORTTK_ASSERT(opr != OPR_ICALL, fortTkSupport::Diagnostics::UnexpectedInput); 
   // -------------------------------------------------------
   // Gather info...
   // -------------------------------------------------------
@@ -351,7 +347,6 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   INT last_arg_idx = WN_Call_Last_Arg_Idx(wn);
   BOOL is_user_call = FALSE;
   BOOL is_allocate_stmt = FALSE; 
-  
   if (opr == OPR_CALL) {
     is_user_call = TRUE;
     const char* nm = ST_name(WN_st(wn));
@@ -366,31 +361,28 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   } else if (opr == OPR_PICCALL) {
     is_user_call = TRUE;
   }
-  
-  // -------------------------------------------------------
-  //
-  // -------------------------------------------------------
-  int xlate_as = 0; // 0: subroutine; 1: function; 2: intrinsic 
+  enum CallKind_E{SUBROUTINE_CALL,
+		  FUNCTION_CALL,
+		  INTRINSIC_CALL};
+  CallKind_E xlate_as=SUBROUTINE_CALL; // default
   UINT targid = 0; // (FIXME)
-
   if (opr == OPR_INTRINSIC_CALL) {
     // xlate_INTRINSIC_CALL() has already handled certain intrinsics (FIXME)
     // ... only consider returns through a first non-string parameter here
-
-    const char* inm = fortTkSupport::IntrinsicXlationTable::intrinsicBasename(WN_intrinsic(wn));
+    const char* inm = IntrinsicInfo::intrinsicBaseName(WN_intrinsic(wn));
     fortTkSupport::IntrinsicXlationTable::XAIFInfoPair infoPair(Whirl2Xaif::getIntrinsicXlationTable().findXAIFInfo(opr, inm));
-    xlate_as = 2; // intrinsic
+    xlate_as = INTRINSIC_CALL;
     targid = ctxt.currentXlationContext().getNewVertexId();
     xos << BegElem("xaif:Intrinsic") 
 	<< Attr("vertex_id", targid) << Attr("name", infoPair.second.name)
 	<< Attr("type", "***") << EndElem;
-
-  } else {
+  } 
+  else {
     // Could translate as an XAIF SubroutineCall, FunctionCall or Intrinsic
     // OPR_ICALL: TranslateWN(xos, WN_kid(wn, WN_kid_count(wn) - 1), ctxt);
     ST* st = WN_st(wn);
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
-    SymTabId scopeid = ctxt.findSymTabId(sttab);
+    fortTkSupport::SymTabId scopeid = ctxt.findSymTabId(sttab);
     const char* funcNm = ST_name(st);
     fortTkSupport::IntrinsicXlationTable::XAIFInfoPair infoPair(Whirl2Xaif::getIntrinsicXlationTable().
 								findXAIFInfo(opr, 
@@ -398,7 +390,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 									     false)); // don't complain if it is not there
     if (infoPair.first) {
       // Intrinsic
-      xlate_as = 2; // intrinsic
+      xlate_as = INTRINSIC_CALL;
       targid = ctxt.currentXlationContext().getNewVertexId();
       xos << BegElem("xaif:Intrinsic")
 	  << Attr("vertex_id", targid) << Attr("name", infoPair.second.name)
@@ -407,7 +399,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
       xos << EndElem;
     } else if (return_ty != (TY_IDX)0 && TY_kind(return_ty) != KIND_VOID) {
       // FunctionCall
-      xlate_as = 1; // function
+      xlate_as = FUNCTION_CALL;
       // JU: for now: 
       FORTTK_DIE("whirl2xaif::xlate_CALL: call to function: " << funcNm 
 		 << " is not supported! This should either be recognized as an intrinsic or should have been canonicalized into a subroutine call"); 
@@ -419,7 +411,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
       // SubroutineCall
       USRCPOS srcpos;
       USRCPOS_srcpos(srcpos) = WN_Get_Linenum(wn);
-      xlate_as = 0; // subroutine
+      xlate_as = SUBROUTINE_CALL; 
       xos << BegElem("xaif:SubroutineCall")
 	  << Attr("statement_id", ctxt.findWNId(wn))
 	  << Attr("scope_id", scopeid) 
@@ -427,17 +419,12 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 	  << AttrSymId(st);
     }
   }
-
   // -------------------------------------------------------  
   // Determine the number of implicit arguments appended to the end
   // of the argument list (i.e. string lengths).
-
   INT total_implicit_args = 0;
   TY_IDX arg_ty, kid_ty, parm_ty;
-
-
   TYPE_ID fmtry;
-  
   for (INT arg_idx = first_arg_idx, total_implicit_args = 0; 
        arg_idx <= last_arg_idx - total_implicit_args; 
        arg_idx++) {
@@ -446,23 +433,20 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
       WN* kidofparm = WN_kid0(WN_kid(wn, arg_idx));
       if (WN_operator(kidofparm) != OPR_CALL && 
 	  WN_operator(kidofparm) != OPR_INTRINSIC_CALL) {
-
 	arg_ty = WN_Tree_Type(WN_kid(wn, arg_idx));	
 	parm_ty = WN_ty(WN_kid(wn,arg_idx));
-	
 	if (TY_Is_Pointer(arg_ty)) {
 	  fmtry = TY_mtype(TY_pointed(arg_ty));
-	} else {
+	} 
+	else {
 	  fmtry = TY_mtype(arg_ty); 
 	}
-	
 	if (fmtry == MTYPE_M) {
 	  if (TY_Is_Pointer(parm_ty)) { // FIXME: hack to handle KIND_STRUCT
 	    fmtry = TY_pointed(parm_ty);
 	    fmtry = TY_mtype(fmtry);
 	  }
 	}
-	
 	if ((TY_Is_Character_Reference(arg_ty) 
 	     || TY_Is_Chararray_Reference(arg_ty) 
 	     || ((TY_Is_Pointer(arg_ty)
@@ -472,15 +456,16 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 	    && !is_allocate_stmt) {
 	  total_implicit_args++;
 	}
-      } else { /*the argument is function call
-		* if the return value is Chararray or Character Reference:
-		*/
+      } 
+      else { /* the argument is function call
+	      * if the return value is Chararray or Character Reference:
+	      */
 	if (WN_operator(kidofparm) == OPR_CALL) {
 	  kid_ty = PU_prototype (Pu_Table[ST_pu(WN_st(kidofparm))]);
 	  if (Func_Return_Character (kid_ty))
 	    total_implicit_args++; 
-	  
-	} else {
+	} 
+	else {
 	  if (WN_operator(kidofparm) == OPR_INTRINSIC_CALL &&
 	      WN_intrinsic(kidofparm) == INTRN_CONCATEXPR)
 	    total_implicit_args++;
@@ -488,8 +473,6 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
       }
     }
   }
-
-  
   // Append the argument list to the function reference, skipping
   // implicit character-string-length arguments assumed to be the
   // last ones in the list (see also ST2F_func_header()).  Note
@@ -500,51 +483,42 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   BOOL first_nonemptyarg = FALSE;
   INT implicit_args;
   UINT position = 0; // invalid position id
-
   UINT srcid = 0; // used for intrinsics (FIXME)
-
   for (INT arg_idx = first_arg_idx, implicit_args = 0; 
        arg_idx <= last_arg_idx - implicit_args; 
        arg_idx++) {
-
     if (WN_kid(wn, arg_idx) != NULL) {
       WN* kidofparm = WN_kid0(WN_kid(wn, arg_idx));
       if (WN_operator(kidofparm) != OPR_CALL)
 	arg_ty = WN_Tree_Type(WN_kid(wn, arg_idx));
       else
 	arg_ty = PU_prototype (Pu_Table[ST_pu(WN_st(kidofparm))]);
-
-      
       position++; // we have seen a valid argument
-      if (xlate_as == 0 || xlate_as == 1) { 
-	// SubroutineCall, FunctionCall
+      if (xlate_as == SUBROUTINE_CALL || xlate_as == FUNCTION_CALL) { 
 	xos << BegElem("xaif:Argument");
-	if (xlate_as == 0) { xos << Attr("position", position); }
-	// JU-begin
-	// ctxt.createXlationContext(PUXlationContext::VARREF, wn);// implicit for Argument
-	// JU-end
+	if (xlate_as == SUBROUTINE_CALL) { 
+	  xos << Attr("position", position); 
+	}
+	ctxt.createXlationContext(XlationContext::NOFLAG, kidofparm);// implicit for Argument
       }
-
-
       // FIXME
       if (opr == OPR_INTRINSIC_CALL &&
 	  INTRN_by_value(WN_intrinsic(wn))) {
 	/* Call-by value, but argument should be emitted without the
 	 * %val() qualifier. */
 	first_nonemptyarg = TRUE;
-
 	srcid = ctxt.currentXlationContext().peekVertexId(); // used for intrinsics
 	TranslateWN(xos, WN_kid(wn, arg_idx), ctxt);
-
-      } else if ((WN_operator(kidofparm) != OPR_CALL 
-		  && (TY_Is_Character_Reference(arg_ty)  
-		      || ((TY_Is_Pointer(arg_ty)
-			   && TY_mtype(TY_pointed(arg_ty))==MTYPE_M)
-			  && (TY_Is_Character_Reference(parm_ty) 
-			      || TY_Is_Chararray_Reference(parm_ty)))) 
-		  || WN_operator(kidofparm)==OPR_CALL 
-		  && Func_Return_Character(arg_ty) )
-		 && !is_allocate_stmt) {
+      } 
+      else if ((WN_operator(kidofparm) != OPR_CALL 
+		&& (TY_Is_Character_Reference(arg_ty)  
+		    || ((TY_Is_Pointer(arg_ty)
+			 && TY_mtype(TY_pointed(arg_ty))==MTYPE_M)
+			&& (TY_Is_Character_Reference(parm_ty) 
+			    || TY_Is_Chararray_Reference(parm_ty)))) 
+		|| WN_operator(kidofparm)==OPR_CALL 
+		&& Func_Return_Character(arg_ty) )
+	       && !is_allocate_stmt) {
 	/* Handle substring arguments here.  These are always assumed
 	 * to be passed by reference. For a function result, the length
 	 * follows the address - does this look like char fn result?
@@ -552,9 +526,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 	 */
 	INT len_idx;
 	INT cur_idx = arg_idx;
-	
 	implicit_args++;
-	
 	if ((is_user_call) && (cur_idx == first_arg_idx) 
 	    && (cur_idx == first_arg_idx) 
 	    && (WN_kid_count(wn) >= cur_idx + 2) 
@@ -567,39 +539,34 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 	}
 	if ( !(first_nonemptyarg && !has_stat) )
 	  has_stat = FALSE;
-	
 	first_nonemptyarg = TRUE;
 	srcid=ctxt.currentXlationContext().peekVertexId();
 	WN2F_String_Argument(xos, WN_kid(wn, cur_idx), /* string base */
 			     WN_kid(wn, len_idx), /* string length */
 			     ctxt);
-
-      } else if (!TY_Is_Pointer(arg_ty) || 
-		 (WN_operator(WN_kid(wn, arg_idx)) == OPR_INTRINSIC_OP &&
-		  INTR_is_valtmp(WN_intrinsic(WN_kid(wn, arg_idx))))) {
+      } 
+      else if (!TY_Is_Pointer(arg_ty) || 
+	       (WN_operator(WN_kid(wn, arg_idx)) == OPR_INTRINSIC_OP &&
+		INTR_is_valtmp(WN_intrinsic(WN_kid(wn, arg_idx))))) {
 	// Need to explicitly note this as a value parameter.
 	if (WN_operator(kidofparm) == OPR_INTRINSIC_CALL &&
 	    WN_intrinsic(kidofparm) == INTRN_CONCATEXPR)
 	  implicit_args++; 
 	  /*parser always generate an extra arg for concat operator*/
-	  
 	if ( !(first_nonemptyarg && !has_stat) )
 	  has_stat = FALSE;
 	first_nonemptyarg = TRUE;
 	srcid = ctxt.currentXlationContext().peekVertexId(); 
 	TranslateWN(xos, WN_kid(wn, arg_idx), ctxt);
-
-
-      } else { /* TY_Is_Pointer(arg_ty) */
+      } 
+      else { /* TY_Is_Pointer(arg_ty) */
 	/* There is also an implicit string length when the argument
 	 * is an array of character strings. */
 	if (TY_Is_Chararray_Reference(arg_ty) && !is_allocate_stmt)
 	  implicit_args++;
-	
 	/* Assume call-by-reference parameter passing */
 	if ( !(first_nonemptyarg && !has_stat) )
 	  has_stat = FALSE;
-	
 	first_nonemptyarg = TRUE;
 	srcid = ctxt.currentXlationContext().peekVertexId(); 
 	xlate_MemRef(xos, 
@@ -609,7 +576,6 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 			   0,                   /* offset from address */
 			   ctxt);
       }
-      
       if ((arg_idx+implicit_args) == (last_arg_idx-1)) { 
 	if (opr == OPR_CALL && is_allocate_stmt) {
 	  if (WN_operator(WN_kid0(WN_kid(wn, last_arg_idx))) == OPR_LDA) {
@@ -621,28 +587,18 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 	  }
 	}
       }
-      
-      if (xlate_as == 0 || xlate_as == 1) { 
-	// SubroutineCall, FunctionCall
-	// JU-begin
-	// ctxt.deleteXlationContext(); // end VARREF context
-	// JU-end
+      if (xlate_as == SUBROUTINE_CALL || xlate_as == FUNCTION_CALL) { 
+        ctxt.deleteXlationContext(); // end Argument context
 	xos << EndElem; // End Argument
       } else {
 	// Intrinsic: create an edge
 	DumpExprGraphEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), srcid, targid, position);
       }
-      
-    }
-  }
-  
+    } // non-null argument
+  } // loop over arguments
   ctxt.currentXlationContext().unsetFlag(XlationContext::HAS_NO_ARR_ELMT);
-  
-  if (xlate_as == 0 || xlate_as == 1) {
-    xos << EndElem; // SubroutineCall or FunctionCall
-  }
-  
-  
+  if (xlate_as == SUBROUTINE_CALL || xlate_as == FUNCTION_CALL) 
+    xos << EndElem; 
 } /* xlate_CALL */
 
 
@@ -653,14 +609,14 @@ whirl2xaif::xlate_INTRINSIC_CALL(xml::ostream& xos, WN *wn,
   // Handles all intrinsics that are translated into XAIF statements
 
   FORTTK_ASSERT(WN_operator(wn) == OPR_INTRINSIC_CALL, 
-		FORTTK_UNEXPECTED_INPUT); 
+		fortTkSupport::Diagnostics::UnexpectedInput); 
 
   WN   *arg_expr;
   TY_IDX arg_ty;
   INT  str_kid, length_kid, first_length_kid;
   BOOL regular_call = FALSE; /* Specially treated intrinsic call? */
   
-  WNId wnid = ctxt.findWNId(wn);
+  fortTkSupport::WNId wnid = ctxt.findWNId(wn);
 
   switch (WN_intrinsic(wn)) {
   case INTRN_CONCATEXPR:    
@@ -728,7 +684,7 @@ whirl2xaif::WN2F_eval(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
    * some kind of surrounding statement there is no way to do 
    * this in Fortran-77.
    */
-  FORTTK_ASSERT(WN_operator(wn) == OPR_EVAL, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_EVAL, fortTkSupport::Diagnostics::UnexpectedInput); 
   
   xos << "CALL _EVAL(";
   TranslateWN(xos, WN_kid0(wn), ctxt);
@@ -742,10 +698,10 @@ void
 whirl2xaif::xlate_PRAGMA(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_PRAGMA ||
-		WN_operator(wn) == OPR_XPRAGMA, FORTTK_UNEXPECTED_INPUT); 
+		WN_operator(wn) == OPR_XPRAGMA, fortTkSupport::Diagnostics::UnexpectedInput); 
   
   // switch (WN_pragma(apragma))
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -759,7 +715,7 @@ void
 whirl2xaif::xlate_PREFETCH(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_PREFETCH ||
-		WN_operator(wn) == OPR_PREFETCHX, FORTTK_UNEXPECTED_INPUT); 
+		WN_operator(wn) == OPR_PREFETCHX, fortTkSupport::Diagnostics::UnexpectedInput); 
   
   
 }
@@ -768,10 +724,10 @@ whirl2xaif::xlate_PREFETCH(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::xlate_COMMENT(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_COMMENT, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_COMMENT, fortTkSupport::Diagnostics::UnexpectedInput); 
   
   // Note: Index_To_Str(WN_GetComment(wn)) returns comment text
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -783,7 +739,7 @@ whirl2xaif::xlate_COMMENT(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_dealloca(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_DEALLOCA, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_DEALLOCA, fortTkSupport::Diagnostics::UnexpectedInput); 
 
   INT16 n,i;
   n = WN_kid_count(wn);
@@ -804,9 +760,9 @@ whirl2xaif::WN2F_dealloca(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void
 whirl2xaif::xlate_USE(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_USE, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_USE, fortTkSupport::Diagnostics::UnexpectedInput); 
   
-  WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   const char* nm = ST_name(WN_st(wn));
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
@@ -820,7 +776,7 @@ whirl2xaif::xlate_USE(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void
 whirl2xaif::WN2F_namelist_stmt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_NAMELIST, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_NAMELIST, fortTkSupport::Diagnostics::UnexpectedInput); 
   
   const char *st_name =  ST_name(WN_st(wn));
   if (ST_is_external(WN_st(wn))) {
@@ -854,7 +810,7 @@ whirl2xaif::WN2F_implicit_bnd(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void
 whirl2xaif::WN2F_nullify_stmt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_NULLIFY, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_NULLIFY, fortTkSupport::Diagnostics::UnexpectedInput); 
 
   int k ;  
   const char *st_name;
@@ -877,7 +833,7 @@ whirl2xaif::WN2F_nullify_stmt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void
 whirl2xaif::WN2F_interface_blk(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_INTERFACE, FORTTK_UNEXPECTED_INPUT); 
+  FORTTK_ASSERT(WN_operator(wn) == OPR_INTERFACE, fortTkSupport::Diagnostics::UnexpectedInput); 
 
   int           k ;
   ST            **param_st;

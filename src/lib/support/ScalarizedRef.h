@@ -1,9 +1,9 @@
 #ifndef ScalarizedRef_H 
 #define ScalarizedRef_H
 
-#include "include/Open64BasicTypes.h"
+#include "Open64IRInterface/Open64BasicTypes.h"
 
-namespace fortTk { 
+namespace fortTkSupport { 
 
   /** 
    * this represents a scalarized reference

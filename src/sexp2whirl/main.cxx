@@ -1,53 +1,28 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/main.cxx,v 1.4 2005/01/12 20:01:01 eraxxon Exp $
 
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/main.cxx,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************** System Include Files ***************************
-
 #include <fcntl.h> // for use in ReadWhirlSexp()
 #include <errno.h> // for use in ReadWhirlSexp()
 
-//*************************** Sexp Include Files ****************************
-
 #include <sexp.h>
 
-//************************** Open64 Include Files ***************************
-
-#include <include/Open64BasicTypes.h>
-
+#include "Open64IRInterface/Open64BasicTypes.h"
 #include "cmplrs/rcodes.h"  // return codes
 #include "tracing.h"        // trace routines
 #include "ir_reader.h"      // fdump_tree
+#include "Open64IRInterface/WhirlIO.h"
+#include "Open64IRInterface/diagnostics.h"
 
-//*************************** User Include Files ****************************
+#include "Diagnostics.h"
+#include "Exception.h"
 
 #include "Args.h"
 #include "sexp2whirl.h"
 
-#include <lib/support/Exception.h>
-#include <lib/support/WhirlIO.h>
+static int real_main(int argc, char **argv);
 
-//************************** Forward Declarations ***************************
+static sexp_t* ReadWhirlSexp(const char* filename);
 
-static int
-real_main(int argc, char **argv);
-
-static sexp_t*
-ReadWhirlSexp(const char* filename);
-
-//***************************************************************************
 
 int
 main(int argc, char **argv)
@@ -59,7 +34,7 @@ main(int argc, char **argv)
     e.Report(cerr); // fatal error
     exit(1);
   }
-  catch (FortTk::BaseException& e) {
+  catch (fortTkSupport::BaseException& e) {
     e.Report(cerr);
     exit(1);
   }
@@ -104,7 +79,7 @@ real_main(int argc, char **argv)
   Diag_Set_Phase("WHIRL to sexp: driver");
   
   Args args(argc, argv);
-  FortTk_SetDiagnosticFilterLevel(args.debug);
+  fortTkSupport::Diagnostics::setDiagnosticFilterLevel(args.debug);
   
   // -------------------------------------------------------
   // 3. Read S-expressions and Translate into WHIRL

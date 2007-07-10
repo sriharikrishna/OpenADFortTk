@@ -9,13 +9,14 @@
 
 #include "xercesc/dom/DOMDocument.hpp"
 
-#include "OpenAnalysis/CFG/CFGStandard.hpp" // for DGraphStandard, CFG::Edge
-#include "OpenAnalysis/Utils/DGraph/DGraphInterfaceIterators.hpp" 
+#include "OpenAnalysis/CFG/CFG.hpp" // for DGraphStandard, CFG::Edge
+//#include "OpenAnalysis/Utils/DGraph/DGraphInterfaceIterators.hpp" 
+#include "OpenAnalysis/Utils/DGraph/DGraphInterface.hpp"
 
-#include "include/Open64BasicTypes.h"
+#include "Open64IRInterface/Open64BasicTypes.h"
 
-#include "lib/support/WhirlIDMaps.h"
-#include "lib/support/IntrinsicXlationTable.h"
+#include "WhirlIDMaps.h"
+#include "IntrinsicXlationTable.h"
 
 #include "PUXlationContext.h"
 
@@ -35,24 +36,28 @@ namespace xaif2whirl {
   };
   
   extern fortTkSupport::IntrinsicXlationTable IntrinsicTable;
-  extern WNIdToWNTabMap        WNIdToWNTableMap;
+  extern fortTkSupport::WNIdToWNTabMap        WNIdToWNTableMap;
 
   void
   TranslateIR(PU_Info* pu_forest, const xercesc::DOMDocument* doc);
   
   // FIXME: relocate...
-  Symbol*
+  fortTkSupport::Symbol*
   GetSymbol(const xercesc::DOMElement* elem, PUXlationContext& ctxt);
 
   const TYPE_ID DefaultMTypeInt = MTYPE_I8;
   const TYPE_ID DefaultMTypeUInt = MTYPE_U8;
 
+  void
+  DDumpDotGraph(OA::OA_ptr<OA::DGraph::DGraphInterface> graph);
 
+  void
+  DumpDotGraph(std::ostream& os, OA::OA_ptr<OA::DGraph::DGraphInterface> graph);
 
-  Symbol*
+  fortTkSupport::Symbol*
   GetOrCreateSymbol(const char* sname, PUXlationContext& ctxt);
 
-  Symbol*
+  fortTkSupport::Symbol*
   GetOrCreateBogusTmpSymbol(PUXlationContext& ctxt);
 
   // ****************************************************************************
@@ -105,28 +110,21 @@ namespace xaif2whirl {
 
   // Get the appropriate persistant id from the element 'elem'.  See
   // detailed descriptions for generic functions below.
-  SymTabId
-  GetSymTabId(const xercesc::DOMElement* elem);
+  fortTkSupport::SymTabId GetSymTabId(const xercesc::DOMElement* elem);
   
-  SymId
-  GetSymId(const xercesc::DOMElement* elem);
+  fortTkSupport::SymId GetSymId(const xercesc::DOMElement* elem);
   
-  PUId
-  GetPUId(const xercesc::DOMElement* elem);
+  fortTkSupport::PUId GetPUId(const xercesc::DOMElement* elem);
   
-  WNId
-  GetWNId(const xercesc::DOMElement* elem);
+  fortTkSupport::WNId GetWNId(const xercesc::DOMElement* elem);
   
-  IdList<WNId>*
-  GetWNIdList(const xercesc::DOMElement* elem);
+  fortTkSupport::IdList<fortTkSupport::WNId>* GetWNIdList(const xercesc::DOMElement* elem);
 
   // Get the value of the tag IntrinsicKey
-  std::string
-  GetIntrinsicKey(const xercesc::DOMElement* elem);
+  std::string GetIntrinsicKey(const xercesc::DOMElement* elem);
 
   // Get the value of the tag PregId
-  PREG_IDX
-  GetPregId(const xercesc::DOMElement* elem);
+  PREG_IDX GetPregId(const xercesc::DOMElement* elem);
   
   // GetId, GetIdList: Returns an id or list of ids from the given tag
   // within the annotation attribute.  For the non-list version, 0 is
@@ -134,12 +132,10 @@ namespace xaif2whirl {
   // may be empty; the caller is responsible for freeing returned
   // memory.
   template <class T>
-  T
-  GetId(const xercesc::DOMElement* elem, const char* tag);
+  T GetId(const xercesc::DOMElement* elem, const char* tag);
   
   template <class T>
-  IdList<T>*
-  GetIdList(const xercesc::DOMElement* elem, const char* tag);
+  fortTkSupport::IdList<T>* GetIdList(const xercesc::DOMElement* elem, const char* tag);
   
   
   // GetId, GetIdList: Returns an id or the list of ids from the given
@@ -148,37 +144,30 @@ namespace xaif2whirl {
   // list may be empty; the caller is responsible for freeing returned
   // memory.
   template <class T>
-  T
-  GetId(const char* idstr, const char* tag);
+  T GetId(const char* idstr, const char* tag);
   
   template <class T>
-  IdList<T>*
-  GetIdList(const char* idstr, const char* tag);
+  fortTkSupport::IdList<T>* GetIdList(const char* idstr, const char* tag);
   
 
   // ***************************************************************************
 
   // FIXME: move to another file
 
-  WN*
-  CreateCallToIntrin(TYPE_ID rtype, const char* fname, unsigned int argc);
+  WN* CreateCallToIntrin(TYPE_ID rtype, const char* fname, unsigned int argc);
 
-  WN*
-  CreateCallToIntrin(TYPE_ID rtype, const char* fname, std::vector<WN*>& args);
+  WN* CreateCallToIntrin(TYPE_ID rtype, const char* fname, std::vector<WN*>& args);
 
-  WN*
-  CreateIntrinsicCall(OPERATOR opr, INTRINSIC intrn, 
-		      TYPE_ID rtype, TYPE_ID dtype, std::vector<WN*>& args);
+  WN* CreateIntrinsicCall(OPERATOR opr, INTRINSIC intrn, 
+			  TYPE_ID rtype, TYPE_ID dtype, std::vector<WN*>& args);
 
-  inline WN*
-  CreateParm(WN *arg, UINT32 flag)
+  inline WN* CreateParm(WN *arg, UINT32 flag)
   {
     TYPE_ID rtype = WN_rtype(arg);
     return WN_CreateParm(rtype, arg, MTYPE_To_TY(rtype), flag);
   }
 
-  WN* 
-  CreateBoolConst(unsigned int val);
+  WN* CreateBoolConst(unsigned int val);
 
   // ***************************************************************************
 
@@ -190,7 +179,7 @@ namespace xaif2whirl {
   // MyDGNode, MyDGEdge: Used to create graph structures from XAIF
   // graphs (lists of nodes and edges)
   // ---------------------------------------------------------
-  class MyDGNode : public OA::DGraph::DGraphStandard::Node {
+  class MyDGNode : public OA::DGraph::NodeImplement {
   public:
     MyDGNode(const xercesc::DOMElement* e_) : e(e_) { Ctor(); }
     virtual ~MyDGNode() { }
@@ -210,12 +199,12 @@ namespace xaif2whirl {
     unsigned int id; // 0 is reserved; first instance is 1
   };
 
-  class MyDGEdge : public OA::DGraph::DGraphStandard::Edge {
+  class MyDGEdge : public OA::DGraph::EdgeImplement {
   public:
-    MyDGEdge(OA::OA_ptr<OA::DGraph::DGraphStandard::Node> source_, 
-	     OA::OA_ptr<OA::DGraph::DGraphStandard::Node> sink_, 
+    MyDGEdge(OA::OA_ptr<OA::DGraph::NodeImplement> source_, 
+	     OA::OA_ptr<OA::DGraph::NodeImplement> sink_, 
 	     const xercesc::DOMElement* e_) 
-      : OA::DGraph::DGraphStandard::Edge(source_, sink_), e(e_) { }
+      : OA::DGraph::EdgeImplement(source_, sink_), e(e_) { }
     virtual ~MyDGEdge() { }
   
     xercesc::DOMElement* GetElem() const { return const_cast<xercesc::DOMElement*>(e); }

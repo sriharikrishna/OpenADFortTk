@@ -59,14 +59,14 @@
 
 //*************************** User Include Files ****************************
 
-#include <lib/support/IntrinsicXlationTable.h>
-#include <lib/support/OAMaps.h>
-#include <lib/support/ScalarizedRefTab.h>
-#include <lib/support/WhirlIDMaps.h>
+#include <IntrinsicXlationTable.h>
+#include <OAMaps.h>
+#include <ScalarizedRefTab.h>
+#include <WhirlIDMaps.h>
 
-#include <lib/support/stab_attr.h>
-#include <lib/support/wn_attr.h>
-#include <lib/support/diagnostics.h>
+#include <stab_attr.h>
+#include <wn_attr.h>
+#include <diagnostics.h>
 
 //************************** Forward Declarations ***************************
 
@@ -84,9 +84,9 @@ namespace whirl2xaif {
   
   extern IntrinsicXlationTable   IntrinsicTable;
   
-  extern PUToOAAnalInfoMap       OAAnalMap;
-  extern ScalarizedRefTabMap_W2X ScalarizedRefTableMap;
-  extern WNToWNIdTabMap          WNToWNIdTableMap;
+//  extern PUToOAAnalInfoMap       OAAnalMap;
+//  extern ScalarizedRefTabMap_W2X ScalarizedRefTableMap;
+//  extern WNToWNIdTabMap          WNToWNIdTableMap;
   
 }; /* namespace whirl2xaif */
 

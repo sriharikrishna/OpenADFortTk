@@ -85,8 +85,8 @@
  * ====================================================================
  */
 
-#include "include/Open64BasicTypes.h"
-#include "lib/support/xmlostream.h"
+#include "Open64IRInterface/Open64BasicTypes.h"
+#include "xmlostream.h"
 
 #include "whirl2xaif.h"
 #include "PUXlationContext.h"

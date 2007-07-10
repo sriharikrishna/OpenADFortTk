@@ -56,8 +56,7 @@ include(config/hpc-cxxutils.m4)
 # Require recent autoconf, automake
 #----------------------------------------------------------------------------
 
-AC_INIT([OpenADFortTk], [0.8.1], [mfagan@cs.rice.edu], [OpenADFortTk])
-AC_CONFIG_SRCDIR([src/include/Open64BasicTypes.h])
+AC_INIT([OpenADFortTk], [1.0], [utke@mcs.anl.gov], [OpenADFortTk])
 AC_CONFIG_AUX_DIR([config])
 
 AC_PREREQ(2.59)
