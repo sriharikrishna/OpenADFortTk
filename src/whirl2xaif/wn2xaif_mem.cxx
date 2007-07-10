@@ -1036,13 +1036,16 @@ namespace whirl2xaif {
     if (array_dim>0) {
       xos << xml::BegElem(XAIFStrings.elem_ArrayElemRef())
 	  << xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId());
-      for (dim = WN_num_dim(wn)-1; dim >= 0; dim--) {
+      for (dim = WN_num_dim(wn)-1; dim >= 0; --dim) {
 	xos << xml::BegElem(XAIFStrings.elem_IndexTriplet());
 	if (WN_operator(WN_array_index(wn, dim))==OPR_SRCTRIPLET) {
 	  TranslateWN(xos, WN_array_index(wn, dim), ctxt);
 	} else {
 	  xos << xml::BegElem(XAIFStrings.elem_Index());
+	  ctxt.createXlationContext(); 
+	  ctxt.currentXlationContext().unsetFlag(XlationContext::VARREF); // elem_Index() contains ExpressionType
 	  TranslateWN(xos, WN_array_index(wn, dim), ctxt);
+	  ctxt.deleteXlationContext();
 	  xos << xml::EndElem;
 	}
 	xos << xml::EndElem;
