@@ -82,11 +82,11 @@
 
 //************************** Open64 Include Files ***************************
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 //*************************** User Include Files ****************************
 
-#include <lib/support/xmlostream.h>
+#include <xmlostream.h>
 #include "PUXlationContext.h"
 
 //************************** Forward Declarations ***************************
@@ -101,7 +101,7 @@ namespace whirl2xaif {
 
   extern void 
   xlate_SymbolTables(xml::ostream& xos, SYMTAB_IDX symtab_lvl, 
-		     fortTk::ScalarizedRefTab_W2X* nonscalarsymtab, 
+		     fortTkSupport::ScalarizedRefTab_W2X* nonscalarsymtab, 
 		     PUXlationContext& ctxt);
   
   extern void 
@@ -111,8 +111,8 @@ namespace whirl2xaif {
   
   extern void 
   xlate_ScalarizedRefTab(xml::ostream& xos, 
-			 fortTk::ScalarizedRefTab_W2X* symtab, 
-			PUXlationContext& ctxt);
+			 fortTkSupport::ScalarizedRefTab_W2X* symtab, 
+			 PUXlationContext& ctxt);
   
   extern void 
   xlate_ArrayBounds(xml::ostream& xos, 

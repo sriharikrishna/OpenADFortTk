@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.74 2006/08/07 20:20:25 utke Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.73 2006/05/12 16:12:24 utke Exp $
 
 #include <stdlib.h> // ANSI: cstdlib // for strtol
 #include <string.h> // ANSI: cstring // for strcmp, etc.
@@ -13,16 +13,20 @@
 #include "xercesc/dom/DOMNode.hpp"
 #include "xercesc/dom/DOMElement.hpp"
 
-#include "include/Open64BasicTypes.h"
+#include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64IRInterface/Open64IRInterface.hpp"
+#include "Open64IRInterface/SymTab.h"
+#include "Open64IRInterface/diagnostics.h"
+#include "Open64IRInterface/wn_attr.h"
+#include "Open64IRInterface/stab_attr.h"
+#include "OpenAnalysis/Utils/DGraph/DGraphInterface.hpp"
+#include "OpenAnalysis/Utils/DGraph/DGraphImplement.hpp"
 
-#include "lib/support/Open64IRInterface.hpp"
-#include "lib/support/SymTab.h" // for XAIFSymToWhirlSymMap
-#include "lib/support/WhirlIDMaps.h"
-#include "lib/support/WhirlParentize.h"
-#include "lib/support/wn_attr.h"   // for WN_Tree_Type
-#include "lib/support/stab_attr.h" 
-#include "lib/support/XAIFStrings.h"
-#include "lib/support/diagnostics.h"
+
+#include "WhirlIDMaps.h"
+#include "WhirlParentize.h"
+#include "XAIFStrings.h"
+#include "Diagnostics.h"
 
 #include "xaif2whirl.h"
 #include "XlateExpression.h"
@@ -36,7 +40,7 @@ namespace xaif2whirl {
 
   fortTkSupport::IntrinsicXlationTable   
   IntrinsicTable(fortTkSupport::IntrinsicXlationTable::X2W);
-  WNIdToWNTabMap          WNIdToWNTableMap;
+  fortTkSupport::WNIdToWNTabMap          WNIdToWNTableMap;
 
   // FIXME
   extern ModeType      opt_mode;
@@ -48,13 +52,14 @@ namespace xaif2whirl {
   TY_IDX ActiveTypeTyIdx;            
   TY_IDX ActiveTypeInitializedTyIdx;
 
+
   // *************************** Forward Declarations ***************************
 
   static void
   TranslateCallGraph(PU_Info* pu_forest, const xercesc::DOMDocument* doc, 
 		     PUXlationContext& ctxt);
 
-  static XAIFSymToSymbolMap*
+  static fortTkSupport::XAIFSymToSymbolMap*
   TranslateScopeHierarchy(const xercesc::DOMDocument* doc, PUXlationContext& ctxt);
 
   static void
@@ -69,7 +74,7 @@ namespace xaif2whirl {
   TranslateCFG(WN *wn_pu, const xercesc::DOMElement* cfgElem, PUXlationContext& ctxt);
 
   static WN*
-  xlate_CFG(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+  xlate_CFG(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 	    OA::OA_ptr<MyDGNode> root, PUXlationContext& ctxt, 
 	    bool structuredCF = false);
 
@@ -91,24 +96,24 @@ namespace xaif2whirl {
   xlate_BBCond_OLD(WN* wn_pu, const xercesc::DOMElement* bbElem, PUXlationContext& ctxt);
 
   static bool
-  FindNextStmtInterval(const xercesc::DOMElement* bbElem, IdList<WNId>* bbIdList, 
-		       WNIdToWNMap* wnmap, WN* blkWN,
+  FindNextStmtInterval(const xercesc::DOMElement* bbElem, fortTkSupport::IdList<fortTkSupport::WNId>* bbIdList, 
+		       fortTkSupport::WNIdToWNMap* wnmap, WN* blkWN,
 		       xercesc::DOMElement* &begXAIF, xercesc::DOMElement* &endXAIF,
 		       WN* &begWN, WN* &endWN);
 
   static WN*
-  FindIntervalBoundary(const xercesc::DOMElement* elem, IdList<WNId>* bbIdList, 
-		       WNIdToWNMap* wnmap, WN* blkWN, int boundary);
+  FindIntervalBoundary(const xercesc::DOMElement* elem, fortTkSupport::IdList<fortTkSupport::WNId>* bbIdList, 
+		       fortTkSupport::WNIdToWNMap* wnmap, WN* blkWN, int boundary);
 
   static WN* 
-  FindWNBlock(const xercesc::DOMElement* bbElem, IdList<WNId>* idlist, 
+  FindWNBlock(const xercesc::DOMElement* bbElem, fortTkSupport::IdList<fortTkSupport::WNId>* idlist, 
 	      PUXlationContext& ctxt);
 
   static WN* 
   FindSafeInsertionPoint(WN* blckWN, WN* stmtWN);
 
   static void
-  RemoveFromWhirlIdMaps(WN* wn, WNToWNIdMap* wn2idmap, WNIdToWNMap* id2wnmap);
+  RemoveFromWhirlIdMaps(WN* wn, fortTkSupport::WNToWNIdMap* wn2idmap, fortTkSupport::WNIdToWNMap* id2wnmap);
 
   // *************************** Forward Declarations ***************************
 
@@ -116,18 +121,18 @@ namespace xaif2whirl {
 
   static void
   xlate_Scope(const xercesc::DOMElement* elem, PUXlationContext& ctxt, 
-	      XAIFSymToSymbolMap* symMap);
+	      fortTkSupport::XAIFSymToSymbolMap* symMap);
 
   static void
   xlate_SymbolTable(const xercesc::DOMElement* elem, const char* scopeId, PU_Info* pu, 
-		    PUXlationContext& ctxt, XAIFSymToSymbolMap* symMap);
+		    PUXlationContext& ctxt, fortTkSupport::XAIFSymToSymbolMap* symMap);
 
   static void
   xlate_Symbol(const xercesc::DOMElement* elem, 
 	       const char* scopeId, 
 	       PU_Info* pu, 
 	       PUXlationContext& ctxt, 
-	       XAIFSymToSymbolMap* symMap,
+	       fortTkSupport::XAIFSymToSymbolMap* symMap,
 	       bool doTempSymbols);
 
   // *************************** Forward Declarations ***************************
@@ -147,7 +152,7 @@ namespace xaif2whirl {
   CreateST(const xercesc::DOMElement* elem, 
 	   SYMTAB_IDX level, 
 	   const char* nm,
-	   XAIFSymToSymbolMap* symMap,
+	   fortTkSupport::XAIFSymToSymbolMap* symMap,
 	   const char* scopeId);
 
   static ST* 
@@ -247,17 +252,12 @@ namespace xaif2whirl {
     bool ascending;
   };
 
-  static OA::OA_ptr<OA::DGraph::Interface> 
+  static OA::OA_ptr<OA::DGraph::DGraphInterface> 
   CreateCFGraph(const xercesc::DOMElement* elem);
 
   //static list<OA::OA_ptr<OA::DGraph::Interface::Node> >*
   //TopologicalSort(OA::OA_ptr<OA::DGraph::Interface> graph);
 
-  static void
-  DDumpDotGraph(OA::OA_ptr<OA::DGraph::Interface> graph);
-
-  static void
-  DumpDotGraph(std::ostream& os, OA::OA_ptr<OA::DGraph::Interface> graph);
 
   // ****************************************************************************
 
@@ -281,10 +281,10 @@ namespace xaif2whirl {
     PUXlationContext ctxt("TranslateIR");
   
     // Initialize global id maps
-    SymTabIdToSymTabMap* stabmap = new SymTabIdToSymTabMap(pu_forest);
+    fortTkSupport::SymTabIdToSymTabMap* stabmap = new fortTkSupport::SymTabIdToSymTabMap(pu_forest);
     ctxt.setSymTabIdToSymTabMap(stabmap);
   
-    PUIdToPUMap* pumap = new PUIdToPUMap(pu_forest);
+    fortTkSupport::PUIdToPUMap* pumap = new fortTkSupport::PUIdToPUMap(pu_forest);
     ctxt.setPUIdToPUMap(pumap);
 
     WNIdToWNTableMap.Create(pu_forest); // Note: could make this local
@@ -317,7 +317,7 @@ namespace xaif2whirl {
     // -------------------------------------------------------
     // Process the symbol tables in the ScopeHierarchy
     // -------------------------------------------------------
-    XAIFSymToSymbolMap* symmap = TranslateScopeHierarchy(doc, ctxt);
+    fortTkSupport::XAIFSymToSymbolMap* symmap = TranslateScopeHierarchy(doc, ctxt);
     ctxt.setXAIFSymToSymbolMap(symmap);
   
     // -------------------------------------------------------
@@ -338,10 +338,10 @@ namespace xaif2whirl {
   //
   // Note: We ignore the scope hierarchy graph, assuming it retains the
   // basic structure it had before xaifBooster.
-  static XAIFSymToSymbolMap*
+  static fortTkSupport::XAIFSymToSymbolMap*
   TranslateScopeHierarchy(const xercesc::DOMDocument* doc, PUXlationContext& ctxt)
   {
-    XAIFSymToSymbolMap* symMap = new XAIFSymToSymbolMap;
+    fortTkSupport::XAIFSymToSymbolMap* symMap = new fortTkSupport::XAIFSymToSymbolMap;
 
     // Get the ScopeHierarchy element
     xercesc::DOMElement* scopeHier = GetChildElement(doc->getDocumentElement(), 
@@ -368,7 +368,7 @@ namespace xaif2whirl {
     // -------------------------------------------------------
     // Find original PU and set globals
     // -------------------------------------------------------
-    PUId puid = GetPUId(cfgElem);
+    fortTkSupport::PUId puid = GetPUId(cfgElem);
     PU_Info* pu = ctxt.findPU(puid);
     if (!pu) { return; }
 
@@ -378,7 +378,7 @@ namespace xaif2whirl {
     // matches and replace the symbol reference 
     // to the proper name.  UNLESS this is 
     // a module
-    Symbol* symd = GetSymbol(cfgElem, ctxt);
+    fortTkSupport::Symbol* symd = GetSymbol(cfgElem, ctxt);
     ST* std = symd->GetST();
     bool isModule=ST_is_in_module(*std);
     // compare this by comparing the symbol table index
@@ -469,15 +469,15 @@ namespace xaif2whirl {
     // -------------------------------------------------------
   
     // 0. WHIRL parent map
-    WhirlParentMap wnParentMap(wn_pu);
+    fortTkSupport::WhirlParentMap wnParentMap(wn_pu);
     ctxt.setWNParentMap(&wnParentMap);
   
     // 1. WHIRL<->ID maps
-    WNToWNIdMap* wnmapx = new WNToWNIdMap();
+    fortTkSupport::WNToWNIdMap* wnmapx = new fortTkSupport::WNToWNIdMap();
     CreateWhirlIdMaps(wn_pu, wnmapx, NULL);
     ctxt.setWNToWNIdMap(wnmapx);
 
-    WNIdToWNMap* wnmapy = WNIdToWNTableMap.Find(Current_PU_Info);
+    fortTkSupport::WNIdToWNMap* wnmapy = WNIdToWNTableMap.Find(Current_PU_Info);
     ctxt.setWNIdToWNMap(wnmapy);
   
     // -------------------------------------------------------
@@ -489,9 +489,9 @@ namespace xaif2whirl {
       GetChildElement(arglst, XAIFStrings.elem_ArgSymRef_x()) : NULL;
     for ( ; arg; arg = GetNextSiblingElement(arg)) {
       // find corresponding WN and symbol
-      WNId id = GetWNId(arg);
+      fortTkSupport::WNId id = GetWNId(arg);
       WN* parmWN = ctxt.findWN(id, true /* mustFind */);
-      Symbol* sym = GetSymbol(arg, ctxt);
+      fortTkSupport::Symbol* sym = GetSymbol(arg, ctxt);
       ST* parmST = sym->GetST();
     
       //bool active = GetActiveAttr(arg); 
@@ -538,7 +538,7 @@ namespace xaif2whirl {
     for (list<xercesc::DOMElement*>::iterator it = cfglist.begin(); 
 	 it != cfglist.end(); ++it) {
       xercesc::DOMElement* cfgelm = (*it);
-      OA::OA_ptr<OA::DGraph::Interface> cfg = CreateCFGraph(cfgelm);
+      OA::OA_ptr<OA::DGraph::DGraphInterface> cfg = CreateCFGraph(cfgelm);
     
       if (opt_algorithm == ALG_BB_PATCHING) { 
 	XAIF_BBElemFilter filt(false /* edges */);
@@ -548,10 +548,10 @@ namespace xaif2whirl {
 	}
       } 
       else {
-	OA::OA_ptr<OA::DGraph::Interface::NodesIterator> enodeIter
+	OA::OA_ptr<OA::DGraph::NodesIteratorInterface> enodeIter
 	  = cfg->getEntryNodesIterator();
 	assert(enodeIter->isValid());
-	OA::OA_ptr<OA::DGraph::Interface::Node> temp = enodeIter->current();
+	OA::OA_ptr<OA::DGraph::NodeInterface> temp = enodeIter->current();
 	OA::OA_ptr<MyDGNode> root = temp.convert<MyDGNode>();
 	(*enodeIter)++; assert(!enodeIter->isValid());
 	bool structuredCF = (opt_algorithm == ALG_STRUCTURED_CF);
@@ -618,17 +618,17 @@ namespace xaif2whirl {
   // [FIXME unstructured]
 
   static pair<WN*, OA::OA_ptr<MyDGNode> >
-  xlate_CFGstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+  xlate_CFGstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 		  OA::OA_ptr<MyDGNode> startNode, set<xercesc::DOMElement*>& xlated, 
 		  PUXlationContext& ctxt);
 
   static WN*
-  xlate_CFGunstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+  xlate_CFGunstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 		    OA::OA_ptr<MyDGNode> startNode, set<xercesc::DOMElement*>& xlated, 
 		    PUXlationContext& ctxt);
 
   static WN*
-  xlate_CFG(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+  xlate_CFG(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 	    OA::OA_ptr<MyDGNode> root, PUXlationContext& ctxt, 
 	    bool structuredCF)
   {
@@ -652,7 +652,7 @@ namespace xaif2whirl {
   // Return value: <new-WHIRL-stmt-block, ending-basic-block> (If the
   // latter is NULL, it means we saw the Exit basic block)
   static pair<WN*, OA::OA_ptr<MyDGNode> >
-  xlate_CFGstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+  xlate_CFGstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 		  OA::OA_ptr<MyDGNode> startNode, set<xercesc::DOMElement*>& xlated, 
 		  PUXlationContext& ctxt)
   {
@@ -667,10 +667,10 @@ namespace xaif2whirl {
     map<OA::OA_ptr<MyDGNode>, unsigned> nodeToLblMap;
   
     // Initialize label maps
-    OA::OA_ptr<OA::DGraph::Interface::NodesIterator> nodeIt 
+    OA::OA_ptr<OA::DGraph::NodesIteratorInterface> nodeIt 
       = cfg->getNodesIterator();
     for ( ; nodeIt->isValid(); ++(*nodeIt)) {
-      OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = nodeIt->current();
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = nodeIt->current();
       OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
 
       nodeToLblMap[n] = nextLblCntr++;
@@ -723,10 +723,10 @@ namespace xaif2whirl {
 	// sort two-way branches into true-false order.)
 	OA::OA_ptr<MyDGEdge> tmp; tmp = NULL;
 	vector<OA::OA_ptr<MyDGEdge> > outedges(numOutEdges, tmp);
-	OA::OA_ptr<OA::DGraph::Interface::OutgoingEdgesIterator> it = 
+	OA::OA_ptr<OA::DGraph::EdgesIteratorInterface> it = 
 	  curNode->getOutgoingEdgesIterator();
 	for (int i = 0; it->isValid(); ++(*it), ++i) {
-	  OA::OA_ptr<OA::DGraph::Interface::Edge> etmp = it->current();
+	  OA::OA_ptr<OA::DGraph::EdgeInterface> etmp = it->current();
 	  outedges[i] = etmp.convert<MyDGEdge>();
 	}
 	std::sort(outedges.begin(), outedges.end(), 
@@ -736,7 +736,7 @@ namespace xaif2whirl {
 	vector<WN*> childblksWN(numOutEdges, NULL);
 	OA::OA_ptr<MyDGNode> endBrNode; endBrNode = NULL;
 	for (unsigned i = 0; i < outedges.size(); ++i) {
-	  OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = outedges[i]->sink();
+	  OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->getSink();
 	  OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
 	  pair<WN*, OA::OA_ptr<MyDGNode> > p 
 	    = xlate_CFGstruct(wn_pu, cfg, n, xlated, ctxt);
@@ -756,7 +756,7 @@ namespace xaif2whirl {
 	
 	  // Add a LABEL/GOTO at the front/end of each successor block
 	  for (unsigned i = 0; i < outedges.size(); ++i) {
-	    OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = outedges[i]->sink();
+	    OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->getSink();
 	    OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
 	    WN* nblkWN = childblksWN[i];
 	  
@@ -862,7 +862,7 @@ namespace xaif2whirl {
   // each basic block.  We do not worry about interfering with original
   // labels because we do not keep them.
   static WN*
-  xlate_CFGunstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::Interface> cfg, 
+  xlate_CFGunstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 		    OA::OA_ptr<MyDGNode> startNode, set<xercesc::DOMElement*>& xlated, 
 		    PUXlationContext& ctxt)
   {
@@ -872,8 +872,13 @@ namespace xaif2whirl {
     WN* blkWN = WN_CreateBlock();
 
     // Topological sort to ensure that, e.g., the exit node is last
-    OA::OA_ptr<list<OA::OA_ptr<OA::DGraph::Interface::Node> > > topoSortedCFG 
-      = OA::DGraph::create_reverse_post_order_list(*cfg);
+    /*! commented out by PLM 08/26/06 
+    OA::OA_ptr<list<OA::OA_ptr<OA::DGraph::NodeInterface> > > topoSortedCFG; 
+      = OA::DGraph::::create_reverse_post_order_list(*cfg);
+      */
+
+    
+    
 
 #if 0
     std::cerr << "TopoSort: ";
@@ -894,10 +899,21 @@ namespace xaif2whirl {
     map<OA::OA_ptr<MyDGNode>, unsigned> nodeToLoopContLblMap;
   
     // Initialize label maps
-    for (list<OA::OA_ptr<OA::DGraph::Interface::Node> >::iterator it 
+/*! commented out by PLM 08/29/06
+ * for (list<OA::OA_ptr<OA::DGraph::NodeInterface> >::iterator it 
 	   = topoSortedCFG->begin(); 
 	 it != topoSortedCFG->end(); ++it) {
-      OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = *it;
+    std::set<OA::OA_ptr<OA::DGraph::NodeInterface> >::iterator it;
+    */
+   
+
+    
+    
+    OA::OA_ptr<OA::DGraph::NodesIteratorInterface> it;
+
+    for (it=cfg->getNodesIterator(); it->isValid(); ++(*it) ) {
+            
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = it->current();
       OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
       nodeToLblMap[n] = nextLblCntr++;
     
@@ -915,10 +931,15 @@ namespace xaif2whirl {
     // ---------------------------------------------------
     // Translate in topological order
     // ---------------------------------------------------
-    for (list<OA::OA_ptr<OA::DGraph::Interface::Node> >::iterator it 
+    /*! commented out by PLM 08/29/06
+    for (list<OA::OA_ptr<OA::DGraph::NodeInterface> >::iterator it 
 	   = topoSortedCFG->begin(); 
 	 it != topoSortedCFG->end(); ++it) {
-      OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = *it;
+     */
+    
+    for (it=cfg->getNodesIterator(); it->isValid(); ++(*it) ) {
+        
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = it->current();
       OA::OA_ptr<MyDGNode> curNode = ntmp.convert<MyDGNode>();
       xercesc::DOMElement* bbElem = curNode->GetElem();
       unsigned curLbl = nodeToLblMap[curNode];
@@ -956,10 +977,10 @@ namespace xaif2whirl {
 	// sort two-way branches into true-false order.)
 	OA::OA_ptr<MyDGEdge> tmp; tmp = NULL;
 	vector<OA::OA_ptr<MyDGEdge> > outedges(numOutEdges, tmp);
-	OA::OA_ptr<OA::DGraph::Interface::OutgoingEdgesIterator> it
+	OA::OA_ptr<OA::DGraph::EdgesIteratorInterface> it
 	  = curNode->getOutgoingEdgesIterator();
 	for (int i = 0; it->isValid(); ++(*it), ++i) {
-	  OA::OA_ptr<OA::DGraph::Interface::Edge> etmp = it->current();
+	  OA::OA_ptr<OA::DGraph::EdgeInterface> etmp = it->current();
 	  outedges[i] = etmp.convert<MyDGEdge>();
 	}
 	std::sort(outedges.begin(), outedges.end(), 
@@ -972,7 +993,7 @@ namespace xaif2whirl {
 	  // Create GOTOs for each child block
 	  vector<WN*> childblksWN(numOutEdges, NULL);
 	  for (unsigned i = 0; i < outedges.size(); ++i) {
-	    OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = outedges[i]->sink();
+	    OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->getSink();
 	    OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
 	    WN* gotoblkWN = WN_CreateBlock();
 	    WN* gotoWN = WN_CreateGoto(nodeToLblMap[n]);
@@ -1190,7 +1211,7 @@ namespace xaif2whirl {
     int defltIdx = -1;
     if (!GetHasConditionAttr(outedges[0]->GetElem())) {
       defltIdx = 0;
-      OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = outedges[0]->sink();
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[0]->getSink();
       OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
       unsigned gotolbl = nodeToLblMap[n];
       defltWN = WN_CreateGoto(gotolbl);
@@ -1201,7 +1222,7 @@ namespace xaif2whirl {
     int numcases = outedges.size() - (defltIdx + 1);
     for (unsigned i = defltIdx + 1; i < outedges.size(); ++i) {
       xercesc::DOMElement* elemEdge = outedges[i]->GetElem();
-      OA::OA_ptr<OA::DGraph::Interface::Node> ntmp = outedges[i]->sink();
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->getSink();
       OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
     
       INT64 caseval = GetCondAttr(elemEdge);
@@ -1228,7 +1249,7 @@ namespace xaif2whirl {
     // 1. Find some info now to prevent several recalculations
     // -------------------------------------------------------
     // FIXME: use parent map -- w2x does not need to generate this id list 
-    IdList<WNId>* idlist = GetWNIdList(bbElem); // FIXME
+    fortTkSupport::IdList<fortTkSupport::WNId>* idlist = GetWNIdList(bbElem); // FIXME
     WN* origblkWN = FindWNBlock(bbElem, idlist, ctxt);
     if (idlist->size() > 0) { 
       FORTTK_ASSERT(origblkWN, "Could not find WHIRL block for:\n" << *bbElem);
@@ -1246,7 +1267,7 @@ namespace xaif2whirl {
 			      IsTagPresent(stmt, XAIFStrings.tag_StmtLabel()));
 	bool skip = (isGotoOrLabel && skipMarkeredGotoAndLabels);
 	if (!skip) {
-	  WNId id = GetWNId(stmt);
+	  fortTkSupport::WNId id = GetWNId(stmt);
 	  WN* foundWN = ctxt.findWN(id, true /* mustFind */);
 	  wn = WN_COPY_Tree(foundWN);
 	  XlateStmt::patchWNStmt(wn, ctxt); // FIXME
@@ -1294,7 +1315,7 @@ namespace xaif2whirl {
     // -------------------------------------------------------
     // 1. Find some info now to prevent several recalculations
     // -------------------------------------------------------
-    IdList<WNId>* idlist = GetWNIdList(bbElem);
+    fortTkSupport::IdList<fortTkSupport::WNId>* idlist = GetWNIdList(bbElem);
     WN* blkWN = FindWNBlock(bbElem, idlist, ctxt);
     if (idlist->size() > 0) { 
       FORTTK_ASSERT(blkWN, "Could not find WHIRL block for:\n" << *bbElem);
@@ -1347,7 +1368,7 @@ namespace xaif2whirl {
     // -------------------------------------------------------
     for (xercesc::DOMElement* stmt = GetFirstChildElement(bbElem); (stmt); 
 	 stmt = GetNextSiblingElement(stmt, XAIFStrings.elem_Marker_x())) {
-      WNId id = GetWNId(stmt);
+      fortTkSupport::WNId id = GetWNId(stmt);
       if (id != 0) {
 	WN* wn = ctxt.findWN(id, true /* mustFind */);
 	XlateStmt::patchWNStmt(wn, ctxt);
@@ -1370,7 +1391,7 @@ namespace xaif2whirl {
     // Conveniently, XAIF 'if' or 'loop' condition is represented by the
     // WHIRL structured control flow node, i.e. the corresponding WHIRL
     // 'if' or 'loop'.
-    IdList<WNId>* idlist = GetWNIdList(bbElem);
+    fortTkSupport::IdList<fortTkSupport::WNId>* idlist = GetWNIdList(bbElem);
 
     xercesc::DOMElement* cond = GetChildElement(bbElem, XAIFStrings.elem_Condition_x());
     if (cond) {
@@ -1399,7 +1420,7 @@ namespace xaif2whirl {
       break; // integer expression
     
     default: 
-      FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
+      FORTTK_DIE(fortTkSupport::Diagnostics::UnexpectedOpr << OPERATOR_name(opr));
     }
   
     // -------------------------------------------------------
@@ -1429,8 +1450,8 @@ namespace xaif2whirl {
   // xaif:Marker element with annotation attribute and will never be
   // NULL.
   static bool
-  FindNextStmtInterval(const xercesc::DOMElement* bbElem, IdList<WNId>* bbIdList, 
-		       WNIdToWNMap* wnmap, WN* blkWN,
+  FindNextStmtInterval(const xercesc::DOMElement* bbElem, fortTkSupport::IdList<fortTkSupport::WNId>* bbIdList, 
+		       fortTkSupport::WNIdToWNMap* wnmap, WN* blkWN,
 		       xercesc::DOMElement* &begXAIF, xercesc::DOMElement* &endXAIF,
 		       WN* &begWN, WN* &endWN)
   {
@@ -1504,8 +1525,8 @@ namespace xaif2whirl {
   // corrresponding WN* should never be NULL.  If 'elem' is NULL, the
   // interval is NULL.
   static WN*
-  FindIntervalBoundary(const xercesc::DOMElement* elem, IdList<WNId>* bbIdList, 
-		       WNIdToWNMap* wnmap, WN* blkWN, int boundary)
+  FindIntervalBoundary(const xercesc::DOMElement* elem, fortTkSupport::IdList<fortTkSupport::WNId>* bbIdList, 
+		       fortTkSupport::WNIdToWNMap* wnmap, WN* blkWN, int boundary)
   {
     if (!elem) {
       return NULL;
@@ -1518,7 +1539,7 @@ namespace xaif2whirl {
       // to use 'bbIdList' to return the first WN* in the list.
       xercesc::DOMElement* adj = GetPrevSiblingElement(elem);
       if (adj && XAIF_BBStmtElemFilter::IsMarker(adj)) {
-	WNId id = GetWNId(adj);
+	fortTkSupport::WNId id = GetWNId(adj);
 	if (id != 0) {
 	  wn = wnmap->Find(id, true /* mustFind */);
 
@@ -1549,7 +1570,7 @@ namespace xaif2whirl {
       // to use 'bbIdList' to return the last WN* in the list.
       xercesc::DOMElement* adj = GetNextSiblingElement(elem);
       if (adj && XAIF_BBStmtElemFilter::IsMarker(adj)) {
-	WNId id = GetWNId(adj);
+	fortTkSupport::WNId id = GetWNId(adj);
 	if (id != 0) {
 	  wn = wnmap->Find(id, true /* mustFind */);
 
@@ -1576,13 +1597,13 @@ namespace xaif2whirl {
   // FindWNBlock: Given an XAIF basic block element, find the
   // corresponding WHIRL block.
   static WN* 
-  FindWNBlock(const xercesc::DOMElement* bbElem, IdList<WNId>* idlist, 
+  FindWNBlock(const xercesc::DOMElement* bbElem, fortTkSupport::IdList<fortTkSupport::WNId>* idlist, 
 	      PUXlationContext& ctxt)
   {
     // We pass 'idlist' to avoid continual reparsing
     WN* wn = NULL;
     if (idlist->size() > 0) {
-      WNId id = idlist->front();
+      fortTkSupport::WNId id = idlist->front();
       wn = ctxt.findWN(id, true /* mustFind */);
     }
   
@@ -1619,15 +1640,15 @@ namespace xaif2whirl {
   // RemoveFromWhirlIdMaps: Remove 'wn' and all of its descendents from
   // the WhirlId maps.
   static void
-  RemoveFromWhirlIdMaps(WN* wn, WNToWNIdMap* wn2idmap, WNIdToWNMap* id2wnmap)
+  RemoveFromWhirlIdMaps(WN* wn, fortTkSupport::WNToWNIdMap* wn2idmap, fortTkSupport::WNIdToWNMap* id2wnmap)
   {
     WN_TREE_CONTAINER<PRE_ORDER> wtree(wn);
     WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
     for (it = wtree.begin(); it != wtree.end(); ++it) {
       WN* curWN = it.Wn();
 
-      WNId curId = 0;
-      WNToWNIdMap::iterator it1 = wn2idmap->find(curWN);
+      fortTkSupport::WNId curId = 0;
+      fortTkSupport::WNToWNIdMap::iterator it1 = wn2idmap->find(curWN);
       if (it1 != wn2idmap->end()) {
 	curId = (*it1).second;
 	wn2idmap->erase(it1);
@@ -1641,7 +1662,7 @@ namespace xaif2whirl {
   // Scopes and Symbols
   // ****************************************************************************
 
-  Symbol*
+  fortTkSupport::Symbol*
   GetSymbol(const xercesc::DOMElement* elem, PUXlationContext& ctxt)
   {
     const XMLCh* scopeIdX = elem->getAttribute(XAIFStrings.attr_scopeId_x());
@@ -1658,7 +1679,7 @@ namespace xaif2whirl {
   }
 
 
-  Symbol*
+  fortTkSupport::Symbol*
   GetOrCreateSymbol(const char* sname, PUXlationContext& ctxt)
   {
     // FIXME: make more general
@@ -1667,8 +1688,8 @@ namespace xaif2whirl {
     // FIXME: need to associate current PU with a scope id...
     const char* scopeId = "1"; // assume global for now
   
-    XAIFSymToSymbolMap* symMap = ctxt.getXAIFSymToSymbolMap();
-    Symbol* sym = symMap->Find(scopeId, sname);
+    fortTkSupport::XAIFSymToSymbolMap* symMap = ctxt.getXAIFSymToSymbolMap();
+    fortTkSupport::Symbol* sym = symMap->Find(scopeId, sname);
     if (!sym) {
       // FIXME: use CreateST...
       TY_IDX ty = MTYPE_To_TY(MTYPE_F8);
@@ -1676,14 +1697,14 @@ namespace xaif2whirl {
       ST* st = New_ST(level);
       ST_Init(st, Save_Str(sname), CLASS_VAR, SCLASS_AUTO, EXPORT_LOCAL, ty);
     
-      sym = new Symbol(st, 0, active);
+      sym = new fortTkSupport::Symbol(st, 0, active);
       symMap->Insert(scopeId, sname, sym);
     }
     return sym;
   }
 
 
-  Symbol*
+  fortTkSupport::Symbol*
   GetOrCreateBogusTmpSymbol(PUXlationContext& ctxt)
   {
     static const char* sname = "OpenAD_bogus";
@@ -1695,10 +1716,10 @@ namespace xaif2whirl {
 
   static void
   xlate_Scope(const xercesc::DOMElement* elem, PUXlationContext& ctxt,
-	      XAIFSymToSymbolMap* symMap)
+	      fortTkSupport::XAIFSymToSymbolMap* symMap)
   {
     // Find the corresponding WHIRL symbol table (ST_TAB)
-    SymTabId symtabId = GetSymTabId(elem);
+    fortTkSupport::SymTabId symtabId = GetSymTabId(elem);
     pair<ST_TAB*, PU_Info*> stab = ctxt.findSymTab(symtabId);
   
     PU_Info* pu = stab.second;
@@ -1706,7 +1727,7 @@ namespace xaif2whirl {
       PU_SetGlobalState(pu);
     
       // Need WHIRL<->ID maps for translating ScalarizedRefs
-      WNIdToWNMap* wnmap = WNIdToWNTableMap.Find(pu);
+      fortTkSupport::WNIdToWNMap* wnmap = WNIdToWNTableMap.Find(pu);
       ctxt.setWNIdToWNMap(wnmap);
     }
   
@@ -1722,9 +1743,9 @@ namespace xaif2whirl {
 
   static void
   xlate_SymbolTable(const xercesc::DOMElement* elem, const char* scopeId, PU_Info* pu, 
-		    PUXlationContext& ctxt, XAIFSymToSymbolMap* symMap)
+		    PUXlationContext& ctxt, fortTkSupport::XAIFSymToSymbolMap* symMap)
   {
-    // For all xaif:Symbol in the xaif:SymbolTable
+    // For all xaif:fortTkSupport::Symbol in the xaif:SymbolTable
     XAIF_SymbolElemFilter filt;
     for (xercesc::DOMElement* e = GetChildElement(elem, &filt);
 	 (e); e = GetNextSiblingElement(e, &filt)) {
@@ -1749,7 +1770,7 @@ namespace xaif2whirl {
 	       const char* scopeId, 
 	       PU_Info* pu, 
 	       PUXlationContext& ctxt, 
-	       XAIFSymToSymbolMap* symMap,
+	       fortTkSupport::XAIFSymToSymbolMap* symMap,
 	       bool doTempSymbols)
   {
 
@@ -1761,8 +1782,8 @@ namespace xaif2whirl {
     SYMTAB_IDX level = (pu) ? CURRENT_SYMTAB : GLOBAL_SYMTAB;
   
     // For symbols not introduced by xaifBooster, *one* of the following applies
-    SymId symId = GetSymId(elem); // non-zero for a normal symbol
-    WNId wnId = GetWNId(elem);    // non-zero for a scalarized symbol
+    fortTkSupport::SymId symId = GetSymId(elem); // non-zero for a normal symbol
+    fortTkSupport::WNId wnId = GetWNId(elem);    // non-zero for a scalarized symbol
   
     bool normalSym = (wnId == 0); // true if a non-scalarized symbol
     bool active = GetActiveAttr(elem);
@@ -1805,7 +1826,7 @@ namespace xaif2whirl {
     }
   
     // 3. Create our own symbol structure and add to the map
-    Symbol* sym = new Symbol(st, wnId, active);
+    fortTkSupport::Symbol* sym = new fortTkSupport::Symbol(st, wnId, active);
     symMap->Insert(scopeId, symNm.c_str(), sym);
   } 
 
@@ -1903,38 +1924,30 @@ namespace xaif2whirl {
   }
 
 
-  SymTabId
-  GetSymTabId(const xercesc::DOMElement* elem)
-  {
-    return GetId<SymTabId>(elem, XAIFStrings.tag_SymTabId());
+  fortTkSupport::SymTabId GetSymTabId(const xercesc::DOMElement* elem) {
+    return GetId<fortTkSupport::SymTabId>(elem, XAIFStrings.tag_SymTabId());
   }
 
 
-  SymId
-  GetSymId(const xercesc::DOMElement* elem)
-  {
-    return GetId<SymId>(elem, XAIFStrings.tag_SymId());
+  fortTkSupport::SymId GetSymId(const xercesc::DOMElement* elem) {
+    return GetId<fortTkSupport::SymId>(elem, XAIFStrings.tag_SymId());
   }
 
 
-  PUId
-  GetPUId(const xercesc::DOMElement* elem)
-  {
-    return GetId<PUId>(elem, XAIFStrings.tag_PUId());
+  fortTkSupport::PUId GetPUId(const xercesc::DOMElement* elem) {
+    return GetId<fortTkSupport::PUId>(elem, XAIFStrings.tag_PUId());
   }
 
 
-  WNId
-  GetWNId(const xercesc::DOMElement* elem)
-  {
-    return GetId<WNId>(elem, XAIFStrings.tag_WHIRLId());
+  fortTkSupport::WNId GetWNId(const xercesc::DOMElement* elem) {
+    return GetId<fortTkSupport::WNId>(elem, XAIFStrings.tag_WHIRLId());
   }
 
 
-  IdList<WNId>*
+  fortTkSupport::IdList<fortTkSupport::WNId>*
   GetWNIdList(const xercesc::DOMElement* elem)
   {
-    return GetIdList<WNId>(elem, XAIFStrings.tag_WHIRLId());
+    return GetIdList<fortTkSupport::WNId>(elem, XAIFStrings.tag_WHIRLId());
   }
 
 
@@ -1983,13 +1996,13 @@ namespace xaif2whirl {
 
 
   template <class T>
-  IdList<T>*
+  fortTkSupport::IdList<T>*
   GetIdList(const xercesc::DOMElement* elem, const char* tag)
   {
     const XMLCh* annot = (elem) ? elem->getAttribute(XAIFStrings.attr_annot_x())
       : NULL;
     XercesStrX annotStr = XercesStrX(annot);
-    IdList<T>* idlist = GetIdList<T>(annotStr.c_str(), tag);
+    fortTkSupport::IdList<T>* idlist = GetIdList<T>(annotStr.c_str(), tag);
     return idlist;
   }
 
@@ -2018,10 +2031,10 @@ namespace xaif2whirl {
 
 
   template <class T>
-  IdList<T>*
+  fortTkSupport::IdList<T>*
   GetIdList(const char* idstr, const char* tag)
   {
-    IdList<T>* idlist = new IdList<T>;
+    fortTkSupport::IdList<T>* idlist = new fortTkSupport::IdList<T>;
 
     if (!idstr) { return idlist; }
   
@@ -2167,7 +2180,7 @@ namespace xaif2whirl {
   CreateST(const xercesc::DOMElement* elem, 
 	   SYMTAB_IDX level, 
 	   const char* nm,
-	   XAIFSymToSymbolMap* symMap,
+	   fortTkSupport::XAIFSymToSymbolMap* symMap,
 	   const char* scopeId)
   {
     const XMLCh* kindX = elem->getAttribute(XAIFStrings.attr_kind_x());
@@ -2186,7 +2199,7 @@ namespace xaif2whirl {
     FORTTK_ASSERT(strcmp(kind.c_str(), "variable") == 0 
 		  || 
 		  strcmp(kind.c_str(), "subroutine") == 0,
-		  FORTTK_UNIMPLEMENTED << "Can create only symbols that are temporary variables or subroutine names derived from a given subroutine that has the specified prefix prepended");
+		  fortTkSupport::Diagnostics::Unimplemented << "Can create only symbols that are temporary variables or subroutine names derived from a given subroutine that has the specified prefix prepended");
     TY_IDX ty;
 
     ST_CLASS symbolClass;
@@ -2229,7 +2242,7 @@ namespace xaif2whirl {
 	} 
 	else {
 	  // FIXME: add other tensors
-	  FORTTK_DIE(FORTTK_UNIMPLEMENTED << "Cannot translate variables of shape " << shape.c_str() );
+	  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "Cannot translate variables of shape " << shape.c_str() );
 	}
     
 	INT64 *lower, *upper;
@@ -2243,7 +2256,7 @@ namespace xaif2whirl {
 	     ++ndimIndex,
 	       dbElem = GetNextSiblingElement(dbElem, &dbFilt)) {
 	  if (ndimIndex==ndim) { 
-	    FORTTK_DIE("Cannot have more DimensionBounds than data type allows (" << ndim << ") for variable " << nm );
+	    FORTTK_DIE("Cannot have more DimensionBounds than data type allows");
 	  }
 	  const XMLCh* lowerX = dbElem->getAttribute(XAIFStrings.attr_lower_x());
 	  XercesStrX lowerS = XercesStrX(lowerX);
@@ -2302,7 +2315,7 @@ namespace xaif2whirl {
 		   << PUXlationContext::getPrefix().c_str());
       }
       std::string origXAIFName(newXAIFName.substr(PUXlationContext::getPrefix().size()));
-      Symbol* origNameSymbol_p = symMap->Find(scopeId, origXAIFName.c_str());
+      fortTkSupport::Symbol* origNameSymbol_p = symMap->Find(scopeId, origXAIFName.c_str());
       if (!origNameSymbol_p) {
 	FORTTK_DIE("Cannot find "
 		   << origXAIFName.c_str()
@@ -2448,7 +2461,7 @@ namespace xaif2whirl {
       retWN = WN_CreateExp2(OPC_U8ADD, wn, offsetWN);
     } 
     else {
-      FORTTK_DIE(FORTTK_UNEXPECTED_OPR << OPERATOR_name(opr));
+      FORTTK_DIE(fortTkSupport::Diagnostics::UnexpectedOpr << OPERATOR_name(opr));
     }
     return retWN;
 #endif  
@@ -2562,7 +2575,7 @@ namespace xaif2whirl {
     if (TY_Is_Array(baseobj_ty)) {
       // array reference, such as "s%b(i)"
       // FIXME: must change type of array
-      FORTTK_DIE(FORTTK_UNIMPLEMENTED << "ConvertScalarizedRefToActiveType");
+      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "ConvertScalarizedRefToActiveType");
     }
     else {
       // structure member reference, such as "s%a" or "b(i)%a"
@@ -2702,7 +2715,7 @@ namespace xaif2whirl {
     } 
     else {
       // FIXME: don't know about anything else yet
-      FORTTK_DIE(FORTTK_UNIMPLEMENTED << "Unknown XAIF type: " << type);
+      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "Unknown XAIF type: " << type);
     }
     return ty;
   }
@@ -2731,15 +2744,15 @@ namespace xaif2whirl {
     // We know there is one successor
     OA::OA_ptr<MyDGNode> succ; succ = NULL;
     if (succIsOutEdge) {
-      OA::OA_ptr<DGraphStandard::SinkNodesIterator> it;
+      OA::OA_ptr<NodesIteratorInterface> it;
       it = node->getSinkNodesIterator();
-      OA::OA_ptr<DGraphStandard::Node> ntmp = it->current();
+      OA::OA_ptr<NodeInterface> ntmp = it->current();
       succ = ntmp.convert<MyDGNode>();
     }
     else {
-      OA::OA_ptr<DGraphStandard::SourceNodesIterator> it;
+      OA::OA_ptr<NodesIteratorInterface> it;
       it = node->getSourceNodesIterator();
-      OA::OA_ptr<DGraphStandard::Node> ntmp = it->current();
+      OA::OA_ptr<NodeInterface> ntmp = it->current();
       succ = ntmp.convert<MyDGNode>();
     }
     return succ;
@@ -2756,23 +2769,23 @@ namespace xaif2whirl {
     int numSucc = (succIsOutEdge) ? node->num_outgoing() : node->num_incoming();
   
     if (succIsOutEdge) {
-      OA::OA_ptr<DGraphStandard::OutgoingEdgesIterator> it;
+      OA::OA_ptr<EdgesIteratorInterface> it;
       it = node->getOutgoingEdgesIterator();
       for ( ; it->isValid(); ++(*it)) {
-	OA::OA_ptr<DGraphStandard::Edge> etmp = it->current();
+	OA::OA_ptr<EdgeInterface> etmp = it->current();
 	OA::OA_ptr<MyDGEdge> edge = etmp.convert<MyDGEdge>();
 	xercesc::DOMElement* e = edge->GetElem();
       
 	unsigned int cond = GetCondAttr(e);
 	if (condition == cond) {
-	  OA::OA_ptr<DGraphStandard::Node> ntmp = edge->sink();
+	  OA::OA_ptr<NodeInterface> ntmp = edge->getSink();
 	  succ = ntmp.convert<MyDGNode>();
 	  break;
 	}
       }
     }
     else {
-      FORTTK_DIE(FORTTK_UNIMPLEMENTED << "Transform into a template.");
+      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "Transform into a template.");
     }
     return succ;
   }
@@ -2780,14 +2793,14 @@ namespace xaif2whirl {
 
   // CreateCFGraph: Given an XAIF control flow graph, create and
   // return a CFG where CFG nodes point to XAIF CVG vertices.
-  static OA::OA_ptr<OA::DGraph::Interface> 
+  static OA::OA_ptr<OA::DGraph::DGraphInterface> 
   CreateCFGraph(const xercesc::DOMElement* cfgElem)
   {
     using namespace OA::DGraph;
   
     MyDGNode::resetIds();
-    OA::OA_ptr<OA::DGraph::DGraphStandard> g; 
-    g = new OA::DGraph::DGraphStandard();
+    OA::OA_ptr<OA::DGraph::DGraphImplement> g; 
+    g = new DGraphImplement();
     VertexIdToMyDGNodeMap m;
   
     // -------------------------------------------------------
@@ -2846,14 +2859,14 @@ namespace xaif2whirl {
   static std::string
   DumpDotGraph_GetNodeName(OA::OA_ptr<MyDGNode> n);
 
-  static void
-  DDumpDotGraph(OA::OA_ptr<OA::DGraph::Interface> graph)
+  void
+  DDumpDotGraph(OA::OA_ptr<OA::DGraph::DGraphInterface> graph)
   {
     DumpDotGraph(std::cerr, graph);
   }
 
-  static void
-  DumpDotGraph(std::ostream& os, OA::OA_ptr<OA::DGraph::Interface> graph)
+  void
+  DumpDotGraph(std::ostream& os, OA::OA_ptr<OA::DGraph::DGraphInterface> graph)
   {
     using namespace OA::DGraph;
     
@@ -2863,12 +2876,12 @@ namespace xaif2whirl {
        << "  edge [ ];\n"
        << std::endl;
   
-    OA::OA_ptr<Interface::EdgesIterator> edgesItPtr;
+    OA::OA_ptr<EdgesIteratorInterface> edgesItPtr;
     edgesItPtr = graph->getEdgesIterator();
     for (; edgesItPtr->isValid(); ++(*edgesItPtr)) {
-      OA::OA_ptr<OA::DGraph::Interface::Edge> e = edgesItPtr->current();
-      OA::OA_ptr<OA::DGraph::Interface::Node> srctmp = e->source();
-      OA::OA_ptr<OA::DGraph::Interface::Node> snktmp = e->sink();
+      OA::OA_ptr<OA::DGraph::EdgeInterface> e = edgesItPtr->current();
+      OA::OA_ptr<OA::DGraph::NodeInterface> srctmp = e->getSource();
+      OA::OA_ptr<OA::DGraph::NodeInterface> snktmp = e->getSink();
       OA::OA_ptr<MyDGNode> src = srctmp.convert<MyDGNode>();
       OA::OA_ptr<MyDGNode> snk = snktmp.convert<MyDGNode>();
       std::string srcNm = DumpDotGraph_GetNodeName(src);

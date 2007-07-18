@@ -39,7 +39,7 @@
 #include <sstream> //FIXME
 
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 
 #include "wn2xaif.h"
@@ -317,7 +317,7 @@ namespace whirl2xaif {
      * uttmost importance.  The best path is returned, while the other
      * on is freed up.
      */
-    FORTTK_ASSERT(path1 && path2, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(path1 && path2, fortTkSupport::Diagnostics::UnexpectedInput);
    
     FLD_PATH_INFO *best_path;
     mUINT64        offs1, offs2;
@@ -702,20 +702,7 @@ namespace whirl2xaif {
   static void
   TY2F_Translate_EquivCommon_PtrFld(xml::ostream& xos, FLD_HANDLE fld)
   {
-    PUXlationContext ctxt("TY2F_Translate_EquivCommon_PtrFld"); // FIXME
-
-    // Declare the pointee and the pointer field of the
-    // common/eqivalence block.
-    const char  *fld_name = TY2F_Fld_Name(fld, TRUE/*comm,equiv*/, 
-					  FALSE/*alt_ret_name*/);
-    const char *pointee_name = "dref_"; // W2CF_Symtab_Nameof_Fld_Pointee(fld);
-  
-    xos << pointee_name << fld_name;
-    TY2F_translate(xos, TY_pointed(FLD_type(fld)), ctxt);
-    xos << std::endl;
-  
-    /* Declare the pointer type */
-    xos << "POINTER(" << fld_name << ',' << pointee_name << fld_name << ')';
+    assert(0);
   }
 
   static void
@@ -724,37 +711,8 @@ namespace whirl2xaif {
 			   BOOL         alt_return, /* Alternate return points */
 			   BOOL        *is_equiv)   /* out */
   {
-    PUXlationContext ctxt("TY2F_Declare_Common_Flds"); //FIXME
-    FLD_ITER fld_iter = Make_fld_iter(fldlist);
-
-    /* Emit specification statements for every element of the
-     * common block, including equivalences. */  
-    do {
-      xos << std::endl;
-    
-      FLD_HANDLE fld (fld_iter);
-      TY_IDX ty = FLD_type(fld);
-    
-      /* Determine whether or not the common-block contains any
-       * equivalences (must all be at the top level). */    
-      *is_equiv = *is_equiv || FLD_equivalence(fld);
-    
-      /* Declare as specified in the symbol table */
-      if (TY_split(Ty_Table[ty])) {
-	/* Treat a full split element as a transparent data-structure */
-	TY2F_Declare_Common_Flds(xos, TY_flist(Ty_Table[ty]),
-				 alt_return, is_equiv);
-      }
-      else if (TY_Is_Pointer(ty)) {
-	TY2F_Translate_EquivCommon_PtrFld(xos, fld_iter);
-      }
-      else { /* Non-pointer common field */
-	xos << TY2F_Fld_Name(fld_iter, TRUE/*common/equivalence*/, 
-			     alt_return/*alt_ret_name*/);
-	TY2F_translate(xos, FLD_type(fld), ctxt);
-      }
-    } while (!FLD_last_field (fld_iter++)) ;
-  } /* TY2F_Declare_Common_Flds */
+    assert(0);
+  } 
 
   static void
   TY2F_List_Common_Flds(xml::ostream& xos, FLD_HANDLE fldlist)
@@ -789,13 +747,13 @@ namespace whirl2xaif {
   static void
   TY2F_invalid(xml::ostream& xos, TY_IDX ty, PUXlationContext& ctxt)
   {
-    FORTTK_DIE(FORTTK_UNEXPECTED_INPUT << TY_kind(Ty_Table[ty]));
+    FORTTK_DIE(fortTkSupport::Diagnostics::UnexpectedInput << TY_kind(Ty_Table[ty]));
   }
 
   static void
   TY2F_scalar(xml::ostream& xos, TY_IDX ty_idx, PUXlationContext& ctxt)
   {
-    FORTTK_ASSERT(TY_kind(ty_idx) == KIND_SCALAR, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(TY_kind(ty_idx) == KIND_SCALAR, fortTkSupport::Diagnostics::UnexpectedInput);
   
     TY&   ty = Ty_Table[ty_idx];
     MTYPE mt = TY_mtype(ty);
@@ -873,7 +831,7 @@ namespace whirl2xaif {
   {
     TY& ty = Ty_Table[ty_idx];
 
-    FORTTK_ASSERT(TY_kind(ty) == KIND_ARRAY, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(TY_kind(ty) == KIND_ARRAY, fortTkSupport::Diagnostics::UnexpectedInput);
 
     xos << xml::BegElem("xaif:Property") << xml::Attr("id", ctxt.currentXlationContext().getNewVertexId()) 
 	<< xml::Attr("name", "whirlkind") << xml::Attr("value", "array") << xml::EndElem;
@@ -970,7 +928,7 @@ namespace whirl2xaif {
   {
     TY& ty = Ty_Table[ty_idx] ;
 
-    FORTTK_ASSERT(TY_kind(ty) == KIND_ARRAY, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(TY_kind(ty) == KIND_ARRAY, fortTkSupport::Diagnostics::UnexpectedInput);
   
     if (TY_is_character(ty)) {
       /* A character string...
@@ -1050,7 +1008,7 @@ namespace whirl2xaif {
      * TY2F_Translate_Structure().
      */
     TY& ty_rt = Ty_Table[ty];
-    FORTTK_ASSERT(TY_kind(ty_rt) == KIND_STRUCT, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(TY_kind(ty_rt) == KIND_STRUCT, fortTkSupport::Diagnostics::UnexpectedInput);
   
     xos << "(" << TY_name(ty) << ")" << "TYPE";
   
@@ -1072,7 +1030,7 @@ namespace whirl2xaif {
      * TY2F_Translate_Structure().
      */
     TY & ty_rt = Ty_Table[ty];
-    FORTTK_ASSERT(TY_kind(ty_rt) == KIND_STRUCT, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(TY_kind(ty_rt) == KIND_STRUCT, fortTkSupport::Diagnostics::UnexpectedInput);
 
 #if 0 // see Open64 stab_attr.cxx; if needed simulate thru PUXlationContext
     if (!TY_is_translated_to_c(ty)) {
@@ -1113,7 +1071,7 @@ namespace whirl2xaif {
   TY2F_void(xml::ostream& xos, TY_IDX ty_idx, PUXlationContext& ctxt)
   {
     TY& ty = Ty_Table[ty_idx];
-    FORTTK_ASSERT(TY_kind(ty) == KIND_VOID, FORTTK_UNEXPECTED_INPUT);
+    FORTTK_ASSERT(TY_kind(ty) == KIND_VOID, fortTkSupport::Diagnostics::UnexpectedInput);
     xos << std::endl << "! <Void Type>";
   }
 
@@ -1128,53 +1086,7 @@ namespace whirl2xaif {
 			  TY_IDX       arr_ty_idx,
 			  STAB_OFFSET  arr_ofst)
   {  
-    FORTTK_ASSERT(TY_Is_Array(arr_ty_idx), 
-		  FORTTK_UNEXPECTED_INPUT << TY_kind(arr_ty_idx));
- 
-    STAB_OFFSET  idx;
-    ARB_HANDLE   arb;
-    PUXlationContext ctxt("TY2F_Translate_ArrayElt"); // FIXME
-
-    xos << xml::BegElem("xaif:Property") << xml::Attr("id", ctxt.currentXlationContext().getNewVertexId())
-	<< xml::Attr("name", "arrayindex***") << xml::EndAttrs;
-
-    if (TY_Is_Character_String(arr_ty_idx)) { // FIXME
-      // Character strings can only be indexed using the substring notation
-      xos << Num2Str(arr_ofst+1, "%lld") << ':' << Num2Str(arr_ofst+1, "%lld");
-    } else { /* Regular array indexing */
-      /* Emit the indexing expressions for each dimension, taking note
-       * that Fortran employs column-major array layout, meaning the 
-       * leftmost indexing expression (dim==0) represents array elements
-       * layed out in contiguous memory locations.
-       */
-      ARB_HANDLE arb_base = TY_arb(arr_ty_idx);
-
-      INT32 dimUB = ARB_dimension(arb_base) - 1; /* dim, not size */
-      INT32 dim = 0;
-    
-      while (dim <= dimUB) {
-	ARB_HANDLE arb = arb_base[dim];
-    
-	const char* idx_str = NULL;
-	if (arr_ofst == 0) {
-	  idx_str = Num2Str(1LL, "%lld");
-	} else if (ARB_const_stride(arb)) { /* Constant stride */
-	  idx = arr_ofst/ARB_stride_val(arb) + 1;
-	  idx_str = Num2Str(idx, "%lld");
-	  arr_ofst -= (arr_ofst/ARB_stride_val(arb))*ARB_stride_val(arb);
-	} else {
-	  idx_str = "*";
-	} 
-
-	xos << xml::BegElem("xaif:Property") << xml::Attr("id", ctxt.currentXlationContext().getNewVertexId())
-	    << xml::Attr("name","dimindex") << xml::Attr("dim", dim)
-	    << xml::Attr("value", idx_str) << xml::EndElem;
-      
-	dim++;
-      }
-    }
-  
-    xos << xml::EndElem;
+    assert(0);
   }
 
 
@@ -1185,7 +1097,7 @@ namespace whirl2xaif {
     BOOL is_equiv = FALSE;
   
     FORTTK_ASSERT(TY_kind(ty) == KIND_STRUCT, 
-		  FORTTK_UNEXPECTED_INPUT << TY_kind(ty));
+		  fortTkSupport::Diagnostics::UnexpectedInput << TY_kind(ty));
 
     // Emit specification statements for every element of the common
     // block, including equivalences.
@@ -1222,7 +1134,7 @@ namespace whirl2xaif {
     BOOL is_equiv;
    
     FORTTK_ASSERT(TY_kind(ty) == KIND_STRUCT, 
-		  FORTTK_UNEXPECTED_INPUT << TY_kind(ty));
+		  fortTkSupport::Diagnostics::UnexpectedInput << TY_kind(ty));
 
     if (alt_return) {
       first_fld = FLD_next(TY_flist(ty)); /* skip func_entry return var */
@@ -1268,7 +1180,7 @@ namespace whirl2xaif {
     FLD_ITER fld_iter;
 
     FORTTK_ASSERT(TY_kind(s_ty) == KIND_STRUCT, 
-		  FORTTK_UNEXPECTED_INPUT << TY_kind(s_ty));
+		  fortTkSupport::Diagnostics::UnexpectedInput << TY_kind(s_ty));
   
     /* Get the best matching field path into fld_path2 */
     fld_iter = Make_fld_iter(TY_flist(s_ty));

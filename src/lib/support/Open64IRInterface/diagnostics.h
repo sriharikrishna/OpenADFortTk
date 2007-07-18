@@ -1,54 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.11 2005/03/19 22:54:51 eraxxon Exp $
-
-// * BeginCopyright *********************************************************
-/*
-  Copyright (C) 2000, 2001 Silicon Graphics, Inc.  All Rights Reserved.
-
-  This program is free software; you can redistribute it and/or modify it
-  under the terms of version 2 of the GNU General Public License as
-  published by the Free Software Foundation.
-
-  This program is distributed in the hope that it would be useful, but
-  WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-  Further, this software is distributed without any warranty that it is
-  free of the rightful claim of any third person regarding infringement 
-  or the like.  Any license provided herein, whether implied or 
-  otherwise, applies only to this software file.  Patent licenses, if 
-  any, provided herein do not apply to combinations of this program with 
-  other software, or any other product whatsoever.  
-
-  You should have received a copy of the GNU General Public License along
-  with this program; if not, write the Free Software Foundation, Inc., 59
-  Temple Place - Suite 330, Boston MA 02111-1307, USA.
-
-  Contact information:  Silicon Graphics, Inc., 1600 Amphitheatre Pky,
-  Mountain View, CA 94043, or:
-
-  http://www.sgi.com
-
-  For further information regarding this notice, see:
-
-  http://oss.sgi.com/projects/GenInfo/NoticeExplan
-*/
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-// Based on Open64 be/whirl2c/diagnostics.h
-//
-//***************************************************************************
+// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/diagnostics.h,v 1.1.1.1 2004/04/16 15:58:28 mstrout Exp $
 
 #ifndef diagnostics_INCLUDED
 #define diagnostics_INCLUDED
@@ -137,149 +88,39 @@
 
 //************************* System Include Files ****************************
 
-//************************** Open64 Include Files ***************************
-
-//*************************** User Include Files ****************************
-
-//***************************************************************************
-
-// Debug and verbosity levels: higher level --> more info; 0 turns
-// respective messages off
+#include <stdio.h>		    /* for stderr */
 
 // Private debugging level: messages for in-house debugging [0-9]
-#define FORTTK_DBG_LVL 0
+#define DBG_LVL 0
 
 // Public debugging level: stuff that a few users may find interesting [0-9]
-extern int FORTTK_DBG_LVL_PUB; // default: 0
+extern int DBG_LVL_PUB; // default: 0
 
-
-extern "C" void 
-FortTk_SetDiagnosticFilterLevel(int lvl);
-
-extern "C" int
-FortTk_GetDiagnosticFilterLevel();
-
-// This routine is called before an error that stops execution.  It is
-// especially useful for use with debuggers that do not have good
-// exception support.
-extern "C" void 
-FortTk_TheMostVisitedBreakpointInHistory(const char* filenm = NULL, 
-					 unsigned int lineno = 0);
-
-
-//***************************************************************************
-// Diagnostic macros
-//***************************************************************************
-
-// FORTTK_MSG: Print a message if level satisfies the diagnostic filter
-
-// FORTTK_DEVMSG: Print a message if private level satisfies the
-// private diagnostic filter
-
-// FORTTK_ERR: Print an error message and continue.
-
-// FORTTK_ASSERT: Throw an assertion (die) if 'expr' evaluates to
-// false. Stops at 'FortTk_TheMostVisitedBreakpointInHistory'.
-
-// FORTTK_ASSERT_WARN: Print a warning if 'expr' evaluates to false.
-// Stops at 'FortTk_TheMostVisitedBreakpointInHistory'.
-
-// FORTTK_DIE: Print an error message and die.  Stops at
-// 'FortTk_TheMostVisitedBreakpointInHistory'.
-
-// FORTTK_THROW: (C++ only) Throw a fatal exception.  Stops at
-// 'FortTk_TheMostVisitedBreakpointInHistory'.
-
-// FORTTK_DIAGIF: If public diagnostic level is at least 'level' ...
-#define FORTTK_DIAGIF(level) if (level <= FORTTK_DBG_LVL_PUB)
-
-// FORTTK_DIAGIF_DEV: If development diagnostic level is at least 'level' ...
-#define FORTTK_DIAGIF_DEV(level) if (level <= FORTTK_DBG_LVL)
-
-//---------------------------------------------------------------------------
-// C++ diagnostics
-//---------------------------------------------------------------------------
-
-#if defined(__cplusplus)
-
-#include "Exception.h"
-
-// All of these macros have a parameter named 'streamArgs' for one or
-// more ostream arguments. These macros use these arguments to create
-// a message string.  Example:
-//   if (...) FORTTK_ERR("bad val: '" << v << "'")
-
-#define FORTTK_MSG(level, streamArgs)                                 \
-  if (level <= FORTTK_DBG_LVL_PUB) {                                  \
-    std::cerr << "FortTk: " << streamArgs << std::endl; }
-
-#define FORTTK_DEVMSG(level, streamArgs)                              \
-  if (level <= FORTTK_DBG_LVL) {                                      \
-    std::cerr << "FortTk* [" << level << "]: " << streamArgs << std::endl; }
-
-#define FORTTK_EMSG(streamArgs)                                       \
-  { std::cerr << "error";                                             \
-    if (FORTTK_DBG_LVL_PUB) {                                         \
-      std::cerr << "[" << __FILE__ << ":" << __LINE__ << "]"; }       \
-    std::cerr << ": " << streamArgs << std::endl; }
-
-#define FORTTK_ASSERT(expr, streamArgs)                               \
-  if (!(expr)) FORTTK_THROW(streamArgs)
-
-#define FORTTK_ASSERT_WARN(expr, streamArgs)                          \
-  if (!(expr)) FORTTK_EMSG(streamArgs)
-
-// (Equivalent to FORTTK_THROW.)
-#define FORTTK_DIE(streamArgs)                                        \
-  FORTTK_THROW(streamArgs)
-
-// (Equivalent to FORTTK_DIE.) Based on Jean Utke's code in xaifBooster.
-#define FORTTK_THROW(streamArgs)                                      \
-  { std::ostringstream WeIrDnAmE;                                     \
-    WeIrDnAmE << streamArgs << std::ends;                             \
-    throw FortTk::FatalException(WeIrDnAmE.str(), __FILE__, __LINE__); }
-
-#endif
-
-
-//---------------------------------------------------------------------------
-// C diagnostics
-//---------------------------------------------------------------------------
-
-#if !defined(__cplusplus)
-
-#include <stdio.h>
-
-#define FORTTK_MSG(level, ...)                                        \
-  if (level <= FORTTK_DBG_LVL_PUB) {                                  \
-    fprintf(stderr, "FortTk [%d]: ", level);                          \
+#define DBGMSG(level, ...)                                            \
+  if (level <= DBG_LVL) {                                             \
+    fprintf(stderr, "Open64IRInterface:[debuglevel=%d]: ", level);                            \
     fprintf(stderr, __VA_ARGS__); fputs("\n", stderr); }
 
-#define FORTTK_DEVMSG(level, ...)                                     \
-  if (level <= FORTTK_DBG_LVL) {                                      \
-    fprintf(stderr, "FortTk* [%d]: ", level);                         \
+#define DBGMSG_PUB(level, ...)                                        \
+  if (level <= DBG_LVL_PUB) {                                         \
+    fprintf(stderr, "Open64IRInterface:[debuglevel=%d]: ", level);                             \
     fprintf(stderr, __VA_ARGS__); fputs("\n", stderr); }
 
-#define FORTTK_EMSG(...)                                              \
+#define ERRMSG(...)                                                   \
   { fputs("error", stderr);                                           \
-    if (FORTTK_DBG_LVL_PUB) {                                         \
-      fprintf(stderr, " [%s:%d]", __FILE__, __LINE__); }              \
+    if (DBG_LVL) {                                                    \
+      fprintf(stderr, "Open64IRInterface: [%s:%d]", __FILE__, __LINE__); }              \
     fputs(": ", stderr); fprintf(stderr, __VA_ARGS__); fputs("\n", stderr); }
 
-//#define FORTTK_ASSERT(expr, ...) // cf. Open64's FmtAssert
+#define DIE(...) ERRMSG(__VA_ARGS__); { exit(1); }
 
-//#define FORTTK_ASSERT_WARN(expr, ...)
 
-#define FORTTK_DIE(...)                                               \
-  FORTTK_EMSG(__VA_ARGS__);                                           \
-  { FortTk_TheMostVisitedBreakpointInHistory(__FILE__, __LINE__); exit(1); }
+#define IFDBG(level) if (level <= DBG_LVL)
 
-#endif
-
+#define IFDBG_PUB(level) if (level <= DBG_LVL_PUB)
 
 //***************************************************************************
-//
-//***************************************************************************
+
 
       /* ------------ Initialization and finalization -------------*/
       /* ----------------------------------------------------------*/
@@ -294,11 +135,6 @@ extern int  Diag_Get_Warn_Count(void);
 
       /* -------------- Diagnostic code enumeration ---------------*/
       /* ----------------------------------------------------------*/
-
-extern const char* FORTTK_UNIMPLEMENTED;
-extern const char* FORTTK_UNEXPECTED_INPUT;
-extern const char* FORTTK_UNEXPECTED_OPR;
-
 
 typedef enum Diag_Code
 {
@@ -359,28 +195,23 @@ typedef enum Diag_Code
       /* ------------------- Diagnostics macros -------------------*/
       /* ----------------------------------------------------------*/
 
-
 #ifdef Is_True_On
 
-/*
-#define XXX_ASSERT_WARN(a_truth, diag_args) \
+#define ASSERT_WARN(a_truth, diag_args) \
    DIAG_ASSERT_LOC(a_truth, Diag_Warning, diag_args)
 #define ASSERT_FATAL(a_truth, diag_args) \
    DIAG_ASSERT_LOC(a_truth, Diag_Fatal, diag_args)
-#define ASSERT_DBG_WARN XXX_ASSERT_WARN
+#define ASSERT_DBG_WARN ASSERT_WARN
 #define ASSERT_DBG_FATAL ASSERT_FATAL
-*/
 
 #else /* !defined(Is_True_On) */
 
-/*
-#define XXX_ASSERT_WARN(a_truth, diag_args) \
+#define ASSERT_WARN(a_truth, diag_args) \
    DIAG_ASSERT_NOLOC(a_truth, Diag_Warning, diag_args)
 #define ASSERT_FATAL(a_truth, diag_args) \
    DIAG_ASSERT_NOLOC(a_truth, Diag_Fatal, diag_args)
 # define ASSERT_DBG_WARN(a_truth, diag_args) ((void) 1)
 # define ASSERT_DBG_FATAL(a_truth, diag_args) ((void) 1)
-*/
 
 #endif /*Is_True_On*/
 

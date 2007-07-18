@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.h,v 1.5 2004/04/28 17:46:19 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/CmdLineParser.h,v 1.5 2004/04/28 17:46:19 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -7,7 +7,7 @@
 //***************************************************************************
 //
 // File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.h,v $
+//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/CmdLineParser.h,v $
 //
 //   Nathan Tallent
 //

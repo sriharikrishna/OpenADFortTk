@@ -1,5 +1,10 @@
+syntax: regexp
 (^|/)CVS($|/)
 (^|/)\.hg($|/)
 (^|/)\.hgtags($|/)
+syntax: glob
 build-x86-Linux/*
 OpenADFortTk-x86-Linux/*
+*.pyc
+*~
+*.orig

@@ -1,44 +1,14 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.i,v 1.2 2006/03/14 01:09:15 utke Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/sexp2wn.i,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
 #ifndef wn2sexp_i
 #define wn2sexp_i
-
-//************************** System Include Files ***************************
-
-//*************************** Sexp Include Files ****************************
-
+#include <iostream>
 #include <sexp.h>
 
-//************************** Open64 Include Files ***************************
-
-#include <include/Open64BasicTypes.h>
-
-//*************************** User Include Files ****************************
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 #include "sexp2whirl.i"
 
-//************************** Forward Declarations ***************************
-
-//***************************************************************************
-// WNXlationTable
-//***************************************************************************
 
 // WNXlationTable: Maps WHIRL OPERATORs to functions designed to
 // handle the translation of that particular node.  Handler functions
@@ -87,6 +57,9 @@ private:
 //***************************************************************************
 
 namespace sexp2whirl {
+
+  extern WN*
+  xlate_INTERFACE(sexp_t* sx);
 
   // ---------------------------------------------------------
   // Structured Control Flow Statements

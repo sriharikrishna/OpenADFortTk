@@ -1,49 +1,23 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v 1.10 2005/03/19 22:54:51 eraxxon Exp $
 
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/testers/main.cxx,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************** System Include Files ***************************
-
 #include <iostream>
 #include <fstream>
 #include <string>
 
-//************************** Open64 Include Files ***************************
+#include <OpenAnalysis/Utils/Exception.hpp>
 
-#include <include/Open64BasicTypes.h>
-
+#include "Open64IRInterface/Open64BasicTypes.h"
 #include "cmplrs/rcodes.h"  // return codes
 #include "tracing.h"        // trace routines
 #include "ir_reader.h"      // fdump_tree
+#include "Open64IRInterface/WhirlIO.h"
+#include "Open64IRInterface/diagnostics.h"
 
-//************************ OpenAnalysis Include Files ***********************
-
-#include <OpenAnalysis/Utils/Exception.hpp>
-
-//*************************** User Include Files ****************************
+#include "Exception.h"
 
 #include "Args.h"
 #include "tester.h"
-
-#include <lib/support/Exception.h>
-#include <lib/support/WhirlIO.h>
-
-//************************** Forward Declarations ***************************
 
 static int 
 real_main(int argc, char **argv);
@@ -66,7 +40,7 @@ main(int argc, char **argv)
     e.Report(cerr); // fatal error
     exit(1);
   }
-  catch (FortTk::BaseException& e) {
+  catch (fortTkSupport::BaseException& e) {
     e.Report(cerr);
     exit(1);
   }

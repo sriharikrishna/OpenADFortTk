@@ -1,5 +1,5 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Exception.h,v 1.3 2005/06/13 14:30:17 eraxxon Exp $
+// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Exception.h,v 1.3 2005/06/13 14:30:17 eraxxon Exp $
 
 // * BeginCopyright *********************************************************
 // *********************************************************** EndCopyright *
@@ -7,7 +7,7 @@
 //***************************************************************************
 //
 // File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/Exception.h,v $
+//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/Exception.h,v $
 //
 // Purpose:
 //    [The purpose of this file]
@@ -38,7 +38,7 @@
 // Exception
 //****************************************************************************
 
-namespace FortTk {
+namespace fortTkSupport {
 
   class BaseException {
   public:

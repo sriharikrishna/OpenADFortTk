@@ -1,39 +1,15 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.cxx,v 1.8 2005/02/01 22:03:18 eraxxon Exp $
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.cxx,v $
-//
-// Purpose:
-//   Translate WHIRL to S-expressions.
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************** System Include Files ***************************
-
 #include <fstream>
 
-//************************** Open64 Include Files ***************************
-
-#include <include/Open64BasicTypes.h>
-
-//*************************** User Include Files ****************************
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 #include "whirl2sexp.h"
 #include "wn2sexp.h"
 #include "symtab2sexp.h"
 
-#include <lib/support/WhirlGlobalStateUtils.h>
-#include <lib/support/SexpTags.h>
-
-//************************** Forward Declarations ***************************
-
-//***************************************************************************
+#include "Open64IRInterface/WhirlGlobalStateUtils.h"
+#include "SexpTags.h"
 
 static void
 GenHeader(sexp::ostream& sos);

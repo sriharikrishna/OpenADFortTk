@@ -2,45 +2,32 @@
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/main.cxx,v 1.26 2006/05/12 16:12:23 utke Exp $
 
 #include <iostream>
-using std::endl;
-using std::cout;
+#include <fstream>
 #include <string>
 
-#include <include/Open64BasicTypes.h>
+#include <xmlostream.h>
 
+#include "OpenAnalysis/Utils/Exception.hpp"
+
+#include "Open64IRInterface/Open64BasicTypes.h"
+// extra from Open64: 
 #include "cmplrs/rcodes.h"  // return codes
 #include "tracing.h"        // trace routines
 #include "ir_reader.h"      // fdump_tree
-
-#include <OpenAnalysis/Utils/Exception.hpp>
-
+// from FortTk again: 
+#include "Open64IRInterface/WhirlIO.h"
+#include "Diagnostics.h"
 #include "Args.h"
 #include "whirl2xaif.h"
+#include "BackSubstituteTemps.h"
 
-#include <lib/support/xmlostream.h>
-#include <lib/support/Exception.h>
-#include <lib/support/WhirlIO.h>
-#include <lib/support/BackSubstituteTemps.h>
-
-static int
-real_main(int argc, char **argv);
-
-static std::ostream*
-InitOutputStream(Args& args);
-
-static void
-FiniOutputStream(std::ostream* os);
-
-static void 
-OpenFile(std::ofstream& fs, const char* filename);
-
-static void 
-CloseFile(std::ofstream& fs);
-
+// some forward decls
+static int real_main(int argc, char **argv);
+static std::ostream& InitOutputStream(Args& args);
+static void FiniOutputStream(std::ostream& os, Args& args);
 
 int
-main(int argc, char **argv)
-{
+main(int argc, char **argv) {
   try {
     return real_main(argc, argv);
   }
@@ -48,7 +35,7 @@ main(int argc, char **argv)
     e.Report(cerr); // fatal error
     exit(1);
   }
-  catch (FortTk::BaseException& e) {
+  catch (fortTkSupport::BaseException& e) {
     e.Report(cerr);
     exit(1);
   }
@@ -61,15 +48,12 @@ main(int argc, char **argv)
     exit(1);
   }
   catch (...) {
-    cerr << "Unknown exception caught\n";
+    std::cerr << "Unknown exception caught\n";
     exit(1);
   }
-  // FIXME: catch badalloc?
 }
 
-static int
-real_main(int argc, char **argv)
-{
+static int real_main(int argc, char **argv) {
   // -------------------------------------------------------
   // 1. Open64 Initialization
   // -------------------------------------------------------
@@ -101,8 +85,8 @@ real_main(int argc, char **argv)
   Diag_Set_Phase("WHIRL to XAIF: driver");
   
   Args args(argc, argv);
-  std::ostream* os = InitOutputStream(args);
-  FortTk_SetDiagnosticFilterLevel(args.debug);
+  std::ostream& os(InitOutputStream(args));
+  fortTkSupport::Diagnostics::setDiagnosticFilterLevel(args.debug);
   
   // -------------------------------------------------------
   // 3. Read WHIRL IR
@@ -118,8 +102,8 @@ real_main(int argc, char **argv)
   // 4. Translate WHIRL into XAIF
   // -------------------------------------------------------  
   
-  (*os) << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n";
-  whirl2xaif::Whirl2Xaif::translateIR(*os, pu_forest, args.tmpVarPrefix.c_str());
+  os << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n";
+  whirl2xaif::Whirl2Xaif::translateIR(os, pu_forest, args.tmpVarPrefix.c_str());
   
   bool writeIR = false;
   if (writeIR) { 
@@ -129,11 +113,6 @@ real_main(int argc, char **argv)
   else {
     FreeIR(pu_forest); // Writing frees some of the WHIRL maps
   }
-  
-  // -------------------------------------------------------
-  // 5. Finalization
-  // -------------------------------------------------------
-  FiniOutputStream(os);
   
   // If we've seen errors, note them and terminate
   INT local_ecount, local_wcount;
@@ -145,45 +124,39 @@ real_main(int argc, char **argv)
   Diag_Exit();
   Cleanup_Files(TRUE, FALSE); // Open64
 
+  // -------------------------------------------------------
+  // 5. Finalization
+  // -------------------------------------------------------
+  FiniOutputStream(os,args);
   return RC_OKAY;
 }
 
-static std::ostream*
-InitOutputStream(Args& args)
-{
+static std::ostream& InitOutputStream(Args& args) {
   if (args.xaifFileNm.empty()) {
-    // Use cout
-    return &(cout);
+    return std::cout;
   } 
   else {
-    ofstream* ofs = new ofstream;
-    OpenFile(*ofs, args.xaifFileNm.c_str());
-    return ofs;
+    std::ofstream* ofs = new std::ofstream;
+    std::string filename(args.xaifFileNm+".tmp");
+    int keepErrno;
+    errno=0;
+    ofs->open(filename.c_str(), ios::out | ios::trunc);
+    if (keepErrno=errno || !ofs->is_open() || ofs->fail()) 
+      FORTTK_DIE("cannot open temporary file " << filename.c_str() << " because: " << strerror(keepErrno));
+    return *ofs;
   }
 }
 
 static void
-FiniOutputStream(std::ostream* os)
-{
-  if (os != &cout) {
-    delete os;
+FiniOutputStream(std::ostream& os,Args& args) {
+  if (!args.xaifFileNm.empty()) {
+    delete &os;
+    std::string tmpfilename(args.xaifFileNm+".tmp");
+    int keepErrno;
+    errno=0;
+    rename(tmpfilename.c_str(), args.xaifFileNm.c_str());
+    if (keepErrno=errno)
+      FORTTK_DIE("cannot rename temporary file " << tmpfilename.c_str() << " to output file " <<  args.xaifFileNm.c_str() << " because: " << strerror(keepErrno));
   }
 }
 
-
-static void 
-OpenFile(std::ofstream& fs, const char* filename)
-{
-  using namespace std;
-
-  fs.open(filename, ios::out | ios::trunc);
-  if (!fs.is_open() || fs.fail()) {
-    ErrMsg(EC_IR_Open, filename, 0/*FIXME*/);
-  } 
-}
-
-static void
-CloseFile(std::ofstream& fs)
-{
-  fs.close();
-}

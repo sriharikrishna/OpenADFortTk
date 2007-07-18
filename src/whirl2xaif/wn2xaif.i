@@ -4,14 +4,13 @@
 #ifndef wn2xaif_i
 #define wn2xaif_i
 
-#include <include/Open64BasicTypes.h>
+#include "Open64IRInterface/Open64BasicTypes.h"
 
 #include "whirl2xaif.h"
 #include "XlationContext.h"
-#include <lib/support/xmlostream.h>
-#include <lib/support/IntrinsicXlationTable.h>
+#include "xmlostream.h"
+#include "IntrinsicXlationTable.h"
 
-//************************** Forward Declarations ***************************
 
 //***************************************************************************
 // Function entry handlers

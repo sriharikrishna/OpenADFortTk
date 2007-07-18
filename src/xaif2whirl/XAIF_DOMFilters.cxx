@@ -13,7 +13,7 @@
 
 #include "xercesc/util/XMLString.hpp"
 
-#include "lib/support/XAIFStrings.h"
+#include "XAIFStrings.h"
 
 #include "XAIF_DOMFilters.h"
 #include "XercesStrX.h"

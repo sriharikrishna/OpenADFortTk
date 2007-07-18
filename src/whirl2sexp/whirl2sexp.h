@@ -1,40 +1,11 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.h,v 1.4 2005/08/01 19:42:17 eraxxon Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/whirl2sexp.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
 #ifndef whirl2sexp_h
 #define whirl2sexp_h
-
-//************************** System Include Files ***************************
-
 #include <fstream>
 
-//************************** Open64 Include Files ***************************
-
-#include <include/Open64BasicTypes.h>
-
-//*************************** User Include Files ****************************
-
-#include <lib/support/sexpostream.h>  /* sexp::ostream, etc */
-
-//************************** Forward Declarations ***************************
-
-//***************************************************************************
+#include "Open64IRInterface/Open64BasicTypes.h"
+#include "sexpostream.h"
 
 namespace whirl2sexp {
   

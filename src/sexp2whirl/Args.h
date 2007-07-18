@@ -1,36 +1,14 @@
 // -*-Mode: C++;-*-
 // $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/Args.h,v 1.1 2004/12/15 17:54:53 eraxxon Exp $
-// * BeginRiceCopyright *****************************************************
-// ******************************************************* EndRiceCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/Args.h,v $
-//
-// Purpose:
-//    [The purpose of this file]
-//
-// Description:
-//    [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
 
 #ifndef Args_h
 #define Args_h
 
-//************************* System Include Files ****************************
-
 #include <iostream>
 #include <string>
 
-//*************************** User Include Files ****************************
+#include "CmdLineParser.h"
 
-#include <lib/support/CmdLineParser.h>
-
-//*************************** Forward Declarations ***************************
-
-//***************************************************************************
 
 class Args {
 public: 
