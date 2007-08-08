@@ -112,7 +112,7 @@ real_main(int argc, char **argv)
 
   // this is back substituting the original references that 
   // were hoisted into temporaries by the front-end: 
-  FortTk::BackSubstituteTemps::forPUInfoForrest(pu_forest);
+  // FortTk::BackSubstituteTemps::forPUInfoForrest(pu_forest);
   
   // -------------------------------------------------------
   // 4. Translate WHIRL into XAIF
