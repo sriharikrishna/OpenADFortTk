@@ -1,7 +1,7 @@
 #ifndef CleanUpWhirl_H_INCLUDED 
 #define CleanUpWhirl_H_INCLUDED
 
-#include "Open64IRInterface/Open64BasicTypes.h"
+#include "Open64BasicTypes.h"
 
 /**
  * clean up whirl problems we 
