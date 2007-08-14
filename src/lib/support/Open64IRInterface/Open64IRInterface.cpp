@@ -1217,13 +1217,13 @@ Open64IRInterface::getCFGStmtType(OA::StmtHandle h)
   case OPR_ISTOREX:
   case OPR_MLOAD:
   case OPR_MSTORE:
+  case OPR_PSTORE:
   case OPR_LDBITS:
   case OPR_STBITS:
   case OPR_ILDBITS:
   case OPR_ISTBITS:
   case OPR_USE: // FIXME: how are these ordered?
   case OPR_INTERFACE: 
-  //case OPR_PSTID: FIXME: want this to fail because don't handle pointers yet
     ty = OA::CFG::SIMPLE;
     break;
 
@@ -2037,6 +2037,7 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
     case OPR_ISTOREX:
     case OPR_ISTBITS:
     case OPR_ISTORE:
+    case OPR_PSTORE:
        {
            
          // 1. recurse on LHS

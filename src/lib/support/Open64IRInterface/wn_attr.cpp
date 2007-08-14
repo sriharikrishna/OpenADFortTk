@@ -326,9 +326,6 @@ Get_Field_Type(TY_IDX base, int field_id)
   return FLD_type(fh);
 }
 
-
-//***************************************************************************
-
 TY_IDX 
 WN_GetRefObjType(const WN* wn)
 {
@@ -365,6 +362,7 @@ WN_GetRefObjType(const WN* wn)
     // STOREs represent the left-hand-side expression
     case OPR_STID:    // type of referenced lhs object
     case OPR_PSTID:
+    case OPR_PSTORE:
     case OPR_STBITS:
       ty = WN_ty(wn);
       break;
@@ -722,10 +720,6 @@ WN_Get_PtrAdd_Intconst(WN* wn0, WN* wn1, TY_IDX pointed_ty)
    }
    return intconst;
 } /* WN_Get_PtrAdd_Intconst */
-
-
-
-//***************************************************************************
 
 static TY_IDX
 WN_get_tld_type(const WN* wn) 
