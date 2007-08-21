@@ -699,9 +699,6 @@ public:
   //! Return an iterator over all dependent MemRefExpr for given proc
   OA::OA_ptr<OA::MemRefExprIterator> getDepMemRefExprIter(OA::ProcHandle h);
  
-  //! Given a statement, return its Activity::IRStmtType
-  OA::Activity::IRStmtType getActivityStmtType(OA::StmtHandle h);
-
   //! given a symbol return the size in bytes of that symbol
   int getSizeInBytes(OA::SymHandle h);
 
@@ -739,9 +736,6 @@ public:
   // ReachConstsIRInterface
   //-------------------------------------------------------------------------
 
-  //! Given a statement, return its ReachConsts::IRStmtType
-  OA::ReachConsts::IRStmtType getReachConstsStmtType(OA::StmtHandle h); 
-  
   //! Given a statement return a list to the pairs of 
   //! target MemRefHandle, ExprHandle where
   //! target = expr

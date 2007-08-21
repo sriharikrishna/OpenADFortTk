@@ -1701,7 +1701,6 @@ Open64IRInterface::getMemRefIterator(OA::StmtHandle h)
 void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
         WN* wn, unsigned lvl)
 {
-
   if (debug) {
       std::cout << "======== findAllMemRefsAndMapToMemRefExprs" << std::endl;
       std::cout << "\tWN =";
@@ -1789,7 +1788,13 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
   // Large switch statement based on operator that current node represents
   switch (opr) {
     // NOTE: MLOAD, MSTORE?  FIXME?: we don't handle these, should we?
-    
+
+    case OPR_MIN:
+    case OPR_MAX:          
+    case OPR_IF:
+    case OPR_LAND:
+    case OPR_LIOR:
+    case OPR_LNOT:    
     case OPR_MPY:
     case OPR_ADD:
     case OPR_SUB:
@@ -1798,10 +1803,10 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
     case OPR_LE:
     case OPR_LT:
     case OPR_GE:
+    case OPR_GT:    
     case OPR_EQ:
     case OPR_NE:    
     case OPR_TRUNC:
-    case OPR_LIOR:
     case OPR_RECIP:
     case OPR_PAREN:
     case OPR_NEG:
@@ -2092,66 +2097,70 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
 
     case OPR_INTRINSIC_CALL:
         {
-            // iterate over the kids
-            for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++) {
-
-                 WN* subMemRef = WN_kid(wn,kidno);
-                 findAllMemRefsAndMapToMemRefExprs(stmt, subMemRef, lvl+1);
-
-                 if(WN_operator(wn) == OPR_INTRINSIC_CALL &&
-                   strcmp(IntrinsicInfo::intrinsicBaseName(WN_intrinsic(wn)), "CASSIGNSTMT")==0) {
-
-                   // find TopMemRefHandle
-                   OA::MemRefHandle m = findTopMemRefHandle(subMemRef);
-                   OA_ptr<MemRefExpr> newmre;
-
-                   // Steal mre from the TopMemRefHandle
-                   newmre = *(sMemref2mreSetMap[m].begin());
-                   sMemref2mreSetMap[m].clear();
-                   sStmt2allMemRefsMap[stmt].erase(m);
-
-                   // Remove AddressOf
-                   isAddrOf = false;
-                   fullAccuracy = false;
-                   hty = OA::MemRefExpr::USE;
-                   int numDerefs = 1;
-                   OA::OA_ptr<OA::Deref> deref_mre;
-                   OA::OA_ptr<OA::MemRefExpr> nullMRE;
-                   deref_mre = new OA::Deref(
+          isAddrOf = false;
+          fullAccuracy = false;
+          hty = OA::MemRefExpr::USE;
+          int numDerefs = 1;
+          OA::OA_ptr<OA::Deref> deref_mre;
+          OA::OA_ptr<OA::MemRefExpr> nullMRE;
+          deref_mre = new OA::Deref(
                                    hty,
                                    nullMRE,
                                    numDerefs);
-                   newmre = deref_mre->composeWith(newmre->clone());
+          OA_ptr<MemRefExpr> newmre;
+          OA::MemRefHandle m;
+          WN* subMemRef;
 
-                   if(kidno == 0) {
-                      // only kidno=0 is lhs
-                      newmre->setMemRefType(MemRefExpr::DEF);
-                   } else {
-                      // other kids are rhs
-                      newmre->setMemRefType(MemRefExpr::USE);
-                   }
+          if(strcmp(IntrinsicInfo::intrinsicBaseName(WN_intrinsic(wn)),
+                    "CASSIGNSTMT")==0) {
+             // Process LHS
+             subMemRef = WN_kid0(wn); 
+             findAllMemRefsAndMapToMemRefExprs(stmt, subMemRef, lvl+1);
+             // find TopMemRefHandle
+             m = MemRefHandle((irhandle_t)subMemRef); 
+             // Steal mre from the TopMemRefHandle
+             newmre = *(sMemref2mreSetMap[m].begin());
+             // Remove AddressOf Wrapper
+             newmre = deref_mre->composeWith(newmre->clone());
+             // MemRef map to the Whirl Node.
+             sMemref2mreSetMap[m].clear();
+             sStmt2allMemRefsMap[stmt].erase(m);
+             newmre->setMemRefType(MemRefExpr::DEF);
+             sMemref2mreSetMap[m].insert(newmre);
+             sStmt2allMemRefsMap[stmt].insert(MemRefHandle(m));
 
-                   if(newmre->isaUnnamed()) {
-                      WN* paramnode = (WN *)m.hval();
-                      WN* paramkid =  WN_kid0(paramnode);
 
-                      OA::MemRefHandle param_mh = findTopMemRefHandle(paramkid);
-                      OA_ptr<MemRefExpr> sub_mre;
+             OA_ptr<MemRefExpr> newmre1;
+             OA::MemRefHandle m1;
+             WN* subMemRef1;
 
-                      sub_mre = *(sMemref2mreSetMap[param_mh].begin());
-
-                      if(sub_mre->isaUnnamed()) {
-                         sMemref2mreSetMap.erase(param_mh);
-                         sStmt2allMemRefsMap[stmt].erase(param_mh);
-                      }
-                   }
-
-                   // MemRef map to the Whirl Node.
-                   sMemref2mreSetMap[m].insert(newmre);
-
-                   sStmt2allMemRefsMap[stmt].insert(MemRefHandle(m));
-                 }
-            }
+             // Process RHS (only process frist kid ignore others)
+             subMemRef1 = WN_kid(wn,1);
+             findAllMemRefsAndMapToMemRefExprs(stmt, subMemRef1, lvl+1);
+             // find TopMemRefHandle
+             m1 = MemRefHandle((irhandle_t)subMemRef1);
+             // Steal mre from the TopMemRefHandle
+             newmre1 = *(sMemref2mreSetMap[m1].begin());
+             // Remove AddressOf Wrapper
+             newmre1 = deref_mre->composeWith(newmre1->clone());
+             // If Unnamed mre then RHS is String Constant. 
+             // No MemRefExpr for String constant. It is treated similar to IntConst
+             if(newmre1->isaUnnamed()) {
+                sMemref2mreSetMap[m1].clear();
+                sStmt2allMemRefsMap[stmt].erase(m1);
+                for (INT kidno=0; kidno<=WN_kid_count(subMemRef1)-1; kidno++) {
+                   sMemref2mreSetMap.erase(MemRefHandle((irhandle_t)WN_kid(subMemRef1,0)));
+                   sStmt2allMemRefsMap[stmt].erase(MemRefHandle((irhandle_t)WN_kid(subMemRef1,0)));
+                }
+             } else {
+               // MemRef map to the Whirl Node.
+               sMemref2mreSetMap[m1].clear();
+               sStmt2allMemRefsMap[stmt].erase(m1);
+               newmre1->setMemRefType(MemRefExpr::USE);
+               sMemref2mreSetMap[m1].insert(newmre1);
+               sStmt2allMemRefsMap[stmt].insert(MemRefHandle(m1));
+             }
+          }
         }
         break;
 
@@ -2333,6 +2342,7 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
                   opr_param_mre->setMemRefType(OA::MemRefExpr::USE);
                   sMemref2mreSetMap[MemRefHandle((irhandle_t)wn)].insert(opr_param_mre);
                   sStmt2allMemRefsMap[stmt].insert(MemRefHandle((irhandle_t)wn));
+
                   
             } else {
                 OA_ptr<MemRefExpr> newmre;
@@ -3130,17 +3140,6 @@ Open64IRInterface::getDepMemRefExprIter(OA::ProcHandle h)
   return depIter;
 }
  
-//! Given a statement, return its Activity::IRStmtType
-OA::Activity::IRStmtType Open64IRInterface::getActivityStmtType(OA::StmtHandle h)
-{ 
-    setCurrentProcToProcContext(h);
-    if (getReachConstsStmtType(h)==OA::ReachConsts::EXPR_STMT) {
-        return OA::Activity::EXPR_STMT;
-    } else {
-        return OA::Activity::ANY_STMT;
-    }
-}
-
 int Open64IRInterface::getSizeInBytes(OA::SymHandle h)
 {
     setCurrentProcToProcContext(h);
@@ -3363,25 +3362,6 @@ Open64IntegerConstVal::eval(OPERATOR opr,
   return retval;
 }
 
-OA::ReachConsts::IRStmtType 
-Open64IRInterface::getReachConstsStmtType(OA::StmtHandle h)
-{
-  setCurrentProcToProcContext(h);
-  WN* wn = (WN*)h.hval();
-  if (!wn) { return OA::ReachConsts::NONE; }
-
-  // We treat String Assignments as Simple Expressions
-  // instead of Intrinsic function call.  
-
-  OPERATOR opr = WN_operator(wn);
-  if (OPERATOR_is_store(opr) ||
-      ((opr == OPR_INTRINSIC_CALL) &&
-      (strcmp(IntrinsicInfo::intrinsicBaseName(WN_intrinsic(wn)), "CASSIGNSTMT")==0)) ) { // cf. findAssignPairs
-    return OA::ReachConsts::EXPR_STMT;
-  } else {
-    return OA::ReachConsts::ANY_STMT;
-  }
-}
 
 OA::OA_ptr<OA::AssignPairIterator> 
 Open64IRInterface::getAssignPairIterator(OA::StmtHandle h)
