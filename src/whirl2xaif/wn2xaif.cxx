@@ -1518,13 +1518,22 @@ namespace whirl2xaif {
   
     FORTTK_ASSERT(loopWN, "Could not find WN corresponding to xaif:ForLoop");
 
-    // Check for a PRAGMA immediately before
-    WN* pragWN = WN_prev(loopWN);
-    if (pragWN && WN_operator(pragWN) == OPR_PRAGMA) {
-      WN_PRAGMA_ID prag = (WN_PRAGMA_ID)WN_pragma(pragWN);
+    // Check for a PRAGMA  right before the loop node
+    // but skip possible STID nodes assigning temporaries
+    // that the front-end may have inserted between the 
+    // loop node and the pragma: 
+    WN* prevWN_p=WN_prev(loopWN); 
+    while (prevWN_p 
+	   && 
+	   WN_operator(prevWN_p) == OPR_STID
+	   && 
+	   ST_is_temp_var(WN_st(prevWN_p))) 
+      prevWN_p=WN_prev(prevWN_p);
+    if (prevWN_p && WN_operator(prevWN_p) == OPR_PRAGMA) {
+      WN_PRAGMA_ID prag = (WN_PRAGMA_ID)WN_pragma(prevWN_p);
       if (prag == WN_PRAGMA_OPENAD_XXX) {
 	static const char* TXT = "\"simple loop";
-	const char* txt = Targ_Print(NULL, WN_val(pragWN)); // CLASS_CONST
+	const char* txt = Targ_Print(NULL, WN_val(prevWN_p)); // CLASS_CONST
 	if (strncasecmp(txt, TXT, strlen(TXT)) == 0) {
 	  loopTy = "explicit";
 	}
