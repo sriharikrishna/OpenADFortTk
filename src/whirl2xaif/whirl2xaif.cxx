@@ -54,6 +54,7 @@ namespace whirl2xaif {
     // -------------------------------------------------------
     OA::OA_ptr<Open64IRInterface> irInterface; irInterface=new Open64IRInterface; 
     Open64IRInterface::initContextState(pu_forest);
+    Open64IRInterface::setIgnoreBlackBoxRoutines();
     xml::ostream xos(os.rdbuf());
     PUXlationContext ctxt("whirl2xaif::translateIR",*irInterface);
     dumpTranslationHeaderComment(xos); // FIXME (optional)

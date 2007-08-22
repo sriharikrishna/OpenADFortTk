@@ -208,17 +208,17 @@ namespace whirl2xaif {
       duudKey=myUdduchains->getUDDUChainId(parenth);
       if (duudKey==0) { 
         std::ostringstream ostr;
-        ostr << "JU: PUXlationContext::findUDDUChainId: no key for >"; 
+        ostr << "findUDDUChainId: no key for >"; 
         Open64IRInterface::DumpWN(wnexpr, ostr);
-        ostr << "< and no key for parent >"; 
+        ostr << "< or parent >"; 
         Open64IRInterface::DumpWN(parentWN_p, ostr);
-        ostr << "< either!"; 
+        ostr << "<"; 
         FORTTK_MSG(1,ostr.str().c_str()); 
       } 
     }
     else { 
       std::ostringstream ostr;
-      ostr << "JU: PUXlationContext::findUDDUChainId: for: "; 
+      ostr << "findUDDUChainId: for: "; 
       Open64IRInterface::DumpWN(wnexpr, ostr);
       ostr << " found " << duudKey; 
       FORTTK_MSG(2,ostr.str().c_str()); 

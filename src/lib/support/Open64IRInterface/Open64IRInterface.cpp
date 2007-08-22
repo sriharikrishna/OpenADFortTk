@@ -75,6 +75,8 @@ std::map<OA::ExprHandle,OA::CallHandle> Open64IRInterface::sParamToCallMap;
 std::map<OA::ProcHandle,std::set<OA::SymHandle> > 
     Open64IRInterface::sProcToSymRefSetMap;
 
+bool Open64IRInterface::ourIgnoreBlackBoxRoutines=false; 
+
 //***************************************************************************
 // Iterators
 //***************************************************************************
@@ -243,13 +245,20 @@ Open64IRCallsiteIterator::build_func_call_list(WN *wn)
   OPERATOR opr = WN_operator(wn);
 
   // Add calls to call list but filter out calls to intrinsics
-  if (OPERATOR_is_call(opr) && !(IntrinsicInfo::isIntrinsic(wn)) &&
-    !((opr == OPR_INTRINSIC_CALL) &&
-      (strcmp(IntrinsicInfo::intrinsicBaseName(WN_intrinsic(wn)), "CASSIGNSTMT")==0))
-     ) {
+  if (OPERATOR_is_call(opr) 
+      && 
+      !(IntrinsicInfo::isIntrinsic(wn)) 
+      &&
+      !((opr == OPR_INTRINSIC_CALL) 
+	&&
+	(strcmp(IntrinsicInfo::intrinsicBaseName(WN_intrinsic(wn)), "CASSIGNSTMT")==0))
+      &&
+      (!Open64IRInterface::ignoreBlackBoxRoutines()
+       ||
+       (Open64IRInterface::ignoreBlackBoxRoutines()
+	&&
+	Open64IRInterface::haveDefinition(wn))))
     wnlist.push_back(wn);
-  }
-  
   // Recur on subexpressions
   for (INT kidno = 0; kidno < WN_kid_count(wn); kidno++) {
     WN* kid = WN_kid(wn, kidno);
@@ -4993,3 +5002,28 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
     // the last procedure is the one that is the currentProc context
     //sCurrentProc = (PU_Info*)proc.hval();
 }
+
+void Open64IRInterface::setIgnoreBlackBoxRoutines() { 
+  ourIgnoreBlackBoxRoutines=true;
+} 
+
+bool Open64IRInterface::ignoreBlackBoxRoutines() { 
+  return ourIgnoreBlackBoxRoutines;
+} 
+
+bool Open64IRInterface::haveDefinition(WN* wn) { 
+  static std::set<string> reportedNames;  // for warnings
+  assert(WN_has_sym(wn));
+  if (true) { 
+    if (sCallSymToProc[OA::SymHandle((OA::irhandle_t)WN_st(wn))]==OA::ProcHandle(0)) { 
+      std::string name=ST_name(WN_st(wn));
+      if (reportedNames.find(name)==reportedNames.end()) { 
+	reportedNames.insert(name);
+	// we don't show these calls to OpenAnalysis which translates to 
+	// making the optimistic assumption that there are no side effects 
+        DBGMSG_PUB(0, "Warning: assuming no sideeffects for undefined routine %s",name.c_str());
+      }
+    }
+  }
+  return (sCallSymToProc[OA::SymHandle((OA::irhandle_t)WN_st(wn))]!=OA::ProcHandle(0));
+} 

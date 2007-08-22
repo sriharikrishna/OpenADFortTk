@@ -1100,7 +1100,7 @@ namespace whirl2xaif {
       coveredSymbols.insert(st);
     else { 
       const char* nm=ST_name(st);
-      FORTTK_MSG(1, "xlate_SideEffectLocationPrint: ignoring duplicate symbol " << nm);
+      FORTTK_MSG(2, "xlate_SideEffectLocationPrint: ignoring duplicate symbol " << nm);
       return; 
     }
     // the wrapper for the VariableReference: 
@@ -1212,7 +1212,21 @@ namespace whirl2xaif {
 	theLocation.convert<OA::UnnamedLoc>();
       // save the context because "toString" may change it
       PU_Info* thisPU=Current_PU_Info;
-      FORTTK_MSG(1,"xlate_SideEffectEntry: side effect list contains an unnamed location for: " << ctxt.getIrInterface().toString(theUnnamedLoc->getExprHandle()));
+      WN* wn_p((WN*)theUnnamedLoc->getExprHandle().hval());
+      if (wn_p 
+	  && 
+	  (WN_operator(wn_p)==OPR_CONST
+	   ||
+	   WN_operator(wn_p)==OPR_INTCONST
+	   ||
+	   (WN_has_sym(wn_p) 
+	    &&
+	    ST_class(WN_st(wn_p))==CLASS_CONST))) { 
+	FORTTK_MSG(2, "xlate_SideEffectEntry: side effect list contains an unnamed location for: " << ctxt.getIrInterface().toString(theUnnamedLoc->getExprHandle()));
+      }
+      else { 
+	FORTTK_MSG(1, "xlate_SideEffectEntry: side effect list contains an unnamed location for: " << ctxt.getIrInterface().toString(theUnnamedLoc->getExprHandle()));
+      }
       if (Current_PU_Info!=thisPU) 
         PU_SetGlobalState(thisPU);
     } 

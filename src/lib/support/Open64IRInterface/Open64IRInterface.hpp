@@ -928,9 +928,21 @@ private:
 
 private:
 
-
+  // if this is true we do not supply  
+  // call handles or statement handles 
+  // for any calls to black box routines
+  static bool ourIgnoreBlackBoxRoutines; 
  
 public:
+
+  static void setIgnoreBlackBoxRoutines(); 
+
+  static bool ignoreBlackBoxRoutines(); 
+
+  // true if the passed in WN 
+  // is a call node for which we 
+  // have a definition in sCallSymToProc
+  static bool haveDefinition(WN* wn);
 
   //! return the formal parameter that an actual parameter is associated with.
   //! 'call' is a handle to the call node; 'param' is the actual
