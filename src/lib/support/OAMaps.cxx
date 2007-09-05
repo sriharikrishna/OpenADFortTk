@@ -1,4 +1,5 @@
 #include "OpenAnalysis/CSFIActivity/ManagerDUGStandard.hpp"
+#include "OpenAnalysis/ReachDefs/ReachDefsStandard.hpp"
 
 #include "Open64IRInterface/Open64IRInterface.hpp"
 #include "OpenAnalysis/ICFG/ManagerICFG.hpp"
@@ -41,11 +42,12 @@ namespace fortTkSupport {
     intraAlias=inter->getInterAlias()->getAliasResults(proc);
     setAlias(intraAlias);
     FORTTK_MSG(2, "progress: reach defs: performAnalysis");
-    OA::OA_ptr<OA::ReachDefs::ManagerReachDefsStandard> rdman;
-    rdman = new OA::ReachDefs::ManagerReachDefsStandard(irIF);
-    OA::OA_ptr<OA::ReachDefs::ReachDefsStandard> rds 
-      = rdman->performAnalysis(proc, cfg, intraAlias, interSideEffect,OA::DataFlow::ITERATIVE);
-    setReachDefs(rds);
+    OA::OA_ptr<OA::ReachDefsOverwrite::ManagerReachDefsOverwriteStandard> rdoman;
+    rdoman = new OA::ReachDefsOverwrite::ManagerReachDefsOverwriteStandard(irIF);
+    OA::OA_ptr<OA::ReachDefsOverwrite::ReachDefsOverwriteStandard> rdos 
+      = rdoman->performAnalysis(proc, cfg, intraAlias, interSideEffect,OA::DataFlow::ITERATIVE);
+    setReachDefs(rdos);
+    OA::OA_ptr<OA::ReachDefs::ReachDefsStandard> rds=rdos.convert<OA::ReachDefs::ReachDefsStandard>();
     FORTTK_MSG(2, "progress: uddu: performAnalysis");
     OA::OA_ptr<OA::UDDUChains::ManagerUDDUChainsStandard> udman;
     udman = new OA::UDDUChains::ManagerUDDUChainsStandard(irIF);
@@ -60,12 +62,19 @@ namespace fortTkSupport {
       aliasmanXAIF->performAnalysis(proc, intraAlias);
     setAliasXAIF(aliasXAIF);
     FORTTK_MSG(2, "progress: ud to xaif : performAnalysis");
-    OA::OA_ptr<OA::XAIF::ManagerStandard> udmanXAIF;
-    udmanXAIF = new OA::XAIF::ManagerStandard(irIF);
+    OA::OA_ptr<OA::XAIF::ManagerUDDUChainsXAIF> udmanXAIF;
+    udmanXAIF = new OA::XAIF::ManagerUDDUChainsXAIF(irIF);
     OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchainsXAIF 
-    = udmanXAIF->performAnalysis(proc, cfg, udduchains,IntraOAInfo::getDoNotFilterFlag());
+    = udmanXAIF->performAnalysis(cfg, udduchains,IntraOAInfo::getDoNotFilterFlag());
     //udduchainsXAIF->dump(std::cout, irIF);
     setUDDUChainsXAIF(udduchainsXAIF);
+    FORTTK_MSG(2, "progress: overwrite to xaif : performAnalysis");
+    OA::OA_ptr<OA::XAIF::ManagerReachDefsOverwriteXAIF> rdomanXAIF;
+    rdomanXAIF = new OA::XAIF::ManagerReachDefsOverwriteXAIF(irIF);
+    OA::OA_ptr<OA::XAIF::ReachDefsOverwriteXAIF> rdoXAIF
+      = rdomanXAIF->performAnalysis(cfg, getReachDefs());
+    //rdoXAIF->dump(std::cout, irIF);
+    setReachDefsOverwriteXAIF(rdoXAIF);
   };
 
   void IntraOAInfo::setDoNotFilterFlag() { 
