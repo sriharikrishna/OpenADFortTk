@@ -231,6 +231,7 @@ namespace whirl2xaif {
     OA::OA_ptr<OA::CFG::CFGInterface> cfg = 
       Whirl2Xaif::getOAAnalMap().getCFGEach()->getCFGResults(proc);
     ctxt.setUDDUChains(oaAnal->getUDDUChainsXAIF());
+    ctxt.setDoChains(oaAnal->getReachDefsOverwriteXAIF());
   
     // 2. Non-scalar symbol table
     fortTkSupport::ScalarizedRefTab_W2X* tab = Whirl2Xaif::getScalarizedRefTableMap().Find(Current_PU_Info);

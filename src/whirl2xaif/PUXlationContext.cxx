@@ -250,6 +250,54 @@ namespace whirl2xaif {
     myUdduchains = aUdduchainsMap; 
   }
 
+  int PUXlationContext::findDoChainId(WN* wn) {
+    if (myDoChains.ptrEqual(NULL)) 
+      FORTTK_DIE("PUXlationContext::findDOChainId: myDoChains not set");
+    if (!wn) 
+      FORTTK_DIE("PUXlationContext::findDOChainId: null pointer passed");
+    OA::StmtHandle h((OA::irhandle_t)wn);
+    int doKey=myDoChains->getChainId(h);
+    if (doKey==0) {
+      std::ostringstream ostr;
+      ostr << "findDOChainId: no key for >"; 
+      Open64IRInterface::DumpWN(wn, ostr);
+      ostr << "<"; 
+      FORTTK_MSG(1,ostr.str().c_str()); 
+    }
+    else { 
+      std::ostringstream ostr;
+      ostr << "findDOChainId: for: "; 
+      Open64IRInterface::DumpWN(wn, ostr);
+      ostr << " found " << doKey; 
+      FORTTK_MSG(2,ostr.str().c_str()); 
+    }
+    return doKey;
+  }
+
+  OA::OA_ptr<OA::XAIF::ReachDefsOverwriteXAIF> PUXlationContext::getDoChains() const { 
+    if (myDoChains.ptrEqual(NULL)) 
+      FORTTK_DIE("PUXlationContext::getDoChains: myDoChains not set");
+    return myDoChains; 
+  }
+
+  void PUXlationContext::setDoChains(OA::OA_ptr<OA::XAIF::ReachDefsOverwriteXAIF> aDoChainsMap) { 
+    if (aDoChainsMap.ptrEqual(NULL)) 
+      FORTTK_DIE("PUXlationContext::setDoChains: uninitialized OA pointer passed");
+    // JU: this is being reset hmm
+    if (!myDoChains.ptrEqual(NULL)) {
+      if (myDoChains.ptrEqual(aDoChainsMap)) { 
+	FORTTK_MSG(2,"PUXlationContext::setDoChains: already set to the same");
+      }
+      else { 
+	FORTTK_MSG(2,"PUXlationContext::setDoChains: already set to "
+		    << myDoChains 
+		    << " new " 
+		    << aDoChainsMap);
+      }
+    }
+    myDoChains = aDoChainsMap; 
+  }
+
   fortTkSupport::ScalarizedRef* PUXlationContext::findScalarizedRef(WN* wn) {
     if (!myScalarizedRefTab_W2Xp)
       FORTTK_DIE("PUXlationContext::findScalarizedRef: myScalarizedRefTab_W2Xp not set");

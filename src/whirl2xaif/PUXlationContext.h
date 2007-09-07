@@ -120,6 +120,10 @@ namespace whirl2xaif {
     OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> getUDDUChains() const; 
     void setUDDUChains(OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> x);
 
+    int findDoChainId(WN* wn);
+    OA::OA_ptr<OA::XAIF::ReachDefsOverwriteXAIF> getDoChains() const; 
+    void setDoChains(OA::OA_ptr<OA::XAIF::ReachDefsOverwriteXAIF> x);
+
     fortTkSupport::ScalarizedRef* findScalarizedRef(WN* wn);
     fortTkSupport::ScalarizedRefTab_W2X* getScalarizedRefTab() const;
     void setScalarizedRefTab(fortTkSupport::ScalarizedRefTab_W2X* aScalarizedRefTab_W2Xp);
@@ -193,6 +197,11 @@ namespace whirl2xaif {
      * we don't own this
      */
     OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> myUdduchains;
+
+    /**
+     * we don't own this
+     */
+    OA::OA_ptr<OA::XAIF::ReachDefsOverwriteXAIF> myDoChains;
 
     /**
      * we don't own this
