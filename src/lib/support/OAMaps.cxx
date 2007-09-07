@@ -46,7 +46,7 @@ namespace fortTkSupport {
     rdoman = new OA::ReachDefsOverwrite::ManagerReachDefsOverwriteStandard(irIF);
     OA::OA_ptr<OA::ReachDefsOverwrite::ReachDefsOverwriteStandard> rdos 
       = rdoman->performAnalysis(proc, cfg, intraAlias, interSideEffect,OA::DataFlow::ITERATIVE);
-    setReachDefs(rdos);
+    setReachDefsOverwrite(rdos);
     OA::OA_ptr<OA::ReachDefs::ReachDefsStandard> rds=rdos.convert<OA::ReachDefs::ReachDefsStandard>();
     FORTTK_MSG(2, "progress: uddu: performAnalysis");
     OA::OA_ptr<OA::UDDUChains::ManagerUDDUChainsStandard> udman;
@@ -72,7 +72,7 @@ namespace fortTkSupport {
     OA::OA_ptr<OA::XAIF::ManagerReachDefsOverwriteXAIF> rdomanXAIF;
     rdomanXAIF = new OA::XAIF::ManagerReachDefsOverwriteXAIF(irIF);
     OA::OA_ptr<OA::XAIF::ReachDefsOverwriteXAIF> rdoXAIF
-      = rdomanXAIF->performAnalysis(cfg, getReachDefs());
+      = rdomanXAIF->performAnalysis(cfg, getReachDefsOverwrite());
     //rdoXAIF->dump(std::cout, irIF);
     setReachDefsOverwriteXAIF(rdoXAIF);
   };

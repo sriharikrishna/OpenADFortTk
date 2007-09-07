@@ -112,8 +112,8 @@ namespace fortTkSupport {
     OA::OA_ptr<OA::Alias::Interface> getAlias() { return myIntraAlias; }
     void setAlias(OA::OA_ptr<OA::Alias::Interface> x) { myIntraAlias = x; }
 
-    OA::OA_ptr<OA::ReachDefsOverwrite::ReachDefsOverwriteStandard> getReachDefs() { return myReachDefsOverwrite; }
-    void setReachDefs(OA::OA_ptr<OA::ReachDefsOverwrite::ReachDefsOverwriteStandard> x) { myReachDefsOverwrite = x; }
+    OA::OA_ptr<OA::ReachDefsOverwrite::ReachDefsOverwriteStandard> getReachDefsOverwrite() { return myReachDefsOverwrite; }
+    void setReachDefsOverwrite(OA::OA_ptr<OA::ReachDefsOverwrite::ReachDefsOverwriteStandard> x) { myReachDefsOverwrite = x; }
   
     OA::OA_ptr<OA::UDDUChains::UDDUChainsStandard> getUDDUChains() { return myUDDUChains; }
     void setUDDUChains(OA::OA_ptr<OA::UDDUChains::UDDUChainsStandard> x) { myUDDUChains = x; }
@@ -124,7 +124,7 @@ namespace fortTkSupport {
     OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> getUDDUChainsXAIF() { return myUDDUChainsXAIF; }
     void setUDDUChainsXAIF(OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> x) {myUDDUChainsXAIF = x; }
   
-    OA::OA_ptr<OA::XAIF::ReachDefsOverwriteXAIF> ReachDefsOverwriteXAIF() { return myReachDefsOverwriteXAIF; }
+    OA::OA_ptr<OA::XAIF::ReachDefsOverwriteXAIF> getReachDefsOverwriteXAIF() { return myReachDefsOverwriteXAIF; }
     void setReachDefsOverwriteXAIF(OA::OA_ptr<OA::XAIF::ReachDefsOverwriteXAIF> x) {myReachDefsOverwriteXAIF = x; }
   
     static bool isGlobalSymbolActive(ST* anST_p);
