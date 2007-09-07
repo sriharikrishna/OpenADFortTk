@@ -188,6 +188,31 @@ private:
 };
 
 
+//! Enumerate all the ExprHandle in a stmt
+//! Used by a helper method
+class Open64IRExprHandleIterator : public OA::ExprHandleIterator {
+public:
+  Open64IRExprHandleIterator(OA::StmtHandle h);
+  Open64IRExprHandleIterator() { mValid = false; }
+  virtual ~Open64IRExprHandleIterator() { };
+
+  virtual OA::ExprHandle current() const;
+  virtual bool isValid() const
+    { return (mValid && (mExprIter!=mEnd)); }
+  virtual void operator++();
+  virtual void reset();
+private:
+  void create(OA::StmtHandle h);
+private:
+  std::list<OA::ExprHandle> mExprList;
+  std::list<OA::ExprHandle>::iterator mEnd;
+  std::list<OA::ExprHandle>::iterator mBegin;
+  std::list<OA::ExprHandle>::iterator mExprIter;
+  bool mValid;
+
+};
+
+
 //! 
 class Open64IRCallsiteIterator : public OA::IRCallsiteIterator {
 public:
@@ -285,6 +310,7 @@ private:
   std::list<ST* >::iterator symlist_iter;
 };
 
+/*
 //! Not implemented yet
 class Open64PtrAssignPairStmtIterator 
     : public OA::Alias::PtrAssignPairStmtIterator 
@@ -304,6 +330,49 @@ class Open64PtrAssignPairStmtIterator
                     
     void operator++() {}
 };
+*/
+
+
+class Open64PtrAssignPairStmtIterator
+    : public OA::Alias::PtrAssignPairStmtIterator
+{
+ public:
+  Open64PtrAssignPairStmtIterator() : mValid(false) { }
+  Open64PtrAssignPairStmtIterator(OA::StmtHandle stmt)
+  { create(stmt); reset(); mValid = true; }
+  virtual ~Open64PtrAssignPairStmtIterator() { };
+
+  //! left hand side
+  virtual OA::OA_ptr<OA::MemRefExpr> currentTarget() const { return (*mIter).first; }
+  //! right hand side
+  virtual OA::OA_ptr<OA::MemRefExpr> currentSource() const { return (*mIter).second; }
+
+  virtual bool isValid() const {
+    return ( mValid && ( mIter != mEnd ) );
+  }
+
+  virtual void operator++() { if (isValid()) mIter++; }
+  virtual void reset();
+
+ private:
+  void create(OA::StmtHandle h);
+
+  //! FIXME
+  //! Delayed Implemention
+  //void createPtrAssignPairsFromReturnStmt(SgReturnStmt *returnStmt);
+
+  //! FIXME
+  //! Delayed Implementation
+  //SgExpression *createPtrAssignPairsFromAssignment(SgNode *assign);
+
+  std::list<std::pair<OA::OA_ptr<OA::MemRefExpr>, OA::OA_ptr<OA::MemRefExpr> > > mMemRefList;
+
+  std::list<std::pair<OA::OA_ptr<OA::MemRefExpr>, OA::OA_ptr<OA::MemRefExpr> > >::iterator mEnd;
+  std::list<std::pair<OA::OA_ptr<OA::MemRefExpr>, OA::OA_ptr<OA::MemRefExpr> > >::iterator mBegin;
+  std::list<std::pair<OA::OA_ptr<OA::MemRefExpr>, OA::OA_ptr<OA::MemRefExpr> > >::iterator mIter;
+  bool mValid;
+};
+
 
 class Open64ParamBindPtrAssignIterator 
     : public OA::Alias::ParamBindPtrAssignIterator {
@@ -650,6 +719,7 @@ public:
   std::string toString(OA::Alias::IRStmtType x)
   { return AliasIRInterfaceDefault::toString(x); }
 
+  /*
   //! If this is a PTR_ASSIGN_STMT then return an iterator over MemRefHandle
   //! pairs where there is a source and target such that target
   //! FIXME: returning a bogus iterator with no pairs, will need this for F90
@@ -659,6 +729,14 @@ public:
         retval = new Open64PtrAssignPairStmtIterator;
         return retval;
     }
+  */ 
+
+
+  //! If this is a PTR_ASSIGN_STMT then return an iterator over MemRefHandle
+  //! pairs where there is a source and target such that target
+  OA::OA_ptr<OA::Alias::PtrAssignPairStmtIterator>
+  getPtrAssignStmtPairIterator(OA::StmtHandle stmt);
+
   
   //! Return an iterator over <int, MemRefExpr> pairs
   //! where the integer represents which formal parameter 
@@ -741,7 +819,11 @@ public:
   //! target = expr
   OA::OA_ptr<OA::AssignPairIterator> 
       getAssignPairIterator(OA::StmtHandle h); 
-  
+ 
+  // Iterator over Expressions in the given Statement
+  OA::OA_ptr<OA::ExprHandleIterator>
+      Open64IRInterface::getExprHandleIterator(OA::StmtHandle stmt);
+      
   //! Given an OpHandle and two operands (unary ops will just
   //! use the first operand and the second operand should be NULL)
   //! return a ConstValBasicInterface 
@@ -827,6 +909,9 @@ private:
   // currently performed
   static std::map<OA::StmtHandle,std::set<OA::MemRefHandle> > 
       sStmt2allMemRefsMap;
+
+  static std::map<OA::StmtHandle,std::set<OA::ExprHandle> >
+      Open64IRInterface::mStmt2allExprsMap;
 
   static std::map<OA::MemRefHandle,OA::StmtHandle> sMemRef2StmtMap;
 
@@ -924,6 +1009,7 @@ private:
   // so they need to be friends
   friend class Open64IRProcIterator;
   friend class Open64IRMemRefIterator;
+  friend class Open64IRExprHandleIterator;
   friend class InitContextVisitor;
 
 private:
