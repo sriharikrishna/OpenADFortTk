@@ -2279,6 +2279,8 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
                      // new MemRefExpr to the top MemRefHandle.
                      // let mre be the mre from the top MemRefHandle
 
+                     mStmt2allExprsMap[stmt].erase((OA::irhandle_t)subMemRef);
+
                      OA::MemRefHandle m = findTopMemRefHandle(subMemRef);
 
                      if(m==OA::MemRefHandle(0)) {
@@ -2327,6 +2329,98 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
                            sMemref2mreSetMap[m].erase(clone_mre);
                            sStmt2allMemRefsMap[stmt].erase(m);
                         }
+                     } else {
+
+                       // get the mre associated with the MemRefHandle
+                       OA_ptr<MemRefExpr> mre;
+                       mre = *(sMemref2mreSetMap[m].begin());
+                       OA::OA_ptr<OA::MemRefExpr> clone_mre = mre->clone();
+
+                       // regular parameter handling
+                       if(mre->isaRefOp()) {
+                          OA::OA_ptr<OA::RefOp> refop = mre.convert<OA::RefOp>();
+                          if(!refop->isaAddressOf()) {
+                             // set accuracy to false
+                             OA::OA_ptr<OA::SubSetRef> subset_mre;
+                             OA::OA_ptr<OA::MemRefExpr> nullMRE;
+                             OA::OA_ptr<OA::MemRefExpr> composed_mre;
+
+                             subset_mre = new OA::SubSetRef(
+                                           OA::MemRefExpr::USE,
+                                           nullMRE
+                                          );
+ 
+                             mre = subset_mre->composeWith(mre->clone());
+
+                             OA::OA_ptr<OA::AddressOf> address_mre;
+                             address_mre = new OA::AddressOf(
+                                               OA::MemRefExpr::USE,
+                                               nullMRE);
+                             OA::OA_ptr<OA::MemRefExpr> tmp_mre = mre->clone();
+                             mre = address_mre->composeWith(tmp_mre);
+
+                          } else {
+                             isAddrOf = false;
+                             fullAccuracy = false;
+                             hty = OA::MemRefExpr::USE;
+                             int numDerefs = 1;
+                             OA::OA_ptr<OA::Deref> deref_mre;
+                             OA::OA_ptr<OA::MemRefExpr> nullMRE;
+                             deref_mre = new OA::Deref(
+                                   hty,
+                                   nullMRE,
+                                   numDerefs);
+                             OA::OA_ptr<OA::MemRefExpr> tmp_mre = mre->clone();
+                             mre = deref_mre->composeWith(tmp_mre);
+
+                          }
+                       } else {
+
+                         isAddrOf = false;
+                         fullAccuracy = false;
+                         hty = OA::MemRefExpr::USE;
+                         int numDerefs = 1;
+
+                         OA::OA_ptr<OA::Deref> deref_mre;
+                         OA::OA_ptr<OA::MemRefExpr> nullMRE;
+                         deref_mre = new OA::Deref(
+                               hty,
+                               nullMRE,
+                               numDerefs);
+                         OA::OA_ptr<OA::MemRefExpr> tmp_mre = mre->clone();
+                         mre = deref_mre->composeWith(tmp_mre);
+
+                       }
+                         
+                       /*
+                 In an intrinsic call, we treat parameters as pass-by-value.
+                 Therefore, the findAllMemRefExpr code should remove the MemRefExprs
+                 associated with OPR_PARM and its child when at an intrinsic call node.
+                      */
+
+                      if(mre->isaUnnamed()) {
+                         WN* paramnode = (WN *)m.hval();
+                         WN* paramkid =  WN_kid0(paramnode);
+
+                         sMemref2mreSetMap.erase(m);
+                         sStmt2allMemRefsMap[stmt].erase(m);
+                         WN* param_node = (WN *)m.hval();
+                         OA::MemRefHandle param_mh = findTopMemRefHandle(paramkid);
+                         OA_ptr<MemRefExpr> sub_mre;
+
+                         sub_mre = *(sMemref2mreSetMap[param_mh].begin());
+
+                         if(sub_mre->isaUnnamed()) {
+                            sMemref2mreSetMap.erase(param_mh);
+                            sStmt2allMemRefsMap[stmt].erase(param_mh);
+                         }
+
+                      } else {
+                        sMemref2mreSetMap[m].erase(clone_mre);
+                        sMemref2mreSetMap[m].insert(mre);
+                      }
+
+  
                      }
                  }
             }
@@ -2683,7 +2777,6 @@ void Open64IRInterface::findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
       // what comes below refers to x via an LDA
       // unless x is a pointer we don't want to see it.
       {
-          
         // get symbol for array
         ST* st = findBaseSymbol(WN_kid0(wn));
         fullAccuracy = false;
