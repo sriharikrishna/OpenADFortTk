@@ -6,11 +6,11 @@ from _Setup import *
 from fortExp      import *
 from PyUtil.l_assembler  import *
 from PyUtil.chomp        import chomp
-from fortLine     import flow_line
+from fixedfmt     import fixedfmt
 from PyIR.mapper       import _Mappable
 from PyIR.mutable_tree import _Mutable_T
 from PyUtil.errors  import ParseError
-
+import flow
 
 class _TypeMod(_Mutable_T):
     'modifier for type declaration'
@@ -233,8 +233,8 @@ class NonComment(GenStmt):
         if lineno:
             init = ' ' + ('%-4d' % lineno) + ' '
         else:
-            init = ' ' * 6
-        self.rawline = flow_line(init + self.lead + str(self))+'\n'
+            init = ''
+        self.rawline = flow.flow_line(init + self.lead + str(self))+'\n'
         return self
 
     def reflow(self):
@@ -336,7 +336,7 @@ class TypeDecl(Decl):
                                  attr_str,
                                    ','.join([str(d) for d in self.decls]))
 
-class DrvdTypeDecl(Decl):
+class DrvdTypeDecl(TypeDecl):
     _sons = ['attrs','decls']
     
     kw     = 'derivedDcl'
@@ -346,6 +346,7 @@ class DrvdTypeDecl(Decl):
         self.attrs = attrs
         self.decls = decls
         self.dblc  = bool(dc)
+        self.mod   = name
 
     def __repr__(self):
         return 'DrvdTypeDecl(%s,%s,%s)' % (repr(self.name),
@@ -379,7 +380,7 @@ class DrvdTypeDefn(Decl):
     def __repr__(self):
         return 'DrvdTypeDefn(%s)' % repr(self.name)
 
-    def __str(self):
+    def __str__(self):
         return 'type %s' % str(self.name)
     
     @staticmethod
@@ -453,6 +454,12 @@ class DeclLeaf(Decl):
 class PUend(Leaf):
     pass
 
+class IfPUstart(DeclLeaf):
+    kw_str = '(If)prog_unit_start'
+
+class IfPUend(DeclLeaf):
+    kw_str = '(If)prog_unit_end'
+
 class BlockdataStmt(PUstart):
     pass
 
@@ -461,6 +468,16 @@ class CommonStmt(Decl):
 
 class DataStmt(Decl):
     pass
+
+class EndInterfaceStmt(DeclLeaf):
+    'End of interface block'
+    kw    = 'endinterface'
+    kw_str = 'end interface'
+
+class EndTypeStmt(DeclLeaf):
+    'end of a type definition'
+    kw     = 'endtype'
+    kw_str = 'end type'
 
 class VarAttrib(Decl):
     @classmethod
@@ -954,10 +971,10 @@ class IfThenStmt(IfStmt):
 
 class IfNonThenStmt(IfStmt):
 
-    _sons = ['e','stmt']
+    _sons = ['test','stmt']
 
-    def __init__(self,e,stmt):
-        self.test = e
+    def __init__(self,test,stmt):
+        self.test = test
         self.stmt = stmt
 
     def __repr__(self):
@@ -991,6 +1008,13 @@ class ElseStmt(Leaf):
 
 class EndStmt(PUend):
     kw =  'end'
+
+class EndPseudoStmt(GenStmt):
+    @staticmethod
+    def parse(scan):
+        if len(scan) >= 2 and scan[1].lower() == 'interface':
+            return EndInterfaceStmt.parse(scan)
+        return EndStmt.parse(scan)
 
 class EndifStmt(Leaf):
     kw = 'endif'
@@ -1053,6 +1077,8 @@ kwtbl = dict(blockdata       = BlockdataStmt,
              elseif          = ElseifStmt,
              endif           = EndifStmt,
              end             = EndStmt,
+             endinterface    = EndInterfaceStmt,
+             endtype         = EndTypeStmt,
              endmodule       = EndStmt,
              endprogram      = EndStmt,
              endfunction     = EndStmt,
@@ -1137,13 +1163,12 @@ def modcompare(m1,m2):
     if not m2: return m1
     mm1 = m1[0]
     mm2 = m2[0]
-    c1  = mm1.__class__
-    c2  = mm2.__class__
-
-    if c1 == c2:
+    if (mm1.__class__ == mm2.__class__) and isinstance(mm1,_TypeMod) :
         if mm1.mod >= mm2.mod: return m1
         return m2
-
+    if isinstance(mm2,_FLenMod) and isinstance(mm1,_FLenMod) :
+        if mm1.len >= mm2.len: return m1
+        return m2
     if _modhash[c1] >= _modhash[c2]: return m1
     return m2
 
@@ -1157,7 +1182,6 @@ def typecompare(t1,t2):
                    doublecomplex=6,
                    )
 
-#    print 't1 = ',t1,'t2 = ',t2
     if t1[0] == t2[0]:
         return(t1[0],modcompare(t1[1],t2[1]))
 

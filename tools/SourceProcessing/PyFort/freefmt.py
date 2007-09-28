@@ -24,7 +24,7 @@ def is_comm(line):
     '''check to see if line is a comment line'''
     return _comm_re.match(line)
 
-comment_p = is_comm
+_comment_p = is_comm
 
 token_cont_re = r'\s* &'
 token_cont_re = re.compile(token_cont_re,re.X)
@@ -37,7 +37,7 @@ def kill_token_cont(l):
         return l[l.find('&')+1:]
     return l
         
-def fjoin(asm):
+def _fjoin(asm):
     '''assemble a logical line from the assembled
     lines come in from the assembler as
 
@@ -59,14 +59,24 @@ def fjoin(asm):
         internal_comments.extend(comments)
         cl = kill_cont(kill_token_cont(cl))
         current_line.append(cl)
-    prim = kill_token_cont(chomp(prim))
+    (prim,eol_comm) = kill_bang_comment(kill_token_cont(chomp(prim)))
+    if eol_comm:
+        internal_comments.append(eol_comm)
     current_line.append(prim)
 
     joined    = ''.join(current_line)
     return (rawline,joined,internal_comments)
 
 cont = pred(is_cont)
-comm = pred(is_comm)
+_comm = pred(is_comm)
 prim = pred(lambda l: not (is_comm(l) or is_cont(l)))
 
-a_stmt = seq(star(seq(cont,star(comm))),prim)
+_a_stmt = seq(star(seq(cont,star(_comm))),prim)
+
+class freefmt(object):
+    'hold helper functions for free fmt'
+
+    a_stmt    = staticmethod(_a_stmt)
+    comm      = staticmethod(_comm)
+    comment_p = staticmethod(_comment_p)
+    fjoin     = staticmethod(_fjoin)

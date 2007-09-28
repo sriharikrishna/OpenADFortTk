@@ -7,7 +7,7 @@ from _Setup import *
 import PyFort.fortStmts as fs
 import PyFort.fortExp  as fe
 from   PyFort.fortContextFile import SymEntry
-from intrinsic import is_intrinsic
+from   PyFort.intrinsic import is_intrinsic
 
 __tmp_prefix   = 'ad_ctmp'
 __call_prefix  = 'ad_s_'
@@ -57,6 +57,14 @@ def gen_repl_fns(line):
 
     def ety(e):
         ety1 = fe.exptype
+        vvv  = ety1(e,
+                    line.ctxt.lookup_type,
+                    fs.kw2type,
+                    fs.lenfn,
+                    fs._Kind,
+                    fs.poly,
+                    fs.typemerge)
+
         return ety1(e,
                     line.ctxt.lookup_type,
                     fs.kw2type,
@@ -202,6 +210,9 @@ def nontriv(e,line):
 
     if isinstance(e,fe.App) and ( lookup_dims(e.head) or \
                                   lookup_lngth(e.head) ):
+        return (e,[])
+
+    if isinstance(e,fe.Sel):
         return (e,[])
 
     ety  = line.ctxt.repl_fns['ety']
