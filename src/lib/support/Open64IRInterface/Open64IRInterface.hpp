@@ -45,6 +45,7 @@
 #include <OpenAnalysis/IRInterface/ParamBindingsIRInterface.hpp>
 #include <OpenAnalysis/IRInterface/ICFGIRInterface.hpp>
 #include <OpenAnalysis/IRInterface/LinearityIRInterface.hpp>
+#include <OpenAnalysis/IRInterface/DUGIRInterface.hpp>
 
 
 /*! Context-Sensitive and Flow-inSensitive Activity Analysis */
