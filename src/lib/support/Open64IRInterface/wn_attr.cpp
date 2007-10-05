@@ -1,86 +1,19 @@
 // -*-Mode: C++;-*-
 // $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/wn_attr.cpp,v 1.4 2006/03/16 03:48:55 mstrout Exp $
 
-// * BeginCopyright *********************************************************
-/*
-  Copyright (C) 2000, 2001 Silicon Graphics, Inc.  All Rights Reserved.
-
-  This program is free software; you can redistribute it and/or modify it
-  under the terms of version 2 of the GNU General Public License as
-  published by the Free Software Foundation.
-
-  This program is distributed in the hope that it would be useful, but
-  WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-  Further, this software is distributed without any warranty that it is
-  free of the rightful claim of any third person regarding infringement 
-  or the like.  Any license provided herein, whether implied or 
-  otherwise, applies only to this software file.  Patent licenses, if 
-  any, provided herein do not apply to combinations of this program with 
-  other software, or any other product whatsoever.  
-
-  You should have received a copy of the GNU General Public License along
-  with this program; if not, write the Free Software Foundation, Inc., 59
-  Temple Place - Suite 330, Boston MA 02111-1307, USA.
-
-  Contact information:  Silicon Graphics, Inc., 1600 Amphitheatre Pky,
-  Mountain View, CA 94043, or:
-
-  http://www.sgi.com
-
-  For further information regarding this notice, see:
-
-  http://oss.sgi.com/projects/GenInfo/NoticeExplan
-*/
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/wn_attr.cpp,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-// Based on Open64 be/whirl2c/wn_attr.cxx
-//
-//***************************************************************************
-
-/* ====================================================================
- * ====================================================================
- *
- * Description:
- *
- *   Get WN tree attributes, beyond those provided through 
- *   common/com/wn_core.h.
- *
- * ====================================================================
- * ====================================================================
- */
-//************************** System Include Files ***************************
-
-//************************** Open64 Include Files ***************************
 
 #include "Open64BasicTypes.h"
-
-//*************************** User Include Files ****************************
 
 #include "stab_attr.h"
 #include "wn_attr.h"
 #include "diagnostics.h"
 
-//************************** Forward Declarations ***************************
-
 static TY_IDX
 WN_get_tld_type(const WN* wn);
 
-//***************************************************************************
 
-/* INTRN_c_name() is only implemented when defined(BUILD_WHIRL2C), while
+/**
+ * INTRN_c_name() is only implemented when defined(BUILD_WHIRL2C), while
  * we must use INTRN_specific_name() when defined(BUILD_WHIRL2F).  To 
  * abstract away from this, we define the macro INTRN_high_level_name.
  * NOT TRUE anymore, but keep this cause I'm not sure which they really want.
@@ -129,19 +62,6 @@ WN_Cvtl_Ty(const WN *wn)
 } /* WN_Cvtl_Ty */
 
 
-//***************************************************************************
-
-// Return a TY that as closely as possible represents the type of the
-// given subexpression (wn).  Supports calls (both as statements and
-// expressions).  Also supports stores, returning the type of the
-// referenced object (possibly dereferencing a pointer type).
-//
-// Note: TY_is_logical() will only hold true when the TY is resolved
-// from a WN_ty or ST_ty attribute, not when it is resolved from an
-// MTYPE.
-//
-// Note: Pointer types may be created as a result of a call to this
-// routine.
 TY_IDX
 WN_Tree_Type(const WN* wn)
 {
@@ -406,9 +326,6 @@ Get_Field_Type(TY_IDX base, int field_id)
   return FLD_type(fh);
 }
 
-
-//***************************************************************************
-
 TY_IDX 
 WN_GetRefObjType(const WN* wn)
 {
@@ -445,6 +362,7 @@ WN_GetRefObjType(const WN* wn)
     // STOREs represent the left-hand-side expression
     case OPR_STID:    // type of referenced lhs object
     case OPR_PSTID:
+    case OPR_PSTORE:
     case OPR_STBITS:
       ty = WN_ty(wn);
       break;
@@ -461,7 +379,7 @@ WN_GetRefObjType(const WN* wn)
 
     default: 
       // NOTE: MLOAD, MSTORE are not supported
-      ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
+      ASSERT_FATAL(false, (DIAG_A_STRING, "not implemented."));
       break;
   }
   return ty;
@@ -549,13 +467,17 @@ WN_GetBaseObjType(const WN* wn)
       break;
     }
 
+    case OPR_PSTORE:
+      ty=WN_ty(wn);
+      break;
+
     case OPR_STRCTFLD:
       ty = WN_load_addr_ty(wn);           
       break;
     
     default: 
       // NOTE: MLOAD, MSTORE are not supported
-      ASSERT_FATAL(false, (DIAG_A_STRING, "Programming Error."));
+      ASSERT_FATAL(false, (DIAG_A_STRING, "not implemented."));
       break;
   }
   return ty;
@@ -798,10 +720,6 @@ WN_Get_PtrAdd_Intconst(WN* wn0, WN* wn1, TY_IDX pointed_ty)
    }
    return intconst;
 } /* WN_Get_PtrAdd_Intconst */
-
-
-
-//***************************************************************************
 
 static TY_IDX
 WN_get_tld_type(const WN* wn) 

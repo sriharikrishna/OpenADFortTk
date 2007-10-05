@@ -26,7 +26,6 @@
 #include <Exception.h>
 #include "Open64IRInterface/WhirlIO.h"
 #include <XAIFStrings.h>
-#include "BackSubstituteTemps.h"
 #include "Args.h"
 #include "xaif2whirl.h"
 #include "XAIF_DOMErrorHandler.h"
@@ -126,10 +125,6 @@ namespace xaif2whirl {
     PU_Info* pu_forest = ReadIR(args.inWhirlFileNm.c_str());
     PrepareIR(pu_forest); // FIXME (should this be part of translation?)
 
-    // this is back substituting the original references that 
-    // were hoisted into temporaries by the front-end: 
-    // FortTk::BackSubstituteTemps::forPUInfoForrest(pu_forest);
-    
     // -------------------------------------------------------
     // 4. Translate XAIF into WHIRL
     // -------------------------------------------------------  

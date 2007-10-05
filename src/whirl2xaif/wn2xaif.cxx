@@ -231,6 +231,7 @@ namespace whirl2xaif {
     OA::OA_ptr<OA::CFG::CFGInterface> cfg = 
       Whirl2Xaif::getOAAnalMap().getCFGEach()->getCFGResults(proc);
     ctxt.setUDDUChains(oaAnal->getUDDUChainsXAIF());
+    ctxt.setDoChains(oaAnal->getReachDefsOverwriteXAIF());
   
     // 2. Non-scalar symbol table
     fortTkSupport::ScalarizedRefTab_W2X* tab = Whirl2Xaif::getScalarizedRefTableMap().Find(Current_PU_Info);
@@ -1100,7 +1101,7 @@ namespace whirl2xaif {
       coveredSymbols.insert(st);
     else { 
       const char* nm=ST_name(st);
-      FORTTK_MSG(1, "xlate_SideEffectLocationPrint: ignoring duplicate symbol " << nm);
+      FORTTK_MSG(2, "xlate_SideEffectLocationPrint: ignoring duplicate symbol " << nm);
       return; 
     }
     // the wrapper for the VariableReference: 
@@ -1212,7 +1213,21 @@ namespace whirl2xaif {
 	theLocation.convert<OA::UnnamedLoc>();
       // save the context because "toString" may change it
       PU_Info* thisPU=Current_PU_Info;
-      FORTTK_MSG(1,"xlate_SideEffectEntry: side effect list contains an unnamed location for: " << ctxt.getIrInterface().toString(theUnnamedLoc->getExprHandle()));
+      WN* wn_p((WN*)theUnnamedLoc->getExprHandle().hval());
+      if (wn_p 
+	  && 
+	  (WN_operator(wn_p)==OPR_CONST
+	   ||
+	   WN_operator(wn_p)==OPR_INTCONST
+	   ||
+	   (WN_has_sym(wn_p) 
+	    &&
+	    ST_class(WN_st(wn_p))==CLASS_CONST))) { 
+	FORTTK_MSG(2, "xlate_SideEffectEntry: side effect list contains an unnamed location for: " << ctxt.getIrInterface().toString(theUnnamedLoc->getExprHandle()));
+      }
+      else { 
+	FORTTK_MSG(1, "xlate_SideEffectEntry: side effect list contains an unnamed location for: " << ctxt.getIrInterface().toString(theUnnamedLoc->getExprHandle()));
+      }
       if (Current_PU_Info!=thisPU) 
         PU_SetGlobalState(thisPU);
     } 
@@ -1518,13 +1533,22 @@ namespace whirl2xaif {
   
     FORTTK_ASSERT(loopWN, "Could not find WN corresponding to xaif:ForLoop");
 
-    // Check for a PRAGMA immediately before
-    WN* pragWN = WN_prev(loopWN);
-    if (pragWN && WN_operator(pragWN) == OPR_PRAGMA) {
-      WN_PRAGMA_ID prag = (WN_PRAGMA_ID)WN_pragma(pragWN);
+    // Check for a PRAGMA  right before the loop node
+    // but skip possible STID nodes assigning temporaries
+    // that the front-end may have inserted between the 
+    // loop node and the pragma: 
+    WN* prevWN_p=WN_prev(loopWN); 
+    while (prevWN_p 
+	   && 
+	   WN_operator(prevWN_p) == OPR_STID
+	   && 
+	   ST_is_temp_var(WN_st(prevWN_p))) 
+      prevWN_p=WN_prev(prevWN_p);
+    if (prevWN_p && WN_operator(prevWN_p) == OPR_PRAGMA) {
+      WN_PRAGMA_ID prag = (WN_PRAGMA_ID)WN_pragma(prevWN_p);
       if (prag == WN_PRAGMA_OPENAD_XXX) {
 	static const char* TXT = "\"simple loop";
-	const char* txt = Targ_Print(NULL, WN_val(pragWN)); // CLASS_CONST
+	const char* txt = Targ_Print(NULL, WN_val(prevWN_p)); // CLASS_CONST
 	if (strncasecmp(txt, TXT, strlen(TXT)) == 0) {
 	  loopTy = "explicit";
 	}

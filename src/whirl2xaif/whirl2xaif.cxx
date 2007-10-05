@@ -54,6 +54,7 @@ namespace whirl2xaif {
     // -------------------------------------------------------
     OA::OA_ptr<Open64IRInterface> irInterface; irInterface=new Open64IRInterface; 
     Open64IRInterface::initContextState(pu_forest);
+    Open64IRInterface::setIgnoreBlackBoxRoutines();
     xml::ostream xos(os.rdbuf());
     PUXlationContext ctxt("whirl2xaif::translateIR",*irInterface);
     dumpTranslationHeaderComment(xos); // FIXME (optional)
@@ -166,7 +167,7 @@ namespace whirl2xaif {
     // -------------------------------------------------------
     // AliasSetList: The first element has to be there
     // -------------------------------------------------------
-    xos << xml::BegElem("xaif:AliasSetList");
+    xos << xml::BegElem("xaif:AliasSetMap");
     xos << xml::BegElem("xaif:AliasSet") << xml::Attr("key", 0);
     xos << xml::BegElem("xaif:AliasRange") 
 	<< xml::Attr("from_virtual_address", 1) 
@@ -196,28 +197,28 @@ namespace whirl2xaif {
 	xos << xml::EndElem; // xaif:AliasSet
       }
     }
-    xos << xml::EndElem; // xaif:AliasSetList
+    xos << xml::EndElem; 
     xos << std::endl;
     // -------------------------------------------------------
-    // DUUDSetList: The first two elements are the *same* for each procedure.
+    // DUUDSetMap: The first two elements are the *same* for each procedure.
     // -------------------------------------------------------
-    xos << xml::BegElem("xaif:DUUDSetList");
+    xos << xml::BegElem("xaif:DUUDSetMap");
     procIt.reset();
     for (int procCnt = 1; procIt.isValid(); ++procIt, ++procCnt) {
       PU_Info* pu = (PU_Info*)procIt.current().hval();
       fortTkSupport::IntraOAInfo* oaAnal = ourOAAnalMap.Find(pu);
       fortTkSupport::WNToWNIdMap* wnmap = ourWNToWNIdTableMap.Find(pu);
       OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchains = oaAnal->getUDDUChainsXAIF();
-      OA::OA_ptr<OA::XAIF::UDDUChainsXAIF::ChainIterator> chainIter 
-	= udduchains->getChainIterator();
-      for ( ; chainIter->isValid(); ++(*chainIter)) {
-	OA::OA_ptr<OA::XAIF::UDDUChainsXAIF::ChainStmtIterator> siter 
-	  = chainIter->currentChainStmtIterator();
-	int chainid = chainIter->currentId(); // 0-2 are same for each proc
+      OA::OA_ptr<OA::XAIF::UDDUChainsXAIF::ChainsIterator> chainsIter 
+	= udduchains->getChainsIterator();
+      for ( ; chainsIter->isValid(); ++(*chainsIter)) {
+	OA::OA_ptr<OA::XAIF::ChainsXAIF::ChainIterator> chainIter 
+	  = chainsIter->currentChainIterator();
+	int chainid = chainsIter->currentId(); // 0-2 are same for each proc
 	if ((0 <= chainid && chainid <= 2) && procCnt != 1) { continue; }
-	xos << xml::BegElem("xaif:DUUDSet") << xml::Attr("key", chainid);
-	for ( ; siter->isValid(); (*siter)++ ) {
-	  OA::StmtHandle stmt = siter->current();
+	xos << xml::BegElem("xaif:StmtIdSet") << xml::Attr("key", chainid);
+	for ( ; chainIter->isValid(); (*chainIter)++ ) {
+	  OA::StmtHandle stmt = chainIter->current();
 	  WN* stmtWN = (WN*)(stmt.hval());
 	  fortTkSupport::WNId stmtid = wnmap->Find(stmtWN);
 	  xos << xml::BegElem("xaif:StatementId");
@@ -229,10 +230,46 @@ namespace whirl2xaif {
 	  }
 	  xos << xml::EndElem;
 	}
-	xos << xml::EndElem; // xaif:DUUDSet
+	xos << xml::EndElem; 
       }
     }
-    xos << xml::EndElem; // xaif:DUUDSetList
+    xos << xml::EndElem; 
+    xos << std::endl;
+    // -------------------------------------------------------
+    // DOSetMap: The first two elements are the *same* for each procedure.
+    // -------------------------------------------------------
+    xos << xml::BegElem("xaif:DOSetMap");
+    procIt.reset();
+    for (int procCnt = 1; procIt.isValid(); ++procIt, ++procCnt) {
+      PU_Info* pu = (PU_Info*)procIt.current().hval();
+      fortTkSupport::IntraOAInfo* oaAnal = ourOAAnalMap.Find(pu);
+      fortTkSupport::WNToWNIdMap* wnmap = ourWNToWNIdTableMap.Find(pu);
+      OA::OA_ptr<OA::XAIF::ReachDefsOverwriteXAIF> rdo = oaAnal->getReachDefsOverwriteXAIF();
+      OA::OA_ptr<OA::XAIF::ReachDefsOverwriteXAIF::ChainsIterator> chainsIter 
+	= rdo->getChainsIterator();
+      for ( ; chainsIter->isValid(); ++(*chainsIter)) {
+	OA::OA_ptr<OA::XAIF::ChainsXAIF::ChainIterator> chainIter 
+	  = chainsIter->currentChainIterator();
+	int chainid = chainsIter->currentId(); // 0-2 are same for each proc
+	if ((0 <= chainid && chainid <= 2) && procCnt != 1) { continue; }
+	xos << xml::BegElem("xaif:StmtIdSet") << xml::Attr("key", chainid);
+	for ( ; chainIter->isValid(); (*chainIter)++ ) {
+	  OA::StmtHandle stmt = chainIter->current();
+	  WN* stmtWN = (WN*)(stmt.hval());
+	  fortTkSupport::WNId stmtid = wnmap->Find(stmtWN);
+	  xos << xml::BegElem("xaif:StatementId");
+	  if (stmtWN == NULL) {
+	    xos << xml::Attr("idRef", "");
+	  }
+	  else {
+	    xos << xml::Attr("idRef", stmtid);
+	  }
+	  xos << xml::EndElem;
+	}
+	xos << xml::EndElem; 
+      }
+    }
+    xos << xml::EndElem; 
     xos << std::endl;
   }
 

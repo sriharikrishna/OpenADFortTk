@@ -19,7 +19,6 @@
 #include "Diagnostics.h"
 #include "Args.h"
 #include "whirl2xaif.h"
-#include "BackSubstituteTemps.h"
 
 // some forward decls
 static int real_main(int argc, char **argv);
@@ -93,10 +92,6 @@ static int real_main(int argc, char **argv) {
   // -------------------------------------------------------
   PU_Info* pu_forest = ReadIR(args.whirlFileNm.c_str());
   PrepareIR(pu_forest); // FIXME (should this be part of translation?)
-
-  // this is back substituting the original references that 
-  // were hoisted into temporaries by the front-end: 
-  // FortTk::BackSubstituteTemps::forPUInfoForrest(pu_forest);
   
   // -------------------------------------------------------
   // 4. Translate WHIRL into XAIF

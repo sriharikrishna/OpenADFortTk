@@ -418,7 +418,8 @@ namespace whirl2xaif {
       USRCPOS_srcpos(srcpos) = WN_Get_Linenum(wn);
       xos << xml::BegElem(XAIFStrings.elem_Assign())
 	  << xml::Attr("statement_id", ctxt.findWNId(wn))
-	  << xml::Attr("lineNumber",USRCPOS_linenum(srcpos));
+	  << xml::Attr("lineNumber",USRCPOS_linenum(srcpos))	
+	  << xml::Attr("do_chain", ctxt.findDoChainId(wn));
     }
   
     // LHS of assignment
@@ -476,7 +477,8 @@ namespace whirl2xaif {
       USRCPOS_srcpos(srcpos) = WN_Get_Linenum(wn);
       xos << xml::BegElem(XAIFStrings.elem_Assign())
 	  << xml::Attr("statement_id", ctxt.findWNId(wn))
-	  << xml::Attr("lineNumber",USRCPOS_linenum(srcpos));
+	  << xml::Attr("lineNumber",USRCPOS_linenum(srcpos))	
+	  << xml::Attr("do_chain", ctxt.findDoChainId(wn));
     }
   
     // LHS of assignment (dereference address)

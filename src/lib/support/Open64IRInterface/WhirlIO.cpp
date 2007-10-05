@@ -76,6 +76,8 @@
 
 #include "diagnostics.h"
 
+#include "CleanUpWhirl.h"
+
 //************************** Forward Declarations ***************************
 
 //***************************************************************************
@@ -120,6 +122,8 @@ ReadIR(const char* irfilename)
   for (PU_Info* pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
     ReadPU(pu);
   }
+
+  CleanUpWhirl::forPUInfoForest(pu_forest);
 
   // Free_Input_Info // should we do this?
 

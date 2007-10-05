@@ -119,6 +119,7 @@ am__objects_1 = libsupport_a-Open64IRInterface.$(OBJEXT) \
 	libsupport_a-SymTab.$(OBJEXT) \
 	libsupport_a-WhirlGlobalStateUtils.$(OBJEXT) \
 	libsupport_a-WhirlIO.$(OBJEXT) \
+	libsupport_a-CleanUpWhirl.$(OBJEXT) \
 	libsupport_a-diagnostics.$(OBJEXT) \
 	libsupport_a-stab_attr.$(OBJEXT) \
 	libsupport_a-wn_attr.$(OBJEXT) \
@@ -129,7 +130,6 @@ am__objects_1 = libsupport_a-Open64IRInterface.$(OBJEXT) \
 	libsupport_a-OAMaps.$(OBJEXT) \
 	libsupport_a-ScalarizedRef.$(OBJEXT) \
 	libsupport_a-ScalarizedRefTab.$(OBJEXT) \
-	libsupport_a-BackSubstituteTemps.$(OBJEXT) \
 	libsupport_a-sexpostream.$(OBJEXT) \
 	libsupport_a-SexpTags.$(OBJEXT) \
 	libsupport_a-sexputil.$(OBJEXT) libsupport_a-Symbol.$(OBJEXT) \
@@ -309,6 +309,7 @@ Open64IRInterface/IntrinsicInfo.cpp Open64IRInterface/IntrinsicInfo.h \
 Open64IRInterface/SymTab.cpp Open64IRInterface/SymTab.h \
 Open64IRInterface/WhirlGlobalStateUtils.cpp Open64IRInterface/WhirlGlobalStateUtils.h \
 Open64IRInterface/WhirlIO.cpp Open64IRInterface/WhirlIO.h \
+Open64IRInterface/CleanUpWhirl.cpp Open64IRInterface/CleanUpWhirl.h \
 Open64IRInterface/diagnostics.cpp Open64IRInterface/diagnostics.h \
 Open64IRInterface/stab_attr.cpp Open64IRInterface/stab_attr.h \
 Open64IRInterface/wn_attr.cpp Open64IRInterface/wn_attr.h \
@@ -322,7 +323,6 @@ OAMaps.h OAMaps.cxx \
 quad.h \
 ScalarizedRef.h ScalarizedRef.cxx \
 ScalarizedRefTab.h ScalarizedRefTab.cxx \
-BackSubstituteTemps.h BackSubstituteTemps.cxx \
 sexpostream.h sexpostream.cxx \
 SexpTags.h SexpTags.cxx \
 sexputil.h sexputil.cxx \
@@ -411,7 +411,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-BackSubstituteTemps.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-CleanUpWhirl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-CmdLineParser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-Diagnostics.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsupport_a-Exception.Po@am__quote@
@@ -520,6 +520,20 @@ libsupport_a-WhirlIO.obj: Open64IRInterface/WhirlIO.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='Open64IRInterface/WhirlIO.cpp' object='libsupport_a-WhirlIO.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -c -o libsupport_a-WhirlIO.obj `if test -f 'Open64IRInterface/WhirlIO.cpp'; then $(CYGPATH_W) 'Open64IRInterface/WhirlIO.cpp'; else $(CYGPATH_W) '$(srcdir)/Open64IRInterface/WhirlIO.cpp'; fi`
+
+libsupport_a-CleanUpWhirl.o: Open64IRInterface/CleanUpWhirl.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -MT libsupport_a-CleanUpWhirl.o -MD -MP -MF "$(DEPDIR)/libsupport_a-CleanUpWhirl.Tpo" -c -o libsupport_a-CleanUpWhirl.o `test -f 'Open64IRInterface/CleanUpWhirl.cpp' || echo '$(srcdir)/'`Open64IRInterface/CleanUpWhirl.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libsupport_a-CleanUpWhirl.Tpo" "$(DEPDIR)/libsupport_a-CleanUpWhirl.Po"; else rm -f "$(DEPDIR)/libsupport_a-CleanUpWhirl.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='Open64IRInterface/CleanUpWhirl.cpp' object='libsupport_a-CleanUpWhirl.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -c -o libsupport_a-CleanUpWhirl.o `test -f 'Open64IRInterface/CleanUpWhirl.cpp' || echo '$(srcdir)/'`Open64IRInterface/CleanUpWhirl.cpp
+
+libsupport_a-CleanUpWhirl.obj: Open64IRInterface/CleanUpWhirl.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -MT libsupport_a-CleanUpWhirl.obj -MD -MP -MF "$(DEPDIR)/libsupport_a-CleanUpWhirl.Tpo" -c -o libsupport_a-CleanUpWhirl.obj `if test -f 'Open64IRInterface/CleanUpWhirl.cpp'; then $(CYGPATH_W) 'Open64IRInterface/CleanUpWhirl.cpp'; else $(CYGPATH_W) '$(srcdir)/Open64IRInterface/CleanUpWhirl.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libsupport_a-CleanUpWhirl.Tpo" "$(DEPDIR)/libsupport_a-CleanUpWhirl.Po"; else rm -f "$(DEPDIR)/libsupport_a-CleanUpWhirl.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='Open64IRInterface/CleanUpWhirl.cpp' object='libsupport_a-CleanUpWhirl.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -c -o libsupport_a-CleanUpWhirl.obj `if test -f 'Open64IRInterface/CleanUpWhirl.cpp'; then $(CYGPATH_W) 'Open64IRInterface/CleanUpWhirl.cpp'; else $(CYGPATH_W) '$(srcdir)/Open64IRInterface/CleanUpWhirl.cpp'; fi`
 
 libsupport_a-diagnostics.o: Open64IRInterface/diagnostics.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -MT libsupport_a-diagnostics.o -MD -MP -MF "$(DEPDIR)/libsupport_a-diagnostics.Tpo" -c -o libsupport_a-diagnostics.o `test -f 'Open64IRInterface/diagnostics.cpp' || echo '$(srcdir)/'`Open64IRInterface/diagnostics.cpp; \
@@ -660,20 +674,6 @@ libsupport_a-ScalarizedRefTab.obj: ScalarizedRefTab.cxx
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='ScalarizedRefTab.cxx' object='libsupport_a-ScalarizedRefTab.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -c -o libsupport_a-ScalarizedRefTab.obj `if test -f 'ScalarizedRefTab.cxx'; then $(CYGPATH_W) 'ScalarizedRefTab.cxx'; else $(CYGPATH_W) '$(srcdir)/ScalarizedRefTab.cxx'; fi`
-
-libsupport_a-BackSubstituteTemps.o: BackSubstituteTemps.cxx
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -MT libsupport_a-BackSubstituteTemps.o -MD -MP -MF "$(DEPDIR)/libsupport_a-BackSubstituteTemps.Tpo" -c -o libsupport_a-BackSubstituteTemps.o `test -f 'BackSubstituteTemps.cxx' || echo '$(srcdir)/'`BackSubstituteTemps.cxx; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libsupport_a-BackSubstituteTemps.Tpo" "$(DEPDIR)/libsupport_a-BackSubstituteTemps.Po"; else rm -f "$(DEPDIR)/libsupport_a-BackSubstituteTemps.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='BackSubstituteTemps.cxx' object='libsupport_a-BackSubstituteTemps.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -c -o libsupport_a-BackSubstituteTemps.o `test -f 'BackSubstituteTemps.cxx' || echo '$(srcdir)/'`BackSubstituteTemps.cxx
-
-libsupport_a-BackSubstituteTemps.obj: BackSubstituteTemps.cxx
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -MT libsupport_a-BackSubstituteTemps.obj -MD -MP -MF "$(DEPDIR)/libsupport_a-BackSubstituteTemps.Tpo" -c -o libsupport_a-BackSubstituteTemps.obj `if test -f 'BackSubstituteTemps.cxx'; then $(CYGPATH_W) 'BackSubstituteTemps.cxx'; else $(CYGPATH_W) '$(srcdir)/BackSubstituteTemps.cxx'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libsupport_a-BackSubstituteTemps.Tpo" "$(DEPDIR)/libsupport_a-BackSubstituteTemps.Po"; else rm -f "$(DEPDIR)/libsupport_a-BackSubstituteTemps.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='BackSubstituteTemps.cxx' object='libsupport_a-BackSubstituteTemps.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -c -o libsupport_a-BackSubstituteTemps.obj `if test -f 'BackSubstituteTemps.cxx'; then $(CYGPATH_W) 'BackSubstituteTemps.cxx'; else $(CYGPATH_W) '$(srcdir)/BackSubstituteTemps.cxx'; fi`
 
 libsupport_a-sexpostream.o: sexpostream.cxx
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libsupport_a_CXXFLAGS) $(CXXFLAGS) -MT libsupport_a-sexpostream.o -MD -MP -MF "$(DEPDIR)/libsupport_a-sexpostream.Tpo" -c -o libsupport_a-sexpostream.o `test -f 'sexpostream.cxx' || echo '$(srcdir)/'`sexpostream.cxx; \
