@@ -105,9 +105,59 @@ class C2(TestCase):
         ae([str(d) for d in dims],['2','4'])
 #        for l in e.lines: print l
 
-s1 = makeSuite(C2)
+class C3(TestCase):
+    def test1(self):
+        'interface blocks stuff (using freefmt read)'
+        ae = self.assertEquals
+        a_ = self.assert_
+        e  = fortContextFile(fname_t('intrfblk.f90'),True)
+        (ty,mod) = e.lines[0].ctxt.lookup_type('x')
+        ae(ty.kw_str,'integer')
+        (ty,mod) = e.lines[0].ctxt.lookup_type('y')
+        ae(ty.kw_str,'complex')
+#        for l in e.lines: print repr(l)
 
-suite = asuite(C1,C2)
+    def test2(self):
+        'change class of subroutine,function in interface block'
+        ae = self.assertEquals
+        a_ = self.assert_
+        e  = fortContextFile(fname_t('intrfblk.f90'),True)
+        a_(isinstance(e.lines[2],fs.IfPUstart))
+        a_(isinstance(e.lines[5],fs.IfPUend))
 
+    def test3(self):
+        'ignore ifaceblk in JU test file'
+        ae = self.assertEquals
+        a_ = self.assert_
+        e  = fortContextFile(fname_t('iblk.f'))
+        a_(True)
+
+    def test4(self):
+        'a%b NOT a statement function'
+        ae = self.assertEquals
+        a_ = self.assert_
+        e  = fortContextFile(fname_t('selarr.f90'),True)
+        a_(isinstance(e.lines[2],fs.StmtFnStmt))
+        a_(not isinstance(e.lines[4],fs.StmtFnStmt))
+#        for l in e.lines: print repr(l)
+
+class C4(TestCase):
+    def test1(self):
+        'derived types recording'
+        ae = self.assertEquals
+        a_ = self.assert_
+        e  = fortContextFile(fname_t('drvd-types.f90'),True)
+#        for l in e.lines: print repr(l)
+        (ty,mod) = e.lines[0].ctxt.lookup_type('x')
+        ae(ty.kw_str,'integer')
+        (ty,mod) = e.lines[0].ctxt.lookup_type('y')
+        ae(ty.kw_str,'complex')
+
+s1 = makeSuite(C4)
+
+suite = asuite(C1,C2,C3,C4)
+
+'''
 if __name__ == "__main__":
     runit(suite)
+'''

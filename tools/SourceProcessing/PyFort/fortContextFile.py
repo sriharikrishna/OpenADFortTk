@@ -51,10 +51,12 @@ class Context(object):
         self.toplev     = toplev
         self.uname      = '__dummy__'
         self.utype      = None
-#        self.vars       = dict()
         self.vars       = caselessDict()
+        self.types      = caselessDict()
         self._getnew    = False
         self._seekmarks = False
+        self._in_iface  = False
+        self._derived_t = False
         self.implicit   = dict()
         for l in 'abcdefghopqrstuvwxyz':
             self.implicit[l] = (fs.RealStmt,[])
@@ -90,9 +92,20 @@ def nextunit(line,ctxtm):
     toplevel module table
     '''
     ctxt = ctxtm[0]
+
+    if ctxt._in_iface:
+        line.__class__ = fs.IfPUend
+        return line
+    
     ctxt._getnew = True
     if ctxt.utype == 'module':
         ctxt.toplev.modules[ctxt.uname] = ctxt
+    return line
+
+def _if_alter(line,newclass):
+    'alter the class of a line to the appropriate new interface class'
+    cls            = line.__class__
+    line.__class__ = newclass
     return line
 
 _showparse = False
@@ -101,6 +114,10 @@ def newunit(line,ctxtm):
     import sys
 
     ctxt = ctxtm[0]
+
+    if ctxt._in_iface:
+        return _if_alter(line,fs.IfPUstart)
+
     ctxt.utype = line.__class__.utype_name
     ctxt.uname = line.name
     ctxt.retntype = None
@@ -111,8 +128,13 @@ def newunit(line,ctxtm):
 
 def fnunit(line,ctxtm):
     'function unit needs to record return type for function'
+
     dc = newunit(line,ctxtm)
     ctxt = ctxtm[0]
+
+    if ctxt._in_iface:
+        return line
+
     ctxt.utype = 'function'
     ctxt.retntype = line.ty
     if line.ty:
@@ -141,31 +163,60 @@ def default_dims(attrs_list):
             return tuple(a.args)
     return ()
 
+def drvdtypedefn(line,ctxtm):
+    'start a derived type definition'
+
+    ctxt = ctxtm[0]
+    if ctxt._in_iface:
+        return line
+
+    ctxt._derived_t   = True
+    dtype             = line.name
+    ctxt.dtype        = dtype
+    ctxt.types[dtype] = caselessDict()
+    return line
+
+def endtype(line,ctxtm):
+    'end a derived type definition'
+
+    ctxt = ctxtm[0]
+    if ctxt._in_iface:
+        return line
+
+    ctxt._derived_t      = False
+    return line
+
 def typedecl(line,ctxtm):
     'type declaration -- record type in symbol table'
 
     ctxt = ctxtm[0]
 
+    if ctxt._in_iface:
+        return line
+    
     typeof  = line.__class__
     kw_str  = line.kw_str
     mod     = line.mod
     lngth   = kw_str == 'character' and (mod and mod[0] or 1)
     dflt_d  = default_dims(line.attrs)
+    symtab  = (ctxt._derived_t and [ctxt.types[ctxt.dtype]] or [ctxt.vars])[0]
     for d in line.decls:
         (name,dims)     = typesep(d,dflt_d)
-        if name in ctxt.vars:
-            ctxt.vars[name].typeof = typeof
-            ctxt.vars[name].mod    = mod
+        if name in symtab:
+            symtab[name].typeof = (typeof,mod)
         else:
-            ctxt.vars[name] = SymEntry(typeof=(typeof,mod),
-                                       kw_str=kw_str,
-                                       dims=dims,
-                                       vclass='local',
-                                       lngth=lngth)
+            symtab[name] = SymEntry(typeof=(typeof,mod),
+                                    kw_str=kw_str,
+                                    dims=dims,
+                                    vclass='local',
+                                    lngth=lngth)
     return line
 
 def dimen(line,ctxtm):
     ctxt = ctxtm[0]
+
+    if ctxt._in_iface:
+        return line
 
     for d in line.decls:
         (name,dims) = (d.head,d.args)
@@ -184,7 +235,7 @@ def assgn(line,ctxtm):
     ctxt = ctxtm[0]
     lhs  = line.lhs
     look = ctxt.lookup_var
-    if isinstance(lhs,fe.App) and not look(lhs.head).dims:
+    if isinstance(lhs,fe.App) and isinstance(lhs.head,str) and not look(lhs.head).dims:
         ret = fs.StmtFnStmt(lhs.head,lhs.args,line.rhs)
         ret.rawline = line.rawline
         ret.lineno  = line.lineno
@@ -199,6 +250,10 @@ def use_module(line,ctxtm):
     '''
     from sys import stderr 
     ctxt    = ctxtm[0]
+
+    if ctxt._in_iface:
+        return line
+    
     modules = ctxt.toplev.modules
     mod     = line.name
     if mod not in modules:
@@ -220,6 +275,9 @@ def implicit(line,ctxtm):
     '''
     ctxt = ctxtm[0]
 
+    if ctxt._in_iface:
+        return line
+
     letters = 'abcdefghijklmnopqrstuvwxyz'
 
     for (t,tlst) in line.lst:
@@ -237,15 +295,36 @@ def implicit(line,ctxtm):
 
     return line
 
-ctxt_lexi = [(fs.PUend,         nextunit),
-             (fs.PUstart,       newunit),
-             (fs.FunctionStmt,  fnunit),
-             (fs.TypeDecl,      typedecl),
-             (fs.DimensionStmt, dimen),
-             (fs.AssignStmt,    assgn),
-             (fs.UseStmt,       use_module),
-             (fs.ImplicitStmt,  implicit),
+def iface(line,ctxtm):
+    'interface block entry -- no new context'
+    ctxt = ctxtm[0]
+    ctxt._in_iface = True
+
+    return line
+
+def endiface(line,ctxtm):
+    'interface block entry -- no new context'
+    ctxt = ctxtm[0]
+    ctxt._in_iface = False
+
+    return line
+
+ctxt_lexi = [(fs.PUend,            nextunit),
+             (fs.PUstart,          newunit),
+             (fs.FunctionStmt,     fnunit),
+             (fs.InterfaceStmt,    iface),
+             (fs.EndInterfaceStmt, endiface),
+             (fs.TypeDecl,         typedecl),
+             (fs.DrvdTypeDefn,     drvdtypedefn),
+             (fs.EndTypeStmt,      endtype),
+             (fs.DimensionStmt,    dimen),
+             (fs.AssignStmt,       assgn),
+             (fs.UseStmt,          use_module),
+             (fs.ImplicitStmt,     implicit),
              ]
+
+def fortUnitContext(line_iter):
+    yield fortContext(line_iter)
 
 class fortContext(_Map):
     '''create a list of contextLine objects:
@@ -270,7 +349,7 @@ class fortContext(_Map):
     def extend(self,iter):
         self.lines.extend(list(iter))
 
-    def printit(self,showmarks=False,out=None):
+    def printit(self,showmarks=False,out=sys.stdout):
         for l in self.lines:
             if showmarks:
                 if isinstance(l,fs.LastDecl):
@@ -281,13 +360,14 @@ class fortContext(_Map):
                     pass
             else:
                 if isinstance(l,fs.Marker): continue
-            if out:
-                print >> out,l.rawline,
-            else:
-                print l.rawline,
+            print >> out,l.rawline,
 
-    def write(self,fname,showmarks=False):
-        ff = open(fname,'w')
+    def writeit(self,fname,showmarks=False):
+        try:
+            ff = open(fname,'w')
+        except IOError:
+            msg="Error cannot open file named: "+name
+            raise UserError(msg)
         self.printit(showmarks,ff)
         ff.close()
 
@@ -312,6 +392,7 @@ def _gen_context(parse_iter,hook=mapper.noop):
     is_decl_prev = False
     decl_lead = ''
     for l in parse_iter.map1(ctxt_lexi,ctxt_mutable):
+#        print "FCF: ",repr(l)
         ctxt   = ctxt_mutable[0]
         l.ctxt = ctxt
         if ctxt._seekmarks:
@@ -332,6 +413,7 @@ def _gen_context(parse_iter,hook=mapper.noop):
                 hold.append(l)
                 continue
             elif is_decl_prev and isinstance(l,fs.Decl):
+                decl_lead = l.lead
                 for ll in hold: yield ll
                 hold = []
             else:
@@ -346,10 +428,15 @@ def _gen_context(parse_iter,hook=mapper.noop):
             decl_lead    = ''
             ctxt_mutable[0] = _new
 
-def fortContextFile(fname,hook=mapper.noop):
+def fortUnitContextFile(fname,free=False,hook=mapper.noop):
+    'create an iterator that returns each unit as a fortContext object'
+
+    return fortUnitContext(_gen_context(fpf.fortParseFileIter(fname,free),hook))
+
+def fortContextFile(fname,free=False,hook=mapper.noop):
     'from a file name create a fortContext object'
 
-    return fortContext(_gen_context(fpf.fortParseFileIter(fname),hook))
+    return fortContext(_gen_context(fpf.fortParseFileIter(fname,free),hook))
 
 def fortContextEmpty(hook=mapper.noop):
     return fortContext([])

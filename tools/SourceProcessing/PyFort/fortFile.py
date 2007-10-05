@@ -7,31 +7,36 @@ Provide mappers, rewriters, string conversion facilities
 '''
 from _Setup import *
 from cStringIO import StringIO
-from fortLine  import a_line
+#from fortLine  import a_line
+from fortLine  import fortLine
 from PyUtil.assembler import vgen
 from PyUtil.buf_iter  import buf_iter
 from PyUtil.errors import UserError
+from freefmt       import freefmt
+from fixedfmt      import fixedfmt
 
 def _ident(s):
     return [s]
 
 class Ffile(object):
-    def __init__(self,fobj):
+    def __init__(self,fobj,free=False):
+        fmt = (free and freefmt) or fixedfmt
+        a_line = fortLine(fmt).a_line
         self.lines = vgen(a_line,buf_iter(fobj))
         self.fobj  = fobj
 
     @staticmethod
-    def file(name):
+    def file(name,free=False):
         try:
           file=open(name)
         except IOError:
           msg="Error cannot open file named: "+name
           raise UserError(msg)
-        return Ffile(open(name))
+        return Ffile(open(name),free)
 
     @staticmethod
-    def here(str):
-        return Ffile(StringIO(str))
+    def here(str,free=False):
+        return Ffile(StringIO(str),free)
 
     def str(self):
         '''return all of the original file lines concatenated together
