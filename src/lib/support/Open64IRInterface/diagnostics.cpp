@@ -1,6 +1,4 @@
 // -*-Mode: C++;-*-
-// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/diagnostics.cpp,v 1.1.1.1 2004/04/16 15:58:28 mstrout Exp $
-
 // * BeginCopyright *********************************************************
 /*
   Copyright (C) 2000, 2001 Silicon Graphics, Inc.  All Rights Reserved.
@@ -38,7 +36,6 @@
 //***************************************************************************
 //
 // File:
-//   $Source: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/diagnostics.cpp,v $
 //
 // Purpose:
 //   [The purpose of this file]

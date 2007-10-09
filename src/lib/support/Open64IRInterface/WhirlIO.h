@@ -1,22 +1,4 @@
 // -*-Mode: C++;-*-
-// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/WhirlIO.h,v 1.1.1.1 2004/04/16 15:58:28 mstrout Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/WhirlIO.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
 #ifndef WhirlIO_h_INCLUDED
 #define WhirlIO_h_INCLUDED
 

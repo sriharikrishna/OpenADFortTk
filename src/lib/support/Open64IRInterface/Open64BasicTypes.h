@@ -1,30 +1,6 @@
 // -*-Mode: C++;-*-
-// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/Open64BasicTypes.h,v 1.1.1.1 2004/04/16 15:58:28 mstrout Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/Open64BasicTypes.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-// Cf. Open64 be/whirl2c/common_include.h
-//
-//***************************************************************************
-
 #ifndef Open64BasicTypes_INCLUDED
 #define Open64BasicTypes_INCLUDED
-
-//************************* System Include Files ****************************
-
-//*************************** User Include Files ****************************
 
 //************************** Open64 Include Files ***************************
 

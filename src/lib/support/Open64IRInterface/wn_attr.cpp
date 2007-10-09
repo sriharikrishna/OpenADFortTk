@@ -1,5 +1,4 @@
 // -*-Mode: C++;-*-
-
 #include "Open64BasicTypes.h"
 
 #include "stab_attr.h"
@@ -351,9 +350,10 @@ WN_GetRefObjType(const WN* wn)
       }
       break;
     }
-
+      
     case OPR_ILOAD:   // type of referenced object
     case OPR_ILOADX:
+    case OPR_MLOAD:   // Priya added MLOAD case             
       ty = WN_ty(wn);
       break;
     
@@ -368,6 +368,7 @@ WN_GetRefObjType(const WN* wn)
     case OPR_ISTORE:  // type of referenced lhs object
     case OPR_ISTOREX:
     case OPR_ISTBITS:
+    case OPR_MSTORE:  // Priya added MSTORE case
       ty = TY_pointed(WN_ty(wn));
       break;
     
@@ -406,7 +407,9 @@ WN_GetBaseObjType(const WN* wn)
       break;
       
     case OPR_ILOAD:
-    case OPR_ILOADX: {
+    case OPR_ILOADX: 
+    case OPR_MLOAD:      // Priya added MLOAD case
+    {
       WN* baseptr = WN_kid0(wn); // address expression as WN
       TY_IDX baseptr_ty = WN_Tree_Type(baseptr);
       ASSERT_FATAL((TY_kind(baseptr_ty) == KIND_POINTER),
@@ -434,7 +437,9 @@ WN_GetBaseObjType(const WN* wn)
       
     case OPR_ISTORE: 
     case OPR_ISTOREX:
-    case OPR_ISTBITS: {
+    case OPR_ISTBITS: 
+    case OPR_MSTORE:   // Priya added MSTORE case
+    {
       // Note: use WN_Tree_Type(baseptr) instead of WN_ty(wn) to find
       // type of baseptr because the former will attempt to interpret
       // pointer arithmetic, e.g., the this structure reference

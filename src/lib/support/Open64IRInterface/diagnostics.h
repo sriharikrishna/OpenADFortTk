@@ -1,6 +1,4 @@
 // -*-Mode: C++;-*-
-// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/diagnostics.h,v 1.1.1.1 2004/04/16 15:58:28 mstrout Exp $
-
 #ifndef diagnostics_INCLUDED
 #define diagnostics_INCLUDED
 /* ====================================================================

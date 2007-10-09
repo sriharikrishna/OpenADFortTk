@@ -1,6 +1,4 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v 1.13 2005/07/28 15:46:51 eraxxon Exp $
-
 // * BeginCopyright *********************************************************
 /*
   Copyright (C) 2000, 2001 Silicon Graphics, Inc.  All Rights Reserved.
@@ -34,22 +32,6 @@
   http://oss.sgi.com/projects/GenInfo/NoticeExplan
 */
 // *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-// Based on Open64 be/whirl2c/stab_attr.h
-//
-//***************************************************************************
-
 #ifndef stab_attr_INCLUDED
 #define stab_attr_INCLUDED
 /* ====================================================================

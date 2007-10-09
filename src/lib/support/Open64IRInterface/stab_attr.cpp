@@ -1,6 +1,4 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/stab_attr.cxx,v 1.12 2005/07/28 15:46:51 eraxxon Exp $
-
 #include "Open64BasicTypes.h"
 
 //*************************** User Include Files ****************************

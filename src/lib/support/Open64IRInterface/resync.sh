@@ -1,8 +1,8 @@
 for i in `ls *.h *.?pp`
 do 
-  diff $i ~/Argonne/svn/Whirl2OA/$i
+  diff $i ../../../../../UseOA_Open64/Whirl2OA/$i > /dev/null
   if [ $? -eq 1 ]
   then 
-    kdiff3 -m $i ~/Argonne/svn/Whirl2OA/$i -o $i   
+    kdiff3 -m $i ../../../../../UseOA_Open64/Whirl2OA/$i -o $i   
   fi
 done

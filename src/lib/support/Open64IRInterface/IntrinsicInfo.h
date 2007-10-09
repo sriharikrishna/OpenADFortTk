@@ -1,6 +1,4 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/IntrinsicInfo.h,v 1.8 2006/05/12 16:12:22 utke Exp $
-
 #ifndef IntrinsicInfo_H 
 #define IntrinsicInfo_H
 

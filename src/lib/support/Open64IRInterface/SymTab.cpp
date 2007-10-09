@@ -1,24 +1,4 @@
 // -*-Mode: C++;-*-
-// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/SymTab.cpp,v 1.2 2006/03/16 03:48:55 mstrout Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/SymTab.cpp,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************** System Include Files ***************************
-
 //************************** Open64 Include Files ***************************
 
 #include "Open64BasicTypes.h"

@@ -1,6 +1,4 @@
 // -*-Mode: C++;-*-
-// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/wn_attr.h,v 1.2 2006/03/16 03:48:55 mstrout Exp $
-
 #ifndef wn_attr_INCLUDED
 #define wn_attr_INCLUDED
 

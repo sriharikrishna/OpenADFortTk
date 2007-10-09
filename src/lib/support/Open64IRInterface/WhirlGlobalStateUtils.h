@@ -1,17 +1,4 @@
 // -*-Mode: C++;-*-
-// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/WhirlGlobalStateUtils.h,v 1.1.1.1 2004/04/16 15:58:28 mstrout Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/WhirlGlobalStateUtils.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
 // Description:
 //
 //   A WHIRL PU -- program unit, representing a procedure or function

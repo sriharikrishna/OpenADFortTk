@@ -45,7 +45,6 @@
 #include <OpenAnalysis/IRInterface/ParamBindingsIRInterface.hpp>
 #include <OpenAnalysis/IRInterface/ICFGIRInterface.hpp>
 #include <OpenAnalysis/IRInterface/LinearityIRInterface.hpp>
-#include <OpenAnalysis/IRInterface/DUGIRInterface.hpp>
 
 
 /*! Context-Sensitive and Flow-inSensitive Activity Analysis */
@@ -54,6 +53,7 @@
 #include <OpenAnalysis/ExprTree/ExprTreeVisitor.hpp>
 #include <OpenAnalysis/ExprTree/EvalToMemRefVisitor.hpp>
 #include <OpenAnalysis/MemRefExpr/MemRefExpr.hpp>
+#include <OpenAnalysis/MemRefExpr/MemRefExprVisitor.hpp>
 
 // still needed for MemRefKludge
 //#include <OpenAnalysis/MemRefExpr/MemRefExprBasic.hpp>
@@ -706,6 +706,33 @@ public:
   // AliasIRInterface
   //-------------------------------------------------------------------------
 
+  class FindUseMREVisitor : public OA::MemRefExprVisitor {
+      public:
+
+         FindUseMREVisitor();
+         ~FindUseMREVisitor();
+         OA::OA_ptr<std::list<OA::OA_ptr<OA::MemRefExpr> > > getAllUseMREs();
+         void visitNamedRef(OA::NamedRef& ref);
+         void visitUnnamedRef(OA::UnnamedRef& ref);
+         void visitUnknownRef(OA::UnknownRef& ref);
+         void visitDeref(OA::Deref& ref);
+         void visitAddressOf(OA::AddressOf& ref);
+         void visitSubSetRef(OA::SubSetRef& ref);
+
+      private:
+         bool do_not_add_mre;
+         OA::OA_ptr<std::list<OA::OA_ptr<OA::MemRefExpr> > > retList;
+  };
+
+  //! Get an Iterator over Use MREs
+  OA::OA_ptr<OA::MemRefExprIterator> getUseMREs(OA::MemRefHandle memref);
+
+  //! Get an Iterator over Def MREs
+  OA::OA_ptr<OA::MemRefExprIterator> getDefMREs(OA::MemRefHandle memref);
+
+  //! Get an Iterator over DiffUse MREs
+  OA::OA_ptr<OA::MemRefExprIterator> getDiffUseMREs(OA::MemRefHandle memref);
+
   //! Given a MemRefHandle return an iterator over
   //! MemRefExprs that describe this memory reference
   OA::OA_ptr<OA::MemRefExprIterator> 
@@ -823,7 +850,7 @@ public:
  
   // Iterator over Expressions in the given Statement
   OA::OA_ptr<OA::ExprHandleIterator>
-      Open64IRInterface::getExprHandleIterator(OA::StmtHandle stmt);
+      getExprHandleIterator(OA::StmtHandle stmt);
       
   //! Given an OpHandle and two operands (unary ops will just
   //! use the first operand and the second operand should be NULL)
@@ -912,7 +939,7 @@ private:
       sStmt2allMemRefsMap;
 
   static std::map<OA::StmtHandle,std::set<OA::ExprHandle> >
-      Open64IRInterface::mStmt2allExprsMap;
+      mStmt2allExprsMap;
 
   static std::map<OA::MemRefHandle,OA::StmtHandle> sMemRef2StmtMap;
 
@@ -943,20 +970,30 @@ private:
   static std::map<OA::ProcHandle,std::set<OA::SymHandle> > 
      sProcToSymRefSetMap;
 
+public:  
   //! Given a statement return an iterator over all memory references
   //! During its creation it also sets up sStmt2allMemRefs 
   //! and memRefs2mreSetMap.
   OA::OA_ptr<OA::MemRefHandleIterator> getMemRefIterator(OA::StmtHandle h); 
 
+private:
   // helper functions for getMemRefIterator
   void findAllMemRefsAndMapToMemRefExprs(OA::StmtHandle stmt,
     WN* wn, unsigned lvl);
 
+  /*
   void createAndMapDerefs(OA::StmtHandle stmt, WN* wn, WN* subMemRef, 
                           bool isAddrOf, bool fullAccuracy, 
                           OA::MemRefExpr::MemRefType hty);
   void createAndMapNamedRef(OA::StmtHandle stmt, WN* wn, ST*, bool isAddrOf,
     bool fullAccuracy, OA::MemRefExpr::MemRefType hty);
+    */
+
+  void createAndMapNamedRef(OA::StmtHandle stmt, WN* wn,
+                            ST* st, OA::MemRefExpr::MemRefType hty);
+
+  void createAndMapDerefs(OA::StmtHandle stmt, WN* wn, WN* subMemRef);
+
   bool isPassByReference(WN*);
   ST* findBaseSymbol(WN*);
 
@@ -977,12 +1014,14 @@ private:
 
   OA::MemRefHandle findTopMemRefHandle(WN *wn);
 
+  bool ExprTree_hack_for_MPI(OA::MemRefHandle h, OA::OA_ptr<OA::ExprTree> tree);
+
   OA::OA_ptr<OA::ExprTree> createExprTree(WN* wn);
 
   OA::OA_ptr<OA::ExprTree::Node> 
   createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn);
 
-  OA::OA_ptr<OA::AssignPairIterator> findAssignPairs(WN* wn);
+//  OA::OA_ptr<OA::AssignPairIterator> findAssignPairs(WN* wn);
 
   OA::OA_ptr<OA::ConstValBasicInterface> getConstValBasicFromST(ST* st);
 

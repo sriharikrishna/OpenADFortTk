@@ -1,22 +1,4 @@
 // -*-Mode: C++;-*-
-// $Header: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/WhirlGlobalStateUtils.cpp,v 1.1.1.1 2004/04/16 15:58:28 mstrout Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /home/derivs2/mstrout/CVSRepository/UseNewOA-Open64/Open64IRInterface/WhirlGlobalStateUtils.cpp,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
 //************************* System Include Files ****************************
 
 #include <cassert>
