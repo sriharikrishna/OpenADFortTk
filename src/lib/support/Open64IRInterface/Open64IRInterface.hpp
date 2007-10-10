@@ -725,22 +725,19 @@ public:
   };
 
   //! Get an Iterator over Use MREs
-  OA::OA_ptr<OA::MemRefExprIterator> getUseMREs(OA::MemRefHandle memref);
+  OA::OA_ptr<OA::MemRefExprIterator> getUseMREs(OA::StmtHandle stmt);
 
   //! Get an Iterator over Def MREs
-  OA::OA_ptr<OA::MemRefExprIterator> getDefMREs(OA::MemRefHandle memref);
+  OA::OA_ptr<OA::MemRefExprIterator> getDefMREs(OA::StmtHandle stmt);
 
   //! Get an Iterator over DiffUse MREs
-  OA::OA_ptr<OA::MemRefExprIterator> getDiffUseMREs(OA::MemRefHandle memref);
+  OA::OA_ptr<OA::MemRefExprIterator> getDiffUseMREs(OA::StmtHandle stmt);
 
   //! Given a MemRefHandle return an iterator over
   //! MemRefExprs that describe this memory reference
   OA::OA_ptr<OA::MemRefExprIterator> 
     getMemRefExprIterator(OA::MemRefHandle h);
  
-  //! Given a statement, return its Alias::IRStmtType
-  OA::Alias::IRStmtType getAliasStmtType(OA::StmtHandle h); 
-
   //! Given a procedure return associated SymHandle
   OA::SymHandle getSymHandle(OA::ProcHandle h) { return getProcSymHandle(h); }
 
