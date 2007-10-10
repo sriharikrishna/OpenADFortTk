@@ -79,9 +79,9 @@ namespace whirl2xaif {
 
   WN* PUXlationContext::findParentWN(WN* wn) {
     if (!myWNParentMapP)
-      FORTTK_DIE("PUXlationContext::FindParentWN: myWNParentMapP not set");
+      FORTTK_DIE("PUXlationContext::findParentWN: myWNParentMapP not set");
     if(!wn)
-      FORTTK_DIE("PUXlationContext::FindParentWN: null pointer passed");
+      FORTTK_DIE("PUXlationContext::findParentWN: null pointer passed");
     return (myWNParentMapP->Find(wn));
   }
 
@@ -199,22 +199,35 @@ namespace whirl2xaif {
       FORTTK_DIE("PUXlationContext::findUDDUChainId: null pointer passed");
     OA::MemRefHandle h((OA::irhandle_t)wnexpr);
     int duudKey=myUdduchains->getUDDUChainId(h);
+    WN* parentWN_p;
     if (duudKey==0) {
-      // for character arrays there is some confusion if we should refer to the 
-      // ARRAY node or the child LDA node. In OA the information may be 
-      // associated with the parent ARRAY node
-      WN* parentWN_p=findParentWN(wnexpr);
-      OA::MemRefHandle parenth((OA::irhandle_t)parentWN_p);
-      duudKey=myUdduchains->getUDDUChainId(parenth);
+      std::ostringstream ostr;
+      ostr << "findUDDUChainId: no key for >"; 
+      Open64IRInterface::DumpWN(wnexpr, ostr);
+      parentWN_p=findParentWN(wnexpr);
+      while (duudKey==0 && parentWN_p) { 
+	// for instance for character arrays there is considerable confusion 
+	// in the OA interface which node should have the proper information, 
+	// e.g. if we should refer to the 
+	// ARRAY node or the child LDA node. 
+	OA::MemRefHandle parenth((OA::irhandle_t)parentWN_p);
+	duudKey=myUdduchains->getUDDUChainId(parenth);
+	if (duudKey==0) {
+	  ostr << "< or parent >"; 
+	  Open64IRInterface::DumpWN(parentWN_p, ostr);
+	  ostr << "<"; 
+	  parentWN_p=findParentWN(parentWN_p);
+	}
+      }
       if (duudKey==0) { 
-        std::ostringstream ostr;
-        ostr << "findUDDUChainId: no key for >"; 
-        Open64IRInterface::DumpWN(wnexpr, ostr);
-        ostr << "< or parent >"; 
-        Open64IRInterface::DumpWN(parentWN_p, ostr);
-        ostr << "<"; 
         FORTTK_MSG(1,ostr.str().c_str()); 
-      } 
+      }
+      else { 
+	ostr << " eventually found " << duudKey << " in >"; 
+	Open64IRInterface::DumpWN(parentWN_p, ostr);
+	ostr << "<"; 
+	FORTTK_MSG(2,ostr.str().c_str()); 
+      }
     }
     else { 
       std::ostringstream ostr;
