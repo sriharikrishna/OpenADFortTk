@@ -89,6 +89,9 @@ std::map<OA::StmtHandle,
                std::pair<OA::MemRefHandle,
                          OA::ExprHandle> > > mStmtToAssignPairs;
 
+// Map between Stmt and Index Exprs because Index Exprs are not differentiable
+std::map<OA::StmtHandle, std::set<OA::MemRefHandle> > mStmtToIndexExprs;
+
 //***************************************************************************
 // Iterators
 //***************************************************************************
@@ -355,6 +358,7 @@ Open64IRMemRefIterator::create(OA::StmtHandle stmt)
   // loop through MemRefHandle's for this statement and for now put them
   // into our own list
   std::set<OA::MemRefHandle>::iterator setIter;
+
   for (setIter=Open64IRInterface::sStmt2allMemRefsMap[stmt].begin(); 
        setIter!=Open64IRInterface::sStmt2allMemRefsMap[stmt].end(); setIter++) 
   {
@@ -2324,7 +2328,17 @@ bool isAddrOf = false;
          for (INT kidno=(WN_kid_count(wn)-1)/2 +1;
              kidno<=WN_kid_count(wn)-1; kidno++)
          {
-           findAllMemRefsAndMapToMemRefExprs(stmt, WN_kid(wn,kidno),lvl);
+             WN* index = WN_kid(wn, kidno);
+
+             //! Array Indexes are expressions
+             OA::ExprHandle rhs((OA::irhandle_t)index);
+         
+             if(opr == OPR_ARRAY) {
+                mStmt2allExprsMap[stmt].insert(rhs);
+                mStmtToIndexExprs[stmt].insert(OA::MemRefHandle((OA::irhandle_t)index));
+             }
+
+             findAllMemRefsAndMapToMemRefExprs(stmt, index,lvl);
          }
 
          break;
@@ -2582,7 +2596,7 @@ bool isAddrOf = false;
             OA::OA_ptr<OA::Deref> deref_mre;
             OA::OA_ptr<OA::MemRefExpr> nullMRE;
             deref_mre = new OA::Deref(
-                                       OA::MemRefExpr::DEF,
+                                       OA::MemRefExpr::USE,
                                        nullMRE,
                                        numDerefs);
 
@@ -2737,6 +2751,7 @@ bool isAddrOf = false;
     case OPR_NEG:
     case OPR_CVT:
     case OPR_SRCTRIPLET:
+    case OPR_SWITCH:
     {
        if(opr == OPR_IF) { 
           mStmt2allExprsMap[stmt].insert((OA::irhandle_t)WN_kid0(wn));
@@ -2759,6 +2774,9 @@ bool isAddrOf = false;
     case OPR_BLOCK:
     case OPR_INTCONST:
     case OPR_CONST:
+    case OPR_GOTO:
+    case OPR_CASEGOTO:
+    case OPR_LABEL:
     {
         break;
     }
@@ -3416,7 +3434,7 @@ Open64IRInterface::getUseMemRefs(OA::StmtHandle stmt)
 
   // get iterator over memory references for this statement
   // and only put USES in the list
-  OA::OA_ptr<OA::MemRefHandleIterator> mIter = getMemRefIterator(stmt);
+  OA::OA_ptr<OA::MemRefHandleIterator> mIter = getAllMemRefs(stmt);
   for ( ; mIter->isValid(); (*mIter)++ ) {
     OA::MemRefHandle memref = mIter->current();
     
@@ -4071,10 +4089,10 @@ Open64IRInterface::getUseMREs(OA::StmtHandle stmt)
    OA::OA_ptr<std::list<OA::OA_ptr<OA::MemRefExpr> > > retList;
    retList = new std::list<OA::OA_ptr<OA::MemRefExpr> >;
 
-
    OA::OA_ptr<OA::MemRefHandleIterator> mIter = getMemRefIterator(stmt);
+
    for ( ; mIter->isValid(); (*mIter)++ ) {
-        OA::MemRefHandle memref = mIter->current();
+       OA::MemRefHandle memref = mIter->current();
 
        set<OA::OA_ptr<OA::MemRefExpr> >::iterator mreIter;
        for (mreIter = sMemref2mreSetMap[memref].begin();
@@ -4153,55 +4171,43 @@ Open64IRInterface::getDiffUseMREs(OA::StmtHandle stmt)
    OA::OA_ptr<std::list<OA::OA_ptr<OA::MemRefExpr> > > retList;
    retList = new std::list<OA::OA_ptr<OA::MemRefExpr> >;
 
-   OA::OA_ptr<OA::MemRefHandleIterator> mIter = getMemRefIterator(stmt);
-   for ( ; mIter->isValid(); (*mIter)++ ) {
-        OA::MemRefHandle memref = mIter->current();
+   //! getDiffUses
+   OA::OA_ptr<OA::MemRefHandleIterator> msetIter;
+   msetIter = getAllMemRefs(stmt);
+   for ( ; msetIter->isValid(); (*msetIter)++ ) {
+        OA::MemRefHandle memref = msetIter->current();
 
-        std::set<std::pair<OA::MemRefHandle,
-                     OA::ExprHandle> >::iterator pairIter;
-
-        bool found = false;
-        for (pairIter = mStmtToAssignPairs[stmt].begin();
-             pairIter!= mStmtToAssignPairs[stmt].end();
-             pairIter++)
-        {
-             OA::MemRefHandle lhsHandle = pairIter->first;
-
-             if(lhsHandle == memref) {
-                found = true;
-             }
+        //! Do not process Index Expressions.
+        if(mStmtToIndexExprs[stmt].find(memref) != 
+           mStmtToIndexExprs[stmt].end()) {
+           continue;
         }
-        if(found==false) {continue;}
 
-        set<OA::OA_ptr<OA::MemRefExpr> >::iterator mreIter;
-        for (mreIter = sMemref2mreSetMap[memref].begin();
-             mreIter != sMemref2mreSetMap[memref].end(); mreIter++ )
+        //! dont need pointer expressions
+        OA::OA_ptr<OA::MemRefExprIterator> mreIter;
+        mreIter = getMemRefExprIterator(memref); 
+        for ( ; mreIter->isValid(); (*mreIter)++ )
         {
              OA::OA_ptr<OA::MemRefExpr> mre;
-             mre = *mreIter;
+             mre = mreIter->current();
 
-             FindUseMREVisitor visitor;
-             // visit the mre in the callee
-             mre->acceptVisitor(visitor);
+             if(mre->isaRefOp()) {
+                OA::OA_ptr<OA::RefOp> refop = mre.convert<OA::RefOp>();
+                if(refop->isaAddressOf()) {
+                   continue;
+                }
+             }
 
-             OA::OA_ptr<std::list<OA::OA_ptr<OA::MemRefExpr> > > tmpList;
-             tmpList = visitor.getAllUseMREs();
-
-             std::list<OA::OA_ptr<OA::MemRefExpr> >::iterator mreIter;
-
-             for(mreIter = tmpList->begin(); mreIter != tmpList->end();
-                 ++mreIter) 
-             {
-                 //! FIXME
-                 //! want to filter index MREs
-                 retList->push_back(*mreIter);
+             if (mre->isUse()) {
+                 retList->push_back(mre);
+                 break;
              }
         }
    }
+
    OA::OA_ptr<Open64MemRefExprIterator> retval;
    retval = new Open64MemRefExprIterator(retList);
    return retval;
-
 }
 
 
@@ -5067,6 +5073,10 @@ print_generic_binary:
   default:
     fprintf(stderr,"DumpWN: no logic for :");  
     fdump_wn(stderr, wn); // or fdump_tree()
+
+    std::cout << std::endl << std::endl;
+
+    //fdump_wn(stdout, wn); // or fdump_tree()
     break;
   }
 }
