@@ -304,6 +304,10 @@ Open64IRCallsiteParamIterator::Open64IRCallsiteParamIterator(WN *wn)
   // Gather all parameter expressions
   for (INT kidno = first_arg_idx; kidno < numactuals; kidno++) {
     WN* kid = WN_kid(wn, kidno);
+    //! skip over optional parameters
+    if(kid == NULL) {
+        continue;
+    }
     wnlist.push_back(kid);
   }
   
@@ -2969,6 +2973,12 @@ Open64IRInterface::getParamBindPtrAssignIterator(OA::CallHandle call)
     OA::OA_ptr<OA::IRCallsiteParamIterator> paramIter = getCallsiteParams(call);
     for ( ; paramIter->isValid(); (*paramIter)++ ) {
         OA::ExprHandle param = paramIter->current();
+
+        //! skip over Optional Parameters
+        if(param == OA::ExprHandle(0)) {
+            continue;
+        }
+        
         OA::OA_ptr<OA::ExprTree> eTreePtr = getExprTree(param);
         OA::EvalToMemRefVisitor evalVisitor;
         eTreePtr->acceptVisitor(evalVisitor);
@@ -3779,21 +3789,6 @@ switch (opr) {
   
   return opt;
   //return (int)opr;
-}
-
-OA::Linearity::IRStmtType 
-Open64IRInterface::getLinearityStmtType(OA::StmtHandle h)
-{
-  setCurrentProcToProcContext(h);
-  WN* wn = (WN*)h.hval();
-  if (!wn) { return OA::Linearity::NONE; }
-  
-  OPERATOR opr = WN_operator(wn);
-  if (OPERATOR_is_store(opr)) { // cf. findAssignPairs
-    return OA::Linearity::EXPR_STMT;
-  } else {
-    return OA::Linearity::ANY_STMT;
-  }
 }
 
 //---------------------------------------------------------------------------

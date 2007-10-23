@@ -741,9 +741,6 @@ public:
   //! Given a procedure return associated SymHandle
   OA::SymHandle getSymHandle(OA::ProcHandle h) { return getProcSymHandle(h); }
 
-  std::string toString(OA::Alias::IRStmtType x)
-  { return AliasIRInterfaceDefault::toString(x); }
-
   /*
   //! If this is a PTR_ASSIGN_STMT then return an iterator over MemRefHandle
   //! pairs where there is a source and target such that target
@@ -885,9 +882,6 @@ public:
 
   //! get the operation type and returns a LinOpType
   OA::Linearity::LinOpType getLinearityOpType(OA::OpHandle op);
-
-  OA::Linearity::IRStmtType getLinearityStmtType(OA::StmtHandle h);
-
 
   //-------------------------------------------------------------------------
   // InterSideEffectIRInterface
