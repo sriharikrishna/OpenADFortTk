@@ -72,6 +72,7 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "DABS",    1 }, { XAIFIntrin, "abs_scal",                  "2_DABS",        1 } },
     { { WNCall,     OPR_CALL,         "IABS",    1 }, { XAIFIntrin, "iabs_scal",                 "0_IABS",        1 } }, 
     { { WNCall,     OPR_CALL,         "SIGN",    2 }, { XAIFIntrin, "sign_scal_scal",            "0_SIGN",        2 } }, 
+    { { WNCall,     OPR_CALL,         "DSIGN",   2 }, { XAIFIntrin, "sign_scal_scal",            "1_SIGN",        2 } }, 
     { { WNExpr,     OPR_RND,          NULL,      1 }, { XAIFIntrin, "bogus_round_scal",          NULL,            1 } },
     { { WNExpr,     OPR_TRUNC,        NULL,      1 }, { XAIFIntrin, "int_scal",                  "0_INT",         1 } },
     { { WNCall,     OPR_CALL,         "INT",     1 }, { XAIFIntrin, "int_scal",                  "1_INT",         1 } },

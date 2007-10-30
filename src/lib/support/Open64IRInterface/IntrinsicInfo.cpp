@@ -69,6 +69,7 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_CALL,          "DABS")       ]=Info(false,1,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "IABS")       ]=Info(false,1,INTEGER_INTR); 
     ourIntrinsicInfoMap[Key( OPR_CALL,          "SIGN")       ]=Info(false,2,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "DSIGN")      ]=Info(false,2,FLOAT_INTR); 
     ourIntrinsicInfoMap[Key( OPR_RND,           NULL)         ]=Info(false,1,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_TRUNC,         NULL)         ]=Info(false,1,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "INT")        ]=Info(false,1,FLOAT_INTR);
