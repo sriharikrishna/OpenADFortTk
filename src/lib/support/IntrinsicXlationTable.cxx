@@ -101,6 +101,7 @@ namespace fortTkSupport {
     // Misc.
     { { WNCall,     OPR_CALL,         "LBOUND",  2 }, { XAIFIntrin, "lbound",                    NULL,            2 } },
     { { WNCall,     OPR_CALL,         "UBOUND",  2 }, { XAIFIntrin, "ubound",                    NULL,            2 } },
+    { { WNCall,     OPR_CALL,         "SIZE",    2 }, { XAIFIntrin, "size",                      NULL,            2 } },
     { { WNIntrinOp, OPR_INTRINSIC_OP, "F90INDEX",2 }, { XAIFIntrin, "index",                     NULL,            2 } },
     { { WNCall,     OPR_CALL,         "LEN",     1 }, { XAIFIntrin, "len",                       NULL,            1 } },
     { { WNExpr,     OPR_SHL,           NULL,     2 }, { XAIFIntrin, "bogus_shl_scal_scal",       NULL,            2 } },

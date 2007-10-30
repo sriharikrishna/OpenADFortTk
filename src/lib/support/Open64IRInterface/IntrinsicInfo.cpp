@@ -102,6 +102,7 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     // array operations
     ourIntrinsicInfoMap[Key( OPR_CALL,          "LBOUND")     ]=Info(false,2,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "UBOUND")     ]=Info(false,2,ARRAY_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "SIZE")       ]=Info(false,2,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "F90INDEX")   ]=Info(false,2,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "MAXVAL")     ]=Info(false,2,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "MINVAL")     ]=Info(false,2,ARRAY_INTR);
