@@ -2336,11 +2336,11 @@ bool isAddrOf = false;
 
              //! Array Indexes are expressions
              OA::ExprHandle rhs((OA::irhandle_t)index);
-         
-             if(opr == OPR_ARRAY) {
-                mStmt2allExprsMap[stmt].insert(rhs);
-                mStmtToIndexExprs[stmt].insert(OA::MemRefHandle((OA::irhandle_t)index));
-             }
+        
+             //! Array Index Expressions are ExprHandles
+             //! for which ExprTree exists.
+             mStmt2allExprsMap[stmt].insert(rhs);
+             mStmtToIndexExprs[stmt].insert(OA::MemRefHandle((OA::irhandle_t)index));
 
              findAllMemRefsAndMapToMemRefExprs(stmt, index,lvl);
          }
@@ -2542,6 +2542,12 @@ bool isAddrOf = false;
                   sStmt2allMemRefsMap[stmt].insert(m);
                   //! Create Pointer AssignPairs
                   mStmtToPtrPairs[stmt].insert(std::pair<OA::OA_ptr<OA::MemRefExpr>, OA::OA_ptr<OA::MemRefExpr> > (newmre, target_newmre) );
+   
+       
+                  //! UnnamedRef is PARM_kid, not PARM 
+                  mStmt2allExprsMap[stmt].erase((OA::irhandle_t)param);
+                  mStmt2allExprsMap[stmt].insert((OA::irhandle_t)param0);
+ 
                 }
            }
 
@@ -2562,7 +2568,7 @@ bool isAddrOf = false;
            sStmt2allMemRefsMap[stmt].erase(m);
            // erase ExprHandles 
            mStmt2allExprsMap[stmt].erase((OA::irhandle_t)param);
-
+           mStmt2allExprsMap[stmt].erase((OA::irhandle_t)param_kid);
         }
 
         break;
@@ -4466,7 +4472,15 @@ Open64IRInterface::createExprTree(OA::OA_ptr<OA::ExprTree> tree, WN* wn)
           //! but we want to recurse on kid0
           return createExprTree(tree, WN_kid0(wn));
         
-    }else { 
+    } else if (opr == OPR_SRCTRIPLET){
+          //! special case indicating section of an array
+          //! for which index expression is created.
+          //! ============ ConstValNode ============
+          OA::ConstValHandle h((OA::irhandle_t)wn);
+          root = new OA::ExprTree::ConstValNode(h);
+          tree->addNode(root);
+          
+    } else { 
 
           //! We want to add special logic for every
           //! node that has more than one child.
