@@ -32,7 +32,15 @@ U
     }
     if($line =~ /$active_re/i) {
 	$line =~s/$decl_re/type(active) ::/i;
-	return $line;
+	my($scn1) = FTscan->new($line);
+  	if($scn1->match(qr/ __(?: value | deriv )__ $TB \( $TB/x)){
+          return ($scn1->grterm(qr/__value__/,\&remove_t)
+                       ->grterm(qr/__deriv__/,\&remove_t)
+                       ->lstring() . "\n");
+        }
+        else {
+          return $line;
+        }
     }
     if($scn->match(qr/ __(?: value | deriv )__ $TB \( $TB/x)){
 	return ($scn->grterm(qr/__value__/,\&xaifv_t)
@@ -41,6 +49,7 @@ U
     }
     return($UNCHANGED);
 }
+
 sub xaifv_t {
     my($v) = $_[0]->copy();
     my(@tl) = $v->tl();
@@ -51,6 +60,15 @@ sub xaifv_t {
 }
 
 sub xaifd_t {
+    my($v) = $_[0]->copy();
+    my(@tl) = $v->tl();
+    $v->set_tl(@tl[2 .. $#tl-1]); # pick up arg tokens
+    my($s) = $v->str();
+
+    return FTscan->new("$s");
+}
+
+sub remove_t {
     my($v) = $_[0]->copy();
     my(@tl) = $v->tl();
     $v->set_tl(@tl[2 .. $#tl-1]); # pick up arg tokens
