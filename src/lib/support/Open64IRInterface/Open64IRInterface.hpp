@@ -1,12 +1,9 @@
 // -*-Mode: C++;-*-
-// $Header$
-
 /*! \file
   
   \brief Implementation of abstract OA interfaces for Open64/WHIRL
 
   \authors Michelle Strout, Nathan Tallent
-  \version $Id$
 
   Copyright ((c)) 2002, Rice University 
   All rights reserved.
