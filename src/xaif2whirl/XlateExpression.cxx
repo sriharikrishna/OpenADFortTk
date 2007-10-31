@@ -317,11 +317,12 @@ namespace xaif2whirl {
     fortTkSupport::IntrinsicXlationTable::WHIRLInfo* info = 
       IntrinsicTable.findWHIRLInfo(xopr, xoprNm, xIntrinKey);
     // 1. Gather the operands, sorted by the "position" attribute
-    FORTTK_ASSERT(n->num_incoming() == info->numop, 
-		  "Internal error: inconsistent number of intrinsic arguments '"
-		  << xoprNm  << "-" << xIntrinKey << "'");
+    unsigned int actualArgCount(n->num_incoming());
+    FORTTK_ASSERT_WARN(actualArgCount== info->numop, 
+		       "Warning: get " << actualArgCount<< " intrinsic arguments for '"
+		       << xoprNm  << "-" << xIntrinKey << "' expect " << info->numop << " (optional args?)");
     OA::OA_ptr<MyDGEdge> tmp; tmp = NULL;
-    vector<OA::OA_ptr<MyDGEdge> > opnd_edge(info->numop, tmp);
+    vector<OA::OA_ptr<MyDGEdge> > opnd_edge(actualArgCount, tmp);
     OA::OA_ptr<EdgesIteratorInterface> itPtr 
       = n->getIncomingEdgesIterator();
     for (int i = 0; itPtr->isValid(); ++(*itPtr), ++i) {
@@ -330,8 +331,8 @@ namespace xaif2whirl {
     }
     std::sort(opnd_edge.begin(), opnd_edge.end(),XAIFEdgePositionCompare()); // ascending
     // 2. Translate each operand into a WHIRL expression tree
-    vector<WN*> opnd_wn(info->numop, NULL); 
-    for (unsigned i = 0; i < info->numop; ++i) {
+    vector<WN*> opnd_wn(actualArgCount, NULL); 
+    for (unsigned i = 0; i < actualArgCount; ++i) {
       OA::OA_ptr<NodeInterface> ntmp = opnd_edge[i]->getSource();
       OA::OA_ptr<MyDGNode> opnd = ntmp.convert<MyDGNode>();
       opnd_wn[i] = xlate_Expression(g, opnd, ctxt);
@@ -379,7 +380,7 @@ namespace xaif2whirl {
       // Find the opcode for the expression
       OPCODE opc = getWNExprOpcode(info->opr, opnd_wn);
       // Create a WHIRL expression tree for the operator and operands
-      switch (info->numop) {
+      switch (actualArgCount) {
       case 1: // unary
 	wn = WN_CreateExp1(opc, opnd_wn[0]); break;
       case 2: // binary
@@ -387,8 +388,7 @@ namespace xaif2whirl {
       case 3: // ternary
 	wn = WN_CreateExp3(opc, opnd_wn[0], opnd_wn[1], opnd_wn[2]); break;
       default:
-	FORTTK_DIE("Incorrect number of operands for WHIRL expr: " 
-		   << info->numop);
+	FORTTK_DIE("Incorrect number of operands for WHIRL expr: " << actualArgCount);
       } 
       break;
     }
