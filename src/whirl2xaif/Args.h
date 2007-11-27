@@ -71,6 +71,9 @@ public:
   // do not filter uddu chains by basic block
   static bool ourDoNotFilterFlag; 
 
+  // don't print a time stamp
+  static bool ourNoTimeStampFlag;
+
 private:
   void Ctor();
 

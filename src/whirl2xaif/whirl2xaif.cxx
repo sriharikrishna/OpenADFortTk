@@ -57,7 +57,8 @@ namespace whirl2xaif {
     Open64IRInterface::setIgnoreBlackBoxRoutines();
     xml::ostream xos(os.rdbuf());
     PUXlationContext ctxt("whirl2xaif::translateIR",*irInterface);
-    dumpTranslationHeaderComment(xos); // FIXME (optional)
+    if (!Args::ourNoTimeStampFlag) 
+	dumpTranslationHeaderComment(xos);
     // Initialize global id maps
     // NOTE: Do this first so that ids will match in back-translation
     fortTkSupport::SymTabToSymTabIdMap stabmap(pu_forest);
