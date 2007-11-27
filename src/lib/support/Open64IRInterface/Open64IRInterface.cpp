@@ -5383,7 +5383,7 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
                               << fqn.mVar << ", " << fqn.mContext << std::endl;
                     std::cout << "\tsym = " << tempIR.toString(sym)
                               << ", hval= " << sym.hval()
-                              << ", st = " << (unsigned int)st << std::endl;
+                              << ", st = " << (unsigned long)st << std::endl;
                     std::cout << "\tproc = " << tempIR.toString(proc)
                               << ", hval= " << proc.hval();
                 }
