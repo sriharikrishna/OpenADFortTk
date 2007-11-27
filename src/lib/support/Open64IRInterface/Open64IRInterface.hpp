@@ -521,6 +521,15 @@ class Open64IntegerConstVal
     Open64IntegerConstVal() {}
     Open64IntegerConstVal(int aVal) : Open64ConstVal(), mVal(aVal) {}
     ~Open64IntegerConstVal() {}
+
+    // Methods used by OpenAnalysis
+    bool operator<(OA::ConstValBasicInterface& other)
+        { Open64ConstVal& otherRecast = dynamic_cast<Open64ConstVal&>(other);
+          if (otherRecast.isaInteger()) {
+              return (otherRecast.getIntegerVal() < mVal);
+          }
+          return false;
+    }
     
     // Methods used by OpenAnalysis
     bool operator==(OA::ConstValBasicInterface& other) 
