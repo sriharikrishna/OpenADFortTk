@@ -47,10 +47,12 @@ static const char* usage_details =
 "  -h, --help          print this help\n"
 "  -s, --simpleLoop    force simple loop property on all loop constructs\n"
 "  -n, --noFilter      do not filter ud/du chains by current basic block\n"
+"  -N, --noTimeStamp   do not print a time stamp into the output\n"
 "      --debug [lvl]   debug mode at level `lvl'\n";
 
 bool Args::ourSimpleLoopFlag=false;   // default: done't force it
-bool Args::ourDoNotFilterFlag=false;   // default: filter it
+bool Args::ourDoNotFilterFlag=false;  // default: filter it
+bool Args::ourNoTimeStampFlag=false;  // default: dump a time stamp
 
 #define CLP CmdLineParser
 
@@ -62,6 +64,7 @@ CmdLineParser::OptArgDesc Args::optArgs[] = {
   { 'h', "help",        CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 's', "simpleLoop",  CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
   { 'n', "noFilter",    CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
+  { 'N', "noTimeStamp", CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
   {  0 , "debug",       CLP::ARG_OPT,  CLP::DUPOPT_CLOB, NULL },
   CmdLineParser::OptArgDesc_NULL
 };
@@ -166,6 +169,9 @@ Args::Parse(int argc, const char* const argv[])
     }
     if (parser.IsOpt("noFilter")) { 
       ourDoNotFilterFlag = true; 
+    }
+    if (parser.IsOpt("noTimeStamp")) { 
+      ourNoTimeStampFlag= true; 
     }
     
     // Check for required arguments
