@@ -106,7 +106,7 @@ ReadIR(const char* irfilename)
   
   // Open file, read PU info and setup symbol tables
   Open_Input_Info(irfilename);
-  Read_Global_Data = "bogus-value-as-argument-to-Initialize_Symbol_Tables";
+  Read_Global_Data = (char*)"bogus-value-as-argument-to-Initialize_Symbol_Tables";
   Initialize_Symbol_Tables(FALSE /*reserve_index_zero*/);
   New_Scope(GLOBAL_SYMTAB, Malloc_Mem_Pool, FALSE);
   PU_Info *pu_forest = Read_Global_Info(NULL);
