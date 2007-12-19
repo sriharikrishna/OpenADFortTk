@@ -4677,9 +4677,9 @@ bool Open64IRInterface::isPassByReference(WN* opr_parm_wn)
 /*!
    constant symbols get their strings from the TCON table?
 */
-char* Open64IRInterface::createCharStarForST(ST* st)
+const char* Open64IRInterface::createCharStarForST(ST* st)
 {
-    char* nm = NULL;
+    const char* nm = NULL;
 
     if (ST_class(st) == CLASS_CONST) {
         TCON& tcon = STC_val(st);

@@ -1001,7 +1001,7 @@ private:
   }
 
   //! use this to appropriately get a string for a symbol
-  static char* createCharStarForST(ST*);
+  static const char* createCharStarForST(ST*);
 
   static void DumpWNMemRef(WN* wn, ostream& os);
 
