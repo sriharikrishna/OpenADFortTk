@@ -119,14 +119,14 @@ HPC_CHECK_CXX_STDC_HEADERS
 # be given on configure line or in the environment.
 
 AC_MSG_CHECKING([for Open64 base])
-OPEN64BASE="${OPENADFORTTK_OPEN64BASE}"
+OPEN64BASE="${OPEN64_BASE}/osprey1.0"
 if test ! -d "${OPEN64BASE}" ; then 
   AC_MSG_ERROR([Invalid Open64 base path ${OPEN64BASE}])
 fi
 AC_MSG_RESULT([${OPEN64BASE}])
 
 AC_MSG_CHECKING([for Open64 installation])
-OPEN64TARG="${OPENADFORTTK_OPEN64}"
+OPEN64TARG="${OPEN64ROOT}"
 if test ! -d "${OPEN64TARG}" ; then 
   AC_MSG_ERROR([Invalid Open64 installation path ${OPEN64TARG}])
 fi
@@ -153,7 +153,7 @@ AC_SUBST([OPEN64_LDFLAGS])
 
 AC_MSG_CHECKING([for OpenAnalysis])
 
-OA="${OPENADFORTTK_OA}"
+OA="${OPENANALYSISROOT}"
 if test ! -d "${OA}" ; then 
   AC_MSG_ERROR([Invalid OpenAnalysis installation path ${OA}])
 fi
@@ -172,7 +172,7 @@ AC_SUBST([OA_LDFLAGS])
 
 AC_MSG_CHECKING([for Xerces-C])
 
-XERCES="${OPENADFORTTK_XERCESC}"
+XERCES="${XERCESCROOT}"
 if test ! -d "${XERCES}" ; then 
   AC_MSG_ERROR([Invalid Xerces-C installation path ${XERCES}])
 fi
