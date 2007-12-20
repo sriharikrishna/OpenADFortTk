@@ -415,6 +415,7 @@ namespace xaif2whirl {
       return xlate_SymbolReferenceCollapsedPath(elem, pathVorlage, ctxt);
     }
     ST* st = sym->GetST();
+    const char* st_name = ST_name(st);
     TY_IDX ty = ST_type(st);
     TYPE_ID rty, dty;
     WN_OFFSET oset = 0;
@@ -424,7 +425,9 @@ namespace xaif2whirl {
     bool create_lda = false;
     // Note: Order matters in these tests
     if (ST_class(st) != CLASS_PREG) { // never create a pointer to a preg
-      if (ctxt.currentXlationContext().isFlag(XlationContext::ARRAY)) {
+      if (ctxt.currentXlationContext().isFlag(XlationContext::ARRAY)
+	  ||
+	  TY_Is_Chararray(ty)) {
 	// Do not load the address of symbol that is already a pointer
 	if (TY_kind(ty) != KIND_POINTER) {
 	  create_lda = true;
@@ -615,14 +618,32 @@ namespace xaif2whirl {
     for (unsigned i = 2*rank, j = 0; i >= (rank + 1); --i, ++j) {
       WN_kid(arrWN, i) = indices[j];
     }
-    // -------------------------------------------------------
-    // 4. Wrap the ARRAY in an ILOAD
-    // -------------------------------------------------------
-    TY_IDX ety = TY_etype(ty);
-    TYPE_ID emty = TY_mtype(ety);
-    TY_IDX eptrty = Stab_Pointer_To(ety);
-    WN* wn = WN_CreateIload(OPR_ILOAD, emty, emty, 0, ety, eptrty, arrWN, 0);
-    return wn;
+    if (TY_Is_Chararray(ty)) { 
+      // -------------------------------------------------------
+      // Wrap in another ARRAY 
+      // -------------------------------------------------------
+      rank=1;
+      nkids = (rank * 2) + 1;	
+      WN* outerArrWN = WN_Create(OPR_ARRAY, MTYPE_U8, MTYPE_V, nkids);
+      // kid 0 is the inner array node
+      WN_kid0(outerArrWN) = arrWN;
+      // kids 1 to n give size of each dimension.  We use a bogus value,
+      // since we only need to support translation back to source code.
+      for (unsigned i = 1; i < nkids; ++i) {
+	WN_kid(outerArrWN, i) = WN_CreateIntconst(OPC_I4INTCONST, 0);
+      }
+      return outerArrWN;
+    } 
+    else { 
+      // -------------------------------------------------------
+      // 4. Wrap the ARRAY in an ILOAD
+      // -------------------------------------------------------
+      TY_IDX ety = TY_etype(ty);
+      TYPE_ID emty = TY_mtype(ety);
+      TY_IDX eptrty = Stab_Pointer_To(ety);
+      WN* wn = WN_CreateIload(OPR_ILOAD, emty, emty, 0, ety, eptrty, arrWN, 0);
+      return wn;
+    }
   }
 
   OA::OA_ptr<OA::DGraph::DGraphImplement> XlateExpression::createExpressionGraph(const DOMElement* elem, 
