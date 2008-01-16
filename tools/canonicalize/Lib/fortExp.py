@@ -20,16 +20,16 @@ class _TypeMod(object):
 class fst_Kind(_TypeMod):
     pat = '(%s)'
 
-import sre
+import re
 from flatten import flatten
 from op_prec import OpPrec
 
-_id_re     = sre.compile(fs.id_re,sre.I | sre.X)
-_flonum_re = sre.compile(fs.flonum_re,sre.I | sre.X)
-_int_re    = sre.compile(fs.int_re,sre.I | sre.X)
-_q_re      = sre.compile(fs.q_re,sre.I | sre.X)
-_qq_re     = sre.compile(fs.qq_re,sre.I | sre.X)
-_num_re    = sre.compile(fs.flonum_re + '|' + fs.int_re,sre.I | sre.X)
+_id_re     = re.compile(fs.id_re,re.I | re.X)
+_flonum_re = re.compile(fs.flonum_re,re.I | re.X)
+_int_re    = re.compile(fs.int_re,re.I | re.X)
+_q_re      = re.compile(fs.q_re,re.I | re.X)
+_qq_re     = re.compile(fs.qq_re,re.I | re.X)
+_num_re    = re.compile(fs.flonum_re + '|' + fs.int_re,re.I | re.X)
 
 _quote_set   = set(['"',"'"])
 _logicon_set = set(['.true.','.false.'])
@@ -315,9 +315,9 @@ def subst(a,pat,repl):
         return a.map(lambda x:subst(x,pat,repl))
 
 def const_type(e,kw2type,lenfn):
-    kind_re = sre.compile(r'_(\w+)')
+    kind_re = re.compile(r'_(\w+)')
     if _flonum_re.match(e):
-        sep_re = sre.compile(r'([^_]+)(_(\w+))?')
+        sep_re = re.compile(r'([^_]+)(_(\w+))?')
         v      = sep_re.match(e)
         ty     = 'd' in v.group(1).lower() and 'doubleprecision' or \
                  'real'

@@ -2,7 +2,8 @@
 to use these expressions, be sure to sre.compile with sre.X
 '''
 
-import sre
+import re
+import myscan
 
 def __str_intern(s):
     template = r"""
@@ -89,7 +90,7 @@ def s_ident(self,s):
     'simplest possible scanner function: return matched string'
     return s
 
-scan1 = sre.Scanner([
+scan1 = myscan.Scanner([
     (id_re,      s_ident),
     (conc_re,    s_ident),
     (dcoln_re,   s_ident),
@@ -101,4 +102,4 @@ scan1 = sre.Scanner([
     (flonum_re,  s_ident),
     (int_re,     s_ident),
     (white_re,   None),
-    ],sre.I | sre.X)
+    ],re.I | re.X)
