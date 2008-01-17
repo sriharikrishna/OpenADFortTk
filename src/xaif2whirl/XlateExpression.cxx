@@ -569,17 +569,24 @@ namespace xaif2whirl {
       }
       if (tripletElementCounter==1) 
 	indices[i] = WN_Type_Conversion(triplet[0],MTYPE_I4);
-      else if (tripletElementCounter==3) { 
+      else  { 
 	WN* theSrcTriplet_p=WN_Create(OPR_SRCTRIPLET,
 				      MTYPE_I8, 
 				      MTYPE_V,
 				      tripletElementCounter);
-	for (int j=0; j<tripletElementCounter; ++j) 
-	  WN_kid(theSrcTriplet_p,j)=WN_Type_Conversion(triplet[j],MTYPE_I4);
+	for (int j=0; j<3; ++j) {
+	  if (triplet[j]!=0) { 
+	    WN_kid(theSrcTriplet_p,j)=WN_Type_Conversion(triplet[j],MTYPE_I4);
+	  }
+	  else { 
+	    WN_kid(theSrcTriplet_p,j)=WN_Create(OPR_IMPLICIT_BND,
+						MTYPE_V, 
+						MTYPE_V,
+						0);
+	  }
+	}
 	indices[i] = theSrcTriplet_p;
       } 
-      else 
-	FORTTK_DIE("missing elements in IndexTriplet, expect 3 found " << tripletElementCounter);
     }
     // -------------------------------------------------------
     // 2. Translate the array symbol reference
