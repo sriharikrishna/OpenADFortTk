@@ -507,9 +507,13 @@ namespace whirl2xaif {
       }
       fortTkSupport::SymId st_id = (fortTkSupport::SymId)ST_index(st);
       xos << xml::BegElem("xaif:Symbol") << AttrSymId(st)
-	  << xml::Attr("kind", "variable") << xml::Attr("type", ty_str)
-	  << xml::Attr("shape", shape_str) << SymIdAnnot(st_id)
-	  << xml::Attr("active", active) <<  xml::EndAttrs;
+	  << xml::Attr("kind", "variable") 
+	  << xml::Attr("type", ty_str)
+	  << xml::Attr("feType",TranslateTYToMType(ty))
+	  << xml::Attr("shape", shape_str) 
+	  << SymIdAnnot(st_id)
+	  << xml::Attr("active", active) 
+	  << xml::EndAttrs;
       xlate_ArrayBounds(xos, ty, ctxt);
       xos << xml::EndElem;
     }
@@ -737,8 +741,11 @@ namespace whirl2xaif {
     const char* ty_str = TranslateTYToSymType(ty_idx);
     if (!ty_str) { ty_str = "***"; }  
 
-    xos << xml::BegElem("xaif:Constant") << xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId()) 
-	<< xml::Attr("type", ty_str) << xml::Attr("value", val) << xml::EndElem;
+    xos << xml::BegElem("xaif:Constant") 
+	<< xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId()) 
+	<< xml::Attr("type", ty_str) 
+	<< xml::Attr("feType",Mtype_Name(TY_mtype(ty)))
+	<< xml::Attr("value", val) << xml::EndElem;
   }
 
 

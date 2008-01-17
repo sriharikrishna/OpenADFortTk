@@ -1364,6 +1364,41 @@ namespace whirl2xaif {
   }
 
   const char*
+  TranslateTYToMType(TY_IDX ty_idx) {
+    TY& ty_r = Ty_Table[ty_idx];
+    if (TY_kind(ty_r) == KIND_SCALAR) {
+      return Mtype_Name(TY_mtype(ty_r));
+    } 
+    else if (TY_kind(ty_r) == KIND_ARRAY) {
+      if (TY_is_character(ty_r)) { 
+	return Mtype_Name(TY_mtype(ty_r));
+      } 
+      else {
+	// Do not permit pointers as elements of arrays, so just use
+	// the corresponding integral type instead.  We do not expect
+	// such pointers to be dereferenced anywhere. (FIXME)
+	TY_IDX ety_idx = TY_AR_etype(ty_r);
+	if (TY_Is_Pointer(ety_idx)) {
+	  ety_idx = Stab_Mtype_To_Ty(TY_mtype(ety_idx));
+	} 
+	return TranslateTYToMType(ety_idx);
+      }
+    } 
+    else if (TY_kind(ty_r) == KIND_STRUCT 
+	     || 
+	     TY_kind(ty_r) == KIND_INVALID
+	     ||
+	     TY_kind(ty_r) == KIND_FUNCTION
+	     ||
+	     TY_kind(ty_r) == KIND_POINTER) { 
+	return Mtype_Name(TY_mtype(ty_r));
+    } 
+    else 
+      FORTTK_DIE("whirl2xaif::TranslateTYToMType: no logic to handle type of kind " << TY_kind(ty_r));
+    return "";
+  }
+
+  const char*
   TranslateTYToSymShape(TY_IDX ty_idx)
   {
     TY& ty = Ty_Table[ty_idx];

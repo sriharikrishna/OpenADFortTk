@@ -328,11 +328,13 @@ whirl2xaif::xlate_INTCONST(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   bool logical = ctxt.currentXlationContext().isFlag(XlationContext::IS_LOGICAL_ARG);
   std::string val = TCON2F_translate(tval, logical);  
   const char* ty_str = (logical) ? "bool" : "integer";
-  
-  xos << BegElem("xaif:Constant") << Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId()) 
-      << Attr("type", ty_str) << Attr("value", val) << EndElem;
-  
-  
+
+  xos << BegElem("xaif:Constant") 
+      << Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId()) 
+      << Attr("type", ty_str) 
+      << Attr("feType",Mtype_Name(OPCODE_rtype(WN_opcode(wn))))
+      << Attr("value", val) 
+      << EndElem;
 }
 
 // xlate_CONST: Translate a WHIRL constant (string, floating point,
@@ -350,10 +352,12 @@ whirl2xaif::xlate_CONST(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   const char* ty_str = TranslateTYToSymType(ty_idx); // FIXME: logical
   if (!ty_str) { ty_str = "***"; }  
 
-  xos << BegElem("xaif:Constant") << Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
-      << Attr("type", ty_str) << Attr("value", val) << EndElem;
-  
-  
+  xos << BegElem("xaif:Constant") 
+      << Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
+      << Attr("type", ty_str) 
+      << Attr("feType",Mtype_Name(TY_mtype(ty_idx)))
+      << Attr("value", val) 
+      << EndElem;
 }
 
 

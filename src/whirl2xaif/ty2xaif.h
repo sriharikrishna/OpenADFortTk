@@ -103,6 +103,9 @@ const char*
 TranslateTYToSymType(TY_IDX ty);
 
 const char*
+TranslateTYToMType(TY_IDX ty);
+
+const char*
 TranslateTYToSymShape(TY_IDX ty);
 
 
