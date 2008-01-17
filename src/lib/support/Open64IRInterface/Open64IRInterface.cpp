@@ -4981,6 +4981,15 @@ print_generic_binary:
     os << ":";
     DumpWN(WN_kid1(wn), os);
     break; 
+  case OPR_IMPLICIT_BND: // Output as nothing
+    break; 
+  case OPR_SRCTRIPLET: // Output as LB:UB:STRIDE
+    DumpWN(WN_kid0(wn), os);
+    os << ":";
+    DumpWN(WN_kid2(wn), os);
+    os << ":";
+    DumpWN(WN_kid1(wn), os);
+    break; 
   case OPR_ARRAYEXP:
     DumpWN(WN_kid0(wn), os);
     break; 
