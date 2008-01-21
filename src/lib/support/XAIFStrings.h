@@ -71,6 +71,7 @@ public:
     ELEM_Symbol,
     ATTR_kind,
     ATTR_type,
+    ATTR_feType,
     ATTR_shape,
     ATTR_temp,
 
@@ -261,6 +262,8 @@ public:
   XMLCh*      attr_kind_x() const { return x_strTbl[ATTR_kind]; }
   const char* attr_type() const { return c_strTbl[ATTR_type]; }
   XMLCh*      attr_type_x() const { return x_strTbl[ATTR_type]; }
+  const char* attr_feType() const { return c_strTbl[ATTR_feType]; }
+  XMLCh*      attr_feType_x() const { return x_strTbl[ATTR_feType]; }
   const char* attr_shape() const { return c_strTbl[ATTR_shape]; }
   XMLCh*      attr_shape_x() const { return x_strTbl[ATTR_shape]; }
   const char* attr_temp() const { return c_strTbl[ATTR_temp]; }

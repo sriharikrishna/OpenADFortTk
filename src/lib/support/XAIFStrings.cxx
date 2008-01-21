@@ -74,6 +74,7 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "xaif:Symbol",
   "kind",
   "type",
+  "feType",
   "shape",
   "temp",
   

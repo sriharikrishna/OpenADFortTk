@@ -23,6 +23,7 @@
 #include "Diagnostics.h"
 
 #include "xaif2whirl.h"
+#include "Args.h"
 #include "XlateExpression.h"
 #include "XAIF_DOMFilters.h"
 #include "XercesStrX.h"
@@ -126,15 +127,20 @@ namespace xaif2whirl {
 					 PUXlationContext& ctxt) {
     FORTTK_ASSERT(elem, fortTkSupport::Diagnostics::UnexpectedInput);
     const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
+    const XMLCh* fetypeX = elem->getAttribute(XAIFStrings.attr_feType_x());
     const XMLCh* valX = elem->getAttribute(XAIFStrings.attr_value_x());
     XercesStrX type = XercesStrX(typeX);
+    XercesStrX fetype = XercesStrX(fetypeX);
+    TYPE_ID mtype=XAIFFETypeToWHIRLMTy(fetype.c_str());
     XercesStrX value = XercesStrX(valX);
     WN* wn = NULL;
     if ((strcmp(type.c_str(), "real") == 0) ||
 	(strcmp(type.c_str(), "double") == 0)) {
       // Floating point constant
       double val = strtod(value.c_str(), (char **)NULL);
-      TCON tcon = Host_To_Targ_Float(MTYPE_F8, val);
+      if (mtype==MTYPE_UNKNOWN)
+	mtype=Args::ourDefaultMTypeReal;
+      TCON tcon = Host_To_Targ_Float(mtype, val);
       wn = Make_Const(tcon);
     } 
     else if (strcmp(type.c_str(), "integer") == 0) {
@@ -147,10 +153,9 @@ namespace xaif2whirl {
 	  ctxt.currentXlationContext().isFlag(XlationContext::EXPRSIMPLE)) {
 	wn = WN_CreateIntconst(OPC_I4INTCONST, (INT32)val);
       } else {
-	// the WHIRL simplifier messes up int CONST nodes
-	//TCON tcon = Host_To_Targ(DefaultMTypeInt, val);
-	//wn = Make_Const(tcon); 
-	OPCODE opc = OPCODE_make_op(OPR_INTCONST, DefaultMTypeInt, MTYPE_V);
+	if (mtype==MTYPE_UNKNOWN)
+	  mtype=Args::ourDefaultMTypeInt;
+	OPCODE opc = OPCODE_make_op(OPR_INTCONST, mtype, MTYPE_V);
 	wn = WN_CreateIntconst(opc, val);
       }
     } 
@@ -454,8 +459,8 @@ namespace xaif2whirl {
       }
       // FIXME: take care of small integer types
       if (MTYPE_byte_size(dty) < 4) {
-	if (MTYPE_is_unsigned(dty)) { rty = DefaultMTypeUInt; }
-	else if (MTYPE_is_signed(dty)) { rty = DefaultMTypeInt; }
+	if (MTYPE_is_unsigned(dty)) { rty = Args::ourDefaultMTypeUInt; }
+	else if (MTYPE_is_signed(dty)) { rty = Args::ourDefaultMTypeInt; }
       }
       if (ST_class(st) == CLASS_PREG) {
 	oset = GetPregId(elem);

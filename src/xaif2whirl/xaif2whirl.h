@@ -45,14 +45,14 @@ namespace xaif2whirl {
   fortTkSupport::Symbol*
   GetSymbol(const xercesc::DOMElement* elem, PUXlationContext& ctxt);
 
-  const TYPE_ID DefaultMTypeInt = MTYPE_I8;
-  const TYPE_ID DefaultMTypeUInt = MTYPE_U8;
-
   void
   DDumpDotGraph(OA::OA_ptr<OA::DGraph::DGraphInterface> graph);
 
   void
   DumpDotGraph(std::ostream& os, OA::OA_ptr<OA::DGraph::DGraphInterface> graph);
+
+  TYPE_ID
+  XAIFFETypeToWHIRLMTy(const char* anFETypeName);
 
   fortTkSupport::Symbol*
   GetOrCreateSymbol(const char* sname, PUXlationContext& ctxt);
