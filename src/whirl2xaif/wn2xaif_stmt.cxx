@@ -48,6 +48,17 @@ whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 
   // FIXME: cleanup AGOTO, RETURN, RETURN_VAL, PRAGMA, COMMENT, USE
   //  INTRN_CASSIGNSTMT, INTRN_STOP, INTRN_STOP_F90, IO
+
+  if (opr==OPR_RETURN && WN_kid_count(wn) == 0) {  // no kids
+    // get the Parent and see if it is the FUNC: 
+    WN* func_p=ctxt.findParentWN(ctxt.findParentBlockWN(wn));
+    // if it is the last one: 
+    if (WN_operator(func_p)==OPR_FUNC_ENTRY
+	&& 
+	WN_last(WN_kid(func_p,WN_kid_count(func_p)-1))==wn)
+      return;
+    FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
+  }
   
   fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
@@ -275,7 +286,9 @@ void
 whirl2xaif::xlate_RETURN(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_RETURN, fortTkSupport::Diagnostics::UnexpectedInput); 
-  
+  // for now: 
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
+  // could be put into the xaif:
   fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
