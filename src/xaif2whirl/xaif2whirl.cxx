@@ -2840,17 +2840,6 @@ namespace xaif2whirl {
 	OA::OA_ptr<MyDGNode> gn; gn = new MyDGNode(elem);
 	g->addNode(gn);
 	m[std::string(vid.c_str())] = gn;
-      
-	// Set the graph root if necessary
-	/* MMS, 5/18/05, DGraph doesn't have root anymore
-	   const XMLCh* name = elem->getNodeName();
-	   if (XMLString::equals(name, XAIFStrings.elem_BBEntry_x())) {
-	   g->setEntry(gn);
-	   }
-	   else if (XMLString::equals(name, XAIFStrings.elem_BBExit_x())) {
-	   g->setExit(gn);
-	   }
-	*/
       } 
     }
   
