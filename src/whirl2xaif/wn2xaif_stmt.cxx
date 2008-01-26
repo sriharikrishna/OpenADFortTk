@@ -58,13 +58,14 @@ whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn_p, PUXlationContext& ctx
 	return;
       // if it is not the last one, check if there is anything 
       // else significant: 
-      WN* next_p;
-      while ((next_p=WN_next(wn_p))!=0) {
+      WN* next_p=WN_next(wn_p);
+      while (next_p!=0) {
 	opr=WN_operator(next_p);
 	if (opr != OPR_RETURN && opr != OPR_COMMENT)
 	  break; 
 	if (next_p==last_p)
 	  return;
+	next_p=WN_next(next_p);
       }
     }
     FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
