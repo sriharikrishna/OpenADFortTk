@@ -425,7 +425,9 @@ namespace whirl2xaif {
     // LHS of assignment
     WN* lhs = wn; // OPR_STID represents the LHS of the assignment
     xos << xml::BegElem(XAIFStrings.elem_AssignLHS()) 
-	<< xml::Attr("du_ud", ctxt.findUDDUChainId(lhs)) << xml::EndAttrs;
+	<< xml::Attr("du_ud", ctxt.findUDDUChainId(lhs))
+	<< xml::Attr("alias", ctxt.getAliasMapKey(lhs))
+	<< xml::EndAttrs;
     ctxt.createXlationContext(XlationContext::VARREF, wn); // implicit for LHS
   
     if (ST_class(base_st) == CLASS_PREG) { // FIXME
@@ -484,7 +486,9 @@ namespace whirl2xaif {
     // LHS of assignment (dereference address)
     WN* lhs = baseptr;
     xos << xml::BegElem(XAIFStrings.elem_AssignLHS()) 
-	<< xml::Attr("du_ud", ctxt.findUDDUChainId(lhs)) << xml::EndAttrs;
+	<< xml::Attr("du_ud", ctxt.findUDDUChainId(lhs))
+	<< xml::Attr("alias", ctxt.getAliasMapKey(lhs))
+	<< xml::EndAttrs;
     ctxt.createXlationContext(XlationContext::VARREF, wn); // implicit for LHS
   
     if (WN_operator(baseptr) == OPR_LDA || WN_operator(baseptr) == OPR_LDID) {
@@ -664,7 +668,8 @@ namespace whirl2xaif {
     if (!ctxt.currentXlationContext().isFlag(XlationContext::VARREF)) {
       xos << xml::BegElem(XAIFStrings.elem_VarRef())
 	  << xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
-	  << xml::Attr("du_ud", ctxt.findUDDUChainId(wn));
+	  << xml::Attr("du_ud", ctxt.findUDDUChainId(wn))
+	  << xml::Attr("alias", ctxt.getAliasMapKey(wn));
       ctxt.createXlationContext(XlationContext::VARREF, wn); // FIXME: do we need wn?
       newContext = true; 
     }
