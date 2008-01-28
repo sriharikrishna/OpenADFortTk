@@ -11,6 +11,7 @@ __intrinsics = (
     'atan',
     'atan2',
     'cos',
+    'dble',
     'exp',
     'float',
     'index',

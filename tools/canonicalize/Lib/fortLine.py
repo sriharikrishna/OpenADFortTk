@@ -4,7 +4,7 @@ from flatten import flatten
 from assembler import *
 from chomp import chomp
 from fortScan import q_re,qq_re
-import sre
+import re
 
 def ident(self):
     '''generic identity function for default mappers'''
@@ -63,14 +63,14 @@ def fline_from_line(line):
 
 def comment_p(l):
     '''given a line l, return true if l is a comment (or blank) line'''
-    comre   = sre.compile(r'''[^\d\s]''')
-    blankre = sre.compile(r'''\s* $''',sre.X)
-    shoutre = sre.compile(r''' \s* !''',sre.X)
+    comre   = re.compile(r'''[^\d\s]''')
+    blankre = re.compile(r'''\s* $''',re.X)
+    shoutre = re.compile(r''' \s* !''',re.X)
     return comre.match(l) or blankre.match(l) or shoutre.match(l)
 
 def cont_p(l):
     '''given a line l, return true if l is a continuation line'''
-    contre = sre.compile(r'''\s{5} \S''',sre.X)
+    contre = re.compile(r'''\s{5} \S''',re.X)
     return contre.match(l)
 
 def stmt_p(l):
@@ -95,7 +95,7 @@ def flow_line(l,cont='+'):
 
 _no_bang_re = r'''^((?: [^'"!] | (?: %s ) | (?: %s) )*) (! .*)$'''
 _no_bang_re = _no_bang_re % (q_re,qq_re)
-_no_bang_re = sre.compile(_no_bang_re,sre.X)
+_no_bang_re = re.compile(_no_bang_re,re.X)
 
 def kill_bang_comment(l):
     '''kill bang comments from end of line'''

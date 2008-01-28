@@ -35,6 +35,10 @@ using std::string;
 
 //***************************************************************************
 
+TYPE_ID Args::ourDefaultMTypeInt  = MTYPE_I8;
+TYPE_ID Args::ourDefaultMTypeUInt = MTYPE_U8;
+TYPE_ID Args::ourDefaultMTypeReal = MTYPE_F8;
+
 static const char* version_info = "version .289";
 
 static const char* usage_summary =
@@ -53,6 +57,9 @@ static const char* usage_details =
 "\n"
 "Options:\n"
 "  -o, --output <file> send output to <file> instead of default file\n"
+"      --i4            make integers 4 byte where not specified (default 8 bytes)\n"
+"      --u4            make unsigned integers 4 byte where not specified (default 8 bytes)\n"
+"      --r4            make reals 4 byte where not specified (default 8 bytes)\n"
 "  -V, --version       print version information\n"
 "  -v, --validate      validate agains schema\n"
 "  -h, --help          print this help\n"
@@ -67,6 +74,9 @@ CmdLineParser::OptArgDesc Args::optArgs[] = {
   {  0 , "structured-cf",   CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "unstructured-cf", CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "bb-patching",     CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
+  {  0 , "i4",              CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
+  {  0 , "u4",              CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
+  {  0 , "r4",              CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "types",    CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 'o', "output",   CLP::ARG_REQ , CLP::DUPOPT_ERR,  NULL },
   { 'V', "version",  CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
@@ -195,6 +205,18 @@ Args::Parse(int argc, const char* const argv[])
     // Check for other options    
     if (parser.IsOpt("output")) { 
       outWhirlFileNm = parser.GetOptArg("output");
+    }
+
+    if (parser.IsOpt("i4")) { 
+      ourDefaultMTypeInt=MTYPE_I4;
+    }
+    
+    if (parser.IsOpt("u4")) { 
+      ourDefaultMTypeUInt=MTYPE_U4;
+    }
+ 
+    if (parser.IsOpt("r4")) { 
+      ourDefaultMTypeReal=MTYPE_F4;
     }
     
     // Check for required arguments

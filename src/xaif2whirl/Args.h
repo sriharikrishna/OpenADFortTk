@@ -68,7 +68,11 @@ public:
   std::string outWhirlFileNm;
   std::string xaifFileNm;
   bool validate;
-  
+
+  static TYPE_ID ourDefaultMTypeInt;
+  static TYPE_ID ourDefaultMTypeUInt;
+  static TYPE_ID ourDefaultMTypeReal;
+
 private:
   void Ctor();
   

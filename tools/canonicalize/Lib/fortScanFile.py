@@ -3,9 +3,9 @@ Module for creating partially processed Fortran files that have
 a token list, line number representation as well as a rawline
 '''
 from chomp import chomp
-import sre
-_lineno_re = sre.compile(r'(\d+)')
-_lead_re   = sre.compile(r'(\s*)')
+import re
+_lineno_re = re.compile(r'(\d+)')
+_lead_re   = re.compile(r'(\s*)')
 
 def _ident(self):
     return [self]

@@ -903,12 +903,14 @@ namespace whirl2xaif {
     TranslateWN(xos, WN_kid0(wn), ctxt);
     ctxt.deleteXlationContext();
     xos << xml::EndElem;
-    xos << xml::BegElem(XAIFStrings.elem_Bound());
-    ctxt.createXlationContext(); 
-    ctxt.currentXlationContext().unsetFlag(XlationContext::VARREF); // elem_Bound() contains ExpressionType
-    TranslateWN(xos, WN_kid1(wn), ctxt); 
-    ctxt.deleteXlationContext();
-    xos << xml::EndElem;
+    if (WN_operator(WN_kid1(wn))!= OPR_IMPLICIT_BND) { 
+      xos << xml::BegElem(XAIFStrings.elem_Bound());
+      ctxt.createXlationContext(); 
+      ctxt.currentXlationContext().unsetFlag(XlationContext::VARREF); // elem_Bound() contains ExpressionType
+      TranslateWN(xos, WN_kid1(wn), ctxt); 
+      ctxt.deleteXlationContext();
+      xos << xml::EndElem;
+    }
     xos << xml::BegElem(XAIFStrings.elem_Stride());
     ctxt.createXlationContext(); 
     ctxt.currentXlationContext().unsetFlag(XlationContext::VARREF); // elem_Stride() contains ExpressionType

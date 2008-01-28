@@ -38,7 +38,7 @@ namespace xaif2whirl{
       LVALUE           = 0x00000020, // var ref should be an lvalue (inheritDown) 
       ARRAY            = 0x00000040, // an array reference (inheritDown)
       ARRAYIDX         = 0x00000080, // an array index expr (inheritDown)
-      EXPRSIMPLE       = 0x00000100  // within a 'simple' expr (inheritDown)
+      EXPRSIMPLE       = 0x00000100  // within a 'simple' expr, used exclusively for CFG exprs. (inheritDown)
     };
 
     bool isFlag(Flags_E f) const;

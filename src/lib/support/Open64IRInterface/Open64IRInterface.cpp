@@ -2174,7 +2174,11 @@ bool isAddrOf = false;
 
          //! get the top MemRefHandle
          OA::MemRefHandle mtop =  findTopMemRefHandle(wn);
-         assert(mtop != OA::MemRefHandle(0));
+         
+         //! ILOAD
+         //!   LDA const_sym   
+         //! assert(mtop != OA::MemRefHandle(0));
+         if(mtop == OA::MemRefHandle(0)) { break; }
 
          //! get the current MemRefHandle
          OA::MemRefHandle m = MemRefHandle((irhandle_t)wn);
@@ -2206,7 +2210,12 @@ bool isAddrOf = false;
 
          //! get the top MemRefHandle
          OA::MemRefHandle mtop =  findTopMemRefHandle(wn);
-         assert(mtop != OA::MemRefHandle(0));
+        
+         
+         //! ILOAD
+         //!   LDA const_sym
+         //! assert(mtop != OA::MemRefHandle(0));
+         if(mtop == OA::MemRefHandle(0)) { break; }
 
          //! get the current MemRefHandle
          OA::MemRefHandle m = MemRefHandle((irhandle_t)wn);
@@ -3090,112 +3099,9 @@ Open64IRInterface::getIndepMemRefExprIter(OA::ProcHandle h)
     if (prag == WN_PRAGMA_OPENAD_INDEPENDENT) {
       ST* st = WN_st(wn);
       OA::SymHandle sym = OA::SymHandle((OA::irhandle_t)st);
-
-      bool isAddrOf, fullAccuracy;
-      OA::MemRefExpr::MemRefType hty;
-      
-      isAddrOf = false;
-      hty = OA::MemRefExpr::USE;
-
-      switch (TY_kind(ST_type(st))) {
-      case KIND_SCALAR:
-        if (debug) {
-          std::cout << "KIND_SCALAR: Sym(" << toString(sym) << ")\n";
-        }       
-        fullAccuracy = true;
-        break;
-      case KIND_ARRAY:
-        if (debug) {
-          std::cout << "KIND_ARRAY: Sym(" << toString(sym) << ")\n";
-        }
-        fullAccuracy = false;
-        break;
-      case KIND_STRUCT:
-        if (debug) {
-          std::cout << "KIND_STRUCT: Sym(" << toString(sym) << ")\n";
-        }       
-        fullAccuracy = false;
-        break;
-      case KIND_POINTER:
-        if (debug) {
-          std::cout << "KIND_POINTER: Sym(" << toString(sym) << ")\n";
-        }
-        fullAccuracy = false;  // arrays are appearing as KIND_POINTER
-        break;
-      case KIND_FUNCTION:
-        if (debug) {
-          std::cout << "KIND_FUNCTION: Sym(" << toString(sym) << ")\n";
-        }
-        assert(0);
-        // this type not handled correctly yet
-        fullAccuracy = false;
-        break;
-      case KIND_VOID:
-        if (debug) {
-          std::cout << "KIND_VOID: Sym(" << toString(sym) << ")\n";
-        }
-        assert(0);
-        // this type not handled correctly yet
-        fullAccuracy = false;
-        break;
-      case KIND_INVALID:
-        if (debug) {
-          std::cout << "KIND_INVALID: Sym(" << toString(sym) << ")\n";
-        }
-        assert(0);
-        //this type not handled correctly yet
-        fullAccuracy = false;
-        break;
-      default:
-        if (debug) {
-          std::cout << "KIND_??? hit default: Sym(" << toString(sym) << ")\n";
-        }
-        assert(0);
-        // shouldn't get here
-        fullAccuracy = false;
-        break;
-      }
-     
-      // if the symbol is a reference parameter, then the MemRefExpr
-      // for an access to the symbol needs a deref
-      if (isRefParam(sym)) {
-
-        mre = new OA::NamedRef(OA::MemRefExpr::USE, sym);
-        mre = new OA::Deref(OA::MemRefExpr::USE, mre, 1);
-
-        if(fullAccuracy == false) {
-           OA::OA_ptr<OA::SubSetRef> subset_mre;
-           OA::OA_ptr<OA::MemRefExpr> nullMRE;
-           OA::OA_ptr<OA::MemRefExpr> composed_mre;
-           subset_mre = new OA::SubSetRef(
-                                 OA::MemRefExpr::USE,
-                                 nullMRE
-                                );
-
-           mre = subset_mre->composeWith(mre->clone());
-        }
-
-      } else {
-        // one case where we end up here is when passing an array as a parameter
-        // another is if we are just accessing a scalar that is not a
-        // reference parameter
-
-        mre = new OA::NamedRef(OA::MemRefExpr::USE, sym);
-
-        if(fullAccuracy == false) {
-           OA::OA_ptr<OA::SubSetRef> subset_mre;
-           OA::OA_ptr<OA::MemRefExpr> nullMRE;
-           OA::OA_ptr<OA::MemRefExpr> composed_mre;
-           subset_mre = new OA::SubSetRef(
-                                 OA::MemRefExpr::USE,
-                                 nullMRE
-                                );
-
-           mre = subset_mre->composeWith(mre->clone());
-        }
-
-      }
-
+      //! Get MRE for the Independent Variable
+      OA::OA_ptr<OA::MemRefExpr> mre;
+      mre = convertSymToMemRefExpr(sym);
       indepList->push_back(mre);
     }
   }
@@ -3230,112 +3136,9 @@ Open64IRInterface::getDepMemRefExprIter(OA::ProcHandle h)
     if (prag == WN_PRAGMA_OPENAD_DEPENDENT) {
       ST* st = WN_st(wn);
       OA::SymHandle sym = OA::SymHandle((OA::irhandle_t)st);
-      bool isAddrOf, fullAccuracy;
-      OA::MemRefExpr::MemRefType hty;
-
-      isAddrOf = false;
-      hty = OA::MemRefExpr::USE;
-
-      switch (TY_kind(ST_type(st))) {
-      case KIND_SCALAR:
-        if (debug) {
-          std::cout << "KIND_SCALAR: Sym(" << toString(sym) << ")\n";
-        }       
-        fullAccuracy = true;
-        break;
-      case KIND_ARRAY:
-        if (debug) {
-          std::cout << "KIND_ARRAY: Sym(" << toString(sym) << ")\n";
-        }
-        fullAccuracy = false;
-        break;
-      case KIND_STRUCT:
-        if (debug) {
-          std::cout << "KIND_STRUCT: Sym(" << toString(sym) << ")\n";
-        }       
-        fullAccuracy = false;
-        break;
-      case KIND_POINTER:
-        if (debug) {
-          std::cout << "KIND_POINTER: Sym(" << toString(sym) << ")\n";
-        }
-        fullAccuracy = false;  // arrays are appearing as KIND_POINTER
-        break;
-      case KIND_FUNCTION:
-        if (debug) {
-          std::cout << "KIND_FUNCTION: Sym(" << toString(sym) << ")\n";
-        }
-        assert(0);
-        // this type not handled correctly yet
-        fullAccuracy = false;
-        break;
-      case KIND_VOID:
-        if (debug) {
-          std::cout << "KIND_VOID: Sym(" << toString(sym) << ")\n";
-        }
-        assert(0);
-        // this type not handled correctly yet
-        fullAccuracy = false;
-        break;
-      case KIND_INVALID:
-        if (debug) {
-          std::cout << "KIND_INVALID: Sym(" << toString(sym) << ")\n";
-        }
-        assert(0);
-        //this type not handled correctly yet
-        fullAccuracy = false;
-        break;
-      default:
-        if (debug) {
-          std::cout << "KIND_??? hit default: Sym(" << toString(sym) << ")\n";
-        }
-        assert(0);
-        // shouldn't get here
-        fullAccuracy = false;
-        break;
-      }
-
-
-      // if the symbol is a reference parameter, then the MemRefExpr
-      // for an access to the symbol needs a deref
-      if (isRefParam(sym)) {
-
-        mre = new OA::NamedRef(OA::MemRefExpr::USE, sym);
-        mre = new OA::Deref(OA::MemRefExpr::USE, mre, 1);
-
-        if(fullAccuracy == false) {
-           OA::OA_ptr<OA::SubSetRef> subset_mre;
-           OA::OA_ptr<OA::MemRefExpr> nullMRE;
-           OA::OA_ptr<OA::MemRefExpr> composed_mre;
-           subset_mre = new OA::SubSetRef(
-                                 OA::MemRefExpr::USE,
-                                 nullMRE
-                                );
-
-           mre = subset_mre->composeWith(mre->clone());
-        }
-          
-      } else {
-        // one case where we end up here is when passing an array as a parameter
-        // another is if we are just accessing a scalar that is not a
-        // reference parameter
-
-        mre = new OA::NamedRef(OA::MemRefExpr::USE, sym);
-
-        if(fullAccuracy == false) {
-           OA::OA_ptr<OA::SubSetRef> subset_mre;
-           OA::OA_ptr<OA::MemRefExpr> nullMRE;
-           OA::OA_ptr<OA::MemRefExpr> composed_mre;
-           subset_mre = new OA::SubSetRef(
-                                 OA::MemRefExpr::USE,
-                                 nullMRE
-                                );
-
-           mre = subset_mre->composeWith(mre->clone());
-        }
-
-      }
-
+      //! Get MRE for the Independent Variable
+      OA::OA_ptr<OA::MemRefExpr> mre;
+      mre = convertSymToMemRefExpr(sym);
       depList->push_back(mre);
     }
   }
@@ -4975,6 +4778,15 @@ print_generic_binary:
     break;
   }
   case OPR_TRIPLET: // Output as LB:UB:STRIDE
+    DumpWN(WN_kid0(wn), os);
+    os << ":";
+    DumpWN(WN_kid2(wn), os);
+    os << ":";
+    DumpWN(WN_kid1(wn), os);
+    break; 
+  case OPR_IMPLICIT_BND: // Output as nothing
+    break; 
+  case OPR_SRCTRIPLET: // Output as LB:UB:STRIDE
     DumpWN(WN_kid0(wn), os);
     os << ":";
     DumpWN(WN_kid2(wn), os);

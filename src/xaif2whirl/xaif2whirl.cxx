@@ -29,6 +29,7 @@
 #include "Diagnostics.h"
 
 #include "xaif2whirl.h"
+#include "Args.h"
 #include "XlateExpression.h"
 #include "XlateStmt.h"
 #include "XAIF_DOMFilters.h"
@@ -186,9 +187,8 @@ namespace xaif2whirl {
 
   static TY_IDX Create_New_Array_Type(TY_IDX old_array_ty);
 
-
   static TY_IDX
-  XAIFTyToWHIRLTy(const char* type); // FIXME: temporary
+  XAIFTyToWHIRLTy(const char* type, const TYPE_ID mtype); 
 
   // *************************** Forward Declarations ***************************
 
@@ -2185,10 +2185,12 @@ namespace xaif2whirl {
   {
     const XMLCh* kindX = elem->getAttribute(XAIFStrings.attr_kind_x());
     const XMLCh* typeX = elem->getAttribute(XAIFStrings.attr_type_x());
+    const XMLCh* fetypeX = elem->getAttribute(XAIFStrings.attr_feType_x());
     const XMLCh* shapeX = elem->getAttribute(XAIFStrings.attr_shape_x());    
 
     XercesStrX kind = XercesStrX(kindX);
     XercesStrX type = XercesStrX(typeX);
+    XercesStrX fetype = XercesStrX(fetypeX);
     XercesStrX shape = XercesStrX(shapeX);
   
     bool active = GetActiveAttr(elem);
@@ -2207,7 +2209,8 @@ namespace xaif2whirl {
     if (strcmp(kind.c_str(), "variable") == 0) { 
       symbolClass=CLASS_VAR;
       // 1. Find basic type according to 'type' and 'active'
-      TY_IDX basicTy = XAIFTyToWHIRLTy(type.c_str());
+      TY_IDX basicTy = XAIFTyToWHIRLTy(type.c_str(),
+				       XAIFFETypeToWHIRLMTy(fetype.c_str()));
       if (active) {
 	basicTy = ActiveTypeTyIdx;
       } 
@@ -2218,11 +2221,6 @@ namespace xaif2whirl {
 	ty = basicTy;
       } 
       else {
-	if (!active) { 
-	  // this is a shortcut that needs fixing. 
-	  basicTy = MTYPE_To_TY(MTYPE_F4);
-	}
-    
 	// Note: cf. be/com/wn_instrument.cxx:1253 for example creating vector
 	INT32 ndim = 0;
 	if (strcmp(shape.c_str(), "vector") == 0) {
@@ -2701,17 +2699,16 @@ namespace xaif2whirl {
 
 
   static TY_IDX
-  XAIFTyToWHIRLTy(const char* type)
+  XAIFTyToWHIRLTy(const char* type, const TYPE_ID mtype)
   {
     TY_IDX ty = 0;
-    if (strcmp(type, "real") == 0) {
-      ty = MTYPE_To_TY(MTYPE_F8);
+    if (mtype!=MTYPE_UNKNOWN)
+      ty = MTYPE_To_TY(mtype);
+    else if (strcmp(type, "real") == 0) {
+      ty = MTYPE_To_TY(Args::ourDefaultMTypeReal);
     } 
     else if (strcmp(type, "integer") == 0) {
-      ty = MTYPE_To_TY(DefaultMTypeInt);
-    } 
-    else if (strcmp(type, "void") == 0) {
-      ty = MTYPE_To_TY(MTYPE_V);
+      ty = MTYPE_To_TY(Args::ourDefaultMTypeInt);
     } 
     else {
       // FIXME: don't know about anything else yet
@@ -2720,6 +2717,13 @@ namespace xaif2whirl {
     return ty;
   }
 
+  TYPE_ID
+  XAIFFETypeToWHIRLMTy(const char* anFETypeName) {
+    if (strcmp(anFETypeName,"")==0) { 
+      return MTYPE_UNKNOWN;
+    }
+    return Name_To_Mtype(anFETypeName);
+  }
 
   // ****************************************************************************
   // MyDGNode routines
