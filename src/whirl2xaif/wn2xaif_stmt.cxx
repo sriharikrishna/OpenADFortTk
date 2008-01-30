@@ -27,29 +27,51 @@ static BOOL WN2F_Skip_Stmt(WN *wn) { return FALSE; /* FIXME */ }
 //***************************************************************************
 // Passive Statements
 //***************************************************************************
-
 void 
-whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
-{
-  OPERATOR opr = WN_operator(wn);
+whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn_p, PUXlationContext& ctxt) {
+  OPERATOR opr = WN_operator(wn_p);
   
   // Short-circuit handling of the following:
   // NOTE: we could incorporate these two routines into this one
   switch (opr) {
   case OPR_GOTO:
-    return xlate_GOTO(xos, wn, ctxt);
+    return xlate_GOTO(xos, wn_p, ctxt);
   case OPR_LABEL:
-    return xlate_LABEL(xos, wn, ctxt);
+    return xlate_LABEL(xos, wn_p, ctxt);
   case OPR_IO: 
-    return xlate_IO(xos, wn, ctxt);
+    return xlate_IO(xos, wn_p, ctxt);
   default:
     break;
   }
 
   // FIXME: cleanup AGOTO, RETURN, RETURN_VAL, PRAGMA, COMMENT, USE
   //  INTRN_CASSIGNSTMT, INTRN_STOP, INTRN_STOP_F90, IO
+
+  if (opr==OPR_RETURN && WN_kid_count(wn_p) == 0) {  // no kids
+    // get the Parent 
+    WN* func_p=ctxt.findParentWN(ctxt.findParentBlockWN(wn_p));
+    // and see if it is the FUNC: 
+    if (WN_operator(func_p)==OPR_FUNC_ENTRY) {  
+      WN* last_p=WN_last(WN_kid(func_p,WN_kid_count(func_p)-1));
+      // if it is the last one: 
+      if (last_p==wn_p)
+	return;
+      // if it is not the last one, check if there is anything 
+      // else significant: 
+      WN* next_p=WN_next(wn_p);
+      while (next_p!=0) {
+	opr=WN_operator(next_p);
+	if (opr != OPR_RETURN && opr != OPR_COMMENT)
+	  break; 
+	if (next_p==last_p)
+	  return;
+	next_p=WN_next(next_p);
+      }
+    }
+    FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
+  }
   
-  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn_p);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
@@ -275,7 +297,9 @@ void
 whirl2xaif::xlate_RETURN(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
   FORTTK_ASSERT(WN_operator(wn) == OPR_RETURN, fortTkSupport::Diagnostics::UnexpectedInput); 
-  
+  // for now: 
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
+  // could be put into the xaif:
   fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
   xos << BegElem(XAIFStrings.elem_Marker()) 
       << Attr("statement_id", stmtid)
