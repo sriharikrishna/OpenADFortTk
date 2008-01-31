@@ -169,12 +169,11 @@ namespace whirl2xaif {
     // AliasSetList: The first element has to be there
     // -------------------------------------------------------
     xos << xml::BegElem("xaif:AliasSetMap");
-    xos << xml::BegElem("xaif:AliasSet") << xml::Attr("key", 0);
-    xos << xml::BegElem("xaif:AliasRange") 
-	<< xml::Attr("from_virtual_address", 1) 
-	<< xml::Attr("to_virtual_address", 1) 
-	<< xml::EndElem;
-    xos << xml::EndElem; // xaif:AliasSet
+
+    // print info for set 0 (unknown) and set 1 (empty loc set)
+    xos << xml::BegElem("xaif:AliasSet") << xml::Attr("key", 0) << xml::EndElem;
+    xos << xml::BegElem("xaif:AliasSet") << xml::Attr("key", 1) << xml::EndElem;
+
     Open64IRProcIterator procIt(pu_forest);
     // iterate over processed units
     for (int procCnt = 1; procIt.isValid(); ++procIt, ++procCnt) {
@@ -182,13 +181,14 @@ namespace whirl2xaif {
       fortTkSupport::IntraOAInfo* oaAnal = ourOAAnalMap.Find(pu);
       fortTkSupport::WNToWNIdMap* wnmap = ourWNToWNIdTableMap.Find(pu);
       OA::OA_ptr<OA::XAIF::AliasMapXAIF> aliasSets = oaAnal->getAliasXAIF();
-      OA::OA_ptr<OA::XAIF::IdIterator> aliasSetIdsIter = aliasSets->getIdIterator();
       // iterate over alias sets
-      for ( ; aliasSetIdsIter->isValid(); ++(*aliasSetIdsIter)) {
-	xos << xml::BegElem("xaif:AliasSet") << xml::Attr("key", aliasSetIdsIter->current());
-	OA::OA_ptr<OA::XAIF::LocTupleIterator> aLocTupleIter = aliasSets->getLocIterator(aliasSetIdsIter->current()); 
+      for (OA::OA_ptr<OA::XAIF::IdIterator> aliasSetIdsIter = aliasSets->getIdIterator(); aliasSetIdsIter->isValid(); ++(*aliasSetIdsIter)) {
+	int setId = aliasSetIdsIter->current();
+	//if ((setId == 0 || setId == 1) && procCnt != 1) continue;
+	if (setId == 0 || setId == 1) continue;
+	xos << xml::BegElem("xaif:AliasSet") << xml::Attr("key", setId);
 	// iterate over alias ranges
-	for ( ; aLocTupleIter->isValid(); ++(*aLocTupleIter) ) {
+	for (OA::OA_ptr<OA::XAIF::LocTupleIterator> aLocTupleIter = aliasSets->getLocIterator(setId); aLocTupleIter->isValid(); ++(*aLocTupleIter) ) {
 	  xos << xml::BegElem("xaif:AliasRange");
 	  xos << xml::Attr("from_virtual_address", aLocTupleIter->current().getLocRange().getStart());
 	  xos << xml::Attr("to_virtual_address", aLocTupleIter->current().getLocRange().getEnd());
@@ -210,11 +210,8 @@ namespace whirl2xaif {
       fortTkSupport::IntraOAInfo* oaAnal = ourOAAnalMap.Find(pu);
       fortTkSupport::WNToWNIdMap* wnmap = ourWNToWNIdTableMap.Find(pu);
       OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> udduchains = oaAnal->getUDDUChainsXAIF();
-      OA::OA_ptr<OA::XAIF::UDDUChainsXAIF::ChainsIterator> chainsIter 
-	= udduchains->getChainsIterator();
-      for ( ; chainsIter->isValid(); ++(*chainsIter)) {
-	OA::OA_ptr<OA::XAIF::ChainsXAIF::ChainIterator> chainIter 
-	  = chainsIter->currentChainIterator();
+      for (OA::OA_ptr<OA::XAIF::UDDUChainsXAIF::ChainsIterator> chainsIter = udduchains->getChainsIterator(); chainsIter->isValid(); ++(*chainsIter)) {
+	OA::OA_ptr<OA::XAIF::ChainsXAIF::ChainIterator> chainIter = chainsIter->currentChainIterator();
 	int chainid = chainsIter->currentId(); // 0-2 are same for each proc
 	if ((0 <= chainid && chainid <= 2) && procCnt != 1) { continue; }
 	xos << xml::BegElem("xaif:StmtIdSet") << xml::Attr("key", chainid);

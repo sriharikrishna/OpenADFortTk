@@ -231,6 +231,7 @@ namespace whirl2xaif {
     OA::OA_ptr<OA::CFG::CFGInterface> cfg = 
       Whirl2Xaif::getOAAnalMap().getCFGEach()->getCFGResults(proc);
     ctxt.setUDDUChains(oaAnal->getUDDUChainsXAIF());
+    ctxt.setAliasMapXAIF(oaAnal->getAliasXAIF());
     ctxt.setDoChains(oaAnal->getReachDefsOverwriteXAIF());
   
     // 2. Non-scalar symbol table
@@ -461,7 +462,8 @@ namespace whirl2xaif {
     if (!ctxt.currentXlationContext().isFlag(XlationContext::VARREF)) {
       xos << xml::BegElem(XAIFStrings.elem_VarRef())
 	  << xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
-	  << xml::Attr("du_ud", ctxt.findUDDUChainId(ctxt.getMostRecentWN()));
+	  << xml::Attr("du_ud", ctxt.findUDDUChainId(ctxt.getMostRecentWN()))
+	  << xml::Attr("alias", ctxt.getAliasMapKey(ctxt.getMostRecentWN()));
       closeVarRef = true; 
     }
 
@@ -543,7 +545,8 @@ namespace whirl2xaif {
     if (!constant && !ctxt.currentXlationContext().isFlag(XlationContext::VARREF)) {
       xos << xml::BegElem(XAIFStrings.elem_VarRef())
 	  << xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
-	  << xml::Attr("du_ud", ctxt.findUDDUChainId(ref_wn));
+	  << xml::Attr("du_ud", ctxt.findUDDUChainId(ref_wn))
+	  << xml::Attr("alias", ctxt.getAliasMapKey(ref_wn));
       ctxt.createXlationContext(XlationContext::VARREF);
       newContext = true; 
     }
@@ -726,7 +729,8 @@ namespace whirl2xaif {
     
       xos << xml::BegElem(XAIFStrings.elem_VarRef())
 	  << xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
-	  << xml::Attr("du_ud", ctxt.findUDDUChainId(wn));
+	  << xml::Attr("du_ud", ctxt.findUDDUChainId(wn))
+	  << xml::Attr("alias", ctxt.getAliasMapKey(wn));
       ctxt.createXlationContext(XlationContext::VARREF); // FIXME: do we need wn?
       newContext = true; 
     }

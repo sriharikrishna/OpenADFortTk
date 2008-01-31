@@ -239,6 +239,55 @@ namespace whirl2xaif {
     return duudKey;
   }
 
+  int PUXlationContext::getAliasMapKey(WN* wnexpr) {
+    if (myAliasMapXAIF_p.ptrEqual(NULL))
+      FORTTK_DIE("PUXlationContext::getAliasMapKey: myAliasMapXAIF_p not set");
+    if (!wnexpr)
+      FORTTK_DIE("PUXlationContext::getAliasMapKey: null pointer passed");
+
+    OA::MemRefHandle theHandle ((OA::irhandle_t)wnexpr);
+    int theAliasMapSetKey = myAliasMapXAIF_p->getMapSetId(theHandle);
+    WN* parentWN_p;
+    if (theAliasMapSetKey == 0) {
+      std::ostringstream ostr;
+      ostr << "PUXlationContext::getAliasMapKey: no key for >";
+      Open64IRInterface::DumpWN(wnexpr, ostr);
+      parentWN_p = findParentWN(wnexpr);
+      // Recursively check parents until a key is found, or there are no parents left
+      while (theAliasMapSetKey == 0 && parentWN_p) {
+	// for instance for character arrays there is considerable confusion in the OA interface
+	// which node should have the proper information,
+	// e.g. if we should refer to the ARRAY node or the child LDA node.
+	OA::MemRefHandle theParentHandle ((OA::irhandle_t)parentWN_p);
+	theAliasMapSetKey = myAliasMapXAIF_p->getMapSetId(theParentHandle);
+	if (theAliasMapSetKey == 0) {
+	  ostr << "< or parent >"; 
+	  Open64IRInterface::DumpWN(parentWN_p, ostr);
+	  ostr << "<"; 
+	  parentWN_p=findParentWN(parentWN_p);
+	}
+      } // end while
+      if (theAliasMapSetKey == 0) { 
+        FORTTK_MSG(1,ostr.str().c_str()); 
+      }
+      else { 
+	ostr << " eventually found " << theAliasMapSetKey << " in >"; 
+	Open64IRInterface::DumpWN(parentWN_p, ostr);
+	ostr << "<"; 
+	FORTTK_MSG(2,ostr.str().c_str()); 
+      }
+    } // end if theAliasMapSetKey is zero
+    else { // theAliasMapSetKey is nonzero 
+      std::ostringstream ostr;
+      ostr << "PUXlationContext::getAliasMapKey: for: "; 
+      Open64IRInterface::DumpWN(wnexpr, ostr);
+      ostr << " found " << theAliasMapSetKey; 
+      FORTTK_MSG(2,ostr.str().c_str()); 
+    }
+
+    return theAliasMapSetKey;
+  } // end PUXlationContext::getAliasMapKey()
+
   OA::OA_ptr<OA::XAIF::UDDUChainsXAIF> PUXlationContext::getUDDUChains() const { 
     if (myUdduchains.ptrEqual(NULL)) 
       FORTTK_DIE("PUXlationContext::getUDDUChains: myUdduchains not set");
@@ -425,6 +474,24 @@ namespace whirl2xaif {
     myAlias = anAliasMap; 
   }
 
+  void PUXlationContext::setAliasMapXAIF(OA::OA_ptr<OA::XAIF::AliasMapXAIF> anAliasMapXAIF_p) { 
+    if (anAliasMapXAIF_p.ptrEqual(NULL)) 
+      FORTTK_DIE("PUXlationContext::setAliasMapXAIF: uninitialized OA pointer passed");
+    // JU: this is being reset hmm
+    if (!myAliasMapXAIF_p.ptrEqual(NULL)) {
+      if (myAliasMapXAIF_p.ptrEqual(anAliasMapXAIF_p)) { 
+	FORTTK_MSG(2,"PUXlationContext::setAliasMapXAIF: already set to the same");
+      }
+      else { 
+	FORTTK_MSG(2,"PUXlationContext::setAliasMapXAIF: already set to "
+		    << myAliasMapXAIF_p
+		    << " new " 
+		    << anAliasMapXAIF_p);
+      }
+    }
+    myAliasMapXAIF_p = anAliasMapXAIF_p; 
+  }
+
   void PUXlationContext::dump(std::ostream& o, const std::string& indent) const {
     o << "(myOriginator=" << myOriginator.c_str() << " ";
     o << ")\n";
@@ -450,4 +517,5 @@ namespace whirl2xaif {
     return myIrInterface;
   } 
 
-}
+} // end namespace whirl2xaif
+
