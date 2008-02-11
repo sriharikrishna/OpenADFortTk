@@ -40,7 +40,15 @@ namespace xaif2whirl {
 
   void
   TranslateIR(PU_Info* pu_forest, const xercesc::DOMDocument* doc);
-  
+ 
+  /**
+   * Translate XAIF CFG or XAIF Replacement to WHIRL
+   */
+  void
+  TranslateCFG(PU_Info* pu_forest,
+	       const xercesc::DOMElement* cfgElem,
+	       PUXlationContext& ctxt);
+ 
   // FIXME: relocate...
   fortTkSupport::Symbol*
   GetSymbol(const xercesc::DOMElement* elem, PUXlationContext& ctxt);

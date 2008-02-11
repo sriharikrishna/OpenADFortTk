@@ -13,6 +13,7 @@
 #include <xercesc/dom/DOMException.hpp>
 #include <xercesc/dom/DOMImplementation.hpp>
 #include <xercesc/dom/DOMNodeIterator.hpp>
+#include <xercesc/sax/SAXException.hpp>
 
 #include <OpenAnalysis/Utils/Exception.hpp>
 
@@ -29,6 +30,8 @@
 #include "Args.h"
 #include "xaif2whirl.h"
 #include "XAIF_DOMErrorHandler.h"
+#include "XAIF_SAXErrorHandler.h"
+#include "XAIF_SAXHandler.h"
 #include "XercesStrX.h"
 
 namespace xaif2whirl { 
@@ -65,6 +68,9 @@ int main(int argc, char **argv) {
 namespace xaif2whirl { 
 
   static int
+  main_SAX(PU_Info* pu_forest, const char* xaiffilenm, bool validate);
+
+  static int
   main_DOM(PU_Info* pu_forest, const char* xaiffilenm, bool validate);
 
   static int
@@ -78,7 +84,7 @@ namespace xaif2whirl {
 
   static int
   real_main(int argc, char **argv) {
-    int ret;
+    int ret, retSAX;
 
     // -------------------------------------------------------
     // 1. Open64 Initialization
@@ -127,8 +133,10 @@ namespace xaif2whirl {
 
     // -------------------------------------------------------
     // 4. Translate XAIF into WHIRL
-    // -------------------------------------------------------  
-  
+    // -------------------------------------------------------
+
+    retSAX = main_SAX(pu_forest, args.xaifFileNm.c_str(), args.validate); 
+
     ret = main_DOM(pu_forest, args.xaifFileNm.c_str(),args.validate); // FIXME check return
 
     WriteIR(args.outWhirlFileNm.c_str(), pu_forest);
@@ -156,13 +164,55 @@ namespace xaif2whirl {
 
   //****************************************************************************
 
+  static int
+  main_SAX(PU_Info* pu_forest, const char* xaiffilenm, bool validate) {
+    std::cout << "-> Entered function main_SAX():  ";
+
+    int ret = 0;
+
+    // 1. Parse XAIF and Translate (modify 'pu_forest')
+    FORTTK_MSG(1, "progress: parsing input XAIF and translating to WHIRL (SAX2)");
+    XMLCh* theImplementationFeatures;
+    XAIF_SAXHandler theSAXHandler(pu_forest, theImplementationFeatures);
+    std::cout << "   Initializing...";
+    //theSAXHandler.initialize(validate);
+    theSAXHandler.initialize(false);
+    std::cout << "   Parsing..." << std::endl;
+
+    bool errorsOccured = false;
+    try {
+      theSAXHandler.parse(xaiffilenm);
+    }
+    catch (const SAXException& e) {
+      const unsigned int maxChars = 2047;
+      XMLCh errText[maxChars + 1];
+      //cerr << "\nSAX Error during parsing: '" << xaiffilenm << "'\n" << "SAXException code is:  " << e.code << endl;
+      //if (DOMImplementation::loadDOMExceptionMsg(e.code, errText, maxChars))
+	//cerr << "Message is: " << XercesStrX(errText) << endl;
+      errorsOccured = true;
+    }
+    catch (const XMLException& e) {
+      cerr << "An error occurred during parsing\n   Message: " << XercesStrX(e.getMessage()) << endl;
+      errorsOccured = true;
+    }
+    catch (...) {
+      cerr << "An error occurred during parsing\n " << endl;
+      errorsOccured = true;
+    }
+    FORTTK_ASSERT(!errorsOccured, "SAX2 Parse Error.");
+
+    return ret;
+  }
+
+  //****************************************************************************
+
   static XercesDOMParser*
   ReadXAIF_DOM(const char* xaiffilenm, bool validate);
-
 
   static int
   main_DOM(PU_Info* pu_forest, const char* xaiffilenm, bool validate)
   {
+    std::cout << "-> Entered main_DOM()" << std::endl;
     int ret = 0;
     FORTTK_MSG(1, "progress: parsing input XAIF");
     // 1. Parse XAIF

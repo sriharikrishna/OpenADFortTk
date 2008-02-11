@@ -63,9 +63,11 @@ namespace xaif2whirl {
   static fortTkSupport::XAIFSymToSymbolMap*
   TranslateScopeHierarchy(const xercesc::DOMDocument* doc, PUXlationContext& ctxt);
 
+/*
   static void
   TranslateCFG(PU_Info* pu_forest, const xercesc::DOMElement* cfgElem,
 	       PUXlationContext& ctxt);
+*/
 
   // *************************** Forward Declarations ***************************
 
@@ -361,7 +363,8 @@ namespace xaif2whirl {
 
 
   // TranslateCFG: Translate XAIF CFG or XAIF Replacement to WHIRL
-  static void
+  //static void
+  void
   TranslateCFG(PU_Info* pu_forest, const xercesc::DOMElement* cfgElem,
 	       PUXlationContext& ctxt)
   {

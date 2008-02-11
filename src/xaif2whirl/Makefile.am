@@ -72,7 +72,9 @@ MYSOURCES = \
 	PUXlationContext.h PUXlationContext.cxx \
 	\
 	XAIF_DOMErrorHandler.h XAIF_DOMErrorHandler.cxx \
+	XAIF_SAXErrorHandler.h XAIF_SAXErrorHandler.cxx \
 	XAIF_DOMFilters.h XAIF_DOMFilters.cxx \
+	XAIF_SAXHandler.h XAIF_SAXHandler.cxx \
 	XercesStrX.h XercesStrX.cxx
 
 MYCFLAGS   = $(OPENADFORTTK_IFLAGS) \
