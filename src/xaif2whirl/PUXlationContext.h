@@ -47,7 +47,7 @@ namespace xaif2whirl {
      * the originator is some name that we can use 
      * for debugging purposes
      */
-    PUXlationContext(const std::string& anOriginator);
+    PUXlationContext(const std::string& anOriginator, PU_Info* pu_forest);
 
     ~PUXlationContext();
 
@@ -89,12 +89,8 @@ namespace xaif2whirl {
     void setWNParentMap(fortTkSupport::WhirlParentMap* aWhirlParentMapP);
   
     std::pair<ST_TAB*, PU_Info*> findSymTab(fortTkSupport::SymTabId stabId);
-    fortTkSupport::SymTabIdToSymTabMap* getSymTabIdToSymTabMap() const;
-    void setSymTabIdToSymTabMap(fortTkSupport::SymTabIdToSymTabMap* aSymTabIdToSymTabMapP);
   
     PU_Info* findPU(fortTkSupport::PUId aPUid);
-    fortTkSupport::PUIdToPUMap* getPUIdToPUMap() const;
-    void setPUIdToPUMap(fortTkSupport::PUIdToPUMap* aPUIdToPUMapP);
 
     fortTkSupport::WNId findWNId(WN* wn);
     fortTkSupport::WNToWNIdMap* getWNToWNIdMap() const;
@@ -105,8 +101,7 @@ namespace xaif2whirl {
     void setWNIdToWNMap(fortTkSupport::WNIdToWNMap* aWNIdToWNMapP);
 
     fortTkSupport::Symbol* findSym(const std::string& scopeid, const std::string& symid);
-    fortTkSupport::XAIFSymToSymbolMap* getXAIFSymToSymbolMap() const;
-    void setXAIFSymToSymbolMap(fortTkSupport::XAIFSymToSymbolMap* aXAIFSymToSymbolMapP);
+    fortTkSupport::XAIFSymToSymbolMap& getXAIFSymToSymbolMap();
     
     // -------------------------------------------------------
     // Misc
@@ -134,20 +129,16 @@ namespace xaif2whirl {
      */
     PUXlationContext& operator=(const PUXlationContext& x);
   
+    fortTkSupport::SymTabIdToSymTabMap mySymTabIdToSymTabMap;
+
+    fortTkSupport::PUIdToPUMap myPUIdToPUMap;
+
+    fortTkSupport::XAIFSymToSymbolMap myXAIFSymToSymbolMap;
+
     /**
      * we don't own this
      */
     fortTkSupport::WhirlParentMap* myWNParentMapP;
-
-    /**
-     * we don't own this
-     */
-    fortTkSupport::SymTabIdToSymTabMap* mySymTabIdToSymTabMapP;
-
-    /**
-     * we don't own this
-     */
-    fortTkSupport::PUIdToPUMap* myPUIdToPUMapP;
 
     /**
      * we don't own this
@@ -158,11 +149,6 @@ namespace xaif2whirl {
      * we don't own this
      */
     fortTkSupport::WNIdToWNMap* myWNIdToWNMapP;
-  
-    /**
-     * we don't own this
-     */
-    fortTkSupport::XAIFSymToSymbolMap* myXAIFSymToSymbolMapP;
 
     // a globally defined prefix for all newly created symbols
     static std::string ourPrefix;

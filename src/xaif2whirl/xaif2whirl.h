@@ -40,6 +40,13 @@ namespace xaif2whirl {
 
   void
   TranslateIR(PU_Info* pu_forest, const xercesc::DOMDocument* doc);
+
+  // ****************************************************************************
+  // Functions that were static, but now aren't anymore (so that the SAX2 parser can call them)
+
+  void
+  xlate_Scope(const xercesc::DOMElement* elem,
+	      PUXlationContext& ctxt);
  
   /**
    * Translate XAIF CFG or XAIF Replacement to WHIRL
@@ -49,6 +56,10 @@ namespace xaif2whirl {
 	       const xercesc::DOMElement* cfgElem,
 	       PUXlationContext& ctxt);
  
+  void DeclareActiveTypes();
+
+  // ****************************************************************************
+
   // FIXME: relocate...
   fortTkSupport::Symbol*
   GetSymbol(const xercesc::DOMElement* elem, PUXlationContext& ctxt);

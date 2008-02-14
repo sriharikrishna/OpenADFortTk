@@ -11,10 +11,7 @@
 #include <xercesc/sax2/Attributes.hpp>
 #include <xercesc/sax2/DefaultHandler.hpp>
 #include <xercesc/sax2/SAX2XMLReader.hpp>
-#include <xercesc/sax2/XMLReaderFactory.hpp>
 
-#include "XAIF_SAXErrorHandler.h"
-#include "xaif2whirl.h"
 #include "PUXlationContext.h"
 
 namespace xaif2whirl {
@@ -30,22 +27,28 @@ namespace xaif2whirl {
 
     void parse(std::string theXMLFileName);
 
-    void startDocument();
-
     void startElement(const XMLCh* const uri,
 		      const XMLCh* const localname,
 		      const XMLCh* const qname,
-		      const xercesc::AttributeList& attrs);
+		      const xercesc::Attributes& attrs);
 
     void endElement(const XMLCh* const uri,
 		    const XMLCh* const localname,
 		    const XMLCh* const qname);
 
-    void endDocument();
+    void deleteParser();
 
   private:
 
-    const XMLCh* blerp;
+    /**
+     * no def
+     */
+    XAIF_SAXHandler();
+
+    /**
+     * no def
+     */
+    XAIF_SAXHandler& operator=(const XAIF_SAXHandler& x);
 
     PU_Info* myPUForest_p;
 
@@ -60,6 +63,8 @@ namespace xaif2whirl {
     std::stack<xercesc::DOMElement*> myElementStack;
 
     bool inDOMMode;
+
+    void copyAttributes(xercesc::DOMElement* theElement, const xercesc::Attributes& theAttributes);
 
   }; // end class XAIF_SAXHandler
 

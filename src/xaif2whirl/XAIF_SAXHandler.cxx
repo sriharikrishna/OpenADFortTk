@@ -1,31 +1,38 @@
 #include <iostream>
 
+#include <xercesc/sax2/Attributes.hpp>
+#include <xercesc/sax2/XMLReaderFactory.hpp>
+#include <xercesc/sax2/SAX2XMLReader.hpp>
+
 #include "XAIF_SAXHandler.h"
+#include "XAIF_SAXErrorHandler.h"
+#include "XAIFStrings.h"
+#include "XAIF_DOMFilters.h"
+#include "PUXlationContext.h"
 #include "xaif2whirl.h"
+
+#include "Open64IRInterface/diagnostics.h"
 
 namespace xaif2whirl { 
 
   XAIF_SAXHandler::XAIF_SAXHandler(PU_Info* pu_forest, const XMLCh* implementationFeatures) :
-   myPUForest_p (pu_forest),
-   myPUXlationContext ("TranslateIR"),
-   myParser_p (xercesc::XMLReaderFactory::createXMLReader()),
-   myDOMImplementation_p (xercesc::DOMImplementationRegistry::getDOMImplementation(implementationFeatures)),
-   myDOMDocument_p (NULL),
-   inDOMMode (false) {
+	myPUForest_p (pu_forest),
+	myPUXlationContext ("TranslateIR", pu_forest),
+	myParser_p (xercesc::XMLReaderFactory::createXMLReader()),
+	myDOMImplementation_p (xercesc::DOMImplementationRegistry::getDOMImplementation(implementationFeatures)),
+	myDOMDocument_p (NULL),
+	inDOMMode (false) {
   }
 
   XAIF_SAXHandler::~XAIF_SAXHandler() {
-    delete myParser_p;
-    delete myDOMImplementation_p;
   }
 
   void XAIF_SAXHandler::initialize(bool validateAgainstSchema) {
-    xercesc::XMLPlatformUtils::Initialize(); // per process parser init
 
-    //myDOMImplementation_p = xercesc::DOMImplementationRegistry::getDOMImplementation(  X("Core")  );
-    //myDOMImplementation_p = xercesc::DOMImplementationRegistry::getDOMImplementation(blerp);
+    if (validateAgainstSchema)
+      FORTTK_MSG(1, "progress: parsing with schema validation");
 
-// COPIED FROM XMLParser.cpp
+    // set features for SAX2 parser (copied from xaifBooster - XMLParser.cpp)
     myParser_p->setFeature(xercesc::XMLUni::fgSAX2CoreValidation,validateAgainstSchema);
     myParser_p->setFeature(xercesc::XMLUni::fgXercesDynamic,false);
     // we need the following for schema processing:
@@ -34,63 +41,62 @@ namespace xaif2whirl {
     // we need the following to support default values coming from the schema:
     myParser_p->setFeature(xercesc::XMLUni::fgXercesSchema,true);
     myParser_p->setFeature(xercesc::XMLUni::fgXercesSchemaFullChecking,validateAgainstSchema);
-//
 
     // set content and error handlers
     myParser_p->setContentHandler(this);
     static XAIF_SAXErrorHandler anErrorHandler;
     myParser_p->setErrorHandler(&anErrorHandler);
 
+    Diag_Set_Phase("XAIF to WHIRL: translate IR");
+
+/* some stuff from TranslateIR()
+    //IntrinsicTable.DDump();
+    if (!pu_forest) { return; }
+*/
+    WNIdToWNTableMap.Create(myPUForest_p); // Note: could make this local
+
+    DeclareActiveTypes(); // sets a static variable (global) in PUXlation...
+
   } // end XAIF_SAXHandler::initialize()
 
   void XAIF_SAXHandler::parse(std::string theXMLFileName) {
-    std::cout << "  -> telling my parser (SAX2XMLReader) to parse file " << theXMLFileName.c_str() << std::endl;
-    try {
-      myParser_p->parse(theXMLFileName.c_str());
-    }
-    catch (...) {
-      std::cerr << "An error occurred during parsing\n " << std::endl;
-    }
+    myParser_p->parse(theXMLFileName.c_str());
   } // end XAIF_SAXHandler::parse()
-
-  void XAIF_SAXHandler::startDocument() {
-      std::cout << "    -> entered startDocument" << std::endl;
-  }
 
   void XAIF_SAXHandler::startElement(const XMLCh* const uri,
 				     const XMLCh* const localname,
 				     const XMLCh* const qname,
-				     const xercesc::AttributeList& attrs) {
-
-    std::cout << "  -> Entered startElement(): ";
-
+				     const xercesc::Attributes& attrs) {
     if (inDOMMode) {
-      std::cout << "  <We are in DOM mode>" << std::endl;
-      //if (qname.equals("ControlFlowGraph")) {
-	//throw_exception("start of CFG element while already in DOM mode");
-      //}
-
-      // create new Element node and add it to the tree
+      if (XMLString::equals(qname, XAIFStrings.elem_CFG_x())) {
+	FORTTK_DIE("start of CFG element while already in DOM mode");
+      }
+      // create new DOMElement, set its attributes, and add it to the document tree and the stack
       xercesc::DOMElement* theNewDOMElement = myDOMDocument_p->createElement(qname);
+      copyAttributes(theNewDOMElement, attrs);
       myElementStack.top()->appendChild(theNewDOMElement);
+      myElementStack.push(theNewDOMElement);
     } // end DOM mode
 
     else { // SAX mode
-      std::cout << "  <We are in SAX mode>" << std::endl;
+      // start of callgraph element: extract the prefix attribute
+      if (XMLString::equals(qname, XAIFStrings.elem_CallGraph_x())) {
+	const XMLCh* prefixX = attrs.getValue(XAIFStrings.attr_prefix_x());
+	PUXlationContext::setPrefix(XercesStrX(prefixX).c_str());
+      }
 
-      //if (qname.equals("ControlFlowGraph")) {
+      // start of ScopeHierarchy or CFG element: switch to DOM mode
+      else if (XMLString::equals(qname, XAIFStrings.elem_CFG_x()) || XMLString::equals(qname, XAIFStrings.elem_ScopeHierarchy_x())) {
 	inDOMMode = true;
-
-	// create new DOMDocument with root element corresponding to the CFG element
+	// create new DOMDocument with root element
 	myDOMDocument_p = myDOMImplementation_p->createDocument(uri,	// root element namespace URI.
-								qname,	// root element name
+								//0,	// root element namespace URI.
+								localname,	// root element name
 								0);	// document type object (DTD).
-	myElementStack.push(myDOMDocument_p->getDocumentElement()); //push current element to the stack
-      //}
-
-      //else { // stay in SAX mode
-      //}
-
+	// set attributes for the root element of the new document and push it to the stack
+	copyAttributes(myDOMDocument_p->getDocumentElement(), attrs);
+	myElementStack.push(myDOMDocument_p->getDocumentElement());
+      }
     } // end SAX mode
 
   } // end XAIF_SAXHandler::startElement()
@@ -101,30 +107,45 @@ namespace xaif2whirl {
     if (inDOMMode) {
       myElementStack.pop(); //remove the element from the stack
 
-      //if (localName.equals("ControlFlowGraph")) {
-	//if (!myElementStack.empty()) throw_exception ("stack not empty after popping CFG element")
-  
+      // end of a CFG element
+      if (XMLString::equals(qname, XAIFStrings.elem_CFG_x())) {
+	if (!myElementStack.empty()) FORTTK_DIE("stack not empty after popping CFG element");
 	inDOMMode = false;
-
-        // translate the DOM CFG subtree
+        // translate the DOM subtree for the CFG
 	TranslateCFG (myPUForest_p, myDOMDocument_p->getDocumentElement(), myPUXlationContext);
 	delete myDOMDocument_p;
+      } // end CFG element
 
-      //} // end CFG element
+      // end of a ScopeHierarchy element
+      else if (XMLString::equals(qname, XAIFStrings.elem_ScopeHierarchy_x())) {
+	if (!myElementStack.empty()) FORTTK_DIE("stack not empty after popping ScopeHierarchy element");
+        inDOMMode = false;
+	// populate the symbol map for myPUXlationContext
+	XAIF_ScopeElemFilter filt;
+	for (xercesc::DOMElement* elem = GetChildElement(myDOMDocument_p->getDocumentElement(), &filt); (elem); elem = GetNextSiblingElement(elem, &filt))
+	  xlate_Scope(elem, myPUXlationContext);
+	delete myDOMDocument_p;
+      } // end ScopeHierarchy element
 
     } // end DOM mode
     else { // in SAX mode
-      //if (localName.equals("ControlFlowGraph")) {
-	//throw_exception ("end of CFG reached while not in DOM mode")
-      //}
-
+      if (XMLString::equals(qname, XAIFStrings.elem_CFG_x()) || XMLString::equals(qname, XAIFStrings.elem_ScopeHierarchy_x()))
+	FORTTK_DIE("end of CFG reached while not in DOM mode");
     } // end SAX mode
 
   } // end XAIF_SAXHandler::endElement()
 
-  void XAIF_SAXHandler::endDocument() {
-      std::cout << "    -> entered endDocument" << std::endl;
+  void XAIF_SAXHandler::deleteParser() {
+    delete myParser_p;
   }
+
+  void XAIF_SAXHandler::copyAttributes(xercesc::DOMElement* theElement, const xercesc::Attributes& theAttributes) {
+    unsigned int n = theAttributes.getLength();
+    for (int i = 0; i < n; i++)
+      theElement->setAttributeNS(theAttributes.getURI(i),
+				 theAttributes.getQName(i),
+				 theAttributes.getValue(i));
+  } // end XAIF_SAXHandler::copyAttributes()
 
 } // end namespace xaif2whirl
 
