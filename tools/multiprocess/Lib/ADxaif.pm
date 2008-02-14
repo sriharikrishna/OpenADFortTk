@@ -27,7 +27,7 @@ sub xaifpp {
     my($scn) = FTscan->new($line);
     if ($scn->match(qr/use $TB w2f__types $TBE /x)){
 	return($line,<<'U');
-      use active_module
+      use OADactive
 U
     }
     if($line =~ /$active_re/i) {
