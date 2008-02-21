@@ -95,7 +95,7 @@ namespace xaif2whirl {
 	// create new DOMDocument with root element
 	myDOMDocument_p = myDOMImplementation_p->createDocument(uri,	// root element namespace URI.
 								//0,	// root element namespace URI.
-								localname,	// root element name
+								qname,	// root element name
 								0);	// document type object (DTD).
 	// set attributes for the root element of the new document and push it to the stack
 	copyAttributes(myDOMDocument_p->getDocumentElement(), attrs);
