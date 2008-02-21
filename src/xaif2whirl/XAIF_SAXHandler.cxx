@@ -86,7 +86,11 @@ namespace xaif2whirl {
       }
 
       // start of ScopeHierarchy or CFG element: switch to DOM mode
-      else if (XMLString::equals(qname, XAIFStrings.elem_CFG_x()) || XMLString::equals(qname, XAIFStrings.elem_ScopeHierarchy_x())) {
+      else if (XMLString::equals(qname, XAIFStrings.elem_ScopeHierarchy_x())
+	       || 
+	       XMLString::equals(qname, XAIFStrings.elem_CFG_x())
+	       ||
+	       XMLString::equals(qname, XAIFStrings.elem_ReplaceList_x())) {
 	inDOMMode = true;
 	// create new DOMDocument with root element
 	myDOMDocument_p = myDOMImplementation_p->createDocument(uri,	// root element namespace URI.
@@ -107,8 +111,10 @@ namespace xaif2whirl {
     if (inDOMMode) {
       myElementStack.pop(); //remove the element from the stack
 
-      // end of a CFG element
-      if (XMLString::equals(qname, XAIFStrings.elem_CFG_x())) {
+      // end of a CFG / ReplacementList element
+      if (XMLString::equals(qname, XAIFStrings.elem_CFG_x())
+	  ||
+	  XMLString::equals(qname, XAIFStrings.elem_ReplaceList_x())) {
 	if (!myElementStack.empty()) FORTTK_DIE("stack not empty after popping CFG element");
 	inDOMMode = false;
         // translate the DOM subtree for the CFG
