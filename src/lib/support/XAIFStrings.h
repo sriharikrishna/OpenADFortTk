@@ -62,6 +62,10 @@ public:
     ATTR_prefix,    // specific prefix
     
     // -----------------------------------------------------
+    // xaif:CallGraph
+    ELEM_CallGraph,
+
+    // -----------------------------------------------------
     // xaif:ScopeHierarchy, xaif:Scope, xaif:SymbolTable
     ELEM_ScopeHierarchy,
     ELEM_Scope,
@@ -244,8 +248,13 @@ public:
   // top level  
   const char* attr_prefix() const   { return c_strTbl[ATTR_prefix]; }
   XMLCh*      attr_prefix_x() const { return x_strTbl[ATTR_prefix]; }
-  // -----------------------------------------------------
 
+  // -----------------------------------------------------
+  // xaif:CallGraph
+  const char* elem_CallGraph() const { return c_strTbl[ELEM_CallGraph]; }
+  XMLCh*      elem_CallGraph_x() const { return x_strTbl[ELEM_CallGraph]; }
+
+  // -----------------------------------------------------
   // xaif:ScopeHierarchy, xaif:Scope, xaif:SymbolTable
   const char* elem_ScopeHierarchy() const { return c_strTbl[ELEM_ScopeHierarchy]; }
   XMLCh*      elem_ScopeHierarchy_x() const { return x_strTbl[ELEM_ScopeHierarchy]; }

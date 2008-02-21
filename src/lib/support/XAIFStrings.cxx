@@ -64,7 +64,10 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "prefix",
 
   // -----------------------------------------------------
+  // xaif:CallGraph
+  "xaif:CallGraph",
 
+  // -----------------------------------------------------
   // xaif:ScopeHierarchy, xaif:Scope, xaif:SymbolTable
   "xaif:ScopeHierarchy",
   "xaif:Scope",

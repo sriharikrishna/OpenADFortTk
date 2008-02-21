@@ -119,7 +119,9 @@ am__objects_1 = xaif2whirl-main.$(OBJEXT) xaif2whirl-Args.$(OBJEXT) \
 	xaif2whirl-XlationContext.$(OBJEXT) \
 	xaif2whirl-PUXlationContext.$(OBJEXT) \
 	xaif2whirl-XAIF_DOMErrorHandler.$(OBJEXT) \
+	xaif2whirl-XAIF_SAXErrorHandler.$(OBJEXT) \
 	xaif2whirl-XAIF_DOMFilters.$(OBJEXT) \
+	xaif2whirl-XAIF_SAXHandler.$(OBJEXT) \
 	xaif2whirl-XercesStrX.$(OBJEXT)
 am_xaif2whirl_OBJECTS = $(am__objects_1)
 xaif2whirl_OBJECTS = $(am_xaif2whirl_OBJECTS)
@@ -167,6 +169,7 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+GREP = @GREP@
 HOST_AR = @HOST_AR@
 HOST_CFLAGS = @HOST_CFLAGS@
 HOST_CXXFLAGS = @HOST_CXXFLAGS@
@@ -222,8 +225,6 @@ XERCES_IFLAGS = @XERCES_IFLAGS@
 XERCES_LDFLAGS = @XERCES_LDFLAGS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -240,23 +241,30 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -299,7 +307,9 @@ MYSOURCES = \
 	PUXlationContext.h PUXlationContext.cxx \
 	\
 	XAIF_DOMErrorHandler.h XAIF_DOMErrorHandler.cxx \
+	XAIF_SAXErrorHandler.h XAIF_SAXErrorHandler.cxx \
 	XAIF_DOMFilters.h XAIF_DOMFilters.cxx \
+	XAIF_SAXHandler.h XAIF_SAXHandler.cxx \
 	XercesStrX.h XercesStrX.cxx
 
 MYCFLAGS = $(OPENADFORTTK_IFLAGS) \
@@ -401,6 +411,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xaif2whirl-PUXlationContext.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xaif2whirl-XAIF_DOMErrorHandler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xaif2whirl-XAIF_DOMFilters.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xaif2whirl-XAIF_SAXErrorHandler.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xaif2whirl-XAIF_SAXHandler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xaif2whirl-XercesStrX.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xaif2whirl-XlateExpression.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xaif2whirl-XlateStmt.Po@am__quote@
@@ -534,6 +546,20 @@ xaif2whirl-XAIF_DOMErrorHandler.obj: XAIF_DOMErrorHandler.cxx
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -c -o xaif2whirl-XAIF_DOMErrorHandler.obj `if test -f 'XAIF_DOMErrorHandler.cxx'; then $(CYGPATH_W) 'XAIF_DOMErrorHandler.cxx'; else $(CYGPATH_W) '$(srcdir)/XAIF_DOMErrorHandler.cxx'; fi`
 
+xaif2whirl-XAIF_SAXErrorHandler.o: XAIF_SAXErrorHandler.cxx
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -MT xaif2whirl-XAIF_SAXErrorHandler.o -MD -MP -MF "$(DEPDIR)/xaif2whirl-XAIF_SAXErrorHandler.Tpo" -c -o xaif2whirl-XAIF_SAXErrorHandler.o `test -f 'XAIF_SAXErrorHandler.cxx' || echo '$(srcdir)/'`XAIF_SAXErrorHandler.cxx; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/xaif2whirl-XAIF_SAXErrorHandler.Tpo" "$(DEPDIR)/xaif2whirl-XAIF_SAXErrorHandler.Po"; else rm -f "$(DEPDIR)/xaif2whirl-XAIF_SAXErrorHandler.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='XAIF_SAXErrorHandler.cxx' object='xaif2whirl-XAIF_SAXErrorHandler.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -c -o xaif2whirl-XAIF_SAXErrorHandler.o `test -f 'XAIF_SAXErrorHandler.cxx' || echo '$(srcdir)/'`XAIF_SAXErrorHandler.cxx
+
+xaif2whirl-XAIF_SAXErrorHandler.obj: XAIF_SAXErrorHandler.cxx
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -MT xaif2whirl-XAIF_SAXErrorHandler.obj -MD -MP -MF "$(DEPDIR)/xaif2whirl-XAIF_SAXErrorHandler.Tpo" -c -o xaif2whirl-XAIF_SAXErrorHandler.obj `if test -f 'XAIF_SAXErrorHandler.cxx'; then $(CYGPATH_W) 'XAIF_SAXErrorHandler.cxx'; else $(CYGPATH_W) '$(srcdir)/XAIF_SAXErrorHandler.cxx'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/xaif2whirl-XAIF_SAXErrorHandler.Tpo" "$(DEPDIR)/xaif2whirl-XAIF_SAXErrorHandler.Po"; else rm -f "$(DEPDIR)/xaif2whirl-XAIF_SAXErrorHandler.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='XAIF_SAXErrorHandler.cxx' object='xaif2whirl-XAIF_SAXErrorHandler.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -c -o xaif2whirl-XAIF_SAXErrorHandler.obj `if test -f 'XAIF_SAXErrorHandler.cxx'; then $(CYGPATH_W) 'XAIF_SAXErrorHandler.cxx'; else $(CYGPATH_W) '$(srcdir)/XAIF_SAXErrorHandler.cxx'; fi`
+
 xaif2whirl-XAIF_DOMFilters.o: XAIF_DOMFilters.cxx
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -MT xaif2whirl-XAIF_DOMFilters.o -MD -MP -MF "$(DEPDIR)/xaif2whirl-XAIF_DOMFilters.Tpo" -c -o xaif2whirl-XAIF_DOMFilters.o `test -f 'XAIF_DOMFilters.cxx' || echo '$(srcdir)/'`XAIF_DOMFilters.cxx; \
 @am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/xaif2whirl-XAIF_DOMFilters.Tpo" "$(DEPDIR)/xaif2whirl-XAIF_DOMFilters.Po"; else rm -f "$(DEPDIR)/xaif2whirl-XAIF_DOMFilters.Tpo"; exit 1; fi
@@ -547,6 +573,20 @@ xaif2whirl-XAIF_DOMFilters.obj: XAIF_DOMFilters.cxx
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='XAIF_DOMFilters.cxx' object='xaif2whirl-XAIF_DOMFilters.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -c -o xaif2whirl-XAIF_DOMFilters.obj `if test -f 'XAIF_DOMFilters.cxx'; then $(CYGPATH_W) 'XAIF_DOMFilters.cxx'; else $(CYGPATH_W) '$(srcdir)/XAIF_DOMFilters.cxx'; fi`
+
+xaif2whirl-XAIF_SAXHandler.o: XAIF_SAXHandler.cxx
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -MT xaif2whirl-XAIF_SAXHandler.o -MD -MP -MF "$(DEPDIR)/xaif2whirl-XAIF_SAXHandler.Tpo" -c -o xaif2whirl-XAIF_SAXHandler.o `test -f 'XAIF_SAXHandler.cxx' || echo '$(srcdir)/'`XAIF_SAXHandler.cxx; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/xaif2whirl-XAIF_SAXHandler.Tpo" "$(DEPDIR)/xaif2whirl-XAIF_SAXHandler.Po"; else rm -f "$(DEPDIR)/xaif2whirl-XAIF_SAXHandler.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='XAIF_SAXHandler.cxx' object='xaif2whirl-XAIF_SAXHandler.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -c -o xaif2whirl-XAIF_SAXHandler.o `test -f 'XAIF_SAXHandler.cxx' || echo '$(srcdir)/'`XAIF_SAXHandler.cxx
+
+xaif2whirl-XAIF_SAXHandler.obj: XAIF_SAXHandler.cxx
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -MT xaif2whirl-XAIF_SAXHandler.obj -MD -MP -MF "$(DEPDIR)/xaif2whirl-XAIF_SAXHandler.Tpo" -c -o xaif2whirl-XAIF_SAXHandler.obj `if test -f 'XAIF_SAXHandler.cxx'; then $(CYGPATH_W) 'XAIF_SAXHandler.cxx'; else $(CYGPATH_W) '$(srcdir)/XAIF_SAXHandler.cxx'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/xaif2whirl-XAIF_SAXHandler.Tpo" "$(DEPDIR)/xaif2whirl-XAIF_SAXHandler.Po"; else rm -f "$(DEPDIR)/xaif2whirl-XAIF_SAXHandler.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='XAIF_SAXHandler.cxx' object='xaif2whirl-XAIF_SAXHandler.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -c -o xaif2whirl-XAIF_SAXHandler.obj `if test -f 'XAIF_SAXHandler.cxx'; then $(CYGPATH_W) 'XAIF_SAXHandler.cxx'; else $(CYGPATH_W) '$(srcdir)/XAIF_SAXHandler.cxx'; fi`
 
 xaif2whirl-XercesStrX.o: XercesStrX.cxx
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -MT xaif2whirl-XercesStrX.o -MD -MP -MF "$(DEPDIR)/xaif2whirl-XercesStrX.Tpo" -c -o xaif2whirl-XercesStrX.o `test -f 'XercesStrX.cxx' || echo '$(srcdir)/'`XercesStrX.cxx; \

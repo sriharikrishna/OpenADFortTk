@@ -53,22 +53,7 @@ namespace xaif2whirl {
   TY_IDX ActiveTypeTyIdx;            
   TY_IDX ActiveTypeInitializedTyIdx;
 
-
   // *************************** Forward Declarations ***************************
-
-  static void
-  TranslateCallGraph(PU_Info* pu_forest, const xercesc::DOMDocument* doc, 
-		     PUXlationContext& ctxt);
-
-  static fortTkSupport::XAIFSymToSymbolMap*
-  TranslateScopeHierarchy(const xercesc::DOMDocument* doc, PUXlationContext& ctxt);
-
-  static void
-  TranslateCFG(PU_Info* pu_forest, const xercesc::DOMElement* cfgElem,
-	       PUXlationContext& ctxt);
-
-  // *************************** Forward Declarations ***************************
-
   // ControlFlowGraph
 
   static void
@@ -117,23 +102,18 @@ namespace xaif2whirl {
   RemoveFromWhirlIdMaps(WN* wn, fortTkSupport::WNToWNIdMap* wn2idmap, fortTkSupport::WNIdToWNMap* id2wnmap);
 
   // *************************** Forward Declarations ***************************
-
   // Scopes and Symbols
 
   static void
-  xlate_Scope(const xercesc::DOMElement* elem, PUXlationContext& ctxt, 
-	      fortTkSupport::XAIFSymToSymbolMap* symMap);
-
-  static void
-  xlate_SymbolTable(const xercesc::DOMElement* elem, const char* scopeId, PU_Info* pu, 
-		    PUXlationContext& ctxt, fortTkSupport::XAIFSymToSymbolMap* symMap);
+  xlate_SymbolTable(const xercesc::DOMElement* elem,
+		    const char* scopeId, PU_Info* pu, 
+		    PUXlationContext& ctxt);
 
   static void
   xlate_Symbol(const xercesc::DOMElement* elem, 
 	       const char* scopeId, 
 	       PU_Info* pu, 
-	       PUXlationContext& ctxt, 
-	       fortTkSupport::XAIFSymToSymbolMap* symMap,
+	       PUXlationContext& ctxt,
 	       bool doTempSymbols);
 
   // *************************** Forward Declarations ***************************
@@ -153,14 +133,11 @@ namespace xaif2whirl {
   CreateST(const xercesc::DOMElement* elem, 
 	   SYMTAB_IDX level, 
 	   const char* nm,
-	   fortTkSupport::XAIFSymToSymbolMap* symMap,
+	   fortTkSupport::XAIFSymToSymbolMap& symMap,
 	   const char* scopeId);
 
   static ST* 
   ConvertIntoGlobalST(ST* st);
-
-  static void 
-  DeclareActiveTypes();
 
   static void 
   ConvertToActiveType(ST* st);
@@ -260,108 +237,11 @@ namespace xaif2whirl {
 
 
   // ****************************************************************************
-
-
-  // ****************************************************************************
   // Top level translation routines
   // ****************************************************************************
 
-  // TranslateIR: 
-  void
-  TranslateIR(PU_Info* pu_forest, const xercesc::DOMDocument* doc)
-  {
-    Diag_Set_Phase("XAIF to WHIRL: translate IR");
-    //IntrinsicTable.DDump();
-  
-    if (!pu_forest) { return; }
-  
-    // -------------------------------------------------------
-    // 1. Initialization
-    // -------------------------------------------------------
-    PUXlationContext ctxt("TranslateIR");
-  
-    // Initialize global id maps
-    fortTkSupport::SymTabIdToSymTabMap* stabmap = new fortTkSupport::SymTabIdToSymTabMap(pu_forest);
-    ctxt.setSymTabIdToSymTabMap(stabmap);
-  
-    fortTkSupport::PUIdToPUMap* pumap = new fortTkSupport::PUIdToPUMap(pu_forest);
-    ctxt.setPUIdToPUMap(pumap);
-
-    WNIdToWNTableMap.Create(pu_forest); // Note: could make this local
-
-    // -------------------------------------------------------
-    // 2. Translate
-    // -------------------------------------------------------
-    TranslateCallGraph(pu_forest, doc, ctxt);
-  
-    // -------------------------------------------------------
-    // 3. Cleanup
-    // -------------------------------------------------------
-    delete stabmap;
-    delete pumap;
-  }
-
-
-  // TranslateCallGraph: 
-  static void
-  TranslateCallGraph(PU_Info* pu_forest, const xercesc::DOMDocument* doc,
-		     PUXlationContext& ctxt)
-  {
-    DeclareActiveTypes();
-  
-  
-    xercesc::DOMElement* topLevel=doc->getDocumentElement();
-    const XMLCh* prefixX = topLevel->getAttribute(XAIFStrings.attr_prefix_x());
-    PUXlationContext::setPrefix(XercesStrX(prefixX).c_str());
-
-    // -------------------------------------------------------
-    // Process the symbol tables in the ScopeHierarchy
-    // -------------------------------------------------------
-    fortTkSupport::XAIFSymToSymbolMap* symmap = TranslateScopeHierarchy(doc, ctxt);
-    ctxt.setXAIFSymToSymbolMap(symmap);
-  
-    // -------------------------------------------------------
-    // Translate each ControlFlowGraph in the CallGraph
-    // -------------------------------------------------------
-    XAIF_CFGElemFilter filt;
-    for (xercesc::DOMElement* elem = GetChildElement(doc->getDocumentElement(), &filt);
-	 (elem); elem = GetNextSiblingElement(elem, &filt)) {
-      TranslateCFG(pu_forest, elem, ctxt);
-    }
-  
-    delete symmap;
-  }
-
-
-  // TranslateScopeHierarchy: Enter symbols for all Scopes in the
-  // ScopeHierarch.  
-  //
-  // Note: We ignore the scope hierarchy graph, assuming it retains the
-  // basic structure it had before xaifBooster.
-  static fortTkSupport::XAIFSymToSymbolMap*
-  TranslateScopeHierarchy(const xercesc::DOMDocument* doc, PUXlationContext& ctxt)
-  {
-    fortTkSupport::XAIFSymToSymbolMap* symMap = new fortTkSupport::XAIFSymToSymbolMap;
-
-    // Get the ScopeHierarchy element
-    xercesc::DOMElement* scopeHier = GetChildElement(doc->getDocumentElement(), 
-					    XAIFStrings.elem_ScopeHierarchy_x());
-    FORTTK_ASSERT(scopeHier, "Could not find " 
-		  << XAIFStrings.elem_ScopeHierarchy());
-  
-    // For each Scope in the ScopeHierarchy, examine each symbol
-    XAIF_ScopeElemFilter filt;
-    for (xercesc::DOMElement* elem = GetChildElement(scopeHier, &filt);
-	 (elem); elem = GetNextSiblingElement(elem, &filt)) {
-      xlate_Scope(elem, ctxt, symMap);
-    }
-  
-    return symMap;
-  }
-
-
   // TranslateCFG: Translate XAIF CFG or XAIF Replacement to WHIRL
-  static void
+  void
   TranslateCFG(PU_Info* pu_forest, const xercesc::DOMElement* cfgElem,
 	       PUXlationContext& ctxt)
   {
@@ -379,6 +259,7 @@ namespace xaif2whirl {
     // to the proper name.  UNLESS this is 
     // a module
     fortTkSupport::Symbol* symd = GetSymbol(cfgElem, ctxt);
+    FORTTK_ASSERT(symd, "Could not find symbol for CFG element " << *cfgElem);
     ST* std = symd->GetST();
     bool isModule=ST_is_in_module(*std);
     // compare this by comparing the symbol table index
@@ -1688,8 +1569,7 @@ namespace xaif2whirl {
     // FIXME: need to associate current PU with a scope id...
     const char* scopeId = "1"; // assume global for now
   
-    fortTkSupport::XAIFSymToSymbolMap* symMap = ctxt.getXAIFSymToSymbolMap();
-    fortTkSupport::Symbol* sym = symMap->Find(scopeId, sname);
+    fortTkSupport::Symbol* sym = ctxt.getXAIFSymToSymbolMap().Find(scopeId, sname);
     if (!sym) {
       // FIXME: use CreateST...
       TY_IDX ty = MTYPE_To_TY(MTYPE_F8);
@@ -1698,7 +1578,7 @@ namespace xaif2whirl {
       ST_Init(st, Save_Str(sname), CLASS_VAR, SCLASS_AUTO, EXPORT_LOCAL, ty);
     
       sym = new fortTkSupport::Symbol(st, 0, active);
-      symMap->Insert(scopeId, sname, sym);
+      ctxt.getXAIFSymToSymbolMap().Insert(scopeId, sname, sym);
     }
     return sym;
   }
@@ -1714,10 +1594,9 @@ namespace xaif2whirl {
 
   // ****************************************************************************
 
-  static void
-  xlate_Scope(const xercesc::DOMElement* elem, PUXlationContext& ctxt,
-	      fortTkSupport::XAIFSymToSymbolMap* symMap)
-  {
+  void
+  xlate_Scope(const xercesc::DOMElement* elem,
+	      PUXlationContext& ctxt) {
     // Find the corresponding WHIRL symbol table (ST_TAB)
     fortTkSupport::SymTabId symtabId = GetSymTabId(elem);
     pair<ST_TAB*, PU_Info*> stab = ctxt.findSymTab(symtabId);
@@ -1737,20 +1616,20 @@ namespace xaif2whirl {
 
     // Translate the xaif:SymbolTable (the only child)
     xercesc::DOMElement* symtabElem = GetFirstChildElement(elem);
-    xlate_SymbolTable(symtabElem, scopeId.c_str(), pu, ctxt, symMap);
+    xlate_SymbolTable(symtabElem, scopeId.c_str(), pu, ctxt);
   }  
 
 
   static void
-  xlate_SymbolTable(const xercesc::DOMElement* elem, const char* scopeId, PU_Info* pu, 
-		    PUXlationContext& ctxt, fortTkSupport::XAIFSymToSymbolMap* symMap)
-  {
+  xlate_SymbolTable(const xercesc::DOMElement* elem,
+		    const char* scopeId, PU_Info* pu,
+		    PUXlationContext& ctxt) {
     // For all xaif:fortTkSupport::Symbol in the xaif:SymbolTable
     XAIF_SymbolElemFilter filt;
     for (xercesc::DOMElement* e = GetChildElement(elem, &filt);
 	 (e); e = GetNextSiblingElement(e, &filt)) {
       // do the non-temporary ones first
-      xlate_Symbol(e, scopeId, pu, ctxt, symMap, false);
+      xlate_Symbol(e, scopeId, pu, ctxt, false);
     }
     for (xercesc::DOMElement* e = GetChildElement(elem, &filt);
 	 (e); e = GetNextSiblingElement(e, &filt)) {
@@ -1758,7 +1637,7 @@ namespace xaif2whirl {
       // subroutine ones we refer to the original 
       // subroutine symbols so we had to translate those
       // first.
-      xlate_Symbol(e, scopeId, pu, ctxt, symMap, true);
+      xlate_Symbol(e, scopeId, pu, ctxt, true);
     }
   }
 
@@ -1770,10 +1649,7 @@ namespace xaif2whirl {
 	       const char* scopeId, 
 	       PU_Info* pu, 
 	       PUXlationContext& ctxt, 
-	       fortTkSupport::XAIFSymToSymbolMap* symMap,
-	       bool doTempSymbols)
-  {
-
+	       bool doTempSymbols) {
     // at this time do we do temporaries or not?
     if (doTempSymbols != GetBoolAttr(elem, XAIFStrings.attr_temp_x(), false /* default */)) { 
       return;
@@ -1799,7 +1675,7 @@ namespace xaif2whirl {
 	st = CreateST(elem, 
 		      level, 
 		      symNm.c_str(), 
-		      symMap,
+		      ctxt.getXAIFSymToSymbolMap(),
 		      scopeId);
 	FORTTK_ASSERT(st != 0,
 		      "CreateST returned a null pointer!");
@@ -1827,7 +1703,7 @@ namespace xaif2whirl {
   
     // 3. Create our own symbol structure and add to the map
     fortTkSupport::Symbol* sym = new fortTkSupport::Symbol(st, wnId, active);
-    symMap->Insert(scopeId, symNm.c_str(), sym);
+    ctxt.getXAIFSymToSymbolMap().Insert(scopeId, symNm.c_str(), sym);
   } 
 
 
@@ -2180,7 +2056,7 @@ namespace xaif2whirl {
   CreateST(const xercesc::DOMElement* elem, 
 	   SYMTAB_IDX level, 
 	   const char* nm,
-	   fortTkSupport::XAIFSymToSymbolMap* symMap,
+	   fortTkSupport::XAIFSymToSymbolMap& symMap,
 	   const char* scopeId)
   {
     const XMLCh* kindX = elem->getAttribute(XAIFStrings.attr_kind_x());
@@ -2313,7 +2189,7 @@ namespace xaif2whirl {
 		   << PUXlationContext::getPrefix().c_str());
       }
       std::string origXAIFName(newXAIFName.substr(PUXlationContext::getPrefix().size()));
-      fortTkSupport::Symbol* origNameSymbol_p = symMap->Find(scopeId, origXAIFName.c_str());
+      fortTkSupport::Symbol* origNameSymbol_p = symMap.Find(scopeId, origXAIFName.c_str());
       if (!origNameSymbol_p) {
 	FORTTK_DIE("Cannot find "
 		   << origXAIFName.c_str()
@@ -2387,7 +2263,7 @@ namespace xaif2whirl {
   }
 
 
-  static void 
+  void 
   DeclareActiveTypes()
   {
     // We create pseudo active types aliased to F8

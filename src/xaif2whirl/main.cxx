@@ -13,6 +13,7 @@
 #include <xercesc/dom/DOMException.hpp>
 #include <xercesc/dom/DOMImplementation.hpp>
 #include <xercesc/dom/DOMNodeIterator.hpp>
+#include <xercesc/sax/SAXException.hpp>
 
 #include <OpenAnalysis/Utils/Exception.hpp>
 
@@ -29,6 +30,8 @@
 #include "Args.h"
 #include "xaif2whirl.h"
 #include "XAIF_DOMErrorHandler.h"
+#include "XAIF_SAXErrorHandler.h"
+#include "XAIF_SAXHandler.h"
 #include "XercesStrX.h"
 
 namespace xaif2whirl { 
@@ -63,6 +66,9 @@ int main(int argc, char **argv) {
 }
 
 namespace xaif2whirl { 
+
+  static int
+  main_SAX(PU_Info* pu_forest, const char* xaiffilenm, bool validate);
 
   static int
   main_DOM(PU_Info* pu_forest, const char* xaiffilenm, bool validate);
@@ -127,9 +133,8 @@ namespace xaif2whirl {
 
     // -------------------------------------------------------
     // 4. Translate XAIF into WHIRL
-    // -------------------------------------------------------  
-  
-    ret = main_DOM(pu_forest, args.xaifFileNm.c_str(),args.validate); // FIXME check return
+    // -------------------------------------------------------
+    ret = main_SAX(pu_forest, args.xaifFileNm.c_str(), args.validate); 
 
     WriteIR(args.outWhirlFileNm.c_str(), pu_forest);
     //FreeIR(pu_forest);
@@ -156,100 +161,42 @@ namespace xaif2whirl {
 
   //****************************************************************************
 
-  static XercesDOMParser*
-  ReadXAIF_DOM(const char* xaiffilenm, bool validate);
-
-
   static int
-  main_DOM(PU_Info* pu_forest, const char* xaiffilenm, bool validate)
-  {
+  main_SAX(PU_Info* pu_forest, const char* xaiffilenm, bool validate) {
     int ret = 0;
-    FORTTK_MSG(1, "progress: parsing input XAIF");
-    // 1. Parse XAIF
-    XercesDOMParser* parser = ReadXAIF_DOM(xaiffilenm,validate);
-    DOMDocument* doc = parser->getDocument();
 
-    FORTTK_MSG(1, "progress: translating to WHIRL");
-    // 2. Translate (modify 'pu_forest')
-    TranslateIR(pu_forest, doc);
+    FORTTK_MSG(1, "progress: parsing input XAIF and translating to WHIRL (SAX2)");
 
-    // 3. Cleanup
-    delete parser;
+    XAIF_SAXHandler theSAXHandler(pu_forest, XMLString::transcode("Core"));
+    theSAXHandler.initialize(validate);
 
-    return ret;
-  }
-
-  static XercesDOMParser*
-  ReadXAIF_DOM(const char* xaiffilenm, bool validate) 
-  {
-    // 1. Create the parser, and then attach an error handler to the
-    // parser.  
-    XercesDOMParser* parser = new XercesDOMParser;
-
-    parser->setValidationScheme(XercesDOMParser::Val_Always);
-    if (validate) { 
-      //parser->setValidationScheme(XercesDOMParser::Val_Always);
-      FORTTK_MSG(1, "progress: parsing with schema validation");
-      parser->setValidationSchemaFullChecking(true);
-    }
-    else {
-      // it appears there is a bug in the parser that 
-      // prompts failure to retrieve attributes when this is 
-      // turned off.
-      //parser->setValidationScheme(XercesDOMParser::Val_Never);
-      parser->setValidationSchemaFullChecking(false);
-    }
-    parser->setDoNamespaces(true);
-    parser->setDoSchema(true);
-    parser->setCreateEntityReferenceNodes(false);
-  
-    XAIF_DOMErrorHandler* errHandler = new XAIF_DOMErrorHandler();
-    parser->setErrorHandler(errHandler);
-  
-    // 2. Parse the XML file, catching any XML exceptions that might propogate
-    // out of it.
     bool errorsOccured = false;
     try {
-      parser->parse(xaiffilenm);
+      theSAXHandler.parse(xaiffilenm);
     }
-    catch (const DOMException& e) {
+    catch (const SAXException& e) {
       const unsigned int maxChars = 2047;
       XMLCh errText[maxChars + 1];
-    
-      cerr << "\nDOM Error during parsing: '" << xaiffilenm << "'\n"
-	   << "DOMException code is:  " << e.code << endl;
-    
-      if (DOMImplementation::loadDOMExceptionMsg(e.code, errText, maxChars))
-	cerr << "Message is: " << XercesStrX(errText) << endl;
-    
+      cerr << "\nSAX Error during parsing: '" << xaiffilenm << "'\n" << "SAXException code is:  " << e.getMessage() << endl;
       errorsOccured = true;
     }
     catch (const XMLException& e) {
-      cerr << "An error occurred during parsing\n   Message: "
-	   << XercesStrX(e.getMessage()) << endl;
+      cerr << "An error occurred during parsing\n   Message: " << XercesStrX(e.getMessage()) << endl;
+      errorsOccured = true;
+    }
+    catch (fortTkSupport::BaseException& e) {
+      cerr << "An error occurred during parsing of file " << xaiffilenm << ":\n" << e.GetMessage() << std::endl;
       errorsOccured = true;
     }
     catch (...) {
-      cerr << "An error occurred during parsing\n " << endl;
+      cerr << "An (unknown) error occurred during parsing\n " << endl;
       errorsOccured = true;
     }
-    FORTTK_ASSERT(!errorsOccured, "Parse Error.");
-  
-    return parser;
-  }
+    FORTTK_ASSERT(!errorsOccured, "SAX2 Parse Error.");
 
+    theSAXHandler.deleteParser();
 
-  // Print the DOM IR
-  static void
-  PrintIR_DOM(DOMDocument* doc)
-  {
-    DOMNodeIterator* it = 
-      doc->createNodeIterator(doc, DOMNodeFilter::SHOW_ELEMENT, NULL, true);
-    for (DOMNode* node = it->nextNode(); (node); node = it->nextNode()) {
-      // XercesStrX::DDumpXMLStr(node->getNodeName());
-      cout << XercesStrX(node->getNodeName()) << endl;
-    }
-    it->release();
+    return ret;
   }
 
   static int
@@ -276,4 +223,5 @@ namespace xaif2whirl {
     return 0;
   }
 
-}
+} // end namespace xaif2whirl
+

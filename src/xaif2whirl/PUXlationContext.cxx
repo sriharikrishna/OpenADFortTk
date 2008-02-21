@@ -11,13 +11,13 @@ namespace xaif2whirl {
 
   std::string PUXlationContext::ourPrefix;
 
-  PUXlationContext::PUXlationContext(const std::string& anOriginator) : 
+  PUXlationContext::PUXlationContext(const std::string& anOriginator, PU_Info* pu_forest) : 
+    mySymTabIdToSymTabMap(pu_forest), 
+    myPUIdToPUMap(pu_forest), 
     myWNParentMapP(NULL), 
-    mySymTabIdToSymTabMapP(NULL), 
-    myPUIdToPUMapP(NULL), 
     myWNToWNIdMapP(NULL),
     myWNIdToWNMapP(NULL),
-    myXAIFSymToSymbolMapP(NULL),
+    //myXAIFSymToSymbolMapP(NULL),
     myOriginator(anOriginator) {
     myXlationContextStack.push_front(XlationContext());
   }
@@ -98,43 +98,11 @@ namespace xaif2whirl {
   }
 
   std::pair<ST_TAB*, PU_Info*>  PUXlationContext::findSymTab(fortTkSupport::SymTabId stabId) {
-    if (!mySymTabIdToSymTabMapP)
-      FORTTK_DIE("PUXlationContext::findSymTab: mySymTabIdToSymTabMapP not set");
-    return (mySymTabIdToSymTabMapP->Find(stabId, true /*mustfind*/)); 
+    return (mySymTabIdToSymTabMap.Find(stabId, true /*mustfind*/)); 
   }
 
-  fortTkSupport::SymTabIdToSymTabMap* PUXlationContext::getSymTabIdToSymTabMap() const { 
-    if (!mySymTabIdToSymTabMapP)
-      FORTTK_DIE("PUXlationContext::getSymTabIdToSymTabMap: mySymTabIdToSymTabMapP not set");
-    return mySymTabIdToSymTabMapP; 
-  }
-
-  void PUXlationContext::setSymTabIdToSymTabMap(fortTkSupport::SymTabIdToSymTabMap* aSymTabIdToSymTabMapP) { 
-    if (!aSymTabIdToSymTabMapP)
-      FORTTK_DIE("PUXlationContext::setSymTabIdToSymTabMap: null pointer passed");
-    if (mySymTabIdToSymTabMapP)
-      FORTTK_DIE("PUXlationContext::setSymTabIdToSymTabMap: already set");
-    mySymTabIdToSymTabMapP = aSymTabIdToSymTabMapP; 
-  }
-  
   PU_Info* PUXlationContext::findPU(fortTkSupport::PUId aPUId) {
-    if (!myPUIdToPUMapP)
-      FORTTK_DIE("PUXlationContext::findPU: myPUIdToPUMapP not set");
-    return (myPUIdToPUMapP->Find(aPUId));
-  }
-
-  fortTkSupport::PUIdToPUMap* PUXlationContext::getPUIdToPUMap() const { 
-    if (!myPUIdToPUMapP)
-      FORTTK_DIE("PUXlationContext::getPUToPUIdMap: myPUIdToPUMapP not set");
-    return myPUIdToPUMapP; 
-  }
-
-  void PUXlationContext::setPUIdToPUMap(fortTkSupport::PUIdToPUMap* aPUIdToPUMapP) {
-    if (!aPUIdToPUMapP)
-      FORTTK_DIE("PUXlationContext::setPUIdToPUMap: null pointer passed");
-    if (myPUIdToPUMapP)
-      FORTTK_DIE("PUXlationContext::setPUIdToPUMap: already set");
-    myPUIdToPUMapP = aPUIdToPUMapP; 
+    return (myPUIdToPUMap.Find(aPUId));
   }
 
   fortTkSupport::WNId PUXlationContext::findWNId(WN* aWNp) {
@@ -201,24 +169,12 @@ namespace xaif2whirl {
 
   fortTkSupport::Symbol* PUXlationContext::findSym(const std::string& scopeid, 
 				    const std::string& symid) { 
-    if(!myXAIFSymToSymbolMapP)
-      FORTTK_DIE("PUXlationContext::findSym: myXAIFSymToSymbolMapP not set");
-    return (myXAIFSymToSymbolMapP->Find(scopeid.c_str(), symid.c_str())); 
+    return (myXAIFSymToSymbolMap.Find(scopeid.c_str(), symid.c_str())); 
   }
- 
-  fortTkSupport::XAIFSymToSymbolMap* PUXlationContext::getXAIFSymToSymbolMap() const { 
-    if(!myXAIFSymToSymbolMapP)
-      FORTTK_DIE("PUXlationContext::getXAIFSymToSymbolMap: myXAIFSymToSymbolMapP not set");
-    return myXAIFSymToSymbolMapP;
-  } 
 
-  void PUXlationContext::setXAIFSymToSymbolMap(fortTkSupport::XAIFSymToSymbolMap* aXAIFSymToSymbolMapP) { 
-    if (!aXAIFSymToSymbolMapP)
-      FORTTK_DIE("PUXlationContext::setXAIFSymToSymbolMap: null pointer passed");
-    if (myXAIFSymToSymbolMapP)
-      FORTTK_DIE("PUXlationContext::setXAIFSymToSymbolMap: already set");
-    myXAIFSymToSymbolMapP = aXAIFSymToSymbolMapP; 
-  } 
+  fortTkSupport::XAIFSymToSymbolMap& PUXlationContext::getXAIFSymToSymbolMap() {
+    return myXAIFSymToSymbolMap;
+  } // end PUXlationContext::getXAIFSymToSymbolMap()
 
   void PUXlationContext::setPrefix(const std::string& aPrefix) { 
     ourPrefix=aPrefix;
