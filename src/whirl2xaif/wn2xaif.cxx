@@ -1,41 +1,3 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/wn2xaif.cxx,v 1.81 2006/05/12 16:12:23 utke Exp $
-
-// * BeginCopyright *********************************************************
-/*
-  Copyright (C) 2000, 2001 Silicon Graphics, Inc.  All Rights Reserved.
-
-  This program is free software; you can redistribute it and/or modify it
-  under the terms of version 2 of the GNU General Public License as
-  published by the Free Software Foundation.
-
-  This program is distributed in the hope that it would be useful, but
-  WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-  Further, this software is distributed without any warranty that it is
-  free of the rightful claim of any third person regarding infringement 
-  or the like.  Any license provided herein, whether implied or 
-  otherwise, applies only to this software file.  Patent licenses, if 
-  any, provided herein do not apply to combinations of this program with 
-  other software, or any other product whatsoever.  
-
-  You should have received a copy of the GNU General Public License along
-  with this program; if not, write the Free Software Foundation, Inc., 59
-  Temple Place - Suite 330, Boston MA 02111-1307, USA.
-
-  Contact information:  Silicon Graphics, Inc., 1600 Amphitheatre Pky,
-  Mountain View, CA 94043, or:
-
-  http://www.sgi.com
-
-  For further information regarding this notice, see:
-
-  http://oss.sgi.com/projects/GenInfo/NoticeExplan
-*/
-// *********************************************************** EndCopyright *
-
-
 #include <alloca.h>
 #include <stdlib.h> 
 #include <string>   
@@ -82,12 +44,9 @@ namespace whirl2xaif {
   static void 
   xlate_LoopUpdate(xml::ostream& xos, WN *wn, PUXlationContext& ctxt);
 
-
   static void
   DumpCFGraphEdge(xml::ostream& xos, UINT eid, 
 		  OA::OA_ptr<OA::CFG::EdgeInterface> edge);
-
-  //*************************** Forward Declarations ***************************
 
   static const char*
   GetLoopReversalType(OA::OA_ptr<OA::CFG::CFGInterface> cfg, 
@@ -376,7 +335,6 @@ namespace whirl2xaif {
   }
 
 
-  // xlate_ignore:
   void
   xlate_ignore(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   {
@@ -391,20 +349,10 @@ namespace whirl2xaif {
     FORTTK_DIE(fortTkSupport::Diagnostics::UnexpectedOpr << OPERATOR_name(opr));
   }
 
-  // xlate_unknown:
   void
-  xlate_unknown(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
-  {
-    // Warn about opcodes we cannot translate, but keep translating.
+  xlate_unknown(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
     OPERATOR opr = WN_operator(wn);
-  
-    //  FORTTK_DEVMSG(0, fortTkSupport::Diagnostics::UnexpectedOpr << OPERATOR_name(opr));
     FORTTK_DIE(fortTkSupport::Diagnostics::UnexpectedOpr << OPERATOR_name(opr));
-
-    xos << xml::BegComment << "*** Unknown WHIRL operator: " << OPERATOR_name(opr)
-	<< " ***" << xml::EndComment;
-  
-    
   }
 
 
@@ -1251,6 +1199,142 @@ namespace whirl2xaif {
     }
   } 
 
+  /**
+   * for a give wn descend recursively down the tree and 
+   * collect all the symbols that are referenced
+   */
+  static void findSymbolsInTree(WN *wn, 
+				SymbolPointerSet& requiredSymbols) {
+    if (WN_has_sym(wn)) { 
+      ST* st=WN_st(wn); 
+      if (!ST_is_temp_var(st))
+	requiredSymbols.insert(st);
+    } 
+    for (INT kid = 0; kid < WN_kid_count(wn); kid++) 
+      findSymbolsInTree(WN_kid(wn,kid),
+			requiredSymbols);
+  } 
+
+  /**
+   * look for the definitions of the temp symbols 
+   * in the program and collect the symbols 
+   * the respective RHSs are referring to
+   */
+  static void findRequiredProgramSymbols(WN* wn,
+					 PUXlationContext& ctxt,
+					 SymbolPointerSet& requiredTempSymbols,
+					 SymbolPointerSet& requiredProgramSymbols) { 
+    FORTTK_ASSERT(WN_operator(wn) == OPR_FUNC_ENTRY, fortTkSupport::Diagnostics::UnexpectedInput);
+    // go to the body
+    WN* theLastBlock=WN_kid(wn,WN_kid_count(wn)-1);
+    FORTTK_ASSERT(WN_operator(theLastBlock)==OPR_BLOCK, fortTkSupport::Diagnostics::UnexpectedInput); 
+    if (WN_first(theLastBlock)==0) 
+      return;
+    WN* childWN=WN_first(theLastBlock);
+    while (childWN!=0) { 
+      OPERATOR childOpr=WN_operator(childWN);
+      if (childOpr==OPR_STID) { 
+	ST* st=WN_st(childWN); 
+	if (requiredTempSymbols.find(st)!=requiredTempSymbols.end()) { 
+	  findSymbolsInTree(childWN,
+			    requiredProgramSymbols);
+	  requiredTempSymbols.erase(st);
+	}
+      } 
+      childWN=WN_next(childWN);
+    }
+  } 
+
+
+  /**
+   * look at a symbol table entry and
+   * find symbols used for dimensions used 
+   * in array declarations
+   */
+  class SearchSymbolTableEntry {
+  public:
+    SearchSymbolTableEntry(PUXlationContext& ctxt,
+			   SymbolPointerSet& requiredSymbols) :
+      myCtxt(ctxt),
+      myRequiredSymbols(requiredSymbols){ 
+    } 
+
+    /** 
+     * the operator referenced by For_all
+     * in findRequiredSymbolsInSymbolTable
+     */
+    void operator()(UINT32 idx, ST* st) const {
+      // must be formal parameter of local variable declaration
+      if (ST_class(st)!=CLASS_VAR)
+	return;
+      TY_IDX tyIdx=ST_type(st); 
+      TY_KIND tyKind=TY_kind(tyIdx);
+      // must be a local array or a pointer to an array (for formal parameters)
+      if (tyKind!=KIND_ARRAY 
+	  && 
+	  tyKind!=KIND_POINTER) 
+	return; 
+      while (tyKind==KIND_POINTER) { 
+	tyIdx=TY_pointed(tyIdx);
+	tyKind=TY_kind(tyIdx);
+	if (tyKind!=KIND_POINTER) { 
+	  if (tyKind==KIND_ARRAY)
+	    break; 
+	  else
+	    return; 
+	}
+      }
+      // now we are looking at an array and can search the array bounds
+      TY& ty = Ty_Table[tyIdx];
+      ARB_HANDLE arbBaseHandle = TY_arb(ty);
+      INT32 dim = ARB_dimension(arbBaseHandle) ;
+      INT32 coDim = ARB_co_dimension(arbBaseHandle);
+      FORTTK_ASSERT(coDim == 0,
+		    fortTkSupport::Diagnostics::UnexpectedInput);      
+      for (int i=0; i<dim; i++) {
+	// lbound: 
+	if (!ARB_const_lbnd(arbBaseHandle[i])) {
+	  // get the array bounds entry
+	  ST_IDX stIdx=ARB_lbnd_var(arbBaseHandle[i]);
+	  if (stIdx!=0)
+	    myRequiredSymbols.insert(&(St_Table[stIdx]));
+	}
+	// ubound: 
+	if (!ARB_const_ubnd(arbBaseHandle[i])) {
+	  // get the array bounds entry
+	  ST_IDX stIdx=ARB_ubnd_var(arbBaseHandle[i]);
+	  if (stIdx!=0)
+	    myRequiredSymbols.insert(&(St_Table[stIdx]));
+	}
+	// stride: 
+	if (!ARB_const_stride(arbBaseHandle[i])) { 
+	  // get the array bounds entry
+	  ST_IDX stIdx=ARB_stride_var(arbBaseHandle[i]);
+	  if (stIdx!=0)
+	    myRequiredSymbols.insert(&(St_Table[stIdx]));
+	}
+      }
+    }
+  
+  private:
+    SYMTAB_IDX      mySymtab;
+    PUXlationContext& myCtxt;  
+    SymbolPointerSet& myRequiredSymbols;
+  };
+
+  /**
+   * search the symbol table 
+   * and find symbols used for dimensions used 
+   * in array declarations
+   */
+  static void findRequiredSymbolsInSymbolTable(SYMTAB_IDX symtab_lvl, 
+					       PUXlationContext& ctxt,
+					       SymbolPointerSet& requiredSymbols) {
+    For_all(St_Table, symtab_lvl, SearchSymbolTableEntry(ctxt,
+							 requiredSymbols));
+  }
+
+
   // xlate_EntryPoint: Translates a function entry or alternate entry
   // point, with parameter declarations.  
   // FIXME: XAIF doesn't support alt-entry.
@@ -1395,6 +1479,40 @@ namespace whirl2xaif {
 			    symHandleI);
     }
     xos << xml::EndElem; // xaif:ModLocal
+    // populate the onEntry list: 
+    SymbolPointerSet requiredTempSymbols; 
+    findRequiredSymbolsInSymbolTable(CURRENT_SYMTAB, 
+				     ctxt,
+				     requiredTempSymbols);
+    // now look at all the variables we found which 
+    // presumably are all temporaries like t__1, t__2, ...
+    // which are defined somewhere in the beginning of 
+    // the body
+    SymbolPointerSet requiredProgramSymbols;
+    findRequiredProgramSymbols(wn,
+			       ctxt,
+			       requiredTempSymbols,
+			       requiredProgramSymbols);
+    if (!requiredTempSymbols.empty()) {
+      const char* nm = ST_name(*(requiredTempSymbols.begin()));
+      FORTTK_MSG(1,"cannot find a definition for temporary symbol " << nm);
+    }
+    FORTTK_ASSERT(requiredTempSymbols.empty(),fortTkSupport::Diagnostics::UnexpectedInput << " non empty list"); 
+    if (!requiredProgramSymbols.empty()) { 
+      coveredSymbols.clear();
+      xos << xml::BegElem("xaif:OnEntry");
+      for (SymbolPointerSet::iterator si=requiredProgramSymbols.begin();
+	   si!=requiredProgramSymbols.end();
+	   ++si) { 
+	ST_TAB* sttab = Scope_tab[ST_level(*si)].st_tab;
+	fortTkSupport::SymTabId scopeid = ctxt.findSymTabId(sttab);
+	xlate_SideEffectLocationPrint(*si,
+				      coveredSymbols,
+				      scopeid,
+				      xos);
+      }
+      xos << xml::EndElem; // xaif:OnEntry
+    }
   }
 
   // GetParamSymHandleSet: Return a set of SymHandles representing the
