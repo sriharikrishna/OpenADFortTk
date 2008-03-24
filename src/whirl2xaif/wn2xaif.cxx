@@ -1270,15 +1270,18 @@ namespace whirl2xaif {
       TY_IDX tyIdx=ST_type(st); 
       TY_KIND tyKind=TY_kind(tyIdx);
       // must be a local array or a pointer to an array (for formal parameters)
-      if (tyKind!=KIND_ARRAY 
-	  && 
-	  tyKind!=KIND_POINTER) 
+      // except for strings
+      if (tyKind!=KIND_ARRAY && tyKind!=KIND_POINTER
+	  ||
+	  TY_Is_Character_String(tyIdx)) 
 	return; 
       while (tyKind==KIND_POINTER) { 
 	tyIdx=TY_pointed(tyIdx);
 	tyKind=TY_kind(tyIdx);
 	if (tyKind!=KIND_POINTER) { 
-	  if (tyKind==KIND_ARRAY)
+	  if (tyKind==KIND_ARRAY
+	      && 
+	      !TY_Is_Character_String(tyIdx))
 	    break; 
 	  else
 	    return; 
