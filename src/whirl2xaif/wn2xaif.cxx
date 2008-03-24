@@ -1201,18 +1201,19 @@ namespace whirl2xaif {
 
   /**
    * for a give wn descend recursively down the tree and 
-   * collect all the symbols that are referenced
+   * collect all the variable symbols that are referenced
    */
-  static void findSymbolsInTree(WN *wn, 
-				SymbolPointerSet& requiredSymbols) {
+  static void findVarSymbolsInTree(WN *wn, 
+				   SymbolPointerSet& requiredSymbols) {
     if (WN_has_sym(wn)) { 
       ST* st=WN_st(wn); 
-      if (!ST_is_temp_var(st))
+      if (!ST_is_temp_var(st) && ST_class(st)==CLASS_VAR)
 	requiredSymbols.insert(st);
     } 
     for (INT kid = 0; kid < WN_kid_count(wn); kid++) 
-      findSymbolsInTree(WN_kid(wn,kid),
-			requiredSymbols);
+      if (WN_kid(wn,kid))
+	findVarSymbolsInTree(WN_kid(wn,kid),
+			  requiredSymbols);
   } 
 
   /**
@@ -1236,7 +1237,7 @@ namespace whirl2xaif {
       if (childOpr==OPR_STID) { 
 	ST* st=WN_st(childWN); 
 	if (requiredTempSymbols.find(st)!=requiredTempSymbols.end()) { 
-	  findSymbolsInTree(childWN,
+	  findVarSymbolsInTree(childWN,
 			    requiredProgramSymbols);
 	  requiredTempSymbols.erase(st);
 	}
