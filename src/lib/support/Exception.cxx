@@ -30,7 +30,7 @@ namespace fortTkSupport {
 		  const char* filenm, unsigned int lineno) {
     if (filenm && lineno != 0) {
       std::ostringstream os;
-      os << "[" << filenm << ":" << lineno << "]: " << m;
+      os << "[" << filenm << ":" << lineno << "]: " << m.c_str();
       msg = os.str();
     } 
     else {

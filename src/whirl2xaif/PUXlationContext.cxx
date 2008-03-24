@@ -1,6 +1,3 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/PUXlationContext.cxx,v 1.2 2006/05/12 16:12:23 utke Exp $
-
 #include <stdio.h>
 
 #include "PUXlationContext.h"
