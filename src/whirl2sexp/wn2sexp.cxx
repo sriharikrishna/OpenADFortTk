@@ -812,7 +812,7 @@ whirl2sexp::xlate_CVT_CVTL(sexp::ostream& sos, WN* wn)
     INT16 cvtlbits = WN_cvtl_bits(wn);
     sos << Atom(cvtlbits);
   }
-  sos << EndList;
+  sos << EndList << EndLine;
   TranslateWN(sos, WN_kid0(wn));
   sos << EndList;
 
