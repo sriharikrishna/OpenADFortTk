@@ -1,6 +1,6 @@
       MODULE all_globals_mod
       use w2f__types
-      use active_module
+      use OAD_active
       IMPLICIT NONE
       SAVE
 C
@@ -10,6 +10,6 @@ C
 
       SUBROUTINE head(X, Y)
       use w2f__types
-      use active_module
+      use OAD_active
       IMPLICIT NONE
       end

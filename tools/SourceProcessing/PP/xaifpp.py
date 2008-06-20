@@ -1,6 +1,6 @@
 '''
    Transformations:
-      1. add the active_module
+      1. add the active module (OAD_active)
       2. convert type(openadty_active)  ... TO
          type(active) :: ...
       3. convert __value__($p) --> $p%v
@@ -36,19 +36,19 @@ def val_deriv_m(self,top):
         top.reflow()
 
 def add_active_module(self,arg):
-    'add the active module'
+    'add the active module (OAD_active)'
     if (self.name == 'w2f__types'):
-      new_stmt = fs.UseStmt('active_module')
+      new_stmt = fs.UseStmt('OAD_active')
       new_stmt.clone_fmt(self)
       arg.attach(self,new_stmt)
     else:
       arg.attach(self)  
 
 def xUse(self,arg):
-    'add the active module'
+    'add the active module (OAD_active)'
     print "arg is", arg
     if (self.name == 'w2f__types'):
-        new_stmt = fs.UseStmt('active_module')
+        new_stmt = fs.UseStmt('OAD_active')
         new_stmt.clone_fmt(self)
         arg.lines.splice(self,new_stmt)
 

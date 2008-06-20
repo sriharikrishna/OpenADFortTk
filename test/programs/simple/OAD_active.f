@@ -1,5 +1,5 @@
 
-        module active_module
+        module OAD_active
         use w2f__types
         implicit none
         private
@@ -91,5 +91,5 @@
           x%d=0.0d0
         end subroutine zero_deriv_a
         
-        end module
+        end module OAD_active
 

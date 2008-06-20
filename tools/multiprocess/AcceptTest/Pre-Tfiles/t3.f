@@ -2,7 +2,7 @@
 
         ! active needs to be a sequence type 
 
-      use active_module
+      use OAD_active
       
       type active
          double precision :: v

@@ -1023,7 +1023,7 @@ C ***********************************************************
 
       SUBROUTINE box_ini_params()
       use w2f__types
-      use active_module
+      use OAD_active
       IMPLICIT NONE
 C
 C     **** Variables and functions ****
@@ -1699,7 +1699,7 @@ C
 
       SUBROUTINE box_ini_fields()
       use w2f__types
-      use active_module
+      use OAD_active
       IMPLICIT NONE
 C
 C     **** Variables and functions ****
@@ -1905,7 +1905,7 @@ sub x2wp {
     my($scn) = FTscan->new($line);
     if ($scn->match(qr/use $TB w2f__types $TBE /x)){
 	return($line,<<'U');
-      use active_module
+      use OAD_active
 U
     }
     if($line =~ /^\s+real\(w2f__8\)\s+/i) {

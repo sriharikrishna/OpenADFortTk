@@ -1,6 +1,6 @@
 '''
    Transformations:
-      1. add the active_module
+      1. add the active module (OAD_active)
       2. convert type(OpenAD_type)  ...
          or type(OpenAD_type_init)  ... TO
          type(active) :: ...
@@ -36,14 +36,14 @@ def val_deriv_m(self,top):
         top.reflow()
 
 def add_active_module(self,arg):
-    'add the active module'
-    new_stmt = fs.UseStmt('active_module')
+    'add the active module (OAD_active)'
+    new_stmt = fs.UseStmt('OAD_active')
     new_stmt.clone_fmt(self)
     arg.attach(self,new_stmt)
 
 def o_add_active_module(self):
     'add the active module'
-    new_stmt = fs.comment_bl('use active module')
+    new_stmt = fs.comment_bl('use active module (OAD_active)')
     return [self,new_stmt[0]]
 
 def xUse(self):

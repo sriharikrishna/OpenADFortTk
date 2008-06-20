@@ -750,7 +750,7 @@ C
 W2F1
     $w2f1_pp = <<'W2F1PP';
       use w2f__types
-      use active_module
+      use OAD_active
       IMPLICIT NONE
 C
 C     **** Global Variables ****
@@ -1419,7 +1419,7 @@ sub x2wp {
     my($scn) = FTscan->new($line);
     if ($scn->match(qr/use $TB w2f__types $TBE /x)){
 	return($line,<<'U');
-      use active_module
+      use OAD_active
 U
     }
     if($line =~ /^\s+real\(w2f__8\)\s+/i) {
