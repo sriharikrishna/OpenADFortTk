@@ -42,7 +42,7 @@ dot_re   = r'''(?x)(?i)\.    # fortran "dotted" keywords
                 eq     |
                 eqv    |
                 ne     |
-                nev    |
+                neqv   |
                 gt     |
                 ge     |
                 lt     |
