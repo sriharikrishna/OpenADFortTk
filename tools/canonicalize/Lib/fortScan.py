@@ -40,7 +40,9 @@ symb_re  = r'[-+*/()=,;%:]'
 dot_re   = r'''(?x)(?i)\.    # fortran "dotted" keywords
             (?:
                 eq     |
+                eqv    |
                 ne     |
+                nev    |
                 gt     |
                 ge     |
                 lt     |
