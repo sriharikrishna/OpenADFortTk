@@ -79,9 +79,9 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "NINT",    1 }, { XAIFIntrin, "nint_scal",                 NULL,            1 } },
     { { WNExpr,     OPR_CEIL,         NULL,      1 }, { XAIFIntrin, "bogus_ceil_scal",           NULL,            1 } },
     { { WNExpr,     OPR_FLOOR,        NULL,      1 }, { XAIFIntrin, "bogus_floor_scal",          NULL,            1 } }, 
-    { { WNCall,     OPR_CALL,         "REAL",    1 }, { XAIFIntrin, "real_int_scal",             NULL,            1 } },
-    { { WNCall,     OPR_CALL,         "FLOAT",   1 }, { XAIFIntrin, "real_int_scal",             NULL,            1 } },
-    { { WNCall,     OPR_CALL,         "DBLE",    1 }, { XAIFIntrin, "bogus_dble_scal",           NULL,            1 } }, 
+    { { WNCall,     OPR_CALL,         "REAL",    1 }, { XAIFIntrin, "real_int_scal",             "0_REAL",        1 } },
+    { { WNCall,     OPR_CALL,         "FLOAT",   1 }, { XAIFIntrin, "real_int_scal",             "1_REAL",        1 } },
+    { { WNCall,     OPR_CALL,         "DBLE",    1 }, { XAIFIntrin, "real_int_scal",             "2_REAL",        1 } }, 
     // Logical (and bitwise logical) operations 
     { { WNExpr,     OPR_BNOT,         NULL,      1 }, { XAIFBoolOp, "not",                       "1_not_bitwise", 1 } },
     { { WNExpr,     OPR_BAND,         NULL,      2 }, { XAIFBoolOp, "and",                       "1_and_bitwise", 2 } },
