@@ -6,6 +6,7 @@ import fortStmts as fs
 import fortExp  as fe
 from   fortContextFile import SymEntry
 from intrinsic import is_intrinsic
+from userFuncs import is_userFunc
 
 __tmp_prefix   = 'oad_ctmp'
 __call_prefix  = 'oad_s_'
@@ -45,7 +46,8 @@ def gen_repl_fns(line):
         return isinstance(a,fe.App) and \
                not ( lookup(a.head).dims or \
                      lookup(a.head).lngth or \
-                     is_intrinsic(a.head) )
+                     is_intrinsic(a.head) or \
+		     is_userFunc(a.head) )
 
     def ety(e):
         ety1 = fe.exptype
