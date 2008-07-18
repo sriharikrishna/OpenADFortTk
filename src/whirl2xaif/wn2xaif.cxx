@@ -1207,12 +1207,16 @@ namespace whirl2xaif {
 				SymbolPointerSet& requiredSymbols) {
     if (WN_has_sym(wn)) { 
       ST* st=WN_st(wn); 
-      if (!ST_is_temp_var(st))
+      if ( ST_class(st)==CLASS_VAR && !ST_is_temp_var(st))
+	// we need to avoid picking up things like integer conversion calls
 	requiredSymbols.insert(st);
     } 
-    for (INT kid = 0; kid < WN_kid_count(wn); kid++) 
-      findSymbolsInTree(WN_kid(wn,kid),
-			requiredSymbols);
+    for (INT kid = 0; kid < WN_kid_count(wn); kid++) { 
+      WN *kidWN_p=WN_kid(wn,kid);
+      if (kidWN_p)
+	findSymbolsInTree(kidWN_p,
+			  requiredSymbols);
+    }
   } 
 
   /**
