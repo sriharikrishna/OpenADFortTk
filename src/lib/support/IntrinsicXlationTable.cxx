@@ -43,6 +43,7 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "COS",     1 }, { XAIFIntrin, "cos_scal",                  "0_COS",         1 } },
     { { WNCall,     OPR_CALL,         "DCOS",    1 }, { XAIFIntrin, "cos_scal",                  "1_DCOS",        1 } },
     { { WNCall,     OPR_CALL,         "TAN",     1 }, { XAIFIntrin, "tan_scal",                  "0_TAN",         1 } },
+    { { WNCall,     OPR_CALL,         "OAD_TAN", 1 }, { XAIFIntrin, "oad_tan_scal",              "0_TAN",         1 } },
     { { WNCall,     OPR_CALL,         "DTAN",    1 }, { XAIFIntrin, "tan_scal",                  "1_DTAN",        1 } }, 
     { { WNCall,     OPR_CALL,         "ASIN",    1 }, { XAIFIntrin, "arcsin_scal",               "0_ASIN",        1 } },
     { { WNCall,     OPR_CALL,         "ACOS",    1 }, { XAIFIntrin, "arccos_scal",               "0_ACOS",        1 } },
