@@ -89,7 +89,7 @@ ReadPU(PU_Info* pu);
 
 // ReadIR:
 PU_Info*
-ReadIR(const char* irfilename)
+ReadIR(const char* irfilename, bool noCleanUpWhirl)
 {
   Diag_Set_Phase("WHIRL IO: Load IR");
 
@@ -119,8 +119,9 @@ ReadIR(const char* irfilename)
   for (PU_Info* pu = pu_forest; pu != NULL; pu = PU_Info_next(pu)) {
     ReadPU(pu);
   }
-
-  CleanUpWhirl::forPUInfoForest(pu_forest);
+  
+  if (!noCleanUpWhirl)
+    CleanUpWhirl::forPUInfoForest(pu_forest);
 
   // Free_Input_Info // should we do this?
 

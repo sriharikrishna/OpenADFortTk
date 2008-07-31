@@ -103,7 +103,7 @@ real_main(int argc, char **argv)
   // -------------------------------------------------------
   // 3. Read WHIRL and Translate into S-expressions
   // -------------------------------------------------------
-  PU_Info* pu_forest = ReadIR(args.whirlFileNm.c_str());
+  PU_Info* pu_forest = ReadIR(args.whirlFileNm.c_str(),args.myNoCleanUpFlag);
   whirl2sexp::TranslateIR(*os, pu_forest);
   FreeIR(pu_forest); // Writing frees some of the WHIRL maps
   
