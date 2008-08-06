@@ -30,8 +30,6 @@ using std::string;
 
 //***************************************************************************
 
-static const char* version_info = "version .289";
-
 static const char* usage_summary =
 "[options] <whirl-file>\n";
 
@@ -40,19 +38,20 @@ static const char* usage_details =
 "output is sent to stdout.\n"
 "\n"
 "Options:\n"
+"  -h, --help          print this help\n"
+"  -n, --noFilter      do not filter ud/du chains by current basic block\n"
+"  -N, --noTimeStamp   do not print a time stamp into the output\n"
 "  -o, --output <file> send output to <file> instead of stdout\n"
 "      --prefix <pfx>  Set the temporary variable prefix to <pfx>. Default\n"
 "                      is 'OpenAD_'\n"
-"  -V, --version       print version information\n"
-"  -h, --help          print this help\n"
 "  -s, --simpleLoop    force simple loop property on all loop constructs\n"
-"  -n, --noFilter      do not filter ud/du chains by current basic block\n"
-"  -N, --noTimeStamp   do not print a time stamp into the output\n"
+"  -v, --variedOnly    do not require active data to also be 'usefull'\n"
 "      --debug [lvl]   debug mode at level `lvl'\n";
 
 bool Args::ourSimpleLoopFlag=false;   // default: done't force it
 bool Args::ourDoNotFilterFlag=false;  // default: filter it
 bool Args::ourNoTimeStampFlag=false;  // default: dump a time stamp
+bool Args::ourVariedOnlyFlag=false;   // default: require both usefull and varied
 
 #define CLP CmdLineParser
 
@@ -60,7 +59,7 @@ CmdLineParser::OptArgDesc Args::optArgs[] = {
   // Options
   { 'o', "output",      CLP::ARG_REQ , CLP::DUPOPT_ERR,  NULL },
   {  0 , "prefix",      CLP::ARG_OPT,  CLP::DUPOPT_CLOB, NULL },
-  { 'V', "version",     CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
+  { 'v', "variedOnly",  CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 'h', "help",        CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 's', "simpleLoop",  CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
   { 'n', "noFilter",    CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
@@ -89,6 +88,7 @@ Args::Args(int argc, const char* const argv[])
 void
 Args::Ctor()
 {
+  ourVariedOnlyFlag=false;
   tmpVarPrefix = "OpenAD_"; // default prefix
   debug = 0;                // default: 0 (off)
 }
@@ -96,14 +96,6 @@ Args::Ctor()
 Args::~Args()
 {
 }
-
-
-void 
-Args::PrintVersion(std::ostream& os) const
-{
-  os << GetCmd() << ": " << version_info << endl;
-}
-
 
 void 
 Args::PrintUsage(std::ostream& os) const
@@ -152,12 +144,9 @@ Args::Parse(int argc, const char* const argv[])
       PrintUsage(std::cerr); 
       exit(1);
     }
-    if (parser.IsOpt("version")) { 
-      PrintVersion(std::cerr);
-      exit(1);
+    if (parser.IsOpt("variedOnly")) { 
+      ourVariedOnlyFlag=true;
     }
-    
-    // Check for other options
     if (parser.IsOpt("output")) { 
       xaifFileNm = parser.GetOptArg("output");
     }    
@@ -173,7 +162,6 @@ Args::Parse(int argc, const char* const argv[])
     if (parser.IsOpt("noTimeStamp")) { 
       ourNoTimeStampFlag= true; 
     }
-    
     // Check for required arguments
     if (parser.GetNumArgs() != 1) {
       PrintError(std::cerr, "Invalid number of arguments!");

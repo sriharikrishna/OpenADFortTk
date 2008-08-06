@@ -86,7 +86,8 @@ namespace fortTkSupport {
   }
 
   void
-  InterOAInfoMap::init(PU_Info* pu_forest, OA::OA_ptr<Open64IRInterface> irIF) {
+  InterOAInfoMap::init(PU_Info* pu_forest, OA::OA_ptr<Open64IRInterface> irIF,
+		       bool activeWithVariedOnly) {
     assert(pu_forest);
     setIRInterface(irIF);
     OA::OA_ptr<Open64IRProcIterator> procIt;
@@ -186,7 +187,7 @@ namespace fortTkSupport {
     OA::OA_ptr<OA::Activity::ManagerDUActive> duactiveman;
     duactiveman = new OA::Activity::ManagerDUActive(getIRInterface(), dug);
     OA::OA_ptr<OA::Activity::InterActiveFortran> duactive;
-    duactive = duactiveman->performAnalysis(parambind);
+    duactive = duactiveman->performAnalysis(parambind, activeWithVariedOnly);
 #ifdef DEBUG_DUAA
     duactive->dump(cout, getIRInterface());
 #endif

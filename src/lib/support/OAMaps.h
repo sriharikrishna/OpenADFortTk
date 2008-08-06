@@ -64,7 +64,8 @@ namespace fortTkSupport {
     InterOAInfoMap() { }
     virtual ~InterOAInfoMap() { }
 
-    void init(PU_Info* pu_forest, OA::OA_ptr<Open64IRInterface> x);
+    void init(PU_Info* pu_forest, OA::OA_ptr<Open64IRInterface> x,
+	      bool activeWithVariedOnly=false);
 
     OA::OA_ptr<Open64IRInterface> getIRInterface() { return myIRIF; }
     void setIRInterface(OA::OA_ptr<Open64IRInterface> x) { myIRIF = x; }

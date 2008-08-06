@@ -74,6 +74,9 @@ public:
   // don't print a time stamp
   static bool ourNoTimeStampFlag;
 
+  // do not require usefull analysis
+  static bool ourVariedOnlyFlag; 
+
 private:
   void Ctor();
 
