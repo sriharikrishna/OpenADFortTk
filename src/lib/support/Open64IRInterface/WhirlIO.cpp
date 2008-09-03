@@ -58,11 +58,6 @@
 
 #include "be_util.h"       // Advance_/Reset_Current_PU_Count(), etc
 
-//#include "region_util.h"   // REGION ids and region-id (RID) map
-//#include "region_main.h"   // REGION_* routines
-//#include "options_stack.h" // Options_Stack (cf. be/driver.cxx)
-
-#include "wn_lower.h"      // WHIRL lowerer
 #include "stblock.h"       // Create_Slink_Symbol()
 
 //*************************** User Include Files ****************************
@@ -317,27 +312,7 @@ PrepareIR(PU_Info* pu_forest)
   for ( ; procIt.isValid(); ++procIt) { 
     PU_Info* pu = (PU_Info*)procIt.current().hval();
     WN* wn_pu = PU_Info_tree_ptr(pu);
-    
     Create_Slink_Symbol(); // FIXME: do we need?
-    Lower_Init(); // Open64 Lowerer
-    
-    // RETURN_VAL (for C)
-    //wn_pu = WN_Lower(wn_pu, LOWER_CALL, NULL, "Lowering CALLS");
-    //wn_pu = WN_Lower(wn_pu, LOWER_IO_STATEMENT, NULL, "Lowering IO");
-    
-#if 0
-    // FIXME: this can affect CFGs (removing duplicate RETURNs)
-    // (causes a problem on simple7.f90)
-    if (WHIRL_Return_Val_On || WHIRL_Mldid_Mstid_On) {
-      Is_True(WHIRL_Return_Val_On && WHIRL_Mldid_Mstid_On, ("FIXME"));
-      wn_pu = WN_Lower(wn_pu, LOWER_RETURN_VAL | LOWER_MLDID_MSTID, NULL,
-                       "RETURN_VAL & MLDID/MSTID lowering");
-      // what about: LOWER_MP for nested PUs
-    }
-    Verify_SYMTAB(CURRENT_SYMTAB);
-#endif
-    
-    Lowering_Finalize();
   }
 }
 
