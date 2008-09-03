@@ -1830,24 +1830,20 @@ namespace xaif2whirl {
   std::string
   GetIntrinsicKey(const xercesc::DOMElement* elem)
   {
-    const XMLCh* annot = (elem) ? elem->getAttribute(XAIFStrings.attr_annot_x())
-      : NULL;
+    const XMLCh* annot = (elem) ? elem->getAttribute(XAIFStrings.attr_annot_x()) : NULL;
     XercesStrX annotStr_x = XercesStrX(annot);
     const char* annotStr = annotStr_x.c_str();
-
-    // Note: Sun wants the first arg to strstr to be char*.  Stupid.
     std::string key;
     char *start = NULL, *end = NULL;
     start = strstr(const_cast<char*>(annotStr), XAIFStrings.tag_IntrinsicKey());
     if (start) {
-      start = start + strlen(annotStr);
+      start = start + strlen(XAIFStrings.tag_IntrinsicKey());
       end = strstr(start, XAIFStrings.tag_End());
     }
     if (start && end) {
       for (char* p = start; p < end; ++p) { key += *p; }
     }
-  
-    return key;
+      return key;
   }
 
 
