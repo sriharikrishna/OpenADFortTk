@@ -105,11 +105,7 @@ namespace xaif2whirl {
     if (!OPERATOR_is_expression(opr) && !OPERATOR_is_call(opr)) { return parent; }
     // Base case: a variable reference
     if (fortTkSupport::ScalarizedRef::isRefTranslatableToXAIF(wn)) {
-      TY_IDX ty = WN_GetBaseObjType(wn);
-      if (TY_kind(ty) == KIND_ARRAY) {
-	ty = TY_etype(ty);
-      }
-      if (ty == ActiveTypeTyIdx || ty == ActiveTypeInitializedTyIdx) {
+      if (hasActiveSymbolType(wn)) {
 	WN* newwn = createValueSelector(wn);
 	WN_kid(parent, kidno) = newwn;
       }
@@ -122,6 +118,30 @@ namespace xaif2whirl {
     }
     return parent;
   }
+
+  bool XlateExpression::hasActiveSymbolType(WN* aWNp) { 
+    if (WN_has_sym(aWNp)) { 
+      ST* st = WN_st(aWNp);
+      TY_IDX tyIdx = ST_type(st);
+      if (TY_kind(tyIdx) == KIND_POINTER) {
+	tyIdx = TY_pointed(tyIdx);
+      } 
+      if (TY_kind(tyIdx) == KIND_ARRAY) {
+	tyIdx = TY_etype(tyIdx);
+      }
+      if (tyIdx == ActiveTypeTyIdx || tyIdx == ActiveTypeInitializedTyIdx) {
+	return true; 
+      }
+    }
+    else { 
+      // Recursive case
+      for (INT i = 0; i < WN_kid_count(aWNp); ++i) {
+	if (hasActiveSymbolType(WN_kid(aWNp, i))) 
+	  return true;
+      }
+    }
+    return false; 
+  } 
 
   WN* XlateExpression::translateConstant(const DOMElement* elem, 
 					 PUXlationContext& ctxt) {
@@ -559,18 +579,21 @@ namespace xaif2whirl {
       UINT tripletElementCounter=0;
       vector<WN*> triplet(3);
       for (; tripletElementExpr; tripletElementExpr = GetNextSiblingElement(tripletElementExpr),++tripletElementCounter) {
-	ctxt.createXlationContext(XlationContext::ARRAYIDX);
-	WN* indexExprWN = translateExpression(GetFirstChildElement(tripletElementExpr), ctxt);
-	ctxt.deleteXlationContext();
-	const XMLCh* tripletElementnmX = tripletElementExpr->getNodeName();
-	if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Index_x()))
-	  triplet[0]=indexExprWN;
-	else if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Bound_x()))
-	  triplet[1]=indexExprWN;
-	else if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Stride_x()))
-	  triplet[2]=indexExprWN;
-	else
-	  FORTTK_DIE("unexpected element :" << *tripletElementExpr);
+	DOMElement* firstChild=GetFirstChildElement(tripletElementExpr);
+	if (firstChild) { 
+	  ctxt.createXlationContext(XlationContext::ARRAYIDX);
+	  WN* indexExprWN = translateExpression(firstChild, ctxt);
+	  ctxt.deleteXlationContext();
+	  const XMLCh* tripletElementnmX = tripletElementExpr->getNodeName();
+	  if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Index_x()))
+	    triplet[0]=indexExprWN;
+	  else if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Bound_x()))
+	    triplet[1]=indexExprWN;
+	  else if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Stride_x()))
+	    triplet[2]=indexExprWN;
+	  else
+	    FORTTK_DIE("unexpected element :" << *tripletElementExpr);
+	}
       }
       if (tripletElementCounter==1) 
 	indices[i] = WN_Type_Conversion(triplet[0],MTYPE_I4);

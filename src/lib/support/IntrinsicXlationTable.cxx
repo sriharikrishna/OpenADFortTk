@@ -83,7 +83,7 @@ namespace fortTkSupport {
     { { WNExpr,     OPR_FLOOR,        NULL,      1 }, { XAIFIntrin, "bogus_floor_scal",          NULL,            1 } }, 
     { { WNCall,     OPR_CALL,         "REAL",    1 }, { XAIFIntrin, "real_int_scal",             "0_REAL",        1 } },
     { { WNCall,     OPR_CALL,         "FLOAT",   1 }, { XAIFIntrin, "real_int_scal",             "1_REAL",        1 } },
-    { { WNCall,     OPR_CALL,         "DBLE",    1 }, { XAIFIntrin, "bogus_dble_scal",           NULL,            1 } }, 
+    { { WNCall,     OPR_CALL,         "DBLE",    1 }, { XAIFIntrin, "real_int_scal",             "2_REAL",        1 } }, 
     { { WNCall,     OPR_CALL,         "AIMAG",   1 }, { XAIFIntrin, "imag_scal",                 NULL,            1 } }, 
     { { WNCall,     OPR_CALL,         "TRANS",   1 }, { XAIFIntrin, "trans_arr",                 NULL,            1 } }, 
     // Logical (and bitwise logical) operations 
