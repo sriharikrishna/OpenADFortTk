@@ -9,7 +9,7 @@
 # Makefile
 #############################################################################
 
-include $(OPENADFORTTK)/test/Makeinclude.config
+include $(OPENADFORTTK_BASE)/test/Makeinclude.config
 
 #############################################################################
 # Configuration
@@ -52,11 +52,9 @@ F90_MASTERS1 = $(shell ls *.f90)
 F90_MASTERS1 := $(filter-out $(F90_EXCEPTIONS1), $(F90_MASTERS1))
 
 # Pipeline
-MFEF90  = $(OPENADFORTTK_OPEN64)/crayf90/sgi/mfef90
-WHIRL2F = $(OPENADFORTTK_OPEN64)/whirl2f/whirl2f
-W2X     = $(OPENADFORTTK)/obj/$(OPENADFORTTK_PLATFORM)/obj/whirl2xaif
-NORM    = $(OPENADFORTTK)/test/util/normalize
-
+MFEF90  = $(OPEN64ROOT)/crayf90/sgi/mfef90
+WHIRL2F = $(OPEN64ROOT)/whirl2f/whirl2f
+W2X     = $(OPENADFORTTK)/bin/whirl2xaif
 OPENAD  = $(OPENADROOT)/bin/openad
 
 #############################################################################

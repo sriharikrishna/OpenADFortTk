@@ -30,6 +30,7 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "SQRT",    1 }, { XAIFIntrin, "sqrt_scal",                 "0_SQRT",        1 } },
     { { WNCall,     OPR_CALL,         "DSQRT",   1 }, { XAIFIntrin, "sqrt_scal",                 "1_DSQRT",       1 } },
     { { WNExpr,     OPR_SQRT,         NULL,      1 }, { XAIFIntrin, "sqrt_scal",                 "2_SQRT",        1 } }, 
+    { { WNCall,     OPR_CALL,         "SUM",     1 }, { XAIFIntrin, "sum_arr",                   NULL,            1 } }, 
     // modulo/remainder
     { { WNExpr,     OPR_MOD,          NULL,      2 }, { XAIFIntrin, "bogus_modulo_scal_scal",    "0_MODULO",      2 } }, 
     { { WNCall,     OPR_CALL,         "MODULO",  2 }, { XAIFIntrin, "bogus_modulo_scal_scal",    "1_MODULO",      2 } }, 
@@ -59,6 +60,7 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "DEXP",    1 }, { XAIFIntrin, "exp_scal",                  "1_DEXP",        1 } },
     { { WNCall,     OPR_CALL,         "LOG",     1 }, { XAIFIntrin, "ln_scal",                   "0_LOG",         1 } },
     { { WNCall,     OPR_CALL,         "DLOG",    1 }, { XAIFIntrin, "ln_scal",                   "1_DLOG",        1 } }, 
+    { { WNCall,     OPR_CALL,         "ALOG",    1 }, { XAIFIntrin, "ln_scal",                   "2_ALOG",        1 } }, 
     { { WNIntrinOp, OPR_INTRINSIC_OP, "EXPEXPR", 2 }, { XAIFIntrin, "pow_scal_scal",             NULL,            2 } },
     // string operations
     { { WNIntrinOp, OPR_INTRINSIC_OP, "CEQEXPR", 2 }, { XAIFIntrin, "string_eq_scal_scal",       NULL,            2 } },
@@ -83,6 +85,8 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "REAL",    1 }, { XAIFIntrin, "real_int_scal",             "0_REAL",        1 } },
     { { WNCall,     OPR_CALL,         "FLOAT",   1 }, { XAIFIntrin, "real_int_scal",             "1_REAL",        1 } },
     { { WNCall,     OPR_CALL,         "DBLE",    1 }, { XAIFIntrin, "real_int_scal",             "2_REAL",        1 } }, 
+    { { WNCall,     OPR_CALL,         "AIMAG",   1 }, { XAIFIntrin, "imag_scal",                 NULL,            1 } }, 
+    { { WNCall,     OPR_CALL,         "TRANS",   1 }, { XAIFIntrin, "trans_arr",                 NULL,            1 } }, 
     // Logical (and bitwise logical) operations 
     { { WNExpr,     OPR_BNOT,         NULL,      1 }, { XAIFBoolOp, "not",                       "1_not_bitwise", 1 } },
     { { WNExpr,     OPR_BAND,         NULL,      2 }, { XAIFBoolOp, "and",                       "1_and_bitwise", 2 } },
@@ -107,6 +111,8 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "LEN",     1 }, { XAIFIntrin, "len",                       NULL,            1 } },
     { { WNExpr,     OPR_SHL,           NULL,     2 }, { XAIFIntrin, "bogus_shl_scal_scal",       NULL,            2 } },
     { { WNExpr,     OPR_ASHR,          NULL,     2 }, { XAIFIntrin, "bogus_ashr_scal_scal",      NULL,            2 } }, 
+    { { WNCall,     OPR_CALL,         "PRESENT", 1 }, { XAIFIntrin, "present",                   NULL,            1 } },
+    { { WNCall,     OPR_CALL,         "ALLOCATED", 1 }, { XAIFIntrin, "allocated",               NULL,            1 } },
     // max/min are turned into special subroutine calls by the canonicalizer 
     { { WNExpr,     OPR_MAX,           NULL,     2 }, { XAIFIntrin, "bogus_max_scal_scal",       NULL,            2 } },
     { { WNExpr,     OPR_MIN,           NULL,     2 }, { XAIFIntrin, "bogus_min_scal_scal",       NULL,            2 } }

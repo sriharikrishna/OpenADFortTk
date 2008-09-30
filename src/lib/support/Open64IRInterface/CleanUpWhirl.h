@@ -17,10 +17,18 @@ class CleanUpWhirl {
 
  private:
 
-  static void forPUInfoTree(PU_Info* aPUInfoTree_p);
+  static void forPUInfoTree(PU_Info* aPUInfoTree_p,
+			    PU_Info* aTopPUInfo_p);
   
-  static void forPUInfo(PU_Info* aPUInfo_p);
+  static void forPUInfo(PU_Info* aPUInfo_p,
+			PU_Info* aTopPUInfo_p);
 
+  static PU_Info* findModulePU(PU_Info* aPUInfoForest_p,
+					     ST* moduleName_ST_p);
+
+  static ST* findModuleSymbol(ST* moduleName_ST_p,
+			      ST* dummyLocal_ST_p,
+			      PU_Info* aTopPUInfo_p); 
 };
 
 #endif

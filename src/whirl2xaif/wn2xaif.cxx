@@ -1210,7 +1210,7 @@ namespace whirl2xaif {
       if ( ST_class(st)==CLASS_VAR && !ST_is_temp_var(st))
 	// we need to avoid picking up things like integer conversion calls
 	requiredSymbols.insert(st);
-    } 
+    }
     for (INT kid = 0; kid < WN_kid_count(wn); kid++) { 
       WN *kidWN_p=WN_kid(wn,kid);
       if (kidWN_p)
@@ -1300,25 +1300,34 @@ namespace whirl2xaif {
 		    fortTkSupport::Diagnostics::UnexpectedInput);      
       for (int i=0; i<dim; i++) {
 	// lbound: 
-	if (!ARB_const_lbnd(arbBaseHandle[i])) {
+	if (!ARB_const_lbnd(arbBaseHandle[i])
+	    && 
+	    !ARB_empty_lbnd(arbBaseHandle[i])) {
 	  // get the array bounds entry
 	  ST_IDX stIdx=ARB_lbnd_var(arbBaseHandle[i]);
-	  if (stIdx!=0)
+	  if (stIdx!=0) { 
 	    myRequiredSymbols.insert(&(St_Table[stIdx]));
+	  } 
 	}
 	// ubound: 
-	if (!ARB_const_ubnd(arbBaseHandle[i])) {
+	if (!ARB_const_ubnd(arbBaseHandle[i])
+	    && 
+	    !ARB_empty_ubnd(arbBaseHandle[i])) {
 	  // get the array bounds entry
 	  ST_IDX stIdx=ARB_ubnd_var(arbBaseHandle[i]);
-	  if (stIdx!=0)
+	  if (stIdx!=0) { 
 	    myRequiredSymbols.insert(&(St_Table[stIdx]));
+	  }
 	}
 	// stride: 
-	if (!ARB_const_stride(arbBaseHandle[i])) { 
+	if (!ARB_const_stride(arbBaseHandle[i])
+	    && 
+	    !ARB_empty_stride(arbBaseHandle[i])) { 
 	  // get the array bounds entry
 	  ST_IDX stIdx=ARB_stride_var(arbBaseHandle[i]);
-	  if (stIdx!=0)
+	  if (stIdx!=0) { 
 	    myRequiredSymbols.insert(&(St_Table[stIdx]));
+	  }
 	}
       }
     }
@@ -1501,10 +1510,12 @@ namespace whirl2xaif {
 			       requiredTempSymbols,
 			       requiredProgramSymbols);
     if (!requiredTempSymbols.empty()) {
-      const char* nm = ST_name(*(requiredTempSymbols.begin()));
-      FORTTK_MSG(1,"cannot find a definition for temporary symbol " << nm);
+      ST* st = ST_ptr(PU_Info_proc_sym(Current_PU_Info));
+      const char* puName = ST_name(st);
+      const char* symbolName = ST_name(*(requiredTempSymbols.begin()));
+      FORTTK_MSG(1,"cannot find a definition for temporary symbol \"" << symbolName << "\" in " << puName);
     }
-    FORTTK_ASSERT(requiredTempSymbols.empty(),fortTkSupport::Diagnostics::UnexpectedInput << " non empty list"); 
+    FORTTK_ASSERT(requiredTempSymbols.empty(),fortTkSupport::Diagnostics::UnexpectedInput << " not all symbols required in local declarations have a definition"); 
     if (!requiredProgramSymbols.empty()) { 
       coveredSymbols.clear();
       xos << xml::BegElem("xaif:OnEntry");

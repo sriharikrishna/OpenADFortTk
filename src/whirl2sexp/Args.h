@@ -34,7 +34,7 @@
 
 class Args {
 public: 
-  Args(); 
+  Args() ; 
   Args(int argc, const char* const argv[]);
   ~Args(); 
   
@@ -53,7 +53,6 @@ public:
   void Dump(std::ostream& os = std::cerr) const;
   void DDump() const;
 
-public:
   // Parsed Data: Command
   const std::string& GetCmd() const { return parser.GetCmd(); }
 
@@ -63,10 +62,9 @@ public:
   
   // Parsed Data: arguments
   std::string whirlFileNm;
-  
-private:
-  void Ctor();
 
+  bool myNoCleanUpFlag;
+  
 private:
   static CmdLineParser::OptArgDesc optArgs[];
   CmdLineParser parser;
