@@ -607,10 +607,13 @@ namespace xaif2whirl {
 	    WN_kid(theSrcTriplet_p,j)=WN_Type_Conversion(triplet[j],MTYPE_I4);
 	  }
 	  else { 
-	    WN_kid(theSrcTriplet_p,j)=WN_Create(OPR_IMPLICIT_BND,
-						MTYPE_V, 
-						MTYPE_V,
-						0);
+	    if (j!=2)
+	      WN_kid(theSrcTriplet_p,j)=WN_Create(OPR_IMPLICIT_BND,
+						  MTYPE_V, 
+						  MTYPE_V,
+						  0);
+	    else // the last one (stride) should default to 1
+	      WN_kid(theSrcTriplet_p,j)=WN_CreateIntconst(OPC_I4INTCONST, 1);
 	  }
 	}
 	indices[i] = theSrcTriplet_p;
