@@ -215,7 +215,7 @@ def declare_tmpvars(line):
     rv = []
     for (ty,tvar) in line.ctxt.new_vars:
         (cls,mod) = ty
-        if ((cls==fs.RealStmt) and _defaultPrec8):
+        if ((cls==fs.RealStmt) and _defaultPrec8 and mod==[]):
             ty=(fs.DoubleStmt,mod)
         (cls,mod) = ty
         decl = cls(mod,[tvar])
