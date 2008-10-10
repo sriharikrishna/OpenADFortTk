@@ -201,6 +201,7 @@ namespace whirl2xaif {
       std::ostringstream ostr;
       ostr << "findUDDUChainId: no key for >"; 
       Open64IRInterface::DumpWN(wnexpr, ostr);
+      ostr << "<"; 
       parentWN_p=findParentWN(wnexpr);
       while (duudKey==0 && parentWN_p) { 
 	// for instance for character arrays there is considerable confusion 
@@ -209,10 +210,12 @@ namespace whirl2xaif {
 	// ARRAY node or the child LDA node. 
 	OA::MemRefHandle parenth((OA::irhandle_t)parentWN_p);
 	duudKey=myUdduchains->getUDDUChainId(parenth);
-	if (duudKey==0) {
-	  ostr << "< or parent >"; 
-	  Open64IRInterface::DumpWN(parentWN_p, ostr);
-	  ostr << "<"; 
+	if (duudKey==0) { 
+	  if (fortTkSupport::Diagnostics::getDiagnosticFilterLevel() > 1) {
+	    ostr << " or parent >"; 
+	    Open64IRInterface::DumpWN(parentWN_p, ostr);
+	    ostr << "<"; 
+	  }
 	  parentWN_p=findParentWN(parentWN_p);
 	}
       }
@@ -249,6 +252,7 @@ namespace whirl2xaif {
       std::ostringstream ostr;
       ostr << "PUXlationContext::getAliasMapKey: no key for >";
       Open64IRInterface::DumpWN(wnexpr, ostr);
+      ostr << "<"; 
       parentWN_p = findParentWN(wnexpr);
       // Recursively check parents until a key is found, or there are no parents left
       while (theAliasMapSetKey == 0 && parentWN_p) {
@@ -258,9 +262,11 @@ namespace whirl2xaif {
 	OA::MemRefHandle theParentHandle ((OA::irhandle_t)parentWN_p);
 	theAliasMapSetKey = myAliasMapXAIF_p->getMapSetId(theParentHandle);
 	if (theAliasMapSetKey == 0) {
-	  ostr << "< or parent >"; 
-	  Open64IRInterface::DumpWN(parentWN_p, ostr);
-	  ostr << "<"; 
+	  if (fortTkSupport::Diagnostics::getDiagnosticFilterLevel() > 1) {
+	    ostr << " or parent >"; 
+	    Open64IRInterface::DumpWN(parentWN_p, ostr);
+	    ostr << "<"; 
+	  }
 	  parentWN_p=findParentWN(parentWN_p);
 	}
       } // end while
