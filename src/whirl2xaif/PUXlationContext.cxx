@@ -198,6 +198,9 @@ namespace whirl2xaif {
     int duudKey=myUdduchains->getUDDUChainId(h);
     WN* parentWN_p;
     if (duudKey==0) {
+      USRCPOS srcpos;
+      USRCPOS_srcpos(srcpos) = WN_Get_Linenum(wnexpr);
+      int aLineNumber=USRCPOS_linenum(srcpos);
       std::ostringstream ostr;
       ostr << "findUDDUChainId: no key for >"; 
       Open64IRInterface::DumpWN(wnexpr, ostr);
@@ -216,10 +219,16 @@ namespace whirl2xaif {
 	    Open64IRInterface::DumpWN(parentWN_p, ostr);
 	    ostr << "<"; 
 	  }
+	  if (!aLineNumber) { 
+	    USRCPOS_srcpos(srcpos) = WN_Get_Linenum(parentWN_p);
+	    aLineNumber=USRCPOS_linenum(srcpos);
+	  }
 	  parentWN_p=findParentWN(parentWN_p);
 	}
       }
       if (duudKey==0) { 
+	if (aLineNumber)
+	  ostr << " line " << aLineNumber; 
         FORTTK_MSG(1,ostr.str().c_str()); 
       }
       else { 
