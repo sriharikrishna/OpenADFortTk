@@ -395,7 +395,5 @@ AC_OUTPUT([ \
   tools/Makefile \
   tools/multiprocess/Makefile \
   tools/normalize/Makefile \
-  \
-  test/Makefile \
 ])
 

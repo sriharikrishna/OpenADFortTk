@@ -10,8 +10,8 @@ from optparse import OptionParser
 from Lib.fortContextFile import fortContextFile
 
 from Lib.userFuncs import addUserFunc
+import Lib.canon as lc 
 
-from Lib.canon import canon_lexi,decl_lexi,_verbose
 
 def hook1(self):
     if hasattr(self.toplev,'_scnt'):
@@ -20,23 +20,29 @@ def hook1(self):
         self.toplev._scnt = 0
         self.toplev.slice_undo = dict()
 
+
 def main():
-  _verbose   = True
+  lc._verbose   = True
   usage = '%prog [options] <input_file>'
   opt = OptionParser(usage=usage)
   opt.add_option('-u','--uDefFuncsFile',dest='uDefFuncsFile',
                  help="file containing names of user defined functions not to be canonicalized",
                  metavar="<file_name>")
-  opts, args = opt.parse_args()
+  opt.add_option("","--r8",dest='r8',
+                 help="set default size of REAL to 8 bytes",
+                 action='store_true',default=False)
+  options, args = opt.parse_args()
   try:
       if len(args) < 1:
           opt.error("expect input file argument")
       fn = args[0]
+      if options.r8 :
+        lc._defaultPrec8=True
       if (opts.uDefFuncsFile) :
-          uFuncsFile=open(opts.uDefFuncsFile,"r")
-          for theLine in uFuncsFile:
-              addUserFunc(theLine.lower().strip())
-          uFuncsFile.close()    
+        uFuncsFile=open(opts.uDefFuncsFile,"r")
+        for theLine in uFuncsFile:
+          addUserFunc(theLine.lower().strip())
+        uFuncsFile.close()    
       f1 = fortContextFile(fn,hook1)
       f1rw = f1.rewrite(canon_lexi).rewrite(decl_lexi)
       slcf = open('reslice.dat','w')
