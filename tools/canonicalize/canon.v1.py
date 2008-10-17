@@ -38,13 +38,13 @@ def main():
       fn = args[0]
       if options.r8 :
         lc._defaultPrec8=True
-      if (opts.uDefFuncsFile) :
-        uFuncsFile=open(opts.uDefFuncsFile,"r")
+      if (options.uDefFuncsFile) :
+        uFuncsFile=open(options.uDefFuncsFile,"r")
         for theLine in uFuncsFile:
           addUserFunc(theLine.lower().strip())
         uFuncsFile.close()    
       f1 = fortContextFile(fn,hook1)
-      f1rw = f1.rewrite(canon_lexi).rewrite(decl_lexi)
+      f1rw = f1.rewrite(lc.canon_lexi).rewrite(lc.decl_lexi)
       slcf = open('reslice.dat','w')
       pp = cp.Pickler(slcf)
       pp.dump(f1rw.lines[0].ctxt.toplev.slice_undo)
