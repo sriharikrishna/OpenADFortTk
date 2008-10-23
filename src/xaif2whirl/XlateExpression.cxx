@@ -343,9 +343,9 @@ namespace xaif2whirl {
       IntrinsicTable.findWHIRLInfo(xopr, xoprNm, xIntrinKey);
     // 1. Gather the operands, sorted by the "position" attribute
     unsigned int actualArgCount(n->num_incoming());
-    FORTTK_ASSERT_WARN(actualArgCount== info->numop, 
+    FORTTK_ASSERT_WARN(actualArgCount<= info->numop && actualArgCount>= info->numop-info->numOptional, 
 		       "Warning: get " << actualArgCount<< " intrinsic arguments for '"
-		       << xoprNm  << "-" << xIntrinKey << "' expect " << info->numop << " (optional args?)");
+		       << xoprNm  << "' expect " << info->numop << " (have " << info->numOptional << " optional args?)");
     OA::OA_ptr<MyDGEdge> tmp; tmp = NULL;
     vector<OA::OA_ptr<MyDGEdge> > opnd_edge(actualArgCount, tmp);
     OA::OA_ptr<EdgesIteratorInterface> itPtr 
