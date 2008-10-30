@@ -79,45 +79,52 @@ namespace whirl2xaif {
   } /* WN2F_Initiate_ZeroInt */
 
 
+    /** 
+     * translating string slices
+     *  \warning{The whirl format for substrings has in 
+     *  the first child the substring size 
+     *  and in the second the offset from the base. 
+     *  We could make proper lower and upper bound 
+     *  expression from this format for xaif. 
+     *  Because we need to backtranslate to whirl 
+     *  we would then have to undo this - 
+     *  so instead we just dump the current expression 
+     *  into the index/bound positions and leave 
+     *  them as they are even though they look misleading in xaif.}
+    */
   static void
   WN2F_Substring(xml::ostream& xos, 
 		 INT64        string_size,
 		 WN          *lower_bnd,
 		 WN          *substring_size,
 		 PUXlationContext& ctxt) {
-    /* Given a substring offset from the base of a character string 
-     * (lower_bnd), the size of the whole string, and the size of the
-     * substring, generate the notation necessary as a suffix to the
-     * string reference to denote the substring.
-     *
-     * NOTE: but not yet since we don't have the proper 
-     *       XAIF representation yet. 
-     */
-    if (WN_operator(lower_bnd) != OPR_INTCONST      ||
-	WN_const_val(lower_bnd) != 0                    ||
-	WN_operator(substring_size) != OPR_INTCONST ||
-	WN_const_val(substring_size) != string_size) {
-      FORTTK_MSG(0, 
-		 "warning: " 
-		 << fortTkSupport::Diagnostics::UnexpectedInput 
-		 << " ignoring substring expression, assuming this was introduced by mfef90" );
-     
-      //       /* Need to generate substring expression "(l+1:l+size)" */
-      //       xos << "(";
-      //       //ctxt.currentXlationContext().setFlag(no_parenthesis);
-      //       TranslateWN(xos, lower_bnd, ctxt);
-      //       //ctxt.currentXlationContext().unsetFlag(no_parenthesis);
-      //       xos << ":";
-      //       if (WN_operator(lower_bnd) != OPR_INTCONST ||
-      // 	  WN_const_val(lower_bnd) != 0)
-      //       {
-      // 	 TranslateWN(xos, lower_bnd, ctxt);
-      // 	 xos << "+";
-      //       }
-      //       TranslateWN(xos, substring_size, ctxt);
-      //       xos << ")";
+    if (WN_operator(lower_bnd) == OPR_INTCONST   
+	&&
+	WN_const_val(lower_bnd) == 0                    
+	&&
+	WN_operator(substring_size) == OPR_INTCONST 
+	&&
+	WN_const_val(substring_size) == string_size) {
+	FORTTK_DIE("should not invoke this");
     }
-  } /* WN2F_Substring */
+    xos << xml::BegElem(XAIFStrings.elem_ArrayElemRef())
+	<< xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId());
+    xos << xml::BegElem(XAIFStrings.elem_IndexTriplet());
+    xos << xml::BegElem(XAIFStrings.elem_Index());
+    ctxt.createXlationContext(); 
+    ctxt.currentXlationContext().unsetFlag(XlationContext::VARREF); // elem_Index() contains ExpressionType
+    TranslateWN(xos, lower_bnd, ctxt);
+    ctxt.deleteXlationContext();
+    xos << xml::EndElem;
+    xos << xml::BegElem(XAIFStrings.elem_Bound());
+    ctxt.createXlationContext(); 
+    ctxt.currentXlationContext().unsetFlag(XlationContext::VARREF); // elem_Index() contains ExpressionType
+    TranslateWN(xos, substring_size, ctxt);
+    ctxt.deleteXlationContext();
+    xos << xml::EndElem;
+    xos << xml::EndElem;
+    xos << xml::EndElem;
+  }
 
 
   static void
@@ -311,23 +318,6 @@ namespace whirl2xaif {
       } 
       baseptr_ty = Stab_Pointer_To(base_ty);
     
-#if 0 // REMOVE
-      else {
-	// Either not a dereference, or possibly a dereference off a 
-	// record/map/common/equivalence field.  The base symbol is
-	// not a pointer, and any dereferencing on a field will occur
-	// in xlate_SymRef().
-	baseptr_ty = Stab_Pointer_To(base_ty);
-	ref_ty = WN_ty(wn);
-      }
-#endif
-#if 0
-      if (!ctxt.currentXlationContext().isFlag(XlationContext::DEREF_ADDR) && STAB_IS_POINTER_REF_PARAM(WN_st(wn))) {
-	// Since we do not wish to dereference a load of a reference 
-	// parameter, this must mean we are taking the address of the
-	// parameter.
-      }
-#endif
       ctxt.currentXlationContext().setWN(wn);
       ctxt.currentXlationContext().setFlag(XlationContext::HAS_NO_ARR_ELMT); // FIXME why?
       xlate_SymRef(xos, WN_st(wn), baseptr_ty, ref_ty, WN_load_offset(wn), ctxt);
@@ -1168,12 +1158,6 @@ namespace whirl2xaif {
   
   }
 
-  // ***************************************************************************
-
-  /*----------- Character String Manipulation Translation ---------------*/
-  /*---------------------------------------------------------------------*/
-
-  // FIXME: I don't think we nee this...
   void
   WN2F_String_Argument(xml::ostream& xos, WN* base_parm, WN* length,
 		       PUXlationContext& ctxt)
@@ -1281,28 +1265,43 @@ namespace whirl2xaif {
 		      "Unexpected conversion from pointer to character string");
 
 	/* Get the string base and substring notation for the argument.  */
-	ctxt.currentXlationContext().setFlag(XlationContext::DEREF_ADDR);
-	TranslateWN(xos, base, ctxt);
-	ctxt.currentXlationContext().unsetFlag(XlationContext::DEREF_ADDR);
+	if ((WN_operator(lower_bnd) != OPR_INTCONST   
+	     ||
+	     WN_const_val(lower_bnd) != 0                    
+	     ||
+	     WN_operator(length_new) != OPR_INTCONST 
+	     ||
+	     WN_const_val(length_new) != str_length )
+	    && 
+	    !ctxt.currentXlationContext().isFlag(XlationContext::HAS_NO_ARR_ELMT)
+	    && 
+	    WN_class(base)!=CLASS_CONST) { 
+	  xos << xml::BegElem(XAIFStrings.elem_VarRef())
+	      << xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
+	      << xml::Attr("du_ud", ctxt.findUDDUChainId(base))
+	      << xml::Attr("alias", ctxt.getAliasMapKey(base));
+	  ctxt.createXlationContext(XlationContext::VARREF, base); 
+	  UINT srcid = ctxt.currentXlationContext().peekVertexId();
+	  TranslateWN(xos, base, ctxt);
+	  UINT targid = ctxt.currentXlationContext().peekVertexId();
+	  WN2F_Substring(xos, 
+			 str_length, 
+			 lower_bnd,
+			 length_new, 
+			 ctxt);
+	  DumpVarRefEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), srcid, targid);
+	  xos << xml::EndElem /* elem_VarRef() */;
+	  ctxt.deleteXlationContext();
+	}
+	else {
+	  ctxt.currentXlationContext().setFlag(XlationContext::DEREF_ADDR);
+	  TranslateWN(xos, base, ctxt);
+	  ctxt.currentXlationContext().unsetFlag(XlationContext::DEREF_ADDR);
+	}
+	return;
       }
-# if 0
-      /* need to take a look see when we need dump out substring--fzhao Jan*/ 
-      if (WN_operator(base) != OPR_CALL &&
-	  WN_operator(base) != OPR_LDA &&
-	  (WN_operator(base1) != OPR_ARRAY ||
-	   WN_operator(base1)==OPR_ARRAY &&
-	   WN_operator(base)==OPR_ARRAY ))
-# endif
-	if (length_new != WN2F_INTCONST_ZERO 
-	    && !ctxt.currentXlationContext().isFlag(XlationContext::HAS_NO_ARR_ELMT))
-	  WN2F_Substring(xos, str_length, lower_bnd,
-			 // WN_Skip_Parm(length),
-			 length_new, ctxt);
-      // fzhao Feb#endif
-      return;
-    }
-  } /* WN2F_String_Argument */
-
+    } /* WN2F_String_Argument */
+  }
 
   static void
   DumpVarRefEdge(xml::ostream& xos, UINT eid, UINT srcid, UINT targid)
