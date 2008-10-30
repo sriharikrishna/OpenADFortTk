@@ -2751,7 +2751,7 @@ namespace xaif2whirl {
       OA::OA_ptr<MyDGNode> snk = snktmp.convert<MyDGNode>();
       std::string srcNm = DumpDotGraph_GetNodeName(src);
       std::string snkNm = DumpDotGraph_GetNodeName(snk);
-      os << "  \"" << srcNm << "\" -> \"" << snkNm << "\";\n";
+      os << "  \"" << srcNm.c_str() << "\" -> \"" << snkNm.c_str() << "\";\n";
     }
     os << "}" << std::endl;
   }
