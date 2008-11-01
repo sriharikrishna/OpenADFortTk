@@ -968,7 +968,7 @@ xlate_Operand(xml::ostream& xos, WN *opnd, TY_IDX assumed_ty,
 		!TY_Is_Chararray_Reference(assumed_ty),
 		fortTkSupport::Diagnostics::UnexpectedInput << "substring reference");
   
-  if (!callByValue) {
+  if (!callByValue && !TY_Is_Character_String(assumed_ty)) {
     xlate_MemRef(xos, opnd,              /* address expression */
 		 assumed_ty,             /* address type */
 		 TY_pointed(assumed_ty), /* object type */
