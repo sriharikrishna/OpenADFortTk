@@ -904,33 +904,34 @@ namespace xaif2whirl {
   INTRINSIC XlateExpression::getWNIntrinsic(const char* intrnNm, vector<WN*>& opands, TYPE_ID* dtype) {
     // 1. Find dtype suggested from operands
     TYPE_ID mty = getRTypeFromOpands(opands);
-    // FIXME *** make part of an intrinsic table ***
     // per Nathan the situation is that there is 
     // a method to translate the whirl intrinsic enumerations 
     // into a  name but whirl doesn't have a function to 
-    // translate the name back. Some of the backtranslation 
-    // is done by looking at the intrinsics table in 
-    // IntrinsicXlationTable.cxx but the following
-    // are of type WNIntrinOp and 
-    // don't have a backtranslation entry.
-    // see also in Open64 common/com:
-    // intrn_info.cxx, wutil.cxx
+    // translate the name back for all of the intrinsic names
+    // because often the intrinsic name known in 
+    // get_intrinsic_from_name 
+    // includes the machine type 
+    // Because we don't include the machine type 
+    // we hardcode the intrinsic here for the following cases.
     INTRINSIC intrn = INTRINSIC_INVALID;
     if (strcmp(intrnNm, "EXPEXPR") == 0) {
       intrn = INTRN_F8EXPEXPR;
       if (dtype) { *dtype = MTYPE_F8; }
     }
-    else if (strcmp(intrnNm, "CEQEXPR") == 0) {
-      intrn = INTRN_CEQEXPR;
-      if (dtype) { *dtype = MTYPE_I4; }
-    }
-    else if (strcmp(intrnNm, "CNEEXPR") == 0) {
-      intrn = INTRN_CNEEXPR;
-      if (dtype) { *dtype = MTYPE_I4; }
-    }
     else if (strcmp(intrnNm, "AMOD") == 0) {
       intrn = INTRN_F4MOD;
       if (dtype) { *dtype = MTYPE_F4; }
+    }
+    else if (strcmp(intrnNm, "DMOD") == 0) {
+      intrn = INTRN_F4MOD;
+      if (dtype) { *dtype = MTYPE_F8; }
+    }
+    else if (strcmp(intrnNm, "LEN") == 0) {
+      intrn = INTRN_I4CLEN;
+      if (dtype) { *dtype = MTYPE_I4; }
+    }
+    else { 
+      intrn=get_intrinsic_from_name(intrnNm);
     }
     FORTTK_ASSERT(intrn != INTRINSIC_INVALID, 
 		  "Unknown intrinsic '" << intrnNm << "'");

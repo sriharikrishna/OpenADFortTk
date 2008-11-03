@@ -735,7 +735,7 @@ whirl2xaif::WN2F_nmsub(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 //***************************************************************************
 
 static void 
-WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
+WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, fortTkSupport::IntrinsicXlationTable::XAIFInfoPair& infoPair,
 		  INT begArgIdx, INT endArgIdx, BOOL callByValue, 
 		  PUXlationContext& ctxt);
 
@@ -763,7 +763,7 @@ whirl2xaif::xlate_INTRINSIC_OP(xml::ostream& xos, WN *wn, PUXlationContext& ctxt
     TranslateWN(xos, WN_kid0(wn), ctxt);
   } else {
     // General case
-    WN2F_Intr_Funcall(xos, wn, infoPair.second.name, 
+    WN2F_Intr_Funcall(xos, wn, infoPair, 
 		      begArgIdx, endArgIdx, by_value, ctxt);
   }
   
@@ -772,7 +772,7 @@ whirl2xaif::xlate_INTRINSIC_OP(xml::ostream& xos, WN *wn, PUXlationContext& ctxt
 
 
 static void 
-WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
+WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, fortTkSupport::IntrinsicXlationTable::XAIFInfoPair& infoPair,
 		  INT begArgIdx, INT endArgIdx, BOOL callByValue, 
 		  PUXlationContext& ctxt)
 {
@@ -804,8 +804,10 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, const char* intrnNm,
   // Emit Intrinsic name
   UINT targid = ctxt.currentXlationContext().getNewVertexId();
   xos << BegElem("xaif:Intrinsic") 
-      << Attr("vertex_id", targid) << Attr("name", intrnNm)
-      << Attr("type", "***") << EndElem;
+      << Attr("vertex_id", targid) << Attr("name", infoPair.second.name)
+      << Attr("type", "***");
+  if (infoPair.second.key) { xos << IntrinsicKeyAnnot(infoPair.second.key); }
+  xos << EndElem;
    
   // Emit Intrinsic argument list, skipping implicit
   // character-string-length arguments assumed to be the last ones in

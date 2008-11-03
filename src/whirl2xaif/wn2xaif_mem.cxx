@@ -142,7 +142,14 @@ namespace whirl2xaif {
      */
     TY_IDX ptr_ty = WN_Tree_Type(*base);
 
-    *string_ty = TY_pointed(ptr_ty);
+    // the WN_Tree_Type logic has been changed to 
+    // return the actual result type rather than a 
+    // low level compiler internal "void pointer" 
+    // therefore this may not actually be a pointer type. 
+    if (TY_kind(ptr_ty) == KIND_POINTER)
+      *string_ty = TY_pointed(ptr_ty);
+    else
+      *string_ty=ptr_ty;
 
     if (TY_size(*string_ty) == 1 && !TY_Is_Array(*string_ty)
 	&& WN_operator(*base) == OPR_ARRAY) {
@@ -1275,7 +1282,9 @@ namespace whirl2xaif {
 	    && 
 	    !ctxt.currentXlationContext().isFlag(XlationContext::HAS_NO_ARR_ELMT)
 	    && 
-	    WN_class(base)!=CLASS_CONST) { 
+	    WN_class(base)!=CLASS_CONST
+	    && 
+	    WN_class(base)!=CLASS_FUNC) { 
 	  xos << xml::BegElem(XAIFStrings.elem_VarRef())
 	      << xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
 	      << xml::Attr("du_ud", ctxt.findUDDUChainId(base))

@@ -69,6 +69,9 @@ namespace fortTkSupport {
     { { WNIntrinOp, OPR_INTRINSIC_OP, "CGTEXPR", 2, 0 }, { XAIFIntrin, "bogus_string_gt_scal_scal", NULL,            2 } },
     { { WNIntrinOp, OPR_INTRINSIC_OP, "CLEEXPR", 2, 0 }, { XAIFIntrin, "bogus_string_le_scal_scal", NULL,            2 } },
     { { WNIntrinOp, OPR_INTRINSIC_OP, "CLTEXPR", 2, 0 }, { XAIFIntrin, "bogus_string_lt_scal_scal", NULL,            2 } },
+    { { WNIntrinOp, OPR_INTRINSIC_OP, "LEN",     1, 0 }, { XAIFIntrin, "len",                       "0_LEN_OP",      1 } },
+    { { WNCall,     OPR_CALL,         "LEN",     1, 0 }, { XAIFIntrin, "len",                       "1_LEN_CALL",    1 } },
+    { { WNCall,     OPR_CALL,         "TRIM",    1, 0 }, { XAIFIntrin, "trim",                      NULL,            1 } },
     // Rounding, conversion
     { { WNExpr,     OPR_ABS,          NULL,      1, 0 }, { XAIFIntrin, "abs_scal",                  "0_ABS",         1 } },
     { { WNCall,     OPR_CALL,         "ABS",     1, 0 }, { XAIFIntrin, "abs_scal",                  "1_ABS",         1 } },
@@ -108,7 +111,6 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "UBOUND",  2, 0 }, { XAIFIntrin, "ubound",                    NULL,            2 } },
     { { WNCall,     OPR_CALL,         "SIZE",    2, 1 }, { XAIFIntrin, "size",                      NULL,            2 } },
     { { WNIntrinOp, OPR_INTRINSIC_OP, "F90INDEX",2, 0 }, { XAIFIntrin, "index",                     NULL,            2 } },
-    { { WNCall,     OPR_CALL,         "LEN",     1, 0 }, { XAIFIntrin, "len",                       NULL,            1 } },
     { { WNExpr,     OPR_SHL,           NULL,     2, 0 }, { XAIFIntrin, "bogus_shl_scal_scal",       NULL,            2 } },
     { { WNExpr,     OPR_ASHR,          NULL,     2, 0 }, { XAIFIntrin, "bogus_ashr_scal_scal",      NULL,            2 } }, 
     { { WNCall,     OPR_CALL,         "PRESENT", 1, 0 }, { XAIFIntrin, "present",                   NULL,            1 } },

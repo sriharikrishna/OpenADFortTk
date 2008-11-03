@@ -54,6 +54,9 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CGTEXPR")    ]=Info(false,2,STRING_INTR);
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CLEEXPR")    ]=Info(false,2,STRING_INTR);
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CLTEXPR")    ]=Info(false,2,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "LEN")        ]=Info(false,1,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "LEN")        ]=Info(false,1,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "TRIM")       ]=Info(false,1,STRING_INTR);
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_CALL,"CONCATEXPR") ]=Info(true, 2,STRING_INTR);
     
     // string assignment
@@ -63,8 +66,6 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     // to the AssignPair sattement. Therefore, Removed from list of Intrinsics.
     //ourIntrinsicInfoMap[Key( OPR_INTRINSIC_CALL,"CASSIGNSTMT")]=Info(false,1,STRING_INTR);
    
-    // string length
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "LEN")        ]=Info(false,1,STRING_INTR);
     // rounding and conversion
     ourIntrinsicInfoMap[Key( OPR_ABS,           NULL)         ]=Info(false,1,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "ABS")        ]=Info(false,1,FLOAT_INTR);
