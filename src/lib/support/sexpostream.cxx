@@ -19,6 +19,8 @@
 
 //************************* System Include Files ****************************
 
+#include <string.h>  // for strlen
+
 //*************************** User Include Files ****************************
 
 #include "sexpostream.h"

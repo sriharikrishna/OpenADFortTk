@@ -1,24 +1,4 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/Args.cxx,v 1.1 2004/08/05 18:38:14 eraxxon Exp $
-// * BeginRiceCopyright *****************************************************
-// ******************************************************* EndRiceCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/Args.cxx,v $
-//
-// Purpose:
-//    [The purpose of this file]
-//
-// Description:
-//    [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************* System Include Files ****************************
-
-//*************************** User Include Files ****************************
+#include <stdlib.h>
 
 #include "Args.h"
 
