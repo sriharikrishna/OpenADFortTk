@@ -9,3 +9,4 @@ OpenADFortTk-*/*
 *~
 *.orig
 autom4te.cache/*
+tools/SourceProcessing
