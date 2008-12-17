@@ -56,6 +56,6 @@ if __name__ == '__main__':
     config, args = opt.parse_args()
     fn         = args[0]
     (base,ext) = os.path.splitext(fn)
-    newfn      = base + '.pp' + ext
+    newfn      = base + '.post' + ext
 
     Prog1(xaifv,fpf(fn).lines).writeit(newfn)
