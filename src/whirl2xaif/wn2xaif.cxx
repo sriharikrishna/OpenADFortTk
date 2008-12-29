@@ -1604,7 +1604,7 @@ namespace whirl2xaif {
       //xos << Comment(vty);
     }
     else {
-      if (IsActiveStmt(wn, ctxt)) {
+      if (IsActiveStmt(wn, ctxt) || opr==OPR_STID) {
 	TranslateWN(xos, wn, ctxt);
       } 
       else {
