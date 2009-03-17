@@ -34,6 +34,7 @@ namespace xaif2whirl{
       ACTIVETYPE       = 0x00000001, // active symbol ref, determined from symbol type (inheritUp)
       VALUESELECTOR    = 0x00000002, // value selector, is also set for passive vars (inheritDown) 
       DERIVSELECTOR    = 0x00000004, // deriv selector (inheritDown)
+      SUPPRESSSELECTOR = 0x00000008, // suppress any selectors for certain intrinsics (inheritDown)
       VARREF           = 0x00000010, // within variable reference (inheritDown)
       LVALUE           = 0x00000020, // var ref should be an lvalue (inheritDown) 
       ARRAY            = 0x00000040, // an array reference (inheritDown)

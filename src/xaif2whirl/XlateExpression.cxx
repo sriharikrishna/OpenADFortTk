@@ -219,6 +219,9 @@ namespace xaif2whirl {
     const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
     XercesStrX nm = XercesStrX(nmX);
     std::string key = GetIntrinsicKey(elem);
+    if (std::string("allocated")==nm.c_str()) { 
+      ctxt.currentXlationContext().setFlag(XlationContext::SUPPRESSSELECTOR);
+    } 
     WN* wn = xlate_ExprOpUsingIntrinsicTable(fortTkSupport::IntrinsicXlationTable::XAIFIntrin, 
 					     nm.c_str(), 
 					     key.c_str(), 
@@ -267,8 +270,11 @@ namespace xaif2whirl {
     // VariableReferenceType
     bool deriv = GetDerivAttr(elem);
     // skip the xaif:VariableReference node
-    DOMElement* varref = GetFirstChildElement(elem); 
-    ctxt.createXlationContext((deriv) ? XlationContext::DERIVSELECTOR : XlationContext::VALUESELECTOR);
+    DOMElement* varref = GetFirstChildElement(elem);
+    if (ctxt.currentXlationContext().isFlag(XlationContext::SUPPRESSSELECTOR))
+      ctxt.createXlationContext();
+    else 
+      ctxt.createXlationContext((deriv) ? XlationContext::DERIVSELECTOR : XlationContext::VALUESELECTOR);
     WN* wn = translateVarRef(varref, ctxt);
     ctxt.deleteXlationContext();
     return wn;
