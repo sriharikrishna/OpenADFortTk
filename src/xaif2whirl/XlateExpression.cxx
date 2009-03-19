@@ -228,6 +228,9 @@ namespace xaif2whirl {
 					     g, 
 					     n, 
 					     ctxt);
+    if (std::string("allocated")==nm.c_str()) {
+      ctxt.currentXlationContext().unsetFlag(XlationContext::SUPPRESSSELECTOR);
+    }
     return wn;
   }
 
