@@ -34,13 +34,15 @@ void AdjustInterfaces::forPUInfo(PU_Info* aPUInfo_p) {
       skipKids=true;
       WN* interfaceFuncWN_p=WN_kid0(curWN_p);
       ST* puName_ST_p=WN_st(interfaceFuncWN_p); 
-      for (INT kidIdx = 0; kidIdx < WN_kid_count(interfaceFuncWN_p); kidIdx+=2) {
-	ST* dummyLocal_ST_p=WN_st(WN_kid(interfaceFuncWN_p, kidIdx));
-	TY_IDX properPUTypeIndex=findPUSymbolType(puName_ST_p,
-						  dummyLocal_ST_p);
-	if (properPUTypeIndex && properPUTypeIndex!=ST_type(dummyLocal_ST_p)){
-	  // do the surgery on the type info 
-	  Set_ST_type(dummyLocal_ST_p,properPUTypeIndex);
+      if (!ST_is_in_module(puName_ST_p)) {  // assuming we don't have to adjust module interfaces
+	for (INT kidIdx = 0; kidIdx < WN_kid_count(interfaceFuncWN_p); kidIdx+=2) {
+	  ST* dummyLocal_ST_p=WN_st(WN_kid(interfaceFuncWN_p, kidIdx));
+	  TY_IDX properPUTypeIndex=findPUSymbolType(puName_ST_p,
+						    dummyLocal_ST_p);
+	  if (properPUTypeIndex && properPUTypeIndex!=ST_type(dummyLocal_ST_p)){
+	    // do the surgery on the type info 
+	    Set_ST_type(dummyLocal_ST_p,properPUTypeIndex);
+	  }
 	}
       }
     }
