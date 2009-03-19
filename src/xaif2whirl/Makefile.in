@@ -114,6 +114,7 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am__objects_1 = xaif2whirl-main.$(OBJEXT) xaif2whirl-Args.$(OBJEXT) \
+	xaif2whirl-AdjustInterfaces.$(OBJEXT) \
 	xaif2whirl-xaif2whirl.$(OBJEXT) xaif2whirl-XlateStmt.$(OBJEXT) \
 	xaif2whirl-XlateExpression.$(OBJEXT) \
 	xaif2whirl-XlationContext.$(OBJEXT) \
@@ -299,6 +300,7 @@ OPENADFORTTK_LIBSUPPORT = $(top_builddir)/src/lib/support/libsupport.a
 MYSOURCES = \
 	main.cxx \
 	Args.h Args.cxx \
+	AdjustInterfaces.h AdjustInterfaces.cxx \
 	\
 	xaif2whirl.h xaif2whirl.cxx \
 	XlateStmt.h XlateStmt.cxx \
@@ -407,6 +409,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xaif2whirl-AdjustInterfaces.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xaif2whirl-Args.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xaif2whirl-PUXlationContext.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xaif2whirl-XAIF_DOMErrorHandler.Po@am__quote@
@@ -461,6 +464,20 @@ xaif2whirl-Args.obj: Args.cxx
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='Args.cxx' object='xaif2whirl-Args.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -c -o xaif2whirl-Args.obj `if test -f 'Args.cxx'; then $(CYGPATH_W) 'Args.cxx'; else $(CYGPATH_W) '$(srcdir)/Args.cxx'; fi`
+
+xaif2whirl-AdjustInterfaces.o: AdjustInterfaces.cxx
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -MT xaif2whirl-AdjustInterfaces.o -MD -MP -MF "$(DEPDIR)/xaif2whirl-AdjustInterfaces.Tpo" -c -o xaif2whirl-AdjustInterfaces.o `test -f 'AdjustInterfaces.cxx' || echo '$(srcdir)/'`AdjustInterfaces.cxx; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/xaif2whirl-AdjustInterfaces.Tpo" "$(DEPDIR)/xaif2whirl-AdjustInterfaces.Po"; else rm -f "$(DEPDIR)/xaif2whirl-AdjustInterfaces.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='AdjustInterfaces.cxx' object='xaif2whirl-AdjustInterfaces.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -c -o xaif2whirl-AdjustInterfaces.o `test -f 'AdjustInterfaces.cxx' || echo '$(srcdir)/'`AdjustInterfaces.cxx
+
+xaif2whirl-AdjustInterfaces.obj: AdjustInterfaces.cxx
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -MT xaif2whirl-AdjustInterfaces.obj -MD -MP -MF "$(DEPDIR)/xaif2whirl-AdjustInterfaces.Tpo" -c -o xaif2whirl-AdjustInterfaces.obj `if test -f 'AdjustInterfaces.cxx'; then $(CYGPATH_W) 'AdjustInterfaces.cxx'; else $(CYGPATH_W) '$(srcdir)/AdjustInterfaces.cxx'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/xaif2whirl-AdjustInterfaces.Tpo" "$(DEPDIR)/xaif2whirl-AdjustInterfaces.Po"; else rm -f "$(DEPDIR)/xaif2whirl-AdjustInterfaces.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='AdjustInterfaces.cxx' object='xaif2whirl-AdjustInterfaces.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -c -o xaif2whirl-AdjustInterfaces.obj `if test -f 'AdjustInterfaces.cxx'; then $(CYGPATH_W) 'AdjustInterfaces.cxx'; else $(CYGPATH_W) '$(srcdir)/AdjustInterfaces.cxx'; fi`
 
 xaif2whirl-xaif2whirl.o: xaif2whirl.cxx
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xaif2whirl_CXXFLAGS) $(CXXFLAGS) -MT xaif2whirl-xaif2whirl.o -MD -MP -MF "$(DEPDIR)/xaif2whirl-xaif2whirl.Tpo" -c -o xaif2whirl-xaif2whirl.o `test -f 'xaif2whirl.cxx' || echo '$(srcdir)/'`xaif2whirl.cxx; \

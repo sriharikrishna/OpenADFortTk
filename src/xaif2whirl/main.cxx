@@ -33,6 +33,7 @@
 #include "XAIF_SAXErrorHandler.h"
 #include "XAIF_SAXHandler.h"
 #include "XercesStrX.h"
+#include "AdjustInterfaces.h"
 
 namespace xaif2whirl { 
 
@@ -135,6 +136,9 @@ namespace xaif2whirl {
     // 4. Translate XAIF into WHIRL
     // -------------------------------------------------------
     ret = main_SAX(pu_forest, args.xaifFileNm.c_str(), args.validate); 
+
+    AdjustInterfaces ai(pu_forest);
+    ai.doIt();
 
     WriteIR(args.outWhirlFileNm.c_str(), pu_forest);
     //FreeIR(pu_forest);
