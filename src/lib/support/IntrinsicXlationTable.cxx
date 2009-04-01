@@ -114,6 +114,7 @@ namespace fortTkSupport {
     { { WNExpr,     OPR_SHL,           NULL,     2, 0 }, { XAIFIntrin, "bogus_shl_scal_scal",       NULL,            2 } },
     { { WNExpr,     OPR_ASHR,          NULL,     2, 0 }, { XAIFIntrin, "bogus_ashr_scal_scal",      NULL,            2 } }, 
     { { WNCall,     OPR_CALL,         "PRESENT", 1, 0 }, { XAIFIntrin, "present",                   NULL,            1 } },
+    { { WNCall,     OPR_CALL,         "ASSOCIATED", 1, 0 }, { XAIFIntrin, "associated",             NULL,            1 } },
     { { WNCall,     OPR_CALL,         "ALLOCATED", 1, 0 }, { XAIFIntrin, "allocated",               NULL,            1 } },
     // max/min are turned into special subroutine calls by the canonicalizer 
     { { WNExpr,     OPR_MAX,           NULL,     2, 0 }, { XAIFIntrin, "bogus_max_scal_scal",       NULL,            2 } },

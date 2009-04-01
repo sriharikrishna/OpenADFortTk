@@ -375,8 +375,14 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
     is_user_call = TRUE;
     const char* nm = ST_name(WN_st(wn));
     if (strcmp(nm, "_ALLOCATE") == 0) {
+      xlate_PassiveStmt(xos,wn,ctxt);
+      // cut short here
+      return; 
       is_allocate_stmt = TRUE;
     } else if (strcmp(nm, "_DEALLOCATE") == 0) {
+      xlate_PassiveStmt(xos,wn,ctxt);
+      // cut short here
+      return; 
       ctxt.currentXlationContext().setFlag(XlationContext::HAS_NO_ARR_ELMT);
       is_allocate_stmt = TRUE;
     } else if (strcmp(nm, "PRESENT") == 0) {

@@ -110,6 +110,7 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_CALL,          "SIZE")       ]=Info(false,2,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "F90INDEX")   ]=Info(false,2,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "PRESENT")    ]=Info(false,1,COMPILER_INTERNAL_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "ASSOCIATED") ]=Info(false,1,COMPILER_INTERNAL_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "ALLOCATED")  ]=Info(false,1,COMPILER_INTERNAL_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "MAXVAL")     ]=Info(false,2,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "MINVAL")     ]=Info(false,2,ARRAY_INTR);
