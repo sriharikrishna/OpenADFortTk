@@ -20,6 +20,7 @@ static const char* usage_details =
 "default, output is sent to stdout.\n"
 "\n"
 "Options:\n"
+"  -n, --noCleanUp     do not perform whirl cleanup needed for OpenAD\n"
 "  -o, --output <file> send output to <file> instead of stdout\n"
 "  -V, --version       print version information\n"
 "  -h, --help          print this help\n"
