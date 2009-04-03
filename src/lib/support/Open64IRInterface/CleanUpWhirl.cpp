@@ -86,12 +86,16 @@ ST* CleanUpWhirl::findModuleSymbol(ST* moduleName_ST_p,
 // entries instead of the proper entries in the 
 // global symbol table. We replace these references.
 void CleanUpWhirl::forPUInfo(PU_Info* aPUInfo_p,
-			     PU_Info* aTopPUInfo_p) { 
+			     PU_Info* aTopPUInfo_p) {
   PU_SetGlobalState(aPUInfo_p);
+  WN *pragmaWN_p=0, *parentBlockWN_p=0;
   WN* thePU_WN_p = PU_Info_tree_ptr(aPUInfo_p);
   WN_TREE_CONTAINER<PRE_ORDER> aWNPtree(thePU_WN_p);
   WN_TREE_CONTAINER<PRE_ORDER>::iterator aWNPtreeIterator=aWNPtree.begin();
-  std::set<WN*> toBeDeletedSet;
+  typedef std::pair<WN*, WN*> NodeBlockWNPPair;
+  typedef std::set<NodeBlockWNPPair> NodeBlockWNPPairSet;
+  NodeBlockWNPPairSet interfaceTreesToBeDeleted;
+  std::set<WN*> useVarsToBeDeleted;
   bool skipKids=false;
   while (aWNPtreeIterator != aWNPtree.end()) { 
     WN* curWN_p = aWNPtreeIterator.Wn();
@@ -115,7 +119,7 @@ void CleanUpWhirl::forPUInfo(PU_Info* aPUInfo_p,
 						 aTopPUInfo_p);
 	  if (properModule_ST_p) { 
 	    WN_kid(curWN_p,kidIdx)=WN_CreateIdname(WN_idname_offset(useOldKid_WN_p),properModule_ST_p);
-	    toBeDeletedSet.insert(useOldKid_WN_p);
+	    useVarsToBeDeleted.insert(useOldKid_WN_p);
 	  }
 	}
 	// always fix up the second kid
@@ -126,9 +130,26 @@ void CleanUpWhirl::forPUInfo(PU_Info* aPUInfo_p,
 					       aTopPUInfo_p);
 	if (properModule_ST_p) { 
 	  WN_kid(curWN_p,kidIdx+1)=WN_CreateIdname(WN_idname_offset(useOldKid_WN_p),properModule_ST_p);
-	  toBeDeletedSet.insert(useOldKid_WN_p);
+	  useVarsToBeDeleted.insert(useOldKid_WN_p);
 	}
       }
+    }
+    else if ( opr == OPR_INTERFACE ) {
+      if (parentBlockWN_p==0 || pragmaWN_p==0) { 
+	DIE("forPUInfo: need parentBlockWN_p(%h)!=0 and pragmaWN_p(%h)!=0\n",parentBlockWN_p,pragmaWN_p);
+      }
+      skipKids=true;
+      // make a copy of curWN_p 
+      // attach it to pragma_WN_p
+      WN* newInterfaceWN_p=WN_COPY_Tree(curWN_p);
+      WN_INSERT_BlockLast(pragmaWN_p,newInterfaceWN_p);
+      interfaceTreesToBeDeleted.insert(NodeBlockWNPPair(curWN_p,parentBlockWN_p));
+    }
+    else if ( opr == OPR_BLOCK ) {
+      parentBlockWN_p=curWN_p;
+    }
+    else if ( opr == OPR_FUNC_ENTRY ) {
+      pragmaWN_p=WN_kid(curWN_p,WN_kid_count(curWN_p)-3);
     }
     // advance the iterator
     if (skipKids){
@@ -139,9 +160,14 @@ void CleanUpWhirl::forPUInfo(PU_Info* aPUInfo_p,
       ++aWNPtreeIterator;
   }
   // postpone the deletion to avoid possibly upsetting the iterator
-  for (std::set<WN*>::iterator i = toBeDeletedSet.begin();
-       i!=toBeDeletedSet.end();
+  for (std::set<WN*>::iterator i = useVarsToBeDeleted.begin();
+       i!=useVarsToBeDeleted.end();
        ++i) 
     WN_Delete(*i);
+  for (NodeBlockWNPPairSet::iterator i = interfaceTreesToBeDeleted.begin();
+       i!=interfaceTreesToBeDeleted.end();
+       ++i) {
+    WN_DELETE_FromBlock((*i).second,(*i).first);
+  }
 } 
 
