@@ -652,7 +652,7 @@ sexp2whirl::xlate_INTERFACE(sexp_t* sx) {
       std::vector<WN*> formalArguments = TranslateWNChildren(kid_sx);
       // make the FUNC_ENTRY: 
       kidwn = WN_Create (OPC_FUNC_ENTRY, formalArguments.size());
-      sexp_t* attrs_sx = get_wnast_attrs(sx); // WN_ATTRS
+      sexp_t* attrs_sx = get_wnast_attrs(kid_sx); // WN_ATTRS
       sexp_t* st_idx_sx = get_elem0(attrs_sx);
       ST_IDX st_idx = GetWhirlSymRef(st_idx_sx);
       WN_entry_name(kidwn) = st_idx;
