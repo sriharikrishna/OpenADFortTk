@@ -139,11 +139,13 @@ void CleanUpWhirl::forPUInfo(PU_Info* aPUInfo_p,
 	DIE("forPUInfo: need parentBlockWN_p(%h)!=0 and pragmaWN_p(%h)!=0\n",parentBlockWN_p,pragmaWN_p);
       }
       skipKids=true;
-      // make a copy of curWN_p 
-      // attach it to pragma_WN_p
-      WN* newInterfaceWN_p=WN_COPY_Tree(curWN_p);
-      WN_INSERT_BlockLast(pragmaWN_p,newInterfaceWN_p);
-      interfaceTreesToBeDeleted.insert(NodeBlockWNPPair(curWN_p,parentBlockWN_p));
+      if (parentBlockWN_p!=pragmaWN_p) { // don't repeat things if we already cleaned up once ...
+	// make a copy of curWN_p 
+	// attach it to pragma_WN_p
+	WN* newInterfaceWN_p=WN_COPY_Tree(curWN_p);
+	WN_INSERT_BlockLast(pragmaWN_p,newInterfaceWN_p);
+	interfaceTreesToBeDeleted.insert(NodeBlockWNPPair(curWN_p,parentBlockWN_p));
+      }
     }
     else if ( opr == OPR_BLOCK ) {
       parentBlockWN_p=curWN_p;
