@@ -160,6 +160,9 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "xaif:DerivativePropagator", // block
   
   "xaif:SetDeriv",             // stmt
+  "xaif:SetNegDeriv",
+  "xaif:IncDeriv",
+  "xaif:DecDeriv",
   "xaif:ZeroDeriv",
   "xaif:Sax",
   "xaif:Saxpy",

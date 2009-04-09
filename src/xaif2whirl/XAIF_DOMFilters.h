@@ -159,6 +159,9 @@ namespace xaif2whirl {
     short acceptNode(const xercesc::DOMNode *node) const;
 
     static bool IsSetDeriv(const xercesc::DOMNode *node);
+    static bool IsSetNegDeriv(const xercesc::DOMNode *node);
+    static bool IsIncDeriv(const xercesc::DOMNode *node);
+    static bool IsDecDeriv(const xercesc::DOMNode *node);
     static bool IsSax(const xercesc::DOMNode *node);
     static bool IsSaxpy(const xercesc::DOMNode *node);
     static bool IsZeroDeriv(const xercesc::DOMNode *node);  

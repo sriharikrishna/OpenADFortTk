@@ -158,6 +158,9 @@ public:
     ELEM_DerivProp,  // block
 
     ELEM_SetDeriv,   // stmt
+    ELEM_SetNegDeriv,
+    ELEM_IncDeriv,
+    ELEM_DecDeriv,
     ELEM_ZeroDeriv,
     ELEM_Sax,
     ELEM_Saxpy,
@@ -408,6 +411,9 @@ public:
   XMLCh*      elem_DerivProp_x() const { return x_strTbl[ELEM_DerivProp]; }
   
   XMLCh*      elem_SetDeriv_x() const { return x_strTbl[ELEM_SetDeriv]; }
+  XMLCh*      elem_SetNegDeriv_x() const { return x_strTbl[ELEM_SetNegDeriv]; }
+  XMLCh*      elem_IncDeriv_x() const { return x_strTbl[ELEM_IncDeriv]; }
+  XMLCh*      elem_DecDeriv_x() const { return x_strTbl[ELEM_DecDeriv]; }
   XMLCh*      elem_ZeroDeriv_x() const { return x_strTbl[ELEM_ZeroDeriv]; }
   XMLCh*      elem_Sax_x() const { return x_strTbl[ELEM_Sax]; }
   XMLCh*      elem_Saxpy_x() const { return x_strTbl[ELEM_Saxpy]; }
