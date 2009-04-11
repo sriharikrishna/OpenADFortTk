@@ -67,6 +67,8 @@ public:
   std::string inWhirlFileNm;
   std::string outWhirlFileNm;
   std::string xaifFileNm;
+  static std::string ourActiveTypeNm;
+  static const unsigned short ourActiveTypeNmLength=27;
   bool validate;
 
   static TYPE_ID ourDefaultMTypeInt;
