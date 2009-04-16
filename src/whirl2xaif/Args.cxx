@@ -18,7 +18,7 @@ static const char* usage_details =
 "output is sent to stdout.\n"
 "\n"
 "Options:\n"
-"  -h, --help          print this help\n"
+"  -h, --help          print this help and exit\n"
 "  -n, --noFilter      do not filter ud/du chains by current basic block\n"
 "  -N, --noTimeStamp   do not print a time stamp into the output\n"
 "  -o, --output <file> send output to <file> instead of stdout\n"
@@ -122,7 +122,7 @@ Args::Parse(int argc, const char* const argv[])
     }
     if (parser.IsOpt("help")) { 
       PrintUsage(std::cerr); 
-      exit(1);
+      exit(0);
     }
     if (parser.IsOpt("variedOnly")) { 
       ourVariedOnlyFlag=true;

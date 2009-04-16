@@ -65,9 +65,9 @@ static const char* usage_details =
 "      --r4            make reals 4 byte where not specified (default 8 bytes)\n"
 "  -t, --type <name>   abstract active type name (default oadactive), no longer\n" 
 "                      than 26 characters\n"
-"  -V, --version       print version information\n"
+"  -V, --version       print version information and exit\n"
 "  -v, --validate      validate agains schema\n"
-"  -h, --help          print this help\n"
+"  -h, --help          print this help and exit\n"
 "      --debug [lvl]   debug mode at level `lvl'\n";
 
 
@@ -174,14 +174,14 @@ Args::Parse(int argc, const char* const argv[])
     }
     if (parser.IsOpt("help")) { 
       PrintUsage(std::cerr); 
-      exit(1);
+      exit(0);
     }
     if (parser.IsOpt("validate")) { 
       validate=true;
     }
     if (parser.IsOpt("version")) { 
       PrintVersion(std::cerr);
-      exit(1);
+      exit(0);
     }
     
     // Check for algorithm options
