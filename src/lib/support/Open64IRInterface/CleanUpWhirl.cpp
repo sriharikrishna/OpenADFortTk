@@ -72,6 +72,7 @@ ST* CleanUpWhirl::findModuleSymbol(ST* moduleName_ST_p,
     ST* an_ST_p=&(St_Table(level,i));
     // std::cout << "looking at " << ST_name(an_ST_p) << std::endl; 
     if (strcmp(ST_name(an_ST_p),dummyLocalName)==0) { // must match the name
+      DBGMSG(2,"findModuleSymbol: replacing presumed parameter %s",dummyLocalName); 
       PU_SetGlobalState(currentPUI);
       return &(St_Table(1,ST_st_idx(*an_ST_p)));
     }
