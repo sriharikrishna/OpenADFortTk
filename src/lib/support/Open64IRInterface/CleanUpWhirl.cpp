@@ -57,29 +57,16 @@ ST* CleanUpWhirl::findModuleSymbol(ST* moduleName_ST_p,
   // haven't found it yet.  This can be the case if the module variable is actually 
   // a fortran "PARAMETER" i.e. a constant for which the name won't match
   // because its name in the global symbol table is the constant value. 
-  // we should try to find the PU of the module and look it up there. 
+  // we can't do anything here because the symbol table entry in the 
+  // actual module isn't visible in this context (because whirl 
+  // only distinguishes things by symbol table level (both would be level 2) 
+  // and within that given level by "index"
+  // so we don't do anything here under the assumption that the 
+  // parameter in all references is being replaced by the actual value anyway
   PU_Info* theModulePU=findModulePU(aTopPUInfo_p,moduleName_ST_p);
   const char* dummyLocalName=ST_name(dummyLocal_ST_p);
-  // temporarily reset the global state
-  PU_Info* currentPUI=Current_PU_Info;
-  PU_SetGlobalState(theModulePU);
-  // level should be 2 here
-  level=2;
-  for (INT i = 1; 
-       i < ST_Table_Size(level) ; 
-       ++i) { 
-    // get the symbol from the table
-    ST* an_ST_p=&(St_Table(level,i));
-    // std::cout << "looking at " << ST_name(an_ST_p) << std::endl; 
-    if (strcmp(ST_name(an_ST_p),dummyLocalName)==0) { // must match the name
-      DBGMSG(2,"findModuleSymbol: replacing presumed parameter %s",dummyLocalName); 
-      PU_SetGlobalState(currentPUI);
-      return &(St_Table(1,ST_st_idx(*an_ST_p)));
-    }
-  }
-  PU_SetGlobalState(currentPUI);
-  DIE("findModuleSymbol: no symbol %s in module %s\n",ST_name(dummyLocal_ST_p),ST_name(moduleName_ST_p));
-  return 0; 	
+  DBGMSG(2,"findModuleSymbol: not replacing presumed parameter with local name %s",dummyLocalName); 
+  return dummyLocal_ST_p; 	
 } 
 
 // in use statements the front-end generates
@@ -118,7 +105,7 @@ void CleanUpWhirl::forPUInfo(PU_Info* aPUInfo_p,
 	  ST* properModule_ST_p=findModuleSymbol(moduleName_ST_p,
 						 dummyLocal_ST_p,
 						 aTopPUInfo_p);
-	  if (properModule_ST_p) { 
+	  if (properModule_ST_p && properModule_ST_p!=dummyLocal_ST_p) { 
 	    WN_kid(curWN_p,kidIdx)=WN_CreateIdname(WN_idname_offset(useOldKid_WN_p),properModule_ST_p);
 	    useVarsToBeDeleted.insert(useOldKid_WN_p);
 	  }
@@ -129,7 +116,7 @@ void CleanUpWhirl::forPUInfo(PU_Info* aPUInfo_p,
 	ST* properModule_ST_p=findModuleSymbol(moduleName_ST_p,
 					       dummyLocal_ST_p,
 					       aTopPUInfo_p);
-	if (properModule_ST_p) { 
+	if (properModule_ST_p && properModule_ST_p!=dummyLocal_ST_p) { 
 	  WN_kid(curWN_p,kidIdx+1)=WN_CreateIdname(WN_idname_offset(useOldKid_WN_p),properModule_ST_p);
 	  useVarsToBeDeleted.insert(useOldKid_WN_p);
 	}
