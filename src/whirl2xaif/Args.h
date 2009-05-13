@@ -74,8 +74,11 @@ public:
   // don't print a time stamp
   static bool ourNoTimeStampFlag;
 
-  // do not require usefull analysis
+  // do not require useful analysis
   static bool ourVariedOnlyFlag; 
+
+  // permit unstructured control flow
+  static bool ourUnstructuredControlFlowFlag; 
 
 private:
   void Ctor();
