@@ -589,9 +589,15 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
 			     WN_kid(wn, len_idx), /* string length */
 			     ctxt);
       } 
-      else if (!TY_Is_Pointer(arg_ty) || 
-	       (WN_operator(WN_kid(wn, arg_idx)) == OPR_INTRINSIC_OP &&
-		INTR_is_valtmp(WN_intrinsic(WN_kid(wn, arg_idx))))) {
+      else if (!TY_Is_Pointer(arg_ty) 
+	       || 
+	       ((WN_operator(kidofparm) == OPR_INTRINSIC_OP
+		 || 
+		 WN_operator(kidofparm) == OPR_INTRINSIC_CALL)
+		&&
+		INTR_is_valtmp(WN_intrinsic(kidofparm)))
+	       ||
+	       WN_operator(kidofparm) == OPR_ARRAYEXP) {
 	// Need to explicitly note this as a value parameter.
 	if (WN_operator(kidofparm) == OPR_INTRINSIC_CALL &&
 	    WN_intrinsic(kidofparm) == INTRN_CONCATEXPR)
