@@ -121,7 +121,9 @@ namespace xaif2whirl {
   }
 
   bool XlateExpression::hasActiveSymbolType(WN* aWNp) { 
-    if (WN_has_sym(aWNp)) { 
+    if (WN_has_sym(aWNp)) {
+      if (WN_operator(aWNp)==OPR_IMPLICIT_BND)
+	return false;
       ST* st = WN_st(aWNp);
       TY_IDX tyIdx = ST_type(st);
       if (TY_kind(tyIdx) == KIND_POINTER) {
