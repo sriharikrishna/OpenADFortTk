@@ -57,6 +57,15 @@ namespace xaif2whirl {
     static WN* xlate_SetDeriv(const DOMElement* elem, 
 			      PUXlationContext& ctxt);
 
+    static WN* xlate_SetNegDeriv(const DOMElement* elem,
+                                 PUXlationContext& ctxt);
+
+    static WN* xlate_IncDeriv(const DOMElement* elem,
+                              PUXlationContext& ctxt);
+
+    static WN* xlate_DecDeriv(const DOMElement* elem,
+                              PUXlationContext& ctxt);
+
     static WN* xlate_ZeroDeriv(const DOMElement* elem, 
 			       PUXlationContext& ctxt);
     /** 

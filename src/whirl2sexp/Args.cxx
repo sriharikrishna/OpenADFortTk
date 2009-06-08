@@ -1,24 +1,4 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/Args.cxx,v 1.1 2004/08/05 18:38:14 eraxxon Exp $
-// * BeginRiceCopyright *****************************************************
-// ******************************************************* EndRiceCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/Args.cxx,v $
-//
-// Purpose:
-//    [The purpose of this file]
-//
-// Description:
-//    [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************* System Include Files ****************************
-
-//*************************** User Include Files ****************************
+#include <cstdlib>
 
 #include "Args.h"
 
@@ -40,6 +20,7 @@ static const char* usage_details =
 "default, output is sent to stdout.\n"
 "\n"
 "Options:\n"
+"  -n, --noCleanUp     do not perform whirl cleanup needed for OpenAD\n"
 "  -o, --output <file> send output to <file> instead of stdout\n"
 "  -V, --version       print version information\n"
 "  -h, --help          print this help\n"
@@ -52,6 +33,7 @@ CmdLineParser::OptArgDesc Args::optArgs[] = {
   // Options
   { 'o', "output",   CLP::ARG_REQ , CLP::DUPOPT_ERR,  NULL },
   { 'V', "version",  CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
+  { 'n', "noCleanUp",CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 'h', "help",     CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "debug",    CLP::ARG_OPT,  CLP::DUPOPT_CLOB, NULL },
   CmdLineParser::OptArgDesc_NULL
@@ -63,21 +45,11 @@ CmdLineParser::OptArgDesc Args::optArgs[] = {
 // Args
 //***************************************************************************
 
-Args::Args()
-{
-  Ctor();
+Args::Args()  : debug(0), myNoCleanUpFlag(false) {
 }
 
-Args::Args(int argc, const char* const argv[])
-{
-  Ctor();
+Args::Args(int argc, const char* const argv[]) : debug(0), myNoCleanUpFlag(false) {
   Parse(argc, argv);
-}
-
-void
-Args::Ctor()
-{
-  debug = 0;      // default: 0 (off)
 }
 
 Args::~Args()
@@ -149,6 +121,10 @@ Args::Parse(int argc, const char* const argv[])
       sexpFileNm = parser.GetOptArg("output");
     }
     
+    if (parser.IsOpt("noCleanUp")) { 
+      myNoCleanUpFlag = true;
+    }
+
     // Check for required arguments
     if (parser.GetNumArgs() != 1) {
       PrintError(std::cerr, "Invalid number of arguments!");

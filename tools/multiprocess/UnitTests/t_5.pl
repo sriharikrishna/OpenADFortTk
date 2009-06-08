@@ -755,7 +755,7 @@ C
 W2F1
     $w2f1_pp = <<'W2F1PP';
       use w2f__types
-      use active_module
+      use OAD_active
       IMPLICIT NONE
 C
 C     **** Global Variables ****

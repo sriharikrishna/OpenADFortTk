@@ -16,6 +16,7 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_CALL,          "SQRT")       ]=Info(false,1,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "DSQRT")      ]=Info(false,1,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_SQRT,          NULL)         ]=Info(false,1,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "SUM")        ]=Info(false,1,ARRAY_INTR); 
     // modulo/remainder
     ourIntrinsicInfoMap[Key( OPR_MOD,           NULL)         ]=Info(false,2,FLOAT_INTR); 
     ourIntrinsicInfoMap[Key( OPR_CALL,          "MODULO")     ]=Info(false,2,FLOAT_INTR); 
@@ -44,6 +45,7 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_CALL,          "DEXP")       ]=Info(false,1,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "LOG")        ]=Info(false,1,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "DLOG")       ]=Info(false,1,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "ALOG")       ]=Info(false,1,FLOAT_INTR); 
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "EXPEXPR")    ]=Info(false,2,FLOAT_INTR);
     // string ops
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CEQEXPR")    ]=Info(false,2,STRING_INTR);
@@ -52,6 +54,9 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CGTEXPR")    ]=Info(false,2,STRING_INTR);
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CLEEXPR")    ]=Info(false,2,STRING_INTR);
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CLTEXPR")    ]=Info(false,2,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "LEN")        ]=Info(false,1,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "LEN")        ]=Info(false,1,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "TRIM")       ]=Info(false,1,STRING_INTR);
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_CALL,"CONCATEXPR") ]=Info(true, 2,STRING_INTR);
     
     // string assignment
@@ -61,8 +66,6 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     // to the AssignPair sattement. Therefore, Removed from list of Intrinsics.
     //ourIntrinsicInfoMap[Key( OPR_INTRINSIC_CALL,"CASSIGNSTMT")]=Info(false,1,STRING_INTR);
    
-    // string length
-    ourIntrinsicInfoMap[Key( OPR_CALL,          "LEN")        ]=Info(false,1,STRING_INTR);
     // rounding and conversion
     ourIntrinsicInfoMap[Key( OPR_ABS,           NULL)         ]=Info(false,1,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "ABS")        ]=Info(false,1,FLOAT_INTR);
@@ -79,6 +82,8 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_CALL,          "REAL")       ]=Info(false,1,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "FLOAT")      ]=Info(false,1,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "DBLE")       ]=Info(false,1,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "AIMAG")      ]=Info(false,1,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "TRANS")      ]=Info(false,1,ARRAY_INTR); 
     // logical (and bitwise logical) operations 
     ourIntrinsicInfoMap[Key( OPR_BNOT,          NULL)         ]=Info(false,1,BOOL_INTR);
     ourIntrinsicInfoMap[Key( OPR_BAND,          NULL)         ]=Info(false,2,BOOL_INTR);
@@ -100,10 +105,14 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_MAX,            NULL)        ]=Info(false,2,FLOAT_INTR); 
     ourIntrinsicInfoMap[Key( OPR_MIN,            NULL)        ]=Info(false,2,FLOAT_INTR); 
     // array operations
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "MAXVAL")     ]=Info(false,1,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "LBOUND")     ]=Info(false,2,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "UBOUND")     ]=Info(false,2,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "SIZE")       ]=Info(false,2,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "F90INDEX")   ]=Info(false,2,ARRAY_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "PRESENT")    ]=Info(false,1,COMPILER_INTERNAL_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "ASSOCIATED") ]=Info(false,1,COMPILER_INTERNAL_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "ALLOCATED")  ]=Info(false,1,COMPILER_INTERNAL_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "MAXVAL")     ]=Info(false,2,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "MINVAL")     ]=Info(false,2,ARRAY_INTR);
     // shifting operations

@@ -540,9 +540,8 @@ namespace xaif2whirl {
   short
   XAIF_DerivPropStmt::acceptNode(const DOMNode *node) const
   {
-    if ( (node->getNodeType() == DOMNode::ELEMENT_NODE) 
-	 && (IsSetDeriv(node) || IsSax(node) || IsSaxpy(node) 
-	     || IsZeroDeriv(node)) ) {
+    if ((node->getNodeType() == DOMNode::ELEMENT_NODE)
+     && (IsSetDeriv(node) || IsSetNegDeriv(node) || IsIncDeriv(node) || IsDecDeriv(node) || IsSax(node) || IsSaxpy(node) || IsZeroDeriv(node))) {
       return FILTER_ACCEPT;
     }
     return FILTER_SKIP;
@@ -554,6 +553,30 @@ namespace xaif2whirl {
   {
     const XMLCh* name = node->getNodeName();
     return (XMLString::equals(name, XAIFStrings.elem_SetDeriv_x()));
+  }
+
+
+  bool
+  XAIF_DerivPropStmt::IsSetNegDeriv(const DOMNode *node)
+  {
+    const XMLCh* name = node->getNodeName();
+    return (XMLString::equals(name, XAIFStrings.elem_SetNegDeriv_x()));
+  }
+
+
+  bool
+  XAIF_DerivPropStmt::IsIncDeriv(const DOMNode *node)
+  {
+    const XMLCh* name = node->getNodeName();
+    return (XMLString::equals(name, XAIFStrings.elem_IncDeriv_x()));
+  }
+
+
+  bool
+  XAIF_DerivPropStmt::IsDecDeriv(const DOMNode *node)
+  {
+    const XMLCh* name = node->getNodeName();
+    return (XMLString::equals(name, XAIFStrings.elem_DecDeriv_x()));
   }
 
 

@@ -38,6 +38,7 @@ namespace xaif2whirl {
     FORTTK_ASSERT(elem, fortTkSupport::Diagnostics::UnexpectedInput);
     // Slurp expression into a graph (DAG) and translate it
     OA::OA_ptr<OA::DGraph::DGraphImplement> g = createExpressionGraph(elem);
+    // xaif2whirl::DDumpDotGraph(g);
     OA::OA_ptr<OA::DGraph::NodeInterface> root = g->getExprGraphRootNode();
     OA::OA_ptr<MyDGNode> n = root.convert<MyDGNode>();
     WN* wn = xlate_Expression(g, n, ctxt);
@@ -59,7 +60,7 @@ namespace xaif2whirl {
     ctxt.createXlationContext(XlationContext::VARREF);
     OA::OA_ptr<OA::DGraph::DGraphImplement> g = 
       createExpressionGraph(elem, true /* varRef */);
-    //    xaif2whirl::DDumpDotGraph(g);
+    // xaif2whirl::DDumpDotGraph(g);
     OA::OA_ptr<OA::DGraph::NodeInterface> root = g->getExprGraphRootNode();
     OA::OA_ptr<MyDGNode> n = root.convert<MyDGNode>();
     WN* wn = xlate_VarRef(g, n, ctxt);
@@ -105,11 +106,7 @@ namespace xaif2whirl {
     if (!OPERATOR_is_expression(opr) && !OPERATOR_is_call(opr)) { return parent; }
     // Base case: a variable reference
     if (fortTkSupport::ScalarizedRef::isRefTranslatableToXAIF(wn)) {
-      TY_IDX ty = WN_GetBaseObjType(wn);
-      if (TY_kind(ty) == KIND_ARRAY) {
-	ty = TY_etype(ty);
-      }
-      if (ty == ActiveTypeTyIdx || ty == ActiveTypeInitializedTyIdx) {
+      if (hasActiveSymbolType(wn)) {
 	WN* newwn = createValueSelector(wn);
 	WN_kid(parent, kidno) = newwn;
       }
@@ -122,6 +119,32 @@ namespace xaif2whirl {
     }
     return parent;
   }
+
+  bool XlateExpression::hasActiveSymbolType(WN* aWNp) { 
+    if (WN_has_sym(aWNp)) {
+      if (WN_operator(aWNp)==OPR_IMPLICIT_BND)
+	return false;
+      ST* st = WN_st(aWNp);
+      TY_IDX tyIdx = ST_type(st);
+      if (TY_kind(tyIdx) == KIND_POINTER) {
+	tyIdx = TY_pointed(tyIdx);
+      } 
+      if (TY_kind(tyIdx) == KIND_ARRAY) {
+	tyIdx = TY_etype(tyIdx);
+      }
+      if (tyIdx == ActiveTypeTyIdx || tyIdx == ActiveTypeInitializedTyIdx) {
+	return true; 
+      }
+    }
+    else { 
+      // Recursive case
+      for (INT i = 0; i < WN_kid_count(aWNp); ++i) {
+	if (hasActiveSymbolType(WN_kid(aWNp, i))) 
+	  return true;
+      }
+    }
+    return false; 
+  } 
 
   WN* XlateExpression::translateConstant(const DOMElement* elem, 
 					 PUXlationContext& ctxt) {
@@ -198,12 +221,18 @@ namespace xaif2whirl {
     const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
     XercesStrX nm = XercesStrX(nmX);
     std::string key = GetIntrinsicKey(elem);
+    if (std::string("allocated")==nm.c_str()) { 
+      ctxt.currentXlationContext().setFlag(XlationContext::SUPPRESSSELECTOR);
+    } 
     WN* wn = xlate_ExprOpUsingIntrinsicTable(fortTkSupport::IntrinsicXlationTable::XAIFIntrin, 
 					     nm.c_str(), 
 					     key.c_str(), 
 					     g, 
 					     n, 
 					     ctxt);
+    if (std::string("allocated")==nm.c_str()) {
+      ctxt.currentXlationContext().unsetFlag(XlationContext::SUPPRESSSELECTOR);
+    }
     return wn;
   }
 
@@ -246,8 +275,11 @@ namespace xaif2whirl {
     // VariableReferenceType
     bool deriv = GetDerivAttr(elem);
     // skip the xaif:VariableReference node
-    DOMElement* varref = GetFirstChildElement(elem); 
-    ctxt.createXlationContext((deriv) ? XlationContext::DERIVSELECTOR : XlationContext::VALUESELECTOR);
+    DOMElement* varref = GetFirstChildElement(elem);
+    if (ctxt.currentXlationContext().isFlag(XlationContext::SUPPRESSSELECTOR))
+      ctxt.createXlationContext();
+    else 
+      ctxt.createXlationContext((deriv) ? XlationContext::DERIVSELECTOR : XlationContext::VALUESELECTOR);
     WN* wn = translateVarRef(varref, ctxt);
     ctxt.deleteXlationContext();
     return wn;
@@ -323,9 +355,9 @@ namespace xaif2whirl {
       IntrinsicTable.findWHIRLInfo(xopr, xoprNm, xIntrinKey);
     // 1. Gather the operands, sorted by the "position" attribute
     unsigned int actualArgCount(n->num_incoming());
-    FORTTK_ASSERT_WARN(actualArgCount== info->numop, 
+    FORTTK_ASSERT_WARN(actualArgCount<= info->numop && actualArgCount>= info->numop-info->numOptional, 
 		       "Warning: get " << actualArgCount<< " intrinsic arguments for '"
-		       << xoprNm  << "-" << xIntrinKey << "' expect " << info->numop << " (optional args?)");
+		       << xoprNm  << "' expect " << info->numop << " (have " << info->numOptional << " optional args?)");
     OA::OA_ptr<MyDGEdge> tmp; tmp = NULL;
     vector<OA::OA_ptr<MyDGEdge> > opnd_edge(actualArgCount, tmp);
     OA::OA_ptr<EdgesIteratorInterface> itPtr 
@@ -544,58 +576,9 @@ namespace xaif2whirl {
 						   PUXlationContext& ctxt) {
     FORTTK_ASSERT(!g.ptrEqual(NULL) && !n.ptrEqual(NULL), fortTkSupport::Diagnostics::UnexpectedInput);
     DOMElement* elem = n->GetElem();
-    // -------------------------------------------------------
-    // 1. Translate the index expression for each dimension
-    // -------------------------------------------------------
-    unsigned int rank = GetChildElementCount(elem);
-    vector<WN*> indices(rank); 
-    DOMElement* dim = GetFirstChildElement(elem);
-    for (int i = 0; dim; dim = GetNextSiblingElement(dim), ++i) {
-      const XMLCh* nmX = dim->getNodeName();
-      FORTTK_ASSERT(XMLString::equals(nmX, XAIFStrings.elem_IndexTriplet_x()), 
-		    "Expected " << XAIFStrings.elem_IndexTriplet() << "; found:\n"
-		    << *dim);
-      DOMElement* tripletElementExpr = GetFirstChildElement(dim);
-      UINT tripletElementCounter=0;
-      vector<WN*> triplet(3);
-      for (; tripletElementExpr; tripletElementExpr = GetNextSiblingElement(tripletElementExpr),++tripletElementCounter) {
-	ctxt.createXlationContext(XlationContext::ARRAYIDX);
-	WN* indexExprWN = translateExpression(GetFirstChildElement(tripletElementExpr), ctxt);
-	ctxt.deleteXlationContext();
-	const XMLCh* tripletElementnmX = tripletElementExpr->getNodeName();
-	if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Index_x()))
-	  triplet[0]=indexExprWN;
-	else if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Bound_x()))
-	  triplet[1]=indexExprWN;
-	else if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Stride_x()))
-	  triplet[2]=indexExprWN;
-	else
-	  FORTTK_DIE("unexpected element :" << *tripletElementExpr);
-      }
-      if (tripletElementCounter==1) 
-	indices[i] = WN_Type_Conversion(triplet[0],MTYPE_I4);
-      else  { 
-	WN* theSrcTriplet_p=WN_Create(OPR_SRCTRIPLET,
-				      MTYPE_I8, 
-				      MTYPE_V,
-				      tripletElementCounter);
-	for (int j=0; j<3; ++j) {
-	  if (triplet[j]!=0) { 
-	    WN_kid(theSrcTriplet_p,j)=WN_Type_Conversion(triplet[j],MTYPE_I4);
-	  }
-	  else { 
-	    WN_kid(theSrcTriplet_p,j)=WN_Create(OPR_IMPLICIT_BND,
-						MTYPE_V, 
-						MTYPE_V,
-						0);
-	  }
-	}
-	indices[i] = theSrcTriplet_p;
-      } 
-    }
-    // -------------------------------------------------------
-    // 2. Translate the array symbol reference
-    // -------------------------------------------------------
+    WN* arrWN = 0;
+    // ----------------------------------------------------------------------------------
+    // Translate the array symbol reference so we can query the type
     OA::OA_ptr<MyDGNode> n1 = GetSuccessor(n, false /* succIsOutEdge */);
     const XMLCh* nmX = n1->GetElem()->getNodeName();
     FORTTK_ASSERT(XMLString::equals(nmX, XAIFStrings.elem_SymRef_x()),
@@ -609,53 +592,125 @@ namespace xaif2whirl {
     if (TY_kind(ty) == KIND_POINTER) { 
       ty = TY_pointed(ty); 
     }
-    FORTTK_ASSERT(TY_AR_ndims(ty) == (INT32)rank,
-		  "Internal error: mismatched array dimensions");
-    // -------------------------------------------------------
-    // 3. Create Whirl ARRAY node (cf. wn_fio.cxx:1.3:7055)
-    // -------------------------------------------------------
-    UINT nkids = (rank * 2) + 1; // 2n + 1 where (where n == rank)
-    WN* arrWN = WN_Create(OPR_ARRAY, MTYPE_U8, MTYPE_V, nkids);
-    // kid 0 is the array's base address
-    WN_kid0(arrWN) = arraySym;
-    // kids 1 to n give size of each dimension.  We use a bogus value,
-    // since we only need to support translation back to source code.
-    for (unsigned i = 1; i <= rank; ++i) {
-      WN_kid(arrWN, i) = WN_CreateIntconst(OPC_I4INTCONST, 0);
-    }
-    // kids n + 1 to 2n give index expressions for each dimension.  
-    // N.B. Reverse the order of index expressions since we are
-    // translating Fortran.  FIXME: should we change whirl2xaif and this
-    // to not reverse the indices?
-    for (unsigned i = 2*rank, j = 0; i >= (rank + 1); --i, ++j) {
-      WN_kid(arrWN, i) = indices[j];
-    }
-    if (TY_Is_Chararray(ty)) { 
-      // -------------------------------------------------------
-      // Wrap in another ARRAY 
-      // -------------------------------------------------------
-      rank=1;
-      nkids = (rank * 2) + 1;	
-      WN* outerArrWN = WN_Create(OPR_ARRAY, MTYPE_U8, MTYPE_V, nkids);
-      // kid 0 is the inner array node
-      WN_kid0(outerArrWN) = arrWN;
-      // kids 1 to n give size of each dimension.  We use a bogus value,
-      // since we only need to support translation back to source code.
-      for (unsigned i = 1; i < nkids; ++i) {
-	WN_kid(outerArrWN, i) = WN_CreateIntconst(OPC_I4INTCONST, 0);
+    if (TY_Is_Chararray(ty)) {
+      // ----------------------------------------------------------------------------------
+      // treat character arrays separately because they have a special whirl format
+      // there is to be one child in xaif expected to be an IndexTriplet
+      FORTTK_ASSERT(GetChildElementCount(elem)==1,"Internal error: unexpected character array with multiple indices");
+      unsigned int childCount = 2; // there are two whirl child nodes
+      DOMElement* dim = GetFirstChildElement(elem); 
+      FORTTK_ASSERT(XMLString::equals(dim->getNodeName(), XAIFStrings.elem_IndexTriplet_x()), 
+		    "Expected " << XAIFStrings.elem_IndexTriplet() << "; found:\n"
+		    << *dim);
+      DOMElement* tripletElementExpr = GetFirstChildElement(dim);
+      UINT tripletElementCounter=0;
+      vector<WN*> triplet(3);
+      for (; tripletElementExpr; tripletElementExpr = GetNextSiblingElement(tripletElementExpr),++tripletElementCounter) {
+	DOMElement* firstChild=GetFirstChildElement(tripletElementExpr);
+	if (firstChild) { 
+	  ctxt.createXlationContext(XlationContext::ARRAYIDX);
+	  WN* indexExprWN = translateExpression(firstChild, ctxt);
+	  ctxt.deleteXlationContext();
+	  const XMLCh* tripletElementnmX = tripletElementExpr->getNodeName();
+	  if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Index_x()))
+	    triplet[0]=indexExprWN;
+	  else if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Bound_x()))
+	    triplet[1]=indexExprWN;
+	  else
+	    FORTTK_DIE("unexpected element :" << *tripletElementExpr);
+	}
       }
-      return outerArrWN;
-    } 
-    else { 
+      FORTTK_ASSERT(tripletElementCounter==2,"Internal error: character array has to have 2 triplet elements");
+      // Create Whirl ARRAY node 
+      arrWN = WN_Create(OPR_ARRAY, MTYPE_U8, MTYPE_V, 3);
+      // kid 0 is the array's base address
+      WN_kid0(arrWN) = arraySym;
+      WN_kid(arrWN, 1)=triplet[1];
+      WN_kid(arrWN, 2)=triplet[0];
+    }
+    else { // is not a character array
+      // ----------------------------------------------------------------------------------
+      // Translate the index expression for each dimension
+      unsigned int rank = GetChildElementCount(elem);
+      vector<WN*> indices(rank); 
+      DOMElement* dim = GetFirstChildElement(elem);
+      for (int i = 0; dim; dim = GetNextSiblingElement(dim), ++i) {
+	const XMLCh* nmX = dim->getNodeName();
+	FORTTK_ASSERT(XMLString::equals(nmX, XAIFStrings.elem_IndexTriplet_x()), 
+		      "Expected " << XAIFStrings.elem_IndexTriplet() << "; found:\n"
+		      << *dim);
+	DOMElement* tripletElementExpr = GetFirstChildElement(dim);
+	UINT tripletElementCounter=0;
+	vector<WN*> triplet(3);
+	for (; tripletElementExpr; tripletElementExpr = GetNextSiblingElement(tripletElementExpr),++tripletElementCounter) {
+	  DOMElement* firstChild=GetFirstChildElement(tripletElementExpr);
+	  if (firstChild) { 
+	    ctxt.createXlationContext(XlationContext::ARRAYIDX);
+	    WN* indexExprWN = translateExpression(firstChild, ctxt);
+	    ctxt.deleteXlationContext();
+	    const XMLCh* tripletElementnmX = tripletElementExpr->getNodeName();
+	    if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Index_x()))
+	      triplet[0]=indexExprWN;
+	    else if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Bound_x()))
+	      triplet[1]=indexExprWN;
+	    else if (XMLString::equals(tripletElementnmX, XAIFStrings.elem_Stride_x()))
+	      triplet[2]=indexExprWN;
+	    else
+	      FORTTK_DIE("unexpected element :" << *tripletElementExpr);
+	  }
+	}
+	if (tripletElementCounter==1) 
+	  indices[i] = WN_Type_Conversion(triplet[0],MTYPE_I4);
+	else { 
+	  WN* theSrcTriplet_p=WN_Create(OPR_SRCTRIPLET,
+					MTYPE_I8, 
+					MTYPE_V,
+					tripletElementCounter);
+	  for (int j=0; j<3; ++j) {
+	    if (triplet[j]!=0) { 
+	      WN_kid(theSrcTriplet_p,j)=WN_Type_Conversion(triplet[j],MTYPE_I4);
+	    }
+	    else { 
+	      if (j!=2)
+		WN_kid(theSrcTriplet_p,j)=WN_Create(OPR_IMPLICIT_BND,
+						    MTYPE_V, 
+						    MTYPE_V,
+						    0);
+	      else // the last one (stride) should default to 1
+		WN_kid(theSrcTriplet_p,j)=WN_CreateIntconst(OPC_I4INTCONST, 1);
+	    }
+	  }
+	  indices[i] = theSrcTriplet_p;
+	} 
+      }
+      FORTTK_ASSERT(TY_AR_ndims(ty) == (INT32)rank,
+		    "Internal error: mismatched array dimensions");
       // -------------------------------------------------------
-      // 4. Wrap the ARRAY in an ILOAD
+      // Create Whirl ARRAY node (cf. wn_fio.cxx:1.3:7055)
+      UINT nkids = (rank * 2) + 1; // 2n + 1 where (where n == rank)
+      arrWN = WN_Create(OPR_ARRAY, MTYPE_U8, MTYPE_V, nkids);
+      // kid 0 is the array's base address
+      WN_kid0(arrWN) = arraySym;
+      // kids 1 to n give size of each dimension.  We use a bogus value,
+      // since we need to support only translation back to source code.
+      for (unsigned i = 1; i <= rank; ++i) {
+	WN_kid(arrWN, i) = WN_CreateIntconst(OPC_I4INTCONST, 0);
+      }
+      // kids n + 1 to 2n give index expressions for each dimension.  
+      // N.B. Reverse the order of index expressions since we are
+      // translating Fortran.  FIXME: should we change whirl2xaif and this
+      // to not reverse the indices?
+      for (unsigned i = 2*rank, j = 0; i >= (rank + 1); --i, ++j) {
+	WN_kid(arrWN, i) = indices[j];
+      }
       // -------------------------------------------------------
+      // Wrap the ARRAY in an ILOAD
       TY_IDX ety = TY_etype(ty);
       TYPE_ID emty = TY_mtype(ety);
       TY_IDX eptrty = Stab_Pointer_To(ety);
-      WN* wn = WN_CreateIload(OPR_ILOAD, emty, emty, 0, ety, eptrty, arrWN, 0);
-      return wn;
+      arrWN=WN_CreateIload(OPR_ILOAD, emty, emty, 0, ety, eptrty, arrWN, 0);
     }
+    return arrWN;
   }
 
   OA::OA_ptr<OA::DGraph::DGraphImplement> XlateExpression::createExpressionGraph(const DOMElement* elem, 
@@ -860,33 +915,34 @@ namespace xaif2whirl {
   INTRINSIC XlateExpression::getWNIntrinsic(const char* intrnNm, vector<WN*>& opands, TYPE_ID* dtype) {
     // 1. Find dtype suggested from operands
     TYPE_ID mty = getRTypeFromOpands(opands);
-    // FIXME *** make part of an intrinsic table ***
     // per Nathan the situation is that there is 
     // a method to translate the whirl intrinsic enumerations 
     // into a  name but whirl doesn't have a function to 
-    // translate the name back. Some of the backtranslation 
-    // is done by looking at the intrinsics table in 
-    // IntrinsicXlationTable.cxx but the following
-    // are of type WNIntrinOp and 
-    // don't have a backtranslation entry.
-    // see also in Open64 common/com:
-    // intrn_info.cxx, wutil.cxx
+    // translate the name back for all of the intrinsic names
+    // because often the intrinsic name known in 
+    // get_intrinsic_from_name 
+    // includes the machine type 
+    // Because we don't include the machine type 
+    // we hardcode the intrinsic here for the following cases.
     INTRINSIC intrn = INTRINSIC_INVALID;
     if (strcmp(intrnNm, "EXPEXPR") == 0) {
       intrn = INTRN_F8EXPEXPR;
       if (dtype) { *dtype = MTYPE_F8; }
     }
-    else if (strcmp(intrnNm, "CEQEXPR") == 0) {
-      intrn = INTRN_CEQEXPR;
-      if (dtype) { *dtype = MTYPE_I4; }
-    }
-    else if (strcmp(intrnNm, "CNEEXPR") == 0) {
-      intrn = INTRN_CNEEXPR;
-      if (dtype) { *dtype = MTYPE_I4; }
-    }
     else if (strcmp(intrnNm, "AMOD") == 0) {
       intrn = INTRN_F4MOD;
       if (dtype) { *dtype = MTYPE_F4; }
+    }
+    else if (strcmp(intrnNm, "DMOD") == 0) {
+      intrn = INTRN_F4MOD;
+      if (dtype) { *dtype = MTYPE_F8; }
+    }
+    else if (strcmp(intrnNm, "LEN") == 0) {
+      intrn = INTRN_I4CLEN;
+      if (dtype) { *dtype = MTYPE_I4; }
+    }
+    else { 
+      intrn=get_intrinsic_from_name(intrnNm);
     }
     FORTTK_ASSERT(intrn != INTRINSIC_INVALID, 
 		  "Unknown intrinsic '" << intrnNm << "'");

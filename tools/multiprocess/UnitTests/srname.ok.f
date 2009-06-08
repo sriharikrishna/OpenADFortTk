@@ -1,7 +1,7 @@
        subroutine foo(x,y,call_nr,version)
 !          implicit none
        use w2f__types
-      use active_module
+       use OAD_active
 C
 C     **** statements ****
 C
@@ -16,7 +16,7 @@ C
        subroutine bar(x,y,call_nr,version)
 !          implicit none
        use w2f__types
-      use active_module
+      use OAD_active
 C
 C     **** statements ****
 C

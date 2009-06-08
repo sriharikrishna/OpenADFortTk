@@ -1830,24 +1830,20 @@ namespace xaif2whirl {
   std::string
   GetIntrinsicKey(const xercesc::DOMElement* elem)
   {
-    const XMLCh* annot = (elem) ? elem->getAttribute(XAIFStrings.attr_annot_x())
-      : NULL;
+    const XMLCh* annot = (elem) ? elem->getAttribute(XAIFStrings.attr_annot_x()) : NULL;
     XercesStrX annotStr_x = XercesStrX(annot);
     const char* annotStr = annotStr_x.c_str();
-
-    // Note: Sun wants the first arg to strstr to be char*.  Stupid.
     std::string key;
     char *start = NULL, *end = NULL;
     start = strstr(const_cast<char*>(annotStr), XAIFStrings.tag_IntrinsicKey());
     if (start) {
-      start = start + strlen(annotStr);
+      start = start + strlen(XAIFStrings.tag_IntrinsicKey());
       end = strstr(start, XAIFStrings.tag_End());
     }
     if (start && end) {
       for (char* p = start; p < end; ++p) { key += *p; }
     }
-  
-    return key;
+      return key;
   }
 
 
@@ -2267,8 +2263,18 @@ namespace xaif2whirl {
   DeclareActiveTypes()
   {
     // We create pseudo active types aliased to F8
+    static char 
+      activeTypeName[Args::ourActiveTypeNmLength], 
+      activeInitializedTypeName[Args::ourActiveTypeNmLength+5];
+    std::string activeInitializedTypeNameStr=Args::ourActiveTypeNm+std::string("_init");
+    strncpy(activeTypeName,
+	    Args::ourActiveTypeNm.c_str(),
+	    Args::ourActiveTypeNmLength);
+    strncpy(activeInitializedTypeName,
+	    activeInitializedTypeNameStr.c_str(),
+	    Args::ourActiveTypeNmLength+4);
     static const char* psTypeNames[] = 
-      { "OpenADTy_active", "OpenADTy_active_init" };
+      { activeTypeName, activeInitializedTypeName};
     static unsigned psTypeNamesSZ = sizeof(psTypeNames) / sizeof(char*);
   
     static TY_IDX* psTyIdx[] = 
@@ -2283,63 +2289,6 @@ namespace xaif2whirl {
       Set_TY_is_external(ty);
       *(psTyIdx[i]) = ty_idx;
     }
-  
-#if 0
-    // Creating a structure type
-  
-    // Cf. dra_ec.cxx / DRA_EC_Declare_Types()
-    // type active
-    //   sequence
-    //   double precision :: v 
-    //   double precision :: d
-    // end type active
-
-    // Create 'v' (value) and 'd' (deriv) fields
-    FLD_HANDLE valFld = New_FLD();  
-    TY_IDX valTyIdx = MTYPE_To_TY(MTYPE_F8);
-    FLD_Init(valFld, Save_Str("v"), valTyIdx, 0);
-  
-    FLD_HANDLE derivFld = New_FLD();
-    TY_IDX derivTyIdx = MTYPE_To_TY(MTYPE_F8);
-    FLD_Init(derivFld, Save_Str("d"), derivTyIdx, TY_size(valTyIdx));
-    Set_FLD_last_field(derivFld);
-  
-    // Decare a struct with above fields
-    TY_IDX activeTyIdx;
-    TY& activeTy = New_TY(activeTyIdx); // sets 'activeTyIdx'
-    INT64 activeSz = 2 * MTYPE_byte_size(valTyIdx);
-    TY_Init(activeTy, activeSz, KIND_STRUCT, MTYPE_M, Save_Str("active"));
-    Set_TY_fld(activeTy, valFld); // location of first field
-    Set_TY_align(activeTyIdx, 8);
-    Set_TY_is_sequence(activeTy);
-    Set_TY_is_external(activeTy);
-  
-  
-    // Creating structure references in WHIRL
-    // wn = reference that needs %d added
-    WN* retWN = wn;
-    // LDID: update the offset field
-    // ILOAD: update the offset field
-    OPERATOR opr = WN_operator(wn);
-    if (opr == OPR_LDA) {
-      STAB_OFFSET offset = WN_lda_offset(wn) + 8;
-      WN_lda_offset(wn) = offset;
-    } 
-    else if (opr == OPR_LDID || opr == OPR_ILOAD) {
-      STAB_OFFSET offset = WN_load_offset(wn) + 8;
-      WN_load_offset(wn) = offset;
-    } 
-    else if (opr == OPR_ARRAY) {
-      // ARRAY: Place an ADD around the ARRAY with the offset
-      WN* offsetWN = WN_CreateIntconst(OPC_U8INTCONST, 8);
-      retWN = WN_CreateExp2(OPC_U8ADD, wn, offsetWN);
-    } 
-    else {
-      FORTTK_DIE(fortTkSupport::Diagnostics::UnexpectedOpr << OPERATOR_name(opr));
-    }
-    return retWN;
-#endif  
-
   }
 
   // ConvertToActiveType: Given a symbol, convert it to active type
@@ -2755,7 +2704,7 @@ namespace xaif2whirl {
       OA::OA_ptr<MyDGNode> snk = snktmp.convert<MyDGNode>();
       std::string srcNm = DumpDotGraph_GetNodeName(src);
       std::string snkNm = DumpDotGraph_GetNodeName(snk);
-      os << "  \"" << srcNm << "\" -> \"" << snkNm << "\";\n";
+      os << "  \"" << srcNm.c_str() << "\" -> \"" << snkNm.c_str() << "\";\n";
     }
     os << "}" << std::endl;
   }

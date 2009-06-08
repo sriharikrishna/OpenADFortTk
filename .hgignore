@@ -3,8 +3,13 @@ syntax: regexp
 (^|/)\.hg($|/)
 (^|/)\.hgtags($|/)
 syntax: glob
-build-x86-Linux/*
-OpenADFortTk-x86-Linux/*
+build-*/*
+OpenADFortTk-*/*
 *.pyc
 *~
+*.swp
 *.orig
+autom4te.cache/*
+tools/SourceProcessing
+Regression
+

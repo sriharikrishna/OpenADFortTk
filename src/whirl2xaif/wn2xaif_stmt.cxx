@@ -9,6 +9,7 @@
 #include "Open64IRInterface/IntrinsicInfo.h"
 #include "IntrinsicXlationTable.h"
 
+#include "Args.h"
 #include "wn2xaif.h"
 #include "wn2xaif_stmt.h"
 #include "wn2xaif_mem.h"
@@ -68,7 +69,20 @@ whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn_p, PUXlationContext& ctx
 	next_p=WN_next(next_p);
       }
     }
-    FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
+    USRCPOS srcpos;
+    int aLineNumber;
+    USRCPOS_srcpos(srcpos) = WN_Get_Linenum(wn_p);
+    aLineNumber=USRCPOS_linenum(srcpos);
+    if (!aLineNumber) {
+      USRCPOS_srcpos(srcpos) = WN_Get_Linenum(func_p);
+      aLineNumber=USRCPOS_linenum(srcpos);
+    }
+    if (Args::ourUnstructuredControlFlowFlag) { 
+      FORTTK_MSG(1,"whirl2xaif::xlate_PassiveStmt: unstructured control flow (early return) related to line " << aLineNumber);
+    }
+    else { 
+      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << " in whirl2xaif::xlate_PassiveStmt for operator " << &OPERATOR_info [opr]._name [4] << " related to line " << aLineNumber << "; for source code with unstructured control flow use the --unstructured flag");
+    }
   }
   
   fortTkSupport::WNId stmtid = ctxt.findWNId(wn_p);
@@ -375,8 +389,14 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
     is_user_call = TRUE;
     const char* nm = ST_name(WN_st(wn));
     if (strcmp(nm, "_ALLOCATE") == 0) {
+      xlate_PassiveStmt(xos,wn,ctxt);
+      // cut short here
+      return; 
       is_allocate_stmt = TRUE;
     } else if (strcmp(nm, "_DEALLOCATE") == 0) {
+      xlate_PassiveStmt(xos,wn,ctxt);
+      // cut short here
+      return; 
       ctxt.currentXlationContext().setFlag(XlationContext::HAS_NO_ARR_ELMT);
       is_allocate_stmt = TRUE;
     } else if (strcmp(nm, "PRESENT") == 0) {
@@ -569,9 +589,15 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
 			     WN_kid(wn, len_idx), /* string length */
 			     ctxt);
       } 
-      else if (!TY_Is_Pointer(arg_ty) || 
-	       (WN_operator(WN_kid(wn, arg_idx)) == OPR_INTRINSIC_OP &&
-		INTR_is_valtmp(WN_intrinsic(WN_kid(wn, arg_idx))))) {
+      else if (!TY_Is_Pointer(arg_ty) 
+	       || 
+	       ((WN_operator(kidofparm) == OPR_INTRINSIC_OP
+		 || 
+		 WN_operator(kidofparm) == OPR_INTRINSIC_CALL)
+		&&
+		INTR_is_valtmp(WN_intrinsic(kidofparm)))
+	       ||
+	       WN_operator(kidofparm) == OPR_ARRAYEXP) {
 	// Need to explicitly note this as a value parameter.
 	if (WN_operator(kidofparm) == OPR_INTRINSIC_CALL &&
 	    WN_intrinsic(kidofparm) == INTRN_CONCATEXPR)

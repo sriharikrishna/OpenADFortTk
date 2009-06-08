@@ -829,20 +829,21 @@ class CallStmt(Exec):
         prefix = seq(lit('call'),disj(app,id))
         ((dc,a),rst) = prefix(scan)
         if (isinstance(a,App)):
-            return CallStmt(a.head,a.args)
+            return CallStmt(a.head,a.args,dc)
         else:
-            return CallStmt(a,[])
+            return CallStmt(a,[],dc)
 
-    def __init__(self,head,args):
+    def __init__(self,head,args,call="call"):
         self.head = head
         self.args = args
+        self.call = call
 
     def __repr__(self):
         return 'CallStmt(%s,%s)' % (repr(self.head),
                                     repr(self.args),)
 
     def __str__(self):
-        return 'call %s(%s)' % (str(self.head),
+        return self.call+' %s(%s)' % (str(self.head),
                                 ','.join([str(l) for l in self.args]))
 
 class AssignStmt(Exec):

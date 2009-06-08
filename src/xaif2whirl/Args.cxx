@@ -38,6 +38,7 @@ using std::string;
 TYPE_ID Args::ourDefaultMTypeInt  = MTYPE_I8;
 TYPE_ID Args::ourDefaultMTypeUInt = MTYPE_U8;
 TYPE_ID Args::ourDefaultMTypeReal = MTYPE_F8;
+std::string Args::ourActiveTypeNm("oadactive");
 
 static const char* version_info = "version .289";
 
@@ -57,12 +58,16 @@ static const char* usage_details =
 "\n"
 "Options:\n"
 "  -o, --output <file> send output to <file> instead of default file\n"
-"      --i4            make integers 4 byte where not specified (default 8 bytes)\n"
-"      --u4            make unsigned integers 4 byte where not specified (default 8 bytes)\n"
+"      --i4            make integers 4 byte where not specified \n"
+"                      (default 8 bytes)\n"
+"      --u4            make unsigned integers 4 byte where not specified \n"
+"                      (default 8 bytes)\n"
 "      --r4            make reals 4 byte where not specified (default 8 bytes)\n"
-"  -V, --version       print version information\n"
+"  -t, --type <name>   abstract active type name (default oadactive), no longer\n" 
+"                      than 26 characters\n"
+"  -V, --version       print version information and exit\n"
 "  -v, --validate      validate agains schema\n"
-"  -h, --help          print this help\n"
+"  -h, --help          print this help and exit\n"
 "      --debug [lvl]   debug mode at level `lvl'\n";
 
 
@@ -77,8 +82,8 @@ CmdLineParser::OptArgDesc Args::optArgs[] = {
   {  0 , "i4",              CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "u4",              CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "r4",              CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
-  {  0 , "types",    CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 'o', "output",   CLP::ARG_REQ , CLP::DUPOPT_ERR,  NULL },
+  { 't', "type",     CLP::ARG_REQ , CLP::DUPOPT_ERR,  NULL },
   { 'V', "version",  CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 'v', "validate", CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 'h', "help",     CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
@@ -169,14 +174,14 @@ Args::Parse(int argc, const char* const argv[])
     }
     if (parser.IsOpt("help")) { 
       PrintUsage(std::cerr); 
-      exit(1);
+      exit(0);
     }
     if (parser.IsOpt("validate")) { 
       validate=true;
     }
     if (parser.IsOpt("version")) { 
       PrintVersion(std::cerr);
-      exit(1);
+      exit(0);
     }
     
     // Check for algorithm options
@@ -205,6 +210,14 @@ Args::Parse(int argc, const char* const argv[])
     // Check for other options    
     if (parser.IsOpt("output")) { 
       outWhirlFileNm = parser.GetOptArg("output");
+    }
+
+    if (parser.IsOpt("type")) { 
+      ourActiveTypeNm = parser.GetOptArg("type");
+      if (ourActiveTypeNm.length()>ourActiveTypeNmLength-1) {
+	PrintError(std::cerr, "-t argument: " + ourActiveTypeNm + " too long." );
+	exit(1);
+      }
     }
 
     if (parser.IsOpt("i4")) { 

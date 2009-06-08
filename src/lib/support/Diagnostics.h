@@ -57,11 +57,18 @@ namespace fortTkSupport {
   // private diagnostic filter
 #define FORTTK_DEVMSG(level, streamArgs)				\
   if (level <= FORTTK_DBG_LVL) {					\
-    std::cerr << "FortTk* [" << level << "]: " << streamArgs << std::endl; }
+    std::cerr << "FortTk[debugLevel=" << level << "]: " << streamArgs << std::endl; }
 
   // FORTTK_EMSG: Print an error message and continue.
 #define FORTTK_EMSG(streamArgs)					\
-  { std::cerr << "error";					\
+  { std::cerr << "FortTk: ERROR:";					\
+    if (fortTkSupport::Diagnostics::getDiagnosticFilterLevel()) {		\
+      std::cerr << "[" << __FILE__ << ":" << __LINE__ << "]"; }	\
+    std::cerr << ": " << streamArgs << std::endl; }
+
+  // FORTTK_WMSG: Print an warning message and continue.
+#define FORTTK_WMSG(streamArgs)					\
+  { std::cerr << "FortTk: WARNING:";					\
     if (fortTkSupport::Diagnostics::getDiagnosticFilterLevel()) {		\
       std::cerr << "[" << __FILE__ << ":" << __LINE__ << "]"; }	\
     std::cerr << ": " << streamArgs << std::endl; }
@@ -74,7 +81,7 @@ namespace fortTkSupport {
   // FORTTK_ASSERT_WARN: Print a warning if 'expr' evaluates to false.
   // Stops at 'FortTk_TheMostVisitedBreakpointInHistory'.
 #define FORTTK_ASSERT_WARN(expr, streamArgs)	\
-  if (!(expr)) FORTTK_EMSG(streamArgs)
+  if (!(expr)) FORTTK_WMSG(streamArgs)
 
   // FORTTK_DIE: Print an error message and die.  Stops at
   // 'FortTk_TheMostVisitedBreakpointInHistory'.

@@ -1,6 +1,6 @@
       program t1
 
-      use active_module
+      use OAD_active
       
       type active
          double precision :: v

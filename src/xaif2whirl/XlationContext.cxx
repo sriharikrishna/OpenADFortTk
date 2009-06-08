@@ -46,7 +46,7 @@ namespace xaif2whirl{
   }
 
   void XlationContext::inheritFlagsDown(const XlationContext& parentContext) { 
-    myFlags = myFlags | (parentContext.myFlags & (VALUESELECTOR|DERIVSELECTOR|VARREF|LVALUE|ARRAY|ARRAYIDX|EXPRSIMPLE)); 
+    myFlags = myFlags | (parentContext.myFlags & (VALUESELECTOR|DERIVSELECTOR|SUPPRESSSELECTOR|VARREF|LVALUE|ARRAY|ARRAYIDX|EXPRSIMPLE)); 
   } 
   void XlationContext::inheritFlagsUp(const XlationContext& childContext) { 
     myFlags = myFlags | (childContext.myFlags & ACTIVETYPE); 
@@ -57,6 +57,7 @@ namespace xaif2whirl{
     if (isFlag(ACTIVETYPE))          o << " active";
     if (isFlag(VALUESELECTOR))       o << " value_sel";
     if (isFlag(DERIVSELECTOR))       o << " deriv_sel";
+    if (isFlag(SUPPRESSSELECTOR))    o << " suppr_sel";
     if (isFlag(VARREF))              o << " varref";
     if (isFlag(LVALUE))              o << " lvalue";
     if (isFlag(ARRAY))               o << " array";

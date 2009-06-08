@@ -289,6 +289,15 @@ namespace xaif2whirl {
       if (XAIF_DerivPropStmt::IsSetDeriv(stmt)) {
 	wn = xlate_SetDeriv(stmt, ctxt);
       } 
+      else if (XAIF_DerivPropStmt::IsSetNegDeriv(stmt)) {
+	wn = xlate_SetNegDeriv(stmt, ctxt);
+      } 
+      else if (XAIF_DerivPropStmt::IsIncDeriv(stmt)) {
+	wn = xlate_IncDeriv(stmt, ctxt);
+      } 
+      else if (XAIF_DerivPropStmt::IsDecDeriv(stmt)) {
+	wn = xlate_DecDeriv(stmt, ctxt);
+      } 
       else if (XAIF_DerivPropStmt::IsZeroDeriv(stmt) ) {
 	wn = xlate_ZeroDeriv(stmt, ctxt);
       } 
@@ -326,6 +335,66 @@ namespace xaif2whirl {
     WN* srcWN = XlateExpression::translateVarRef(GetFirstChildElement(src), ctxt);
     ctxt.deleteXlationContext();
     WN* callWN = CreateCallToIntrin(MTYPE_V, "setderiv", 2);  
+    WN_actual(callWN, 0) = CreateParm(tgtWN, WN_PARM_BY_REFERENCE);
+    WN_actual(callWN, 1) = CreateParm(srcWN, WN_PARM_BY_VALUE);
+    return callWN;
+  }
+
+  WN* XlateStmt::xlate_SetNegDeriv(const DOMElement* elem, 
+                                   PUXlationContext& ctxt) {
+    DOMElement* tgt = GetChildElement(elem, XAIFStrings.elem_Tgt_x());
+    DOMElement* src = GetChildElement(elem, XAIFStrings.elem_Src_x());
+    // Note: This should always be DERIVSELECTOR (FIXME)
+    bool deriv = GetDerivAttr(tgt);
+    ctxt.createXlationContext((deriv) ? XlationContext::DERIVSELECTOR : XlationContext::VALUESELECTOR);
+    WN* tgtWN = XlateExpression::translateVarRef(GetFirstChildElement(tgt), ctxt);
+    ctxt.deleteXlationContext();
+    // Note: This should always be DERIVSELECTOR (FIXME)
+    deriv = GetDerivAttr(src);
+    ctxt.createXlationContext((deriv) ? XlationContext::DERIVSELECTOR : XlationContext::VALUESELECTOR);
+    WN* srcWN = XlateExpression::translateVarRef(GetFirstChildElement(src), ctxt);
+    ctxt.deleteXlationContext();
+    WN* callWN = CreateCallToIntrin(MTYPE_V, "set_neg_deriv", 2);  
+    WN_actual(callWN, 0) = CreateParm(tgtWN, WN_PARM_BY_REFERENCE);
+    WN_actual(callWN, 1) = CreateParm(srcWN, WN_PARM_BY_VALUE);
+    return callWN;
+  }
+
+  WN* XlateStmt::xlate_IncDeriv(const DOMElement* elem, 
+                                PUXlationContext& ctxt) {
+    DOMElement* tgt = GetChildElement(elem, XAIFStrings.elem_Tgt_x());
+    DOMElement* src = GetChildElement(elem, XAIFStrings.elem_Src_x());
+    // Note: This should always be DERIVSELECTOR (FIXME)
+    bool deriv = GetDerivAttr(tgt);
+    ctxt.createXlationContext((deriv) ? XlationContext::DERIVSELECTOR : XlationContext::VALUESELECTOR);
+    WN* tgtWN = XlateExpression::translateVarRef(GetFirstChildElement(tgt), ctxt);
+    ctxt.deleteXlationContext();
+    // Note: This should always be DERIVSELECTOR (FIXME)
+    deriv = GetDerivAttr(src);
+    ctxt.createXlationContext((deriv) ? XlationContext::DERIVSELECTOR : XlationContext::VALUESELECTOR);
+    WN* srcWN = XlateExpression::translateVarRef(GetFirstChildElement(src), ctxt);
+    ctxt.deleteXlationContext();
+    WN* callWN = CreateCallToIntrin(MTYPE_V, "inc_deriv", 2);  
+    WN_actual(callWN, 0) = CreateParm(tgtWN, WN_PARM_BY_REFERENCE);
+    WN_actual(callWN, 1) = CreateParm(srcWN, WN_PARM_BY_VALUE);
+    return callWN;
+  }
+
+  WN* XlateStmt::xlate_DecDeriv(const DOMElement* elem, 
+                                PUXlationContext& ctxt) {
+    DOMElement* tgt = GetChildElement(elem, XAIFStrings.elem_Tgt_x());
+    DOMElement* src = GetChildElement(elem, XAIFStrings.elem_Src_x());
+    // Note: This should always be DERIVSELECTOR (FIXME)
+    bool deriv = GetDerivAttr(tgt);
+    ctxt.createXlationContext((deriv) ? XlationContext::DERIVSELECTOR : XlationContext::VALUESELECTOR);
+    WN* tgtWN = XlateExpression::translateVarRef(GetFirstChildElement(tgt), ctxt);
+    ctxt.deleteXlationContext();
+    // Note: This should always be DERIVSELECTOR (FIXME)
+    deriv = GetDerivAttr(src);
+    ctxt.createXlationContext((deriv) ? XlationContext::DERIVSELECTOR : XlationContext::VALUESELECTOR);
+    WN* srcWN = XlateExpression::translateVarRef(GetFirstChildElement(src), ctxt);
+    ctxt.deleteXlationContext();
+    WN* callWN = CreateCallToIntrin(MTYPE_V, "dec_deriv", 2);  
     WN_actual(callWN, 0) = CreateParm(tgtWN, WN_PARM_BY_REFERENCE);
     WN_actual(callWN, 1) = CreateParm(srcWN, WN_PARM_BY_VALUE);
     return callWN;

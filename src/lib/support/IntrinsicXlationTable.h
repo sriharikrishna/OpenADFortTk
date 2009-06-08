@@ -81,6 +81,7 @@ namespace fortTkSupport {
       OPERATOR opr;       // the WN operator
       const char* name;   // string qualifier for calls
       unsigned int numop; // number of operands to intrinsic
+      unsigned int numOptional; // number of optional arguments
       void dump(std::ostream& os = std::cerr) const;
       void ddump() const;
     };

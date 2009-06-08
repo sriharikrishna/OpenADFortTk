@@ -78,6 +78,8 @@ namespace xaif2whirl {
 
   private:
 
+    static bool hasActiveSymbolType(WN* aWNp);
+
     static WN* xlate_Expression(OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
 				OA::OA_ptr<MyDGNode> n, 
 				PUXlationContext& ctxt);

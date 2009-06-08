@@ -6,10 +6,13 @@ import fortStmts as fs
 import fortExp  as fe
 from   fortContextFile import SymEntry
 from intrinsic import is_intrinsic
+from userFuncs import is_userFunc
 
 __tmp_prefix   = 'oad_ctmp'
 __call_prefix  = 'oad_s_'
 __slice_prefix = 'oad_slc'
+
+_defaultPrec8 = False
 
 def new_call(a,v,polyfix=''):
     '''from an app term, and a new var v,
@@ -45,7 +48,8 @@ def gen_repl_fns(line):
         return isinstance(a,fe.App) and \
                not ( lookup(a.head).dims or \
                      lookup(a.head).lngth or \
-                     is_intrinsic(a.head) )
+                     is_intrinsic(a.head) or \
+		     is_userFunc(a.head) )
 
     def ety(e):
         ety1 = fe.exptype
@@ -212,6 +216,9 @@ def declare_tmpvars(line):
     '''
     rv = []
     for (ty,tvar) in line.ctxt.new_vars:
+        (cls,mod) = ty
+        if ((cls==fs.RealStmt) and _defaultPrec8 and mod==[]):
+            ty=(fs.DoubleStmt,mod)
         (cls,mod) = ty
         decl = cls(mod,[tvar])
         decl.lineno = False
