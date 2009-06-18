@@ -1214,8 +1214,8 @@ namespace whirl2xaif {
     for (INT kid = 0; kid < WN_kid_count(wn); kid++) { 
       WN *kidWN_p=WN_kid(wn,kid);
       if (kidWN_p)
-	findSymbolsInTree(kidWN_p,
-			  requiredSymbols);
+	findVarSymbolsInTree(kidWN_p,
+			     requiredSymbols);
     }
   } 
 
