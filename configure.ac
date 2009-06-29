@@ -391,9 +391,5 @@ AC_OUTPUT([ \
   src/whirl2xaif/Makefile \
   src/xaif2whirl/Makefile \
   src/testers/Makefile \
-  \
-  tools/Makefile \
-  tools/multiprocess/Makefile \
-  tools/normalize/Makefile \
 ])
 

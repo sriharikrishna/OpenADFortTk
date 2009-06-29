@@ -68,8 +68,7 @@ MYINSTALLDIR = $(DESTDIR)$(prefix)
 
 SUBDIRS = \
 	doc \
-	src \
-	tools 
+	src 
 
 #############################################################################
 # Other rules
