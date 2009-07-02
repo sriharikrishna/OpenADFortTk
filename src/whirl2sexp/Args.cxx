@@ -20,11 +20,12 @@ static const char* usage_details =
 "default, output is sent to stdout.\n"
 "\n"
 "Options:\n"
-"  -n, --noCleanUp     do not perform whirl cleanup needed for OpenAD\n"
 "  -o, --output <file> send output to <file> instead of stdout\n"
 "  -V, --version       print version information\n"
 "  -h, --help          print this help\n"
-"      --debug [lvl]   debug mode at level `lvl'\n";
+"  -n, --noCleanUp     only for development: do not perform whirl cleanup \n"
+"                      needed for OpenAD\n"
+"      --debug [lvl]   only for development: debug mode at level `lvl'\n";
 
 
 #define CLP CmdLineParser

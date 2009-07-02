@@ -129,7 +129,7 @@ namespace xaif2whirl {
     // -------------------------------------------------------
     // 3. Read WHIRL IR as basis for translation
     // -------------------------------------------------------
-    PU_Info* pu_forest = ReadIR(args.inWhirlFileNm.c_str());
+    PU_Info* pu_forest = ReadIR(args.inWhirlFileNm.c_str(),args.myNoCleanUpFlag);
     PrepareIR(pu_forest); // FIXME (should this be part of translation?)
 
     // -------------------------------------------------------
@@ -137,8 +137,10 @@ namespace xaif2whirl {
     // -------------------------------------------------------
     ret = main_SAX(pu_forest, args.xaifFileNm.c_str(), args.validate); 
 
-    AdjustInterfaces ai(pu_forest);
-    ai.doIt();
+    if (!args.myNoCleanUpFlag) { 
+      AdjustInterfaces ai(pu_forest);
+      ai.doIt();
+    }
 
     WriteIR(args.outWhirlFileNm.c_str(), pu_forest);
     //FreeIR(pu_forest);

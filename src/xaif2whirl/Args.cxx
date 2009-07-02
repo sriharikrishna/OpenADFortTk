@@ -68,7 +68,9 @@ static const char* usage_details =
 "  -V, --version       print version information and exit\n"
 "  -v, --validate      validate agains schema\n"
 "  -h, --help          print this help and exit\n"
-"      --debug [lvl]   debug mode at level `lvl'\n";
+"  -n, --noCleanUp     only for development: do not perform whirl cleanup \n"
+"                      needed for OpenAD\n"
+"      --debug [lvl]   only for development: debug mode at level `lvl'\n";
 
 
 #define CLP CmdLineParser
@@ -82,6 +84,7 @@ CmdLineParser::OptArgDesc Args::optArgs[] = {
   {  0 , "i4",              CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "u4",              CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "r4",              CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
+  { 'n', "noCleanUp",CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   { 'o', "output",   CLP::ARG_REQ , CLP::DUPOPT_ERR,  NULL },
   { 't', "type",     CLP::ARG_REQ , CLP::DUPOPT_ERR,  NULL },
   { 'V', "version",  CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
@@ -115,6 +118,7 @@ Args::Ctor()
   algorithm = xaif2whirl::ALG_UNSTRUCTURED_CF;
   validate  = false; 
   debug     = 0; // default: 0 (off)
+  myNoCleanUpFlag = false;
 }
 
 Args::~Args()
@@ -232,6 +236,10 @@ Args::Parse(int argc, const char* const argv[])
       ourDefaultMTypeReal=MTYPE_F4;
     }
     
+    if (parser.IsOpt("noCleanUp")) { 
+      myNoCleanUpFlag = true;
+    }
+
     // Check for required arguments
     if (parser.GetNumArgs() != 2) {
       PrintError(std::cerr, "Invalid number of arguments!");

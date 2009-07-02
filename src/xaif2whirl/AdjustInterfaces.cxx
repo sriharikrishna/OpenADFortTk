@@ -41,6 +41,13 @@ void AdjustInterfaces::forPUInfo(PU_Info* aPUInfo_p) {
 						    dummyLocal_ST_p);
 	  if (properPUTypeIndex && properPUTypeIndex!=ST_type(dummyLocal_ST_p)){
 	    // do the surgery on the type info 
+	    FORTTK_MSG(2,"in interface named " 
+		       << ST_name(puName_ST_p) << " adjusting type for " 
+		       << ST_name(dummyLocal_ST_p) 
+		       << " from "
+		       << TY_IDX_index(ST_type(dummyLocal_ST_p))
+		       << " to " 
+		       << TY_IDX_index(properPUTypeIndex)); 
 	    Set_ST_type(dummyLocal_ST_p,properPUTypeIndex);
 	  }
 	}

@@ -75,6 +75,8 @@ public:
   static TYPE_ID ourDefaultMTypeUInt;
   static TYPE_ID ourDefaultMTypeReal;
 
+  bool myNoCleanUpFlag;
+
 private:
   void Ctor();
   
