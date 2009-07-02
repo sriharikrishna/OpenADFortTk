@@ -21,6 +21,50 @@ void AdjustInterfaces::forPUInfoTree(PU_Info* aPUInfoTree_p) {
   }
 }
 
+TY_IDX copyTypeAdjust(TY_IDX dummyTypeIdx,
+		      TY_IDX properPUTypeIdx) { 
+  FORTTK_ASSERT(dummyTypeIdx!=properPUTypeIdx,"copyType: identical type indices");
+  FORTTK_ASSERT(TY_kind(dummyTypeIdx) != KIND_SCALAR 
+		&& 
+		TY_kind(properPUTypeIdx) != KIND_SCALAR,
+		"copyType: scalar type");
+  TY_IDX copiedChildTypeIdx, ty_idx;
+  TY& ty = New_TY(ty_idx); // sets 'ty_idx'
+  TY_Init(ty, 
+	  TY_size(dummyTypeIdx), 
+	  TY_kind(dummyTypeIdx),
+	  TY_mtype(dummyTypeIdx),
+	  TY_name_idx(dummyTypeIdx));
+  if (TY_kind(dummyTypeIdx) == KIND_POINTER ) { 
+    FORTTK_ASSERT(TY_kind(properPUTypeIdx) == KIND_POINTER,"copyType: not a pointer");
+    if (TY_kind(TY_pointed(properPUTypeIdx)) != KIND_SCALAR) {
+      copiedChildTypeIdx = copyTypeAdjust(TY_pointed(dummyTypeIdx),
+					  TY_pointed(properPUTypeIdx));
+      Set_TY_pointed(ty,copiedChildTypeIdx);
+    }
+    else { 
+      FORTTK_ASSERT(TY_kind(TY_pointed(dummyTypeIdx)) == KIND_SCALAR,"copyType: not a scalar");
+      Set_TY_pointed(ty,TY_pointed(properPUTypeIdx));
+    }
+  }
+  else if (TY_kind(dummyTypeIdx) == KIND_ARRAY ) { 
+    FORTTK_ASSERT(TY_kind(properPUTypeIdx) == KIND_ARRAY,"copyType: not an array");
+    if (TY_kind(TY_etype(properPUTypeIdx)) != KIND_SCALAR) {
+      copiedChildTypeIdx = copyTypeAdjust(TY_etype(dummyTypeIdx),
+					  TY_etype(properPUTypeIdx));
+      Set_TY_etype(ty,copiedChildTypeIdx);
+    }
+    else { 
+      FORTTK_ASSERT(TY_kind(TY_etype(dummyTypeIdx)) == KIND_SCALAR,"copyType: not a scalar");
+      Set_TY_etype(ty,TY_etype(properPUTypeIdx));
+    }
+    Set_TY_arb(ty,TY_arb(dummyTypeIdx));
+  }
+  else 
+    FORTTK_DIE("copyType: no logic to handle type kind: " <<  TY_kind(dummyTypeIdx)); 
+  return ty_idx;
+} 
+
 void AdjustInterfaces::forPUInfo(PU_Info* aPUInfo_p) { 
   PU_SetGlobalState(aPUInfo_p);
   WN* thePU_WN_p = PU_Info_tree_ptr(aPUInfo_p);
@@ -39,15 +83,25 @@ void AdjustInterfaces::forPUInfo(PU_Info* aPUInfo_p) {
 	  ST* dummyLocal_ST_p=WN_st(WN_kid(interfaceFuncWN_p, kidIdx));
 	  TY_IDX properPUTypeIndex=findPUSymbolType(puName_ST_p,
 						    dummyLocal_ST_p);
-	  if (properPUTypeIndex && properPUTypeIndex!=ST_type(dummyLocal_ST_p)){
-	    // do the surgery on the type info 
+	  TY_IDX dummyLocalTypeIndex=ST_type(dummyLocal_ST_p);
+	  if (properPUTypeIndex && properPUTypeIndex!=dummyLocalTypeIndex){
+	    if (TY_kind(dummyLocalTypeIndex) != KIND_SCALAR) { 
+	      properPUTypeIndex=copyTypeAdjust(dummyLocalTypeIndex,
+					       properPUTypeIndex);
+	    }
+	    else { 
+	      FORTTK_ASSERT(TY_kind(properPUTypeIndex) == KIND_SCALAR, 
+			    "AdjustInterfaces::forPUInfo: type kind mismatch for symbol " 
+			    << ST_name(dummyLocal_ST_p) << " referenced in " << ST_name(puName_ST_p));
+	    }
 	    FORTTK_MSG(2,"in interface named " 
-		       << ST_name(puName_ST_p) << " adjusting type for " 
+		       << ST_name(puName_ST_p) << " adjusting type for variable" 
 		       << ST_name(dummyLocal_ST_p) 
 		       << " from "
 		       << TY_IDX_index(ST_type(dummyLocal_ST_p))
 		       << " to " 
 		       << TY_IDX_index(properPUTypeIndex)); 
+	    // do the surgery on the type in the symbol table 
 	    Set_ST_type(dummyLocal_ST_p,properPUTypeIndex);
 	  }
 	}
