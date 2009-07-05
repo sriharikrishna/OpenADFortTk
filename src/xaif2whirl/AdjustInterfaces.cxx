@@ -22,8 +22,12 @@ void AdjustInterfaces::forPUInfoTree(PU_Info* aPUInfoTree_p) {
 }
 
 TY_IDX copyTypeAdjust(TY_IDX dummyTypeIdx,
-		      TY_IDX properPUTypeIdx) { 
-  FORTTK_ASSERT(dummyTypeIdx!=properPUTypeIdx,"copyType: identical type indices");
+		      TY_IDX properPUTypeIdx) {
+  if (dummyTypeIdx==properPUTypeIdx) { 
+    FORTTK_MSG(2, "copyType: identical type index >" 
+	       << TY_IDX_index(properPUTypeIdx)
+	       << "<");
+  }
   FORTTK_ASSERT(TY_kind(dummyTypeIdx) != KIND_SCALAR 
 		&& 
 		TY_kind(properPUTypeIdx) != KIND_SCALAR,
@@ -78,13 +82,21 @@ void AdjustInterfaces::forPUInfo(PU_Info* aPUInfo_p) {
       skipKids=true;
       WN* interfaceFuncWN_p=WN_kid0(curWN_p);
       ST* puName_ST_p=WN_st(interfaceFuncWN_p); 
-      if (!ST_is_in_module(puName_ST_p)) {  // assuming we don't have to adjust module interfaces
+      if (!ST_is_in_module(puName_ST_p)) {  // leave  module procedure interfaces alone
 	for (INT kidIdx = 0; kidIdx < WN_kid_count(interfaceFuncWN_p); ++kidIdx) {
 	  ST* dummyLocal_ST_p=WN_st(WN_kid(interfaceFuncWN_p, kidIdx));
 	  TY_IDX properPUTypeIndex=findPUSymbolType(puName_ST_p,
-						    dummyLocal_ST_p);
+						    dummyLocal_ST_p,
+						    kidIdx);
 	  TY_IDX dummyLocalTypeIndex=ST_type(dummyLocal_ST_p);
 	  if (properPUTypeIndex && properPUTypeIndex!=dummyLocalTypeIndex){
+	    FORTTK_MSG(2,"considering adjustments in interface named " 
+		       << ST_name(puName_ST_p) << " for variable " 
+		       << ST_name(dummyLocal_ST_p) 
+		       << " from "
+		       << TY_IDX_index(ST_type(dummyLocal_ST_p))
+		       << " to " 
+		       << TY_IDX_index(properPUTypeIndex)); 
 	    if (TY_kind(dummyLocalTypeIndex) != KIND_SCALAR) { 
 	      properPUTypeIndex=copyTypeAdjust(dummyLocalTypeIndex,
 					       properPUTypeIndex);
@@ -95,7 +107,7 @@ void AdjustInterfaces::forPUInfo(PU_Info* aPUInfo_p) {
 			    << ST_name(dummyLocal_ST_p) << " referenced in " << ST_name(puName_ST_p));
 	    }
 	    FORTTK_MSG(2,"in interface named " 
-		       << ST_name(puName_ST_p) << " adjusting type for variable" 
+		       << ST_name(puName_ST_p) << " adjusting type for variable " 
 		       << ST_name(dummyLocal_ST_p) 
 		       << " from "
 		       << TY_IDX_index(ST_type(dummyLocal_ST_p))
@@ -118,7 +130,8 @@ void AdjustInterfaces::forPUInfo(PU_Info* aPUInfo_p) {
 } 
 
 TY_IDX AdjustInterfaces::findPUSymbolType(ST* puName_ST_p,
-					  ST* dummyLocal_ST_p) { 
+					  ST* dummyLocal_ST_p,
+					  INT wnKidIdx) { 
   TY_IDX theTypeIndex=0;
   PU_Info* thePU=findPU(puName_ST_p);
   if (!thePU)
@@ -128,22 +141,26 @@ TY_IDX AdjustInterfaces::findPUSymbolType(ST* puName_ST_p,
   // temporarily reset the global state
   PU_Info* currentPUI=Current_PU_Info;
   PU_SetGlobalState(thePU);
-  // level should be 2 here
-  INT level=2;
-  for (INT i = 1; 
-       i < ST_Table_Size(level) ; 
-       ++i) { 
-    // get the symbol from the table
-    ST* an_ST_p=&(St_Table(level,i));
-    // std::cout << "looking at " << ST_name(an_ST_p) << std::endl; 
-    if (strcmp(ST_name(an_ST_p),dummyLocalName)==0) { // must match the name
-      theTypeIndex=ST_type(an_ST_p);
-      PU_SetGlobalState(currentPUI);
-      return theTypeIndex;
+  WN* thePU_WN_p = PU_Info_tree_ptr(thePU);
+  WN_TREE_CONTAINER<PRE_ORDER> aWNPtree(thePU_WN_p);
+  WN_TREE_CONTAINER<PRE_ORDER>::iterator aWNPtreeIterator=aWNPtree.begin();
+  bool skipKids=false;
+  while (aWNPtreeIterator != aWNPtree.end()) { 
+    WN* curWN_p = aWNPtreeIterator.Wn();
+    OPERATOR opr = WN_operator(curWN_p);
+    if (opr==OPR_FUNC_ENTRY && strcmp(ST_name(WN_st(curWN_p)),puName)==0) {
+      // found it, now go by position: 
+      if (WN_kid(curWN_p,wnKidIdx) && WN_has_sym(WN_kid(curWN_p,wnKidIdx))) { 
+	FORTTK_MSG(2,"for " << puName << " matched " << dummyLocalName << " to " << ST_name(WN_st(WN_kid(curWN_p,wnKidIdx))) << " for position " << wnKidIdx);
+	theTypeIndex=ST_type(WN_st(WN_kid(curWN_p,wnKidIdx)));
+	PU_SetGlobalState(currentPUI);
+	return theTypeIndex; 
+      }
     }
+    ++aWNPtreeIterator;
   }
   PU_SetGlobalState(currentPUI);
-  FORTTK_ASSERT_WARN(0, "AdjustInterfaces::findPUSymbol: symbol " << dummyLocalName << " referenced in " << puName << " not found in the derinition");
+  FORTTK_ASSERT_WARN(0, "AdjustInterfaces::findPUSymbol: symbol " << dummyLocalName << " referenced in interface " << puName << " not found in the definition, go by parameter position ");
   return theTypeIndex; 	
 } 
 

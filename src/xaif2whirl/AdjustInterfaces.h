@@ -36,7 +36,8 @@ class AdjustInterfaces{
   void forPUInfo(PU_Info* aPUInfo_p);
 
   TY_IDX findPUSymbolType(ST* puName_ST_p,
-			  ST* dummyLocal_ST_p); 
+			  ST* dummyLocal_ST_p,
+			  INT wnKidIdx); 
 
   /**
    * find a PU in the forest
