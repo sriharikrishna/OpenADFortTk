@@ -84,6 +84,7 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_CALL,          "DBLE")       ]=Info(false,1,FLOAT_INTR); 
     ourIntrinsicInfoMap[Key( OPR_CALL,          "AIMAG")      ]=Info(false,1,FLOAT_INTR); 
     ourIntrinsicInfoMap[Key( OPR_CALL,          "TRANS")      ]=Info(false,1,ARRAY_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_COMPLEX,       NULL)         ]=Info(false,2,FLOAT_INTR); 
     // logical (and bitwise logical) operations 
     ourIntrinsicInfoMap[Key( OPR_BNOT,          NULL)         ]=Info(false,1,BOOL_INTR);
     ourIntrinsicInfoMap[Key( OPR_BAND,          NULL)         ]=Info(false,2,BOOL_INTR);

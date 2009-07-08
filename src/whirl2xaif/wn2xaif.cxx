@@ -1871,7 +1871,7 @@ namespace whirl2xaif {
     ourHandlerTable[OPR_ALLOCA]=               &WN2F_alloca ;
 
     // Expressions: Binary operations
-    ourHandlerTable[OPR_COMPLEX]=              &WN2F_complex ; // OPR_PAIR
+    ourHandlerTable[OPR_COMPLEX]=              &xlate_BinaryOp ; // OPR_PAIR
     ourHandlerTable[OPR_ADD]=                  &xlate_BinaryOp ;
     ourHandlerTable[OPR_SUB]=                  &xlate_BinaryOp ;
     ourHandlerTable[OPR_MPY]=                  &xlate_BinaryOp ;

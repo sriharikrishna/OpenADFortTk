@@ -4891,6 +4891,15 @@ print_generic_binary:
     } // for kids
     os << ")";
     break;
+  case OPR_PAIR:
+    os << "cmplx(";
+    for (int kid = 0; kid < WN_kid_count(wn); kid++) {
+      DumpWN(WN_kid(wn, kid), os);
+      if (kid < WN_kid_count(wn)-1)
+        os << ", ";
+    } // for kids
+    os << ")";
+    break;
   default:
     fprintf(stderr,"DumpWN: no logic for :");  
     fdump_wn(stderr, wn); // or fdump_tree()

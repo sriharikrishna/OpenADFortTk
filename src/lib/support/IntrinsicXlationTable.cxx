@@ -90,6 +90,7 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "DBLE",    1, 0 }, { XAIFIntrin, "real_int_scal",             "2_REAL",        1 } }, 
     { { WNCall,     OPR_CALL,         "AIMAG",   1, 0 }, { XAIFIntrin, "imag_scal",                 NULL,            1 } }, 
     { { WNCall,     OPR_CALL,         "TRANS",   1, 0 }, { XAIFIntrin, "trans_arr",                 NULL,            1 } }, 
+    { { WNExpr,     OPR_COMPLEX,      NULL,      2, 0 }, { XAIFIntrin, "complex_scal",              NULL,            2 } }, 
     // Logical (and bitwise logical) operations 
     { { WNExpr,     OPR_BNOT,         NULL,      1, 0 }, { XAIFBoolOp, "b_not",                     NULL,            1 } },
     { { WNExpr,     OPR_BAND,         NULL,      2, 0 }, { XAIFBoolOp, "b_and",                     NULL,            2 } },

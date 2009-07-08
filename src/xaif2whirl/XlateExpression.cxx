@@ -908,6 +908,9 @@ namespace xaif2whirl {
 	     opr == OPR_LT || opr == OPR_LE) {
       rty = getMType(MTYPE_CLASS_INTEGER, 4);
     }
+    else if (opr == OPR_COMPLEX ) {
+      rty = getMType(MTYPE_CLASS_COMPLEX_FLOAT,MTYPE_byte_size(mty));
+    }
     OPCODE opc = OPCODE_make_op(opr, rty, dty);
     return opc;
   }

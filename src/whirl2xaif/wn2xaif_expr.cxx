@@ -383,7 +383,7 @@ whirl2xaif::xlate_UnaryOp(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_rsqrt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_RSQRT, fortTkSupport::Diagnostics::UnexpectedInput);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
   
@@ -399,7 +399,7 @@ whirl2xaif::WN2F_rsqrt(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_realpart(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_REALPART, fortTkSupport::Diagnostics::UnexpectedInput);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
    
   switch (WN_rtype(wn)) {
   case MTYPE_F4:
@@ -427,7 +427,7 @@ whirl2xaif::WN2F_realpart(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_imagpart(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_IMAGPART, fortTkSupport::Diagnostics::UnexpectedInput);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
   switch (WN_rtype(wn)) {
   case MTYPE_F4:
@@ -520,7 +520,7 @@ whirl2xaif::WN2F_parm(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_alloca(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_ALLOCA, fortTkSupport::Diagnostics::UnexpectedInput);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
   xos << "OPR_ALLOCA(";
   TranslateWN(xos,WN_kid0(wn),ctxt);
@@ -550,41 +550,10 @@ whirl2xaif::xlate_BinaryOp(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   ctxt.currentXlationContext().unsetFlag(XlationContext::IS_LOGICAL_OPERATION);
 }
 
-
-void 
-whirl2xaif::WN2F_complex(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
-{
-  FORTTK_ASSERT(WN_operator(wn) == OPR_COMPLEX, fortTkSupport::Diagnostics::UnexpectedInput);
-  
-  switch (WN_rtype(wn)) {
-  case MTYPE_C4:
-    xos << "CMPLX";
-    break;
-  case MTYPE_C8:
-    xos << "DCMPLX";
-    break;
-  case MTYPE_CQ:
-    xos << "QCMPLX";
-    break;
-  default:
-    FORTTK_DIE("Unexpected type: " << MTYPE_name(WN_rtype(wn)));
-    break;
-  }
-  
-  xos << "("; /* getting real part */
-  TranslateWN(xos, WN_kid0(wn), ctxt);
-  xos << ","; /* getting imaginary part */
-  TranslateWN(xos, WN_kid1(wn), ctxt);
-  xos << ")";
-  
-  
-}
-
-
 void 
 whirl2xaif::WN2F_bnor(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_BNOR, fortTkSupport::Diagnostics::UnexpectedInput);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
 
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
   
@@ -603,7 +572,7 @@ whirl2xaif::WN2F_bnor(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 void 
 whirl2xaif::WN2F_lshr(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 {
-  FORTTK_ASSERT(WN_operator(wn) == OPR_LSHR, fortTkSupport::Diagnostics::UnexpectedInput);
+  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
   
   TY_IDX const result_ty = Stab_Mtype_To_Ty(WN_rtype(wn));
   
