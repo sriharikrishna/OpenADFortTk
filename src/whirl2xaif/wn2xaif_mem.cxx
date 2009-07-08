@@ -891,15 +891,16 @@ namespace whirl2xaif {
   
   }
 
-
   void
   WN2F_src_triplet(xml::ostream& xos, WN* wn, PUXlationContext& ctxt) {
-    xos << xml::BegElem(XAIFStrings.elem_Index());
-    ctxt.createXlationContext(); 
-    ctxt.currentXlationContext().unsetFlag(XlationContext::VARREF); // elem_Index() contains ExpressionType
-    TranslateWN(xos, WN_kid0(wn), ctxt);
-    ctxt.deleteXlationContext();
-    xos << xml::EndElem;
+    if (WN_operator(WN_kid0(wn))!= OPR_IMPLICIT_BND) {
+      xos << xml::BegElem(XAIFStrings.elem_Index());
+      ctxt.createXlationContext(); 
+      ctxt.currentXlationContext().unsetFlag(XlationContext::VARREF); // elem_Index() contains ExpressionType
+      TranslateWN(xos, WN_kid0(wn), ctxt);
+      ctxt.deleteXlationContext();
+      xos << xml::EndElem;
+    }
     if (WN_operator(WN_kid1(wn))!= OPR_IMPLICIT_BND) { 
       xos << xml::BegElem(XAIFStrings.elem_Bound());
       ctxt.createXlationContext(); 
