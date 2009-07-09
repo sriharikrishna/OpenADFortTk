@@ -344,6 +344,23 @@ namespace xaif2whirl {
     }
   };
 
+  bool conversionToReal(fortTkSupport::IntrinsicXlationTable::WHIRLInfo& info) { 
+    if (info.opr=OPR_CALL) {
+      const std::string oprName(info.name);
+      if (
+	  oprName.compare("REAL")==0
+	  ||
+	  oprName.compare("DBLE")==0
+	  || 
+	  oprName.compare("FLOAT")==0
+	  || 
+	  oprName.compare("AIMAG")==0
+	  )
+	return true;
+    } 
+    return false; 
+  } 
+
   WN* XlateExpression::xlate_ExprOpUsingIntrinsicTable(const fortTkSupport::IntrinsicXlationTable::XAIFOpr xopr, 
 						       const char* xoprNm, 
 						       const char* xIntrinKey,
@@ -393,7 +410,11 @@ namespace xaif2whirl {
 	newrty = getMType(MTYPE_CLASS_FLOAT, 8);
       }
       // WN_set_rtype(opnd_wn[i], newrty);
-      if (newrty != MTYPE_UNKNOWN && newrty != rty) {
+      if (newrty != MTYPE_UNKNOWN 
+	  && 
+	  newrty != rty
+	  && 
+	  ! conversionToReal(*info)) {
 	opnd_wn[i] = WN_Cvt(rty, newrty, opnd_wn[i]);
       }
     }
