@@ -345,7 +345,7 @@ namespace xaif2whirl {
   };
 
   bool conversionToReal(fortTkSupport::IntrinsicXlationTable::WHIRLInfo& info) { 
-    if (info.opr=OPR_CALL) {
+    if (info.opr==OPR_CALL) {
       const std::string oprName(info.name);
       if (
 	  oprName.compare("REAL")==0
