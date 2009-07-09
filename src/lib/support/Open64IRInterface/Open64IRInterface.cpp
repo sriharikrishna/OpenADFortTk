@@ -2771,6 +2771,7 @@ bool isAddrOf = false;
     case OPR_CVT:
     case OPR_SRCTRIPLET:
     case OPR_SWITCH:
+    case OPR_COMPLEX:
     {
        if(opr == OPR_IF) { 
           mStmt2allExprsMap[stmt].insert((OA::irhandle_t)WN_kid0(wn));
