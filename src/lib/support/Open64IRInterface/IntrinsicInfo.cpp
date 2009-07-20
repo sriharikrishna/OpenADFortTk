@@ -46,6 +46,7 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_CALL,          "LOG")        ]=Info(false,1,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "DLOG")       ]=Info(false,1,FLOAT_INTR); 
     ourIntrinsicInfoMap[Key( OPR_CALL,          "ALOG")       ]=Info(false,1,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "LOG10")      ]=Info(false,1,FLOAT_INTR); 
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "EXPEXPR")    ]=Info(false,2,FLOAT_INTR);
     // string ops
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CEQEXPR")    ]=Info(false,2,STRING_INTR);

@@ -61,6 +61,7 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "LOG",     1, 0 }, { XAIFIntrin, "ln_scal",                   "0_LOG",         1 } },
     { { WNCall,     OPR_CALL,         "DLOG",    1, 0 }, { XAIFIntrin, "ln_scal",                   "1_DLOG",        1 } }, 
     { { WNCall,     OPR_CALL,         "ALOG",    1, 0 }, { XAIFIntrin, "ln_scal",                   "2_ALOG",        1 } }, 
+    { { WNCall,     OPR_CALL,         "LOG10",   1, 0 }, { XAIFIntrin, "log10",                     NULL,            1 } }, 
     { { WNIntrinOp, OPR_INTRINSIC_OP, "EXPEXPR", 2, 0 }, { XAIFIntrin, "pow_scal_scal",             NULL,            2 } },
     // string operations
     { { WNIntrinOp, OPR_INTRINSIC_OP, "CEQEXPR", 2, 0 }, { XAIFIntrin, "string_eq_scal_scal",       NULL,            2 } },
