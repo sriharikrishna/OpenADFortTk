@@ -135,7 +135,7 @@ namespace xaif2whirl {
     // -------------------------------------------------------
     // 4. Translate XAIF into WHIRL
     // -------------------------------------------------------
-    ret = main_SAX(pu_forest, args.xaifFileNm.c_str(), args.validate); 
+    if (ret = main_SAX(pu_forest, args.xaifFileNm.c_str(), args.validate) != 0) {return ret;} 
 
     if (!args.myNoCleanUpFlag) { 
       AdjustInterfaces ai(pu_forest);
@@ -199,7 +199,10 @@ namespace xaif2whirl {
       errorsOccured = true;
     }
     FORTTK_ASSERT(!errorsOccured, "SAX2 Parse Error.");
-
+    
+    if (theSAXHandler.getParserErrorStatus())
+      return 1; 
+    
     theSAXHandler.deleteParser();
 
     return ret;

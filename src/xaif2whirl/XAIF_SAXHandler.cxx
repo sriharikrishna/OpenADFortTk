@@ -63,6 +63,10 @@ namespace xaif2whirl {
     myParser_p->parse(theXMLFileName.c_str());
   } // end XAIF_SAXHandler::parse()
 
+  bool XAIF_SAXHandler::getParserErrorStatus() { 
+    return (dynamic_cast<const XAIF_SAXErrorHandler*>(myParser_p->getErrorHandler()))->getErrors();
+  } 
+
   void XAIF_SAXHandler::startElement(const XMLCh* const uri,
 				     const XMLCh* const localname,
 				     const XMLCh* const qname,

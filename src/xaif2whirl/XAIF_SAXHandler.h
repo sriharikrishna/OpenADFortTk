@@ -36,6 +36,8 @@ namespace xaif2whirl {
 		    const XMLCh* const localname,
 		    const XMLCh* const qname);
 
+    bool getParserErrorStatus(); 
+
     void deleteParser();
 
   private:
