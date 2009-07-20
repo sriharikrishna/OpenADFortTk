@@ -445,7 +445,22 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
       // FunctionCall
       xlate_as = FUNCTION_CALL;
       // JU: for now: 
-      FORTTK_DIE("whirl2xaif::xlate_CALL: call to function: " << funcNm 
+      USRCPOS srcpos;
+      USRCPOS_srcpos(srcpos) = WN_Get_Linenum(wn);
+      if(!USRCPOS_linenum(srcpos)) { 
+	WN* parWN=ctxt.findParentWN(wn);
+	if (parWN) { 
+	  USRCPOS_srcpos(srcpos) = WN_Get_Linenum(parWN);
+	  while (!USRCPOS_linenum(srcpos) && parWN) { 
+	    parWN=ctxt.findParentWN(parWN);
+	    USRCPOS_srcpos(srcpos) = WN_Get_Linenum(parWN);
+	  }
+	}
+      }
+      FORTTK_DIE("whirl2xaif::xlate_CALL: call to function: " 
+		 << funcNm 
+		 << " near line " 
+		 << USRCPOS_linenum(srcpos)
 		 << " is not supported! This should either be recognized as an intrinsic or should have been canonicalized into a subroutine call"); 
       // we leave the rest of the code as is...
       xos << BegElem("xaif:FunctionCall") 
