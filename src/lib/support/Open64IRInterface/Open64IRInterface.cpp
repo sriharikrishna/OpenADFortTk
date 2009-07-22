@@ -2858,6 +2858,8 @@ ST* Open64IRInterface::findBaseSymbol(WN* wn)
     case OPR_CALL:
     case OPR_INTRINSIC_OP:
     case OPR_CVT:    
+    case OPR_COMPLEX:    
+    case OPR_ARRAY_CONSTRUCT:    
         retval = findBaseSymbol(WN_kid0(wn));
         break;
     case OPR_STID:
