@@ -460,7 +460,8 @@ namespace xaif2whirl {
     FORTTK_ASSERT_WARN(iostmt == IOS_CR_FWF || iostmt == IOS_CR_FWU 
 		       || iostmt == IOS_CR_FRF || iostmt == IOS_CR_FRU
 		       || iostmt == IOS_CR_OPEN || iostmt == IOS_CR_CLOSE
-		       || iostmt == IOS_INQUIRE || iostmt == IOS_CR_INQUIRE,
+		       || iostmt == IOS_INQUIRE || iostmt == IOS_CR_INQUIRE
+		       || iostmt == IOS_REWIND  || iostmt == IOS_CR_REWIND,
 		       fortTkSupport::Diagnostics::UnexpectedInput << IOSTATEMENT_name(iostmt));
     // Iterate over IO_ITEMs and translate IOLs (io lists)
     for (INT kidno = 0; kidno < WN_kid_count(wn); ++kidno) {
