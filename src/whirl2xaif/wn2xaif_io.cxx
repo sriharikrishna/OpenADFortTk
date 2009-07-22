@@ -849,12 +849,6 @@ WN2F_ios_open(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
       << " [OPEN***]" << EndAttr
       << EndElem;
-
-#if 0 // FIXME
-  xlate_IOControlList(xos, wn,
-		      0 /* from kid*/, WN_kid_count(wn)-1 /* to kid*/,
-		      ctxt);
-#endif
 } /* WN2F_ios_open */
 
 
@@ -866,7 +860,7 @@ WN2F_ios_rewind(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
   xos << BegElem(XAIFStrings.elem_Marker())
       << Attr("statement_id", stmtid)
       << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
-      << " [REWIND***]" << EndAttr;
+      << " [REWIND***]" << EndAttr; 
   xos << EndElem;
 } /* WN2F_ios_rewind */
 
