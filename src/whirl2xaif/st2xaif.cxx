@@ -484,9 +484,12 @@ namespace whirl2xaif {
       translatenow = true;
     }
     if (translatenow) { // FIXME
-      const char* ty_str = TranslateTYToSymType(ty);
+      bool isPointer = TY_Is_Pointer(ty) || TY_is_f90_pointer(ty);
+      const char* ty_str = isPointer ? TranslateTYToSymType(TY_pointed(ty))
+                                     : TranslateTYToSymType(ty);
       if (!ty_str) { ty_str = "***"; }
-      const char* shape_str = TranslateTYToSymShape(ty);
+      const char* shape_str = isPointer ? TranslateTYToSymShape(TY_pointed(ty))
+                                        : TranslateTYToSymShape(ty);
       if (!shape_str) { shape_str = "***"; }
       int active = (ctxt.isActiveSym(st)) ? 1 : 0;
       if (active 
@@ -512,8 +515,11 @@ namespace whirl2xaif {
 	  << xml::Attr("feType",TranslateTYToMType(ty))
 	  << xml::Attr("shape", shape_str) 
 	  << SymIdAnnot(st_id)
-	  << xml::Attr("active", active) 
-	  << xml::EndAttrs;
+	  << xml::Attr("active", active);
+      if (isPointer) {
+        xos << xml::Attr("pointer", isPointer);
+      }
+      xos << xml::EndAttrs;
       xlate_ArrayBounds(xos, ty, ctxt);
       xos << xml::EndElem;
     }
