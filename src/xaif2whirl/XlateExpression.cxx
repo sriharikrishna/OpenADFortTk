@@ -653,7 +653,7 @@ namespace xaif2whirl {
       // ----------------------------------------------------------------------------------
       // Translate the index expression for each dimension
       unsigned int rank = GetChildElementCount(elem);
-      vector<WN*> indices(rank); 
+      vector<WN*> indices(rank,(WN*)0); 
       DOMElement* dim = GetFirstChildElement(elem);
       for (int i = 0; dim; dim = GetNextSiblingElement(dim), ++i) {
 	const XMLCh* nmX = dim->getNodeName();
@@ -662,7 +662,7 @@ namespace xaif2whirl {
 		      << *dim);
 	DOMElement* tripletElementExpr = GetFirstChildElement(dim);
 	UINT tripletElementCounter=0;
-	vector<WN*> triplet(3);
+	vector<WN*> triplet(3,(WN*)0);
 	for (; tripletElementExpr; tripletElementExpr = GetNextSiblingElement(tripletElementExpr),++tripletElementCounter) {
 	  DOMElement* firstChild=GetFirstChildElement(tripletElementExpr);
 	  if (firstChild) { 
@@ -680,7 +680,7 @@ namespace xaif2whirl {
 	      FORTTK_DIE("unexpected element :" << *tripletElementExpr);
 	  }
 	}
-	if (tripletElementCounter==1) 
+	if (tripletElementCounter==1 && triplet[0]) 
 	  indices[i] = WN_Type_Conversion(triplet[0],MTYPE_I4);
 	else { 
 	  WN* theSrcTriplet_p=WN_Create(OPR_SRCTRIPLET,
