@@ -460,31 +460,6 @@ namespace whirl2xaif {
     WN* ref_wn = ctxt.getMostRecentWN();
     TY_IDX base_ty = TY_pointed(baseptr_ty); 
 
-#if 0 // FIXME:REMOVE
-      // -------------------------------------------------------
-      // 
-      // -------------------------------------------------------
-
-      /* Do the symbol translation from the base of BASED symbols */
-    if (Stab_Is_Based_At_Common_Or_Equivalence(base_st)) {
-      offset += ST_ofst(base_st); /* offset of based symbol */
-      base_st = ST_base(base_st); /* replace based symbol with its base */
-      base_ty = ST_type(base_st);
-      baseptr_ty = Stab_Pointer_To(base_ty);
-    }
-  
-    /* Do the symbol translation from the base of fully split common symbols */
-    if (ST_is_split_common(base_st)) {
-      base_st = ST_full(base_st);
-      base_ty = ST_type(base_st);
-      if (TY_Is_Pointer(base_ty))
-	base_ty = TY_pointed(base_ty);
-      if (TY_is_f90_pointer(base_ty)) //Sept
-	base_ty = TY_pointed(base_ty);
-      baseptr_ty = Stab_Pointer_To(base_ty);
-    }
-#endif
-  
     // -------------------------------------------------------
     // If we are not already within xaif:VariableReference... (FIXME: abstract)
     // -------------------------------------------------------
