@@ -994,6 +994,15 @@ namespace whirl2xaif {
 	/* Get the base of the object to be indexed into, still using
 	 * ctxt.currentXlationContext().isFlag(XlationContext::DEREF_ADDR).
 	 */
+	bool newContext=false;
+	if (!ctxt.currentXlationContext().isFlag(XlationContext::VARREF)) {
+	  xos << xml::BegElem(XAIFStrings.elem_VarRef())
+	      << xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
+	      << xml::Attr("du_ud", ctxt.findUDDUChainId(wn))
+	      << xml::Attr("alias", ctxt.getAliasMapKey(wn));
+	  ctxt.createXlationContext(XlationContext::VARREF, wn);
+	  newContext=true;
+	}
 	UINT srcid = ctxt.currentXlationContext().peekVertexId();
 	TranslateWN(xos, kid, ctxt);
 	ctxt.currentXlationContext().unsetFlag(XlationContext::DEREF_ADDR);
@@ -1004,6 +1013,10 @@ namespace whirl2xaif {
 	  UINT targid = ctxt.currentXlationContext().peekVertexId();
 	  WN2F_arrsection_bounds(xos,wn,array_ty,ctxt);
 	  DumpVarRefEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), srcid, targid);
+	}
+	if (newContext) {
+	  ctxt.deleteXlationContext();
+	  xos << xml::EndElem /* elem_VarRef() */;
 	}
       }
     }
