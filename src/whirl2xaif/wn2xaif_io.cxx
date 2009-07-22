@@ -859,21 +859,15 @@ WN2F_ios_open(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 
 
 static void 
-WN2F_ios_rewind(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
-{
-  /* The kids should be an IOU, followed a sequence of IOCs.  Always
-   * use the explicit UNIT keyword, unless there is exactly one kid
-   * and it is an IOU.
-   */
+WN2F_ios_rewind(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
   FORTTK_ASSERT(WN_IOSTMT(wn) == IOS_REWIND || WN_IOSTMT(wn) == IOS_CR_REWIND, 
 		fortTkSupport::Diagnostics::UnexpectedOpr << IOSTATEMENT_name(WN_IOSTMT(wn)));
-  
-  xos << "REWIND";
-  if (WN_kid_count(wn) == 1 && IS_IO_ITEM_IOU(WN_kid0(wn)))
-    xlate_IO_ITEM(xos, WN_kid0(wn), ctxt);
-  else
-    xlate_IOControlList(xos, wn,
-			0 /* from kid*/, WN_kid_count(wn)-1 /* to kid*/, ctxt);
+  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
+  xos << BegElem(XAIFStrings.elem_Marker())
+      << Attr("statement_id", stmtid)
+      << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
+      << " [REWIND***]" << EndAttr;
+  xos << EndElem;
 } /* WN2F_ios_rewind */
 
 
