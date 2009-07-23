@@ -686,7 +686,7 @@ namespace xaif2whirl {
 	  WN* theSrcTriplet_p=WN_Create(OPR_SRCTRIPLET,
 					MTYPE_I8, 
 					MTYPE_V,
-					tripletElementCounter);
+					3);
 	  for (int j=0; j<3; ++j) {
 	    if (triplet[j]!=0) { 
 	      WN_kid(theSrcTriplet_p,j)=WN_Type_Conversion(triplet[j],MTYPE_I4);
