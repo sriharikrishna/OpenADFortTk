@@ -559,7 +559,8 @@ INPUT                  = src \
                          $(OPENADROOT)/Open64/osprey1.0/common/util \
                          $(OPENADROOT)/Open64/osprey1.0/be/com \
                          $(OPENADROOT)/Open64/osprey1.0/be/be \
-                         $(OPENADROOT)/Open64/osprey1.0/targ_ia32_ia64_linux/include
+                         $(OPENADROOT)/Open64/osprey1.0/targ_ia32_ia64_linux/include \ 
+                         $(OPENADROOT)/OpenAnalysis/src/OpenAnalysis
 
 # This tag can be used to specify the character encoding of the source files 
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is 
