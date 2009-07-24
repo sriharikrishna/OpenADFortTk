@@ -1053,11 +1053,12 @@ namespace whirl2xaif {
 				PUXlationContext& ctxt,
 				OA::OA_ptr<OA::SymHandleIterator> formalArgSymHandleI) 
   { 
-    // OA may include constants in the Location lists.  We splice them
-    // out since they are not in the XAIF symbol table.
+    // OA may include constants in the location lists.  We filter them
+    // out because they are not in the XAIF symbol table.
     ST* st = (ST*)theNamedLoc->getSymHandle().hval();
     ST_TAB* sttab = Scope_tab[ST_level(st)].st_tab;
     fortTkSupport::SymTabId scopeid = ctxt.findSymTabId(sttab);
+    // std::cout << "have " << ST_name(st) << " in scope " << scopeid << " as NamedLoc " <<  (void*)(&(*theNamedLoc)) << std::endl; 
 
     if (ST_class(st) == CLASS_CONST) {
       return;
@@ -1093,6 +1094,43 @@ namespace whirl2xaif {
 	return;
       }
     }
+    else { 
+      // this is a temporary fix to a problem in the analysis 
+      // for the following case: 
+      // a symbol SY occurs in the sideffect list of routine R
+      // as a consequence of R calling FOO, SY is declared within 
+      // FOO (i.e. ST_level is 2) and referenced in BAR that is 
+      // contained in FOO.  Because SY is from the enclosing scope
+      // it is considered "not" local to BAR 
+      // (see also comments in Open64IRInterface.cpp:3715 ff.)
+      // Presumably somewhere in OA then the assumption is made 
+      // that anything not local is global and it ends up 
+      // in the R's side effect list. To be global, however,
+      // it would have to have ST_level 1 or at least 
+      // a level higher than the current PU. If it is not 
+      // we will assume the above case and just return. 
+      ST_IDX stLevel=ST_level(st), puStLevel=PU_lexical_level(ST_ptr(PU_Info_proc_sym(Current_PU_Info)));
+      bool inCurrentSt=false; 
+      if (stLevel==puStLevel) { 
+	// see if we can find it...
+	for (INT i = 1; 
+	     i < ST_Table_Size(stLevel) ; 
+	     ++i) { 
+	  // get the symbol from the table
+	  ST* an_ST_p=&(St_Table(stLevel,i));
+	  if (an_ST_p==st) {// same (not just equal) instance
+	    inCurrentSt=true; 
+	    break; 
+	  }
+	}
+      }
+      if((stLevel==puStLevel && !inCurrentSt) || stLevel>puStLevel) { 
+	ST* puStP = ST_ptr(PU_Info_proc_sym(Current_PU_Info));
+	const char* puName = ST_name(puStP);
+	FORTTK_WMSG("xlate_SideEffectNamedLocation: ignoring symbol " << ST_name(st) << " (level " << (unsigned short)stLevel << ") which is invisible in " << puName << " (level " << (unsigned short)puStLevel); 
+	return; 
+      }
+    } 
     xlate_SideEffectLocationPrint(st,coveredSymbols,scopeid, xos);
   }
 

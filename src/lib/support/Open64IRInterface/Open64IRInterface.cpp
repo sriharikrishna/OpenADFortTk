@@ -3756,7 +3756,7 @@ Open64IRInterface::getLocation(OA::ProcHandle p, OA::SymHandle s)
         setCurrentProcContext(p);
     }
 
-    
+ 
     bool isLocal, isUnique;
     bool hasNestedProc = (PU_Info_child(Current_PU_Info) != NULL);
 
@@ -3803,6 +3803,13 @@ Open64IRInterface::getLocation(OA::ProcHandle p, OA::SymHandle s)
     } else {
       retval = NULL;
     }
+
+//     if (!retval.ptrEqual(0) && st!=0 /* && strcmp(ST_name(st),"I01")==0 */) { 
+//       ST* pust = ST_ptr(PU_Info_proc_sym(Current_PU_Info));
+//       const char* puName = ST_name(pust);
+//       std::cout << "getLoc for " << ST_name(st) << " islocal:" << isLocal << " and " <<  (unsigned short)ST_level((ST*)s.hval()) << " ?= " <<  (unsigned short)CURRENT_SYMTAB << " in " << puName << " returning " << &(*retval) <<  std::endl; 
+//     }
+
     // reset the context
     setCurrentProcContext(currContext);
 
