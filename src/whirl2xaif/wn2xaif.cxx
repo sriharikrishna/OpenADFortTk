@@ -1127,7 +1127,7 @@ namespace whirl2xaif {
       if((stLevel==puStLevel && !inCurrentSt) || stLevel>puStLevel) { 
 	ST* puStP = ST_ptr(PU_Info_proc_sym(Current_PU_Info));
 	const char* puName = ST_name(puStP);
-	FORTTK_WMSG("xlate_SideEffectNamedLocation: ignoring symbol " << ST_name(st) << " (level " << (unsigned short)stLevel << ") which is invisible in " << puName << " (level " << (unsigned short)puStLevel); 
+	FORTTK_WMSG("xlate_SideEffectNamedLocation: ignoring symbol " << ST_name(st) << " (nesting level " << (unsigned short)stLevel << ") which is invisible in " << puName << " (nesting level " << (unsigned short)puStLevel << ")"); 
 	return; 
       }
     } 
