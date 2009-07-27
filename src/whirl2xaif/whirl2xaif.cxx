@@ -283,6 +283,39 @@ namespace whirl2xaif {
     xos.flush();
   }
 
+  bool hasUnstructuredCF(WN* thePU_WN_p) { 
+    // quick test for offending nodes  
+    WN_TREE_CONTAINER<PRE_ORDER> aWNPtree(thePU_WN_p);
+    WN_TREE_CONTAINER<PRE_ORDER>::iterator aWNPtreeIterator=aWNPtree.begin();
+    while (aWNPtreeIterator != aWNPtree.end()) { 
+      WN* curWN_p = aWNPtreeIterator.Wn();
+      OPERATOR opr = WN_operator(curWN_p);
+      if (opr==OPR_RETURN 
+	  && 
+	  WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1))!=curWN_p
+	  &&
+	  WN_prev(WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1)))!=curWN_p) {
+// 	std::cout << std::endl << "curWN_p is " << curWN_p << " ";
+// 	Open64IRInterface::DumpWN(curWN_p,std::cout);
+// 	std::cout << std::endl; 
+// 	std::cout << "WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1)) is " << WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1)) << " ";
+// 	Open64IRInterface::DumpWN(WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1)),std::cout);
+// 	std::cout << std::endl;
+// 	std::cout << "WN_prev(WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1))) is " << WN_prev(WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1))) << " ";
+// 	Open64IRInterface::DumpWN(WN_prev(WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1))),std::cout);
+// 	std::cout << std::endl;
+	FORTTK_MSG(2,"hasUnstructuredCF: found early return");
+	return true; 
+      }
+//       if (opr==OPR_GOTO || opr==OPR_AGOTO) { 
+// 	FORTTK_MSG(2,"hasUnstructuredCF: found goto");
+// 	return true;
+//       }
+      ++aWNPtreeIterator;
+    } 
+    return false; 
+  }
+
   void Whirl2Xaif::translatePU(xml::ostream& xos, 
 			       PU_Info *pu, 
 			       UINT32 vertexId,
@@ -312,8 +345,10 @@ namespace whirl2xaif {
     xos << xml::BegElem("xaif:ControlFlowGraph") 
 	<< xml::Attr("vertex_id", vertexId) << xml::Attr("scope_id", scopeId)
 	<< AttrSymId(st) << PUIdAnnot(puId)
-	<< xml::Attr("controlflowgraph_scope_id", puScopeId)
-	<< xml::EndAttrs;
+	<< xml::Attr("controlflowgraph_scope_id", puScopeId);
+    if ((Args::ourUnstructuredControlFlowFlag) && hasUnstructuredCF(wn_pu))
+      xos << xml::Attr("structured", false);
+    xos << xml::EndAttrs;
     if (IsActivePU(st)) {
       translateWNPU(xos, wn_pu, ctxt);
     }
