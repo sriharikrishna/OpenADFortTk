@@ -77,12 +77,7 @@ whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn_p, PUXlationContext& ctx
       USRCPOS_srcpos(srcpos) = WN_Get_Linenum(func_p);
       aLineNumber=USRCPOS_linenum(srcpos);
     }
-    if (Args::ourUnstructuredControlFlowFlag) { 
-      FORTTK_MSG(1,"whirl2xaif::xlate_PassiveStmt: unstructured control flow (early return) related to line " << aLineNumber);
-    }
-    else { 
-      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << " in whirl2xaif::xlate_PassiveStmt for operator " << &OPERATOR_info [opr]._name [4] << " related to line " << aLineNumber << "; for source code with unstructured control flow use the --unstructured flag");
-    }
+    FORTTK_MSG(1,"whirl2xaif::xlate_PassiveStmt: unstructured control flow (early return) related to line " << aLineNumber);
   }
   
   fortTkSupport::WNId stmtid = ctxt.findWNId(wn_p);

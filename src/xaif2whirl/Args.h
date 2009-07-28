@@ -60,7 +60,7 @@ public:
   
   // Parsed Data: optional arguments
   xaif2whirl::ModeType      mode;      // default: MODE_REVERSE
-  xaif2whirl::AlgorithmType algorithm; // default: ALG_UNSTRUCTURED_CF
+  xaif2whirl::AlgorithmType algorithm; // default: ALG_NULL
   int debug;                           // default: 0 (off)
   
   // Parsed Data: arguments

@@ -95,6 +95,7 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "xaif:ArgumentList",
   "xaif:ArgumentSymbolReference",
   "intent",
+  "structured",
   
   "xaif:Replacement",
   "placeholder",

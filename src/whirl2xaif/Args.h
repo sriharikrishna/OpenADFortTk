@@ -77,9 +77,6 @@ public:
   // do not require useful analysis
   static bool ourVariedOnlyFlag; 
 
-  // permit unstructured control flow
-  static bool ourUnstructuredControlFlowFlag; 
-
 private:
   void Ctor();
 

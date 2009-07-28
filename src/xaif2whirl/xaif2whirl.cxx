@@ -435,8 +435,7 @@ namespace xaif2whirl {
 	OA::OA_ptr<OA::DGraph::NodeInterface> temp = enodeIter->current();
 	OA::OA_ptr<MyDGNode> root = temp.convert<MyDGNode>();
 	(*enodeIter)++; assert(!enodeIter->isValid());
-	bool structuredCF = (opt_algorithm == ALG_STRUCTURED_CF);
-	WN* cfgblkWN = xlate_CFG(wn_pu, cfg, root, ctxt, structuredCF);
+	WN* cfgblkWN = xlate_CFG(wn_pu, cfg, root, ctxt, GetBoolAttr(cfgelm, XAIFStrings.attr_structured_x(),true));
 	if (XAIF_CFGElemFilter::IsReplacement(cfgelm)) {
 	  const XMLCh* pX = 
 	    cfgelm->getAttribute(XAIFStrings.attr_placeholder_x());

@@ -52,8 +52,6 @@ static const char* usage_details =
 "\n"
 "Algorithms:\n"
 "  -m, --mode=<mode> forward, reverse.  By default, assumes reverse.\n"
-"  --structured-cf   Generate structured control-flow\n"
-"  --unstructured-cf Generate unstructured control-flow [Default]\n"
 "  --bb-patching     TEMPORARY: use basic-block patch algorithm\n"
 "\n"
 "Options:\n"
@@ -78,8 +76,6 @@ static const char* usage_details =
 CmdLineParser::OptArgDesc Args::optArgs[] = {
   // Options
   { 'm', "mode",     CLP::ARG_REQ, CLP::DUPOPT_CLOB, NULL },
-  {  0 , "structured-cf",   CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
-  {  0 , "unstructured-cf", CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "bb-patching",     CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "i4",              CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "u4",              CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
@@ -115,7 +111,7 @@ void
 Args::Ctor()
 {
   mode      = xaif2whirl::MODE_REVERSE;
-  algorithm = xaif2whirl::ALG_UNSTRUCTURED_CF;
+  algorithm = xaif2whirl::ALG_NULL;
   validate  = false; 
   debug     = 0; // default: 0 (off)
   myNoCleanUpFlag = false;
@@ -200,12 +196,6 @@ Args::Parse(int argc, const char* const argv[])
 	PrintError(std::cerr, "Invalid argument to 'mode': " + arg);
 	exit(1);
       }
-    }
-    if (parser.IsOpt("structured-cf")) { 
-      algorithm = xaif2whirl::ALG_STRUCTURED_CF;
-    }
-    if (parser.IsOpt("unstructured-cf")) { 
-      algorithm = xaif2whirl::ALG_UNSTRUCTURED_CF;
     }
     if (parser.IsOpt("bb-patching")) { 
       algorithm = xaif2whirl::ALG_BB_PATCHING;

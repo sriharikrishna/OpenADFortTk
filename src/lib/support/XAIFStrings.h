@@ -93,6 +93,7 @@ public:
     ELEM_ArgList,
     ELEM_ArgSymRef,
     ATTR_intent,
+    ATTR_structured,
     
     ELEM_Replacement,
     ATTR_placeholder,
@@ -304,6 +305,8 @@ public:
   XMLCh*      elem_ArgSymRef_x() const { return x_strTbl[ELEM_ArgSymRef]; }
   const char* attr_intent() const { return c_strTbl[ATTR_intent]; }
   XMLCh*      attr_intent_x() const { return x_strTbl[ATTR_intent]; }
+  const char* attr_structured() const { return c_strTbl[ATTR_structured]; }
+  XMLCh*      attr_structured_x() const { return x_strTbl[ATTR_structured]; }
   
   const char* elem_Replacement() const { return c_strTbl[ELEM_Replacement]; }
   XMLCh*      elem_Replacement_x() const { return x_strTbl[ELEM_Replacement]; }

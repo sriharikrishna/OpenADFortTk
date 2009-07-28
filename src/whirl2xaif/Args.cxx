@@ -26,14 +26,12 @@ static const char* usage_details =
 "                      is 'OpenAD_'\n"
 "  -s, --simpleLoop    force simple loop property on all loop constructs\n"
 "  -v, --variedOnly    do not require active data to also be 'useful'\n"
-"  -u, --unstructured  permit unstructured control flow\n"
 "      --debug [lvl]   debug mode at level `lvl'\n";
 
 bool Args::ourSimpleLoopFlag=false;   // default: done't force it
 bool Args::ourDoNotFilterFlag=false;  // default: filter it
 bool Args::ourNoTimeStampFlag=false;  // default: dump a time stamp
 bool Args::ourVariedOnlyFlag=false;   // default: require both usefull and varied
-bool Args::ourUnstructuredControlFlowFlag=false; // default: require structured control flow
 
 #define CLP CmdLineParser
 
@@ -46,7 +44,6 @@ CmdLineParser::OptArgDesc Args::optArgs[] = {
   { 's', "simpleLoop",  CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
   { 'n', "noFilter",    CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
   { 'N', "noTimeStamp", CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
-  { 'u', "unstructured",CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
   {  0 , "debug",       CLP::ARG_OPT,  CLP::DUPOPT_CLOB, NULL },
   CmdLineParser::OptArgDesc_NULL
 };
@@ -128,9 +125,6 @@ Args::Parse(int argc, const char* const argv[])
     }
     if (parser.IsOpt("variedOnly")) { 
       ourVariedOnlyFlag=true;
-    }
-    if (parser.IsOpt("unstructured")) { 
-      ourUnstructuredControlFlowFlag=true;
     }
     if (parser.IsOpt("output")) { 
       xaifFileNm = parser.GetOptArg("output");

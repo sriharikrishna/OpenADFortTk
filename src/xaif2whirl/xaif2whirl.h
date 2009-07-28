@@ -30,8 +30,6 @@ namespace xaif2whirl {
 
   enum AlgorithmType {
     ALG_NULL,
-    ALG_STRUCTURED_CF,   // special case
-    ALG_UNSTRUCTURED_CF, // most general
     ALG_BB_PATCHING      // temporary
   };
   

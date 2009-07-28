@@ -304,7 +304,7 @@ namespace whirl2xaif {
 // 	std::cout << "WN_prev(WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1))) is " << WN_prev(WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1))) << " ";
 // 	Open64IRInterface::DumpWN(WN_prev(WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1))),std::cout);
 // 	std::cout << std::endl;
-	FORTTK_MSG(2,"hasUnstructuredCF: found early return");
+	FORTTK_MSG(1,"hasUnstructuredCF: found early return");
 	return true; 
       }
 //       if (opr==OPR_GOTO || opr==OPR_AGOTO) { 
@@ -346,7 +346,7 @@ namespace whirl2xaif {
 	<< xml::Attr("vertex_id", vertexId) << xml::Attr("scope_id", scopeId)
 	<< AttrSymId(st) << PUIdAnnot(puId)
 	<< xml::Attr("controlflowgraph_scope_id", puScopeId);
-    if ((Args::ourUnstructuredControlFlowFlag) && hasUnstructuredCF(wn_pu))
+    if (hasUnstructuredCF(wn_pu))
       xos << xml::Attr("structured", false);
     xos << xml::EndAttrs;
     if (IsActivePU(st)) {
