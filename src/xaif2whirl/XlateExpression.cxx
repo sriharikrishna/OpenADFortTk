@@ -926,7 +926,7 @@ namespace xaif2whirl {
       rty = getMType(MTYPE_CLASS_INTEGER, MTYPE_byte_size(rty));
     } 
     else if (opr == OPR_EQ || opr == OPR_NE || opr == OPR_GT || opr == OPR_GE ||
-	     opr == OPR_LT || opr == OPR_LE) {
+	     opr == OPR_LT || opr == OPR_LE || opr == OPR_LNOT ) {
       rty = getMType(MTYPE_CLASS_INTEGER, 4);
     }
     else if (opr == OPR_COMPLEX ) {
