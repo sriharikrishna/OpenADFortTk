@@ -1,42 +1,24 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/WhirlIDMaps.h,v 1.12 2005/05/16 15:17:39 eraxxon Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/WhirlIDMaps.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #ifndef WhirlIDMaps_INCLUDED_h
 #define WhirlIDMaps_INCLUDED_h
-
-//************************* System Include Files ****************************
 
 #include <iostream>
 #include <map>  // STL
 #include <set>  // STL
 #include <list> // STL
 
-//************************** Open64 Include Files ***************************
-
 #include "Open64IRInterface/Open64BasicTypes.h"
-
-//*************************** User Include Files ****************************
 
 #include "BaseMap.h"
 #include "Diagnostics.h"
 
-//************************** Forward Declarations ***************************
 
 namespace fortTkSupport { 
 
@@ -44,8 +26,6 @@ typedef UINT SymTabId;
 typedef UINT SymId;
 typedef UINT PUId;
 typedef UINT WNId;
-
-//***************************************************************************
 
 // A list of ids: Should only be used with scalar id types above
 template <class T>
@@ -251,8 +231,6 @@ void
 CreateWhirlIdMaps(WN* wn, WNToWNIdMap* x, WNIdToWNMap* y);
 
 
-//***************************************************************************
-
 }
 
-#endif /* WhirlIDMaps_INLUCDED_h */
+#endif 

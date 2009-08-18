@@ -14,13 +14,15 @@
 
 @SET_MAKE@
 
-# -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Makefile.am,v 1.2 2006/05/12 16:12:23 utke Exp $
+##########################################################
+# This file is part of OpenADFortTk.                     #
+# The full COPYRIGHT notice can be found in the top      #
+# level directory of the OpenADFortTk source tree.       #
+# For more information visit                             #
+# http://www.mcs.anl.gov/openad                          #
+##########################################################
 
 #############################################################################
-#
-# File:
-#   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Makefile.am,v $
 #
 # Description:
 #   *Process with automake to produce Makefile.in*

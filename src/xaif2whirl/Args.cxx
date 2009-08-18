@@ -1,39 +1,20 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.cxx,v 1.10 2005/11/01 23:28:48 utke Exp $
-// * BeginRiceCopyright *****************************************************
-// ******************************************************* EndRiceCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/Args.cxx,v $
-//
-// Purpose:
-//    [The purpose of this file]
-//
-// Description:
-//    [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************* System Include Files ****************************
-
-//************************** Open64 Include Files ***************************
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #include "Open64IRInterface/Open64BasicTypes.h"
 #include "file_util.h"      // New_Extension, Last_Pathname_Component
 
-//*************************** User Include Files ****************************
-
 #include "Args.h"
-
-//*************************** Forward Declarations **************************
 
 using std::cerr;
 using std::endl;
 using std::string;
 
-//***************************************************************************
 
 TYPE_ID Args::ourDefaultMTypeInt  = MTYPE_I8;
 TYPE_ID Args::ourDefaultMTypeUInt = MTYPE_U8;

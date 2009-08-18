@@ -14,13 +14,15 @@
 
 @SET_MAKE@
 
-# -*-Mode: makefile;-*-
-# $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/Makefile.am,v 1.1 2005/06/10 17:44:32 eraxxon Exp $
+##########################################################
+# This file is part of OpenADFortTk.                     #
+# The full COPYRIGHT notice can be found in the top      #
+# level directory of the OpenADFortTk source tree.       #
+# For more information visit                             #
+# http://www.mcs.anl.gov/openad                          #
+##########################################################
 
 #############################################################################
-#
-# File:
-#   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2sexp/Makefile.am,v $
 #
 # Description:
 #   *Process with automake to produce Makefile.in*

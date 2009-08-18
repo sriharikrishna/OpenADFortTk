@@ -1,36 +1,18 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.h,v 1.7 2005/01/17 15:22:50 eraxxon Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/sexpostream.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #ifndef sexpostream_INCLUDED_h
 #define sexpostream_INCLUDED_h
 
-//************************* System Include Files ****************************
-
 #include <iostream>
 #include <string>
-#include <list> // STL
+#include <list> 
 
-//*************************** User Include Files ****************************
-
-//*************************** Forward Declarations ***************************
-
-//****************************************************************************
 
 // ---------------------------------------------------------
 // sexp::ostream:

@@ -1,34 +1,15 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/FileUtil.h,v 1.1 2004/06/01 22:25:42 eraxxon Exp $
-
-// * BeginRiceCopyright *****************************************************
-// ******************************************************* EndRiceCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/FileUtil.h,v $
-//
-// Purpose:
-//    [The purpose of this file]
-//
-// Description:
-//    [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #ifndef FileUtil_h
 #define FileUtil_h 
 
-//************************* System Include Files ****************************
-
 #include <string>
-
-//*************************** User Include Files ****************************
-
-//*************************** Forward Declarations ***************************
-
-//****************************************************************************
 
 namespace FileUtil {
 
@@ -72,6 +53,6 @@ namespace FileUtil {
   DirName(const char* path); 
   
   
-}; /* namespace FileUtil */
+}; 
 
 #endif 

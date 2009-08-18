@@ -1,30 +1,13 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.cxx,v 1.9 2005/05/16 15:17:39 eraxxon Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/WhirlIDMaps.cxx,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************* System Include Files ****************************
-
-//*************************** User Include Files ****************************
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #include "Open64IRInterface/Open64IRInterface.hpp"
 #include "WhirlIDMaps.h"
-
-//************************** Forward Declarations ***************************
 
 namespace fortTkSupport { 
 
@@ -235,6 +218,4 @@ CreateWhirlIdMaps(WN* wn, WNToWNIdMap* x, WNIdToWNMap* y)
   }
 }
 
-//***************************************************************************
- 
 }

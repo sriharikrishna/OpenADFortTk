@@ -1,39 +1,15 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XlationCtxt.cxx,v 1.1 2003/09/17 19:45:05 eraxxon Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XlationCtxt.cxx,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************** System Include Files ***************************
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #include <stdio.h>
 
-//************************** Open64 Include Files ***************************
-
-//*************************** User Include Files ****************************
-
 #include "XlationCtxt.h"
 
-//************************** Forward Declarations ***************************
-
-//***************************************************************************
-
-//***************************************************************************
-// CtxtFlags
-//***************************************************************************
 
 CtxtFlags::CtxtFlags()
   : flags(0)

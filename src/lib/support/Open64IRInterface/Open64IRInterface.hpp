@@ -1,21 +1,13 @@
-// -*-Mode: C++;-*-
-/*! \file
-  
-  \brief Implementation of abstract OA interfaces for Open64/WHIRL
-
-  \authors Michelle Strout, Nathan Tallent
-
-  Copyright ((c)) 2002, Rice University 
-  All rights reserved.
-  See ../../../Rice.copyright for details.
-
-*/
-
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #ifndef Open64IRInterface_H
 #define Open64IRInterface_H
-
-//************************** System Include Files ***************************
 
 #include <list>
 #include <map>
@@ -58,8 +50,6 @@
 #include <OpenAnalysis/Utils/OA_ptr.hpp>
 #include "IntrinsicInfo.h"
 
-//************************** Open64 Include Files ***************************
-
 // IRInterface types: Use OA_IRHANDLETYPE_UL
 //   ProcHandle     - PU_Info*
 //   StmtHandle     - WN*
@@ -73,8 +63,6 @@
 //   ConstValHandle - WN*
 
 #include "Open64BasicTypes.h"
-
-//*************************** User Include Files ****************************
 
 #include "WhirlGlobalStateUtils.h"
 #include "diagnostics.h"

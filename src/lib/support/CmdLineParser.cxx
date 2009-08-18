@@ -1,25 +1,10 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.cxx,v 1.6 2004/04/28 17:46:19 eraxxon Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/CmdLineParser.cxx,v $
-//
-//   Nathan Tallent
-//
-// Purpose:
-//    [The purpose of this file]
-//
-// Description:
-//    [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************* System Include Files ****************************
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #include <stdlib.h> // <cstdlib> // for strtol
 #include <string.h> // <cstring>
@@ -27,21 +12,13 @@
 
 #include <algorithm> // for sort
 
-//************************** Open64 Include Files ***************************
-
-//*************************** User Include Files ****************************
-
 #include "CmdLineParser.h"
-
-//*************************** Forward Declarations ***************************
 
 using std::string;
 
 static string MISSING_SWITCH = "Missing switch after -";
 static string UNKNOWN_SWITCH = "Unknown option switch: ";
 static string MISSING_ARG = "Missing argument for switch: ";
-
-//*************************** Forward Declarations ***************************
 
 // lt_OptArgDesc: Used to sort CmdLineParser::OptArgDesc
 struct lt_OptArgDesc
@@ -74,7 +51,6 @@ private:
 
 };
 
-//****************************************************************************
 
 // IsDashDash
 static inline bool
@@ -658,6 +634,4 @@ CmdLineParser::AddOption(const OptArgDesc& odesc,
     }
   }
 }
-
-//****************************************************************************
 

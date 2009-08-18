@@ -1,35 +1,17 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/FileUtil.cxx,v 1.1 2004/06/01 22:25:42 eraxxon Exp $
-
-// * BeginRiceCopyright *****************************************************
-// ******************************************************* EndRiceCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/FileUtil.cxx,v $
-//
-// Purpose:
-//    [The purpose of this file]
-//
-// Description:
-//    [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************* System Include Files ****************************
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #include <string.h> // <cstring>
 
-//*************************** User Include Files ****************************
-
 #include "FileUtil.h"
-
-//*************************** Forward Declarations **************************
 
 using std::string;
 
-//***************************************************************************
 
 string
 FileUtil::FileName(const char* path); 

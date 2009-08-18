@@ -1,42 +1,18 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/Exception.h,v 1.3 2005/06/13 14:30:17 eraxxon Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/Exception.h,v $
-//
-// Purpose:
-//    [The purpose of this file]
-//
-// Description:
-//    [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #ifndef FortTk_Exception_H 
 #define FortTk_Exception_H
-
-//************************* System Include Files ****************************
 
 #include <iostream>
 #include <sstream>
 #include <string>
 
-//*************************** User Include Files ****************************
-
-//*************************** Forward Declarations ***************************
-
-//****************************************************************************
-
-// Note: Use the inteface in "Diagnostics.h"
-
-//****************************************************************************
-// Exception
-//****************************************************************************
 
 namespace fortTkSupport {
 
@@ -88,8 +64,6 @@ namespace fortTkSupport {
 
   };
   
-} /* namespace FortTk */
-
-//****************************************************************************
+} 
 
 #endif // FortTk_Exception_H

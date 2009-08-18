@@ -1,38 +1,16 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/BaseMap.h,v 1.4 2004/12/08 22:09:28 eraxxon Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/BaseMap.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 #ifndef BaseMap_H 
 #define BaseMap_H
 
-//************************** System Include Files ***************************
-
 #include <map>
 
-//*************************** User Include Files ****************************
-
 #include "Diagnostics.h"
-
-//************************** Forward Declarations ***************************
-
-//***************************************************************************
-// BaseMap
-//***************************************************************************
 
 namespace fortTkSupport {
 
@@ -88,8 +66,6 @@ public:
 protected:
 };
 
-} // FortTk
-
-//***************************************************************************
+} 
 
 #endif 

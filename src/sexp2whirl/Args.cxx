@@ -1,39 +1,20 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/Args.cxx,v 1.1 2004/12/15 17:54:53 eraxxon Exp $
-// * BeginRiceCopyright *****************************************************
-// ******************************************************* EndRiceCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/sexp2whirl/Args.cxx,v $
-//
-// Purpose:
-//    [The purpose of this file]
-//
-// Description:
-//    [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************* System Include Files ****************************
-
-//************************** Open64 Include Files ***************************
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #include "Open64IRInterface/Open64BasicTypes.h"
 #include "file_util.h"      // New_Extension, Last_Pathname_Component
 
-//*************************** User Include Files ****************************
-
 #include "Args.h"
-
-//*************************** Forward Declarations **************************
 
 using std::cerr;
 using std::endl;
 using std::string;
 
-//***************************************************************************
 
 static const char* version_info = "version .289";
 
@@ -65,9 +46,6 @@ CmdLineParser::OptArgDesc Args::optArgs[] = {
 
 #undef CLP
 
-//***************************************************************************
-// Args
-//***************************************************************************
 
 Args::Args()
 {

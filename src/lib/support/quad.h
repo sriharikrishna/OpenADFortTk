@@ -1,37 +1,15 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/include/quad.h,v 1.2 2005/06/14 16:55:34 eraxxon Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/include/quad.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #ifndef FortTk_quad_INCLUDED
 #define FortTk_quad_INCLUDED
 
-//************************* System Include Files ****************************
-
-//*************************** User Include Files ****************************
-
-//************************** Open64 Include Files ***************************
-
 #include <../../common/com/targ_const.h> // QUAD_TYPE
-
-//*************************** User Include Files ****************************
-
-//************************** Forward Declarations ***************************
-
 namespace FortTk {
 
   // Used to translate the bits within TCONs. We can safely assume 64
@@ -64,8 +42,6 @@ namespace FortTk {
     return qd1;
   }
 
-}; /* namespace FortTk */
-
-//***************************************************************************
+}; 
 
 #endif

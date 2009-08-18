@@ -1,39 +1,18 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/XAIFStrings.h,v 1.24 2006/01/15 05:57:26 utke Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/XAIFStrings.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #ifndef XAIFStrings_INCLUDED_h
 #define XAIFStrings_INCLUDED_h
 
-//************************* System Include Files ****************************
-
 #include <iostream>
-
-//************************* Xerces Include Files ****************************
 
 #include <xercesc/util/XercesDefs.hpp>
 #include <xercesc/util/XMLString.hpp>
-
-//*************************** User Include Files ****************************
-
-//*************************** Forward Declarations ***************************
-
-//****************************************************************************
 
 XERCES_CPP_NAMESPACE_USE
 
@@ -468,7 +447,5 @@ private:
 
 // A global instance providing everyone access to the above info
 extern XAIFStringRepository XAIFStrings;
-
-//***************************************************************************
 
 #endif // XAIFStrings_INCLUDED_h

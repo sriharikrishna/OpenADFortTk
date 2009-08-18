@@ -1,43 +1,26 @@
-// -*-Mode: C++;-*-
-/*! \file
-  
-  \brief Implementation of abstract OA interfaces for Open64/WHIRL
-
-  \authors Nathan Tallent, Michelle Strout
-
-  Copyright ((c)) 2002, Rice University 
-  All rights reserved.
-  See ../../../Rice.copyright for details.
-
-*/
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 static bool debug = false;
-
-//************************** System Include Files ***************************
 
 #include <list>
 #include <climits>
 #include <cassert>
 //using std::list;
 
-//************************ OpenAnalysis Include Files ***********************
-
-//************************** Open64 Include Files ***************************
-
 #include "Open64BasicTypes.h"
 #include "ir_reader.h" // for fdump_wn()
-
-//*************************** User Include Files ****************************
 
 #include "Open64IRInterface.hpp"
 #include "SymTab.h"
 #include "wn_attr.h"
 #include "stab_attr.h"
 #include "IntrinsicInfo.cpp"
-
-//************************** Forward Declarations ***************************
-
-//***************************************************************************
 
 //***************************************************************************
 // Static Class Members

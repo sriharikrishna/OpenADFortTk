@@ -1,33 +1,14 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SexpTags.cxx,v 1.6 2005/02/01 23:06:53 eraxxon Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/SexpTags.cxx,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************* System Include Files ****************************
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #include <string>
 
-//*************************** User Include Files ****************************
-
 #include "SexpTags.h"
-
-//*************************** Forward Declarations ***************************
-
-//****************************************************************************
 
 namespace SexpTags {
 
@@ -62,8 +43,6 @@ namespace SexpTags {
   const char* OFLG        = "oflg";
   
 };
-
-//****************************************************************************
 
 
 static const char* BLANK_LINE =

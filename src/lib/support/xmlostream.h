@@ -1,36 +1,17 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/xmlostream.h,v 1.7 2004/08/05 18:35:24 eraxxon Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/xmlostream.h,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #ifndef xmlostream_INCLUDED_h
 #define xmlostream_INCLUDED_h
 
-//************************* System Include Files ****************************
-
 #include <iostream>
 #include <string>
 #include <list> // STL
-
-//*************************** User Include Files ****************************
-
-//*************************** Forward Declarations ***************************
-
-//****************************************************************************
 
 // FIXME: add xml escaping routines
 
@@ -439,14 +420,10 @@ SetIndentStep(int step_)
 
 }; /* namespace xml */
 
-//****************************************************************************
-
 // FIXME:
 inline void Append_Token_String(xml::ostream& xos, const char *string)
 {
   xos << string << " ";
 }
-
-//****************************************************************************
 
 #endif /* xmlostream_INLUCDED_h */

@@ -1,39 +1,10 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/st2xaif.cxx,v 1.44 2006/05/12 16:12:23 utke Exp $
-
-// * BeginCopyright *********************************************************
-/*
-  Copyright (C) 2000, 2001 Silicon Graphics, Inc.  All Rights Reserved.
-
-  This program is free software; you can redistribute it and/or modify it
-  under the terms of version 2 of the GNU General Public License as
-  published by the Free Software Foundation.
-
-  This program is distributed in the hope that it would be useful, but
-  WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-  Further, this software is distributed without any warranty that it is
-  free of the rightful claim of any third person regarding infringement 
-  or the like.  Any license provided herein, whether implied or 
-  otherwise, applies only to this software file.  Patent licenses, if 
-  any, provided herein do not apply to combinations of this program with 
-  other software, or any other product whatsoever.  
-
-  You should have received a copy of the GNU General Public License along
-  with this program; if not, write the Free Software Foundation, Inc., 59
-  Temple Place - Suite 330, Boston MA 02111-1307, USA.
-
-  Contact information:  Silicon Graphics, Inc., 1600 Amphitheatre Pky,
-  Mountain View, CA 94043, or:
-
-  http://www.sgi.com
-
-  For further information regarding this notice, see:
-
-  http://oss.sgi.com/projects/GenInfo/NoticeExplan
-*/
-// *********************************************************** EndCopyright *
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 /* ====================================================================
  * ====================================================================
@@ -80,16 +51,10 @@
  * ====================================================================
  */
 
-// ************************** System Include Files ***************************
-
 #include <ctype.h>
 #include <sstream> //FIXME
 
-// ************************** Open64 Include Files ***************************
-
 #include "Open64IRInterface/Open64BasicTypes.h"
-
-// *************************** User Include Files ****************************
 
 #include "wn2xaif.h"
 #include "st2xaif.h"
@@ -97,12 +62,10 @@
 
 #include "Open64IRInterface/SymTab.h"
 
-// ************************** Forward Declarations ***************************
 
 namespace whirl2xaif { 
 
 
-  // ************************** Forward Declarations ***************************
 
   /*------- Fwd refs for miscellaneous utilities ------------------------*/
   /*---------------------------------------------------------------------*/
@@ -850,27 +813,5 @@ namespace whirl2xaif {
   }
 
 
-  // Find and emit any COMMONS that are initialized.
-  // For_all(St_Table,GLOBAL_SYMTAB,WN2F_emit_commons(xos));
-  // struct WN2F_emit_commons {
-  // public:
-  //   WN2F_emit_commons(xml::ostream& xos_) : xos(xos_) { }
-  
-  //   void operator() (UINT32,  ST* st)
-  //   {
-  //     //XlationContext& ctxt1 = ctxt; // FIXME (bug in gcc 3.0.4 it seems)
-  //     if (ST_sclass(st) == SCLASS_DGLOBAL) {
-  //       if (ST_is_initialized(st))  {
-  // 	if (!Has_Base_Block(st) || ST_class(ST_base_idx(st)) == CLASS_BLOCK) {
-  // 	  TranslateSTDecl(xos, st, ctxt);
-  // 	}
-  //       }
-  //     }
-  //   }
-
-  // private:
-  //   xml::ostream& xos;
-  //   PUXlationContext ctxt ("WN2F_emit_commons");//FIXME
-  // };
 
 }
