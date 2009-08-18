@@ -405,6 +405,68 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
 		  INTRINSIC_CALL};
   CallKind_E xlate_as=SUBROUTINE_CALL; // default
   UINT targid = 0; // (FIXME)
+  // -------------------------------------------------------  
+  // Determine the number of implicit arguments appended to the end
+  // of the argument list (i.e. string lengths).
+  INT total_implicit_args = 0;
+  TY_IDX arg_ty, kid_ty, parm_ty;
+  TYPE_ID fmtry;
+  for (INT arg_idx = first_arg_idx; 
+       arg_idx <= last_arg_idx - total_implicit_args; 
+       arg_idx++) {
+    if (WN_kid(wn, arg_idx) != NULL) {
+      OPCODE tempopc = WN_opcode(WN_kid(wn, arg_idx));
+      WN* kidofparm = WN_kid0(WN_kid(wn, arg_idx));
+      if (WN_operator(kidofparm) != OPR_CALL && 
+	  WN_operator(kidofparm) != OPR_INTRINSIC_CALL) {
+	arg_ty = WN_Tree_Type(WN_kid(wn, arg_idx));	
+	parm_ty = WN_ty(WN_kid(wn,arg_idx));
+	if (TY_Is_Pointer(arg_ty)) {
+	  fmtry = TY_mtype(TY_pointed(arg_ty));
+	} 
+	else {
+	  fmtry = TY_mtype(arg_ty); 
+	}
+	if (fmtry == MTYPE_M) {
+	  if (TY_Is_Pointer(parm_ty)) { // FIXME: hack to handle KIND_STRUCT
+	    fmtry = TY_pointed(parm_ty);
+	    fmtry = TY_mtype(fmtry);
+	  }
+	}
+	if (
+	    (TY_Is_Character_Reference(arg_ty) 
+	     || 
+	     TY_Is_Chararray_Reference(arg_ty) 
+	     || 
+	     (
+	      (TY_Is_Pointer(arg_ty) 
+	       && 
+	       TY_mtype(TY_pointed(arg_ty))==MTYPE_M) 
+	      && 
+	      (TY_Is_Character_Reference(parm_ty) 
+	       || 
+	       TY_Is_Chararray_Reference(parm_ty)))
+	     )
+	    && !is_allocate_stmt) {
+	  total_implicit_args++;
+	}
+      } 
+      else { /* the argument is function call
+	      * if the return value is Chararray or Character Reference:
+	      */
+	if (WN_operator(kidofparm) == OPR_CALL) {
+	  kid_ty = PU_prototype (Pu_Table[ST_pu(WN_st(kidofparm))]);
+	  if (Func_Return_Character (kid_ty))
+	    total_implicit_args++; 
+	} 
+	else {
+	  if (WN_operator(kidofparm) == OPR_INTRINSIC_CALL &&
+	      WN_intrinsic(kidofparm) == INTRN_CONCATEXPR)
+	    total_implicit_args++;
+	}
+      }
+    }
+  }
   if (opr == OPR_INTRINSIC_CALL) {
     // xlate_INTRINSIC_CALL() has already handled certain intrinsics (FIXME)
     // ... only consider returns through a first non-string parameter here
@@ -462,6 +524,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
 	  << Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
 	  << Attr("scope_id", scopeid) << AttrSymId(st);
     } else {
+      // std::cout << "last " << last_arg_idx << " first " << first_arg_idx << " impl " << total_implicit_args << std::endl;
       // SubroutineCall
       USRCPOS srcpos;
       USRCPOS_srcpos(srcpos) = WN_Get_Linenum(wn);
@@ -470,61 +533,8 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
 	  << Attr("statement_id", ctxt.findWNId(wn))
 	  << Attr("scope_id", scopeid) 
 	  << Attr("lineNumber",USRCPOS_linenum(srcpos))
+	  << Attr("formalArgCount",last_arg_idx-first_arg_idx-total_implicit_args+1)
 	  << AttrSymId(st);
-    }
-  }
-  // -------------------------------------------------------  
-  // Determine the number of implicit arguments appended to the end
-  // of the argument list (i.e. string lengths).
-  INT total_implicit_args = 0;
-  TY_IDX arg_ty, kid_ty, parm_ty;
-  TYPE_ID fmtry;
-  for (INT arg_idx = first_arg_idx, total_implicit_args = 0; 
-       arg_idx <= last_arg_idx - total_implicit_args; 
-       arg_idx++) {
-    if (WN_kid(wn, arg_idx) != NULL) {
-      OPCODE tempopc = WN_opcode(WN_kid(wn, arg_idx));
-      WN* kidofparm = WN_kid0(WN_kid(wn, arg_idx));
-      if (WN_operator(kidofparm) != OPR_CALL && 
-	  WN_operator(kidofparm) != OPR_INTRINSIC_CALL) {
-	arg_ty = WN_Tree_Type(WN_kid(wn, arg_idx));	
-	parm_ty = WN_ty(WN_kid(wn,arg_idx));
-	if (TY_Is_Pointer(arg_ty)) {
-	  fmtry = TY_mtype(TY_pointed(arg_ty));
-	} 
-	else {
-	  fmtry = TY_mtype(arg_ty); 
-	}
-	if (fmtry == MTYPE_M) {
-	  if (TY_Is_Pointer(parm_ty)) { // FIXME: hack to handle KIND_STRUCT
-	    fmtry = TY_pointed(parm_ty);
-	    fmtry = TY_mtype(fmtry);
-	  }
-	}
-	if ((TY_Is_Character_Reference(arg_ty) 
-	     || TY_Is_Chararray_Reference(arg_ty) 
-	     || ((TY_Is_Pointer(arg_ty)
-		  && TY_mtype(TY_pointed(arg_ty))==MTYPE_M)
-		 && (TY_Is_Character_Reference(parm_ty) 
-		     || TY_Is_Chararray_Reference(parm_ty))))
-	    && !is_allocate_stmt) {
-	  total_implicit_args++;
-	}
-      } 
-      else { /* the argument is function call
-	      * if the return value is Chararray or Character Reference:
-	      */
-	if (WN_operator(kidofparm) == OPR_CALL) {
-	  kid_ty = PU_prototype (Pu_Table[ST_pu(WN_st(kidofparm))]);
-	  if (Func_Return_Character (kid_ty))
-	    total_implicit_args++; 
-	} 
-	else {
-	  if (WN_operator(kidofparm) == OPR_INTRINSIC_CALL &&
-	      WN_intrinsic(kidofparm) == INTRN_CONCATEXPR)
-	    total_implicit_args++;
-	}
-      }
     }
   }
   // Append the argument list to the function reference, skipping
@@ -541,17 +551,22 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
   for (INT arg_idx = first_arg_idx, implicit_args = 0; 
        arg_idx <= last_arg_idx - implicit_args; 
        arg_idx++) {
+    position++; // need to account for optional parameters (when not present they are represented a NULL nodes)
     if (WN_kid(wn, arg_idx) != NULL) {
       WN* kidofparm = WN_kid0(WN_kid(wn, arg_idx));
       if (WN_operator(kidofparm) != OPR_CALL)
 	arg_ty = WN_Tree_Type(WN_kid(wn, arg_idx));
       else
 	arg_ty = PU_prototype (Pu_Table[ST_pu(WN_st(kidofparm))]);
-      position++; // we have seen a valid argument
       if (xlate_as == SUBROUTINE_CALL || xlate_as == FUNCTION_CALL) { 
 	xos << BegElem("xaif:Argument");
 	if (xlate_as == SUBROUTINE_CALL) { 
 	  xos << Attr("position", position); 
+	}
+	if ((WN_kid(wn, arg_idx))->u3.ty_fields.ty) {  // hack for keyword call
+	  xos << BegAttr("annotation") 
+	      << SymIdAnnotVal((WN_kid(wn, arg_idx))->u3.ty_fields.ty) 
+	      << EndAttr;
 	}
 	ctxt.createXlationContext(XlationContext::NOFLAG, kidofparm);// implicit for Argument
       }

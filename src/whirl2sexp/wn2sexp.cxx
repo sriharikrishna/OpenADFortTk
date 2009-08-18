@@ -931,8 +931,11 @@ whirl2sexp::xlate_PARM(sexp::ostream& sos, WN* wn)
 
   sos << BegList << GenSexpWNOpr(wn);     // WN_OPR
   sos << BegList                          // WN_ATTRS
-      << GenSexpOpaqueFlg(flg) << GenSexpTyUse(ty_idx)
-      << EndList << EndLine; 
+      << GenSexpOpaqueFlg(flg) << GenSexpTyUse(ty_idx);
+  if (wn->u3.ty_fields.ty) {  // hack for keyword call
+    sos << GenSexpSymRef(wn->u3.ty_fields.ty);
+  }
+  sos << EndList << EndLine; 
   TranslateWN(sos, WN_kid0(wn));          // KID 0
   sos << EndList;
 

@@ -111,6 +111,7 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "xaif:Argument",
   
   "subroutine_name",
+  "formalArgCount",
   
   // Expressions
   "xaif:VariableReference",

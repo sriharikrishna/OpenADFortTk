@@ -109,6 +109,7 @@ public:
     ELEM_Argument,
 
     ATTR_subname,
+    ATTR_formalArgCount,
 
     // Expressions
     ELEM_VarRef,
@@ -348,6 +349,8 @@ public:
   const char* attr_subname() const { return c_strTbl[ATTR_subname]; }
   XMLCh*      attr_subname_x() const { return x_strTbl[ATTR_subname]; }
   
+  const char* attr_formalArgCount() const { return c_strTbl[ATTR_formalArgCount]; }
+  XMLCh*      attr_formalArgCount_x() const { return x_strTbl[ATTR_formalArgCount]; }
 
   // Expressions
   const char* elem_VarRef() const { return c_strTbl[ELEM_VarRef]; }

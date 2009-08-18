@@ -136,9 +136,10 @@ namespace xaif2whirl {
     // 1. Gather the arguments, sorted by "position" attribute and
     // translate them into a WHIRL expression tree.
     // -------------------------------------------------------
-    unsigned int numArgs = GetChildElementCount(elem);
+    unsigned int numArgs = GetIntAttr(elem, XAIFStrings.attr_formalArgCount_x(), 0 /* default */);
     unsigned int numiArgs = 0; // implicit args
-    std::vector<WN*> args_wn(numArgs, NULL);
+    std::vector<std::pair<WN*,fortTkSupport::SymId > > 
+      args_wn(numArgs, std::pair<WN*,fortTkSupport::SymId > (NULL,NULL));
     for (DOMElement* arg = GetFirstChildElement(elem); (arg); 
 	 arg = GetNextSiblingElement(arg)) { 
       // VariableReferenceType
@@ -149,6 +150,9 @@ namespace xaif2whirl {
       unsigned int pos = GetPositionAttr(arg); // 1-based
       FORTTK_ASSERT(1 <= pos && pos <= numArgs, 
 		    "Unexpected position attribute:\n" << *arg);
+      fortTkSupport::SymId symId = GetSymId(arg); 
+      if (symId) // non-zero for a keyword Argument
+	args_wn[pos-1].second=symId;
       // Note: We do *not* check the deriv flag; any active variable
       // references should be passed as is.
       DOMElement* argExpr = GetFirstChildElement(arg);
@@ -160,7 +164,7 @@ namespace xaif2whirl {
 	ctxt.createXlationContext(XlationContext::DERIVSELECTOR);
 	WN* varRefWN = XlateExpression::translateVarRef(varRef, ctxt);
 	ctxt.deleteXlationContext();
-	args_wn[pos - 1] = varRefWN;
+	args_wn[pos - 1].first = varRefWN;
 	// Determine whether WHIRL needs an implicit argument
 	// (cf. WN2F_call() in wn2f_stmt.cxx)
 	TY_IDX ty = WN_Tree_Type(varRefWN);
@@ -172,7 +176,7 @@ namespace xaif2whirl {
 	ctxt.createXlationContext(XlationContext::DERIVSELECTOR);
 	WN* constWN = XlateExpression::translateConstant(argExpr, ctxt);
 	ctxt.deleteXlationContext();
-	args_wn[pos - 1] = constWN;
+	args_wn[pos - 1].first = constWN;
 	// Determine whether WHIRL needs an implicit argument
 	// (cf. WN2F_call() in wn2f_stmt.cxx)
 	TY_IDX ty = WN_Tree_Type(constWN);
@@ -200,9 +204,12 @@ namespace xaif2whirl {
     WN* callWN = WN_Call(rtype, MTYPE_V, numArgs + numiArgs, sym->GetST());
     WN_Set_Call_Default_Flags(callWN); // set conservative assumptions
     for (unsigned i = 0; i < numArgs; ++i) {
-      if (args_wn[i]) { 
+      if (args_wn[i].first) { 
 	// conservatively assume pass by reference
-	WN_actual(callWN, i) = CreateParm(args_wn[i], WN_PARM_BY_REFERENCE);
+	WN_actual(callWN, i) = CreateParm(args_wn[i].first, WN_PARM_BY_REFERENCE);
+	if (args_wn[i].second) { 
+	  WN_actual(callWN, i)->u3.ty_fields.ty=args_wn[i].second;
+	}
       }
     }
     for (unsigned i = 0, j = numArgs; i < numiArgs; ++i, ++j) {
