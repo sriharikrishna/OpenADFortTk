@@ -1,45 +1,24 @@
-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v 1.24 2006/01/15 05:57:27 utke Exp $
-
-// * BeginCopyright *********************************************************
-// *********************************************************** EndCopyright *
-
-//***************************************************************************
-//
-// File:
-//   $Source: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/XAIFStrings.cxx,v $
-//
-// Purpose:
-//   [The purpose of this file]
-//
-// Description:
-//   [The set of functions, macros, etc. defined in the file]
-//
-//***************************************************************************
-
-//************************* System Include Files ****************************
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
 
 #include <iostream>
 
 #include <stdlib.h>
 #include <string.h>
 
-//************************* Xerces Include Files ****************************
-
-//*************************** User Include Files ****************************
-
 #include "XAIFStrings.h"
 
-//*************************** Forward Declarations ***************************
 
 using std::cerr;
 using std::endl;
 
-//****************************************************************************
 
 XAIFStringRepository XAIFStrings;
-
-//****************************************************************************
 
 // Note: The order must match the enumeration!
 const char* XAIFStringRepository::c_strTbl[] = {
@@ -192,8 +171,6 @@ const char* XAIFStringRepository::c_strTbl[] = {
   
   "}"
 };
-
-//****************************************************************************
 
 XAIFStringRepository::XAIFStringRepository()
 { 
