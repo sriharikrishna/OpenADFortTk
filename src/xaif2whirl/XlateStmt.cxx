@@ -149,7 +149,7 @@ namespace xaif2whirl {
 		    << *arg);
       unsigned int pos = GetPositionAttr(arg); // 1-based
       FORTTK_ASSERT(1 <= pos && pos <= numArgs, 
-		    "Unexpected position attribute:\n" << *arg);
+		    "Unexpected position attribute value:\n" << *arg << " out of range [1," << numArgs << "]");
       fortTkSupport::SymId symId = GetSymId(arg); 
       if (symId) // non-zero for a keyword Argument
 	args_wn[pos-1].second=symId;
