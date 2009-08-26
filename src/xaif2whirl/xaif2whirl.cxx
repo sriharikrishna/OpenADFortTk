@@ -1,5 +1,4 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/xaif2whirl.cxx,v 1.73 2006/05/12 16:12:24 utke Exp $
 
 #include <stdlib.h> // ANSI: cstdlib // for strtol
 #include <string.h> // ANSI: cstring // for strcmp, etc.
@@ -61,8 +60,9 @@ namespace xaif2whirl {
 
   static WN*
   xlate_CFG(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
-	    OA::OA_ptr<MyDGNode> root, PUXlationContext& ctxt, 
-	    bool structuredCF = false);
+	    OA::OA_ptr<MyDGNode> root, PUXlationContext& ctxt,
+	    unsigned& startLabel_r, 
+	    bool structuredCF);
 
   static WN*
   TranslateBasicBlock(WN *wn_pu, const xercesc::DOMElement* bbElem, PUXlationContext& ctxt,
@@ -416,6 +416,7 @@ namespace xaif2whirl {
 
     // Translate
     WN* newstmtblkWN = WN_CreateBlock();
+    unsigned startLabel=1;
     for (list<xercesc::DOMElement*>::iterator it = cfglist.begin(); 
 	 it != cfglist.end(); ++it) {
       xercesc::DOMElement* cfgelm = (*it);
@@ -435,12 +436,18 @@ namespace xaif2whirl {
 	OA::OA_ptr<OA::DGraph::NodeInterface> temp = enodeIter->current();
 	OA::OA_ptr<MyDGNode> root = temp.convert<MyDGNode>();
 	(*enodeIter)++; assert(!enodeIter->isValid());
-	WN* cfgblkWN = xlate_CFG(wn_pu, cfg, root, ctxt, GetBoolAttr(cfgelm, XAIFStrings.attr_structured_x(),true));
+	WN* cfgblkWN = xlate_CFG(wn_pu, 
+				 cfg, 
+				 root, 
+				 ctxt, 
+				 startLabel,
+				 GetBoolAttr(cfgelm, 
+					     XAIFStrings.attr_structured_x(),
+					     true/*default if not specified*/));
 	if (XAIF_CFGElemFilter::IsReplacement(cfgelm)) {
 	  const XMLCh* pX = 
 	    cfgelm->getAttribute(XAIFStrings.attr_placeholder_x());
 	  XercesStrX p = XercesStrX(pX);
-        
 	  WN* begWN = CreateOpenADReplacementBeg(p.c_str());
 	  WN* endWN = CreateOpenADReplacementEnd();
 	  WN_INSERT_BlockFirst(cfgblkWN, begWN);
@@ -500,26 +507,29 @@ namespace xaif2whirl {
   static pair<WN*, OA::OA_ptr<MyDGNode> >
   xlate_CFGstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 		  OA::OA_ptr<MyDGNode> startNode, set<xercesc::DOMElement*>& xlated, 
-		  PUXlationContext& ctxt);
+		  PUXlationContext& ctxt,
+		  unsigned int& startLabel_r);
 
   static WN*
   xlate_CFGunstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 		    OA::OA_ptr<MyDGNode> startNode, set<xercesc::DOMElement*>& xlated, 
-		    PUXlationContext& ctxt);
+		    PUXlationContext& ctxt,
+		    unsigned int& startLabel_r);
 
   static WN*
   xlate_CFG(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 	    OA::OA_ptr<MyDGNode> root, PUXlationContext& ctxt, 
+	    unsigned int& startLabel_r,
 	    bool structuredCF)
   {
     WN* blkWN = NULL;
     set<xercesc::DOMElement*> xlated;
     if (structuredCF) {
       pair<WN*, OA::OA_ptr<MyDGNode> > ret = 
-	xlate_CFGstruct(wn_pu, cfg, root, xlated, ctxt);
+	xlate_CFGstruct(wn_pu, cfg, root, xlated, ctxt, startLabel_r);
       blkWN = ret.first;
     } else {
-      blkWN = xlate_CFGunstruct(wn_pu, cfg, root, xlated, ctxt);
+      blkWN = xlate_CFGunstruct(wn_pu, cfg, root, xlated, ctxt, startLabel_r);
     }
     return blkWN;
   }
@@ -534,7 +544,8 @@ namespace xaif2whirl {
   static pair<WN*, OA::OA_ptr<MyDGNode> >
   xlate_CFGstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 		  OA::OA_ptr<MyDGNode> startNode, set<xercesc::DOMElement*>& xlated, 
-		  PUXlationContext& ctxt)
+		  PUXlationContext& ctxt,
+		  unsigned int& startLabel_r)
   {
     using namespace OA::CFG;  
 
@@ -543,7 +554,6 @@ namespace xaif2whirl {
     // ---------------------------------------------------
     // We must generate labels FIXME
     // ---------------------------------------------------
-    static unsigned int nextLblCntr = 1; // 0 is reserved
     map<OA::OA_ptr<MyDGNode>, unsigned> nodeToLblMap;
   
     // Initialize label maps
@@ -553,7 +563,7 @@ namespace xaif2whirl {
       OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = nodeIt->current();
       OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
 
-      nodeToLblMap[n] = nextLblCntr++;
+      nodeToLblMap[n] = startLabel_r++;
     }
   
     // ---------------------------------------------------
@@ -619,7 +629,7 @@ namespace xaif2whirl {
 	  OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = outedges[i]->getSink();
 	  OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
 	  pair<WN*, OA::OA_ptr<MyDGNode> > p 
-	    = xlate_CFGstruct(wn_pu, cfg, n, xlated, ctxt);
+	    = xlate_CFGstruct(wn_pu, cfg, n, xlated, ctxt, startLabel_r);
 	  childblksWN[i] = p.first;
 	  endBrNode = p.second; // will be EndBranch for structured-CF
 	}
@@ -681,7 +691,7 @@ namespace xaif2whirl {
       
 	// 2. Translate (recursively) loop body
 	pair<WN*, OA::OA_ptr<MyDGNode> > p 
-	  = xlate_CFGstruct(wn_pu, cfg, body, xlated, ctxt);
+	  = xlate_CFGstruct(wn_pu, cfg, body, xlated, ctxt, startLabel_r);
 	WN* bodyWN = p.first;
       
 	// 3. Translate condition expression (and update/init statements)
@@ -744,7 +754,8 @@ namespace xaif2whirl {
   static WN*
   xlate_CFGunstruct(WN* wn_pu, OA::OA_ptr<OA::DGraph::DGraphInterface> cfg, 
 		    OA::OA_ptr<MyDGNode> startNode, set<xercesc::DOMElement*>& xlated, 
-		    PUXlationContext& ctxt)
+		    PUXlationContext& ctxt,
+		    unsigned int& startLabel_r)
   {
     using namespace OA::DGraph;
     using namespace OA::CFG;
@@ -752,56 +763,30 @@ namespace xaif2whirl {
     WN* blkWN = WN_CreateBlock();
 
     // Topological sort to ensure that, e.g., the exit node is last
-    /*! commented out by PLM 08/26/06 
-    OA::OA_ptr<list<OA::OA_ptr<OA::DGraph::NodeInterface> > > topoSortedCFG; 
-      = OA::DGraph::::create_reverse_post_order_list(*cfg);
-      */
-
-    
-    
-
-#if 0
-    std::cerr << "TopoSort: ";
-    for (list<DGraphStandard::Node*>::iterator it = topoSortedCFG->begin(); 
-	 it != topoSortedCFG->end(); ++it) {
-      MyDGNode* n = dynamic_cast<MyDGNode*>(*it);
-      std::cerr << n->getId() << " "; 
-    }
-    std::cerr << std::endl;
-#endif
+    // was commented out; unclear if it still is relevant 
 
     // ---------------------------------------------------
     // We must generate labels that do not conflict with other labels in
     // the WHIRL code.  We use two maps to remember label values.
     // ---------------------------------------------------
-    static unsigned int nextLblCntr = 1; // 0 is reserved
+
     map<OA::OA_ptr<MyDGNode>, unsigned> nodeToLblMap;
     map<OA::OA_ptr<MyDGNode>, unsigned> nodeToLoopContLblMap;
   
     // Initialize label maps
-/*! commented out by PLM 08/29/06
- * for (list<OA::OA_ptr<OA::DGraph::NodeInterface> >::iterator it 
-	   = topoSortedCFG->begin(); 
-	 it != topoSortedCFG->end(); ++it) {
-    std::set<OA::OA_ptr<OA::DGraph::NodeInterface> >::iterator it;
-    */
-   
-
-    
-    
     OA::OA_ptr<OA::DGraph::NodesIteratorInterface> it;
 
     for (it=cfg->getNodesIterator(); it->isValid(); ++(*it) ) {
             
       OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = it->current();
       OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
-      nodeToLblMap[n] = nextLblCntr++;
+      nodeToLblMap[n] = startLabel_r++;
     
       // See notes on translating loops below
       xercesc::DOMElement* bbElem = n->GetElem();
       if (XAIF_BBElemFilter::IsBBForLoop(bbElem) ||
 	  XAIF_BBElemFilter::IsBBPostLoop(bbElem)) {
-	nodeToLoopContLblMap[n] = nextLblCntr++;
+	nodeToLoopContLblMap[n] = startLabel_r++;
       } 
       else if (XAIF_BBElemFilter::IsBBPreLoop(bbElem)) {
 	nodeToLoopContLblMap[n] = nodeToLblMap[n];
@@ -811,12 +796,6 @@ namespace xaif2whirl {
     // ---------------------------------------------------
     // Translate in topological order
     // ---------------------------------------------------
-    /*! commented out by PLM 08/29/06
-    for (list<OA::OA_ptr<OA::DGraph::NodeInterface> >::iterator it 
-	   = topoSortedCFG->begin(); 
-	 it != topoSortedCFG->end(); ++it) {
-     */
-    
     for (it=cfg->getNodesIterator(); it->isValid(); ++(*it) ) {
         
       OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = it->current();
@@ -983,7 +962,7 @@ namespace xaif2whirl {
 	// Create other special pre-loop statements
 	WN* stmtWN = NULL;
 	if (isDoLoop) {
-	  INT32 lbl_test = nextLblCntr++;
+	  INT32 lbl_test = startLabel_r++;
 	  INT32 lbl_cntnue = nodeToLoopContLblMap[curNode];
         
 	  WN_INSERT_BlockLast(blkWN, initWN); // Init
@@ -1030,11 +1009,6 @@ namespace xaif2whirl {
       }
     }
 
-    // ---------------------------------------------------
-    // Cleanup
-    // ---------------------------------------------------
-    //delete topoSortedCFG; OA_ptr takes care of it
-  
     return blkWN;
   }  
 
