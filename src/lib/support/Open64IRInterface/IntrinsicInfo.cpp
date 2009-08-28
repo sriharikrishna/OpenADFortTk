@@ -127,7 +127,7 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
   return ourIntrinsicInfoMap;
 } 
 
-bool IntrinsicInfo::lookupIntrinsicInfo(WN* aWN_p, const IntrinsicInfo::Info* anInfo) { 
+bool IntrinsicInfo::lookupIntrinsicInfo(const WN* aWN_p, const IntrinsicInfo::Info* anInfo) { 
   OPERATOR opr = WN_operator(aWN_p);
   IntrinsicMap::const_iterator finder;
 
@@ -175,7 +175,7 @@ bool IntrinsicInfo::lookupIntrinsicInfo(WN* aWN_p, const IntrinsicInfo::Info* an
   return finder!=getMap().end();
 } 
 
-bool IntrinsicInfo::isIntrinsic(WN* aWN_p) { 
+bool IntrinsicInfo::isIntrinsic(const WN* aWN_p) { 
   const Info* anInfo_p;
   return lookupIntrinsicInfo(aWN_p,anInfo_p);
 }

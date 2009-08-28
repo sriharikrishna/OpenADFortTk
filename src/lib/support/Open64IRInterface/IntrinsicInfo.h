@@ -12,7 +12,7 @@ public:
   /** 
    * is this an intrinsic?
    */
-  static bool isIntrinsic(WN* aWN_p); 
+  static bool isIntrinsic(const WN* aWN_p); 
 
   /** 
    * strips machine type information from the name
@@ -96,7 +96,7 @@ private:
   /** 
    * internal lookup 
    */
-  static bool lookupIntrinsicInfo(WN* aWN_p, const Info* anInfo); 
+  static bool lookupIntrinsicInfo(const WN* aWN_p, const Info* anInfo); 
   
 }; 
 
