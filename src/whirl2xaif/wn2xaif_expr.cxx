@@ -722,6 +722,17 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, fortTkSupport::IntrinsicXlationTabl
       << Attr("vertex_id", targid) << Attr("name", infoPair.second.name)
       << Attr("type", "***");
   if (infoPair.second.key) { xos << IntrinsicKeyAnnot(infoPair.second.key); }
+  TY_IDX result_ty=WN_Tree_Type(wn);
+  bool isPointer = TY_Is_Pointer(result_ty) || TY_is_f90_pointer(result_ty);
+  const char* ty_str = 
+    isPointer ? TranslateTYToSymType(TY_pointed(result_ty))
+    : TranslateTYToSymType(result_ty);
+  if (!ty_str) { ty_str = "***"; }
+  const char* shape_str = 
+    isPointer ? TranslateTYToSymShape(TY_pointed(result_ty))
+    : TranslateTYToSymShape(result_ty);
+  xos << xml::Attr("rType", ty_str)
+      << xml::Attr("rShape", shape_str);
   xos << EndElem;
    
   // Emit Intrinsic argument list, skipping implicit
@@ -847,6 +858,16 @@ xlate_BinaryOpUsingIntrinsicTable(xml::ostream& xos,
   if (typeStr) {
     xos << Attr("type", typeStr);
   }
+  bool isPointer = TY_Is_Pointer(result_ty) || TY_is_f90_pointer(result_ty);
+  const char* ty_str = 
+    isPointer ? TranslateTYToSymType(TY_pointed(result_ty))
+    : TranslateTYToSymType(result_ty);
+  if (!ty_str) { ty_str = "***"; }
+  const char* shape_str = 
+    isPointer ? TranslateTYToSymShape(TY_pointed(result_ty))
+    : TranslateTYToSymShape(result_ty);
+  xos << xml::Attr("rType", ty_str)
+      << xml::Attr("rShape", shape_str);
   xos << EndElem;
   
   // First operand
