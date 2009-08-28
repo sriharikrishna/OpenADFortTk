@@ -518,6 +518,10 @@ namespace xaif2whirl {
     // be translated to source code.
     TY_IDX ty = WN_Tree_Type(lhs); // should be a pointer type
     TY_IDX rhs_ty = WN_Tree_Type(rhs);
+    if (TY_is_f90_pointer(rhs_ty) || TY_Is_Pointer(rhs_ty)) 
+      rhs_ty=TY_pointed(rhs_ty);
+    if (TY_Is_Array(rhs_ty) || TY_Is_Pointer(rhs_ty)) 
+      rhs_ty=TY_etype(rhs_ty);
     TYPE_ID dtype = TY_mtype(rhs_ty);
     if (dtype == MTYPE_STR) {
       dtype = MTYPE_U1;
