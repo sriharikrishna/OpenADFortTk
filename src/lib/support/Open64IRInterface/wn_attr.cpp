@@ -1,9 +1,11 @@
 // -*-Mode: C++;-*-
 #include "Open64BasicTypes.h"
 
+#include <strstream>
 #include "stab_attr.h"
 #include "wn_attr.h"
 #include "diagnostics.h"
+#include "IntrinsicInfo.h"
 
 static TY_IDX
 WN_get_tld_type(const WN* wn);
@@ -377,8 +379,13 @@ WN_GetRefObjType(const WN* wn)
       break;
 
     default: 
+      { 
       // NOTE: MLOAD, MSTORE are not supported
-      ASSERT_FATAL(false, (DIAG_A_STRING, "not implemented."));
+      std::ostrstream msg;
+      msg << "not implemented for opcode " 
+	  << &OPERATOR_info [opr]._name [4];
+      ASSERT_FATAL(false, (DIAG_A_STRING, msg.str()));
+      }
       break;
   }
   return ty;
@@ -478,16 +485,18 @@ WN_GetBaseObjType(const WN* wn)
       ty = WN_load_addr_ty(wn);           
       break;
     
-    default: 
+    default: { 
       // NOTE: MLOAD, MSTORE are not supported
-      ASSERT_FATAL(false, (DIAG_A_STRING, "not implemented."));
+      std::ostrstream msg;
+      msg << "not implemented for opcode " 
+	  << &OPERATOR_info [opr]._name [4];
+      ASSERT_FATAL(false, (DIAG_A_STRING, msg.str()));
       break;
+    }
   }
   return ty;
 }
 
-
-// Does this make sense for intrinsic?
 TY_IDX 
 WN_Call_Type(const WN* wn)
 {
