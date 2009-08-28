@@ -710,7 +710,7 @@ namespace whirl2xaif {
 	  }
 	} 
 	else {
-	  TranslateWN(xos, addr, ctxt); /* Array lvalue */
+	  TranslateWN(xos, addr, ctxt); /* Array */
 	  if (hasArrayElmt) {
 	    TY2F_Translate_ArrayElt(xos, base_ty, offset);
 	  }
