@@ -282,7 +282,12 @@ WN_Tree_Type(const WN* wn)
       break;
       
     case OPR_PARM:
-      ty = WN_Tree_Type(WN_kid0(wn));
+      if (WN_operator(WN_kid0(wn))==OPR_ILOAD || WN_operator(WN_kid0(wn))==OPR_ARRSECTION) {
+	ty = WN_Tree_Type(WN_kid0(WN_kid0(wn)));
+      }
+      else { 
+	ty = WN_Tree_Type(WN_kid0(wn));
+      }
       break;
       
     case OPR_COMMA:
@@ -525,8 +530,13 @@ WN_Call_Return_Type(const WN* wn)
   if (opr == OPR_INTRINSIC_CALL) {
     return_ty = WN_intrinsic_return_ty(wn);
   } else {
-    TY_IDX func_ty = WN_Call_Type(wn);
-    return_ty = Func_Return_Type(func_ty);    
+    if (opr == OPR_CALL && IntrinsicInfo::isIntrinsic(wn)) {
+      return_ty=WN_Tree_Type(WN_kid0(wn));
+    }
+    else { 
+      TY_IDX func_ty = WN_Call_Type(wn);
+      return_ty = Func_Return_Type(func_ty);    
+    }
   }
   return return_ty;
 }
