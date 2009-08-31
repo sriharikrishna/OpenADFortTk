@@ -763,7 +763,6 @@ namespace xaif2whirl {
     WN* blkWN = WN_CreateBlock();
 
     // Topological sort to ensure that, e.g., the exit node is last
-    // was commented out; unclear if it still is relevant 
 
     // ---------------------------------------------------
     // We must generate labels that do not conflict with other labels in
@@ -776,7 +775,7 @@ namespace xaif2whirl {
     // Initialize label maps
     OA::OA_ptr<OA::DGraph::NodesIteratorInterface> it;
 
-    for (it=cfg->getNodesIterator(); it->isValid(); ++(*it) ) {
+    for (it=cfg->getReversePostDFSIterator(DEdgeOrg); it->isValid(); ++(*it) ) {
             
       OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = it->current();
       OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
@@ -796,7 +795,7 @@ namespace xaif2whirl {
     // ---------------------------------------------------
     // Translate in topological order
     // ---------------------------------------------------
-    for (it=cfg->getNodesIterator(); it->isValid(); ++(*it) ) {
+    for (it=cfg->getReversePostDFSIterator(DEdgeOrg); it->isValid(); ++(*it) ) {
         
       OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = it->current();
       OA::OA_ptr<MyDGNode> curNode = ntmp.convert<MyDGNode>();
