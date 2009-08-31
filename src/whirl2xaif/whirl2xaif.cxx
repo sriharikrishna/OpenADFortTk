@@ -310,6 +310,13 @@ namespace whirl2xaif {
 	  return true; 
 	}
       }
+      if (opr==OPR_TRUEBR) { 
+	LABEL_IDX lb=WN_label_number(curWN_p);
+	if (Label_Table[lb].kind==LKIND_LOOP_GEN) { 
+	  FORTTK_MSG(1,"hasUnstructuredCF: found unstructured loop control flow statements in "<< ST_name(puST_p));
+	  return true; 
+	}
+      } 
       ++aWNPtreeIterator;
     } 
     return false; 
