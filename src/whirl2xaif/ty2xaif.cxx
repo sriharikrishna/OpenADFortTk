@@ -1050,7 +1050,7 @@ namespace whirl2xaif {
 			  TY_IDX       arr_ty_idx,
 			  STAB_OFFSET  arr_ofst)
   {  
-    assert(0);
+ 	std::cout << "TEMP WARNING" << std::endl; 
   }
 
 
