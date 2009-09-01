@@ -283,7 +283,8 @@ namespace whirl2xaif {
     xos.flush();
   }
 
-  bool hasUnstructuredCF(WN* thePU_WN_p) { 
+  bool hasUnstructuredCF(WN* thePU_WN_p,
+			 ST* puST_p) { 
     // quick test for offending nodes  
     WN_TREE_CONTAINER<PRE_ORDER> aWNPtree(thePU_WN_p);
     WN_TREE_CONTAINER<PRE_ORDER>::iterator aWNPtreeIterator=aWNPtree.begin();
@@ -295,22 +296,27 @@ namespace whirl2xaif {
 	  WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1))!=curWN_p
 	  &&
 	  WN_prev(WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1)))!=curWN_p) {
-// 	std::cout << std::endl << "curWN_p is " << curWN_p << " ";
-// 	Open64IRInterface::DumpWN(curWN_p,std::cout);
-// 	std::cout << std::endl; 
-// 	std::cout << "WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1)) is " << WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1)) << " ";
-// 	Open64IRInterface::DumpWN(WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1)),std::cout);
-// 	std::cout << std::endl;
-// 	std::cout << "WN_prev(WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1))) is " << WN_prev(WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1))) << " ";
-// 	Open64IRInterface::DumpWN(WN_prev(WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1))),std::cout);
-// 	std::cout << std::endl;
-	FORTTK_MSG(1,"hasUnstructuredCF: found early return");
+	FORTTK_MSG(1,"hasUnstructuredCF: found early return in " << ST_name(puST_p));
 	return true; 
       }
-//       if (opr==OPR_GOTO || opr==OPR_AGOTO) { 
-// 	FORTTK_MSG(2,"hasUnstructuredCF: found goto");
-// 	return true;
-//       }
+      if (opr==OPR_GOTO || opr==OPR_AGOTO) {
+	LABEL_IDX lb=WN_label_number(curWN_p);
+	if (Label_Table[lb].kind==LKIND_LOOP_GEN) { 
+	  FORTTK_MSG(1,"hasUnstructuredCF: found unstructured loop control flow statements in "<< ST_name(puST_p));
+	  return true; 
+	}
+	if (Label_Table[lb].kind!=LKIND_SELECT_GEN) { 
+	  FORTTK_MSG(1,"hasUnstructuredCF: found goto statements in "<< ST_name(puST_p));
+	  return true; 
+	}
+      }
+      if (opr==OPR_TRUEBR) { 
+	LABEL_IDX lb=WN_label_number(curWN_p);
+	if (Label_Table[lb].kind==LKIND_LOOP_GEN) { 
+	  FORTTK_MSG(1,"hasUnstructuredCF: found unstructured loop control flow statements in "<< ST_name(puST_p));
+	  return true; 
+	}
+      } 
       ++aWNPtreeIterator;
     } 
     return false; 
@@ -346,7 +352,7 @@ namespace whirl2xaif {
 	<< xml::Attr("vertex_id", vertexId) << xml::Attr("scope_id", scopeId)
 	<< AttrSymId(st) << PUIdAnnot(puId)
 	<< xml::Attr("controlflowgraph_scope_id", puScopeId);
-    if (hasUnstructuredCF(wn_pu))
+    if (hasUnstructuredCF(wn_pu,st))
       xos << xml::Attr("structured", false);
     xos << xml::EndAttrs;
     if (IsActivePU(st)) {
