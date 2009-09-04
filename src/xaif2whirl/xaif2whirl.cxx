@@ -745,6 +745,107 @@ namespace xaif2whirl {
     return make_pair(blkWN, curNode);
   }
 
+  /** 
+   * for the back translation of unstructured control flow graphs
+   */ 
+  OA::OA_ptr<std::list<OA::OA_ptr<OA::DGraph::NodeInterface> > >
+  getOrderedSinkNodesList(OA::OA_ptr<OA::DGraph::DGraphInterface> cfg,
+			  OA::OA_ptr<OA::DGraph::NodeInterface> pNode) {
+    OA::OA_ptr<std::list<OA::OA_ptr<OA::DGraph::NodeInterface> > > retval;
+    retval = new std::list<OA::OA_ptr<OA::DGraph::NodeInterface> >;
+    // put all sink nodes in a list
+    OA::OA_ptr<std::list<OA::OA_ptr<OA::DGraph::NodeInterface> > > tempList;
+    tempList = new std::list<OA::OA_ptr<OA::DGraph::NodeInterface> >;
+    std::list<OA::OA_ptr<OA::DGraph::EdgeInterface> >::iterator iter;
+    OA::OA_ptr<MyDGNode> cfgNode = pNode.convert<MyDGNode>();
+    xercesc::DOMElement* bbElem = cfgNode->GetElem();
+    OA::OA_ptr<OA::DGraph::EdgesIteratorInterface>it=pNode->getOutgoingEdgesIterator();
+    for(; it->isValid(); ++(*it)) {
+      OA::OA_ptr<OA::DGraph::EdgeInterface> e = it->current();
+      OA::OA_ptr<MyDGEdge> cfgEdge = e.convert<MyDGEdge>();
+      // std::cout << "getOrderedSinkNodesList edge has cond: " <<  GetHasConditionAttr(cfgEdge->GetElem()) << " val " << GetCondAttr(cfgEdge->GetElem()) << std::endl; 
+      if ((XAIF_BBElemFilter::IsBBForLoop(bbElem) 
+	   ||
+	   XAIF_BBElemFilter::IsBBPostLoop(bbElem))
+	  && 
+	  ( 
+	   (GetHasConditionAttr(cfgEdge->GetElem()) 
+	    && 
+	    GetCondAttr(cfgEdge->GetElem())==0 )
+	   || 
+	   ! GetHasConditionAttr(cfgEdge->GetElem()))) { 
+	retval->push_front(e->getSink());
+      }
+      else { 
+	retval->push_back(e->getSink());
+      }
+    }
+    return retval;
+  }
+    
+  /** 
+   * for the back translation of unstructured control flow graphs
+   */ 
+  void getReversePostDFSListR(OA::OA_ptr<OA::DGraph::DGraphInterface> cfg,
+			      OA::OA_ptr<OA::DGraph::NodeInterface> pNode,
+			      std::map<OA::OA_ptr<OA::DGraph::NodeInterface>,bool>& visitMap,
+			      OA::OA_ptr<std::list<OA::OA_ptr<OA::DGraph::NodeInterface> > > pList ) { 
+    OA::OA_ptr<MyDGNode> cfgNode = pNode.convert<MyDGNode>();
+    xercesc::DOMElement* bbElem = cfgNode->GetElem();
+    // std::cout << " getReversePostDFSListR invoked for " << bbElem->getNodeName() << " " << bbElem->getAttribute(XAIFStrings.attr_Vid_x()) << std::endl;   
+
+    // mark as visited so that we don't get in an infinite
+    // loop on cycles in the graph
+    visitMap[pNode] = true;
+    // loop over the successors or predecessors based on orientation
+    OA::OA_ptr<std::list<OA::OA_ptr<OA::DGraph::NodeInterface> > > nodeList = getOrderedSinkNodesList(cfg,pNode); 
+    std::list<OA::OA_ptr<OA::DGraph::NodeInterface> >::iterator it=nodeList->begin();
+    for (; it!=nodeList->end(); ++it) {
+      OA::OA_ptr<OA::DGraph::NodeInterface> n = *it;
+      // if the node hasn't been visited then call recursively
+      if (!visitMap[n]) {
+	getReversePostDFSListR(cfg, n, visitMap, pList);
+      }
+    }
+    // add ourselves to the beginning of the list
+    // std::cout << " getReversePostDFSListR pushing for " << bbElem->getNodeName() << " " << bbElem->getAttribute(XAIFStrings.attr_Vid_x()) << std::endl;   
+    pList->push_front(pNode);
+  } 
+
+  /** 
+   * for the back translation of unstructured control flow graphs
+   * this behaves like normal reversePostDFS order 
+   * (as it was implemented in OpenAnalysis)  
+   * with the one exception that we the successor nodes of a given loop node 
+   * are ordered such that the node to loop successor (not the loop body) 
+   * comes first in the DFS search (see the logic in getOrderedSinkNodesList). 
+   * This removes the scenario of an EXIT node being placed in the middle of the list of blocks 
+   * that are being connected via gotos (which consequently rather than 
+   * exiting leads to continued execution of the next block that 
+   * happens to follow the EXIT node in the list). 
+   */ 
+  OA::OA_ptr<std::list<OA::OA_ptr<OA::DGraph::NodeInterface> > >
+  getReversePostDFSList(OA::OA_ptr<OA::DGraph::DGraphInterface> cfg) { 
+    std::map<OA::OA_ptr<OA::DGraph::NodeInterface>,bool> visitMap;
+    // loop over all nodes and set their visit field to false
+    OA::OA_ptr<OA::DGraph::NodesIteratorInterface> nodeIter = cfg->getNodesIterator();
+    for ( ; nodeIter->isValid(); (*nodeIter)++ ) {
+      OA::OA_ptr<OA::DGraph::NodeInterface> node = nodeIter->current();
+      visitMap[node] = false;
+    }
+    // generate a list of nodes in the requested ordering
+    OA::OA_ptr<std::list<OA::OA_ptr<OA::DGraph::NodeInterface> > > retval;
+    retval = new std::list<OA::OA_ptr<OA::DGraph::NodeInterface> >;
+    nodeIter = cfg->getEntryNodesIterator();
+    for ( ; nodeIter->isValid(); (*nodeIter)++ ) {
+      OA::OA_ptr<OA::DGraph::NodeInterface> on = nodeIter->current();
+      getReversePostDFSListR(cfg,
+			     nodeIter->current(), 
+			     visitMap, 
+			     retval);
+    }
+    return retval;
+  } 
 
   // xlate_CFGunstruct: Helper for translating an unstructured CFG.  
   // 
@@ -757,8 +858,9 @@ namespace xaif2whirl {
 		    PUXlationContext& ctxt,
 		    unsigned int& startLabel_r)
   {
-    using namespace OA::DGraph;
-    using namespace OA::CFG;
+    //    using namespace OA::DGraph;
+    //    using namespace OA::CFG;
+
 
     WN* blkWN = WN_CreateBlock();
 
@@ -773,11 +875,13 @@ namespace xaif2whirl {
     map<OA::OA_ptr<MyDGNode>, unsigned> nodeToLoopContLblMap;
   
     // Initialize label maps
-    OA::OA_ptr<OA::DGraph::NodesIteratorInterface> it;
-
-    for (it=cfg->getReversePostDFSIterator(DEdgeOrg); it->isValid(); ++(*it) ) {
+    OA::OA_ptr<std::list<OA::OA_ptr<OA::DGraph::NodeInterface> > > nodeList;
+    nodeList=getReversePostDFSList(cfg);
+    std::list<OA::OA_ptr<OA::DGraph::NodeInterface> >::iterator it= nodeList->begin();
+    
+    for (; it!=nodeList->end(); ++it) {
             
-      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = it->current();
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = *it;
       OA::OA_ptr<MyDGNode> n = ntmp.convert<MyDGNode>();
       nodeToLblMap[n] = startLabel_r++;
     
@@ -795,13 +899,13 @@ namespace xaif2whirl {
     // ---------------------------------------------------
     // Translate in topological order
     // ---------------------------------------------------
-    for (it=cfg->getReversePostDFSIterator(DEdgeOrg); it->isValid(); ++(*it) ) {
+    for (it= nodeList->begin(); it!=nodeList->end();++it) {
         
-      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = it->current();
+      OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = *it;
       OA::OA_ptr<MyDGNode> curNode = ntmp.convert<MyDGNode>();
       xercesc::DOMElement* bbElem = curNode->GetElem();
       unsigned curLbl = nodeToLblMap[curNode];
-    
+      // std::cout << " looking at " << bbElem->getNodeName() << std::endl;   
       if (XAIF_BBElemFilter::IsBBEntry(bbElem) ||
 	  XAIF_BBElemFilter::IsBBExit(bbElem) ||
 	  XAIF_BBElemFilter::IsBB(bbElem)) {
