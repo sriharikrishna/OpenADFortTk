@@ -56,7 +56,9 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CLEEXPR")    ]=Info(false,2,STRING_INTR);
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "CLTEXPR")    ]=Info(false,2,STRING_INTR);
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_OP,  "LEN")        ]=Info(false,1,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "INDEX")      ]=Info(true, 3,STRING_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "LEN")        ]=Info(false,1,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "LEN_TRIM")   ]=Info(false,1,STRING_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "TRIM")       ]=Info(false,1,STRING_INTR);
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_CALL,"CONCATEXPR") ]=Info(true, 2,STRING_INTR);
     
