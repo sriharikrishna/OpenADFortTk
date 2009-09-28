@@ -80,7 +80,6 @@ namespace xaif2whirl {
   static int
   XercesFini();
 
-  ModeType      opt_mode      = MODE_NULL;
   AlgorithmType opt_algorithm = ALG_NULL;
 
   static int
@@ -122,7 +121,6 @@ namespace xaif2whirl {
     XAIFStrings.XMLInitialize();
 
     Args args(argc, argv);
-    opt_mode = args.mode; // FIXME
     opt_algorithm = args.algorithm; // FIXME
     fortTkSupport::Diagnostics::setDiagnosticFilterLevel(args.debug);
   

@@ -1,8 +1,11 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/whirl2xaif/whirl2xaif.cxx,v 1.53 2006/05/12 16:12:23 utke Exp $
-
-
-#include <time.h>
+// ##########################################################
+// # This file is part of OpenADFortTk.                     #
+// # The full COPYRIGHT notice can be found in the top      #
+// # level directory of the OpenADFortTk source tree.       #
+// # For more information visit                             #
+// # http://www.mcs.anl.gov/openad                          #
+// ##########################################################
+#include <ctime>
 #include <fstream>
 
 #include "Open64IRInterface/Open64BasicTypes.h"
@@ -291,13 +294,21 @@ namespace whirl2xaif {
     while (aWNPtreeIterator != aWNPtree.end()) { 
       WN* curWN_p = aWNPtreeIterator.Wn();
       OPERATOR opr = WN_operator(curWN_p);
-      if (opr==OPR_RETURN 
-	  && 
-	  WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1))!=curWN_p
-	  &&
-	  WN_prev(WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1)))!=curWN_p) {
-	FORTTK_MSG(1,"hasUnstructuredCF: found early return in " << ST_name(puST_p));
-	return true; 
+      if (opr==OPR_RETURN) { 
+	// does it have a tail of Return nodes...
+	// see if this curWN_p is the last node
+	WN* tailWN_p=WN_last(WN_kid(thePU_WN_p,WN_kid_count(thePU_WN_p)-1));
+	while (tailWN_p) {
+	  if (tailWN_p==curWN_p)
+	    break;
+	  else {
+	    if (WN_operator(tailWN_p)!=OPR_RETURN) { 
+	      FORTTK_MSG(1,"hasUnstructuredCF: found early return in " << ST_name(puST_p));
+	      return true; 
+	    }
+	    tailWN_p=WN_prev(tailWN_p);
+	  }
+	}
       }
       if (opr==OPR_GOTO || opr==OPR_AGOTO) {
 	LABEL_IDX lb=WN_label_number(curWN_p);

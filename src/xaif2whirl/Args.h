@@ -41,7 +41,6 @@ public:
   const std::string& GetCmd() const { return parser.GetCmd(); }
   
   // Parsed Data: optional arguments
-  xaif2whirl::ModeType      mode;      // default: MODE_REVERSE
   xaif2whirl::AlgorithmType algorithm; // default: ALG_NULL
   int debug;                           // default: 0 (off)
   

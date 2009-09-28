@@ -22,12 +22,6 @@
 
 namespace xaif2whirl {
 
-  enum ModeType {
-    MODE_NULL,
-    MODE_FORWARD,  // forward mode
-    MODE_REVERSE   // reverse mode
-  };
-
   enum AlgorithmType {
     ALG_NULL,
     ALG_BB_PATCHING      // temporary
