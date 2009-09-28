@@ -43,7 +43,6 @@ namespace xaif2whirl {
   fortTkSupport::WNIdToWNTabMap          WNIdToWNTableMap;
 
   // FIXME
-  extern ModeType      opt_mode;
   extern AlgorithmType opt_algorithm;
 
   // FIXME

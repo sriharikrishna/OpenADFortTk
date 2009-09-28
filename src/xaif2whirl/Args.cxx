@@ -32,7 +32,6 @@ static const char* usage_details =
 "extension of <xaif-file> with 'x2w.B'.\n"
 "\n"
 "Algorithms:\n"
-"  -m, --mode=<mode> forward, reverse.  By default, assumes reverse.\n"
 "  --bb-patching     TEMPORARY: use basic-block patch algorithm\n"
 "\n"
 "Options:\n"
@@ -56,7 +55,6 @@ static const char* usage_details =
 
 CmdLineParser::OptArgDesc Args::optArgs[] = {
   // Options
-  { 'm', "mode",     CLP::ARG_REQ, CLP::DUPOPT_CLOB, NULL },
   {  0 , "bb-patching",     CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "i4",              CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
   {  0 , "u4",              CLP::ARG_NONE, CLP::DUPOPT_CLOB, NULL },
@@ -91,7 +89,6 @@ Args::Args(int argc, const char* const argv[])
 void
 Args::Ctor()
 {
-  mode      = xaif2whirl::MODE_REVERSE;
   algorithm = xaif2whirl::ALG_NULL;
   validate  = false; 
   debug     = 0; // default: 0 (off)
@@ -165,19 +162,6 @@ Args::Parse(int argc, const char* const argv[])
       exit(0);
     }
     
-    // Check for algorithm options
-    if (parser.IsOpt("mode")) { 
-      const string& arg = parser.GetOptArg("mode");
-      if (arg == "forward") {
-	mode = xaif2whirl::MODE_FORWARD;
-      }
-      else if (arg == "reverse") {
-	mode = xaif2whirl::MODE_REVERSE;
-      } else {
-	PrintError(std::cerr, "Invalid argument to 'mode': " + arg);
-	exit(1);
-      }
-    }
     if (parser.IsOpt("bb-patching")) { 
       algorithm = xaif2whirl::ALG_BB_PATCHING;
     }
