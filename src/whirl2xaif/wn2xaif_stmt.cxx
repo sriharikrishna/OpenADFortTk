@@ -477,7 +477,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
     xos << BegElem("xaif:Intrinsic") 
 	<< Attr("vertex_id", targid) << Attr("name", infoPair.second.name)
 	<< Attr("type", "***");
-    TY_IDX result_ty=WN_Tree_Type(wn);
+    TY_IDX result_ty=WN_GetExprType(wn);
     bool isPointer = TY_Is_Pointer(result_ty) || TY_is_f90_pointer(result_ty);
     const char* ty_str = 
       isPointer ? TranslateTYToSymType(TY_pointed(result_ty))
@@ -486,8 +486,10 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
     const char* shape_str = 
       isPointer ? TranslateTYToSymShape(TY_pointed(result_ty))
       : TranslateTYToSymShape(result_ty);
-    xos << xml::Attr("rType", ty_str)
-	<< xml::Attr("rShape", shape_str);
+    if (strcmp(ty_str,"real"))
+      xos << xml::Attr("rType", ty_str); 
+    if (strcmp(shape_str,"scalar"))
+      xos << xml::Attr("rShape", shape_str);
     xos << EndElem;
   } 
   else {
@@ -509,7 +511,7 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
 	  << Attr("vertex_id", targid) << Attr("name", infoPair.second.name)
 	  << Attr("type", "***");
       if (infoPair.second.key) { xos << IntrinsicKeyAnnot(infoPair.second.key); }
-      TY_IDX result_ty=WN_Tree_Type(wn);
+      TY_IDX result_ty=WN_GetExprType(wn);
       bool isPointer = TY_Is_Pointer(result_ty) || TY_is_f90_pointer(result_ty);
       const char* ty_str = 
 	isPointer ? TranslateTYToSymType(TY_pointed(result_ty))
@@ -518,8 +520,10 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
       const char* shape_str = 
 	isPointer ? TranslateTYToSymShape(TY_pointed(result_ty))
 	: TranslateTYToSymShape(result_ty);
-      xos << xml::Attr("rType", ty_str)
-	  << xml::Attr("rShape", shape_str);
+      if (strcmp(ty_str,"real"))
+	xos << xml::Attr("rType", ty_str);
+      if (strcmp(shape_str,"scalar"))
+	xos << xml::Attr("rShape", shape_str);
       xos << EndElem;
     } else if (return_ty != (TY_IDX)0 && TY_kind(return_ty) != KIND_VOID) {
       // FunctionCall

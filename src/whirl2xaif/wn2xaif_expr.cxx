@@ -489,7 +489,7 @@ whirl2xaif::xlate_BinaryOp(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
 		fortTkSupport::Diagnostics::UnexpectedInput << OPERATOR_name(opr));
   xlate_BinaryOpUsingIntrinsicTable(xos, 
 				    opc, 
-				    WN_Tree_Type(wn), 
+				    WN_GetExprType(wn), 
 				    WN_kid0(wn), 
 				    WN_kid1(wn), 
 				    ctxt);
@@ -722,7 +722,7 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, fortTkSupport::IntrinsicXlationTabl
       << Attr("vertex_id", targid) << Attr("name", infoPair.second.name)
       << Attr("type", "***");
   if (infoPair.second.key) { xos << IntrinsicKeyAnnot(infoPair.second.key); }
-  TY_IDX result_ty=WN_Tree_Type(wn);
+  TY_IDX result_ty=WN_GetExprType(wn);
   bool isPointer = TY_Is_Pointer(result_ty) || TY_is_f90_pointer(result_ty);
   const char* ty_str = 
     isPointer ? TranslateTYToSymType(TY_pointed(result_ty))
@@ -731,8 +731,10 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, fortTkSupport::IntrinsicXlationTabl
   const char* shape_str = 
     isPointer ? TranslateTYToSymShape(TY_pointed(result_ty))
     : TranslateTYToSymShape(result_ty);
-  xos << xml::Attr("rType", ty_str)
-      << xml::Attr("rShape", shape_str);
+  if (strcmp(ty_str,"real"))
+    xos << xml::Attr("rType", ty_str);
+  if (strcmp(shape_str,"scalar"))
+    xos << xml::Attr("rShape", shape_str);
   xos << EndElem;
    
   // Emit Intrinsic argument list, skipping implicit
@@ -866,8 +868,10 @@ xlate_BinaryOpUsingIntrinsicTable(xml::ostream& xos,
   const char* shape_str = 
     isPointer ? TranslateTYToSymShape(TY_pointed(result_ty))
     : TranslateTYToSymShape(result_ty);
-  xos << xml::Attr("rType", ty_str)
-      << xml::Attr("rShape", shape_str);
+  if (infoPair.second.opr!=fortTkSupport::IntrinsicXlationTable::XAIFBoolOp && strcmp(ty_str,"real"))
+    xos << xml::Attr("rType", ty_str);
+  if (infoPair.second.opr!=fortTkSupport::IntrinsicXlationTable::XAIFBoolOp && strcmp(shape_str,"scalar"))
+    xos << xml::Attr("rShape", shape_str);
   xos << EndElem;
   
   // First operand

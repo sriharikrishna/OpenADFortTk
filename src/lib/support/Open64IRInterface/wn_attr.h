@@ -113,6 +113,15 @@ WN_GetRefObjType(const WN* wn);
 extern TY_IDX 
 WN_GetBaseObjType(const WN* wn);
 
+/**
+ * For expression sub trees get the type
+ * This is being introduced as a last 
+ * resort to get around the inscrutable paths 
+ * taken by WN_[Tree_|GetRefObj|GetBaseObj]Type
+ */
+extern TY_IDX 
+WN_GetExprType(const WN* wn);
+
 extern TY_IDX 
 WN_Call_Type(const WN* wn);
 
