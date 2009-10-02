@@ -526,7 +526,19 @@ WN_Call_Return_Type(const WN* wn)
     return_ty = WN_intrinsic_return_ty(wn);
   } else {
     if (opr == OPR_CALL && IntrinsicInfo::isIntrinsic(wn)) {
-      return_ty=WN_GetExprType(WN_kid0(wn));
+      // here come hacks for special cases that will be made obsolete by the move to Rose
+      ST* st_p = WN_st(wn);
+      const char* funcNm = ST_name(st_p);
+      if (!strcmp(funcNm,"LEN")
+	  ||
+	  !strcmp(funcNm,"ALLOCATED")
+	  || 
+	  !strcmp(funcNm,"MAXVAL")) { 
+	return_ty=Stab_Mtype_To_Ty(OPCODE_rtype(WN_opcode(wn)));
+      }
+      else { 
+	return_ty=WN_GetExprType(WN_kid0(wn));
+      }
     }
     else { 
       TY_IDX func_ty = WN_Call_Type(wn);
