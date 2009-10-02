@@ -991,10 +991,10 @@ WN_GetExprType(const WN* wn) {
       
     case OPR_PARM:
       if (WN_operator(WN_kid0(wn))==OPR_ILOAD || WN_operator(WN_kid0(wn))==OPR_ARRSECTION) {
-	ty = WN_Tree_Type(WN_kid0(WN_kid0(wn)));
+	ty = WN_GetExprType(WN_kid0(WN_kid0(wn)));
       }
       else { 
-	ty = WN_Tree_Type(WN_kid0(wn));
+	ty = WN_GetExprType(WN_kid0(wn));
       }
       break;
       
