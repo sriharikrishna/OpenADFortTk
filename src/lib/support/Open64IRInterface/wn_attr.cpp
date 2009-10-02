@@ -533,8 +533,32 @@ WN_Call_Return_Type(const WN* wn)
 	  ||
 	  !strcmp(funcNm,"ALLOCATED")
 	  || 
-	  !strcmp(funcNm,"MAXVAL")) { 
+	  !strcmp(funcNm,"MAXVAL")
+          || 
+	  !strcmp(funcNm,"SIZE")) { 
 	return_ty=Stab_Mtype_To_Ty(OPCODE_rtype(WN_opcode(wn)));
+      }
+      else if (!strcmp(funcNm,"DBLE")) { 
+	return_ty=WN_GetExprType(WN_kid0(wn));
+	// this can be for instance an integer array
+	if (TY_mtype(return_ty) != MTYPE_F8) { 
+	  if (TY_Is_Pointer(return_ty)) {
+	    if (TY_Is_Array(TY_pointed(return_ty))) {
+	      return_ty=TY_pointed(return_ty);
+	    }
+	    else { 
+	      ASSERT_FATAL(false, (DIAG_UNIMPLEMENTED, "in WN_Call_Return_Type"));
+	    }
+	  } 
+	  if  (TY_Is_Array(return_ty)) { 
+	    // make a fake type to return
+	    return_ty=Make_Array_Type(MTYPE_F8,
+				      (TY_arb(return_ty)).Entry()->dimension,
+				      1);
+	  }
+	  else 
+	    return_ty=Stab_Mtype_To_Ty(MTYPE_F8);
+	}
       }
       else { 
 	return_ty=WN_GetExprType(WN_kid0(wn));
