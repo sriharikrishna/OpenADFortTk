@@ -2421,24 +2421,21 @@ namespace xaif2whirl {
       FORTTK_DIE("Unexpected type kind: " << TY_kind(typeIndex));
     }
   
-    if (TY_kind(typeIndex) == KIND_SCALAR 
-	&& 
-	Stab_Is_Based_At_Common_Or_Equivalence(st)) {
-      FORTTK_DIE("Because of default initialization within the active type we cannot handle common blocks/equivalences containing active elements, here occuring for: " << ST_name(st) << " This should instead be handled by the canonicalization of common blocks into modules");
-    
-      // commented out the following because of the reasoning above.
-
-      //     // -------------------------------------------------------
-      //     // 3. If this symbol is part of a common block, patch up types in
-      //     // the common block fields.  Note that we only need to change
-      //     // scalars -- arrays have been effectively changed above
-      //     // -------------------------------------------------------
-      //     TY_IDX baseTypeIndex = ST_type(ST_base(st));
-      //     mUINT64 offset = ST_ofst(st); // offset into base symbol
-    
-      //     // find field with correct offset or symbol
-      //     FLD_HANDLE fld = TY_Lookup_FLD(baseTypeIndex, 0, offset);
-      //     Set_FLD_type(fld, newBaseTypeIndex);
+    if (TY_kind(typeIndex) == KIND_SCALAR) { 
+       if (Stab_Is_Valid_Base(st) && 
+	   Stab_Is_Equivalence_Block(st)) {
+	 FORTTK_DIE("Because of default initialization within the active type we cannot handle equivalences containing active elements, here occuring for: " << ST_name(st));
+       }
+       // -------------------------------------------------------
+       // 3. If this symbol is part of a common block, patch up types in
+       // the common block fields.  Note that we only need to change
+       // scalars -- arrays have been effectively changed above
+       // -------------------------------------------------------
+       TY_IDX baseTypeIndex = ST_type(ST_base(st));
+       mUINT64 offset = ST_ofst(st); // offset into base symbol
+       // find field with correct offset or symbol
+       FLD_HANDLE fld = TY_Lookup_FLD(baseTypeIndex, 0, offset);
+       Set_FLD_type(fld, newBaseTypeIndex);
     }
   }
 
