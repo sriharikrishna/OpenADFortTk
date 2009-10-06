@@ -2369,11 +2369,32 @@ namespace xaif2whirl {
   // ConvertToActiveType: Given a symbol, convert it to active type
   static void 
   ConvertToActiveType(ST* st) {
+    static std::set<std::string> cbSymbolSet, eqSymbolSet;
+    // Find the type that will be replaced
+    TY_IDX typeIndex = ST_type(st);
+    // -------------------------------------------------------
+    // issue warnings
+    // -------------------------------------------------------
+    if ((TY_kind(typeIndex) == KIND_SCALAR 
+	 || 
+	 TY_kind(typeIndex) == KIND_ARRAY) 
+	&& Stab_Is_Valid_Base(st)) { 
+      if (Stab_Is_Equivalence_Block(ST_base(st))) {
+	if (eqSymbolSet.find(ST_name(st))==eqSymbolSet.end()) { 
+	  FORTTK_WMSG("EQUIVALENCE construct detected for " << ST_name(st) << " conflicts with default initialization within the active type (required for adjoint mode)");
+	  eqSymbolSet.insert(ST_name(st));
+	}
+      }
+      if (Stab_Is_Common_Block(ST_base(st))) {
+	if (cbSymbolSet.find(ST_name(st))==cbSymbolSet.end()) { 
+	  FORTTK_WMSG("COMMON construct detected for " << ST_name(st) << " conflicts with default initialization within the active type (required for adjoint mode)");
+	  cbSymbolSet.insert(ST_name(st));
+	}
+      }
+    }
     // -------------------------------------------------------
     // 1. Setup
     // -------------------------------------------------------
-    // Find the type that will be replaced
-    TY_IDX typeIndex = ST_type(st);
     if (TY_kind(typeIndex) == KIND_POINTER) { // only have one level of indirection
       typeIndex = TY_pointed(typeIndex);
     }
@@ -2392,6 +2413,13 @@ namespace xaif2whirl {
     // -------------------------------------------------------
     if (TY_kind(typeIndex) == KIND_SCALAR) {
       Set_ST_type(*st, newBaseTypeIndex);
+      if (Stab_Is_Valid_Base(st)) { 
+	TY_IDX baseTypeIndex = ST_type(ST_base(st));
+	mUINT64 offset = ST_ofst(st); // offset into base symbol
+	// find field with correct offset or symbol
+	FLD_HANDLE fld = TY_Lookup_FLD(baseTypeIndex, 0, offset);
+	Set_FLD_type(fld, newBaseTypeIndex);
+      }
     }
     else if (TY_kind(typeIndex) == KIND_ARRAY) {
       // get the element type index 
@@ -2413,29 +2441,19 @@ namespace xaif2whirl {
 	  newArraySymbolTypeIndex = Make_Pointer_Type(newArrayTypeIndex);
 	}
 	Set_ST_type(st,newArraySymbolTypeIndex);
+	if (Stab_Is_Valid_Base(st)) { 
+	  TY_IDX baseTypeIndex = ST_type(ST_base(st));
+	  mUINT64 offset = ST_ofst(st); // offset into base symbol
+	  // find field with correct offset or symbol
+	  FLD_HANDLE fld = TY_Lookup_FLD(baseTypeIndex, 0, offset);
+	  Set_FLD_type(fld, newArraySymbolTypeIndex);
+	}
       }
     } 
     else {
       // Note: We should never see a KIND_STRUCT; this is handled
       // through scalarization.
       FORTTK_DIE("Unexpected type kind: " << TY_kind(typeIndex));
-    }
-  
-    if (TY_kind(typeIndex) == KIND_SCALAR) { 
-       if (Stab_Is_Valid_Base(st) && 
-	   Stab_Is_Equivalence_Block(st)) {
-	 FORTTK_DIE("Because of default initialization within the active type we cannot handle equivalences containing active elements, here occuring for: " << ST_name(st));
-       }
-       // -------------------------------------------------------
-       // 3. If this symbol is part of a common block, patch up types in
-       // the common block fields.  Note that we only need to change
-       // scalars -- arrays have been effectively changed above
-       // -------------------------------------------------------
-       TY_IDX baseTypeIndex = ST_type(ST_base(st));
-       mUINT64 offset = ST_ofst(st); // offset into base symbol
-       // find field with correct offset or symbol
-       FLD_HANDLE fld = TY_Lookup_FLD(baseTypeIndex, 0, offset);
-       Set_FLD_type(fld, newBaseTypeIndex);
     }
   }
 
