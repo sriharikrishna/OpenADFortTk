@@ -2413,7 +2413,11 @@ namespace xaif2whirl {
     // -------------------------------------------------------
     if (TY_kind(typeIndex) == KIND_SCALAR) {
       Set_ST_type(*st, newBaseTypeIndex);
-      if (Stab_Is_Valid_Base(st)) { 
+      if (Stab_Is_Valid_Base(st)
+	  && 
+	  (Stab_Is_Equivalence_Block(ST_base(st))
+	   ||
+	   Stab_Is_Common_Block(ST_base(st)))) { 
 	TY_IDX baseTypeIndex = ST_type(ST_base(st));
 	mUINT64 offset = ST_ofst(st); // offset into base symbol
 	// find field with correct offset or symbol
@@ -2441,7 +2445,11 @@ namespace xaif2whirl {
 	  newArraySymbolTypeIndex = Make_Pointer_Type(newArrayTypeIndex);
 	}
 	Set_ST_type(st,newArraySymbolTypeIndex);
-	if (Stab_Is_Valid_Base(st)) { 
+	if (Stab_Is_Valid_Base(st)
+	    && 
+	    (Stab_Is_Equivalence_Block(ST_base(st))
+	     ||
+	     Stab_Is_Common_Block(ST_base(st)))) { 
 	  TY_IDX baseTypeIndex = ST_type(ST_base(st));
 	  mUINT64 offset = ST_ofst(st); // offset into base symbol
 	  // find field with correct offset or symbol
