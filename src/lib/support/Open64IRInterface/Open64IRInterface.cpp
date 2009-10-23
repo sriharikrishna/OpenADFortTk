@@ -5177,7 +5177,7 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
             if (debug) {
                 std::cout << "symbol = " << createCharStarForST(st) 
                           << ", sProcContext[" << sym.hval() << "] = " 
-                          << proc.hval() << std::endl;
+                          << proc.hval() << "(" <<  ST_name(ST_ptr(PU_Info_proc_sym((PU_Info*)proc.hval()))) << ")" <<  std::endl;
             }
 
             // store the string for the symbol
@@ -5186,23 +5186,19 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
 
             // store symbols based on fully qualified name as well
             // if they are module or common block variables
-            if (Stab_Is_Based_At_Common_Block(st))
-            {
-                fully_qualified_name fqn = create_fqn(sym);
-                sGlobalVarMap[fqn].insert(sym);
-                sSymToFQNMap[sym] = fqn;
-                if (debug) {
-                    std::cout << "create_fqn(" << createCharStarForST(st) 
-                              << ") = "
-                              << fqn.mVar << ", " << fqn.mContext << std::endl;
-                    std::cout << "\tsym = " << tempIR.toString(sym)
-                              << ", hval= " << sym.hval()
-                              << ", st = " << (unsigned long)st << std::endl;
-                    std::cout << "\tproc = " << tempIR.toString(proc)
-                              << ", hval= " << proc.hval();
-                }
+            if (Stab_Is_Based_At_Common_Block(st) ) {
+	      fully_qualified_name fqn = create_fqn(sym);
+	      sGlobalVarMap[fqn].insert(sym);
+	      sSymToFQNMap[sym] = fqn;
+	      if (debug) {
+		std::cout << "create_fqn(" << createCharStarForST(st) 
+			  << ") yields: ("
+			  << fqn.mVar << "," << fqn.mContext << ")" << std::endl;
+		std::cout << "\tsym = " << tempIR.toString(sym)
+			  << ", hval= " << sym.hval()
+			  << ", st = " << (unsigned long)st << std::endl;
+	      }
             }
-
         }
 
         // 2. Add Whirl AST nodes to map
