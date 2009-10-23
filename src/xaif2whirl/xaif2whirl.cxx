@@ -149,7 +149,7 @@ namespace xaif2whirl {
   ConvertScalarizedRefToActiveType(WN* wn);
 
   static FLD_HANDLE
-  TY_Lookup_FLD(TY_IDX struct_ty, TY_IDX ref_ty, UINT64 ref_ofst);
+  TY_Lookup_FLD(TY_IDX struct_ty, TY_IDX ref_ty, UINT64 ref_ofst, unsigned short eqInst=1);
 
 
   // FIXME (Note: TYPE_ID and TY_IDX are typedef'd to the same type, so
@@ -2379,6 +2379,12 @@ namespace xaif2whirl {
 	 || 
 	 TY_kind(typeIndex) == KIND_ARRAY) 
 	&& Stab_Is_Valid_Base(st)) { 
+      if (ST_is_equivalenced(st)) {
+	if (eqSymbolSet.find(ST_name(st))==eqSymbolSet.end()) { 
+	  FORTTK_WMSG("EQUIVALENCE construct detected for " << ST_name(st) << " conflicts with default initialization within the active type (required for adjoint mode)");
+	  eqSymbolSet.insert(ST_name(st));
+	}
+      }
       if (Stab_Is_Equivalence_Block(ST_base(st))) {
 	if (eqSymbolSet.find(ST_name(st))==eqSymbolSet.end()) { 
 	  FORTTK_WMSG("EQUIVALENCE construct detected for " << ST_name(st) << " conflicts with default initialization within the active type (required for adjoint mode)");
@@ -2417,12 +2423,23 @@ namespace xaif2whirl {
 	  && 
 	  (Stab_Is_Equivalence_Block(ST_base(st))
 	   ||
+	   ST_is_equivalenced(st)
+	   ||
 	   Stab_Is_Common_Block(ST_base(st)))) { 
 	TY_IDX baseTypeIndex = ST_type(ST_base(st));
 	mUINT64 offset = ST_ofst(st); // offset into base symbol
 	// find field with correct offset or symbol
 	FLD_HANDLE fld = TY_Lookup_FLD(baseTypeIndex, 0, offset);
 	Set_FLD_type(fld, newBaseTypeIndex);
+	if (ST_is_equivalenced(st)) {
+	  // retrieve fields with the same offset
+	  unsigned short eqInst=2;
+	  FLD_HANDLE fld = TY_Lookup_FLD(baseTypeIndex, 0, offset,eqInst);
+	  while (!fld.Is_Null()) { 
+	    Set_FLD_type(fld, newBaseTypeIndex);
+	    fld = TY_Lookup_FLD(baseTypeIndex, 0, offset,++eqInst);
+	  }
+	}
       }
     }
     else if (TY_kind(typeIndex) == KIND_ARRAY) {
@@ -2449,12 +2466,23 @@ namespace xaif2whirl {
 	    && 
 	    (Stab_Is_Equivalence_Block(ST_base(st))
 	     ||
+	     ST_is_equivalenced(st)
+	     ||
 	     Stab_Is_Common_Block(ST_base(st)))) { 
 	  TY_IDX baseTypeIndex = ST_type(ST_base(st));
 	  mUINT64 offset = ST_ofst(st); // offset into base symbol
 	  // find field with correct offset or symbol
 	  FLD_HANDLE fld = TY_Lookup_FLD(baseTypeIndex, 0, offset);
 	  Set_FLD_type(fld, newArraySymbolTypeIndex);
+	  if (ST_is_equivalenced(st)) {
+	    // retrieve fields with the same offset
+	    unsigned short eqInst=2;
+	    FLD_HANDLE fld = TY_Lookup_FLD(baseTypeIndex, 0, offset,eqInst);
+	    while (!fld.Is_Null()) { 
+	      Set_FLD_type(fld, newArraySymbolTypeIndex);
+	      fld = TY_Lookup_FLD(baseTypeIndex, 0, offset,++eqInst);
+	    }
+	  }
 	}
       }
     } 
@@ -2522,16 +2550,19 @@ namespace xaif2whirl {
   //
   // cf. FLD_get_to_field
   static FLD_HANDLE 
-  TY_Lookup_FLD(TY_IDX struct_ty, TY_IDX ref_ty, UINT64 ref_ofst)
+  TY_Lookup_FLD(TY_IDX struct_ty, TY_IDX ref_ty, UINT64 ref_ofst,unsigned short eqInst)
   {
     FLD_ITER fld_iter = Make_fld_iter(TY_fld(struct_ty));
+    unsigned short foundInst=0;
     do {
       FLD_HANDLE fld(fld_iter);
       UINT64 ofst = FLD_ofst(fld);
       TY_IDX ty   = FLD_type(fld);
       if (ofst == ref_ofst) {
+	++foundInst;
 	if (ref_ty == 0) {
-	  return fld;
+	  if (eqInst==foundInst)
+	    return fld;
 	}
 	else {
 	  if (Stab_Identical_Types(ref_ty, ty, FALSE /* check_quals */,
