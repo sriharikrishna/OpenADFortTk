@@ -59,6 +59,7 @@
 #include "wn2xaif.h"
 #include "st2xaif.h"
 #include "ty2xaif.h"
+#include "Args.h"
 
 #include "Open64IRInterface/SymTab.h"
 
@@ -105,10 +106,40 @@ namespace whirl2xaif {
   static void 
   xlate_STUse_BLOCK(xml::ostream& xos, ST *st, PUXlationContext& ctxt);
 
+  static FLD_HANDLE
+  TY_Lookup_FLD(TY_IDX struct_ty, TY_IDX ref_ty, UINT64 ref_ofst, unsigned short eqInst=1);
+
   // ***************************************************************************
 
 #include <alloca.h>
 #include <sstream> //FIXME
+
+  // identical copy from xaif2whirl.cxx
+  static FLD_HANDLE 
+  TY_Lookup_FLD(TY_IDX struct_ty, TY_IDX ref_ty, UINT64 ref_ofst,unsigned short eqInst)
+  {
+    FLD_ITER fld_iter = Make_fld_iter(TY_fld(struct_ty));
+    unsigned short foundInst=0;
+    do {
+      FLD_HANDLE fld(fld_iter);
+      UINT64 ofst = FLD_ofst(fld);
+      TY_IDX ty   = FLD_type(fld);
+      if (ofst == ref_ofst) {
+	++foundInst;
+	if (ref_ty == 0) {
+	  if (eqInst==foundInst)
+	    return fld;
+	}
+	else {
+	  if (Stab_Identical_Types(ref_ty, ty, FALSE /* check_quals */,
+				   FALSE /* check_scalars */, TRUE)) {
+	    return fld;
+	  }
+	}
+      }
+    } while (!FLD_last_field(fld_iter++));
+    return FLD_HANDLE(); // null field
+  }
 
   std::string
   TCON2F_hollerith(TCON tvalue)
@@ -418,6 +449,93 @@ namespace whirl2xaif {
     FORTTK_DIE("Unknown ST_CLASS " << ST_class(st));
   }
 
+  static bool equivalencedToActive(ST* st,
+				   PUXlationContext& ctxt) { 
+    // find the symbols we are equivalence to:
+    //    std::cout << "JU: equivalencedToActive: looking at " << ST_name(st) << std::endl;  
+    TY_IDX baseTypeIndex = ST_type(ST_base(st));
+    mUINT64 offset = ST_ofst(st); // offset into base symbol
+    // find field with correct offset or symbol
+    FLD_HANDLE fld = TY_Lookup_FLD(baseTypeIndex, 0, offset);
+    ST_IDX fldStIdx=FLD_st(fld);
+    //    std::cout << "\tJU: equivalencedToActive: looking at fld " << 1 <<  ":" << fld.Idx() << ":" << FLD_name(fld) << ":" << offset;  
+    if (!fldStIdx) { 
+      //      std::cout << "\tJU: equivalencedToActive: no FLD st"  << std::endl;
+      ;
+    }
+    else {  
+      //      std::cout << "\tJU: equivalencedToActive: have FLD st"  << std::endl;
+      ST* fldSt_p=ST_ptr(fldStIdx);
+      if (ctxt.isActiveSym(fldSt_p)) 
+	return true;
+    } 
+    // if not the first one retrieve other fields with the same offset
+    unsigned short eqInst=2;
+    fld = TY_Lookup_FLD(baseTypeIndex, 0, offset,eqInst);
+    while (!fld.Is_Null()) { 
+      ST_IDX fldStIdx=FLD_st(fld);
+      if (!fldStIdx) {  // this happens e.g. for local variable equivalenced to common block variable  
+	//	std::cout << "\tJU: equivalencedToActive: skipping fld " << eqInst <<  ":" << fld.Idx() << ":" << FLD_name(fld) << ":" << offset << std::endl;  
+	;
+      }
+      else { 
+	ST* fldSt_p=ST_ptr(fldStIdx);
+	//	std::cout << "\tJU: equivalencedToActive: looking at fld " << eqInst <<  ":" << fld.Idx() << ":" << ST_name(fldSt_p) << ":" << offset << std::endl;  
+	if (ctxt.isActiveSym(fldSt_p)) 
+	  return true;
+      } 
+      fld = TY_Lookup_FLD(baseTypeIndex, 0, offset,++eqInst);
+    }
+    return false; 
+  } 
+
+  static bool equivalencedToActiveBlock(ST* st,
+					PUXlationContext& ctxt) { 
+    // find what we are equivalence to:
+    TY_IDX baseTypeIndex = ST_type(ST_base(st));
+    mUINT64 offset = ST_ofst(st); // offset into base symbol
+    // find field with correct offset or symbol
+    FLD_HANDLE fld = TY_Lookup_FLD(baseTypeIndex, 0, offset);
+    ST_IDX fldStIdx=FLD_st(fld);
+    //    std::cout << "\tJU: equivalencedToActiveBlock: looking at fld " << 1 <<  ":" << fld.Idx() << ":" << FLD_name(fld) << ":" << offset;  
+    if (!fldStIdx) { 
+      //      std::cout << "\tJU: equivalencedToActiveBlock: no FLD st"  << std::endl;
+    }
+    else {  
+      //      std::cout << "\tJU: equivalencedToActiveBlock: have FLD st"  << std::endl;
+      ST* fldSt_p=ST_ptr(fldStIdx);
+      if (ctxt.isActiveSym(fldSt_p)) 
+	return true;
+    } 
+    return false; 
+  } 
+
+  static bool activeInCommon(ST* st,
+			     PUXlationContext& ctxt) { 
+    // see if there is anything else 
+    // active in this common block 
+    TY_IDX tyIdx = ST_type(ST_base(st));
+    TY& ty = Ty_Table[tyIdx];
+    FLD_HANDLE fldlist=TY_flist(ty);
+    FLD_ITER fld_iter = Make_fld_iter(fldlist);
+    do {
+      FLD_HANDLE fld (fld_iter);
+      ST_IDX fldStIdx=FLD_st(fld);
+      //      std::cout << "\tJU: activeInCommon: looking at fld " << 1 <<  ":" << fld.Idx() << ":" << FLD_name(fld) << ":" << FLD_ofst(fld);  
+      if (!fldStIdx) { 
+	//	std::cout << "\tJU: activeInCommon: no FLD st"  << std::endl;
+	;
+      }
+      else {  
+	//	std::cout << "\tJU: activeInCommon: have FLD st"  << std::endl;
+	ST* fldSt_p=ST_ptr(fldStIdx);
+	if (ctxt.isActiveSym(fldSt_p)) 
+	  return true; 
+      }
+    } while (!FLD_last_field (fld_iter++)) ;
+    return false;
+  }
+
   static void 
   xlate_STDecl_VAR(xml::ostream& xos, ST *st, PUXlationContext& ctxt) {  
     FORTTK_ASSERT(ST_class(st) == CLASS_VAR, fortTkSupport::Diagnostics::UnexpectedInput);
@@ -455,6 +573,43 @@ namespace whirl2xaif {
                                         : TranslateTYToSymShape(ty);
       if (!shape_str) { shape_str = "***"; }
       int active = (ctxt.isActiveSym(st)) ? 1 : 0;
+      if (Args::ourUniformCBactFlag && !active && Stab_Is_Valid_Base(st)) { 
+	if (ST_is_equivalenced(st)) { 
+	  active=equivalencedToActive(st,ctxt);
+	} 
+	if (!active && Stab_Is_Equivalence_Block(ST_base(st))) {
+	  active=equivalencedToActiveBlock(st,ctxt);
+	}
+	if (!active && Stab_Is_Common_Block(ST_base(st))) {
+	  active=activeInCommon(st,ctxt);
+	}
+	if (active) { 
+	  if ((strcmp(ty_str, "integer") == 0
+	       ||
+	       strcmp(ty_str, "string") == 0)) { 
+	    static const char* txt1 = "cannot activate equivalenced of common block symbol >";
+	    static const char* txt2 = "< of type ";
+	    if (CURRENT_SYMTAB == GLOBAL_SYMTAB) {
+	      FORTTK_MSG(0, "warning: within global scope: " << txt1 << ST_name(st) << txt2 << ty_str);
+	    }
+	    else {
+	      ST_IDX pu_st = PU_Info_proc_sym(Current_PU_Info);
+	      FORTTK_MSG(0, "warning: within " << ST_name(pu_st) << ": " << txt1 << ST_name(st) << txt2  << ty_str);
+	    }
+	  }
+	  else {
+	    static const char* txt1 = "activating symbol >";
+	    static const char* txt2 = "< of type ";
+	    if (CURRENT_SYMTAB == GLOBAL_SYMTAB) {
+	      FORTTK_MSG(1, "within global scope: " << txt1 << ST_name(st) << txt2 << ty_str);
+	    }
+	    else {
+	      ST_IDX pu_st = PU_Info_proc_sym(Current_PU_Info);
+	      FORTTK_MSG(1, "within " << ST_name(pu_st) << ": " << txt1 << ST_name(st) << txt2  << ty_str);
+	    }
+	  }
+	}
+      } 
       if (active 
 	  && 
 	  (strcmp(ty_str, "integer") == 0

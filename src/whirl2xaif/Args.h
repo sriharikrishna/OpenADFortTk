@@ -59,6 +59,9 @@ public:
   // do not require useful analysis
   static bool ourVariedOnlyFlag; 
 
+  // uniformly activate all variables in a common block if one is active 
+  static bool ourUniformCBactFlag; 
+
 private:
   void Ctor();
 
