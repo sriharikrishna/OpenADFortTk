@@ -535,7 +535,9 @@ WN_Call_Return_Type(const WN* wn)
 	  || 
 	  !strcmp(funcNm,"MAXVAL")
           || 
-	  !strcmp(funcNm,"SIZE")) { 
+	  !strcmp(funcNm,"SIZE")
+	  ||
+	  !strcmp(funcNm,"SUM")) { 
 	return_ty=Stab_Mtype_To_Ty(OPCODE_rtype(WN_opcode(wn)));
       }
       else if (!strcmp(funcNm,"DBLE")
