@@ -81,42 +81,44 @@ void AdjustInterfaces::forPUInfo(PU_Info* aPUInfo_p) {
     if (opr==OPR_INTERFACE) {  // interfaces
       skipKids=true;
       WN* interfaceFuncWN_p=WN_kid0(curWN_p);
-      ST* puName_ST_p=WN_st(interfaceFuncWN_p); 
-      if (!ST_is_in_module(puName_ST_p)) {  // leave  module procedure interfaces alone
-	for (INT kidIdx = 0; kidIdx < WN_kid_count(interfaceFuncWN_p); ++kidIdx) {
-	  ST* dummyLocal_ST_p=WN_st(WN_kid(interfaceFuncWN_p, kidIdx));
-	  TY_IDX properPUTypeIndex=findPUSymbolType(puName_ST_p,
-						    dummyLocal_ST_p,
-						    kidIdx);
-	  TY_IDX dummyLocalTypeIndex=ST_type(dummyLocal_ST_p);
-	  if (properPUTypeIndex && properPUTypeIndex!=dummyLocalTypeIndex){
-	    FORTTK_MSG(2,"considering adjustments in interface named " 
-		       << ST_name(puName_ST_p) << " for variable " 
-		       << ST_name(dummyLocal_ST_p) 
-		       << " from "
-		       << TY_IDX_index(ST_type(dummyLocal_ST_p))
-		       << " to " 
-		       << TY_IDX_index(properPUTypeIndex)); 
-	    if (TY_kind(dummyLocalTypeIndex) != KIND_SCALAR) { 
-	      properPUTypeIndex=copyTypeAdjust(dummyLocalTypeIndex,
-					       properPUTypeIndex);
-	    }
-	    else { 
-	      FORTTK_ASSERT(TY_kind(properPUTypeIndex) == KIND_SCALAR, 
-			    "AdjustInterfaces::forPUInfo: type kind mismatch for symbol " 
-			    << ST_name(dummyLocal_ST_p) << " referenced in " << ST_name(puName_ST_p));
-	    }
-	    FORTTK_MSG(2,"in interface named " 
-		       << ST_name(puName_ST_p) << " adjusting type for variable " 
-		       << ST_name(dummyLocal_ST_p) 
-		       << " from "
-		       << TY_IDX_index(ST_type(dummyLocal_ST_p))
-		       << " to " 
-		       << TY_IDX_index(properPUTypeIndex)); 
-	    // do the surgery on the type in the symbol table 
-	    Set_ST_type(dummyLocal_ST_p,properPUTypeIndex);
-	  }
-	}
+      if (interfaceFuncWN_p) {
+        ST* puName_ST_p=WN_st(interfaceFuncWN_p); 
+        if (!ST_is_in_module(puName_ST_p)) {  // leave  module procedure interfaces alone
+          for (INT kidIdx = 0; kidIdx < WN_kid_count(interfaceFuncWN_p); ++kidIdx) {
+            ST* dummyLocal_ST_p=WN_st(WN_kid(interfaceFuncWN_p, kidIdx));
+            TY_IDX properPUTypeIndex=findPUSymbolType(puName_ST_p,
+          					    dummyLocal_ST_p,
+          					    kidIdx);
+            TY_IDX dummyLocalTypeIndex=ST_type(dummyLocal_ST_p);
+            if (properPUTypeIndex && properPUTypeIndex!=dummyLocalTypeIndex){
+              FORTTK_MSG(2,"considering adjustments in interface named " 
+          	       << ST_name(puName_ST_p) << " for variable " 
+          	       << ST_name(dummyLocal_ST_p) 
+          	       << " from "
+          	       << TY_IDX_index(ST_type(dummyLocal_ST_p))
+          	       << " to " 
+          	       << TY_IDX_index(properPUTypeIndex)); 
+              if (TY_kind(dummyLocalTypeIndex) != KIND_SCALAR) { 
+                properPUTypeIndex=copyTypeAdjust(dummyLocalTypeIndex,
+          				       properPUTypeIndex);
+              }
+              else { 
+                FORTTK_ASSERT(TY_kind(properPUTypeIndex) == KIND_SCALAR, 
+          		    "AdjustInterfaces::forPUInfo: type kind mismatch for symbol " 
+          		    << ST_name(dummyLocal_ST_p) << " referenced in " << ST_name(puName_ST_p));
+              }
+              FORTTK_MSG(2,"in interface named " 
+          	       << ST_name(puName_ST_p) << " adjusting type for variable " 
+          	       << ST_name(dummyLocal_ST_p) 
+          	       << " from "
+          	       << TY_IDX_index(ST_type(dummyLocal_ST_p))
+          	       << " to " 
+          	       << TY_IDX_index(properPUTypeIndex)); 
+              // do the surgery on the type in the symbol table 
+              Set_ST_type(dummyLocal_ST_p,properPUTypeIndex);
+            }
+          }
+        }
       }
     }
     // advance the iterator
