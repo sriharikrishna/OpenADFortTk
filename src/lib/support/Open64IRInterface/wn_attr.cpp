@@ -535,6 +535,8 @@ WN_Call_Return_Type(const WN* wn)
 	  || 
 	  !strcmp(funcNm,"MAXVAL")
           || 
+	  !strcmp(funcNm,"MINVAL")
+          || 
 	  !strcmp(funcNm,"SIZE")
 	  ||
 	  !strcmp(funcNm,"SUM")) { 
