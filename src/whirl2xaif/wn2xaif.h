@@ -315,6 +315,13 @@ namespace whirl2xaif {
     return AttrAnnotVal(XAIFStrings.tag_StmtLabel(), val_);
   }
 
+  template<class T>
+  AttrAnnotInfo_<T>
+  StmtReturnAnnotVal(const T& val_)
+  {
+    return AttrAnnotVal(XAIFStrings.tag_StmtReturn(), val_);
+  }
+
 } /* namespace whirl2xaif */
 
 #endif 

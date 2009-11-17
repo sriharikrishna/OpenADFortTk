@@ -64,8 +64,11 @@ namespace xaif2whirl {
 	    bool structuredCF);
 
   static WN*
-  TranslateBasicBlock(WN *wn_pu, const xercesc::DOMElement* bbElem, PUXlationContext& ctxt,
-		      bool skipMarkeredGotoAndLabels);
+  TranslateBasicBlock(WN *wn_pu, 
+		      const xercesc::DOMElement* bbElem, 
+		      PUXlationContext& ctxt,
+		      bool skipMarkeredGotoAndLabels,
+		      unsigned endLabel);
 
   // *************************** Forward Declarations ***************************
 
@@ -328,8 +331,10 @@ namespace xaif2whirl {
   static WN*
   xlate_CFG_BasicBlock(WN *wn_pu, OA::OA_ptr<MyDGNode> curBB, 
 		       PUXlationContext& ctxt, 
-		       bool skipMarkeredGotoAndLabels = true, 
-		       unsigned newCurBBLbl = 0, unsigned newNextBBLbl = 0);
+		       bool skipMarkeredGotoAndLabels, 
+		       unsigned newCurBBLbl, 
+		       unsigned newNextBBLbl,
+		       unsigned endLabel);
 
   static WN*
   xlate_CFG_BranchMulti(OA::OA_ptr<MyDGNode> curNode, WN* condWN, 
@@ -584,7 +589,13 @@ namespace xaif2whirl {
 	// ---------------------------------------------------
 	OA::OA_ptr<MyDGNode> nextNode = GetSuccessor(curNode); // at most one outgoing edge
 	unsigned lbl = (generateLbl) ? curLbl : 0;
-	WN* stmts = xlate_CFG_BasicBlock(wn_pu, curNode, ctxt, true, lbl);
+	WN* stmts = xlate_CFG_BasicBlock(wn_pu, 
+					 curNode, 
+					 ctxt, 
+					 true, 
+					 lbl,
+					 0,
+					 0);
 	WN_INSERT_BlockLast(blkWN, stmts);
 	generateLbl = false;
 	curNode = nextNode;
@@ -878,6 +889,9 @@ namespace xaif2whirl {
     nodeList=getReversePostDFSList(cfg);
     std::list<OA::OA_ptr<OA::DGraph::NodeInterface> >::iterator it= nodeList->begin();
     
+    // the final label for this CFG guaranteed to be at the end
+    unsigned endLabel=startLabel_r++;
+    
     for (; it!=nodeList->end(); ++it) {
             
       OA::OA_ptr<OA::DGraph::NodeInterface> ntmp = *it;
@@ -913,8 +927,15 @@ namespace xaif2whirl {
 	// ---------------------------------------------------
 	OA::OA_ptr<MyDGNode> nextNode = GetSuccessor(curNode); // at most one outgoing edge
 	unsigned nextLbl = (!nextNode.ptrEqual(NULL)) ? nodeToLblMap[nextNode] : 0;
-	WN* stmts = xlate_CFG_BasicBlock(wn_pu, curNode, ctxt, true, 
-					 curLbl, nextLbl);
+	if (XAIF_BBElemFilter::IsBBExit(bbElem))
+	  nextLbl=endLabel;
+	WN* stmts = xlate_CFG_BasicBlock(wn_pu, 
+					 curNode, 
+					 ctxt, 
+					 true, 
+					 curLbl, 
+					 nextLbl,
+					 endLabel);
 	WN_INSERT_BlockLast(blkWN, stmts);
       }
       else if (XAIF_BBElemFilter::IsBBBranch(bbElem)) {
@@ -981,8 +1002,13 @@ namespace xaif2whirl {
 	// ---------------------------------------------------
 	OA::OA_ptr<MyDGNode> nextNode = GetSuccessor(curNode); // at most one outgoing edge
 	unsigned nextLbl = (!nextNode.ptrEqual(NULL)) ? nodeToLblMap[nextNode] : 0;
-	WN* stmts = xlate_CFG_BasicBlock(wn_pu, curNode, ctxt, true, 
-					 curLbl, nextLbl);
+	WN* stmts = xlate_CFG_BasicBlock(wn_pu, 
+					 curNode, 
+					 ctxt, 
+					 true, 
+					 curLbl, 
+					 nextLbl,
+					 endLabel);
 	WN_INSERT_BlockLast(blkWN, stmts);
       }
       else if (XAIF_BBElemFilter::IsBBForLoop(bbElem) ||
@@ -1102,15 +1128,21 @@ namespace xaif2whirl {
 	// ---------------------------------------------------
 	OA::OA_ptr<MyDGNode> nextNode = GetSuccessor(curNode); // at most one outgoing edge
 	unsigned nextLbl = (!nextNode.ptrEqual(NULL)) ? nodeToLoopContLblMap[nextNode] : 0;
-	WN* stmts = xlate_CFG_BasicBlock(wn_pu, curNode, ctxt, true, 
-					 curLbl, nextLbl);
+	WN* stmts = xlate_CFG_BasicBlock(wn_pu, 
+					 curNode, 
+					 ctxt, 
+					 true, 
+					 curLbl, 
+					 nextLbl,
+					 endLabel);
 	WN_INSERT_BlockLast(blkWN, stmts);
       }
       else {
 	FORTTK_DIE("Unknown XAIF basic block:\n" << *bbElem);
       }
     }
-
+    WN* lblWN = WN_CreateLabel(endLabel, 0 /*label_flag*/, NULL);
+    WN_INSERT_BlockLast(blkWN, lblWN);
     return blkWN;
   }  
 
@@ -1123,7 +1155,9 @@ namespace xaif2whirl {
   xlate_CFG_BasicBlock(WN *wn_pu, OA::OA_ptr<MyDGNode> curBB, 
 		       PUXlationContext& ctxt, 
 		       bool skipMarkeredGotoAndLabels, 
-		       unsigned newCurBBLbl, unsigned newNextBBLbl)
+		       unsigned newCurBBLbl, 
+		       unsigned newNextBBLbl,
+		       unsigned endLabel)
   {
     xercesc::DOMElement* bbElem = curBB->GetElem();
 
@@ -1135,7 +1169,7 @@ namespace xaif2whirl {
     // 1. Translate (if we add our own goto's and labels, then we need
     // to throw away any original goto and label at the end and
     // beginning of the block)
-    WN* stmtblk = TranslateBasicBlock(wn_pu, bbElem, ctxt, skipOldGotoAndLabels);
+    WN* stmtblk = TranslateBasicBlock(wn_pu, bbElem, ctxt, skipOldGotoAndLabels,endLabel);
   
     // 2. If necessary, add a label to front and goto at end
     if (addNewGotoAndLabels) {
@@ -1196,8 +1230,11 @@ namespace xaif2whirl {
 
   // TranslateBasicBlock: Translate a non-control-flow basic block
   static WN*
-  TranslateBasicBlock(WN *wn_pu, const xercesc::DOMElement* bbElem, PUXlationContext& ctxt,
-		      bool skipMarkeredGotoAndLabels)
+  TranslateBasicBlock(WN *wn_pu, 
+		      const xercesc::DOMElement* bbElem, 
+		      PUXlationContext& ctxt,
+		      bool skipMarkeredGotoAndLabels,
+		      unsigned endLabel)
   {
     WN* blkWN = WN_CreateBlock();
 
@@ -1223,10 +1260,16 @@ namespace xaif2whirl {
 			      IsTagPresent(stmt, XAIFStrings.tag_StmtLabel()));
 	bool skip = (isGotoOrLabel && skipMarkeredGotoAndLabels);
 	if (!skip) {
-	  fortTkSupport::WNId id = GetWNId(stmt);
-	  WN* foundWN = ctxt.findWN(id, true /* mustFind */);
-	  wn = WN_COPY_Tree(foundWN);
-	  XlateStmt::patchWNStmt(wn, ctxt); // FIXME
+	  if (IsTagPresent(stmt, XAIFStrings.tag_StmtReturn())) { 
+	    // replace return with goto endlabel
+	    wn = WN_CreateGoto(endLabel);
+	  }
+	  else { 
+	    fortTkSupport::WNId id = GetWNId(stmt);
+	    WN* foundWN = ctxt.findWN(id, true /* mustFind */);
+	    wn = WN_COPY_Tree(foundWN);
+	    XlateStmt::patchWNStmt(wn, ctxt); // FIXME
+	  }
 	}
       }
       else {
@@ -1236,7 +1279,6 @@ namespace xaif2whirl {
 	WN_INSERT_BlockLast(blkWN, wn);
       }
     }
-  
     return blkWN;
   }
 

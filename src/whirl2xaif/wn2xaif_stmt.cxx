@@ -80,14 +80,22 @@ whirl2xaif::xlate_PassiveStmt(xml::ostream& xos, WN *wn_p, PUXlationContext& ctx
     FORTTK_MSG(1,"whirl2xaif::xlate_PassiveStmt: unstructured control flow (early return) related to line " << aLineNumber);
   }
   
-  fortTkSupport::WNId stmtid = ctxt.findWNId(wn_p);
-  xos << BegElem(XAIFStrings.elem_Marker()) 
-      << Attr("statement_id", stmtid)
-      << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
-      << " [passive: " << OPERATOR_name(opr) << "]" << EndAttr
-      << EndElem;
-  
-  
+  if (opr==OPR_RETURN) { 
+    fortTkSupport::WNId stmtid = ctxt.findWNId(wn_p);
+    xos << BegElem(XAIFStrings.elem_Marker())
+	<< Attr("statement_id", stmtid)
+	<< BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
+	<< StmtReturnAnnotVal(WN_label_number(wn_p)) << EndAttr
+	<< EndElem;
+  }
+  else { 
+    fortTkSupport::WNId stmtid = ctxt.findWNId(wn_p);
+    xos << BegElem(XAIFStrings.elem_Marker()) 
+	<< Attr("statement_id", stmtid)
+	<< BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
+	<< " [passive: " << OPERATOR_name(opr) << "]" << EndAttr
+	<< EndElem;
+  }
 }
 
 
@@ -308,15 +316,6 @@ whirl2xaif::xlate_RETURN(xml::ostream& xos, WN *wn, PUXlationContext& ctxt)
   FORTTK_ASSERT(WN_operator(wn) == OPR_RETURN, fortTkSupport::Diagnostics::UnexpectedInput); 
   // for now: 
   FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented);
-  // could be put into the xaif:
-  fortTkSupport::WNId stmtid = ctxt.findWNId(wn);
-  xos << BegElem(XAIFStrings.elem_Marker()) 
-      << Attr("statement_id", stmtid)
-      << BegAttr("annotation") << WhirlIdAnnotVal(stmtid)
-      << " [return]" << EndAttr
-      << EndElem;
-  
-  
 }
 
 
