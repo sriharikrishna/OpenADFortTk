@@ -1592,6 +1592,9 @@ namespace whirl2xaif {
     const char* opr_str = OPERATOR_name(opr);
   
     if (vty == XAIFStrings.elem_BBForLoop()) {
+      if (WN_operator(WN_end(wn))==OPR_NE) { 
+	FORTTK_WMSG("xlate_BBStmt: loop with variable stride");
+      }
       xlate_LoopInitialization(xos, WN_start(wn), ctxt);
       xlate_CFCondition(xos, WN_end(wn), ctxt);
       xlate_LoopUpdate(xos, WN_step(wn), ctxt);
