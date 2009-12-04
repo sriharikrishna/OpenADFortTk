@@ -5008,7 +5008,14 @@ void Open64IRInterface::initProcToSymRefSetMap(Open64IRProcIterator &procIter)
 void Open64IRInterface::setCurrentProcToProcContext(OA::IRHandle h) 
 {
     if (h.hval()!=0) {
-      PU_Info *pu = (PU_Info*)sProcContext[h].hval();
+
+      std::map<OA::IRHandle,OA::ProcHandle>::iterator fi=sProcContext.find(h);
+      if (fi==sProcContext.end()) { 
+	std::cout << "missing entry " << h.hval() << " in sProcContext" << std::endl;  
+	std::cout << " could be a OPC : " <<  OPCODE_name(WN_opcode((WN*)(h.hval()))) << std::endl;
+      }  
+      assert(fi!=sProcContext.end());
+      PU_Info *pu = (PU_Info*)((*fi).second.hval());
       assert(pu!=NULL);
       // have to check what Open64 thinks is current context
       if ( Current_PU_Info  != pu && pu != NULL ) {
@@ -5030,66 +5037,6 @@ void Open64IRInterface::setCurrentProcContext(OA::ProcHandle proc)
         PU_SetGlobalState(pu);
     }
 }
-
-/*! Helper class to initProcContext.  Finds all handles within
-    an expression and maps them to the given procedure context.
-*/
-/*
-class InitContextVisitor : public OA::ExprTreeVisitor {
-  public:
-    InitContextVisitor(OA::ProcHandle proc) : mProc(proc) {}
-    ~InitContextVisitor() {}
-
-    void visitExprTreeBefore(OA::ExprTree&) {}
-    void visitExprTreeAfter(OA::ExprTree&) {}
-    
-    //---------------------------------------
-    // method for each ExprTree::Node subclass
-    //---------------------------------------
-    // default base class so that visitors can handle unknown
-    // node sub-classes in a generic fashion
-    void visitNode(OA::ExprTree::Node&) {}
-
-    void visitOpNode(OA::ExprTree::OpNode& n)
-    {
-        Open64IRInterface::sProcContext[n.getHandle()] = mProc;
-
-        // visit each child
-        OA::OA_ptr<OA::ExprTree::Node> cetNodePtr;
-        OA::ExprTree::ChildNodesIterator cNodesIter(n);
-        for ( ; cNodesIter.isValid(); cNodesIter++ ) {
-            cetNodePtr = cNodesIter.current();
-            cetNodePtr->acceptVisitor(*this);
-        }
-
-    }
-
-    void visitCallNode(OA::ExprTree::CallNode& n)
-    {
-        // do nothing because have other routines that saw all calls
-        // in a statement
-    }
-
-    void visitMemRefNode(OA::ExprTree::MemRefNode& n)
-    {
-        // do nothing because have other routines that saw all mem refs
-        // in a statement
-    }
-
-    void visitConstSymNode(OA::ExprTree::ConstSymNode& n)
-    {
-        Open64IRInterface::sProcContext[n.getHandle()] = mProc;
-    }
-
-    void visitConstValNode(OA::ExprTree::ConstValNode& n)
-    {
-        Open64IRInterface::sProcContext[n.getHandle()] = mProc;
-    }
-
-  private:
-    OA::ProcHandle mProc;
-};
-*/
 
 
 /*! only call if the symbol is in a module or a common block
@@ -5175,9 +5122,8 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
             // set the procedure context for the symbol
             sProcContext[sym] = proc;
             if (debug) {
-                std::cout << "symbol = " << createCharStarForST(st) 
-                          << ", sProcContext[" << sym.hval() << "] = " 
-                          << proc.hval() << "(" <<  ST_name(ST_ptr(PU_Info_proc_sym((PU_Info*)proc.hval()))) << ")" <<  std::endl;
+                std::cout << "sProcContext[" << sym.hval() << ":symbol=" << createCharStarForST(st) << "] = " 
+                          << proc.hval() << ":PU=" <<  ST_name(ST_ptr(PU_Info_proc_sym((PU_Info*)proc.hval()))) << "" <<  std::endl;
             }
 
             // store the string for the symbol
@@ -5205,13 +5151,13 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
         WN_TREE_CONTAINER<PRE_ORDER> wtree(wn_pu);
         WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
         for (it = wtree.begin(); it != wtree.end(); ++it) {
-            WN* curWN = it.Wn();
-            OA::IRHandle h((OA::irhandle_t)curWN);
-            sProcContext[h] = proc;
-            if (debug) {
-                std::cout << "sProcContext[" << h.hval() << "] = " 
-                          << proc.hval() << std::endl;
-            }
+	  WN* curWN = it.Wn();
+	  OA::IRHandle h((OA::irhandle_t)curWN);
+	  sProcContext[h] = proc;
+	  if (debug) {
+	    std::cout << "sProcContext[" << h.hval() << ":OPC=" << OPCODE_name(WN_opcode(curWN)) << "] = " 
+		      << proc.hval() << ":PU=" <<  ST_name(ST_ptr(PU_Info_proc_sym((PU_Info*)proc.hval()))) << "" <<  std::endl;
+	  }
         }
     }
 
