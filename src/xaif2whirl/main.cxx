@@ -34,6 +34,8 @@
 #include "XAIF_SAXHandler.h"
 #include "XercesStrX.h"
 #include "AdjustInterfaces.h"
+#include "AdjustFunctions.h"
+#include "InterfaceData.h"
 
 namespace xaif2whirl { 
 
@@ -129,6 +131,8 @@ namespace xaif2whirl {
     // -------------------------------------------------------
     PU_Info* pu_forest = ReadIR(args.inWhirlFileNm.c_str(),args.myNoCleanUpFlag);
     PrepareIR(pu_forest); // FIXME (should this be part of translation?)
+    InterfaceData::collect(pu_forest);
+    InterfaceData::dump();
 
     // -------------------------------------------------------
     // 4. Translate XAIF into WHIRL
@@ -138,6 +142,8 @@ namespace xaif2whirl {
     if (!args.myNoCleanUpFlag) { 
       AdjustInterfaces ai(pu_forest);
       ai.doIt();
+      AdjustFunctions af(pu_forest);
+      af.doIt();
     }
 
     WriteIR(args.outWhirlFileNm.c_str(), pu_forest);

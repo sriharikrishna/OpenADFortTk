@@ -7,10 +7,6 @@
 #include <vector>
 #include <algorithm>
 
-#include "xercesc/dom/DOMDocument.hpp"
-#include "xercesc/dom/DOMNode.hpp"
-#include "xercesc/dom/DOMElement.hpp"
-
 #include "Open64IRInterface/Open64BasicTypes.h"
 #include "Open64IRInterface/Open64IRInterface.hpp"
 #include "Open64IRInterface/SymTab.h"

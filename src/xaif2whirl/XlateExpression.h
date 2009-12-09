@@ -1,14 +1,15 @@
-// -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/xaif2whirl/XlateExpression.h,v 1.2 2006/05/12 16:12:24 utke Exp $
-
 #ifndef XlateExpression_INCLUDED_h
 #define XlateExpression_INCLUDED_h
 
 #include <iostream>
 
 #include "xercesc/dom/DOMDocument.hpp"
+#include "xercesc/dom/DOMElement.hpp"
+#include "xercesc/dom/DOMNode.hpp"
 
 #include "Open64IRInterface/Open64BasicTypes.h"
+
+#include "IntrinsicXlationTable.h"
 
 #include "PUXlationContext.h"
 
@@ -19,6 +20,7 @@
 
 namespace xaif2whirl {
 
+  class MyDGNode;
 
   class XlateExpression { 
 
@@ -73,8 +75,15 @@ namespace xaif2whirl {
 			   PUXlationContext& ctxt);
 
 
-    static WN* translateConstant(const DOMElement* elem, 
+    static WN* translateConstant(const xercesc::DOMElement* elem, 
 				 PUXlationContext& ctxt);
+
+    /** 
+     * createValueSelector: Select the value portion of 'wn', by wrapping
+     * a dummy intrinsic call around it
+     * N.B.: This creates a OPR_CALL node, which is not an expression.
+     */
+    static WN* createValueSelector(WN* wn);
 
   private:
 
@@ -84,7 +93,7 @@ namespace xaif2whirl {
 				OA::OA_ptr<MyDGNode> n, 
 				PUXlationContext& ctxt);
 
-    static WN* xlate_VarRef(const DOMElement* elem, 
+    static WN* xlate_VarRef(const xercesc::DOMElement* elem, 
 			    PUXlationContext& ctxt);
 
     static WN* xlate_VarRef(OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
@@ -120,7 +129,7 @@ namespace xaif2whirl {
      * active flag in 'ctxt' that is inherited *up* the context stack.
      * N.B.: For PREGS we *do not* create a LDA
      */
-    static WN* xlate_SymbolReference(const DOMElement* elem, 
+    static WN* xlate_SymbolReference(const xercesc::DOMElement* elem, 
 				     PUXlationContext& ctxt);
 
     /**
@@ -128,10 +137,10 @@ namespace xaif2whirl {
      * For pregs, also return the PREG_IDX as an WN_OFFSET.
      * Do not set an active flag.
      */
-    static pair<ST*, WN_OFFSET> xlate_SymbolReferenceSimple(const DOMElement* elem, 
+    static pair<ST*, WN_OFFSET> xlate_SymbolReferenceSimple(const xercesc::DOMElement* elem, 
 							    PUXlationContext& ctxt);
 
-    static WN* xlate_SymbolReferenceCollapsedPath(const DOMElement* elem, WN* pathVorlageWN,
+    static WN* xlate_SymbolReferenceCollapsedPath(const xercesc::DOMElement* elem, WN* pathVorlageWN,
 						  PUXlationContext& ctxt);
 
     static WN* xlate_ArrayElementReference(OA::OA_ptr<OA::DGraph::DGraphImplement> g, 
@@ -166,16 +175,9 @@ namespace xaif2whirl {
      *  SymbolReference: A
      *
      */    
-    static OA::OA_ptr<OA::DGraph::DGraphImplement> createExpressionGraph(const DOMElement* elem, 
-									bool varRef = false);
+    static OA::OA_ptr<OA::DGraph::DGraphImplement> createExpressionGraph(const xercesc::DOMElement* elem, 
+									 bool varRef = false);
     
-    /** 
-     * createValueSelector: Select the value portion of 'wn', by wrapping
-     * a dummy intrinsic call around it
-     * N.B.: This creates a OPR_CALL node, which is not an expression.
-     */
-    static WN* createValueSelector(WN* wn);
-
     /**
      * createDerivSelector: Select the deriv portion of 'wn', by wrapping
      * a dummy intrinsic call around it

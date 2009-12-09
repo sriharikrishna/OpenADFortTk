@@ -80,6 +80,7 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_TRUNC,         NULL)         ]=Info(false,1,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "INT")        ]=Info(false,1,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "NINT")       ]=Info(false,1,FLOAT_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "TRANSFER")   ]=Info(false,2,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_CEIL,          NULL)         ]=Info(false,1,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_FLOOR,         NULL)         ]=Info(false,1,FLOAT_INTR); 
     ourIntrinsicInfoMap[Key( OPR_CALL,          "REAL")       ]=Info(false,1,FLOAT_INTR);

@@ -33,6 +33,8 @@ MYSOURCES = \
 	main.cxx \
 	Args.h Args.cxx \
 	AdjustInterfaces.h AdjustInterfaces.cxx \
+	AdjustFunctions.h AdjustFunctions.cxx \
+	InterfaceData.h InterfaceData.cxx \
 	\
 	xaif2whirl.h xaif2whirl.cxx \
 	XlateStmt.h XlateStmt.cxx \

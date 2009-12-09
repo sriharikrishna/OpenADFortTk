@@ -33,6 +33,7 @@
 #include "XlateStmt.h"
 #include "XAIF_DOMFilters.h"
 #include "XercesStrX.h"
+#include "InterfaceData.h"
 
 // *************************** Forward Declarations ***************************
 
@@ -263,9 +264,19 @@ namespace xaif2whirl {
     fortTkSupport::Symbol* symd = GetSymbol(cfgElem, ctxt);
     FORTTK_ASSERT(symd, "Could not find symbol for CFG element " << *cfgElem);
     ST* std = symd->GetST();
-    bool isModule=ST_is_in_module(*std);
+    bool isModuleName=(ST_is_in_module(*std) 
+		       && 
+		       (PU_lexical_level(Pu_Table[ST_pu(*std)])<3));
+    if (ST_is_in_module(*std) 
+	&& 
+	PU_lexical_level(Pu_Table[ST_pu(*std)])==3
+	&& 
+	PU_Info_proc_sym(pu)!=ST_st_idx (*std)) { 
+      // need to see if there is a corresponding interface and adjust it
+      InterfaceData::findAndAdjustInterface(pu,std);
+    } 
     // compare this by comparing the symbol table index
-    if (!isModule && PU_Info_proc_sym(pu)!=ST_st_idx (*std))
+    if (!isModuleName && PU_Info_proc_sym(pu)!=ST_st_idx (*std))
       PU_Info_proc_sym(pu)=ST_st_idx (*std);
 #if 0
     cout << XercesStrX(cfgElem->getNodeName()) << ": " << ST_name(std) << endl;
@@ -276,9 +287,10 @@ namespace xaif2whirl {
     // set up the name in the FUNC_ENTRY too
     // compare this by comparing the symbol table index UNLESS this is 
     // a module
-    if (!isModule && WN_st_idx(wn_pu)!=ST_st_idx (*std))
+    if (!isModuleName && WN_st_idx(wn_pu)!=ST_st_idx (*std))
       WN_st_idx(wn_pu)=ST_st_idx (*std);
     PU_SetGlobalState(pu);
+
 
     // -------------------------------------------------------
     // Translate, modifying 'wn_pu'

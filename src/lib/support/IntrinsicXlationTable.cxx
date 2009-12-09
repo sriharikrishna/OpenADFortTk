@@ -86,6 +86,7 @@ namespace fortTkSupport {
     { { WNExpr,     OPR_TRUNC,        NULL,      1, 0 }, { XAIFIntrin, "int_scal",                  "0_INT",         1 } },
     { { WNCall,     OPR_CALL,         "INT",     1, 0 }, { XAIFIntrin, "int_scal",                  "1_INT",         1 } },
     { { WNCall,     OPR_CALL,         "NINT",    1, 0 }, { XAIFIntrin, "nint_scal",                 NULL,            1 } },
+    { { WNCall,     OPR_CALL,         "TRANSFER",2, 0 }, { XAIFIntrin, "transfer",                  NULL,            2 } },
     { { WNExpr,     OPR_CEIL,         NULL,      1, 0 }, { XAIFIntrin, "bogus_ceil_scal",           NULL,            1 } },
     { { WNExpr,     OPR_FLOOR,        NULL,      1, 0 }, { XAIFIntrin, "bogus_floor_scal",          NULL,            1 } }, 
     { { WNCall,     OPR_CALL,         "REAL",    1, 0 }, { XAIFIntrin, "real_scal",                 "0_REAL",        1 } },
