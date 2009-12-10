@@ -37,6 +37,8 @@ const char* XAIFStringRepository::c_strTbl[] = {
   "source",
   "target",
   
+  "lineNumber",
+
   // -----------------------------------------------------
   // top level
 

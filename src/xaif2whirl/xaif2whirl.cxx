@@ -1090,6 +1090,9 @@ namespace xaif2whirl {
 	WN *initWN = NULL, *updateWN = NULL;
 	if (XAIF_BBElemFilter::IsBBForLoop(bbElem)) {
 	  // Note: initWN and updateWN are STIDs
+	  const XMLCh* lineNumberX = bbElem->getAttribute(XAIFStrings.attr_lineNumber_x());
+	  XercesStrX lineNumber = XercesStrX(lineNumberX);
+	  FORTTK_MSG(2, "doing loop with line number attribute: " << lineNumber.c_str())	 
 	  init = GetChildElement(bbElem, XAIFStrings.elem_LpInit_x());
 	  update = GetChildElement(bbElem, XAIFStrings.elem_LpUpdate_x());
 	  initWN = XlateStmt::translateStmt(init, ctxt);

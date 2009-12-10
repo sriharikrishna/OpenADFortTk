@@ -35,6 +35,8 @@ public:
 
     ATTR_source,    // source
     ATTR_target,    // target
+
+    ATTR_lineNumber,// line number
     
     // -----------------------------------------------------
     // top level
@@ -227,6 +229,9 @@ public:
   XMLCh*      attr_source_x() const { return x_strTbl[ATTR_source]; }
   const char* attr_target() const { return c_strTbl[ATTR_target]; }
   XMLCh*      attr_target_x() const { return x_strTbl[ATTR_target]; }
+
+  const char* attr_lineNumber() const { return c_strTbl[ATTR_lineNumber]; }
+  XMLCh*      attr_lineNumber_x() const { return x_strTbl[ATTR_lineNumber]; }
   
   // -----------------------------------------------------
   // top level  
