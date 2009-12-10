@@ -572,6 +572,19 @@ WN_Call_Return_Type(const WN* wn)
 	    return_ty=Stab_Mtype_To_Ty(OPCODE_rtype(WN_opcode(wn)));
 	}
       }
+      else if (!strcmp(funcNm,"LBOUND")
+	       ||
+	       !strcmp(funcNm,"UBOUND")) {
+	if (WN_kid_count(wn)==2) { // returns an integer 
+	  return_ty=Stab_Mtype_To_Ty(OPCODE_rtype(WN_opcode(wn)));
+	}
+	else { // returns a vector
+	  // make up a type to return
+	  return_ty=Make_Array_Type(OPCODE_rtype(WN_opcode(wn)),
+				    1, // is just a vector
+				    (TY_arb(WN_GetExprType(WN_kid0(wn)))).Entry()->dimension); // length of the vector is the number of dimensions of the first argument
+	} 
+      }
       else { 
 	return_ty=WN_GetExprType(WN_kid0(wn));
       }
