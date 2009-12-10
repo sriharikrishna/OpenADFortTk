@@ -273,7 +273,9 @@ namespace xaif2whirl {
 	&& 
 	PU_Info_proc_sym(pu)!=ST_st_idx (*std)) { 
       // need to see if there is a corresponding interface and adjust it
-      InterfaceData::findAndAdjustInterface(pu,std);
+      InterfaceData::findAndAdjustInterface(InterfaceData::getParentOf(pu),
+					    PU_Info_tree_ptr(pu),
+					    std);
     } 
     // compare this by comparing the symbol table index
     if (!isModuleName && PU_Info_proc_sym(pu)!=ST_st_idx (*std))

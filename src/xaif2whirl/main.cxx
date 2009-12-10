@@ -132,7 +132,9 @@ namespace xaif2whirl {
     PU_Info* pu_forest = ReadIR(args.inWhirlFileNm.c_str(),args.myNoCleanUpFlag);
     PrepareIR(pu_forest); // FIXME (should this be part of translation?)
     InterfaceData::collect(pu_forest);
-    InterfaceData::dump();
+    if (fortTkSupport::Diagnostics::getDiagnosticFilterLevel()>1) { 
+      InterfaceData::dump();
+    }
 
     // -------------------------------------------------------
     // 4. Translate XAIF into WHIRL

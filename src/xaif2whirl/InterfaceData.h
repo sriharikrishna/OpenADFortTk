@@ -16,8 +16,18 @@ class InterfaceData{
 
   static void dump();
 
-  static void findAndAdjustInterface(PU_Info* pu,ST* std);
+  static void findAndAdjustInterface(PU_Info* pu,
+				     WN* oldWN_p,
+				     ST* newST_p);
   
+  static PU_Info* getParentOf(PU_Info* child);
+
+  /**
+   * child to parent map
+   */
+  typedef std::map<PU_Info*,PU_Info*> ChildToParentMap;
+
+
   /** 
    *  FUNC_ENTRY/INTERFACE and new ST* (if renamed) 
    */
@@ -53,7 +63,12 @@ class InterfaceData{
   /**
    * the data structure we collect into:
    */
-  static PuIFaceRenamePairListPairListPairList ourInterfacesByModule;
+  static PuIFaceRenamePairListPairListPairList ourInterfacesByPU;
+
+  /** 
+   * track parents 
+   */
+  static ChildToParentMap ourChildToParentMap;
 
   /** 
    * recursively for each (sub) tree of PUs
@@ -65,12 +80,19 @@ class InterfaceData{
    */ 
   static void forPUInfo(PU_Info* aPUInfo_p);
 
-  static PuIFaceRenamePairListPairListPair* findModuleData(PU_Info* aPUInfo_p);
-  static IFaceRenamePairListPair* findInterfaceData(PuIFaceRenamePairListPairListPair* moduleData, 
-							   WN* theInterface_WN_p);
+  static PuIFaceRenamePairListPairListPair* findPUData(PU_Info* aPUInfo_p);
 
+  /**
+   *find by 'old' name
+   */
+  static IFaceRenamePairListPair* findInterfaceData(PuIFaceRenamePairListPairListPair* moduleData, 
+						    WN* theInterface_WN_p);
+
+  /**
+   *find by 'old' name
+   */
   static InterfaceData::RenamePair* findSpecific(IFaceRenamePairListPair* interfaceData, 
-							 WN* theInterface_WN_p); 
+						 WN* theInterface_WN_p); 
 
 
 };
