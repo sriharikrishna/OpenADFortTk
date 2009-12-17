@@ -364,13 +364,13 @@ namespace xaif2whirl {
 						       OA::OA_ptr<MyDGNode> n, 
 						       PUXlationContext& ctxt) {
     using namespace OA::DGraph;
-    fortTkSupport::IntrinsicXlationTable::WHIRLInfo* info = 
+    fortTkSupport::IntrinsicXlationTable::WHIRLInfo* aWhirlInfo_p = 
       IntrinsicTable.findWHIRLInfo(xopr, xoprNm, xIntrinKey);
     // 1. Gather the operands, sorted by the "position" attribute
     unsigned int actualArgCount(n->num_incoming());
-    FORTTK_ASSERT_WARN(actualArgCount<= info->numop && actualArgCount>= info->numop-info->numOptional, 
+    FORTTK_ASSERT_WARN(actualArgCount<= aWhirlInfo_p->numop && actualArgCount>= aWhirlInfo_p->numop-aWhirlInfo_p->numOptional, 
 		       "Warning: get " << actualArgCount<< " intrinsic arguments for '"
-		       << xoprNm  << "' expect " << info->numop << " (have " << info->numOptional << " optional args?)");
+		       << xoprNm  << "' expect " << aWhirlInfo_p->numop << " (have " << aWhirlInfo_p->numOptional << " optional args?)");
     OA::OA_ptr<MyDGEdge> tmp; tmp = NULL;
     vector<OA::OA_ptr<MyDGEdge> > opnd_edge(actualArgCount, tmp);
     OA::OA_ptr<EdgesIteratorInterface> itPtr 
@@ -387,52 +387,64 @@ namespace xaif2whirl {
       OA::OA_ptr<MyDGNode> opnd = ntmp.convert<MyDGNode>();
       opnd_wn[i] = xlate_Expression(g, opnd, ctxt);
     }       
-    // Here promote all arguments up to 8 bytes; we assume canonicalized
-    // argument forms
-    // FIXME: for now we promote reals to 8; demote ints to 4; we could
-    // selectively do this...
-    for (unsigned i = 0; i < opnd_wn.size(); ++i) {
-      // FIXME: could use rtype for operator
-      TY_IDX ty = WN_Tree_Type(opnd_wn[i]);
-      TYPE_ID rty = TY_mtype(ty);      
-      // Pointers and character strings often look like integers to the
-      // test below
-      if (TY_Is_Pointer(ty) || TY_Is_Character_String(ty)) { continue; }
-      TYPE_ID newrty = MTYPE_UNKNOWN;
-      if (MTYPE_is_integral(rty)) {
-	newrty = getMType(MTYPE_CLASS_INTEGER, 4);
-      }
-      else if (MTYPE_is_float(rty)) {
-	newrty = getMType(MTYPE_CLASS_FLOAT, 8);
-      }
-      // WN_set_rtype(opnd_wn[i], newrty);
-      if (newrty != MTYPE_UNKNOWN 
-	  && 
-	  newrty != rty
-	  && 
-	  ! conversionToReal(*info)) {
-	opnd_wn[i] = WN_Cvt(rty, newrty, opnd_wn[i]);
+    if (aWhirlInfo_p->opr==OPR_CALL && aWhirlInfo_p->name && strcmp(aWhirlInfo_p->name,"TRANSFER")==0) { 
+      // leave transfer arguments untouched
+      // std::cout << "XlateExpression::xlate_ExprOpUsingIntrinsicTable: skipping argument conversion for transfer" << std::endl; 
+    }
+    else { 
+      // Here promote all arguments up to 8 bytes; we assume canonicalized
+      // argument forms
+      // FIXME: for now we promote reals to 8; demote ints to 4; we could
+      // selectively do this...
+      for (unsigned i = 0; i < opnd_wn.size(); ++i) {
+	if (WN_operator(opnd_wn[i])==OPR_CALL && strcmp(ST_name(WN_st(opnd_wn[i])),"TRANSFER")==0) { 
+	  // leave transfer result untouched
+	  //  std::cout << "XlateExpression::xlate_ExprOpUsingIntrinsicTable: skipping result conversion for transfer" << std::endl; 
+	}
+	else { 
+	  // FIXME: could use rtype for operator
+	  TY_IDX ty = WN_Tree_Type(opnd_wn[i]);
+	  TYPE_ID rty = TY_mtype(ty);      
+	  // Pointers and character strings often look like integers to the
+	  // test below
+	  if (TY_Is_Pointer(ty) || TY_Is_Character_String(ty)) { continue; }
+	  TYPE_ID newrty = MTYPE_UNKNOWN;
+	  if (MTYPE_is_integral(rty)) {
+	    newrty = getMType(MTYPE_CLASS_INTEGER, 4);
+	  }
+	  else if (MTYPE_is_float(rty)) {
+	    newrty = getMType(MTYPE_CLASS_FLOAT, 8);
+	  }
+	  // WN_set_rtype(opnd_wn[i], newrty);
+	  if (newrty != MTYPE_UNKNOWN 
+	      && 
+	      newrty != rty
+	      && 
+	      ! conversionToReal(*aWhirlInfo_p)) {
+	    opnd_wn[i] = WN_Cvt(rty, newrty, opnd_wn[i]);
+	  }
+	}
       }
     }
     // 3. Translate into either WHIRL OPR_CALL or a WHIRL expression operator
     WN* wn = NULL;
-    switch (info->oprcl) {
+    switch (aWhirlInfo_p->oprcl) {
     case fortTkSupport::IntrinsicXlationTable::WNCall: {
       TYPE_ID rtype = MTYPE_F8; // FIXME
-      wn = CreateCallToIntrin(rtype, info->name, opnd_wn);
+      wn = CreateCallToIntrin(rtype, aWhirlInfo_p->name, opnd_wn);
       break;
     }
     case fortTkSupport::IntrinsicXlationTable::WNIntrinCall:
     case fortTkSupport::IntrinsicXlationTable::WNIntrinOp: {          
       TYPE_ID rtype = MTYPE_F8; // FIXME
       TYPE_ID dtype = MTYPE_V;  // FIXME
-      INTRINSIC intrn = getWNIntrinsic(info->name, opnd_wn, NULL);
-      wn = CreateIntrinsicCall(info->opr, intrn, rtype, dtype, opnd_wn);
+      INTRINSIC intrn = getWNIntrinsic(aWhirlInfo_p->name, opnd_wn, NULL);
+      wn = CreateIntrinsicCall(aWhirlInfo_p->opr, intrn, rtype, dtype, opnd_wn);
       break;
     }
     case fortTkSupport::IntrinsicXlationTable::WNExpr: {
       // Find the opcode for the expression
-      OPCODE opc = getWNExprOpcode(info->opr, opnd_wn);
+      OPCODE opc = getWNExprOpcode(aWhirlInfo_p->opr, opnd_wn);
       // Create a WHIRL expression tree for the operator and operands
       switch (actualArgCount) {
       case 1: // unary
@@ -447,7 +459,7 @@ namespace xaif2whirl {
       break;
     }
     default:
-      FORTTK_DIE("Invalid WNOprClass class: " << info->oprcl);
+      FORTTK_DIE("Invalid WNOprClass class: " << aWhirlInfo_p->oprcl);
     }
     return wn;
   }

@@ -834,46 +834,54 @@ xlate_BinaryOpUsingIntrinsicTable(xml::ostream& xos,
   OPERATOR opr = OPCODE_operator(opcode);
   fortTkSupport::IntrinsicXlationTable::XAIFInfoPair infoPair(Whirl2Xaif::getIntrinsicXlationTable().findXAIFInfo(opr, NULL));
   UINT targid, srcid0, srcid1;
-  
-  // Get XAIF operator type
-  const char* opStr = NULL;
-  const char* typeStr = NULL;
-  switch (infoPair.second.opr) {
-  case fortTkSupport::IntrinsicXlationTable::XAIFIntrin: {
-    opStr = "xaif:Intrinsic";
-    typeStr = "***";
-    break;
+  bool noParent=false;
+  if (opr==OPR_TRUNC && WN_operator(wn0)==OPR_CALL && strcmp(ST_name(WN_st(wn0)),"TRANSFER")==0) {  // skip the TRUNC node
+    if (ctxt.currentXlationContext().peekVertexId()==1) { // nothing there yet
+      noParent=true;
+    }
+    else
+      targid=ctxt.currentXlationContext().getVertexId();
   }
-  case fortTkSupport::IntrinsicXlationTable::XAIFBoolOp: {
-    opStr = "xaif:BooleanOperation";
-    break;
-  }
-  default:
-    FORTTK_DIE("xlate_BinaryOpUsingIntrinsicTable: no logic to handle: " 
-	       << fortTkSupport::IntrinsicXlationTable::toString(infoPair.second.opr).c_str());
-  }
-  
-  // Operation
-  targid = ctxt.currentXlationContext().getNewVertexId();
-  xos << BegElem(opStr) << Attr("vertex_id", targid)
-      << Attr("name", infoPair.second.name);
-  if (typeStr) {
-    xos << Attr("type", typeStr);
-  }
-  bool isPointer = TY_Is_Pointer(result_ty) || TY_is_f90_pointer(result_ty);
-  const char* ty_str = 
-    isPointer ? TranslateTYToSymType(TY_pointed(result_ty))
-    : TranslateTYToSymType(result_ty);
-  if (!ty_str) { ty_str = "***"; }
-  const char* shape_str = 
-    isPointer ? TranslateTYToSymShape(TY_pointed(result_ty))
-    : TranslateTYToSymShape(result_ty);
-  if (infoPair.second.opr!=fortTkSupport::IntrinsicXlationTable::XAIFBoolOp && strcmp(ty_str,"real"))
-    xos << xml::Attr("rType", ty_str);
-  if (infoPair.second.opr!=fortTkSupport::IntrinsicXlationTable::XAIFBoolOp && strcmp(shape_str,"scalar"))
-    xos << xml::Attr("rShape", shape_str);
-  xos << EndElem;
-  
+  else { 
+    // Get XAIF operator type
+    const char* opStr = NULL;
+    const char* typeStr = NULL;
+    switch (infoPair.second.opr) {
+    case fortTkSupport::IntrinsicXlationTable::XAIFIntrin: {
+      opStr = "xaif:Intrinsic";
+      typeStr = "***";
+      break;
+    }
+    case fortTkSupport::IntrinsicXlationTable::XAIFBoolOp: {
+      opStr = "xaif:BooleanOperation";
+      break;
+    }
+    default:
+      FORTTK_DIE("xlate_BinaryOpUsingIntrinsicTable: no logic to handle: " 
+		 << fortTkSupport::IntrinsicXlationTable::toString(infoPair.second.opr).c_str());
+    }
+    
+    // Operation
+    targid = ctxt.currentXlationContext().getNewVertexId();
+    xos << BegElem(opStr) << Attr("vertex_id", targid)
+	<< Attr("name", infoPair.second.name);
+    if (typeStr) {
+      xos << Attr("type", typeStr);
+    }
+    bool isPointer = TY_Is_Pointer(result_ty) || TY_is_f90_pointer(result_ty);
+    const char* ty_str = 
+      isPointer ? TranslateTYToSymType(TY_pointed(result_ty))
+      : TranslateTYToSymType(result_ty);
+    if (!ty_str) { ty_str = "***"; }
+    const char* shape_str = 
+      isPointer ? TranslateTYToSymShape(TY_pointed(result_ty))
+      : TranslateTYToSymShape(result_ty);
+    if (infoPair.second.opr!=fortTkSupport::IntrinsicXlationTable::XAIFBoolOp && strcmp(ty_str,"real"))
+      xos << xml::Attr("rType", ty_str);
+    if (infoPair.second.opr!=fortTkSupport::IntrinsicXlationTable::XAIFBoolOp && strcmp(shape_str,"scalar"))
+      xos << xml::Attr("rShape", shape_str);
+    xos << EndElem;
+  }    
   // First operand
   srcid0 = ctxt.currentXlationContext().peekVertexId();
   xlate_Operand(xos, wn0, wn0_ty, TRUE/*call-by-value*/, ctxt);
@@ -883,14 +891,13 @@ xlate_BinaryOpUsingIntrinsicTable(xml::ostream& xos,
     srcid1 = ctxt.currentXlationContext().peekVertexId();
     xlate_Operand(xos, wn1, wn1_ty, TRUE/*call-by-value*/, ctxt);
   }
-  
-  // Edges
-  DumpExprGraphEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), srcid0, targid, 1);
-  if (is_binary_op) { 
-    DumpExprGraphEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), srcid1, targid, 2); 
+  if (!noParent) { 
+    // Edges
+    DumpExprGraphEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), srcid0, targid, 1);
+    if (is_binary_op) { 
+      DumpExprGraphEdge(xos, ctxt.currentXlationContext().getNewEdgeId(), srcid1, targid, 2); 
+    }
   }
-  
-  
 }
 
 
