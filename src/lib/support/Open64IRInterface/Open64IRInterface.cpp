@@ -2939,7 +2939,7 @@ void Open64IRInterface::createAndMapNamedRef(OA::StmtHandle stmt, WN* wn, ST* st
 
     if (Stab_Is_Based_At_Common_Block(st)
 	||
-	ST_is_in_module(st)) {
+	(ST_is_in_module(st) && ST_sym_class(st)==CLASS_VAR)) {
         std::set<SymHandle>::iterator setIter;
         fully_qualified_name fqn = sSymToFQNMap[sym];
         OA::ProcHandle pContext = getCurrentProcContext();
@@ -3737,7 +3737,7 @@ Open64IRInterface::getLocation(OA::ProcHandle p, OA::SymHandle s)
     ST* st = (ST*)s.hval();
     if (Stab_Is_Based_At_Common_Block(st)
 	||
-	ST_is_in_module(st)) {
+	(ST_is_in_module(st) && ST_sym_class(st)==CLASS_VAR)) {
         fully_qualified_name fqn = sSymToFQNMap[s];
         s = sFQNToProcToLocalSymMap[fqn][p];
         // need context for this procedure now
@@ -3765,7 +3765,7 @@ Open64IRInterface::getLocation(OA::ProcHandle p, OA::SymHandle s)
         // for that same var name and common block that fully overlap
         if (Stab_Is_Based_At_Common_Block(st)
 	    ||
-	    ST_is_in_module(st)) {
+	    (ST_is_in_module(st) && ST_sym_class(st)==CLASS_VAR)) {
           fully_qualified_name fqn = sSymToFQNMap[s];
           if (sGlobalVarMap[fqn].empty()) {
             assert(0); // this symbol should have been put in there
@@ -5052,7 +5052,7 @@ fully_qualified_name Open64IRInterface::create_fqn(OA::SymHandle sym)
     ST* st = (ST*)sym.hval();
     assert(Stab_Is_Based_At_Common_Block(st)
 	   ||
-	   ST_is_in_module(st));
+	   (ST_is_in_module(st) && ST_sym_class(st)==CLASS_VAR));
     ST* base_st=st;
     if (Stab_Is_Based_At_Common_Block(st)) {
       while (!Stab_Is_Common_Block(base_st)) {
@@ -5135,7 +5135,7 @@ void Open64IRInterface::initProcContext(PU_Info* pu_forest,
             // if they are module or common block variables
             if (Stab_Is_Based_At_Common_Block(st) 
 		||
-		ST_is_in_module(st)) {
+		(ST_is_in_module(st) && ST_sym_class(st)==CLASS_VAR)) {
 	      fully_qualified_name fqn = create_fqn(sym);
 	      sGlobalVarMap[fqn].insert(sym);
 	      sSymToFQNMap[sym] = fqn;
