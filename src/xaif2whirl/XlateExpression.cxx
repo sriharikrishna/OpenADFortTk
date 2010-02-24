@@ -849,8 +849,10 @@ namespace xaif2whirl {
     for (int i = 0; i < opands_num; ++i) {
       TY_IDX ty = WN_Tree_Type(opands[i]);
       opands_ty[i] = ty;
-      opands_mty[i] = TY_mtype(ty);
-      // FIXME: old: opands_mty[i] = WN_rtype(opands[i]);
+      if (TY_kind(ty) == KIND_ARRAY) 
+	opands_mty[i] = TY_mtype(TY_etype(ty));
+      else 
+	opands_mty[i] = TY_mtype(ty);
     }
     // 2. Find an appropriate mtype for operands
     TYPE_ID mty = opands_mty[0];
