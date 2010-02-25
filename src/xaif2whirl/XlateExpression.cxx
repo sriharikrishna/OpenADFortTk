@@ -830,6 +830,9 @@ namespace xaif2whirl {
   TYPE_ID XlateExpression::getRType(WN* wn) {
     TY_IDX ty_idx = WN_Tree_Type(wn);
     TYPE_ID rty = MTYPE_UNKNOWN;
+    if (TY_kind(ty_idx) == KIND_POINTER) { 
+      ty_idx=TY_pointed(ty_idx);
+    }
     if (TY_kind(ty_idx) == KIND_ARRAY) { 
       rty=TY_mtype(TY_etype(ty_idx));
     }
