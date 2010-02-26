@@ -12,4 +12,5 @@ OpenADFortTk-*/*
 autom4te.cache/*
 tools/SourceProcessing
 Regression
-
+Makefile-OpenADFortTk.mk
+nbproject/*
