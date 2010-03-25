@@ -372,6 +372,12 @@ WN_GetRefObjType(const WN* wn)
     case OPR_ISTBITS:
     case OPR_MSTORE:  // Priya added MSTORE case
       ty = TY_pointed(WN_ty(wn));
+      if (TY_is_f90_pointer(ty)) { 
+	ty = TY_pointed(ty);
+      }
+      if (TY_Is_Array(ty)) { 
+	ty = TY_AR_etype(ty);
+      }
       break;
     
     case OPR_STRCTFLD:
