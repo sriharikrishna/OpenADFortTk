@@ -865,10 +865,13 @@ namespace whirl2xaif {
     const char* ty_str = TranslateTYToSymType(ty_idx);
     if (!ty_str) { ty_str = "***"; }  
 
+    MTYPE mt = TY_mtype(ty);
+    if (TY_kind(ty) == KIND_POINTER)
+      mt=TY_mtype(TY_pointed(ty));
     xos << xml::BegElem("xaif:Constant") 
 	<< xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId()) 
 	<< xml::Attr("type", ty_str) 
-	<< xml::Attr("feType",Mtype_Name(TY_mtype(ty)))
+	<< xml::Attr("feType",Mtype_Name(mt))
 	<< xml::Attr("value", val) << xml::EndElem;
   }
 
