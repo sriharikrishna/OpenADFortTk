@@ -1352,10 +1352,11 @@ namespace whirl2xaif {
 	     || 
 	     TY_kind(ty_r) == KIND_INVALID
 	     ||
-	     TY_kind(ty_r) == KIND_FUNCTION
-	     ||
-	     TY_kind(ty_r) == KIND_POINTER) { 
-	return Mtype_Name(TY_mtype(ty_r));
+	     TY_kind(ty_r) == KIND_FUNCTION) { 
+      return Mtype_Name(TY_mtype(ty_r));
+    } 
+    else if (TY_kind(ty_r) == KIND_POINTER) { 
+      return TranslateTYToMType(TY_pointed(ty_r));
     } 
     else 
       FORTTK_DIE("whirl2xaif::TranslateTYToMType: no logic to handle type of kind " << TY_kind(ty_r));
