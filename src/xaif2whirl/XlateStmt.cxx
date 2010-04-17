@@ -83,7 +83,7 @@ namespace xaif2whirl {
       // FIXME: for now, no need to do anything.  all calls are active
       // and all arguments are variables
     }
-    else if (OPERATOR_is_store(opr)) {
+    else if (OPERATOR_is_store(opr) && opr!=OPR_PSTORE && opr!=OPR_PSTID) {
       patchedWN = XlateExpression::patchWNExpr(wn, 0 /* kid */, ctxt);
     }
     return patchedWN;
