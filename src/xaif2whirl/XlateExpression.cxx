@@ -217,7 +217,12 @@ namespace xaif2whirl {
     const XMLCh* nmX = elem->getAttribute(XAIFStrings.attr_name_x());
     XercesStrX nm = XercesStrX(nmX);
     std::string key = GetIntrinsicKey(elem);
-    if (std::string("allocated")==nm.c_str()) { 
+    bool suppressIt=(std::string("allocated")==nm.c_str() 
+		     || 
+		     std::string("lbound")==nm.c_str() 
+		     || 
+		     std::string("ubound")==nm.c_str());
+    if (suppressIt) { 
       ctxt.currentXlationContext().setFlag(XlationContext::SUPPRESSSELECTOR);
     } 
     WN* wn = xlate_ExprOpUsingIntrinsicTable(fortTkSupport::IntrinsicXlationTable::XAIFIntrin, 
@@ -226,7 +231,7 @@ namespace xaif2whirl {
 					     g, 
 					     n, 
 					     ctxt);
-    if (std::string("allocated")==nm.c_str()) {
+    if (suppressIt) {
       ctxt.currentXlationContext().unsetFlag(XlationContext::SUPPRESSSELECTOR);
     }
     return wn;
