@@ -111,6 +111,7 @@ namespace fortTkSupport {
     { { WNExpr,     OPR_GE,           NULL,      2, 0 }, { XAIFBoolOp, "greater_or_equal",          NULL,            2 } },
     { { WNExpr,     OPR_LT,           NULL,      2, 0 }, { XAIFBoolOp, "less_than",                 NULL,            2 } },
     { { WNExpr,     OPR_LE,           NULL,      2, 0 }, { XAIFBoolOp, "less_or_equal",             NULL,            2 } }, 
+    { { WNCall,     OPR_CALL,         "ANY",     1, 0 }, { XAIFIntrin, "any",                       NULL,            1 } },
     // Misc.
     { { WNCall,     OPR_CALL,         "MAXVAL",  1, 0 }, { XAIFIntrin, "maxval",                    NULL,            1 } },
     { { WNCall,     OPR_CALL,         "MINVAL",  1, 0 }, { XAIFIntrin, "minval",                    NULL,            1 } },

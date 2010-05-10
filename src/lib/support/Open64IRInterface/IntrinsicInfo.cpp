@@ -106,6 +106,7 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_GE,            NULL)         ]=Info(false,2,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_LT,            NULL)         ]=Info(false,2,FLOAT_INTR);
     ourIntrinsicInfoMap[Key( OPR_LE,            NULL)         ]=Info(false,2,FLOAT_INTR); 
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "ANY")        ]=Info(false,1,ARRAY_INTR);
     // max/min
     ourIntrinsicInfoMap[Key( OPR_MAX,            NULL)        ]=Info(false,2,FLOAT_INTR); 
     ourIntrinsicInfoMap[Key( OPR_MIN,            NULL)        ]=Info(false,2,FLOAT_INTR); 
