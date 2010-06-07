@@ -469,6 +469,36 @@ namespace xaif2whirl {
     return wn;
   }
 
+  // helper operator
+  struct replaceIfLocal {
+  public:
+    ST** mySt;
+    ST* myStCB;
+    ST_IDX myOtherPUIdx;
+    ST_IDX myOwnPUIdx;
+    replaceIfLocal(ST** st,
+		   ST* stCB,
+		   ST_IDX otherPUIdx,
+		   ST_IDX myPUIdx):
+      mySt(st),
+      myStCB(stCB),
+      myOtherPUIdx(otherPUIdx),
+      myOwnPUIdx(myPUIdx) {
+    }
+    void operator()(UINT32, ST* st) const {
+      if (ST_sclass(st)==SCLASS_COMMON
+	  && 
+	  ST_sclass(ST_base(st))==SCLASS_COMMON
+	  && 
+	  myOwnPUIdx==ST_st_idx(ST_base(ST_base(st)))
+	  && 
+	  strcmp(ST_name(ST_base(st)),ST_name(myStCB))==0
+	  && 
+	  strcmp(ST_name(st),ST_name(*mySt))==0)
+	*mySt=st;
+    }
+  };
+
   WN* XlateExpression::xlate_SymbolReference(const DOMElement* elem, 
 					     PUXlationContext& ctxt) {
     FORTTK_ASSERT(elem, fortTkSupport::Diagnostics::UnexpectedInput);
@@ -486,6 +516,22 @@ namespace xaif2whirl {
       return xlate_SymbolReferenceCollapsedPath(elem, pathVorlage, ctxt);
     }
     ST* st = sym->GetST();
+    // see what kind of symbol this is
+    if (ST_sclass(st)==SCLASS_COMMON) { 
+      // if it is a common block variable we need to 
+      // avoid picking up duplicate common block definitions
+      ST* stCB=ST_base(st);
+      if (ST_sclass(stCB)!=SCLASS_COMMON) 
+	FORTTK_DIE("Expect a common block name here");
+      ST* stPU=ST_base(stCB);
+      ST_IDX otherPUIdx=ST_st_idx(stPU);
+      ST_IDX myPUIdx=Current_PU_Info->proc_sym;
+      if (myPUIdx!=otherPUIdx) { // not the same PU
+	// see if there is already a local equivalent to the common block variable 
+	// used in the other PU. 
+	For_all(St_Table,GLOBAL_SYMTAB,replaceIfLocal(&st,stCB,otherPUIdx,myPUIdx));
+      }
+    }
     const char* st_name = ST_name(st);
     TY_IDX ty = ST_type(st);
     TYPE_ID rty, dty;
@@ -791,30 +837,6 @@ namespace xaif2whirl {
 	m[std::string(vid.c_str())] = gn;
       } 
     } while ( (e = GetNextSiblingElement(e)) );
-    // -------------------------------------------------------
-    // Find the root node
-    // -------------------------------------------------------
-    // Since the graph is connected, the root node is the first (only)
-    // node without outgoing edges.
-    
-
-
-    
-    
-    /*! commented out by PLM 08/30/06, I dont think I need to set RootNode in the Graph 
-    OA::OA_ptr<NodeInterface> root; root = NULL;
-    DGraph::NodesIterator nIt(*g);
-    for ( ; nIt.isValid(); ++nIt) {
-      OA::OA_ptr<NodeInterface> node = nIt.current();
-      if (node->num_outgoing() == 0) {
-	root = node;
-	break;
-      }
-    }
-    FORTTK_ASSERT(!root.ptrEqual(NULL), 
-		  "Unable to find root of expression graph:\n" << *elem);
-    g->setRoot(root);
-    */
     return g;
   }
 
