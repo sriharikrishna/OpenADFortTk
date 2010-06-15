@@ -474,15 +474,12 @@ namespace xaif2whirl {
   public:
     ST** mySt;
     ST* myStCB;
-    ST_IDX myOtherPUIdx;
     ST_IDX myOwnPUIdx;
     replaceIfLocal(ST** st,
 		   ST* stCB,
-		   ST_IDX otherPUIdx,
 		   ST_IDX myPUIdx):
       mySt(st),
       myStCB(stCB),
-      myOtherPUIdx(otherPUIdx),
       myOwnPUIdx(myPUIdx) {
     }
     void operator()(UINT32, ST* st) const {
@@ -501,6 +498,10 @@ namespace xaif2whirl {
 
   WN* XlateExpression::xlate_SymbolReference(const DOMElement* elem, 
 					     PUXlationContext& ctxt) {
+    typedef std::map<ST_IDX,std::set<ST*> >  PuIdxToSTPSetMap;
+    // this map is supposed to retain a representer common block (associated with another PU)
+    // for references to common block variables that did not exist in the original PU
+    static PuIdxToSTPSetMap globPUtoCBMap; 
     FORTTK_ASSERT(elem, fortTkSupport::Diagnostics::UnexpectedInput);
     // -------------------------------------------------------
     // 0. Setup; Possibly redirect processing
@@ -529,7 +530,33 @@ namespace xaif2whirl {
       if (myPUIdx!=otherPUIdx) { // not the same PU
 	// see if there is already a local equivalent to the common block variable 
 	// used in the other PU. 
-	For_all(St_Table,GLOBAL_SYMTAB,replaceIfLocal(&st,stCB,otherPUIdx,myPUIdx));
+	ST* givenST_p=st;
+	For_all(St_Table,GLOBAL_SYMTAB,replaceIfLocal(&st,stCB,myPUIdx));
+	// if this is replaces that means we can map it to the common block variant in this PU
+	if (st==givenST_p) { // not replaced, meaning this common block did not previously exist in this PU
+	  PuIdxToSTPSetMap::iterator it=globPUtoCBMap.find(myPUIdx);
+	  if (it==globPUtoCBMap.end()) { // we haven't seen this common block before
+	    // add it to the map and put the CB ST* into the set
+	    (globPUtoCBMap[myPUIdx]).insert(stCB);
+	  }
+	  else {
+	    std::set<ST*>& theCBset=it->second;
+	    std::set<ST*>::iterator sIt;
+	    for (sIt=theCBset.begin();
+		 sIt!=theCBset.end();
+		 ++sIt) { 
+	      if (strcmp(ST_name(*sIt),ST_name(stCB))==0) {
+		// got the CB already in the set
+		For_all(St_Table,GLOBAL_SYMTAB,replaceIfLocal(&st,*sIt,ST_st_idx(ST_base(stCB))));
+		break;
+	      }
+	    }
+	    if (sIt==theCBset.end()) { 
+	      // wasn't in the set, add it
+	      (globPUtoCBMap[myPUIdx]).insert(stCB);
+	    } 
+	  }
+	}
       }
     }
     const char* st_name = ST_name(st);
