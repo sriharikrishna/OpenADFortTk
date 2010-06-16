@@ -527,11 +527,13 @@ namespace xaif2whirl {
       ST* stPU=ST_base(stCB);
       ST_IDX otherPUIdx=ST_st_idx(stPU);
       ST_IDX myPUIdx=Current_PU_Info->proc_sym;
+      // std::cout << "doing " << ST_name(stPU) << "::" << ST_name(stCB) << "::" << ST_name(st) << " while in " << ST_name(St_Table[myPUIdx]) << std::endl;
       if (myPUIdx!=otherPUIdx) { // not the same PU
 	// see if there is already a local equivalent to the common block variable 
 	// used in the other PU. 
 	ST* givenST_p=st;
 	For_all(St_Table,GLOBAL_SYMTAB,replaceIfLocal(&st,stCB,myPUIdx));
+	// std::cout << "tried for local CB:  " << ST_name(ST_base(ST_base(st))) << "::" << ST_name(ST_base(st)) << "::" << ST_name(st) << " while in " << ST_name(St_Table[myPUIdx]) << std::endl;
 	// if this is replaces that means we can map it to the common block variant in this PU
 	if (st==givenST_p) { // not replaced, meaning this common block did not previously exist in this PU
 	  PuIdxToSTPSetMap::iterator it=globPUtoCBMap.find(myPUIdx);
@@ -547,7 +549,8 @@ namespace xaif2whirl {
 		 ++sIt) { 
 	      if (strcmp(ST_name(*sIt),ST_name(stCB))==0) {
 		// got the CB already in the set
-		For_all(St_Table,GLOBAL_SYMTAB,replaceIfLocal(&st,*sIt,ST_st_idx(ST_base(stCB))));
+		For_all(St_Table,GLOBAL_SYMTAB,replaceIfLocal(&st,*sIt,ST_st_idx(ST_base(*sIt))));
+		// std::cout << "tried for other CB: " << ST_name(ST_base(ST_base(st))) << "::" << ST_name(ST_base(st)) << "::" << ST_name(st) << " while in " << ST_name(St_Table[myPUIdx]) << std::endl;
 		break;
 	      }
 	    }
