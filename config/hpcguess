@@ -137,7 +137,7 @@ case $1 in
   # MacOS
   powerpc*-*-darwin*)
     cononical_host="powerpc-MacOS" ;;
-  i386*-*-darwin* | i686*-*-darwin*)
+  i386*-*-darwin* | i686*-*-darwin* | x86_64*-*-darwin*)
     cononical_host="x86-MacOS" ;;
 
   # Solaris
