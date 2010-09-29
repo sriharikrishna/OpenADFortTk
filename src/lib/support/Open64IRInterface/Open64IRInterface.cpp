@@ -2390,7 +2390,11 @@ bool isAddrOf = false;
         } 
 
         // Intrinsic call
-        if (IntrinsicInfo::isIntrinsic(wn))  {
+        ST* st = WN_st(wn);
+        const char* funcNm = ST_name(st);
+        if (IntrinsicInfo::isIntrinsic(wn)
+	    &&
+	    strcmp(funcNm,"_ALLOCATE")!=0)  {
 
           //! Iterate over the param nodes
           for (INT kidno=0; kidno<=WN_kid_count(wn)-1; kidno++) {
@@ -2457,10 +2461,6 @@ bool isAddrOf = false;
             }
           }
         }
-
-        // get the name
-        ST* st = WN_st(wn);
-        const char* funcNm = ST_name(st);
         if(strcmp(funcNm,"_ALLOCATE")==0) {
 
            for (INT kidno=0; kidno<=WN_kid_count(wn)-2; kidno++) {
