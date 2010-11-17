@@ -165,8 +165,6 @@ namespace xaif2whirl {
 				    const INT64* lower, 
 				    const INT64* upper);
 
-  static TY_IDX Create_New_Array_Type(TY_IDX old_array_ty);
-
   static TY_IDX
   XAIFTyToWHIRLTy(const char* type, const TYPE_ID mtype); 
 
@@ -2512,7 +2510,7 @@ namespace xaif2whirl {
 	// Note: because types may be shared, we cannot simply change the
 	// element type.  For now we create a new type for each active
 	// symbol.
-	TY_IDX newArrayTypeIndex = Copy_TY(typeIndex); // cf. Create_New_Array_Type
+	TY_IDX newArrayTypeIndex = Copy_TY(typeIndex); 
 	Set_TY_etype(newArrayTypeIndex, newBaseTypeIndex); // alignment, etc. should be ok
       
 	// Now find the appropriate type for the symbol
@@ -2635,7 +2633,6 @@ namespace xaif2whirl {
     return FLD_HANDLE(); // null field
   }
 
-
   // FIXME: Available in symtab_utils.h / symtab.cxx
   static TY_IDX
   MY_Make_Array_Type (TY_IDX elem_ty, 
@@ -2681,35 +2678,6 @@ namespace xaif2whirl {
     Set_TY_arb (ty, arb_h_first);
     return ty_idx;
   } // Make_Array_Type
-
-
-  // From: be/lno/pad.cxx (does Copy_TY() only do a shallow copy?)
-  static TY_IDX 
-  Create_New_Array_Type(TY_IDX old_array_ty)
-  {
-    TY_IDX new_array_ty = Copy_TY(old_array_ty);
-    ARB_HANDLE old_arb_base = TY_arb(old_array_ty);
-    INT old_arb_idx=0;
-    BOOL first_time = TRUE;
-    ARB_HANDLE first_arb;
-    BOOL done = FALSE;
-    while (!done) {
-      ARB_HANDLE tmp = old_arb_base[old_arb_idx];
-      ARB_HANDLE arb = New_ARB ();
-      if (first_time) {
-	first_arb = arb;
-	first_time = FALSE;
-      }
-      ARB_copy(arb,tmp);
-      old_arb_idx++;
-      done = ARB_last_dimen(tmp);
-    };
-
-    Set_TY_arb (new_array_ty, first_arb);
-
-    return new_array_ty;
-  } // Create_New_Array_Type
-
 
   static TY_IDX
   XAIFTyToWHIRLTy(const char* type, const TYPE_ID mtype)
