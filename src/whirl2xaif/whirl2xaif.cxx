@@ -363,8 +363,10 @@ namespace whirl2xaif {
 	<< xml::Attr("vertex_id", vertexId) << xml::Attr("scope_id", scopeId)
 	<< AttrSymId(st) << PUIdAnnot(puId)
 	<< xml::Attr("controlflowgraph_scope_id", puScopeId);
-    if (hasUnstructuredCF(wn_pu,st))
+    if (hasUnstructuredCF(wn_pu,st)) { 
+      FORTTK_WMSG("translatePU: found unstructured control flow in "<< ST_name(st) << " while simple loop annotations (-s) were requested");
       xos << xml::Attr("structured", false);
+    }
     xos << xml::EndAttrs;
     if (IsActivePU(st)) {
       translateWNPU(xos, wn_pu, ctxt);
