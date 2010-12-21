@@ -291,11 +291,11 @@ namespace whirl2xaif {
 		    TY_IDX ty_idx, 
 		    PUXlationContext& ctxt) { 
     if (TY_kind(ty_idx) == KIND_ARRAY) {
-      if (! TY_is_character(ty_idx)) { 
+      if (! TY_is_character(ty_idx) &&  ! TY_is_f90_assumed_size(ty_idx)) { 
 	bool assumeBoundsAllConst=false;
 	// figure out if all bounds are constant
 	for (int i=0; i<TY_AR_ndims(ty_idx); i++) {
-	  if (TY_AR_const_lbnd(ty_idx,i) && TY_AR_const_ubnd(ty_idx,i)) { 
+	  if (TY_AR_const_lbnd(ty_idx,i) && TY_AR_const_ubnd(ty_idx,i)) {
 	    if (!assumeBoundsAllConst && i==0) { 
 	      assumeBoundsAllConst=true;
 	    }
