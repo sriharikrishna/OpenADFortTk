@@ -603,6 +603,9 @@ public:
   // Given a memory reference, pretty-print it to the output stream os.
   void dump(OA::MemRefHandle h, std::ostream& os);
 
+  // Given a sym handle, pretty-print it to the output stream os.
+  void dump(OA::SymHandle h, std::ostream& os);
+
   //-------------------------------------------------------------------------
   // CallGraphIRInterface
   //-------------------------------------------------------------------------

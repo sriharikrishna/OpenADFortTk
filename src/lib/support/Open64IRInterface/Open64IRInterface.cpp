@@ -925,6 +925,14 @@ Open64IRInterface::dump(OA::MemRefHandle h, std::ostream& os)
   os << std::endl;
 }
 
+void 
+Open64IRInterface::dump(OA::SymHandle sym, std::ostream& os)
+{ 
+  std::string n = toString(sym);
+  os << n; 
+  os << std::endl;
+}
+
 
 //---------------------------------------------------------------------------
 // CallGraphIRInterface
