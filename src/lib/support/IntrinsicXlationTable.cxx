@@ -65,11 +65,11 @@ namespace fortTkSupport {
     { { WNIntrinOp, OPR_INTRINSIC_OP, "EXPEXPR", 2, 0 }, { XAIFIntrin, "pow_scal_scal",             NULL,            2 } },
     // string operations
     { { WNIntrinOp, OPR_INTRINSIC_OP, "CEQEXPR", 2, 0 }, { XAIFIntrin, "string_eq_scal_scal",       NULL,            2 } },
-    { { WNIntrinOp, OPR_INTRINSIC_OP, "CNEEXPR", 2, 0 }, { XAIFIntrin, "bogus_string_ne_scal_scal", NULL,            2 } },
-    { { WNIntrinOp, OPR_INTRINSIC_OP, "CGEEXPR", 2, 0 }, { XAIFIntrin, "bogus_string_ge_scal_scal", NULL,            2 } },
-    { { WNIntrinOp, OPR_INTRINSIC_OP, "CGTEXPR", 2, 0 }, { XAIFIntrin, "bogus_string_gt_scal_scal", NULL,            2 } },
-    { { WNIntrinOp, OPR_INTRINSIC_OP, "CLEEXPR", 2, 0 }, { XAIFIntrin, "bogus_string_le_scal_scal", NULL,            2 } },
-    { { WNIntrinOp, OPR_INTRINSIC_OP, "CLTEXPR", 2, 0 }, { XAIFIntrin, "bogus_string_lt_scal_scal", NULL,            2 } },
+    { { WNIntrinOp, OPR_INTRINSIC_OP, "CNEEXPR", 2, 0 }, { XAIFIntrin, "string_ne_scal_scal",       NULL,            2 } },
+    { { WNIntrinOp, OPR_INTRINSIC_OP, "CGEEXPR", 2, 0 }, { XAIFIntrin, "string_ge_scal_scal",       NULL,            2 } },
+    { { WNIntrinOp, OPR_INTRINSIC_OP, "CGTEXPR", 2, 0 }, { XAIFIntrin, "string_gt_scal_scal",       NULL,            2 } },
+    { { WNIntrinOp, OPR_INTRINSIC_OP, "CLEEXPR", 2, 0 }, { XAIFIntrin, "string_le_scal_scal",       NULL,            2 } },
+    { { WNIntrinOp, OPR_INTRINSIC_OP, "CLTEXPR", 2, 0 }, { XAIFIntrin, "string_lt_scal_scal",       NULL,            2 } },
     { { WNIntrinOp, OPR_INTRINSIC_OP, "LEN",     1, 0 }, { XAIFIntrin, "len",                       "0_LEN_OP",      1 } },
     { { WNCall,     OPR_CALL,         "INDEX",   3, 1 }, { XAIFIntrin, "index",                     "0_INDEX_CALL",  3 } },
     { { WNCall,     OPR_CALL,         "LEN",     1, 0 }, { XAIFIntrin, "len",                       "1_LEN_CALL",    1 } },
@@ -126,9 +126,10 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "ALLOCATED", 1, 0 }, { XAIFIntrin, "allocated",               NULL,            1 } },
     { { WNCall,     OPR_CALL,         "_ALLOCATE", 1, 0 }, { XAIFIntrin, "allocate",                NULL,            1 } },
     { { WNCall,     OPR_CALL,         "_DEALLOCATE", 1, 0 }, { XAIFIntrin, "deallocate",            NULL,            1 } },
-    // max/min are turned into special subroutine calls by the canonicalizer 
-    { { WNExpr,     OPR_MAX,           NULL,     2, 0 }, { XAIFIntrin, "bogus_max_scal_scal",       NULL,            2 } },
-    { { WNExpr,     OPR_MIN,           NULL,     2, 0 }, { XAIFIntrin, "bogus_min_scal_scal",       NULL,            2 } }
+    // max/min are turned into special subroutine calls by the canonicalizer except for integer expressions;
+    // nc stands for not-canonicalized 
+    { { WNExpr,     OPR_MAX,           NULL,     2, 0 }, { XAIFIntrin, "nc_max_scal_scal",          NULL,            2 } },
+    { { WNExpr,     OPR_MIN,           NULL,     2, 0 }, { XAIFIntrin, "nc_min_scal_scal",          NULL,            2 } }
   
   };
 
