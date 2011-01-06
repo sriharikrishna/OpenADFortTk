@@ -33,6 +33,7 @@
  * ====================================================================
  * ====================================================================
  */
+#include <string>
 
 #include "Open64IRInterface/Open64BasicTypes.h"
 
@@ -67,7 +68,6 @@ namespace whirl2xaif {
   extern void 
   TranslateSTUse(xml::ostream& xos, ST* st, PUXlationContext& ctxt);
   
-#include <string>
 
 // FIXME/REMOVE
 extern std::string 

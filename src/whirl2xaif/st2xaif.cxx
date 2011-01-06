@@ -52,7 +52,8 @@
  */
 
 #include <ctype.h>
-#include <sstream> //FIXME
+#include <sstream> 
+#include <alloca.h>
 
 #include "Open64IRInterface/Open64BasicTypes.h"
 
@@ -111,8 +112,6 @@ namespace whirl2xaif {
 
   // ***************************************************************************
 
-#include <alloca.h>
-#include <sstream> //FIXME
 
   // identical copy from xaif2whirl.cxx
   static FLD_HANDLE 

@@ -7,7 +7,7 @@ namespace fortTkSupport {
 
   /** 
    * this represents a scalarized reference
-   * i.e. a dummy variable <prefix><id><postfix> 
+   * i.e. a dummy variable 
    * that represents a (chain of) dereference
    */
   class ScalarizedRef {
