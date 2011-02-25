@@ -1305,6 +1305,7 @@ Open64IRInterface::getCFGStmtType(OA::StmtHandle h)
   case OPR_ISTBITS:
   case OPR_USE: // FIXME: how are these ordered?
   case OPR_INTERFACE: 
+  case OPR_NULLIFY: 
     ty = OA::CFG::SIMPLE;
     break;
 

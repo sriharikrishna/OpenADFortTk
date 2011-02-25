@@ -125,6 +125,7 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "ASSOCIATED", 1, 0 }, { XAIFIntrin, "associated",             NULL,            1 } },
     { { WNCall,     OPR_CALL,         "ALLOCATED", 1, 0 }, { XAIFIntrin, "allocated",               NULL,            1 } },
     { { WNCall,     OPR_CALL,         "_ALLOCATE", 1, 0 }, { XAIFIntrin, "allocate",                NULL,            1 } },
+    { { WNIntrinOp, OPR_NULLIFY,      NULL     , 1, 0 }, { XAIFIntrin, "nullify",                   NULL,            1 } },
     { { WNCall,     OPR_CALL,         "_DEALLOCATE", 1, 0 }, { XAIFIntrin, "deallocate",            NULL,            1 } },
     // max/min are turned into special subroutine calls by the canonicalizer except for integer expressions;
     // nc stands for not-canonicalized 
