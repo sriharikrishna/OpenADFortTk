@@ -392,7 +392,11 @@ namespace xaif2whirl {
       OA::OA_ptr<MyDGNode> opnd = ntmp.convert<MyDGNode>();
       opnd_wn[i] = xlate_Expression(g, opnd, ctxt);
     }       
-    if (aWhirlInfo_p->opr==OPR_CALL && aWhirlInfo_p->name && strcmp(aWhirlInfo_p->name,"TRANSFER")==0) { 
+    if (aWhirlInfo_p->opr==OPR_CALL 
+	&& 
+	(aWhirlInfo_p->name && strcmp(aWhirlInfo_p->name,"TRANSFER")==0
+	 ||
+	 aWhirlInfo_p->name && strcmp(aWhirlInfo_p->name,"ASSOCIATED")==0)) { 
       // leave transfer arguments untouched
       // std::cout << "XlateExpression::xlate_ExprOpUsingIntrinsicTable: skipping argument conversion for transfer" << std::endl; 
     }
@@ -402,7 +406,11 @@ namespace xaif2whirl {
       // FIXME: for now we promote reals to 8; demote ints to 4; we could
       // selectively do this...
       for (unsigned i = 0; i < opnd_wn.size(); ++i) {
-	if (WN_operator(opnd_wn[i])==OPR_CALL && strcmp(ST_name(WN_st(opnd_wn[i])),"TRANSFER")==0) { 
+	if (WN_operator(opnd_wn[i])==OPR_CALL 
+	    && 
+	    (strcmp(ST_name(WN_st(opnd_wn[i])),"TRANSFER")==0
+	     ||
+	     strcmp(ST_name(WN_st(opnd_wn[i])),"ASSOCIATED")==0)) { 
 	  // leave transfer result untouched
 	  //  std::cout << "XlateExpression::xlate_ExprOpUsingIntrinsicTable: skipping result conversion for transfer" << std::endl; 
 	}
