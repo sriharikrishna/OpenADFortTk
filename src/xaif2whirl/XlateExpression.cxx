@@ -396,7 +396,9 @@ namespace xaif2whirl {
 	&& 
 	(aWhirlInfo_p->name && strcmp(aWhirlInfo_p->name,"TRANSFER")==0
 	 ||
-	 aWhirlInfo_p->name && strcmp(aWhirlInfo_p->name,"ASSOCIATED")==0)) { 
+	 aWhirlInfo_p->name && strcmp(aWhirlInfo_p->name,"ASSOCIATED")==0
+	 ||
+	 aWhirlInfo_p->name && strcmp(aWhirlInfo_p->name,"SIZE")==0)) { 
       // leave transfer arguments untouched
       // std::cout << "XlateExpression::xlate_ExprOpUsingIntrinsicTable: skipping argument conversion for transfer" << std::endl; 
     }
@@ -410,7 +412,9 @@ namespace xaif2whirl {
 	    && 
 	    (strcmp(ST_name(WN_st(opnd_wn[i])),"TRANSFER")==0
 	     ||
-	     strcmp(ST_name(WN_st(opnd_wn[i])),"ASSOCIATED")==0)) { 
+	     strcmp(ST_name(WN_st(opnd_wn[i])),"ASSOCIATED")==0
+	     ||
+	     strcmp(ST_name(WN_st(opnd_wn[i])),"SIZE")==0)) { 
 	  // leave transfer result untouched
 	  //  std::cout << "XlateExpression::xlate_ExprOpUsingIntrinsicTable: skipping result conversion for transfer" << std::endl; 
 	}
