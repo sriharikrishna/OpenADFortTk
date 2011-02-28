@@ -114,6 +114,7 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "ANY",     1, 0 }, { XAIFIntrin, "any",                       NULL,            1 } },
     // Misc.
     { { WNCall,     OPR_CALL,         "MAXVAL",  1, 0 }, { XAIFIntrin, "maxval",                    NULL,            1 } },
+    { { WNCall,     OPR_CALL,         "MAXLOC",  1, 0 }, { XAIFIntrin, "maxloc_arr",                NULL,            1 } },
     { { WNCall,     OPR_CALL,         "MINVAL",  1, 0 }, { XAIFIntrin, "minval",                    NULL,            1 } },
     { { WNCall,     OPR_CALL,         "LBOUND",  2, 0 }, { XAIFIntrin, "lbound",                    NULL,            2 } },
     { { WNCall,     OPR_CALL,         "UBOUND",  2, 0 }, { XAIFIntrin, "ubound",                    NULL,            2 } },
