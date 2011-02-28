@@ -63,7 +63,9 @@ namespace xaif2whirl {
     ctxt.deleteXlationContext();
     // If we are not already within another VarRef and we translated an
     // active symbol, select the appropriate portion of the active type
-    if (!ctxt.currentXlationContext().isFlag(XlationContext::VARREF)) {
+    if (!ctxt.currentXlationContext().isFlag(XlationContext::VARREF)
+	||
+	ctxt.currentXlationContext().isFlag(XlationContext::ARRAYIDX)) {
       if (ctxt.currentXlationContext().isFlag(XlationContext::ACTIVETYPE)) { 
 	if (ctxt.currentXlationContext().isFlag(XlationContext::VALUESELECTOR)) {
 	  wn = createValueSelector(wn); // active
@@ -221,7 +223,9 @@ namespace xaif2whirl {
 		     || 
 		     std::string("lbound")==nm.c_str() 
 		     || 
-		     std::string("ubound")==nm.c_str());
+		     std::string("ubound")==nm.c_str()
+		     || 
+		     std::string("size")==nm.c_str());
     if (suppressIt) { 
       ctxt.currentXlationContext().setFlag(XlationContext::SUPPRESSSELECTOR);
     } 
@@ -277,8 +281,12 @@ namespace xaif2whirl {
     bool deriv = GetDerivAttr(elem);
     // skip the xaif:VariableReference node
     DOMElement* varref = GetFirstChildElement(elem);
-    if (ctxt.currentXlationContext().isFlag(XlationContext::SUPPRESSSELECTOR))
+    if (ctxt.currentXlationContext().isFlag(XlationContext::SUPPRESSSELECTOR)) { 
       ctxt.createXlationContext();
+      // to make sure:
+      ctxt.currentXlationContext().unsetFlag(XlationContext::DERIVSELECTOR);
+      ctxt.currentXlationContext().unsetFlag(XlationContext::VALUESELECTOR);
+    }  
     else 
       ctxt.createXlationContext((deriv) ? XlationContext::DERIVSELECTOR : XlationContext::VALUESELECTOR);
     WN* wn = translateVarRef(varref, ctxt);
