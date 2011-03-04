@@ -297,6 +297,10 @@ namespace whirl2xaif {
       FORTTK_MSG(2,ostr.str().c_str()); 
     }
 
+    std::ostringstream ostr;
+    Open64IRInterface::DumpWN(wnexpr, ostr);
+    FORTTK_MSG(2,"PUXlationContext::getAliasMapKey(): returns " <<  theAliasMapSetKey << " for " << ostr.str().c_str());
+
     return theAliasMapSetKey;
   } // end PUXlationContext::getAliasMapKey()
 
