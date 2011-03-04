@@ -670,7 +670,9 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
 	  has_stat = FALSE;
 	first_nonemptyarg = TRUE;
 	srcid = ctxt.currentXlationContext().peekVertexId(); 
-	WN* currCtxtWN=ctxt.currentXlationContext().getWN();
+	WN* ctxtRefWN=0;
+	if (ctxt.currentXlationContext().hasWN())
+	  ctxtRefWN=ctxt.currentXlationContext().getWN();
 	ctxt.currentXlationContext().setWN(WN_kid(wn, arg_idx));
 	xlate_MemRef(xos, 
 			   WN_kid(wn, arg_idx), /* address expression */
@@ -678,7 +680,8 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
 			   TY_pointed(arg_ty),  /* object type */
 			   0,                   /* offset from address */
 			   ctxt);
-	ctxt.currentXlationContext().setWN(currCtxtWN);
+	if (ctxtRefWN)
+	  ctxt.currentXlationContext().setWN(ctxtRefWN);
       }
       if ((arg_idx+implicit_args) == (last_arg_idx-1)) { 
 	if (opr == OPR_CALL && is_allocate_stmt) {
