@@ -935,6 +935,8 @@ namespace xaif2whirl {
       opands_ty[i] = ty;
       if (TY_kind(ty) == KIND_ARRAY) 
 	opands_mty[i] = TY_mtype(TY_etype(ty));
+      else if (TY_kind(ty) == KIND_POINTER) 
+	opands_mty[i] = TY_mtype(TY_pointed(ty));
       else 
 	opands_mty[i] = TY_mtype(ty);
     }
