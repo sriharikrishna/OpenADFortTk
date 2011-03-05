@@ -682,8 +682,11 @@ namespace whirl2xaif {
       }
     } 
     else {
-
-      fortTkSupport::ScalarizedRef* sym = ctxt.findScalarizedRef(ref_wn);
+      WN* testWN=ref_wn;
+      if (WN_operator(addr) == OPR_STRCTFLD) {
+	testWN = addr;
+      }
+      fortTkSupport::ScalarizedRef* sym = ctxt.findScalarizedRef(testWN);
       if (sym) { 
 	// 1. A scalarized symbol
 	ST_TAB* sttab = Scope_tab[CURRENT_SYMTAB].st_tab;
