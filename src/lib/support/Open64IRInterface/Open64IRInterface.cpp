@@ -4908,6 +4908,20 @@ print_generic_binary:
     } // for kids
     os << ")";
     break;
+  case OPR_STRCTFLD: { 
+    DumpWN(WN_kid(wn, 0), os);
+    os << "%";
+    TY_IDX ty2 = WN_load_addr_ty(wn);
+    UINT field_id = WN_field_id(wn);
+    FLD_HANDLE fld = TY_fld(ty2); 
+    field_id--;
+    while (field_id && !FLD_last_field(fld)) {
+        --field_id ;
+        fld = FLD_next(fld);
+    }
+    os <<  FLD_name(fld);
+    break;
+  }
   default:
     fprintf(stderr,"DumpWN: no logic for :");  
     fdump_wn(stderr, wn); // or fdump_tree()
