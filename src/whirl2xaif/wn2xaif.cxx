@@ -692,7 +692,7 @@ namespace whirl2xaif {
 	xos << xml::BegElem("xaif:SymbolReference") 
 	    << xml::Attr("vertex_id", ctxt.currentXlationContext().getNewVertexId())
 	    << xml::Attr("scope_id", scopeid) 
-	    << xml::Attr("symbol_id", sym->getName()) << xml::EndElem;
+	    << xml::Attr("symbol_id", sym->getName().c_str()) << xml::EndElem;
       } 
       else if (fortTkSupport::ScalarizedRef::isRefScalar(base_ty, ref_ty) 
 	       || 

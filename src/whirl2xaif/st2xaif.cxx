@@ -383,7 +383,7 @@ namespace whirl2xaif {
       int active = (strcmp(ty_str, "real") == 0 // FIXME: see xlate_STDecl_VAR
 		    || strcmp(ty_str, "complex") == 0) ? 1 : 0; 
     
-      xos << xml::BegElem("xaif:Symbol") << xml::Attr("symbol_id", sym->getName()) 
+      xos << xml::BegElem("xaif:Symbol") << xml::Attr("symbol_id", sym->getName().c_str()) 
 	  << xml::Attr("kind", "variable") << xml::Attr("type", ty_str) 
 	  << xml::Attr("shape", "scalar") << WhirlIdAnnot(ctxt.findWNId(wn))
 	  << xml::Attr("active", active) << xml::EndElem;
