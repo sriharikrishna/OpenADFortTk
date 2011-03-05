@@ -181,29 +181,23 @@ namespace fortTkSupport {
   AddToScalarizedRefTabOp::operator()(const WN* wn) 
   {
     // create a hash of this reference
-    OA::OA_ptr<OA::ExprTree> e = 
-      ir->getExprTree(OA::ExprHandle((OA::irhandle_t)wn));
     ostringstream o;
-    e->dump(o, ir); // e->str(o);
-    string s = o.str();
+    ir->DumpWN((WN*)wn,o);
+    string hashVal = o.str();
   
     // if <hash, sym> not already in workmap, insert <hash, new sym>
     ScalarizedRef* sym = NULL;
-    WorkMapTy::iterator it = workmap.find(s);
+    WorkMapTy::iterator it = workmap.find(hashVal);
     if (it == workmap.end()) {
       sym = new ScalarizedRef(const_cast<WN*>(wn));
-      workmap.insert(make_pair(s, sym));
+      workmap.insert(make_pair(hashVal, sym));
     } 
     else {
       sym = (*it).second;
     }
   
-#if 0
-    cout << "Ref: '" << s << "' --> "; sym->Dump(cout); cout << endl;
-    fdump_tree(stdout, (WN*)wn);
-#endif  
+    FORTTK_MSG(1, "AddToScalarizedRefTabOp::operator() : hashVal : '" << hashVal.c_str() << "' --> " <<  sym->getName().c_str());
 
-    // insert <wn, sym> in tab
     tab->Insert(wn, sym);
     return 0;
   }
