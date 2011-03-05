@@ -345,8 +345,12 @@ namespace whirl2xaif {
   xlate_STRCTFLD(xml::ostream& xos, 
 		 WN *wn, 
 		 PUXlationContext& ctxt) {
-    OPERATOR opr = WN_operator(wn);
-    FORTTK_DIE(fortTkSupport::Diagnostics::UnexpectedOpr << OPERATOR_name(opr));
+    xlate_MemRef(xos, 
+		 wn, 
+		 WN_Tree_Type(wn),  
+		 WN_Tree_Type(wn),  
+		 0, 
+		 ctxt);
   }
 
   void
