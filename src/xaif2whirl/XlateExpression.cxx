@@ -690,6 +690,7 @@ namespace xaif2whirl {
     case OPR_LDBITS: 
     case OPR_ILOAD: 
     case OPR_ILDBITS:
+    case OPR_STRCTFLD:
       wn = WN_COPY_Tree(pathVorlageWN);
       break;
     default: 
