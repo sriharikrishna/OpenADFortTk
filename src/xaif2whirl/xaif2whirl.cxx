@@ -278,9 +278,8 @@ namespace xaif2whirl {
     // compare this by comparing the symbol table index
     if (!isModuleName && PU_Info_proc_sym(pu)!=ST_st_idx (*std))
       PU_Info_proc_sym(pu)=ST_st_idx (*std);
-#if 0
-    cout << XercesStrX(cfgElem->getNodeName()) << ": " << ST_name(std) << endl;
-#endif  
+
+    FORTTK_MSG(1,"TranslateCFG: starting on " << XercesStrX(cfgElem->getNodeName()) << ": " << ST_name(std));
   
     // Set globals
     WN *wn_pu = PU_Info_tree_ptr(pu);
