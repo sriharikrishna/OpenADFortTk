@@ -2,6 +2,8 @@
 #include <sstream>
 
 #include "ScalarizedRef.h"
+#include "Diagnostics.h"
+
 #include "Open64IRInterface/stab_attr.h"
 #include "Open64IRInterface/wn_attr.h"
 
@@ -141,8 +143,8 @@ namespace fortTkSupport {
     case OPR_STID: 
     case OPR_STBITS: 
     case OPR_ILOAD: 
-    case OPR_ISTORE: 
-    case OPR_STRCTFLD: {
+    case OPR_ISTORE: {
+      FORTTK_MSG(1, "ScalarizedRef::isRefScalarizable(" << OPERATOR_name(opr) << ":" << aWNp  << ")");
       // yes if refobj_ty is scalar and reference is non-scalar
       // (for stores, only check LHS (kid1))
       TY_IDX baseobj_ty = WN_GetBaseObjType(aWNp);
@@ -160,12 +162,23 @@ namespace fortTkSupport {
 	   WN_operator(WN_kid0(aWNp)) == OPR_LDA)) {
 	TY_IDX ty = WN_ty(WN_kid0(aWNp));
 	if (TY_Is_Pointer(ty) && TY_Is_Array(TY_pointed(ty))) {
+	  FORTTK_MSG(1, "ScalarizedRef::isRefScalarizable returns false");
 	  return false;
 	}
       } 
+      FORTTK_MSG(1, "ScalarizedRef::isRefScalarizable returns " << (TY_Is_Scalar(refobj_ty) && !isRefScalar(baseobj_ty, refobj_ty)));
       return (TY_Is_Scalar(refobj_ty) && !isRefScalar(baseobj_ty, refobj_ty));
     }
-      // FIXME: ILOADX, ISTOREX  /  ILDBITS, ISTBITS
+    case OPR_STRCTFLD: {
+      FORTTK_MSG(1, "ScalarizedRef::isRefScalarizable(" << OPERATOR_name(opr) << ":" << aWNp  << ")");
+      // yes if refobj_ty is scalar and reference is non-scalar
+      // (for stores, only check LHS (kid1))
+      TY_IDX baseobj_ty = WN_GetBaseObjType(aWNp);
+      TY_IDX refobj_ty = WN_GetRefObjType(aWNp);
+      FORTTK_MSG(1, "ScalarizedRef::isRefScalarizable returns TY_Is_Scalar(" << TY_IDX_index(refobj_ty) << ")=" <<  TY_Is_Scalar(refobj_ty) << " && " << (!isRefScalar(baseobj_ty, refobj_ty)) );
+      return true;
+    }
+    // FIXME: ILOADX, ISTOREX  /  ILDBITS, ISTBITS
     default: 
       break; // fall through
     } // switch
