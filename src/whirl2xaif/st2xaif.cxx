@@ -643,98 +643,6 @@ namespace whirl2xaif {
       xlate_ArrayBounds(xos, ty, ctxt);
       xos << xml::EndElem;
     }
-#if 0 // FIXME
-    /* Declare the variable */
-  
-    if (Stab_Is_Common_Block(st)) {
-      TY2F_Translate_Common(xos, st_name, ty); 
-    } else if (Stab_Is_Equivalence_Block(st)) {
-      if (ST_is_return_var(st))
-	TY2F_Translate_Equivalence(xos, ty, TRUE /*alt return point*/);
-      else
-	TY2F_Translate_Equivalence(xos, ty, FALSE /*regular equiv.*/);
-    } else if (TY_Is_Pointer(ty) && !TY_is_f90_pointer(ty) 
-	       && ST_sclass(st) != SCLASS_FORMAL) {
-
-      const char* drefName = ST_name(st); // prepend "deref_"
-    
-      /* Declare pointee with the name specified in the symbol table */
-      xos << "deref_" << drefName;
-      if (TY_ptr_as_array(Ty_Table[ty]))
-	TY2F_translate(xos, Stab_Array_Of(TY_pointed(ty), 0/*size*/));
-      else
-	TY2F_translate(xos, TY_pointed(ty));
-
-      /* Declare the pointer object */
-      xos << "POINTER(" << st_name << ',' << "deref_" << drefName << ')' 
-	  << std::endl;
-
-    } else if (ST_sclass(st) == SCLASS_FORMAL && !ST_is_value_parm(st)) {
-      /* ie, regular f77 dummy argument, expect pointer TY     */
-      /* To counteract the Fortran call-by-reference semantics */
-      // a parameter
-      FORTTK_ASSERT(TY_Is_Pointer(ty), "Unexpected type " << TY_kind(ty));
-      if (TY_kind(TY_pointed(ty)) == KIND_FUNCTION) {
-	xos << "EXTERNAL ";
-      } else {
-	TY_IDX ty1;
-	TY_IDX ty2 = TY_pointed(ty);      
-	if (TY_Is_Pointer(ty2) && TY_ptr_as_array(Ty_Table[ty2])) {
-	  /* Handle ptr as array parameters */
-	  ty1 = Stab_Array_Of(TY_pointed(ty2), 0/*size*/);
-	} else {
-	  ty1 = TY_pointed(ty);
-	}
-	TY2F_translate(xos, ty1);
-      }
-      xos << st_name << "-1-" << std::endl;
-
-    } else if (ST2F_Is_Dummy_Procedure(st)) {
-      TYLIST tylist_idx = TY_tylist(TY_pointed(ty));
-      TY_IDX rt = TY_IDX_ZERO;
-      if (tylist_idx != (TYLIST) 0)
-	rt = TYLIST_type(Tylist_Table[tylist_idx]);
-    
-      ST2F_Declare_Return_Type(xos, rt, ctxt);
-    
-    } else {
-      TY2F_translate(xos, ty); // Declare as specified in symbol table
-    }
-
-    xos << " " << st_name;
-  
-    if (ST_is_allocatable(st)) {
-      xos << "ALLOCATABLE" << ST_name(st) << std::endl;
-    }
-    if (ST_is_private(st)) {
-      xos << "PRIVATE" << ST_name(st) << std::endl;
-    }
-    if (ST_is_my_pointer(st)) {
-      xos << "POINTER" << ST_name(st) << std::endl;
-    }
-    if (ST_is_f90_target(st)) {
-      xos << "TARGET" << ST_name(st) << std::endl;
-    }
-  
-    /* Save it's value between calls, if so specified, unless it is
-     * an equivalence, in which case it is implicitly SAVE.
-     */
-    if (!Stab_Is_Equivalence_Block(st) &&
-	(ST_sclass(st) == SCLASS_FSTATIC || ST_sclass(st) == SCLASS_PSTATIC)) {
-      xos << "SAVE" << st_name << std::endl;
-    }
-
-    INITO_IDX    inito;
-  INITPRO:
-    /* Generate a DATA statement for initializers */
-    if (ST_is_initialized(st) && !Stab_No_Linkage(st)  
-	&& (!TY_Is_Structured(ty) || Stab_Is_Common_Block(st)
-	    || Stab_Is_Equivalence_Block(st))) {
-      inito = Find_INITO_For_Symbol(st);
-      if (inito != (INITO_IDX)0)
-	INITO2F_translate(xos, inito); // Data_Stmt_Tokens
-    }
-#endif
   }
 
   static void 
@@ -749,11 +657,6 @@ namespace whirl2xaif {
 	<< xml::Attr("kind", "subroutine") << xml::Attr("type", "void")
 	<< SymIdAnnot(st_id) << xml::EndElem;
 
-#if 0 // REMOVE
-    // Specify the function return type, unless it is void
-    TY_IDX return_ty = Func_Return_Type(ST_pu_type(st));
-    ST2F_Declare_Return_Type(xos, return_ty, ctxt);  
-#endif
   }
 
   static void 
