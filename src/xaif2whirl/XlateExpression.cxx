@@ -718,8 +718,13 @@ namespace xaif2whirl {
     ctxt.createXlationContext(XlationContext::ARRAY);
     WN* arraySym = xlate_VarRef(g, n1, ctxt);
     ctxt.deleteXlationContext();
-    ST* st = WN_st(arraySym);
-    TY_IDX ty = ST_type(st);
+    TY_IDX ty;
+    if (WN_operator(arraySym)==OPR_STRCTFLD) { 
+      ty=WN_GetRefObjType(arraySym);
+    }
+    else{
+      ty = ST_type(WN_st(arraySym));
+    }
     if (TY_kind(ty) == KIND_POINTER) { 
       ty = TY_pointed(ty); 
     }

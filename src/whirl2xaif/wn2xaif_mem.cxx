@@ -923,7 +923,7 @@ namespace whirl2xaif {
     TranslateWN(xos, WN_kid0(wn), ctxt);
     
   }
-
+  
 
   void
   WN2F_arrsection(xml::ostream& xos, WN* wn, PUXlationContext& ctxt)
@@ -1040,10 +1040,8 @@ namespace whirl2xaif {
   void
   WN2F_Arrsection_Slots(xml::ostream& xos, WN* wn, PUXlationContext& ctxt) {
     INT32 dim;
-    WN * kidz;
     INT32 array_dim;
     TY_IDX ttyy;
-    ST * st;
     ARB_HANDLE arb_base;
     WN* kid;
     /* Gets bounds from the slots of an OPC_ARRSECTION node  */
@@ -1053,9 +1051,13 @@ namespace whirl2xaif {
      * expression represents array elements laid out in contiguous
      * memory locations.
      */
-    kidz = WN_kid0(wn);
-    st  =  WN_st(kidz);
-    ttyy = ST_type(st);
+    WN* kid0 = WN_kid0(wn);
+    if (WN_operator(kid0)==OPR_STRCTFLD) { 
+      ttyy=WN_GetRefObjType(kid0);
+    }
+    else { 
+      ttyy = ST_type(WN_st(kid0));
+    }
     if (TY_Is_Pointer(ttyy))  //Sept temp use
       ttyy=TY_pointed(ttyy);
     if (TY_is_f90_pointer(ttyy))
