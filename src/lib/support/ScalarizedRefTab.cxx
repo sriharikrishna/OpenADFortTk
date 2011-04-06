@@ -50,18 +50,10 @@ namespace fortTkSupport {
   }
 
 
-  //***************************************************************************
-    // ScalarizedRefTab
-    //***************************************************************************
-
-    ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
-    ScalarizedRefTab()
-    {
-    }
-
-  ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::
-  ~ScalarizedRefTab()
-  {
+  // ScalarizedRefTab
+  ScalarizedRefTab<ScalarizedRefTab_Base::W2X>::ScalarizedRefTab() {}
+  
+  ScalarizedRefTab<ScalarizedRefTab_Base::W2X>:: ~ScalarizedRefTab() {
     // Clear table ref pool
     for (ScalarizedRefPoolTy::iterator it = scalarizedRefPool.begin();
 	 it != scalarizedRefPool.end(); ++it) {
