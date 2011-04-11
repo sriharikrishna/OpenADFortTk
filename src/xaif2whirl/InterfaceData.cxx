@@ -199,9 +199,10 @@ void InterfaceData::findAndAdjustInterface(PU_Info* pu,WN* oldWN_p, ST* newST_p)
   PuIFaceRenamePairListPairListPair* ifDataByModule;
   if ((ifDataByModule=findPUData(pu))==NULL) { 
     // don't have the PU
-    FORTTK_DIE("InterfaceData::findAndAdjustInterface: PU " 
-	       << ST_name(WN_st(PU_Info_tree_ptr(pu))) 
-	       << " unknown");
+    FORTTK_WMSG("InterfaceData::findAndAdjustInterface: PU " 
+		<< ST_name(WN_st(PU_Info_tree_ptr(pu))) 
+		<< " unknown");
+    return;
   }
   IFaceRenamePairListPair* ifDataByInterface(NULL);
   int instancesFound=0;
