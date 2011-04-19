@@ -188,7 +188,7 @@ namespace fortTkSupport {
       sym = (*it).second;
     }
   
-    FORTTK_MSG(1, "AddToScalarizedRefTabOp::operator() : hashVal : '" << hashVal.c_str() << "' --> " <<  sym->getName().c_str());
+    FORTTK_MSG(1, "AddToScalarizedRefTabOp::operator() : hashVal : '" << hashVal.c_str() << "' --> " <<  sym->getName().c_str() << " (" << sym << ',' << wn << ")");
 
     tab->Insert(wn, sym);
     return 0;
