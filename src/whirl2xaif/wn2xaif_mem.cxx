@@ -950,7 +950,7 @@ namespace whirl2xaif {
     kid    = WN_kid0(wn);
     ptr_ty = WN_Tree_Type(kid);
 
-    if (WN2F_Is_Address_Preg(kid,ptr_ty)) {
+    if (WN2F_Is_Address_Preg(kid,ptr_ty) or !TY_Is_Pointer(ptr_ty)) {
       /* a preg or sym has been used as an address, usually after
 	 optimization don't know base type, or anything else so use
 	 OPR_ARRAY to generate bounds */
