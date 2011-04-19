@@ -147,7 +147,7 @@ namespace xaif2whirl {
 
   static void 
   ConvertStructMemberToActiveType(TY_IDX base_ty, TY_IDX ref_ty,
-				  STAB_OFFSET ref_ofst);
+				  UINT field_id);
 
   static void 
   ConvertScalarizedRefToActiveType(WN* wn);
@@ -172,8 +172,8 @@ namespace xaif2whirl {
 
   class ConvertModuleTypeFctr {
   public:
-    ConvertModuleTypeFctr(TY_IDX struct_ty_, TY_IDX ref_ty_, UINT64 ref_ofst_)
-      : struct_ty(struct_ty_), ref_ty(ref_ty_), ref_ofst(ref_ofst_)
+    ConvertModuleTypeFctr(TY_IDX struct_ty_, TY_IDX ref_ty_, UINT field_id_)
+      : struct_ty(struct_ty_), ref_ty(ref_ty_), field_id(field_id_)
     { 
       ty_name  = TY_name(struct_ty);
       ty_mtype = TY_mtype(struct_ty);
@@ -188,7 +188,7 @@ namespace xaif2whirl {
 	  && TY_size(*entry) == ty_size
 	  && strcmp(TY_name(*entry), ty_name) == 0) {
 	TY_IDX ty = make_TY_IDX(idx);
-	ConvertStructMemberToActiveType(ty, ref_ty, ref_ofst);
+	ConvertStructMemberToActiveType(ty, ref_ty, field_id);
 	return true; // early exit
       }
       return false; // continue
@@ -197,7 +197,7 @@ namespace xaif2whirl {
   private:
     TY_IDX struct_ty;
     TY_IDX ref_ty;
-    UINT64 ref_ofst;
+    UINT field_id;
 
     // cached values
     const char* ty_name;
@@ -2554,11 +2554,23 @@ namespace xaif2whirl {
   // change the type of the referenced field.
   static void 
   ConvertStructMemberToActiveType(TY_IDX base_ty, TY_IDX ref_ty, 
-				  STAB_OFFSET ref_ofst)
+				  UINT field_id)
   {
-    FLD_HANDLE fld = TY_Lookup_FLD(base_ty, ref_ty, ref_ofst);
+    UINT cur_field_id=0;
+    FLD_HANDLE fld = FLD_get_to_field (base_ty, field_id, cur_field_id);
     FORTTK_ASSERT(fld.Entry(), "Could not find field in " << TY_name(base_ty));
-    Set_FLD_type(fld, ActiveTypeTyIdx);
+    TY_IDX fldTy=fld.Entry()->type;
+    if (TY_kind(fldTy) == KIND_POINTER) {
+      // replicate the pointer type but let it point to the active type 
+      TY_IDX typeIndex=TY_pointed(fldTy);
+      TY_IDX newArrayTypeIndex = Copy_TY(typeIndex); 
+      Set_TY_etype(newArrayTypeIndex, ActiveTypeTyIdx);
+      TY_IDX newArraySymbolTypeIndex = Make_Pointer_Type(newArrayTypeIndex);
+      Set_FLD_type(fld, newArraySymbolTypeIndex);
+    } 
+    else { 
+      Set_FLD_type(fld, ActiveTypeTyIdx);
+    }
   }
 
 
@@ -2576,11 +2588,24 @@ namespace xaif2whirl {
   {
     TY_IDX baseobj_ty = WN_GetBaseObjType(wn);
     TY_IDX refobj_ty  = WN_GetRefObjType(wn);
-      
     if (TY_Is_Array(baseobj_ty)) {
       // array reference, such as "s%b(i)"
-      // FIXME: must change type of array
-      FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "ConvertScalarizedRefToActiveType");
+      // must change type of ref-obj.
+      // Note that we assume the WHIRL includes offsets instead of field ids
+      WN* kid0;
+      // descend until the OPR_STRCTFLD
+      while (WN_operator(wn)!=OPR_STRCTFLD && (NULL!=(kid0=WN_kid0(wn)))) { 
+	wn=kid0;
+      }
+      // in case we descended
+      baseobj_ty = WN_GetBaseObjType(wn);
+      FORTTK_ASSERT(OPERATOR_has_field_id(WN_operator(wn)), "Uh-oh!");
+      UINT field_id = WN_field_id(wn);
+      ConvertStructMemberToActiveType(baseobj_ty, refobj_ty, field_id);
+      if (TY_is_external(baseobj_ty)) {
+	For_all_until(Ty_Table,
+		      ConvertModuleTypeFctr(baseobj_ty, refobj_ty, field_id));
+      }
     }
     else {
       // structure member reference, such as "s%a" or "b(i)%a"
