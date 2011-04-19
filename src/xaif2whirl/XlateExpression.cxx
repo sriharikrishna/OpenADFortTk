@@ -722,6 +722,9 @@ namespace xaif2whirl {
     if (WN_operator(arraySym)==OPR_STRCTFLD) { 
       ty=WN_GetRefObjType(arraySym);
     }
+    else if (WN_kid0(arraySym) && WN_operator(WN_kid0(arraySym))==OPR_STRCTFLD ) {
+      ty=WN_GetRefObjType(WN_kid0(arraySym));
+    }
     else{
       ty = ST_type(WN_st(arraySym));
     }
