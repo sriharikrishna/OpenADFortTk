@@ -1052,6 +1052,9 @@ namespace whirl2xaif {
      * memory locations.
      */
     WN* kid0 = WN_kid0(wn);
+    if (WN_operator(kid0)==OPR_ILOAD && WN_operator(WN_kid0(kid0)) == OPR_STRCTFLD) { 
+      kid0 = WN_kid0(kid0);
+    }
     if (WN_operator(kid0)==OPR_STRCTFLD) { 
       ttyy=WN_GetRefObjType(kid0);
     }

@@ -686,11 +686,10 @@ namespace whirl2xaif {
       }
     } 
     else {
-      WN* testWN=ref_wn;
-      if (WN_operator(addr) == OPR_STRCTFLD) {
-	testWN = addr;
+      fortTkSupport::ScalarizedRef* sym = ctxt.findScalarizedRef(ref_wn);
+      if (!sym && WN_operator(addr) == OPR_STRCTFLD) {
+	sym = ctxt.findScalarizedRef(addr);
       }
-      fortTkSupport::ScalarizedRef* sym = ctxt.findScalarizedRef(testWN);
       if (sym) { 
 	// 1. A scalarized symbol
 	ST_TAB* sttab = Scope_tab[CURRENT_SYMTAB].st_tab;
