@@ -376,9 +376,13 @@ namespace whirl2xaif {
       fortTkSupport::ScalarizedRef* sym = (*it);
     
       WN* wn = sym->getWN();
-      TY_IDX ty = WN_Tree_Type(wn);
+      TY_IDX ty = WN_GetRefObjType(wn);
       const char* ty_str = TranslateTYToSymType(ty);
       if (!ty_str) { ty_str = "***"; }
+      if (WN_operator(wn)==OPR_ILOAD)
+	ty=WN_Tree_Type(WN_kid0(wn));
+      else
+	ty = WN_Tree_Type(wn);
       bool isPointer = TY_Is_Pointer(ty) || TY_is_f90_pointer(ty);
       const char* shape_str = isPointer ? TranslateTYToSymShape(TY_pointed(ty))
                                         : TranslateTYToSymShape(ty);
