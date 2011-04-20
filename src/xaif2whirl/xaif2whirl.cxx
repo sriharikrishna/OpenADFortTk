@@ -2568,6 +2568,14 @@ namespace xaif2whirl {
       TY_IDX newArraySymbolTypeIndex = Make_Pointer_Type(newArrayTypeIndex);
       Set_FLD_type(fld, newArraySymbolTypeIndex);
     } 
+    else if (TY_kind(fldTy) == KIND_ARRAY) {
+      // replicate the pointer type but let it point to the active type 
+      //      TY_IDX typeIndex=TY_pointed(fldTy);
+      TY_IDX newArrayTypeIndex = Copy_TY(fldTy); 
+      Set_TY_etype(newArrayTypeIndex, ActiveTypeTyIdx);
+      TY_IDX newArraySymbolTypeIndex = Make_Pointer_Type(newArrayTypeIndex);
+      Set_FLD_type(fld, newArraySymbolTypeIndex);
+    } 
     else { 
       Set_FLD_type(fld, ActiveTypeTyIdx);
     }
@@ -2610,13 +2618,12 @@ namespace xaif2whirl {
     else {
       // structure member reference, such as "s%a" or "b(i)%a"
       // must change type of ref-obj.
-      // Note that we assume the WHIRL includes offsets instead of field ids
-      FORTTK_ASSERT(OPERATOR_has_offset(WN_operator(wn)), "Uh-oh!");
-      STAB_OFFSET refobj_ofst = WN_offset(wn);
-      ConvertStructMemberToActiveType(baseobj_ty, refobj_ty, refobj_ofst);
+      FORTTK_ASSERT(OPERATOR_has_field_id(WN_operator(wn)), "Uh-oh!");
+      UINT field_id = WN_field_id(wn);
+      ConvertStructMemberToActiveType(baseobj_ty, refobj_ty, field_id);
       if (TY_is_external(baseobj_ty)) {
 	For_all_until(Ty_Table,
-		      ConvertModuleTypeFctr(baseobj_ty, refobj_ty, refobj_ofst));
+		      ConvertModuleTypeFctr(baseobj_ty, refobj_ty, field_id));
       }
     }
   }
