@@ -134,6 +134,22 @@ namespace xaif2whirl {
 	return true; 
       }
     }
+    else if( WN_operator(aWNp)==OPR_STRCTFLD) { 
+      TY_IDX base_ty = WN_GetBaseObjType(aWNp);
+      UINT field_id = WN_field_id(aWNp);
+      UINT cur_field_id=0;
+      FLD_HANDLE fld = FLD_get_to_field (base_ty, field_id, cur_field_id);
+      TY_IDX tyIdx = FLD_type(fld);
+      if (TY_kind(tyIdx) == KIND_POINTER) {
+	tyIdx = TY_pointed(tyIdx);
+      } 
+      if (TY_kind(tyIdx) == KIND_ARRAY) {
+	tyIdx = TY_etype(tyIdx);
+      }
+      if (tyIdx == ActiveTypeTyIdx || tyIdx == ActiveTypeInitializedTyIdx) {
+	return true; 
+      }
+    }
     else { 
       // Recursive case
       for (INT i = 0; i < WN_kid_count(aWNp); ++i) {
