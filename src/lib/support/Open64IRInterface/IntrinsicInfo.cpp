@@ -114,6 +114,7 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_CALL,          "MAXVAL")     ]=Info(false,1,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "MAXLOC")     ]=Info(false,1,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "MINVAL")     ]=Info(false,1,ARRAY_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "MINLOC")     ]=Info(false,1,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "LBOUND")     ]=Info(false,2,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "UBOUND")     ]=Info(false,2,ARRAY_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "SIZE")       ]=Info(false,2,ARRAY_INTR);
