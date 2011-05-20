@@ -2601,6 +2601,9 @@ namespace xaif2whirl {
       // must change type of ref-obj.
       // Note that we assume the WHIRL includes offsets instead of field ids
       WN* kid0;
+      if (WN_operator(wn)==OPR_ISTORE) {
+	wn=WN_kid1(wn);
+      }
       // descend until the OPR_STRCTFLD
       while (WN_operator(wn)!=OPR_STRCTFLD && (NULL!=(kid0=WN_kid0(wn)))) { 
 	wn=kid0;
