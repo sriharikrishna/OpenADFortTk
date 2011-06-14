@@ -75,6 +75,7 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "LEN",     1, 0 }, { XAIFIntrin, "len",                       "1_LEN_CALL",    1 } },
     { { WNCall,     OPR_CALL,         "LEN_TRIM",1, 0 }, { XAIFIntrin, "len_trim",                  NULL,            1 } },
     { { WNCall,     OPR_CALL,         "TRIM",    1, 0 }, { XAIFIntrin, "trim",                      NULL,            1 } },
+    { { WNCall,     OPR_CALL,         "ICHAR",   1, 0 }, { XAIFIntrin, "ichar",                     NULL,            1 } },
     // Rounding, conversion
     { { WNExpr,     OPR_ABS,          NULL,      1, 0 }, { XAIFIntrin, "abs_scal",                  "0_ABS",         1 } },
     { { WNCall,     OPR_CALL,         "ABS",     1, 0 }, { XAIFIntrin, "abs_scal",                  "1_ABS",         1 } },

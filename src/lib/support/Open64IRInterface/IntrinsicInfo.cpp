@@ -61,6 +61,7 @@ const IntrinsicInfo::IntrinsicMap& IntrinsicInfo::getMap() {
     ourIntrinsicInfoMap[Key( OPR_CALL,          "LEN_TRIM")   ]=Info(false,1,STRING_INTR);
     ourIntrinsicInfoMap[Key( OPR_CALL,          "TRIM")       ]=Info(false,1,STRING_INTR);
     ourIntrinsicInfoMap[Key( OPR_INTRINSIC_CALL,"CONCATEXPR") ]=Info(true, 2,STRING_INTR);
+    ourIntrinsicInfoMap[Key( OPR_CALL,          "ICHAR")      ]=Info(false,1,STRING_INTR);
     
     // string assignment
     // String Assigment is Treated as a special case of Intrinsic functions.
