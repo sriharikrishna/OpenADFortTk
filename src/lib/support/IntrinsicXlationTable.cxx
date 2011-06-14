@@ -94,6 +94,7 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "DBLE",    1, 0 }, { XAIFIntrin, "real_scal",                 "2_REAL",        1 } }, 
     { { WNCall,     OPR_CALL,         "AIMAG",   1, 0 }, { XAIFIntrin, "imag_scal",                 NULL,            1 } }, 
     { { WNCall,     OPR_CALL,         "TRANSPOSE",1, 0 }, { XAIFIntrin, "transpose_arr",            NULL,            1 } }, 
+    { { WNCall,     OPR_CALL,         "RESHAPE", 2, 0 }, { XAIFIntrin, "reshape_arr",               NULL,            2 } }, 
     { { WNExpr,     OPR_COMPLEX,      NULL,      2, 0 }, { XAIFIntrin, "complex_scal",              NULL,            2 } }, 
     // Logical (and bitwise logical) operations 
     { { WNExpr,     OPR_BNOT,         NULL,      1, 0 }, { XAIFBoolOp, "b_not",                     NULL,            1 } },
@@ -118,6 +119,7 @@ namespace fortTkSupport {
     { { WNCall,     OPR_CALL,         "LBOUND",  2, 0 }, { XAIFIntrin, "lbound",                    NULL,            2 } },
     { { WNCall,     OPR_CALL,         "UBOUND",  2, 0 }, { XAIFIntrin, "ubound",                    NULL,            2 } },
     { { WNCall,     OPR_CALL,         "SIZE",    2, 1 }, { XAIFIntrin, "size",                      NULL,            2 } },
+    { { WNCall,     OPR_CALL,         "SHAPE",   1, 1 }, { XAIFIntrin, "shape_arr",                 NULL,            1 } },
     { { WNIntrinOp, OPR_INTRINSIC_OP, "F90INDEX",2, 0 }, { XAIFIntrin, "index",                     "1_INDEX_OP",    2 } },
     { { WNExpr,     OPR_SHL,           NULL,     2, 0 }, { XAIFIntrin, "bogus_shl_scal_scal",       NULL,            2 } },
     { { WNExpr,     OPR_ASHR,          NULL,     2, 0 }, { XAIFIntrin, "bogus_ashr_scal_scal",      NULL,            2 } }, 
