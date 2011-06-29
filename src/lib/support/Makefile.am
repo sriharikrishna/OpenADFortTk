@@ -37,7 +37,7 @@ Open64IRInterface/SymTab.cpp Open64IRInterface/SymTab.h \
 Open64IRInterface/WhirlGlobalStateUtils.cpp Open64IRInterface/WhirlGlobalStateUtils.h \
 Open64IRInterface/WhirlIO.cpp Open64IRInterface/WhirlIO.h \
 Open64IRInterface/CleanUpWhirl.cpp Open64IRInterface/CleanUpWhirl.h \
-Open64IRInterface/diagnostics.cpp Open64IRInterface/diagnostics.h \
+Open64IRInterface/IFDiagnostics.cpp Open64IRInterface/IFDiagnostics.h \
 Open64IRInterface/stab_attr.cpp Open64IRInterface/stab_attr.h \
 Open64IRInterface/wn_attr.cpp Open64IRInterface/wn_attr.h \
 \

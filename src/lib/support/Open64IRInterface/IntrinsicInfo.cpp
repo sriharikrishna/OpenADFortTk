@@ -1,5 +1,5 @@
 #include "IntrinsicInfo.h"
-#include "diagnostics.h"
+#include "IFDiagnostics.h"
 #include "wn_attr.h"
 
 IntrinsicInfo::IntrinsicMap IntrinsicInfo::ourIntrinsicInfoMap;

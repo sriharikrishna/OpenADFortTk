@@ -21,7 +21,7 @@
 #include "WhirlGlobalStateUtils.h"
 #include "Open64IRInterface.hpp"
 
-#include "diagnostics.h"
+#include "IFDiagnostics.h"
 
 #include "CleanUpWhirl.h"
 

@@ -1,6 +1,6 @@
 #include <set>
 #include "CleanUpWhirl.h"
-#include "diagnostics.h"
+#include "IFDiagnostics.h"
 #include "WhirlGlobalStateUtils.h"
 
 PU_Info* CleanUpWhirl::findModulePU(PU_Info* aPUInfoForest_p,

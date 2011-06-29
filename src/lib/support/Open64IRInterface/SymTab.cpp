@@ -9,7 +9,7 @@
 
 #include "stab_attr.h"
 #include "wn_attr.h"
-#include "diagnostics.h"
+#include "IFDiagnostics.h"
 
 //************************** Forward Declarations ***************************
 

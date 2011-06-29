@@ -28,7 +28,7 @@
 #include "Open64BasicTypes.h"
 #include "file_util.h" 
 
-#include "diagnostics.h"
+#include "IFDiagnostics.h"
 
 
 int DBG_LVL_PUB = 0;
