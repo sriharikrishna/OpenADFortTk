@@ -81,10 +81,10 @@ f_getoptions $*
 #find . -name aclocal.m4  | xargs /bin/touch
 
 # We sleep for a moment to ensure relative timestamp differences
-find . -name aclocal.m4   -exec /bin/touch '{}' \;
+find . -name aclocal.m4   -exec touch '{}' \;
 sleep 1
 #find . -name config.h.in  -exec /bin/touch '{}' \;
-find . -name configure    -exec /bin/touch '{}' \;
+find . -name configure    -exec touch '{}' \;
 sleep 1
-find . -name Makefile.in  -exec /bin/touch '{}' \;
+find . -name Makefile.in  -exec touch '{}' \;
 

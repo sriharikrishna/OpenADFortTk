@@ -65,7 +65,7 @@
 #include "Open64BasicTypes.h"
 
 #include "WhirlGlobalStateUtils.h"
-#include "diagnostics.h"
+#include "IFDiagnostics.h"
 
 //typedef std::pair<char*,char*> fully_qualified_name;
 struct fully_qualified_name {
