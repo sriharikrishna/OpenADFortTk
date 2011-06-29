@@ -22,7 +22,7 @@
 #include "tracing.h"        // trace routines
 #include "ir_reader.h"      // fdump_tree
 #include "wn_simp.h"        // WN_Simplifier_Enable()
-#include "Open64IRInterface/diagnostics.h"
+#include "Open64IRInterface/IFDiagnostics.h"
 
 #include <Exception.h>
 #include "Open64IRInterface/WhirlIO.h"

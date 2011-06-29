@@ -16,7 +16,7 @@
 
 #include <stab_attr.h>
 #include <wn_attr.h>
-#include <diagnostics.h>
+#include <IFDiagnostics.h>
 
 
 #define whirl2xaif_divider_comment \

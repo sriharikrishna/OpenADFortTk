@@ -15,7 +15,7 @@
 #include "Open64IRInterface/Open64BasicTypes.h"
 #include "Open64IRInterface/Open64IRInterface.hpp"
 #include "Open64IRInterface/SymTab.h"
-#include "Open64IRInterface/diagnostics.h"
+#include "Open64IRInterface/IFDiagnostics.h"
 #include "Open64IRInterface/wn_attr.h"
 #include "Open64IRInterface/stab_attr.h"
 #include "OpenAnalysis/Utils/DGraph/DGraphInterface.hpp"

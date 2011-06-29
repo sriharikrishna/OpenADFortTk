@@ -11,7 +11,7 @@
 #include "PUXlationContext.h"
 #include "xaif2whirl.h"
 
-#include "Open64IRInterface/diagnostics.h"
+#include "Open64IRInterface/IFDiagnostics.h"
 
 namespace xaif2whirl { 
 

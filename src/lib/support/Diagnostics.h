@@ -1,5 +1,4 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.h,v 1.11 2005/03/19 22:54:51 eraxxon Exp $
 #ifndef Diagnostics_INCLUDED
 #define Diagnostics_INCLUDED
 

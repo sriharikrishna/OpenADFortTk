@@ -1,6 +1,6 @@
 // -*-Mode: C++;-*-
-#ifndef diagnostics_INCLUDED
-#define diagnostics_INCLUDED
+#ifndef IFDiagnostics_INCLUDED
+#define IFDiagnostics_INCLUDED
 /* ====================================================================
  * ====================================================================
  *
@@ -56,7 +56,7 @@
  *
  *       where DIAG_CODE is one of the enumerated values and args is
  *       a comma separated list of values corresponding to the format
- *       directives in the diagnostic message (see diagnostics.c).
+ *       directives in the diagnostic message (see IFDiagnostics.cpp).
  *       When "Is_True_On" is defined, the location of the ASSERT in
  *       the compiler sources is emitted as part of the diagnostics.
  *
@@ -229,5 +229,5 @@ extern void Diag_Set_Location(const char *file_name, int line_number);
 extern void Diag_Warning(DIAG_CODE code, ...);
 extern void Diag_Fatal(DIAG_CODE code, ...);
 
-#endif /* diagnostics_INCLUDED */
+#endif
 

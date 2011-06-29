@@ -1,5 +1,4 @@
 // -*-Mode: C++;-*-
-// $Header: /Volumes/cvsrep/developer/OpenADFortTk/src/lib/support/diagnostics.cxx,v 1.10 2005/03/19 22:54:51 eraxxon Exp $
 
 #include "Diagnostics.h"
 

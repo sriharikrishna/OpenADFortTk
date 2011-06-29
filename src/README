@@ -93,7 +93,7 @@ A quickly written abstraction:
   WhirlParentize.h / WhirlParentize.cxx
 
 
-diagnostics.h Exception.h
+IFDiagnostics.h Exception.h
 BaseMap.h
 CmdLineParser.h
 

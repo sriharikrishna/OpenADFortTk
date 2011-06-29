@@ -11,7 +11,7 @@
 #include "tracing.h"        // trace routines
 #include "ir_reader.h"      // fdump_tree
 #include "Open64IRInterface/WhirlIO.h"
-#include "Open64IRInterface/diagnostics.h"
+#include "Open64IRInterface/IFDiagnostics.h"
 
 #include "Diagnostics.h"
 #include "Exception.h"
