@@ -478,12 +478,13 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
 	<< Attr("type", "***");
     TY_IDX result_ty=WN_GetExprType(wn);
     bool isPointer = TY_Is_Pointer(result_ty) || TY_is_f90_pointer(result_ty);
+    bool isFnPointer = isPointer && (TY_kind(TY_pointed(result_ty)) == KIND_FUNCTION);
     const char* ty_str = 
-      isPointer ? TranslateTYToSymType(TY_pointed(result_ty))
+      (isPointer && (!isFnPointer)) ? TranslateTYToSymType(TY_pointed(result_ty))
       : TranslateTYToSymType(result_ty);
     if (!ty_str) { ty_str = "***"; }
     const char* shape_str = 
-      isPointer ? TranslateTYToSymShape(TY_pointed(result_ty))
+      (isPointer && (!isFnPointer)) ? TranslateTYToSymShape(TY_pointed(result_ty))
       : TranslateTYToSymShape(result_ty);
     if (strcmp(ty_str,"real"))
       xos << xml::Attr("rType", ty_str); 
@@ -512,12 +513,13 @@ whirl2xaif::xlate_CALL(xml::ostream& xos, WN *wn, PUXlationContext& ctxt) {
       if (infoPair.second.key) { xos << IntrinsicKeyAnnot(infoPair.second.key); }
       TY_IDX result_ty=WN_GetExprType(wn);
       bool isPointer = TY_Is_Pointer(result_ty) || TY_is_f90_pointer(result_ty);
+      bool isFnPointer = isPointer && (TY_kind(TY_pointed(result_ty)) == KIND_FUNCTION);
       const char* ty_str = 
-	isPointer ? TranslateTYToSymType(TY_pointed(result_ty))
+	(isPointer && (!isFnPointer)) ? TranslateTYToSymType(TY_pointed(result_ty))
 	: TranslateTYToSymType(result_ty);
       if (!ty_str) { ty_str = "***"; }
       const char* shape_str = 
-	isPointer ? TranslateTYToSymShape(TY_pointed(result_ty))
+	(isPointer && (!isFnPointer)) ? TranslateTYToSymShape(TY_pointed(result_ty))
 	: TranslateTYToSymShape(result_ty);
       if (strcmp(ty_str,"real"))
 	xos << xml::Attr("rType", ty_str);

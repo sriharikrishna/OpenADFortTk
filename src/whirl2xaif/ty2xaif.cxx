@@ -1321,6 +1321,9 @@ namespace whirl2xaif {
     } 
     else if (TY_kind(ty) == KIND_POINTER) { 
       str = "opaque";
+      if (TY_kind(TY_pointed(ty)) == KIND_FUNCTION) {
+	str = "void";
+      }
     } 
     else 
       FORTTK_DIE("whirl2xaif::TranslateTYToSymType: no logic to handle type of kind " << TY_kind(ty));
@@ -1402,6 +1405,10 @@ namespace whirl2xaif {
       // the latter applies to symbols that are f90 interface names
       str = "scalar"; // FIXME
     }  
+    else if ((TY_kind(ty) == KIND_POINTER) &&
+	     (TY_kind(TY_pointed(ty)) == KIND_FUNCTION)) {
+      str = "void";
+    }
   
     return str;
   }

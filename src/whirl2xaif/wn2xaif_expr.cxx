@@ -724,12 +724,13 @@ WN2F_Intr_Funcall(xml::ostream& xos, WN* wn, fortTkSupport::IntrinsicXlationTabl
   if (infoPair.second.key) { xos << IntrinsicKeyAnnot(infoPair.second.key); }
   TY_IDX result_ty=WN_GetExprType(wn);
   bool isPointer = TY_Is_Pointer(result_ty) || TY_is_f90_pointer(result_ty);
+  bool isFnPointer = isPointer && (TY_kind(TY_pointed(result_ty)) == KIND_FUNCTION);
   const char* ty_str = 
-    isPointer ? TranslateTYToSymType(TY_pointed(result_ty))
+    (isPointer && (!isFnPointer)) ? TranslateTYToSymType(TY_pointed(result_ty))
     : TranslateTYToSymType(result_ty);
   if (!ty_str) { ty_str = "***"; }
   const char* shape_str = 
-    isPointer ? TranslateTYToSymShape(TY_pointed(result_ty))
+    (isPointer && (!isFnPointer)) ? TranslateTYToSymShape(TY_pointed(result_ty))
     : TranslateTYToSymShape(result_ty);
   if (strcmp(ty_str,"real"))
     xos << xml::Attr("rType", ty_str);
@@ -869,12 +870,13 @@ xlate_BinaryOpUsingIntrinsicTable(xml::ostream& xos,
       xos << Attr("type", typeStr);
     }
     bool isPointer = TY_Is_Pointer(result_ty) || TY_is_f90_pointer(result_ty);
+    bool isFnPointer = isPointer && (TY_kind(TY_pointed(result_ty)) == KIND_FUNCTION);
     const char* ty_str = 
-      isPointer ? TranslateTYToSymType(TY_pointed(result_ty))
+      (isPointer && (!isFnPointer)) ? TranslateTYToSymType(TY_pointed(result_ty))
       : TranslateTYToSymType(result_ty);
     if (!ty_str) { ty_str = "***"; }
     const char* shape_str = 
-      isPointer ? TranslateTYToSymShape(TY_pointed(result_ty))
+      (isPointer && (!isFnPointer)) ? TranslateTYToSymShape(TY_pointed(result_ty))
       : TranslateTYToSymShape(result_ty);
     if (infoPair.second.opr!=fortTkSupport::IntrinsicXlationTable::XAIFBoolOp && strcmp(ty_str,"real"))
       xos << xml::Attr("rType", ty_str);

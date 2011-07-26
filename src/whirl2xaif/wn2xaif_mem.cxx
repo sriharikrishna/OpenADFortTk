@@ -146,7 +146,8 @@ namespace whirl2xaif {
     // return the actual result type rather than a 
     // low level compiler internal "void pointer" 
     // therefore this may not actually be a pointer type. 
-    if (TY_kind(ptr_ty) == KIND_POINTER)
+    if ((TY_kind(ptr_ty) == KIND_POINTER) &&
+	(TY_kind(TY_pointed(ptr_ty)) != KIND_FUNCTION))
       *string_ty = TY_pointed(ptr_ty);
     else
       *string_ty=ptr_ty;

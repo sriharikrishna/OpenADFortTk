@@ -5201,6 +5201,9 @@ bool Open64IRInterface::ignoreBlackBoxRoutines() {
 
 bool Open64IRInterface::haveDefinition(WN* wn) { 
   static std::set<string> reportedNames;  // for warnings
+  if (WN_operator(wn) == OPR_ICALL) {
+    return false;
+  }
   assert(WN_has_sym(wn));
   if (true) { 
     if (sCallSymToProc[OA::SymHandle((OA::irhandle_t)WN_st(wn))]==OA::ProcHandle(0)) { 

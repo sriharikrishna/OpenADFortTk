@@ -384,15 +384,21 @@ namespace whirl2xaif {
       else
 	ty = WN_Tree_Type(wn);
       bool isPointer = TY_Is_Pointer(ty) || TY_is_f90_pointer(ty);
-      const char* shape_str = isPointer ? TranslateTYToSymShape(TY_pointed(ty))
+      bool isFnPointer = isPointer && (TY_kind(TY_pointed(ty)) == KIND_FUNCTION);
+      const char* shape_str = (isPointer && (!isFnPointer)) ? TranslateTYToSymShape(TY_pointed(ty))
                                         : TranslateTYToSymShape(ty);
     
       int active = (strcmp(ty_str, "real") == 0 // FIXME: see xlate_STDecl_VAR
 		    || strcmp(ty_str, "complex") == 0) ? 1 : 0; 
-    
-      xos << xml::BegElem("xaif:Symbol") << xml::Attr("symbol_id", sym->getName().c_str()) 
-	  << xml::Attr("kind", "variable") << xml::Attr("type", ty_str) 
-	  << xml::Attr("shape", shape_str) << WhirlIdAnnot(ctxt.findWNId(wn))
+
+      xos << xml::BegElem("xaif:Symbol") << xml::Attr("symbol_id", sym->getName().c_str());    
+      if (isFnPointer) {
+	xos << xml::Attr("kind", "pointer") << xml::Attr("type", ty_str);
+      }
+      else {
+	xos << xml::Attr("kind", "variable") << xml::Attr("type", ty_str);
+      }
+      xos << xml::Attr("shape", shape_str) << WhirlIdAnnot(ctxt.findWNId(wn))
 	  << xml::Attr("active", active) << xml::EndElem;
     }
   }
@@ -572,10 +578,11 @@ namespace whirl2xaif {
     }
     if (translatenow) { // FIXME
       bool isPointer = TY_Is_Pointer(ty) || TY_is_f90_pointer(ty);
-      const char* ty_str = isPointer ? TranslateTYToSymType(TY_pointed(ty))
+      bool isFnPointer = isPointer && (TY_kind(TY_pointed(ty)) == KIND_FUNCTION);
+      const char* ty_str = (isPointer && (!isFnPointer)) ? TranslateTYToSymType(TY_pointed(ty))
                                      : TranslateTYToSymType(ty);
       if (!ty_str) { ty_str = "***"; }
-      const char* shape_str = isPointer ? TranslateTYToSymShape(TY_pointed(ty))
+      const char* shape_str = (isPointer && (!isFnPointer)) ? TranslateTYToSymShape(TY_pointed(ty))
                                         : TranslateTYToSymShape(ty);
       if (!shape_str) { shape_str = "***"; }
       int active = (ctxt.isActiveSym(st)) ? 1 : 0;
@@ -633,15 +640,21 @@ namespace whirl2xaif {
 	}
       }
       fortTkSupport::SymId st_id = (fortTkSupport::SymId)ST_index(st);
-      xos << xml::BegElem("xaif:Symbol") << AttrSymId(st)
-	  << xml::Attr("kind", "variable") 
-	  << xml::Attr("type", ty_str)
+
+      xos << xml::BegElem("xaif:Symbol") << AttrSymId(st);
+      if (isFnPointer) {
+	xos << xml::Attr("kind", "pointer");
+      } 
+      else {
+	xos << xml::Attr("kind", "variable");
+      }
+      xos << xml::Attr("type", ty_str)
 	  << xml::Attr("feType",TranslateTYToMType(ty))
 	  << xml::Attr("shape", shape_str) 
 	  << SymIdAnnot(st_id)
 	  << xml::Attr("active", active);
       if (isPointer) {
-        xos << xml::Attr("pointer", isPointer);
+	xos << xml::Attr("pointer", isPointer);
       }
       xos << xml::EndAttrs;
       xlate_ArrayBounds(xos, ty, ctxt);
