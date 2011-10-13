@@ -275,7 +275,7 @@ Open64IRPtrAsgnIterator::create(OA::ProcHandle h)
   for (it = wtree.begin(); it != wtree.end(); /* */) {
     WN* curWN = it.Wn();
     OPERATOR opr = WN_operator(curWN);
-    if (opr==OPR_PSTID) {
+    if (opr==OPR_PSTID || opr==OPR_PSTORE) {
       //std::cerr << "iterating: " << OPERATOR_name(opr) << std::endl;
       mStmtList.push_back(OA::StmtHandle((OA::irhandle_t)curWN));
     }
