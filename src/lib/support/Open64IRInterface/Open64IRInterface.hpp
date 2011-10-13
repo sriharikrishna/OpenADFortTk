@@ -173,6 +173,30 @@ private:
   bool mValid;
 };
 
+class Open64IRPtrAsgnIterator : public OA::IRStmtIterator {
+public:
+  Open64IRPtrAsgnIterator(OA::ProcHandle h);
+  Open64IRPtrAsgnIterator() { mValid = false; }
+  virtual ~Open64IRPtrAsgnIterator();
+
+  virtual OA::StmtHandle current() const ;
+  virtual bool isValid() const { return (mValid && (mStmtIter != mEnd)); }
+  virtual void operator++();
+
+  virtual void reset();
+
+private:
+  void create(OA::ProcHandle h);
+
+private:
+  std::list<OA::StmtHandle> mStmtList;
+
+  std::list<OA::StmtHandle>::iterator mEnd;
+  std::list<OA::StmtHandle>::iterator mBegin;
+  std::list<OA::StmtHandle>::iterator mStmtIter;
+  bool mValid;
+};
+
 
 //! Enumerate all the ExprHandle in a stmt
 //! Used by a helper method
@@ -613,6 +637,8 @@ public:
   //! Given a subprogram return an IRStmtIterator for the entire
   //! subprogram
   OA::OA_ptr<OA::IRStmtIterator> getStmtIterator(OA::ProcHandle h);
+
+  OA::OA_ptr<OA::IRStmtIterator> getPtrAsgnIterator(OA::ProcHandle h);
 
   //! Return an iterator over all of the callsites in a given stmt
   OA::OA_ptr<OA::IRCallsiteIterator> getCallsites(OA::StmtHandle h);

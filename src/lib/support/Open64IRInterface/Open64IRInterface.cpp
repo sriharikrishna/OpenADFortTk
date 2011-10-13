@@ -218,6 +218,77 @@ Open64IRStmtIterator::create(OA::ProcHandle h)
   }
 }
 
+//---------------------------------------------------------------------------
+// Open64IRPtrAsgnIterator
+//---------------------------------------------------------------------------
+Open64IRPtrAsgnIterator::Open64IRPtrAsgnIterator(OA::ProcHandle h)
+{
+  create(h);
+  reset();
+  mValid = true;
+}
+
+Open64IRPtrAsgnIterator::~Open64IRPtrAsgnIterator()
+{
+}
+     
+OA::StmtHandle 
+Open64IRPtrAsgnIterator::current() const
+{
+  if (mValid) { 
+    return (*mStmtIter); 
+  } else { 
+    return OA::StmtHandle(0); 
+  }
+}
+
+void 
+Open64IRPtrAsgnIterator::operator++()
+{
+  if (mValid) {
+    mStmtIter++;
+  }
+}
+
+void 
+Open64IRPtrAsgnIterator::reset()
+{
+  mStmtIter = mStmtList.begin();
+  mEnd = mStmtList.end();
+  mBegin = mStmtList.begin();
+}
+
+void 
+Open64IRPtrAsgnIterator::create(OA::ProcHandle h)
+{
+  // NOTE: for now we just create a new list.  we could save some
+  // memory and use the WHIRL pre-order iterator directly.
+  PU_Info* pu = (PU_Info*)h.hval();
+  if (!pu) { return; }
+  
+  PU_SetGlobalState(pu);
+  
+  WN* wn_pu = PU_Info_tree_ptr(pu);
+  
+  WN_TREE_CONTAINER<PRE_ORDER> wtree(wn_pu);
+  WN_TREE_CONTAINER<PRE_ORDER>::iterator it;
+  for (it = wtree.begin(); it != wtree.end(); /* */) {
+    WN* curWN = it.Wn();
+    OPERATOR opr = WN_operator(curWN);
+    if (opr==OPR_PSTID) {
+      //std::cerr << "iterating: " << OPERATOR_name(opr) << std::endl;
+      mStmtList.push_back(OA::StmtHandle((OA::irhandle_t)curWN));
+    }
+    bool isPlainStmt = OPERATOR_is_stmt(opr)
+      && !(OPERATOR_is_scf(opr) || OPERATOR_is_non_scf(opr));
+    if (isPlainStmt) {
+      it.WN_TREE_next_skip();
+    } else {
+      ++it;
+    }
+  }
+}
+
 
 //---------------------------------------------------------------------------
 // Open64IRCallsiteIterator
@@ -3431,6 +3502,14 @@ void Open64PtrAssignPairStmtIterator::create(OA::StmtHandle stmt)
   }
 }
 
+
+OA::OA_ptr<OA::IRStmtIterator>
+Open64IRInterface::getPtrAsgnIterator(OA::ProcHandle proc)
+{
+  OA::OA_ptr<OA::IRStmtIterator> retval;
+  retval = new Open64IRPtrAsgnIterator(proc);
+  return retval;
+}
 
 //! If this is a PTR_ASSIGN_STMT then return an iterator over MemRefHandle
 //! pairs where there is a source and target such that target
