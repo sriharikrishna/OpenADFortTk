@@ -2561,12 +2561,19 @@ namespace xaif2whirl {
     FORTTK_ASSERT(fld.Entry(), "Could not find field in " << TY_name(base_ty));
     TY_IDX fldTy=fld.Entry()->type;
     if (TY_kind(fldTy) == KIND_POINTER) {
-      // replicate the pointer type but let it point to the active type 
-      TY_IDX typeIndex=TY_pointed(fldTy);
-      TY_IDX newArrayTypeIndex = Copy_TY(typeIndex); 
-      Set_TY_etype(newArrayTypeIndex, ActiveTypeTyIdx);
-      TY_IDX newArraySymbolTypeIndex = Make_Pointer_Type(newArrayTypeIndex);
-      Set_FLD_type(fld, newArraySymbolTypeIndex);
+      // replicate the pointer type but let it point to the active type
+      TY_IDX fieldPointed = TY_pointed(fldTy);
+      if (TY_kind(fieldPointed) == KIND_ARRAY) {
+        TY_IDX newArrayTypeIndex = Copy_TY(fieldPointed); 
+        Set_TY_etype(newArrayTypeIndex, ActiveTypeTyIdx);
+        TY_IDX newArraySymbolTypeIndex = Make_Pointer_Type(newArrayTypeIndex);
+        Set_FLD_type(fld, newArraySymbolTypeIndex);
+      }
+      else {
+        TY_IDX newFldType=Copy_TY(fldTy);
+        Set_TY_pointed(newFldType, ActiveTypeTyIdx);
+        Set_FLD_type(fld, newFldType);
+      }
     } 
     else if (TY_kind(fldTy) == KIND_ARRAY) {
       // replicate the pointer type but let it point to the active type 
