@@ -2865,7 +2865,17 @@ ST* Open64IRInterface::findBaseSymbol(WN* wn)
         break;
     case OPR_INTCONST:
         break;
-    default:
+    case OPR_INTRINSIC_CALL:
+      {
+	if (WN_kid_count(wn)>1) { 
+	  DBGMSG_PUB(0, "Warning: ignoring call to %s in non-hoisted expression",WN_intrinsic_name(WN_intrinsic(wn)));
+	}
+	else if( WN_kid_count(wn)==1) { 
+	  retval = findBaseSymbol(WN_kid0(wn));
+	}
+        break;
+      }
+    default: 
         assert(0);  // don't expect to get here
   }
   return retval;
