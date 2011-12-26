@@ -561,7 +561,7 @@ namespace whirl2xaif {
     else if (ST_sclass(st) == SCLASS_FORMAL && !ST_is_value_parm(st)) {
       // A procedure parameter (we expect a pointer TY to counteract the
       // Fortran call-by-reference semantics)
-      FORTTK_ASSERT(TY_Is_Pointer(ty), "Unexpected type " << TY_kind(ty));
+      FORTTK_ASSERT((TY_Is_Pointer(ty)|| TY_is_f90_pointer(ty)), "Unexpected type " << TY_kind(ty) << " for " << st_name);
     
       TY_IDX base_ty = TY_pointed(ty);
       if (TY_Is_Pointer(base_ty) && TY_ptr_as_array(Ty_Table[base_ty])) {
