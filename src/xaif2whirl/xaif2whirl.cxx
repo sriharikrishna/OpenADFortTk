@@ -2094,15 +2094,32 @@ namespace xaif2whirl {
   WN*
   CreateCallToIntrin(TYPE_ID rtype, const char* fname, std::vector<WN*>& args)
   {
-    WN* callWN = CreateCallToIntrin(rtype, fname, args.size());
-  
+    unsigned int numiArgs = 0; // implicit args if any
+    for (unsigned int i = 0; i < args.size(); ++i) {
+      if (args[i]) { 
+	TY_IDX ty = WN_Tree_Type(args[i]);
+	if (TY_Is_Character_Reference(ty) || TY_Is_Chararray_Reference(ty)) {
+	  numiArgs++;
+	}
+      }
+    }
+    WN* callWN = CreateCallToIntrin(rtype, fname, args.size()+numiArgs);
     for (unsigned int i = 0; i < args.size(); ++i) {
       if (args[i]) { 
 	// conservatively assume pass by reference
 	WN_actual(callWN, i) = CreateParm(args[i], WN_PARM_BY_REFERENCE);
+	TY_IDX ty = WN_Tree_Type(args[i]);
+	if (TY_Is_Character_Reference(ty) || TY_Is_Chararray_Reference(ty)) {
+	  numiArgs++;
+	}
       }
     }
-  
+    if (WN_intrinsic(callWN)==INTRN_SCAN) { 
+      for (unsigned i = args.size(); i < args.size()+numiArgs; ++i) {
+	// Create bogus values, knowing that we only want to unparse the WHIRL
+	WN_actual(callWN, i) = CreateParm(WN_CreateIntconst(OPC_I4INTCONST, 0),WN_PARM_BY_VALUE); // a white lie
+      }
+    }
     return callWN;
   }
 
