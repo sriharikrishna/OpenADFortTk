@@ -2258,6 +2258,9 @@ namespace xaif2whirl {
 	else if (strcmp(shape.c_str(), "five_tensor") == 0) {
 	  ndim = 5;
 	} 
+	else if (strcmp(shape.c_str(), "six_tensor") == 0) {
+	  ndim = 6;
+	} 
 	else {
 	  // FIXME: add other tensors
 	  FORTTK_DIE(fortTkSupport::Diagnostics::Unimplemented << "Cannot translate variables of shape " << shape.c_str() );
