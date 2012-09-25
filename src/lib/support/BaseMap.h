@@ -44,7 +44,7 @@ public:
   virtual bool 
   Insert(FromTy x, ToTy y) {
     pair<typename std::map<FromTy, ToTy>::iterator, bool> p = 
-      insert(make_pair(x, y)); // std::map<FromTy, ToTy>::value_type
+      this->insert(make_pair(x, y)); // std::map<FromTy, ToTy>::value_type
     return p.second;
   }
   
