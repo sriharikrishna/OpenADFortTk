@@ -3810,7 +3810,7 @@ Open64IRInterface::getLocation(OA::ProcHandle p, OA::SymHandle s)
     }
 
     if (debug) {
-      std::cout << std::endl << "mIR->toString(p) = " << toString(p) 
+      std::cout << std::endl << "getLocation: mIR->toString(p) = " << toString(p) 
               << ", <hval=" << p.hval() << std::endl;
       std::cout << "mIR->toString(s) = " << toString(s) 
               << ", <hval=" << s.hval() << std::endl;
