@@ -749,7 +749,7 @@ namespace xaif2whirl {
     if (TY_kind(ty) == KIND_POINTER) { 
       ty = TY_pointed(ty); 
     }
-    if (TY_Is_Chararray(ty)) {
+    if (TY_Is_Character_String(ty)) {
       // ----------------------------------------------------------------------------------
       // treat character arrays separately because they have a special whirl format
       // there is to be one child in xaif expected to be an IndexTriplet
@@ -865,6 +865,9 @@ namespace xaif2whirl {
       TY_IDX ety = TY_etype(ty);
       TYPE_ID emty = TY_mtype(ety);
       TY_IDX eptrty = Stab_Pointer_To(ety);
+      if (emty==0 && TY_Is_Chararray(ty)) {
+	emty=MTYPE_U4;
+      }
       arrWN=WN_CreateIload(OPR_ILOAD, emty, emty, 0, ety, eptrty, arrWN, 0);
     }
     return arrWN;
