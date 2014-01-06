@@ -731,6 +731,8 @@ namespace xaif2whirl {
     FORTTK_ASSERT(XMLString::equals(nmX, XAIFStrings.elem_SymRef_x()),
 		  "Expected " << XAIFStrings.elem_SymRef() << "; found:\n"
 		  << *(n1->GetElem()));
+    const XMLCh* symNmX = n1->GetElem()->getAttribute(XAIFStrings.attr_symId_x());
+    XercesStrX symNm = XercesStrX(symNmX);
     ctxt.createXlationContext(XlationContext::ARRAY);
     WN* arraySym = xlate_VarRef(g, n1, ctxt);
     ctxt.deleteXlationContext();
@@ -751,7 +753,7 @@ namespace xaif2whirl {
       // ----------------------------------------------------------------------------------
       // treat character arrays separately because they have a special whirl format
       // there is to be one child in xaif expected to be an IndexTriplet
-      FORTTK_ASSERT(GetChildElementCount(elem)==1,"Internal error: unexpected character array with multiple indices");
+      FORTTK_ASSERT(GetChildElementCount(elem)==1,"Internal error: unexpected character array with multiple indices for >" <<  symNm.c_str() << "<");
       unsigned int childCount = 2; // there are two whirl child nodes
       DOMElement* dim = GetFirstChildElement(elem); 
       FORTTK_ASSERT(XMLString::equals(dim->getNodeName(), XAIFStrings.elem_IndexTriplet_x()), 
@@ -775,7 +777,7 @@ namespace xaif2whirl {
 	    FORTTK_DIE("unexpected element :" << *tripletElementExpr);
 	}
       }
-      FORTTK_ASSERT(tripletElementCounter==2,"Internal error: character array has to have 2 triplet elements");
+      FORTTK_ASSERT(tripletElementCounter==2,"Internal error: character array has to have 2 triplet elements for >" <<  symNm.c_str() << "<");
       // Create Whirl ARRAY node 
       arrWN = WN_Create(OPR_ARRAY, MTYPE_U8, MTYPE_V, 3);
       // kid 0 is the array's base address
