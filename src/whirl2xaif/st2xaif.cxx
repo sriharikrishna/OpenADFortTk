@@ -623,6 +623,15 @@ namespace whirl2xaif {
 	  }
 	}
       } 
+      if (Args::ourAllActiveFlag 
+	  && 
+	  !active 
+	  && 
+	  ((strcmp(ty_str, "real") == 0
+	    ||
+	    strcmp(ty_str, "complex") == 0))) {
+	active=true;
+      }
       if (active 
 	  && 
 	  (strcmp(ty_str, "integer") == 0

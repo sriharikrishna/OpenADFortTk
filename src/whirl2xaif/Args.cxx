@@ -28,6 +28,7 @@ static const char* usage_details =
 "  -v, --variedOnly    do not require active data to also be 'useful'\n"
 "      --uniformCBact  if any variable in a given common block is active\n"
 "                      then activate all of them\n"
+"      --allActive     all floating point variables are made active\n"
 "      --debug [lvl]   debug mode at level `lvl'\n";
 
 bool Args::ourSimpleLoopFlag=false;   // default: done't force it
@@ -35,6 +36,7 @@ bool Args::ourDoNotFilterFlag=false;  // default: filter it
 bool Args::ourNoTimeStampFlag=false;  // default: dump a time stamp
 bool Args::ourVariedOnlyFlag=false;   // default: require both usefull and varied
 bool Args::ourUniformCBactFlag=false; // default: no uniform activation
+bool Args::ourAllActiveFlag=false;    // default: no global activation
 
 #define CLP CmdLineParser
 
@@ -48,6 +50,7 @@ CmdLineParser::OptArgDesc Args::optArgs[] = {
   { 'n', "noFilter",    CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
   { 'N', "noTimeStamp", CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
   {  0 , "uniformCBact",CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
+  {  0 , "allActive",   CLP::ARG_NONE, CLP::DUPOPT_ERR,  NULL },
   {  0 , "debug",       CLP::ARG_OPT,  CLP::DUPOPT_CLOB, NULL },
   CmdLineParser::OptArgDesc_NULL
 };
@@ -148,6 +151,9 @@ Args::Parse(int argc, const char* const argv[])
     }
     if (parser.IsOpt("uniformCBact")) { 
       ourUniformCBactFlag = true; 
+    }
+    if (parser.IsOpt("allActive")) { 
+      ourAllActiveFlag = true; 
     }
     // Check for required arguments
     if (parser.GetNumArgs() != 1) {

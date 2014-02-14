@@ -62,6 +62,9 @@ public:
   // uniformly activate all variables in a common block if one is active 
   static bool ourUniformCBactFlag; 
 
+  // activate all floating point variables
+  static bool ourAllActiveFlag; 
+
 private:
   void Ctor();
 
