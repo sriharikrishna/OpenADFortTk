@@ -629,7 +629,12 @@ namespace whirl2xaif {
 	  && 
 	  ((strcmp(ty_str, "real") == 0
 	    ||
-	    strcmp(ty_str, "complex") == 0))) {
+	    strcmp(ty_str, "complex") == 0))
+	  &&  
+	  !(ST_sclass(st) == SCLASS_PSTATIC 
+	    &&
+	    ST_is_initialized(st))
+	  ) {
 	active=true;
       }
       if (active 
@@ -646,6 +651,21 @@ namespace whirl2xaif {
 	else {
 	  ST_IDX pu_st = PU_Info_proc_sym(Current_PU_Info);
 	  FORTTK_MSG(0, "warning: within " << ST_name(pu_st) << ": " << txt1 << ST_name(st) << txt2  << ty_str);
+	}
+      }
+      if (active 
+	  && 
+	  (ST_sclass(st) == SCLASS_PSTATIC 
+	    &&
+	   ST_is_initialized(st))) { 
+	static const char* txt1 = "explicit initialization of active symbol >";
+	static const char* txt2 = "< implies the active type may not use default initialization";
+	if (CURRENT_SYMTAB == GLOBAL_SYMTAB) {
+	  FORTTK_MSG(0, "warning: within global scope: " << txt1 << ST_name(st) << txt2 );
+	}
+	else {
+	  ST_IDX pu_st = PU_Info_proc_sym(Current_PU_Info);
+	  FORTTK_MSG(0, "warning: within " << ST_name(pu_st) << ": " << txt1 << ST_name(st) << txt2 );
 	}
       }
       fortTkSupport::SymId st_id = (fortTkSupport::SymId)ST_index(st);
